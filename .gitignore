@@ -5,3 +5,12 @@
 **config.py
 **.cache
 .DS_Store
+
+# Compiled python modules.
+*.pyc
+
+# Setuptools distribution folder.
+/dist/
+
+/*.egg-info
+/*.egg
