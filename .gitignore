@@ -4,7 +4,12 @@
 **venv
 **config.py
 **.cache
+
+# macOS-specific files
 .DS_Store
+
+#PyCharm project configuration files
+.idea
 
 # Compiled python modules.
 *.pyc
