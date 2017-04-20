@@ -67,5 +67,5 @@ echo $newVersionString > $VERSIONFILE
 
 if [[ $CHECKGIT == true ]]
 then
-    git add VERSION
+    git add $VERSIONFILE
 fi
