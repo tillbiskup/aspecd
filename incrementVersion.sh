@@ -24,7 +24,7 @@
 
 # Some configuration
 VERSIONFILE="VERSION"
-CHECKGIT=false # set to "true" to check for changes via git diff
+CHECKGIT=true# set to "true" to check for changes via git diff
 
 # Internal functions
 function join_by { local IFS="$1"; shift; echo "$*"; }
@@ -65,3 +65,7 @@ newVersionString=`join_by . ${versionArray[@]}`
 # Write new version string to file
 echo $newVersionString > $VERSIONFILE
 
+if [[ $CHECKGIT == true ]]
+then
+    git add VERSION
+fi
