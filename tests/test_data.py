@@ -102,7 +102,11 @@ class TestAxisSetupInConstructor(unittest.TestCase):
         with self.assertRaises(data.AxesValuesInconsistentWithDataError):
             data.Data(tmp_data, self.axes)
 
-    # @TODO test_axes_values_dimensions_are_consistent_with_data
+    def test_wrong_axes_values_dimensions_with_nonempty_2D_data_raises(self):
+        len_data = [5, 3]
+        tmp_data = np.zeros(len_data)
+        with self.assertRaises(data.AxesValuesInconsistentWithDataError):
+            data.Data(tmp_data, self.axes)
 
 
 if __name__ == '__main__':
