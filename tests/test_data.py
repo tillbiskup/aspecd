@@ -108,6 +108,26 @@ class TestAxisSetupInConstructor(unittest.TestCase):
         with self.assertRaises(data.AxesValuesInconsistentWithDataError):
             data.Data(tmp_data, self.axes)
 
+    def test_set_wrong_axes_dimensions_with_nonempty_1D_data_raises(self):
+        len_data = 5
+        tmp_data = np.zeros(len_data)
+        tmp_axis = axis.Axis()
+        tmp_axis.values = np.zeros(2*len_data)
+        tmp_axes = [tmp_axis, axis.Axis()]
+        with self.assertRaises(data.AxesValuesInconsistentWithDataError):
+            data.Data(tmp_data, tmp_axes)
+
+    def test_set_wrong_axes_dimensions_with_nonempty_2D_data_raises(self):
+        len_data = [5, 3]
+        tmp_data = np.zeros(len_data)
+        tmp_axis1 = axis.Axis()
+        tmp_axis1.values = np.zeros(2*len_data[0])
+        tmp_axis2 = axis.Axis()
+        tmp_axis2.values = np.zeros(2*len_data[1])
+        tmp_axes = [tmp_axis1, tmp_axis2, axis.Axis()]
+        with self.assertRaises(data.AxesValuesInconsistentWithDataError):
+            data.Data(tmp_data, tmp_axes)
+
 
 if __name__ == '__main__':
     unittest.main()
