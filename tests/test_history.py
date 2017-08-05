@@ -2,7 +2,7 @@
 
 import unittest
 
-from aspecd import history, processing
+from aspecd import history, processing, system
 from datetime import datetime, timedelta
 
 
@@ -30,3 +30,10 @@ class TestHistoryRecord(unittest.TestCase):
         now = datetime.today()
         self.assertAlmostEqual(now, self.historyrecord.date,
                                delta=timedelta(seconds=1))
+
+    def test_has_sysinfo_property(self):
+        self.assertTrue(hasattr(self.historyrecord, 'sysinfo'))
+
+    def test_sysinfo_is_systeminfo(self):
+        self.assertTrue(
+            isinstance(self.historyrecord.sysinfo, system.SystemInfo))
