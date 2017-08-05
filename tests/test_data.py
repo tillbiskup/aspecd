@@ -7,7 +7,7 @@ from aspecd import data
 from aspecd import axis
 
 
-class TestAxis(unittest.TestCase):
+class TestData(unittest.TestCase):
 
     def setUp(self):
         self.data = data.Data()
