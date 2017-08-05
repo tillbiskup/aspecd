@@ -2,7 +2,7 @@
 
 import unittest
 
-from aspecd import dataset, data, history
+from aspecd import dataset, data, history, processing
 
 
 class TestDataset(unittest.TestCase):
@@ -42,23 +42,24 @@ class TestDatasetProcessing(unittest.TestCase):
 
     def setUp(self):
         self.dataset = dataset.Dataset()
+        self.processingStep = processing.ProcessingStep()
 
     def test_has_process_method(self):
         self.assertTrue(hasattr(self.dataset, 'process'))
         self.assertTrue(callable(self.dataset.process))
 
     def test_process_adds_history_record(self):
-        self.dataset.process()
+        self.dataset.process(self.processingStep)
         self.assertFalse(self.dataset.history == [])
 
     def test_added_history_record_is_historyrecord(self):
-        self.dataset.process()
+        self.dataset.process(self.processingStep)
         self.assertTrue(isinstance(self.dataset.history[-1],
                                    history.HistoryRecord))
 
     def test_process_increments_history_pointer(self):
         historypointer = self.dataset._historypointer
-        self.dataset.process()
+        self.dataset.process(self.processingStep)
         self.assertTrue(self.dataset._historypointer == historypointer + 1)
 
 
@@ -66,6 +67,7 @@ class TestDatasetUndo(unittest.TestCase):
 
     def setUp(self):
         self.dataset = dataset.Dataset()
+        self.processingStep = processing.ProcessingStep()
 
     def test_has_undo_method(self):
         self.assertTrue(hasattr(self.dataset, 'undo'))
@@ -77,20 +79,21 @@ class TestDatasetUndo(unittest.TestCase):
             self.dataset.undo()
 
     def test_undo_decrements_historypointer(self):
-        self.dataset.process()
+        self.dataset.process(self.processingStep)
         historypointer = self.dataset._historypointer
         self.dataset.undo()
         self.assertEqual(self.dataset._historypointer, historypointer - 1)
 
     def test_undo_with_historypointer_zero_raises(self):
-        self.dataset.process()
+        self.dataset.process(self.processingStep)
         self.dataset.undo()
         with self.assertRaises(dataset.UndoAtBeginningOfHistoryError):
             self.dataset.undo()
 
-    def test_undo_with_undoable_history_step_raises(self):
-        self.dataset.process()
-        self.dataset.history[-1].processing.undoable = True
+    def test_undo_with_undoable_processing_step_raises(self):
+        processingstep = self.processingStep
+        processingstep.undoable = True
+        self.dataset.process(processingstep)
         with self.assertRaises(dataset.UndoStepUndoableError):
             self.dataset.undo()
 
@@ -99,6 +102,7 @@ class TestDatasetRedo(unittest.TestCase):
 
     def setUp(self):
         self.dataset = dataset.Dataset()
+        self.processingStep = processing.ProcessingStep()
 
     def test_has_redo_method(self):
         self.assertTrue(hasattr(self.dataset, 'redo'))
@@ -109,13 +113,13 @@ class TestDatasetRedo(unittest.TestCase):
         with self.assertRaises(dataset.RedoAlreadyAtLatestChangeError):
             self.dataset.redo()
 
-    def test_redo_at_latest_chance_raises(self):
-        self.dataset.process()
+    def test_redo_at_latest_change_raises(self):
+        self.dataset.process(self.processingStep)
         with self.assertRaises(dataset.RedoAlreadyAtLatestChangeError):
             self.dataset.redo()
 
     def test_redo_increments_historypointer(self):
-        self.dataset.process()
+        self.dataset.process(self.processingStep)
         self.dataset.undo()
         historypointer = self.dataset._historypointer
         self.dataset.redo()

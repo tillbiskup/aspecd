@@ -7,3 +7,6 @@ class ProcessingStep:
         self.undoable = False
         self.name = self.__class__.__name__
         self.parameters = dict()
+
+    def process(self, dataset):
+        pass

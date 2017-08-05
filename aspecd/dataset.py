@@ -62,9 +62,10 @@ class Dataset:
         self.history = []
         self._historypointer = -1
 
-    def process(self):
-        self.history.append(history.HistoryRecord())
-        self._historypointer += 1
+    def process(self, processingstep):
+        historyrecord = self._create_historyrecord(processingstep)
+        processingstep.process(self)
+        self._append_historyrecord(historyrecord)
 
     def undo(self):
         if len(self.history) == 0:
@@ -73,9 +74,33 @@ class Dataset:
             raise UndoAtBeginningOfHistoryError
         if self.history[-1].processing.undoable:
             raise UndoStepUndoableError
-        self._historypointer -= 1
+        self._decrement_historypointer()
+        self._replay_history()
 
     def redo(self):
         if self._historypointer == len(self.history)-1:
             raise RedoAlreadyAtLatestChangeError
+        processingstep = self.history[self._historypointer+1].processing
+        processingstep.process(self)
+        self._increment_historypointer()
+
+    @staticmethod
+    def _create_historyrecord(processingstep):
+        historyrecord = history.HistoryRecord()
+        historyrecord.processing = processingstep
+        return historyrecord
+
+    def _append_historyrecord(self, historyrecord):
+        self.history.append(historyrecord)
+        self._increment_historypointer()
+
+    def _increment_historypointer(self):
         self._historypointer += 1
+
+    def _decrement_historypointer(self):
+        self._historypointer -= 1
+
+    def _replay_history(self):
+        self.data = self._origdata
+        for historyentry in self.history[:self._historypointer]:
+            historyentry.processing.process(self)

@@ -3,20 +3,30 @@
 import unittest
 
 from aspecd import history, processing
+from datetime import datetime, timedelta
 
 
 class TestHistoryRecord(unittest.TestCase):
-
     def setUp(self):
-        self.hrec = history.HistoryRecord()
+        self.historyrecord = history.HistoryRecord()
 
     def test_instantiate_class(self):
         pass
 
     def test_has_processing_property(self):
-        self.assertTrue(hasattr(self.hrec, 'processing'))
+        self.assertTrue(hasattr(self.historyrecord, 'processing'))
 
     def test_processing_is_processingstep(self):
-        self.assertTrue(isinstance(self.hrec.processing,
+        self.assertTrue(isinstance(self.historyrecord.processing,
                                    processing.ProcessingStep))
 
+    def test_has_date_property(self):
+        self.assertTrue(hasattr(self.historyrecord, 'date'))
+
+    def test_date_is_datetime(self):
+        self.assertTrue(isinstance(self.historyrecord.date, datetime))
+
+    def test_date_is_current_date(self):
+        now = datetime.today()
+        self.assertAlmostEqual(now, self.historyrecord.date,
+                               delta=timedelta(seconds=1))
