@@ -53,6 +53,17 @@ class RedoAlreadyAtLatestChangeError(Error):
         self.message = message
 
 
+class ProcessingWithLeadingHistoryError(Error):
+    """Exception raised trying to process with leading history
+
+    Attributes:
+        message -- explanation of the error
+    """
+
+    def __init__(self, message=''):
+        self.message = message
+
+
 class Dataset:
 
     def __init__(self):
@@ -63,6 +74,8 @@ class Dataset:
         self._historypointer = -1
 
     def process(self, processingstep):
+        if self._has_leading_history():
+            raise ProcessingWithLeadingHistoryError
         historyrecord = self._create_historyrecord(processingstep)
         processingstep.process(self)
         self._append_historyrecord(historyrecord)
@@ -104,3 +117,26 @@ class Dataset:
         self.data = self._origdata
         for historyentry in self.history[:self._historypointer]:
             historyentry.processing.process(self)
+
+    def _has_leading_history(self):
+        if len(self.history)-1 > self._historypointer:
+            return True
+        else:
+            return False
+
+    def strip_history(self):
+        if not self._has_leading_history():
+            return
+        del self.history[self._historypointer+1:]
+
+    def load(self):
+        pass
+
+    def save(self):
+        pass
+
+    def importfrom(self):
+        pass
+
+    def exportto(self):
+        pass

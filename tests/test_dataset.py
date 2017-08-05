@@ -6,7 +6,6 @@ from aspecd import dataset, data, history, processing
 
 
 class TestDataset(unittest.TestCase):
-
     def setUp(self):
         self.dataset = dataset.Dataset()
 
@@ -39,7 +38,6 @@ class TestDataset(unittest.TestCase):
 
 
 class TestDatasetProcessing(unittest.TestCase):
-
     def setUp(self):
         self.dataset = dataset.Dataset()
         self.processingStep = processing.ProcessingStep()
@@ -64,7 +62,6 @@ class TestDatasetProcessing(unittest.TestCase):
 
 
 class TestDatasetUndo(unittest.TestCase):
-
     def setUp(self):
         self.dataset = dataset.Dataset()
         self.processingStep = processing.ProcessingStep()
@@ -99,7 +96,6 @@ class TestDatasetUndo(unittest.TestCase):
 
 
 class TestDatasetRedo(unittest.TestCase):
-
     def setUp(self):
         self.dataset = dataset.Dataset()
         self.processingStep = processing.ProcessingStep()
@@ -124,3 +120,40 @@ class TestDatasetRedo(unittest.TestCase):
         historypointer = self.dataset._historypointer
         self.dataset.redo()
         self.assertEqual(self.dataset._historypointer, historypointer + 1)
+
+
+class TestDatasetIO(unittest.TestCase):
+    def setUp(self):
+        self.dataset = dataset.Dataset()
+
+    def test_has_load_method(self):
+        self.assertTrue(hasattr(self.dataset, 'load'))
+        self.assertTrue(callable(self.dataset.load))
+
+    def test_has_save_method(self):
+        self.assertTrue(hasattr(self.dataset, 'save'))
+        self.assertTrue(callable(self.dataset.save))
+
+    def test_has_importfrom_method(self):
+        self.assertTrue(hasattr(self.dataset, 'importfrom'))
+        self.assertTrue(callable(self.dataset.importfrom))
+
+    def test_has_exportto_method(self):
+        self.assertTrue(hasattr(self.dataset, 'exportto'))
+        self.assertTrue(callable(self.dataset.exportto))
+
+
+class TestDatasetProcessingWithHistory(unittest.TestCase):
+    def setUp(self):
+        self.dataset = dataset.Dataset()
+        self.processingStep = processing.ProcessingStep()
+        self.dataset.process(self.processingStep)
+        self.dataset.undo()
+
+    def test_process_with_leading_history_raises(self):
+        with self.assertRaises(dataset.ProcessingWithLeadingHistoryError):
+            self.dataset.process(self.processingStep)
+
+    def test_stripping_leading_history_allows_processing(self):
+        self.dataset.strip_history()
+        self.dataset.process(self.processingStep)
