@@ -58,7 +58,7 @@ class Dataset:
     def __init__(self):
         self.data = data.Data()
         self._origdata = data.Data()
-        self.metadata = {}
+        self.metadata = dict()
         self.history = []
         self._historypointer = -1
 
@@ -71,7 +71,7 @@ class Dataset:
             raise UndoWithEmptyHistoryError
         if self._historypointer == -1:
             raise UndoAtBeginningOfHistoryError
-        if self.history[-1].undoable:
+        if self.history[-1].processing.undoable:
             raise UndoStepUndoableError
         self._historypointer -= 1
 

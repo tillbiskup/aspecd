@@ -90,7 +90,7 @@ class TestDatasetUndo(unittest.TestCase):
 
     def test_undo_with_undoable_history_step_raises(self):
         self.dataset.process()
-        self.dataset.history[-1].undoable = True
+        self.dataset.history[-1].processing.undoable = True
         with self.assertRaises(dataset.UndoStepUndoableError):
             self.dataset.undo()
 

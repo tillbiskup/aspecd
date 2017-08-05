@@ -1,7 +1,10 @@
 """History."""
 
 
+from aspecd import processing
+
+
 class HistoryRecord:
 
     def __init__(self):
-        self.undoable = False
+        self.processing = processing.ProcessingStep()
