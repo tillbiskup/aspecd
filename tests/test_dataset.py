@@ -94,6 +94,16 @@ class TestDatasetUndo(unittest.TestCase):
         with self.assertRaises(dataset.UndoStepUndoableError):
             self.dataset.undo()
 
+    def test_multiple_undo_with_undoable_processing_step_raises(self):
+        processingstep = self.processingStep
+        processingstep.undoable = True
+        self.dataset.process(processingstep)
+        processingstep.undoable = False
+        self.dataset.process(processingstep)
+        self.dataset.undo()
+        with self.assertRaises(dataset.UndoStepUndoableError):
+            self.dataset.undo()
+
 
 class TestDatasetRedo(unittest.TestCase):
     def setUp(self):

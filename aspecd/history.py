@@ -11,3 +11,7 @@ class HistoryRecord:
         self.processing = processing.ProcessingStep()
         self.date = datetime.today()
         self.sysinfo = system.SystemInfo()
+
+    @property
+    def undoable(self):
+        return self.processing.undoable

@@ -37,3 +37,9 @@ class TestHistoryRecord(unittest.TestCase):
     def test_sysinfo_is_systeminfo(self):
         self.assertTrue(
             isinstance(self.historyrecord.sysinfo, system.SystemInfo))
+
+    def test_has_undoable_property(self):
+        self.assertTrue(hasattr(self.historyrecord, 'undoable'))
+
+    def test_undoable_is_boolean(self):
+        self.assertTrue(isinstance(self.historyrecord.undoable, bool))

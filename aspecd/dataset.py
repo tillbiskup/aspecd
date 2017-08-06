@@ -2,6 +2,7 @@
 
 
 from aspecd import data, history
+import copy
 
 
 class Error(Exception):
@@ -76,6 +77,8 @@ class Dataset:
     def process(self, processingstep):
         if self._has_leading_history():
             raise ProcessingWithLeadingHistoryError
+        # Important: Need a copy, not the reference to the original object
+        processingstep = copy.deepcopy(processingstep)
         historyrecord = self._create_historyrecord(processingstep)
         processingstep.process(self)
         self._append_historyrecord(historyrecord)
@@ -85,7 +88,7 @@ class Dataset:
             raise UndoWithEmptyHistoryError
         if self._historypointer == -1:
             raise UndoAtBeginningOfHistoryError
-        if self.history[-1].processing.undoable:
+        if self.history[self._historypointer].undoable:
             raise UndoStepUndoableError
         self._decrement_historypointer()
         self._replay_history()
