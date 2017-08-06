@@ -100,6 +100,12 @@ class Dataset:
         processingstep.process(self)
         self._increment_historypointer()
 
+    def _has_leading_history(self):
+        if len(self.history)-1 > self._historypointer:
+            return True
+        else:
+            return False
+
     @staticmethod
     def _create_historyrecord(processingstep):
         historyrecord = history.HistoryRecord()
@@ -119,13 +125,7 @@ class Dataset:
     def _replay_history(self):
         self.data = self._origdata
         for historyentry in self.history[:self._historypointer]:
-            historyentry.processing.process(self)
-
-    def _has_leading_history(self):
-        if len(self.history)-1 > self._historypointer:
-            return True
-        else:
-            return False
+            historyentry.replay(self)
 
     def strip_history(self):
         if not self._has_leading_history():

@@ -160,6 +160,12 @@ class TestDatasetProcessingWithHistory(unittest.TestCase):
         self.dataset.process(self.processingStep)
         self.dataset.undo()
 
+    def test_stripping_leading_history_deletes_history_entries(self):
+        orig_len_history = len(self.dataset.history)
+        self.dataset.strip_history()
+        new_len_history = len(self.dataset.history)
+        self.assertGreater(orig_len_history, new_len_history)
+
     def test_process_with_leading_history_raises(self):
         with self.assertRaises(dataset.ProcessingWithLeadingHistoryError):
             self.dataset.process(self.processingStep)

@@ -27,3 +27,15 @@ class TestProcessingStep(unittest.TestCase):
 
     def test_parameters_property_is_dict(self):
         self.assertTrue(isinstance(self.processing.parameters, dict))
+
+    def test_has_description_property(self):
+        self.assertTrue(hasattr(self.processing, 'description'))
+
+    def test_description_property_is_string(self):
+        self.assertTrue(isinstance(self.processing.description, str))
+
+    def test_has_comment_property(self):
+        self.assertTrue(hasattr(self.processing, 'comment'))
+
+    def test_description_comment_is_string(self):
+        self.assertTrue(isinstance(self.processing.comment, str))

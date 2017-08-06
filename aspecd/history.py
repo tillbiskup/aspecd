@@ -15,3 +15,6 @@ class HistoryRecord:
     @property
     def undoable(self):
         return self.processing.undoable
+
+    def replay(self, dataset):
+        self.processing.process(dataset=dataset)

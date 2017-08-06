@@ -43,3 +43,7 @@ class TestHistoryRecord(unittest.TestCase):
 
     def test_undoable_is_boolean(self):
         self.assertTrue(isinstance(self.historyrecord.undoable, bool))
+
+    def test_has_replay_method(self):
+        self.assertTrue(hasattr(self.historyrecord, 'replay'))
+        self.assertTrue(callable(self.historyrecord.replay))
