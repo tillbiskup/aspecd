@@ -1,7 +1,6 @@
 """History."""
 
-
-from aspecd import processing, system
+from aspecd import processing, system, analysis
 from datetime import datetime
 
 
@@ -39,3 +38,13 @@ class ProcessingHistoryRecord(HistoryRecord):
 
     def replay(self, dataset):
         self.processing.process(dataset=dataset)
+
+
+class AnalysisHistoryRecord(HistoryRecord):
+    """
+    History record for analysis steps on datasets.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.analysis = analysis.AnalysisStep()

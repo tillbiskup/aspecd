@@ -39,3 +39,7 @@ class TestProcessingStep(unittest.TestCase):
 
     def test_description_comment_is_string(self):
         self.assertTrue(isinstance(self.processing.comment, str))
+
+    def test_has_process_method(self):
+        self.assertTrue(hasattr(self.processing, 'process'))
+        self.assertTrue(callable(self.processing.process))

@@ -1,6 +1,5 @@
 """Dataset."""
 
-
 from aspecd import data, history
 import copy
 
@@ -66,22 +65,22 @@ class ProcessingWithLeadingHistoryError(Error):
 
 
 class Dataset:
-
     def __init__(self):
         self.data = data.Data()
         self._origdata = data.Data()
         self.metadata = dict()
         self.history = []
         self._historypointer = -1
+        self.analyses = []
 
     def process(self, processingstep):
         if self._has_leading_history():
             raise ProcessingWithLeadingHistoryError
         # Important: Need a copy, not the reference to the original object
         processingstep = copy.deepcopy(processingstep)
-        historyrecord = self._create_historyrecord(processingstep)
+        historyrecord = self._create_processinghistoryrecord(processingstep)
         processingstep.process(self)
-        self._append_historyrecord(historyrecord)
+        self._append_processinghistoryrecord(historyrecord)
 
     def undo(self):
         if len(self.history) == 0:
@@ -94,25 +93,25 @@ class Dataset:
         self._replay_history()
 
     def redo(self):
-        if self._historypointer == len(self.history)-1:
+        if self._historypointer == len(self.history) - 1:
             raise RedoAlreadyAtLatestChangeError
-        processingstep = self.history[self._historypointer+1].processing
+        processingstep = self.history[self._historypointer + 1].processing
         processingstep.process(self)
         self._increment_historypointer()
 
     def _has_leading_history(self):
-        if len(self.history)-1 > self._historypointer:
+        if len(self.history) - 1 > self._historypointer:
             return True
         else:
             return False
 
     @staticmethod
-    def _create_historyrecord(processingstep):
+    def _create_processinghistoryrecord(processingstep):
         historyrecord = history.ProcessingHistoryRecord()
         historyrecord.processing = processingstep
         return historyrecord
 
-    def _append_historyrecord(self, historyrecord):
+    def _append_processinghistoryrecord(self, historyrecord):
         self.history.append(historyrecord)
         self._increment_historypointer()
 
@@ -130,7 +129,23 @@ class Dataset:
     def strip_history(self):
         if not self._has_leading_history():
             return
-        del self.history[self._historypointer+1:]
+        del self.history[self._historypointer + 1:]
+
+    def analyse(self, analysisstep):
+        # Important: Need a copy, not the reference to the original object
+        analysisstep = copy.deepcopy(analysisstep)
+        historyrecord = self._create_analysishistoryrecord(analysisstep)
+        analysisstep.analyse(self)
+        self.analyses.append(historyrecord)
+
+    def analyze(self, analysisstep):
+        self.analyse(analysisstep)
+
+    @staticmethod
+    def _create_analysishistoryrecord(analysisstep):
+        historyrecord = history.AnalysisHistoryRecord()
+        historyrecord.analysis = analysisstep
+        return historyrecord
 
     def load(self):
         pass

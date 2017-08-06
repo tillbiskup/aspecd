@@ -2,23 +2,16 @@
 
 import unittest
 
-from aspecd import history, processing, system
+from aspecd import history, processing, analysis, system
 from datetime import datetime, timedelta
 
 
-class TestProcessingHistoryRecord(unittest.TestCase):
+class TestHistoryRecord(unittest.TestCase):
     def setUp(self):
-        self.historyrecord = history.ProcessingHistoryRecord()
+        self.historyrecord = history.HistoryRecord()
 
     def test_instantiate_class(self):
         pass
-
-    def test_has_processing_property(self):
-        self.assertTrue(hasattr(self.historyrecord, 'processing'))
-
-    def test_processing_is_processingstep(self):
-        self.assertTrue(isinstance(self.historyrecord.processing,
-                                   processing.ProcessingStep))
 
     def test_has_date_property(self):
         self.assertTrue(hasattr(self.historyrecord, 'date'))
@@ -38,6 +31,27 @@ class TestProcessingHistoryRecord(unittest.TestCase):
         self.assertTrue(
             isinstance(self.historyrecord.sysinfo, system.SystemInfo))
 
+
+class TestProcessingHistoryRecord(unittest.TestCase):
+    def setUp(self):
+        self.historyrecord = history.ProcessingHistoryRecord()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_processing_property(self):
+        self.assertTrue(hasattr(self.historyrecord, 'processing'))
+
+    def test_processing_is_processingstep(self):
+        self.assertTrue(isinstance(self.historyrecord.processing,
+                                   processing.ProcessingStep))
+
+    def test_has_date_property(self):
+        self.assertTrue(hasattr(self.historyrecord, 'date'))
+
+    def test_has_sysinfo_property(self):
+        self.assertTrue(hasattr(self.historyrecord, 'sysinfo'))
+
     def test_has_undoable_property(self):
         self.assertTrue(hasattr(self.historyrecord, 'undoable'))
 
@@ -47,3 +61,18 @@ class TestProcessingHistoryRecord(unittest.TestCase):
     def test_has_replay_method(self):
         self.assertTrue(hasattr(self.historyrecord, 'replay'))
         self.assertTrue(callable(self.historyrecord.replay))
+
+
+class TestAnalysisHistoryRecord(unittest.TestCase):
+    def setUp(self):
+        self.historyrecord = history.AnalysisHistoryRecord()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_processing_property(self):
+        self.assertTrue(hasattr(self.historyrecord, 'analysis'))
+
+    def test_processing_is_processingstep(self):
+        self.assertTrue(isinstance(self.historyrecord.analysis,
+                                   analysis.AnalysisStep))

@@ -2,7 +2,7 @@
 
 import unittest
 
-from aspecd import dataset, data, history, processing
+from aspecd import dataset, data, history, processing, analysis
 
 
 class TestDataset(unittest.TestCase):
@@ -36,6 +36,12 @@ class TestDataset(unittest.TestCase):
     def test_history_is_list(self):
         self.assertTrue(isinstance(self.dataset.history, list))
 
+    def test_has_analyses_property(self):
+        self.assertTrue(hasattr(self.dataset, 'analyses'))
+
+    def test_analyses_is_list(self):
+        self.assertTrue(isinstance(self.dataset.analyses, list))
+
 
 class TestDatasetProcessing(unittest.TestCase):
     def setUp(self):
@@ -59,6 +65,17 @@ class TestDatasetProcessing(unittest.TestCase):
         historypointer = self.dataset._historypointer
         self.dataset.process(self.processingStep)
         self.assertTrue(self.dataset._historypointer == historypointer + 1)
+
+    def test_process_writes_different_historyrecords(self):
+        self.dataset.process(self.processingStep)
+        self.dataset.process(self.processingStep)
+        self.assertIsNot(self.dataset.history[-1].processing,
+                         self.dataset.history[-2].processing)
+
+    def test_process_copies_processingstep_object(self):
+        self.dataset.process(self.processingStep)
+        self.assertIsNot(self.processingStep,
+                         self.dataset.history[-1].processing)
 
 
 class TestDatasetUndo(unittest.TestCase):
@@ -173,3 +190,26 @@ class TestDatasetProcessingWithHistory(unittest.TestCase):
     def test_stripping_leading_history_allows_processing(self):
         self.dataset.strip_history()
         self.dataset.process(self.processingStep)
+
+
+class TestDatasetAnalysis(unittest.TestCase):
+    def setUp(self):
+        self.dataset = dataset.Dataset()
+        self.analysisstep = analysis.AnalysisStep()
+
+    def test_has_analyse_method(self):
+        self.assertTrue(hasattr(self.dataset, 'analyse'))
+        self.assertTrue(callable(self.dataset.analyse))
+
+    def test_has_analyze_method(self):
+        self.assertTrue(hasattr(self.dataset, 'analyze'))
+        self.assertTrue(callable(self.dataset.analyze))
+
+    def test_analyse_adds_analysis_record(self):
+        self.dataset.analyse(self.analysisstep)
+        self.assertFalse(self.dataset.analyses == [])
+
+    def test_added_analysis_record_is_analysishistoryrecord(self):
+        self.dataset.analyse(self.analysisstep)
+        self.assertTrue(isinstance(self.dataset.analyses[-1],
+                                   history.AnalysisHistoryRecord))
