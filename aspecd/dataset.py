@@ -78,9 +78,9 @@ class Dataset:
             raise ProcessingWithLeadingHistoryError
         # Important: Need a copy, not the reference to the original object
         processingstep = copy.deepcopy(processingstep)
-        historyrecord = self._create_processinghistoryrecord(processingstep)
+        historyrecord = self._create_processing_historyrecord(processingstep)
         processingstep.process(self)
-        self._append_processinghistoryrecord(historyrecord)
+        self._append_processing_historyrecord(historyrecord)
 
     def undo(self):
         if len(self.history) == 0:
@@ -106,12 +106,12 @@ class Dataset:
             return False
 
     @staticmethod
-    def _create_processinghistoryrecord(processingstep):
+    def _create_processing_historyrecord(processingstep):
         historyrecord = history.ProcessingHistoryRecord()
         historyrecord.processing = processingstep
         return historyrecord
 
-    def _append_processinghistoryrecord(self, historyrecord):
+    def _append_processing_historyrecord(self, historyrecord):
         self.history.append(historyrecord)
         self._increment_historypointer()
 
@@ -138,7 +138,7 @@ class Dataset:
         # At least if preprocessing list in AnalysisStep is empty.
         # Otherwise, perhaps copy dataset object, perform processing steps from
         # preprocessing list in AnalysisStep and analyse this one...
-        historyrecord = self._create_analysishistoryrecord(analysisstep)
+        historyrecord = self._create_analysis_historyrecord(analysisstep)
         analysisstep.analyse(self)
         self.analyses.append(historyrecord)
 
@@ -146,7 +146,7 @@ class Dataset:
         self.analyse(analysisstep)
 
     @staticmethod
-    def _create_analysishistoryrecord(analysisstep):
+    def _create_analysis_historyrecord(analysisstep):
         historyrecord = history.AnalysisHistoryRecord()
         historyrecord.analysis = analysisstep
         return historyrecord

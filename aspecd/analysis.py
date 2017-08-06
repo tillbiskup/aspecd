@@ -4,6 +4,22 @@
 import copy
 
 
+class Error(Exception):
+    """Base class for exceptions in this module."""
+    pass
+
+
+class MissingDatasetError(Error):
+    """Exception raised when no dataset exists to act on
+
+    Attributes:
+        message -- explanation of the error
+    """
+
+    def __init__(self, message=''):
+        self.message = message
+
+
 class AnalysisStep:
 
     def __init__(self):
@@ -19,9 +35,15 @@ class AnalysisStep:
         self.description = 'Abstract processing step'
         # User-supplied comment describing intent, purpose, reason, ...
         self.comment = ''
+        # Reference to the dataset the analysis step should be performed on
+        self.dataset = None
 
-    def analyse(self, dataset):
-        pass
+    def analyse(self, dataset=None):
+        if not dataset:
+            if self.dataset:
+                self.dataset.analyse(self)
+            else:
+                raise MissingDatasetError
 
     def analyze(self, dataset):
         """Same method as self.analyse, but for those preferring AE over BE"""

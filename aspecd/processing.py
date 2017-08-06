@@ -7,7 +7,7 @@ class Error(Exception):
 
 
 class ProcessingNotApplicableToDatasetError(Error):
-    """Exception raised when trying to perform undo with empty history
+    """Exception raised when processing step is not applicable to dataset
 
     Attributes:
         message -- explanation of the error
@@ -18,7 +18,7 @@ class ProcessingNotApplicableToDatasetError(Error):
 
 
 class MissingDatasetError(Error):
-    """Exception raised when trying to perform undo with empty history
+    """Exception raised when no dataset exists to act on
 
     Attributes:
         message -- explanation of the error

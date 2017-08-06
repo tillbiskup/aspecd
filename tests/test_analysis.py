@@ -2,7 +2,7 @@
 
 import unittest
 
-from aspecd import analysis, processing
+from aspecd import analysis, processing, dataset
 
 
 class TestAnalysis(unittest.TestCase):
@@ -55,6 +55,15 @@ class TestAnalysis(unittest.TestCase):
     def test_has_analyze_method(self):
         self.assertTrue(hasattr(self.analysisstep, 'analyze'))
         self.assertTrue(callable(self.analysisstep.analyze))
+
+    def test_analyse_without_analysisstep_and_with_dataset(self):
+        self.analysisstep.dataset = dataset.Dataset()
+        self.analysisstep.analyse()
+        self.assertGreater(len(self.analysisstep.dataset.analyses), 0)
+
+    def test_analyse_without_analysisstep_nor_dataset_raises(self):
+        with self.assertRaises(analysis.MissingDatasetError):
+            self.analysisstep.analyse()
 
 
 class TestPreprocessing(unittest.TestCase):
