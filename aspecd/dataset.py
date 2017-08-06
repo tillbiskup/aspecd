@@ -134,6 +134,10 @@ class Dataset:
     def analyse(self, analysisstep):
         # Important: Need a copy, not the reference to the original object
         analysisstep = copy.deepcopy(analysisstep)
+        # TODO: Add all processing steps in history of dataset to AnalysisStep.
+        # At least if preprocessing list in AnalysisStep is empty.
+        # Otherwise, perhaps copy dataset object, perform processing steps from
+        # preprocessing list in AnalysisStep and analyse this one...
         historyrecord = self._create_analysishistoryrecord(analysisstep)
         analysisstep.analyse(self)
         self.analyses.append(historyrecord)
@@ -146,6 +150,9 @@ class Dataset:
         historyrecord = history.AnalysisHistoryRecord()
         historyrecord.analysis = analysisstep
         return historyrecord
+
+    def delete_analysis(self, index):
+        del self.analyses[index]
 
     def load(self):
         pass

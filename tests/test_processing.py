@@ -2,11 +2,10 @@
 
 import unittest
 
-from aspecd import processing
+from aspecd import processing, dataset
 
 
 class TestProcessingStep(unittest.TestCase):
-
     def setUp(self):
         self.processing = processing.ProcessingStep()
 
@@ -43,3 +42,12 @@ class TestProcessingStep(unittest.TestCase):
     def test_has_process_method(self):
         self.assertTrue(hasattr(self.processing, 'process'))
         self.assertTrue(callable(self.processing.process))
+
+    def test_process_without_processingstep_and_with_dataset(self):
+        self.processing.dataset = dataset.Dataset()
+        self.processing.process()
+        self.assertGreater(len(self.processing.dataset.history), 0)
+
+    def test_process_without_processingstep_nor_dataset_raises(self):
+        with self.assertRaises(processing.MissingDatasetError):
+            self.processing.process()

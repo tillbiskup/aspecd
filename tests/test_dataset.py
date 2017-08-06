@@ -213,3 +213,21 @@ class TestDatasetAnalysis(unittest.TestCase):
         self.dataset.analyse(self.analysisstep)
         self.assertTrue(isinstance(self.dataset.analyses[-1],
                                    history.AnalysisHistoryRecord))
+
+    def test_has_delete_analysis_method(self):
+        self.assertTrue(hasattr(self.dataset, 'delete_analysis'))
+        self.assertTrue(callable(self.dataset.delete_analysis))
+
+    def test_delete_analysis_deletes_analysis_record(self):
+        self.dataset.analyse(self.analysisstep)
+        orig_len_analyses = len(self.dataset.analyses)
+        self.dataset.delete_analysis(0)
+        new_len_analyses = len(self.dataset.analyses)
+        self.assertGreater(orig_len_analyses, new_len_analyses)
+
+    def test_delete_analysis_deletes_correct_analysis_record(self):
+        self.dataset.analyse(self.analysisstep)
+        self.dataset.analyse(self.analysisstep)
+        analysisstep = self.dataset.analyses[-1]
+        self.dataset.delete_analysis(0)
+        self.assertIs(analysisstep, self.dataset.analyses[-1])

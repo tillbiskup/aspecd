@@ -6,7 +6,18 @@ class Error(Exception):
     pass
 
 
-class ProcessingNotApplicableToDataset(Error):
+class ProcessingNotApplicableToDatasetError(Error):
+    """Exception raised when trying to perform undo with empty history
+
+    Attributes:
+        message -- explanation of the error
+    """
+
+    def __init__(self, message=''):
+        self.message = message
+
+
+class MissingDatasetError(Error):
     """Exception raised when trying to perform undo with empty history
 
     Attributes:
@@ -28,14 +39,23 @@ class ProcessingStep:
         self.description = 'Abstract processing step'
         # User-supplied comment describing intent, purpose, reason, ...
         self.comment = ''
+        # Reference to the dataset the processing step should be performed on
+        self.dataset = None
 
-    def process(self, dataset):
+    def process(self, dataset=None):
         """
         Perform the actual processing step on the given dataset.
 
-        This method should always only be called by the dataset itself and its
-        corresponding "processing" method, as otherwise no history would get
-        written.
+        If no dataset is provided at method call, but is set as property in the
+        ProcessingStep object, the process method of the dataset will be called
+        and thus the history written.
+
+        If no dataset is provided at method call nor as property in the object,
+        the method will raise a respective exception.
+
+        The Dataset object always call this method with the respective dataset
+        as argument. Therefore, in this case setting the dataset property
+        within the Processing object is not necessary.
 
         The actual processing step should be coded within the private method
         "_perform_task". Besides that, the applicability of the processing step
@@ -45,8 +65,13 @@ class ProcessingStep:
         :param dataset:
         :return:
         """
+        if not dataset:
+            if self.dataset:
+                self.dataset.process(self)
+            else:
+                raise MissingDatasetError
         if not self._applicable(dataset):
-            raise ProcessingNotApplicableToDataset
+            raise ProcessingNotApplicableToDatasetError
         self._sanitise_parameters(dataset)
         self._perform_task(dataset)
 
