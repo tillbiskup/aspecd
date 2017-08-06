@@ -108,7 +108,7 @@ class Dataset:
 
     @staticmethod
     def _create_historyrecord(processingstep):
-        historyrecord = history.HistoryRecord()
+        historyrecord = history.ProcessingHistoryRecord()
         historyrecord.processing = processingstep
         return historyrecord
 

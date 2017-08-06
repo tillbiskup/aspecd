@@ -6,9 +6,9 @@ from aspecd import history, processing, system
 from datetime import datetime, timedelta
 
 
-class TestHistoryRecord(unittest.TestCase):
+class TestProcessingHistoryRecord(unittest.TestCase):
     def setUp(self):
-        self.historyrecord = history.HistoryRecord()
+        self.historyrecord = history.ProcessingHistoryRecord()
 
     def test_instantiate_class(self):
         pass

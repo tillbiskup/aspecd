@@ -7,7 +7,7 @@ class Error(Exception):
 
 
 class ProcessingNotApplicableToDataset(Error):
-    """Exception raised trying to undo with empty history
+    """Exception raised when trying to perform undo with empty history
 
     Attributes:
         message -- explanation of the error

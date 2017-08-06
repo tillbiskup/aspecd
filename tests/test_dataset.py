@@ -53,7 +53,7 @@ class TestDatasetProcessing(unittest.TestCase):
     def test_added_history_record_is_historyrecord(self):
         self.dataset.process(self.processingStep)
         self.assertTrue(isinstance(self.dataset.history[-1],
-                                   history.HistoryRecord))
+                                   history.ProcessingHistoryRecord))
 
     def test_process_increments_history_pointer(self):
         historypointer = self.dataset._historypointer

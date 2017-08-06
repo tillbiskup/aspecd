@@ -8,9 +8,15 @@ from datetime import datetime
 class HistoryRecord:
 
     def __init__(self):
-        self.processing = processing.ProcessingStep()
         self.date = datetime.today()
         self.sysinfo = system.SystemInfo()
+
+
+class ProcessingHistoryRecord(HistoryRecord):
+
+    def __init__(self):
+        super().__init__()
+        self.processing = processing.ProcessingStep()
 
     @property
     def undoable(self):
