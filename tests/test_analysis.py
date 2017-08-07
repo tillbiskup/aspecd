@@ -56,7 +56,7 @@ class TestAnalysis(unittest.TestCase):
         self.assertTrue(hasattr(self.analysisstep, 'analyze'))
         self.assertTrue(callable(self.analysisstep.analyze))
 
-    def test_analyse_without_analysisstep_and_with_dataset(self):
+    def test_analyse_without_argument_and_with_dataset(self):
         self.analysisstep.dataset = dataset.Dataset()
         self.analysisstep.analyse()
         self.assertGreater(len(self.analysisstep.dataset.analyses), 0)

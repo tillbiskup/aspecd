@@ -72,6 +72,7 @@ class Dataset:
         self.history = []
         self._historypointer = -1
         self.analyses = []
+        self.annotations = []
 
     def process(self, processingstep):
         if self._has_leading_history():
@@ -153,6 +154,20 @@ class Dataset:
 
     def delete_analysis(self, index):
         del self.analyses[index]
+
+    def annotate(self, annotation):
+        # Important: Need a copy, not the reference to the original object
+        annotation = copy.deepcopy(annotation)
+        historyrecord = self._create_annotation_historyrecord(annotation)
+        annotation.annotate(self)
+        self.annotations.append(historyrecord)
+        pass
+
+    @staticmethod
+    def _create_annotation_historyrecord(annotation):
+        historyrecord = history.AnnotationHistoryRecord()
+        historyrecord.annotation = annotation
+        return historyrecord
 
     def load(self):
         pass

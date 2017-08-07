@@ -1,6 +1,6 @@
 """History."""
 
-from aspecd import processing, system, analysis
+from aspecd import processing, system, analysis, annotation
 from datetime import datetime
 
 
@@ -48,3 +48,13 @@ class AnalysisHistoryRecord(HistoryRecord):
     def __init__(self):
         super().__init__()
         self.analysis = analysis.AnalysisStep()
+
+
+class AnnotationHistoryRecord(HistoryRecord):
+    """
+    History record for annotations of datasets.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.annotation = annotation.Annotation()
