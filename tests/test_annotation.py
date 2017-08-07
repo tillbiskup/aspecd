@@ -84,3 +84,22 @@ class TestComment(unittest.TestCase):
         commenttext = 'Lorem ipsum'
         self.comment.content['comment'] = commenttext
         self.assertEqual(self.comment.comment, commenttext)
+
+
+class TestArtefact(unittest.TestCase):
+    def setUp(self):
+        self.artefact = annotation.Artefact()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_content_has_key_comment(self):
+        self.assertTrue('comment' in self.artefact.content)
+
+
+class TestCharacteristic(unittest.TestCase):
+    def setUp(self):
+        self.characteristic = annotation.Characteristic()
+
+    def test_instantiate_class(self):
+        pass

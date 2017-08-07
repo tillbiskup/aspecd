@@ -39,6 +39,23 @@ class AnalysisStep:
         self.dataset = None
 
     def analyse(self, dataset=None):
+        """
+        Perform the actual analysis step on the given dataset.
+
+        If no dataset is provided at method call, but is set as property in the
+        AnalysisStep object, the process method of the dataset will be called
+        and thus the history written.
+
+        If no dataset is provided at method call nor as property in the object,
+        the method will raise a respective exception.
+
+        The Dataset object always call this method with the respective dataset
+        as argument. Therefore, in this case setting the dataset property
+        within the Analysis object is not necessary.
+
+        :param dataset:
+        :return:
+        """
         if not dataset:
             if self.dataset:
                 self.dataset.analyse(self)

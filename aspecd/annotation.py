@@ -50,13 +50,33 @@ class Annotation:
     """
 
     def __init__(self):
-        self.type = ''
+        # Type is used as easy identifier: lower-case version of class name
+        self.type = self.__class__.__name__.lower()
+        # Scope can be, e.g., dataset, slice, point, area, distance
         self.scope = ''
+        # Generic place for more information, therefore dictionary
         self.content = dict()
+        # Reference to dataset the annotation is for
         self.dataset = None
-        self._settype()
 
     def annotate(self, dataset=None):
+        """
+        Annotate a dataset with the given annotation.
+
+        If no dataset is provided at method call, but is set as property in the
+        Annotation object, the process method of the dataset will be called and
+        thus the history written.
+
+        If no dataset is provided at method call nor as property in the object,
+        the method will raise a respective exception.
+
+        The Dataset object always call this method with the respective dataset
+        as argument. Therefore, in this case setting the dataset property
+        within the Annotation object is not necessary.
+
+        :param dataset:
+        :return:
+        """
         if not self.content:
             raise NoContentError
         if not dataset:
@@ -64,9 +84,6 @@ class Annotation:
                 self.dataset.annotate(self)
             else:
                 raise MissingDatasetError
-
-    def _settype(self):
-        self.type = self.__class__.__name__.lower()
 
 
 class Comment(Annotation):
@@ -85,3 +102,14 @@ class Comment(Annotation):
     @comment.setter
     def comment(self, comment=''):
         self.content['comment'] = comment
+
+
+class Artefact(Annotation):
+
+    def __init__(self):
+        super().__init__()
+        self.content['comment'] = ''
+
+
+class Characteristic(Annotation):
+    pass
