@@ -33,6 +33,12 @@ class AxesValuesInconsistentWithDataError(Error):
 
 
 class Data:
+    """
+    Data contains both, the numeric data as well as the corresponding axes.
+
+    The data class ensures consistency in terms of dimensions between numerical
+    data and axes.
+    """
 
     def __init__(self, data=np.zeros(0), axes=None, calculated=False):
         self._data = data
