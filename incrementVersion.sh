@@ -19,12 +19,12 @@
 # containing the version string will be checked for manual changes
 # and if there are any, the script will exit immediately.
 #
-# Copyright (c) 2017, Till Biskup
-# 2017-04-16
+# Copyright (c) 2017-18, Till Biskup
+# 2018-08-30
 
 # Some configuration
 VERSIONFILE="VERSION"
-CHECKGIT=true# set to "true" to check for changes via git diff
+CHECKGIT=true # set to "true" to check for changes via git diff
 
 # Internal functions
 function join_by { local IFS="$1"; shift; echo "$*"; }
