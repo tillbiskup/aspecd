@@ -1,4 +1,4 @@
-"""Dataset."""
+"""Datasets."""
 
 from aspecd import data, history
 import copy
@@ -65,6 +65,13 @@ class ProcessingWithLeadingHistoryError(Error):
 
 
 class Dataset:
+    """Base class for all kinds of datasets.
+
+    The dataset is one of the core elements of the ASpecD framework, basically
+    containing both, (numeric) data and corresponding metadata, aka information
+    available about the data.
+    """
+
     def __init__(self):
         self.data = data.Data()
         self._origdata = data.Data()
@@ -74,15 +81,28 @@ class Dataset:
         self.analyses = []
         self.annotations = []
 
-    def process(self, processingstep):
+    def process(self, processing_step):
+        """Apply processing step to dataset.
+
+        Every processing step is an object of type processing.ProcessingStep
+        and is passed as argument to dataset.process.
+
+        Calling this function ensures that the history record is added to the
+        dataset as well as a few basic checks are performed such as for leading
+        history, meaning that the _historypointer is not set to the current tip
+        of the history of the dataset. In this case, an error is raised.
+
+        :param processing_step: processing.ProcessingStep()
+        :return: processing_step
+        """
         if self._has_leading_history():
             raise ProcessingWithLeadingHistoryError
         # Important: Need a copy, not the reference to the original object
-        processingstep = copy.deepcopy(processingstep)
-        historyrecord = self._create_processing_historyrecord(processingstep)
-        processingstep.process(self)
+        processing_step = copy.deepcopy(processing_step)
+        historyrecord = self._create_processing_historyrecord(processing_step)
+        processing_step.process(self)
         self._append_processing_historyrecord(historyrecord)
-        return processingstep
+        return processing_step
 
     def undo(self):
         if len(self.history) == 0:
@@ -145,6 +165,7 @@ class Dataset:
         self.analyses.append(historyrecord)
 
     def analyze(self, analysisstep):
+        """Same method as self.analyse, but for those preferring AE over BE."""
         self.analyse(analysisstep)
 
     @staticmethod
