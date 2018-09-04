@@ -19,3 +19,8 @@
 
 /*.egg-info
 /*.egg
+
+# Sphinx templates and build
+docs/_build
+docs/_static
+docs/_templates
