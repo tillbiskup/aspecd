@@ -29,6 +29,26 @@ class MissingDatasetError(Error):
 
 
 class ProcessingStep:
+    """Base class for processing steps.
+
+    Each class actually performing a processing step should inherit from this
+    class. Furthermore, all parameters, implicit and explicit, necessary to
+    perform the processing step, should eventually be stored in the property
+    "self.parameters" (currently a dictionary).
+
+    To perform the processing step, call the "process" method of the dataset
+    the processing should be applied to, and provide a reference to the
+    actual processing_step object to it.
+
+    Further things that need to be changed upon inheriting from this class
+    are the string stored in "self.description", being basically a one-liner,
+    and the flag "self.undoable" if necessary.
+
+    The actual implementation of the processing step is done in the private
+    method "self._perform_task()" that in turn gets called by "self.process()"
+    which is called by the "process()" method of the dataset object.
+    """
+
     def __init__(self):
         self.undoable = False
         # Name defaults always to the class name, don't change!
@@ -78,10 +98,28 @@ class ProcessingStep:
 
     @staticmethod
     def _applicable(dataset):
+        """Check whether processing step is applicable to the given dataset.
+
+        Returns "True" by default and needs to be implemented in classes
+        inheriting from ProcessingStep according to their needs.
+        """
         return True
 
     def _sanitise_parameters(self):
+        """Ensure parameters provided for processing step are correct.
+
+        Needs to be implemented in classes inheriting from ProcessingStep
+        according to their needs. Most probably, you want to check for
+        correct types of all parameters as well as values within sensible
+        borders.
+        """
         pass
 
     def _perform_task(self):
+        """Perform the actual processing step on the dataset.
+
+        The implementation of the actual processing goes in here in all
+        classes inheriting from ProcessingStep. This method is automatically
+        called by self.processing() after some background checks.
+        """
         pass

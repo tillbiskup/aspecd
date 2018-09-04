@@ -68,4 +68,5 @@ echo $newVersionString > $VERSIONFILE
 if [[ $CHECKGIT == true ]]
 then
     git add $VERSIONFILE
+    echo "Version in version file upped"
 fi
