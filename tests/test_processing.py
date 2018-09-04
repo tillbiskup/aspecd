@@ -51,3 +51,16 @@ class TestProcessingStep(unittest.TestCase):
     def test_process_without_processingstep_nor_dataset_raises(self):
         with self.assertRaises(processing.MissingDatasetError):
             self.processing.process()
+
+    def test_process_with_dataset_sets_dataset(self):
+        test_dataset = dataset.Dataset()
+        test_dataset.process(self.processing)
+        # Note: Dataset.process creates a deep copy of the processing object.
+        #       Test needs most probably to change in the future.
+        self.assertTrue(isinstance(test_dataset.history[-1].processing.dataset,
+                                   dataset.Dataset))
+
+    def test_process_with_dataset(self):
+        test_dataset = dataset.Dataset()
+        test_dataset.process(self.processing)
+        self.assertGreater(len(test_dataset.history), 0)

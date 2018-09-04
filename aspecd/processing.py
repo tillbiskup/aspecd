@@ -43,8 +43,7 @@ class ProcessingStep:
         self.dataset = None
 
     def process(self, dataset=None):
-        """
-        Perform the actual processing step on the given dataset.
+        """Perform the actual processing step on the given dataset.
 
         If no dataset is provided at method call, but is set as property in the
         ProcessingStep object, the process method of the dataset will be called
@@ -53,7 +52,7 @@ class ProcessingStep:
         If no dataset is provided at method call nor as property in the object,
         the method will raise a respective exception.
 
-        The Dataset object always call this method with the respective dataset
+        The Dataset object always calls this method with the respective dataset
         as argument. Therefore, in this case setting the dataset property
         within the Processing object is not necessary.
 
@@ -70,17 +69,19 @@ class ProcessingStep:
                 self.dataset.process(self)
             else:
                 raise MissingDatasetError
+        else:
+            self.dataset = dataset
         if not self._applicable(dataset):
             raise ProcessingNotApplicableToDatasetError
-        self._sanitise_parameters(dataset)
-        self._perform_task(dataset)
+        self._sanitise_parameters()
+        self._perform_task()
 
     @staticmethod
     def _applicable(dataset):
         return True
 
-    def _sanitise_parameters(self, dataset):
+    def _sanitise_parameters(self):
         pass
 
-    def _perform_task(self, dataset):
+    def _perform_task(self):
         pass
