@@ -77,6 +77,11 @@ class TestDatasetProcessing(unittest.TestCase):
         self.assertIsNot(self.processingStep,
                          self.dataset.history[-1].processing)
 
+    def test_dataset_process_returns_processing_object(self):
+        processing_object = processing.ProcessingStep()
+        processing_step = self.dataset.process(processing_object)
+        self.assertTrue(isinstance(processing_step, processing.ProcessingStep))
+
 
 class TestDatasetUndo(unittest.TestCase):
     def setUp(self):

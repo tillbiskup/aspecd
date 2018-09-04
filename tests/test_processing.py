@@ -54,13 +54,15 @@ class TestProcessingStep(unittest.TestCase):
 
     def test_process_with_dataset_sets_dataset(self):
         test_dataset = dataset.Dataset()
-        test_dataset.process(self.processing)
-        # Note: Dataset.process creates a deep copy of the processing object.
-        #       Test needs most probably to change in the future.
-        self.assertTrue(isinstance(test_dataset.history[-1].processing.dataset,
-                                   dataset.Dataset))
+        processing_step = test_dataset.process(self.processing)
+        self.assertTrue(isinstance(processing_step.dataset, dataset.Dataset))
 
     def test_process_with_dataset(self):
         test_dataset = dataset.Dataset()
         test_dataset.process(self.processing)
         self.assertGreater(len(test_dataset.history), 0)
+
+    def test_calling_process_returns_dataset(self):
+        test_dataset = self.processing.process(dataset.Dataset())
+        self.assertTrue(isinstance(test_dataset, dataset.Dataset))
+

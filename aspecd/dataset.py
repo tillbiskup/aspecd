@@ -82,6 +82,7 @@ class Dataset:
         historyrecord = self._create_processing_historyrecord(processingstep)
         processingstep.process(self)
         self._append_processing_historyrecord(historyrecord)
+        return processingstep
 
     def undo(self):
         if len(self.history) == 0:

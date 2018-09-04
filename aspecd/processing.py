@@ -82,7 +82,7 @@ class ProcessingStep:
         will be sanitised.
 
         :param dataset:
-        :return:
+        :return: dataset
         """
         if not dataset:
             if self.dataset:
@@ -95,6 +95,7 @@ class ProcessingStep:
             raise ProcessingNotApplicableToDatasetError
         self._sanitise_parameters()
         self._perform_task()
+        return self.dataset
 
     @staticmethod
     def _applicable(dataset):
