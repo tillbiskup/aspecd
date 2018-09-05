@@ -1,4 +1,13 @@
-"""Processing."""
+"""Data processing functionality.
+
+Key to reproducible science is automatic documentation of each processing
+step applied to the data of a dataset. Such a processing step each is
+self-contained, meaning it contains every necessary information to perform
+the processing task on a given dataset.
+
+Each real processing step should inherit from
+aspect.processing.ProcessingStep as documented there.
+"""
 
 
 class Error(Exception):
@@ -9,8 +18,10 @@ class Error(Exception):
 class ProcessingNotApplicableToDatasetError(Error):
     """Exception raised when processing step is not applicable to dataset
 
-    Attributes:
-        message -- explanation of the error
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
     """
 
     def __init__(self, message=''):
@@ -20,8 +31,10 @@ class ProcessingNotApplicableToDatasetError(Error):
 class MissingDatasetError(Error):
     """Exception raised when no dataset exists to act on
 
-    Attributes:
-        message -- explanation of the error
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
     """
 
     def __init__(self, message=''):
@@ -36,17 +49,24 @@ class ProcessingStep:
     perform the processing step, should eventually be stored in the property
     "self.parameters" (currently a dictionary).
 
-    To perform the processing step, call the "process" method of the dataset
+    To perform the processing step, call the ``process`` method of the dataset
     the processing should be applied to, and provide a reference to the
     actual processing_step object to it.
 
     Further things that need to be changed upon inheriting from this class
-    are the string stored in "self.description", being basically a one-liner,
-    and the flag "self.undoable" if necessary.
+    are the string stored in ``description``, being basically a one-liner,
+    and the flag ``undoable`` if necessary.
 
     The actual implementation of the processing step is done in the private
-    method "self._perform_task()" that in turn gets called by "self.process()"
-    which is called by the "process()" method of the dataset object.
+    method ``perform_task`` that in turn gets called by ``process``
+    which is called by the ``process`` method of the dataset object.
+
+    Raises
+    ------
+    ProcessingNotApplicableToDatasetError
+        Raised when processing step is not applicable to dataset
+    MissingDatasetError
+        Raised when no dataset exists to act on
     """
 
     def __init__(self):
@@ -77,12 +97,26 @@ class ProcessingStep:
         within the Processing object is not necessary.
 
         The actual processing step should be coded within the private method
-        "_perform_task". Besides that, the applicability of the processing step
-        to the given dataset will be checked automatically and the parameters
-        will be sanitised.
+        ``_perform_task``. Besides that, the applicability of the processing
+        step to the given dataset will be checked automatically and the
+        parameters will be sanitised.
 
-        :param dataset:
-        :return: dataset
+        Parameters
+        ----------
+        dataset : `aspecd.dataset.Dataset`
+            dataset to apply processing step to
+
+        Returns
+        -------
+        dataset : `aspecd.dataset.Dataset`
+            dataset the processing step has been applied to
+
+        Raises
+        ------
+        ProcessingNotApplicableToDatasetError
+            Raised when processing step is not applicable to dataset
+        MissingDatasetError
+            Raised when no dataset exists to act on
         """
         if not dataset:
             if self.dataset:
@@ -101,8 +135,13 @@ class ProcessingStep:
     def _applicable(dataset):
         """Check whether processing step is applicable to the given dataset.
 
-        Returns "True" by default and needs to be implemented in classes
+        Returns `True` by default and needs to be implemented in classes
         inheriting from ProcessingStep according to their needs.
+
+        Returns
+        -------
+        applicable : `bool`
+            `True` if successful, `False` otherwise.
         """
         return True
 

@@ -12,8 +12,10 @@ class Error(Exception):
 class AxisValuesDimensionError(Error):
     """Exception raised for wrong dimension of values
 
-    Attributes:
-        message -- explanation of the error
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
     """
 
     def __init__(self, message=''):
@@ -23,8 +25,10 @@ class AxisValuesDimensionError(Error):
 class AxisValuesTypeError(Error):
     """Exception raised for wrong type of values
 
-    Attributes:
-        message -- explanation of the error
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
     """
 
     def __init__(self, message=''):

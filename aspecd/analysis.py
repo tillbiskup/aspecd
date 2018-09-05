@@ -12,8 +12,10 @@ class Error(Exception):
 class MissingDatasetError(Error):
     """Exception raised when no dataset exists to act on
 
-    Attributes:
-        message -- explanation of the error
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
     """
 
     def __init__(self, message=''):

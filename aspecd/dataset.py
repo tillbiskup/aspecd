@@ -12,8 +12,10 @@ class Error(Exception):
 class UndoWithEmptyHistoryError(Error):
     """Exception raised trying to undo with empty history
 
-    Attributes:
-        message -- explanation of the error
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
     """
 
     def __init__(self, message=''):
@@ -23,8 +25,10 @@ class UndoWithEmptyHistoryError(Error):
 class UndoAtBeginningOfHistoryError(Error):
     """Exception raised trying to undo with history pointer at zero
 
-    Attributes:
-        message -- explanation of the error
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
     """
 
     def __init__(self, message=''):
@@ -34,8 +38,10 @@ class UndoAtBeginningOfHistoryError(Error):
 class UndoStepUndoableError(Error):
     """Exception raised trying to undo an undoable step of history
 
-    Attributes:
-        message -- explanation of the error
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
     """
 
     def __init__(self, message=''):
@@ -45,8 +51,10 @@ class UndoStepUndoableError(Error):
 class RedoAlreadyAtLatestChangeError(Error):
     """Exception raised trying to redo with empty history
 
-    Attributes:
-        message -- explanation of the error
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
     """
 
     def __init__(self, message=''):
@@ -56,8 +64,10 @@ class RedoAlreadyAtLatestChangeError(Error):
 class ProcessingWithLeadingHistoryError(Error):
     """Exception raised trying to process with leading history
 
-    Attributes:
-        message -- explanation of the error
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
     """
 
     def __init__(self, message=''):
@@ -109,12 +119,12 @@ class Dataset:
 
         Parameters
         ----------
-        processing_step : `processing.ProcessingStep`
+        processing_step : `aspecd.processing.ProcessingStep`
             processing step to apply to the dataset
 
         Returns
         -------
-        processing_step : `processing.ProcessingStep`
+        processing_step : `aspecd.processing.ProcessingStep`
             processing step applied to the dataset
 
         Raises
@@ -207,7 +217,7 @@ class Dataset:
 
         Parameters
         ----------
-        analysisstep : `analysis.AnalysisStep`
+        analysisstep : `aspecd.analysis.AnalysisStep`
             analysis step to apply to the dataset
         """
         # Important: Need a copy, not the reference to the original object
@@ -240,7 +250,7 @@ class Dataset:
 
         Parameters
         ----------
-        annotation : `annotation.Annotation`
+        annotation : `aspecd.annotation.Annotation`
             annotation to add to the dataset
         """
         # Important: Need a copy, not the reference to the original object

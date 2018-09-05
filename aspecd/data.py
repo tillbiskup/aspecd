@@ -13,8 +13,10 @@ class Error(Exception):
 class AxesCountError(Error):
     """Exception raised for wrong number of axes
 
-    Attributes:
-        message -- explanation of the error
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
     """
 
     def __init__(self, message=''):
@@ -24,8 +26,10 @@ class AxesCountError(Error):
 class AxesValuesInconsistentWithDataError(Error):
     """Exception raised for axes values inconsistent with data
 
-    Attributes:
-        message -- explanation of the error
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
     """
 
     def __init__(self, message=''):

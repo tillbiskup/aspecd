@@ -21,8 +21,10 @@ class Error(Exception):
 class InfofileTypeError(Error):
     """Exception raised for wrong file format.
 
-    Attributes:
-        message -- explanation of the error
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
     """
 
     def __init__(self, message=''):
@@ -33,7 +35,9 @@ class InfofileEmptyError(Error):
     """Exception raised for empty file.
 
     Attributes:
-        message -- explanation of the error
+    ----------
+    message : `str`
+        explanation of the error
     """
 
     def __init__(self, message=''):
