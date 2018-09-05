@@ -208,6 +208,8 @@ class Dataset:
             historyentry.replay(self)
 
     def strip_history(self):
+        """Remove leading history, if any.
+        """
         if not self._has_leading_history():
             return
         del self.history[self._historypointer + 1:]
