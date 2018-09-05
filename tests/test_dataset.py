@@ -72,6 +72,11 @@ class TestDatasetProcessing(unittest.TestCase):
         self.assertIsNot(self.dataset.history[-1].processing,
                          self.dataset.history[-2].processing)
 
+    def test_processhistoryrecord_process_is_processsteprecord(self):
+        self.dataset.process(self.processingStep)
+        # self.assertTrue(isinstance(self.dataset.history[-1],
+        #                            processing.ProcessingStepRecord))
+
     def test_process_copies_processingstep_object(self):
         self.dataset.process(self.processingStep)
         self.assertIsNot(self.processingStep,

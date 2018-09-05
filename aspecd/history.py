@@ -28,9 +28,9 @@ class ProcessingHistoryRecord(HistoryRecord):
     History record for processing steps on datasets.
     """
 
-    def __init__(self):
+    def __init__(self, processing_step=None):
         super().__init__()
-        self.processing = processing.ProcessingStepRecord()
+        self.processing = processing.ProcessingStepRecord(processing_step)
 
     @property
     def undoable(self):

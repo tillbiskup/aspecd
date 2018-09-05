@@ -187,9 +187,9 @@ class Dataset:
             return False
 
     @staticmethod
-    def _create_processing_historyrecord(processingstep):
-        historyrecord = history.ProcessingHistoryRecord()
-        historyrecord.processing = processingstep
+    def _create_processing_historyrecord(processing_step):
+        historyrecord = history.ProcessingHistoryRecord(processing_step)
+        historyrecord.processing = processing_step
         return historyrecord
 
     def _append_processing_historyrecord(self, historyrecord):

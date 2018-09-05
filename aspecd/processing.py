@@ -71,8 +71,9 @@ class ProcessingStep:
 
     def __init__(self):
         self.undoable = False
-        # Name defaults always to the class name, don't change!
-        self.name = self.__class__.__name__
+        # Name defaults always to the full class name, don't change!
+        self.name = ''.join([self.__class__.__module__, '.',
+                             self.__class__.__name__])
         # All parameters, implicit and explicit
         self.parameters = dict()
         # Short description, to be set in class definition
@@ -167,11 +168,16 @@ class ProcessingStep:
 
 class ProcessingStepRecord:
 
-    def __init__(self):
+    def __init__(self, processing_step=None):
         self.undoable = False
         self.description = ''
         self.parameters = dict()
         self.class_name = ''
+        if processing_step:
+            self._copy_fields_from_processing_step(processing_step)
+
+    def _copy_fields_from_processing_step(self, processing_step):
+        self.description = processing_step.description
 
     def create_processing_step(self):
         # TODO: Need to construct object from string of class.

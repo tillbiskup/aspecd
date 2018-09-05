@@ -35,14 +35,18 @@ class TestHistoryRecord(unittest.TestCase):
 class TestProcessingHistoryRecord(unittest.TestCase):
     def setUp(self):
         self.historyrecord = history.ProcessingHistoryRecord()
+        self.processing_step = processing.ProcessingStep()
 
     def test_instantiate_class(self):
         pass
 
+    def test_instantiate_class_with_processing_step(self):
+        history.ProcessingHistoryRecord(self.processing_step)
+
     def test_has_processing_property(self):
         self.assertTrue(hasattr(self.historyrecord, 'processing'))
 
-    def test_processing_is_processingstep(self):
+    def test_processing_is_processingsteprecord(self):
         self.assertTrue(isinstance(self.historyrecord.processing,
                                    processing.ProcessingStepRecord))
 

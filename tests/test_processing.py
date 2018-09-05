@@ -18,8 +18,10 @@ class TestProcessingStep(unittest.TestCase):
     def test_has_name_property(self):
         self.assertTrue(hasattr(self.processing, 'name'))
 
-    def test_name_property_equals_class_name(self):
-        self.assertEqual(self.processing.name, 'ProcessingStep')
+    def test_name_property_equals_full_class_name(self):
+        full_class_name = ''.join([self.processing.__class__.__module__, '.',
+                                   self.processing.__class__.__name__])
+        self.assertEqual(self.processing.name, full_class_name)
 
     def test_has_parameters_property(self):
         self.assertTrue(hasattr(self.processing, 'parameters'))
@@ -70,9 +72,19 @@ class TestProcessingStep(unittest.TestCase):
 class TestProcessingStepRecord(unittest.TestCase):
     def setUp(self):
         self.processing_record = processing.ProcessingStepRecord()
+        self.processing_step = processing.ProcessingStep()
 
     def test_instantiate_class(self):
         pass
+
+    def test_instantiate_class_with_processing_step(self):
+        processing.ProcessingStepRecord(self.processing_step)
+
+    def test_instantiate_description_from_processing_step(self):
+        self.processing_step.description = 'Test'
+        processing_record = \
+            processing.ProcessingStepRecord(self.processing_step)
+        self.assertEqual(processing_record.description, 'Test')
 
     def test_has_create_processing_step_method(self):
         self.assertTrue(hasattr(self.processing_record,
