@@ -30,14 +30,15 @@ class ProcessingHistoryRecord(HistoryRecord):
 
     def __init__(self):
         super().__init__()
-        self.processing = processing.ProcessingStep()
+        self.processing = processing.ProcessingStepRecord()
 
     @property
     def undoable(self):
         return self.processing.undoable
 
     def replay(self, dataset):
-        self.processing.process(dataset=dataset)
+        processing_step = self.processing.create_processing_step()
+        processing_step.process(dataset=dataset)
 
 
 class AnalysisHistoryRecord(HistoryRecord):

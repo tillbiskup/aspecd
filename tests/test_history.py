@@ -2,7 +2,7 @@
 
 import unittest
 
-from aspecd import history, processing, analysis, system
+from aspecd import history, processing, analysis, system, dataset
 from datetime import datetime, timedelta
 
 
@@ -44,7 +44,7 @@ class TestProcessingHistoryRecord(unittest.TestCase):
 
     def test_processing_is_processingstep(self):
         self.assertTrue(isinstance(self.historyrecord.processing,
-                                   processing.ProcessingStep))
+                                   processing.ProcessingStepRecord))
 
     def test_has_date_property(self):
         self.assertTrue(hasattr(self.historyrecord, 'date'))
@@ -61,6 +61,9 @@ class TestProcessingHistoryRecord(unittest.TestCase):
     def test_has_replay_method(self):
         self.assertTrue(hasattr(self.historyrecord, 'replay'))
         self.assertTrue(callable(self.historyrecord.replay))
+
+    def test_replay(self):
+        self.historyrecord.replay(dataset.Dataset())
 
 
 class TestAnalysisHistoryRecord(unittest.TestCase):

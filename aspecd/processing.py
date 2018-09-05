@@ -163,3 +163,23 @@ class ProcessingStep:
         called by self.processing() after some background checks.
         """
         pass
+
+
+class ProcessingStepRecord:
+
+    def __init__(self):
+        self.undoable = False
+        self.description = ''
+        self.parameters = dict()
+        self.class_name = ''
+
+    def create_processing_step(self):
+        # TODO: Need to construct object from string of class.
+        #       See https://gist.github.com/tsileo/4354068 for an example.
+        # https://docs.python.org/3.6/library/importlib.html#importlib.import_module
+        # processing_step = getattr('test_processing', self.class_name)
+        processing_step = ProcessingStep()
+        processing_step.undoable = self.undoable
+        processing_step.parameters = self.parameters
+        processing_step.description = self.description
+        return processing_step

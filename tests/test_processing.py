@@ -66,3 +66,44 @@ class TestProcessingStep(unittest.TestCase):
         test_dataset = self.processing.process(dataset.Dataset())
         self.assertTrue(isinstance(test_dataset, dataset.Dataset))
 
+
+class TestProcessingStepRecord(unittest.TestCase):
+    def setUp(self):
+        self.processing_record = processing.ProcessingStepRecord()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_create_processing_step_method(self):
+        self.assertTrue(hasattr(self.processing_record,
+                                'create_processing_step'))
+        self.assertTrue(
+            callable(self.processing_record.create_processing_step))
+
+    def test_create_processing_step_returns_processing_object(self):
+        test_object = self.processing_record.create_processing_step()
+        self.assertTrue(isinstance(test_object, processing.ProcessingStep))
+
+    def test_processing_object_has_correct_undoable_value(self):
+        self.processing_record.undoable = True
+        test_object = self.processing_record.create_processing_step()
+        self.assertTrue(test_object.undoable, self.processing_record.undoable)
+
+    def test_has_parameters_property(self):
+        self.assertTrue(hasattr(self.processing_record, 'parameters'))
+
+    def test_processing_object_has_correct_parameters_value(self):
+        self.processing_record.parameters['test'] = True
+        test_object = self.processing_record.create_processing_step()
+        self.assertEqual(test_object.parameters['test'], True)
+
+    def test_has_description_property(self):
+        self.assertTrue(hasattr(self.processing_record, 'description'))
+
+    def test_processing_object_has_correct_description_value(self):
+        self.processing_record.description = 'Test'
+        test_object = self.processing_record.create_processing_step()
+        self.assertEqual(test_object.description, 'Test')
+
+    def test_has_class_name_property(self):
+        self.assertTrue(hasattr(self.processing_record, 'class_name'))
