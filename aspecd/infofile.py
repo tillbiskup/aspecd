@@ -34,7 +34,7 @@ class InfofileTypeError(Error):
 class InfofileEmptyError(Error):
     """Exception raised for empty file.
 
-    Attributes:
+    Attributes
     ----------
     message : `str`
         explanation of the error
