@@ -10,6 +10,8 @@ Welcome to ASpecD's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   api/modules
+
 
 Indices and tables
 ==================
@@ -17,5 +19,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
-* :doc:`api/modules`

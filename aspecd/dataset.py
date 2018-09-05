@@ -70,6 +70,19 @@ class Dataset:
     The dataset is one of the core elements of the ASpecD framework, basically
     containing both, (numeric) data and corresponding metadata, aka information
     available about the data.
+
+    Raises
+    ------
+    UndoWithEmptyHistoryError
+        Raised when trying to undo with empty history
+    UndoAtBeginningOfHistoryError
+        Raised when trying to undo with history pointer at zero
+    UndoStepUndoableError
+        Raised when trying to undo an undoable step of history
+    RedoAlreadyAtLatestChangeError
+        Raised  when trying to redo with empty history
+    ProcessingWithLeadingHistoryError
+        Raised  when trying to process with leading history
     """
 
     def __init__(self):
@@ -87,13 +100,27 @@ class Dataset:
         Every processing step is an object of type processing.ProcessingStep
         and is passed as argument to dataset.process.
 
+        .. todo:: This should probably be changed.
+
         Calling this function ensures that the history record is added to the
         dataset as well as a few basic checks are performed such as for leading
         history, meaning that the _historypointer is not set to the current tip
         of the history of the dataset. In this case, an error is raised.
 
-        :param processing_step: processing.ProcessingStep()
-        :return: processing_step
+        Parameters
+        ----------
+        processing_step : `processing.ProcessingStep`
+            processing step to apply to the dataset
+
+        Returns
+        -------
+        processing_step : `processing.ProcessingStep`
+            processing step applied to the dataset
+
+        Raises
+        ------
+        ProcessingWithLeadingHistoryError
+            Raised  when trying to process with leading history
         """
         if self._has_leading_history():
             raise ProcessingWithLeadingHistoryError
@@ -105,6 +132,21 @@ class Dataset:
         return processing_step
 
     def undo(self):
+        """Revert last processing step.
+
+        Actually, the history pointer is decremented and starting from the
+        ``origdata``, all processing steps are reapplied to the data up to
+        this point in history.
+
+        Raises
+        ------
+        UndoWithEmptyHistoryError
+            Raised when trying to undo with empty history
+        UndoAtBeginningOfHistoryError
+            Raised when trying to undo with history pointer at zero
+        UndoStepUndoableError
+            Raised when trying to undo an undoable step of history
+        """
         if len(self.history) == 0:
             raise UndoWithEmptyHistoryError
         if self._historypointer == -1:
@@ -115,6 +157,13 @@ class Dataset:
         self._replay_history()
 
     def redo(self):
+        """Reapply previously undone processing step.
+
+        Raises
+        ------
+        RedoAlreadyAtLatestChangeError
+            Raised  when trying to redo with empty history
+        """
         if self._historypointer == len(self.history) - 1:
             raise RedoAlreadyAtLatestChangeError
         processingstep = self.history[self._historypointer + 1].processing
@@ -154,6 +203,13 @@ class Dataset:
         del self.history[self._historypointer + 1:]
 
     def analyse(self, analysisstep):
+        """Apply analysis to dataset.
+
+        Parameters
+        ----------
+        analysisstep : `analysis.AnalysisStep`
+            analysis step to apply to the dataset
+        """
         # Important: Need a copy, not the reference to the original object
         analysisstep = copy.deepcopy(analysisstep)
         # TODO: Add all processing steps in history of dataset to AnalysisStep.
@@ -165,7 +221,8 @@ class Dataset:
         self.analyses.append(historyrecord)
 
     def analyze(self, analysisstep):
-        """Same method as self.analyse, but for those preferring AE over BE."""
+        """Same method as ``self.analyse``, but for those preferring AE over BE.
+        """
         self.analyse(analysisstep)
 
     @staticmethod
@@ -175,9 +232,17 @@ class Dataset:
         return historyrecord
 
     def delete_analysis(self, index):
+        """Remove analysis step record from dataset."""
         del self.analyses[index]
 
     def annotate(self, annotation):
+        """Add annotation to dataset.
+
+        Parameters
+        ----------
+        annotation : `annotation.Annotation`
+            annotation to add to the dataset
+        """
         # Important: Need a copy, not the reference to the original object
         annotation = copy.deepcopy(annotation)
         historyrecord = self._create_annotation_historyrecord(annotation)
