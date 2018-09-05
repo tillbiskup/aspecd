@@ -9,6 +9,8 @@ Each real processing step should inherit from
 aspect.processing.ProcessingStep as documented there.
 """
 
+from aspecd import utils
+
 
 class Error(Exception):
     """Base class for exceptions in this module."""
@@ -72,8 +74,7 @@ class ProcessingStep:
     def __init__(self):
         self.undoable = False
         # Name defaults always to the full class name, don't change!
-        self.name = ''.join([self.__class__.__module__, '.',
-                             self.__class__.__name__])
+        self.name = utils.full_class_name(self)
         # All parameters, implicit and explicit
         self.parameters = dict()
         # Short description, to be set in class definition
@@ -104,12 +105,12 @@ class ProcessingStep:
 
         Parameters
         ----------
-        dataset : `aspecd.dataset.Dataset`
+        dataset : :class:`aspecd.dataset.Dataset`
             dataset to apply processing step to
 
         Returns
         -------
-        dataset : `aspecd.dataset.Dataset`
+        dataset : :class:`aspecd.dataset.Dataset`
             dataset the processing step has been applied to
 
         Raises
@@ -167,24 +168,55 @@ class ProcessingStep:
 
 
 class ProcessingStepRecord:
+    """Base class for processing step records stored in the dataset history.
+
+    The history of a :class:`aspecd.dataset.Dataset` should *not* contain
+    references to :class:`aspecd.processing.ProcessingStep` objects, but rather
+    records that contain all necessary information to create the respective
+    objects inherited from :class:`aspecd.processing.ProcessingStep`. One
+    reason for this is simply that we want to import datasets containing
+    processing steps in their history for which no corresponding processing
+    class exists in the current installation of the application.
+
+    .. note::
+        Each history entry in a dataset stores the processing as a
+        :class:`aspecd.processing.ProcessingStepRecord`, even in applications
+        inheriting from the ASpecD framework. Hence, subclassing of this class
+        should normally not be necessary.
+
+    Parameters
+    ----------
+    processing_step : :class:`aspecd.processing.ProcessingStep`
+        Processing step the record should be created for.
+
+    """
 
     def __init__(self, processing_step=None):
         self.undoable = False
         self.description = ''
         self.parameters = dict()
-        self.class_name = ''
+        # Defaults to ProcessingStep from aspecd.processing
+        self.class_name = 'aspecd.processing.ProcessingStep'
         if processing_step:
+            self.class_name = processing_step.name
             self._copy_fields_from_processing_step(processing_step)
 
     def _copy_fields_from_processing_step(self, processing_step):
         self.description = processing_step.description
+        self.parameters = processing_step.parameters
+        self.undoable = processing_step.undoable
 
     def create_processing_step(self):
-        # TODO: Need to construct object from string of class.
-        #       See https://gist.github.com/tsileo/4354068 for an example.
-        # https://docs.python.org/3.6/library/importlib.html#importlib.import_module
-        # processing_step = getattr('test_processing', self.class_name)
-        processing_step = ProcessingStep()
+        """Return a processing step object.
+
+        Returns
+        -------
+        processing_step : :class:`aspecd.processing.ProcessingStep`
+            actual processing step object that can be used for processing,
+            e.g., in context of undo/redo
+
+        """
+        processing_step = utils.object_from_class_name(self.class_name)
         processing_step.undoable = self.undoable
         processing_step.parameters = self.parameters
         processing_step.description = self.description

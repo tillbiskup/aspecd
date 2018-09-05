@@ -119,3 +119,16 @@ class TestProcessingStepRecord(unittest.TestCase):
 
     def test_has_class_name_property(self):
         self.assertTrue(hasattr(self.processing_record, 'class_name'))
+
+    def test_processing_object_gets_correct_parameters_value(self):
+        test_dictionary = dict(bla='blub', foo='bar')
+        self.processing_step.parameters = test_dictionary
+        self.processing_record = \
+            processing.ProcessingStepRecord(self.processing_step)
+        test_object = self.processing_record.create_processing_step()
+        self.assertEqual(test_object.parameters, test_dictionary)
+
+    def test_processing_object_gets_correct_undoable_value(self):
+        self.processing_record.undoable = True
+        test_object = self.processing_record.create_processing_step()
+        self.assertEqual(test_object.undoable, True)

@@ -176,8 +176,10 @@ class Dataset:
         """
         if self._historypointer == len(self.history) - 1:
             raise RedoAlreadyAtLatestChangeError
-        processingstep = self.history[self._historypointer + 1].processing
-        processingstep.process(self)
+        processing_step_record = \
+            self.history[self._historypointer + 1].processing
+        processing_step = processing_step_record.create_processing_step()
+        processing_step.process(self)
         self._increment_historypointer()
 
     def _has_leading_history(self):
@@ -189,7 +191,7 @@ class Dataset:
     @staticmethod
     def _create_processing_historyrecord(processing_step):
         historyrecord = history.ProcessingHistoryRecord(processing_step)
-        historyrecord.processing = processing_step
+        #historyrecord.processing = processing_step
         return historyrecord
 
     def _append_processing_historyrecord(self, historyrecord):
