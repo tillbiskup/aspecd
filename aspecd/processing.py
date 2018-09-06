@@ -141,7 +141,7 @@ class ProcessingStep:
                 raise MissingDatasetError
         else:
             self.dataset = dataset
-        if not self.applicable(dataset):
+        if not self.applicable(self.dataset):
             raise ProcessingNotApplicableToDatasetError
         self._sanitise_parameters()
         self._perform_task()

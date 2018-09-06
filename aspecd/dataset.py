@@ -284,6 +284,9 @@ class Dataset:
         history_record.annotation = annotation
         return history_record
 
+    def plot(self, plotter=None):
+        return plotter
+
     def load(self):
         pass
 

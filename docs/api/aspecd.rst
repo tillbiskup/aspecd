@@ -68,6 +68,14 @@ aspecd.internal module
     :undoc-members:
     :show-inheritance:
 
+aspecd.plotting module
+----------------------
+
+.. automodule:: aspecd.plotting
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 aspecd.processing module
 ------------------------
 
@@ -80,6 +88,14 @@ aspecd.system module
 --------------------
 
 .. automodule:: aspecd.system
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+aspecd.utils module
+-------------------
+
+.. automodule:: aspecd.utils
     :members:
     :undoc-members:
     :show-inheritance:

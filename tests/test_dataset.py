@@ -2,7 +2,7 @@
 
 import unittest
 
-from aspecd import dataset, data, history, processing, analysis
+from aspecd import dataset, data, history, processing, analysis, plotting
 
 
 class TestDataset(unittest.TestCase):
@@ -241,3 +241,18 @@ class TestDatasetAnalysis(unittest.TestCase):
         analysisstep = self.dataset.analyses[-1]
         self.dataset.delete_analysis(0)
         self.assertIs(analysisstep, self.dataset.analyses[-1])
+
+
+class TestDatasetPlotting(unittest.TestCase):
+    def setUp(self):
+        self.dataset = dataset.Dataset()
+        self.plotter = plotting.Plotter()
+
+    def test_has_plot_method(self):
+        self.assertTrue(hasattr(self.dataset, 'plot'))
+        self.assertTrue(callable(self.dataset.plot))
+
+    def test_dataset_plot_returns_plotter_object(self):
+        plotter_object = plotting.Plotter()
+        plot = self.dataset.plot(plotter_object)
+        self.assertTrue(isinstance(plot, plotting.Plotter))
