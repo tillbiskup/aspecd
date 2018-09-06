@@ -127,14 +127,14 @@ class ProcessingStep:
                 raise MissingDatasetError
         else:
             self.dataset = dataset
-        if not self._applicable(dataset):
+        if not self.applicable(dataset):
             raise ProcessingNotApplicableToDatasetError
         self._sanitise_parameters()
         self._perform_task()
         return self.dataset
 
     @staticmethod
-    def _applicable(dataset):
+    def applicable(dataset):
         """Check whether processing step is applicable to the given dataset.
 
         Returns `True` by default and needs to be implemented in classes
@@ -195,6 +195,7 @@ class ProcessingStepRecord:
         self.undoable = False
         self.description = ''
         self.parameters = dict()
+        self.comment = ''
         # Defaults to ProcessingStep from aspecd.processing
         self.class_name = 'aspecd.processing.ProcessingStep'
         if processing_step:
@@ -205,6 +206,7 @@ class ProcessingStepRecord:
         self.description = processing_step.description
         self.parameters = processing_step.parameters
         self.undoable = processing_step.undoable
+        self.comment = processing_step.comment
 
     def create_processing_step(self):
         """Return a processing step object.
@@ -220,4 +222,5 @@ class ProcessingStepRecord:
         processing_step.undoable = self.undoable
         processing_step.parameters = self.parameters
         processing_step.description = self.description
+        processing_step.comment = self.comment
         return processing_step
