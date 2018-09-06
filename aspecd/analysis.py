@@ -3,6 +3,8 @@
 
 import copy
 
+from aspecd import utils
+
 
 class Error(Exception):
     """Base class for exceptions in this module."""
@@ -25,8 +27,8 @@ class MissingDatasetError(Error):
 class AnalysisStep:
 
     def __init__(self):
-        # Name defaults always to the class name, don't change!
-        self.name = self.__class__.__name__
+        # Name defaults always to the full class name, don't change!
+        self.name = utils.full_class_name(self)
         # All parameters, implicit and explicit
         self.parameters = dict()
         # Results of the analysis step
@@ -34,15 +36,14 @@ class AnalysisStep:
         # List of necessary preprocessing steps to perform analysis
         self.preprocessing = []
         # Short description, to be set in class definition
-        self.description = 'Abstract processing step'
+        self.description = 'Abstract analysis step'
         # User-supplied comment describing intent, purpose, reason, ...
         self.comment = ''
         # Reference to the dataset the analysis step should be performed on
         self.dataset = None
 
     def analyse(self, dataset=None):
-        """
-        Perform the actual analysis step on the given dataset.
+        """Perform the actual analysis step on the given dataset.
 
         If no dataset is provided at method call, but is set as property in the
         AnalysisStep object, the process method of the dataset will be called
@@ -55,8 +56,10 @@ class AnalysisStep:
         as argument. Therefore, in this case setting the dataset property
         within the Analysis object is not necessary.
 
-        :param dataset:
-        :return:
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset to perform analysis for
         """
         if not dataset:
             if self.dataset:

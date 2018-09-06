@@ -16,7 +16,8 @@ class TestAnalysis(unittest.TestCase):
         self.assertTrue(hasattr(self.analysisstep, 'name'))
 
     def test_name_property_equals_class_name(self):
-        self.assertEqual(self.analysisstep.name, 'AnalysisStep')
+        class_name = 'aspecd.analysis.AnalysisStep'
+        self.assertEqual(self.analysisstep.name, class_name)
 
     def test_has_parameters_property(self):
         self.assertTrue(hasattr(self.analysisstep, 'parameters'))

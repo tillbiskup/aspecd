@@ -2,7 +2,7 @@
 
 import unittest
 
-from aspecd import processing, dataset
+from aspecd import processing, dataset, utils
 
 
 class TestProcessingStep(unittest.TestCase):
@@ -19,8 +19,7 @@ class TestProcessingStep(unittest.TestCase):
         self.assertTrue(hasattr(self.processing, 'name'))
 
     def test_name_property_equals_full_class_name(self):
-        full_class_name = ''.join([self.processing.__class__.__module__, '.',
-                                   self.processing.__class__.__name__])
+        full_class_name = utils.full_class_name(self.processing)
         self.assertEqual(self.processing.name, full_class_name)
 
     def test_has_parameters_property(self):
