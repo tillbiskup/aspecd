@@ -62,9 +62,9 @@ class TestDatasetProcessing(unittest.TestCase):
                                    history.ProcessingHistoryRecord))
 
     def test_process_increments_history_pointer(self):
-        historypointer = self.dataset._historypointer
+        historypointer = self.dataset._history_pointer
         self.dataset.process(self.processingStep)
-        self.assertTrue(self.dataset._historypointer == historypointer + 1)
+        self.assertTrue(self.dataset._history_pointer == historypointer + 1)
 
     def test_process_writes_different_historyrecords(self):
         self.dataset.process(self.processingStep)
@@ -104,9 +104,9 @@ class TestDatasetUndo(unittest.TestCase):
 
     def test_undo_decrements_historypointer(self):
         self.dataset.process(self.processingStep)
-        historypointer = self.dataset._historypointer
+        historypointer = self.dataset._history_pointer
         self.dataset.undo()
-        self.assertEqual(self.dataset._historypointer, historypointer - 1)
+        self.assertEqual(self.dataset._history_pointer, historypointer - 1)
 
     def test_undo_with_historypointer_zero_raises(self):
         self.dataset.process(self.processingStep)
@@ -154,9 +154,9 @@ class TestDatasetRedo(unittest.TestCase):
     def test_redo_increments_historypointer(self):
         self.dataset.process(self.processingStep)
         self.dataset.undo()
-        historypointer = self.dataset._historypointer
+        historypointer = self.dataset._history_pointer
         self.dataset.redo()
-        self.assertEqual(self.dataset._historypointer, historypointer + 1)
+        self.assertEqual(self.dataset._history_pointer, historypointer + 1)
 
 
 class TestDatasetIO(unittest.TestCase):

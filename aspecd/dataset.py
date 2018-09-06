@@ -100,7 +100,7 @@ class Dataset:
         self._origdata = data.Data()
         self.metadata = dict()
         self.history = []
-        self._historypointer = -1
+        self._history_pointer = -1
         self.analyses = []
         self.annotations = []
 
@@ -109,8 +109,6 @@ class Dataset:
 
         Every processing step is an object of type processing.ProcessingStep
         and is passed as argument to dataset.process.
-
-        .. todo:: This should probably be changed.
 
         Calling this function ensures that the history record is added to the
         dataset as well as a few basic checks are performed such as for leading
@@ -136,9 +134,10 @@ class Dataset:
             raise ProcessingWithLeadingHistoryError
         # Important: Need a copy, not the reference to the original object
         processing_step = copy.deepcopy(processing_step)
-        historyrecord = self._create_processing_historyrecord(processing_step)
+        history_record = \
+            self._create_processing_history_record(processing_step)
         processing_step.process(self)
-        self._append_processing_historyrecord(historyrecord)
+        self._append_processing_history_record(history_record)
         return processing_step
 
     def undo(self):
@@ -159,11 +158,11 @@ class Dataset:
         """
         if len(self.history) == 0:
             raise UndoWithEmptyHistoryError
-        if self._historypointer == -1:
+        if self._history_pointer == -1:
             raise UndoAtBeginningOfHistoryError
-        if self.history[self._historypointer].undoable:
+        if self.history[self._history_pointer].undoable:
             raise UndoStepUndoableError
-        self._decrement_historypointer()
+        self._decrement_history_pointer()
         self._replay_history()
 
     def redo(self):
@@ -174,76 +173,81 @@ class Dataset:
         RedoAlreadyAtLatestChangeError
             Raised  when trying to redo with empty history
         """
-        if self._historypointer == len(self.history) - 1:
+        if self._history_pointer == len(self.history) - 1:
             raise RedoAlreadyAtLatestChangeError
         processing_step_record = \
-            self.history[self._historypointer + 1].processing
+            self.history[self._history_pointer + 1].processing
         processing_step = processing_step_record.create_processing_step()
         processing_step.process(self)
-        self._increment_historypointer()
+        self._increment_history_pointer()
 
     def _has_leading_history(self):
-        if len(self.history) - 1 > self._historypointer:
+        if len(self.history) - 1 > self._history_pointer:
             return True
         else:
             return False
 
     @staticmethod
-    def _create_processing_historyrecord(processing_step):
+    def _create_processing_history_record(processing_step):
         historyrecord = history.ProcessingHistoryRecord(processing_step)
-        #historyrecord.processing = processing_step
         return historyrecord
 
-    def _append_processing_historyrecord(self, historyrecord):
-        self.history.append(historyrecord)
-        self._increment_historypointer()
+    def _append_processing_history_record(self, history_record):
+        self.history.append(history_record)
+        self._increment_history_pointer()
 
-    def _increment_historypointer(self):
-        self._historypointer += 1
+    def _increment_history_pointer(self):
+        self._history_pointer += 1
 
-    def _decrement_historypointer(self):
-        self._historypointer -= 1
+    def _decrement_history_pointer(self):
+        self._history_pointer -= 1
 
     def _replay_history(self):
         self.data = self._origdata
-        for historyentry in self.history[:self._historypointer]:
+        for historyentry in self.history[:self._history_pointer]:
             historyentry.replay(self)
 
     def strip_history(self):
         """Remove leading history, if any.
+
+        If a dataset has a leading history, i.e., its history pointer does not
+        point to the last entry of the history, and you want to perform a
+        processing step on this very dataset, you need first to strip its
+        history, as otherwise, a :class:`ProcessingWithLeadingHistoryError`
+        will be raised.
         """
         if not self._has_leading_history():
             return
-        del self.history[self._historypointer + 1:]
+        del self.history[self._history_pointer + 1:]
 
-    def analyse(self, analysisstep):
+    def analyse(self, analysis_step):
         """Apply analysis to dataset.
 
         Parameters
         ----------
-        analysisstep : `aspecd.analysis.AnalysisStep`
+        analysis_step : `aspecd.analysis.AnalysisStep`
             analysis step to apply to the dataset
         """
         # Important: Need a copy, not the reference to the original object
-        analysisstep = copy.deepcopy(analysisstep)
+        analysis_step = copy.deepcopy(analysis_step)
         # TODO: Add all processing steps in history of dataset to AnalysisStep.
         # At least if preprocessing list in AnalysisStep is empty.
         # Otherwise, perhaps copy dataset object, perform processing steps from
         # preprocessing list in AnalysisStep and analyse this one...
-        historyrecord = self._create_analysis_historyrecord(analysisstep)
-        analysisstep.analyse(self)
-        self.analyses.append(historyrecord)
+        history_record = self._create_analysis_history_record(analysis_step)
+        analysis_step.analyse(self)
+        self.analyses.append(history_record)
 
-    def analyze(self, analysisstep):
+    def analyze(self, analysis_step):
         """Same method as ``self.analyse``, but for those preferring AE over BE.
         """
-        self.analyse(analysisstep)
+        self.analyse(analysis_step)
 
     @staticmethod
-    def _create_analysis_historyrecord(analysisstep):
-        historyrecord = history.AnalysisHistoryRecord()
-        historyrecord.analysis = analysisstep
-        return historyrecord
+    def _create_analysis_history_record(analysis_step):
+        history_record = history.AnalysisHistoryRecord()
+        history_record.analysis = analysis_step
+        return history_record
 
     def delete_analysis(self, index):
         """Remove analysis step record from dataset."""
@@ -259,16 +263,16 @@ class Dataset:
         """
         # Important: Need a copy, not the reference to the original object
         annotation = copy.deepcopy(annotation)
-        historyrecord = self._create_annotation_historyrecord(annotation)
+        history_record = self._create_annotation_history_record(annotation)
         annotation.annotate(self)
-        self.annotations.append(historyrecord)
+        self.annotations.append(history_record)
         pass
 
     @staticmethod
-    def _create_annotation_historyrecord(annotation):
-        historyrecord = history.AnnotationHistoryRecord()
-        historyrecord.annotation = annotation
-        return historyrecord
+    def _create_annotation_history_record(annotation):
+        history_record = history.AnnotationHistoryRecord()
+        history_record.annotation = annotation
+        return history_record
 
     def load(self):
         pass
