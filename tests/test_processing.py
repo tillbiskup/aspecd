@@ -70,11 +70,16 @@ class TestProcessingStep(unittest.TestCase):
 
 class TestProcessingStepRecord(unittest.TestCase):
     def setUp(self):
-        self.processing_record = processing.ProcessingStepRecord()
         self.processing_step = processing.ProcessingStep()
+        self.processing_record = \
+            processing.ProcessingStepRecord(self.processing_step)
 
     def test_instantiate_class(self):
         pass
+
+    def test_instantiate_without_processing_step_raises(self):
+        with self.assertRaises(processing.MissingProcessingStepError):
+            processing.ProcessingStepRecord()
 
     def test_instantiate_class_with_processing_step(self):
         processing.ProcessingStepRecord(self.processing_step)

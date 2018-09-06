@@ -43,6 +43,19 @@ class MissingDatasetError(Error):
         self.message = message
 
 
+class MissingProcessingStepError(Error):
+    """Exception raised when no processing step exists to act on
+
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
+    """
+
+    def __init__(self, message=''):
+        self.message = message
+
+
 class ProcessingStep:
     """Base class for processing steps.
 
@@ -189,24 +202,28 @@ class ProcessingStepRecord:
     processing_step : :class:`aspecd.processing.ProcessingStep`
         Processing step the record should be created for.
 
+    Raises
+    ------
+    MissingProcessingStepError
+        Raised when no processing step exists to act on
     """
 
     def __init__(self, processing_step=None):
+        if not processing_step:
+            raise MissingProcessingStepError
         self.undoable = False
         self.description = ''
         self.parameters = dict()
         self.comment = ''
-        # Defaults to ProcessingStep from aspecd.processing
-        self.class_name = 'aspecd.processing.ProcessingStep'
-        if processing_step:
-            self.class_name = processing_step.name
-            self._copy_fields_from_processing_step(processing_step)
+        self.class_name = ''
+        self._copy_fields_from_processing_step(processing_step)
 
     def _copy_fields_from_processing_step(self, processing_step):
         self.description = processing_step.description
         self.parameters = processing_step.parameters
         self.undoable = processing_step.undoable
         self.comment = processing_step.comment
+        self.class_name = processing_step.name
 
     def create_processing_step(self):
         """Return a processing step object.

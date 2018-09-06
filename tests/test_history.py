@@ -34,8 +34,9 @@ class TestHistoryRecord(unittest.TestCase):
 
 class TestProcessingHistoryRecord(unittest.TestCase):
     def setUp(self):
-        self.historyrecord = history.ProcessingHistoryRecord()
         self.processing_step = processing.ProcessingStep()
+        self.historyrecord = \
+            history.ProcessingHistoryRecord(self.processing_step)
 
     def test_instantiate_class(self):
         pass
