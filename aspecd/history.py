@@ -26,6 +26,11 @@ class HistoryRecord:
 class ProcessingHistoryRecord(HistoryRecord):
     """
     History record for processing steps on datasets.
+
+    Parameters
+    ----------
+    processing_step : :class:`aspecd.processing.ProcessingStep`
+        record of the processing step the history is saved for
     """
 
     def __init__(self, processing_step=None):
@@ -37,6 +42,13 @@ class ProcessingHistoryRecord(HistoryRecord):
         return self.processing.undoable
 
     def replay(self, dataset):
+        """Replay the processing step saved in the history record.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset the processing step should be replayed to
+        """
         processing_step = self.processing.create_processing_step()
         processing_step.process(dataset=dataset)
 
