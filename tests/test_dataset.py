@@ -52,6 +52,11 @@ class TestDatasetProcessing(unittest.TestCase):
         self.assertTrue(hasattr(self.dataset, 'process'))
         self.assertTrue(callable(self.dataset.process))
 
+    def test_process_without_processing_step_raises(self):
+        with self.assertRaises(dataset.MissingProcessingStepError):
+            self.dataset.process()
+
+
     def test_process_adds_history_record(self):
         self.dataset.process(self.processingStep)
         self.assertFalse(self.dataset.history == [])
@@ -72,10 +77,10 @@ class TestDatasetProcessing(unittest.TestCase):
         self.assertIsNot(self.dataset.history[-1].processing,
                          self.dataset.history[-2].processing)
 
-    def test_processhistoryrecord_process_is_processsteprecord(self):
+    def test_process_history_record_process_is_processing_step_record(self):
         self.dataset.process(self.processingStep)
-        # self.assertTrue(isinstance(self.dataset.history[-1],
-        #                            processing.ProcessingStepRecord))
+        self.assertTrue(isinstance(self.dataset.history[-1].processing,
+                                   processing.ProcessingStepRecord))
 
     def test_process_copies_processingstep_object(self):
         self.dataset.process(self.processingStep)

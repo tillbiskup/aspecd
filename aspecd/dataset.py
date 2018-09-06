@@ -16,6 +16,19 @@ class Error(Exception):
     pass
 
 
+class MissingProcessingStepError(Error):
+    """Exception raised trying to process without processing_step
+
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
+    """
+
+    def __init__(self, message=''):
+        self.message = message
+
+
 class UndoWithEmptyHistoryError(Error):
     """Exception raised trying to undo with empty history
 
@@ -111,7 +124,7 @@ class Dataset:
         self.analyses = []
         self.annotations = []
 
-    def process(self, processing_step):
+    def process(self, processing_step=None):
         """Apply processing step to dataset.
 
         Every processing step is an object of type
@@ -141,11 +154,13 @@ class Dataset:
         """
         if self._has_leading_history():
             raise ProcessingWithLeadingHistoryError
+        if not processing_step:
+            raise MissingProcessingStepError
         # Important: Need a copy, not the reference to the original object
         processing_step = copy.deepcopy(processing_step)
+        processing_step.process(self)
         history_record = \
             self._create_processing_history_record(processing_step)
-        processing_step.process(self)
         self._append_processing_history_record(history_record)
         return processing_step
 

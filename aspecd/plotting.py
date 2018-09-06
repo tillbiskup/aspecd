@@ -91,6 +91,9 @@ class Plotter:
         Returns `True` by default and needs to be implemented in classes
         inheriting from Plotter according to their needs.
 
+        A typical example would be a 2D plot applied to a 1D dataset that will
+        most probably not be possible/sensible.
+
         Returns
         -------
         applicable : `bool`
@@ -99,7 +102,29 @@ class Plotter:
         return True
 
     def _create_plot(self):
+        """Perform the actual plotting of the data of the dataset.
+
+        The implementation of the actual plotting goes in here in all
+        classes inheriting from Plotter. This method is automatically
+        called by :func:`self.plot` after some background checks.
+        """
         pass
 
     def save(self):
+        """Save the plot to a file.
+
+        .. todo::
+            The actual way of how plots are saved has to be figured out, as
+            well as the way this is implemented here.
+
+            One way would be similar to the implementation of :func:`plot` with
+            a private method doing all the special stuff. Somehow it would be
+            nice as well to be able to apply a consistent styling from an
+            external source of configuration--clearly future stuff to deal
+            with.
+
+            Another idea would be to postpone the actual saving to another
+            class that can explicitly deal with all sorts of parameters and
+            settings necessary for that.
+        """
         pass
