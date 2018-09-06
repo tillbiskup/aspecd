@@ -1,4 +1,11 @@
-"""Datasets."""
+"""Datasets.
+
+The dataset is one key concept of the ASpecD framework, containing the data as
+well as the corresponding metadata. Furthermore, a history of every processing,
+analysis and annotation step is recorded as well, aiming at a maximum of
+reproducibility. This is part of how the ASpecD framework tries to support good
+scientific practice.
+"""
 
 from aspecd import data, history
 import copy
@@ -107,13 +114,15 @@ class Dataset:
     def process(self, processing_step):
         """Apply processing step to dataset.
 
-        Every processing step is an object of type processing.ProcessingStep
-        and is passed as argument to dataset.process.
+        Every processing step is an object of type
+        :class:`aspecd.processing.ProcessingStep'' and is passed as argument
+        to :func:`process`.
 
         Calling this function ensures that the history record is added to the
         dataset as well as a few basic checks are performed such as for leading
-        history, meaning that the _historypointer is not set to the current tip
-        of the history of the dataset. In this case, an error is raised.
+        history, meaning that the ``_history_pointer`` is not set to the
+        current tip of the history of the dataset. In this case, an error is
+        raised.
 
         Parameters
         ----------
@@ -144,7 +153,7 @@ class Dataset:
         """Revert last processing step.
 
         Actually, the history pointer is decremented and starting from the
-        ``origdata``, all processing steps are reapplied to the data up to
+        ``_origdata``, all processing steps are reapplied to the data up to
         this point in history.
 
         Raises
@@ -239,7 +248,8 @@ class Dataset:
         self.analyses.append(history_record)
 
     def analyze(self, analysis_step):
-        """Same method as ``self.analyse``, but for those preferring AE over BE.
+        """Same method as :func:`self.analyse`, but for those preferring AE
+        over BE.
         """
         self.analyse(analysis_step)
 
