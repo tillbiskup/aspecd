@@ -6,7 +6,7 @@ self-contained, meaning it contains every necessary information to perform
 the processing task on a given dataset.
 
 Each real processing step should inherit from
-aspect.processing.ProcessingStep as documented there.
+:class:`aspecd.processing.ProcessingStep` as documented there.
 """
 
 from aspecd import utils
@@ -64,8 +64,8 @@ class ProcessingStep:
     perform the processing step, should eventually be stored in the property
     "self.parameters" (currently a dictionary).
 
-    To perform the processing step, call the ``process`` method of the dataset
-    the processing should be applied to, and provide a reference to the
+    To perform the processing step, call the :func:`process` method of the
+    dataset the processing should be applied to, and provide a reference to the
     actual processing_step object to it.
 
     Further things that need to be changed upon inheriting from this class
@@ -73,8 +73,9 @@ class ProcessingStep:
     and the flag ``undoable`` if necessary.
 
     The actual implementation of the processing step is done in the private
-    method ``perform_task`` that in turn gets called by ``process``
-    which is called by the ``process`` method of the dataset object.
+    method :func:`_perform_task` that in turn gets called by :func:`process`
+    which is called by the :func:`aspecd.dataset.Dataset.process` method of the
+    dataset object.
 
     Raises
     ------
@@ -101,20 +102,20 @@ class ProcessingStep:
         """Perform the actual processing step on the given dataset.
 
         If no dataset is provided at method call, but is set as property in the
-        ProcessingStep object, the process method of the dataset will be called
-        and thus the history written.
+        ProcessingStep object, the :func:`aspecd.dataset.Dataset.process`
+        method of the dataset will be called and thus the history written.
 
         If no dataset is provided at method call nor as property in the object,
         the method will raise a respective exception.
 
         The Dataset object always calls this method with the respective dataset
         as argument. Therefore, in this case setting the dataset property
-        within the Processing object is not necessary.
+        within the ProcessingStep object is not necessary.
 
-        The actual processing step should be coded within the private method
-        ``_perform_task``. Besides that, the applicability of the processing
-        step to the given dataset will be checked automatically and the
-        parameters will be sanitised.
+        The actual processing step should be implemented within the private
+        method :func:`_perform_task`. Besides that, the applicability of the
+        processing step to the given dataset will be checked automatically and
+        the parameters will be sanitised.
 
         Parameters
         ----------
@@ -175,7 +176,7 @@ class ProcessingStep:
 
         The implementation of the actual processing goes in here in all
         classes inheriting from ProcessingStep. This method is automatically
-        called by self.processing() after some background checks.
+        called by :func:`self.processing` after some background checks.
         """
         pass
 
