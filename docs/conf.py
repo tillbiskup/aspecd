@@ -74,6 +74,8 @@ pygments_style = 'sphinx'
 # Show or hide todo and todolist directives in output
 todo_include_todos = True
 
+# Autodoc configuration
+autodoc_default_flags = ['members', 'undoc-members', 'private-members']
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
