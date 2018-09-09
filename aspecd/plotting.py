@@ -73,6 +73,35 @@ class Plotter:
         self.dataset = None
 
     def plot(self, dataset=None):
+        """Perform the actual plotting on the given dataset.
+
+        If no dataset is provided at method call, but is set as property in the
+        Plotter object, the :func:`aspecd.dataset.Dataset.plot` method of the
+        dataset will be called and thus the history written.
+
+        If no dataset is provided at method call nor as property in the object,
+        the method will raise a respective exception.
+
+        The Dataset object always calls this method with the respective dataset
+        as argument. Therefore, in this case setting the dataset property
+        within the Plotter object is not necessary.
+
+        The actual plotting should be implemented within the private
+        method :func:`_create_plot`. Besides that, the applicability of the
+        plotting to the given dataset will be checked automatically.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset to perform plot for
+
+        Raises
+        ------
+        PlottingNotApplicableToDatasetError
+            Raised when plotting is not applicable to dataset
+        MissingDatasetError
+            Raised when no dataset exists to act on
+        """
         if not dataset:
             if self.dataset:
                 self.dataset.plot()
