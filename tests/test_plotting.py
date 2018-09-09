@@ -102,7 +102,7 @@ class TestSaver(unittest.TestCase):
             self.saver.save()
 
     def test_save_with_plotter_sets_plotter(self):
-        plotter = plotting.Plotter
+        plotter = plotting.Plotter()
         self.saver.filename = 'Testfile'
         self.saver.save(plotter)
         self.assertEqual(self.saver.plotter, plotter)
