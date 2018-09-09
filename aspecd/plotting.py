@@ -181,6 +181,10 @@ class Plotter:
         called by :meth:`plot` after some background checks.
 
         The reference to the figure object should be stored in :attr:`figure`.
+
+        Plotting should be done using a method of the
+        :class:`matplotlib.axes.Axes` class. The axis can be inferred as
+        property of the :attr:`figure` object stored in the plotter.
         """
         pass
 
@@ -270,5 +274,9 @@ class Saver:
         The implementation of the actual saving goes in here in all
         classes inheriting from Saver. This method is automatically
         called by :meth:`save`.
+
+        Saving will in the simplest case be a call to
+        :meth:`savefig` of the figure to save. To access this figure,
+        use the property :attr:`plotter.figure`.
         """
         pass
