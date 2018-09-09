@@ -107,6 +107,19 @@ class MissingPlotterError(Error):
         self.message = message
 
 
+class MissingImporterError(Error):
+    """Exception raised importing without :class:`aspecd.importer.Importer`
+
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
+    """
+
+    def __init__(self, message=''):
+        self.message = message
+
+
 class Dataset:
     """Base class for all kinds of datasets.
 
@@ -355,8 +368,10 @@ class Dataset:
     def save(self):
         pass
 
-    def importfrom(self):
-        pass
+    def import_from(self, importer=None):
+        if not importer:
+            raise MissingImporterError("No importer provided")
+        importer.import_into(self)
 
-    def exportto(self):
+    def export_to(self):
         pass

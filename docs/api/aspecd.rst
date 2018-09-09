@@ -52,6 +52,14 @@ aspecd.history module
     :undoc-members:
     :show-inheritance:
 
+aspecd.importer module
+----------------------
+
+.. automodule:: aspecd.importer
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 aspecd.infofile module
 ----------------------
 

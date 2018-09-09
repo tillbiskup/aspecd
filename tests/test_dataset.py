@@ -2,7 +2,8 @@
 
 import unittest
 
-from aspecd import dataset, data, history, processing, analysis, plotting
+from aspecd import dataset, data, history, processing, analysis, plotting, \
+    importer
 
 
 class TestDataset(unittest.TestCase):
@@ -176,12 +177,12 @@ class TestDatasetIO(unittest.TestCase):
         self.assertTrue(callable(self.dataset.save))
 
     def test_has_importfrom_method(self):
-        self.assertTrue(hasattr(self.dataset, 'importfrom'))
-        self.assertTrue(callable(self.dataset.importfrom))
+        self.assertTrue(hasattr(self.dataset, 'import_from'))
+        self.assertTrue(callable(self.dataset.import_from))
 
     def test_has_exportto_method(self):
-        self.assertTrue(hasattr(self.dataset, 'exportto'))
-        self.assertTrue(callable(self.dataset.exportto))
+        self.assertTrue(hasattr(self.dataset, 'export_to'))
+        self.assertTrue(callable(self.dataset.export_to))
 
 
 class TestDatasetProcessingWithHistory(unittest.TestCase):
@@ -264,3 +265,17 @@ class TestDatasetPlotting(unittest.TestCase):
     def test_plot_without_plotter_raises(self):
         with self.assertRaises(dataset.MissingPlotterError):
             self.dataset.plot()
+
+
+class TestDatasetImporting(unittest.TestCase):
+    def setUp(self):
+        self.dataset = dataset.Dataset()
+        self.importer = importer.Importer()
+
+    def test_has_import_from_method(self):
+        self.assertTrue(hasattr(self.dataset, 'import_from'))
+        self.assertTrue(callable(self.dataset.import_from))
+
+    def test_import_without_importer_raises(self):
+        with self.assertRaises(dataset.MissingImporterError):
+            self.dataset.import_from()
