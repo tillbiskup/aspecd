@@ -22,7 +22,7 @@ class TestPlotter(unittest.TestCase):
 
     def test_plot_with_dataset(self):
         self.plotter.dataset = dataset.Dataset()
-        self.plotter.plot(self.plotter)
+        self.plotter.plot()
 
     def test_name_property_equals_full_class_name(self):
         full_class_name = utils.full_class_name(self.plotter)
@@ -48,3 +48,59 @@ class TestPlotter(unittest.TestCase):
         test_dataset = dataset.Dataset()
         plotter = test_dataset.plot(self.plotter)
         self.assertTrue(isinstance(plotter.dataset, dataset.Dataset))
+
+    def test_save_without_saver_raises(self):
+        with self.assertRaises(plotting.MissingSaverError):
+            self.plotter.save()
+
+    def test_save_returns_saver(self):
+        filename = 'Testfile'
+        saver = plotting.Saver()
+        saver.filename = filename
+        returned_saver = self.plotter.save(saver)
+        self.assertTrue(isinstance(returned_saver, plotting.Saver))
+
+    def test_save_sets_plot_in_saver(self):
+        filename = 'Testfile'
+        saver = plotting.Saver()
+        saver.filename = filename
+        returned_saver = self.plotter.save(saver)
+        self.assertEqual(returned_saver.plotter, self.plotter)
+
+
+class TestSaver(unittest.TestCase):
+    def setUp(self):
+        self.saver = plotting.Saver()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_save_method(self):
+        self.assertTrue(hasattr(self.saver, 'save'))
+        self.assertTrue(callable(self.saver.save))
+
+    def test_save_without_filename_raises(self):
+        with self.assertRaises(plotting.MissingFilenameError):
+            self.saver.save(plotting.Plotter())
+
+    def test_with_filename_set_previously(self):
+        self.saver.plotter = plotting.Plotter()
+        self.saver.filename = 'Testfile'
+        self.saver.save()
+
+    def test_save_without_plotter_raises(self):
+        self.saver.filename = 'Testfile'
+        with self.assertRaises(plotting.MissingPlotError):
+            self.saver.save()
+
+    def test_save_with_plotter_sets_plotter(self):
+        plotter = plotting.Plotter
+        self.saver.filename = 'Testfile'
+        self.saver.save(plotter)
+        self.assertEqual(self.saver.plotter, plotter)
+
+    def test_has_parameters_property(self):
+        self.assertTrue(hasattr(self.saver, 'parameters'))
+
+    def test_parameters_property_is_dict(self):
+        self.assertTrue(isinstance(self.saver.parameters, dict))

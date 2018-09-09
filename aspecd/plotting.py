@@ -34,6 +34,45 @@ class PlotNotApplicableToDatasetError(Error):
         self.message = message
 
 
+class MissingSaverError(Error):
+    """Exception raised when no saver is provided.
+
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
+    """
+
+    def __init__(self, message=''):
+        self.message = message
+
+
+class MissingFilenameError(Error):
+    """Exception raised when no filename was provided
+
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
+    """
+
+    def __init__(self, message=''):
+        self.message = message
+
+
+class MissingPlotError(Error):
+    """Exception raised when no plot exists to save.
+
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
+    """
+
+    def __init__(self, message=''):
+        self.message = message
+
+
 class Plotter:
     """Base class for plots.
 
@@ -60,6 +99,8 @@ class Plotter:
         Raised when no dataset exists to act on
     PlotNotApplicableToDatasetError
         Raised when processing step is not applicable to dataset
+    MissingSaverError
+        Raised when no saver is provided when trying to save
     """
 
     def __init__(self):
@@ -104,7 +145,7 @@ class Plotter:
         """
         if not dataset:
             if self.dataset:
-                self.dataset.plot()
+                self.dataset.plot(self)
             else:
                 raise MissingDatasetError
         else:
@@ -139,21 +180,83 @@ class Plotter:
         """
         pass
 
-    def save(self):
+    def save(self, saver=None):
         """Save the plot to a file.
 
-        .. todo::
-            The actual way of how plots are saved has to be figured out, as
-            well as the way this is implemented here.
+        The actual saving is postponed to an object of class
+        :class:`aspecd.plotting.Saver` that is submitted as parameter.
 
-            One way would be similar to the implementation of :func:`plot` with
-            a private method doing all the special stuff. Somehow it would be
-            nice as well to be able to apply a consistent styling from an
-            external source of configuration--clearly future stuff to deal
-            with.
+        Parameters
+        ----------
+        saver : `aspecd.plotting.Saver`
+            Saver handling the actual saving of the plot
 
-            Another idea would be to postpone the actual saving to another
-            class that can explicitly deal with all sorts of parameters and
-            settings necessary for that.
+        Returns
+        -------
+        saver : `aspecd.plotting.Saver`
+            Saver used to save the plot
+
+        Raises
+        ------
+        MissingSaverError
+            Raised if no Saver is provided as parameter.
+        """
+        if not saver:
+            raise MissingSaverError
+        saver.save(self)
+        return saver
+
+
+class Saver:
+    """Base class for saving plots.
+
+    Raises
+    ------
+    MissingFilenameError
+        Raised if no filename is provided for saver.
+    MissingPlotError
+        Raised if no plot is provided to act upon.
+    """
+
+    def __init__(self):
+        self.filename = None
+        self.parameters = dict()
+        self.plotter = None
+        pass
+
+    def save(self, plotter=None):
+        """Save the plot to a file.
+
+        If no plotter is provided at method call, but is set as property in the
+        Saver object, the :func:`aspecd.plotting.Plotter.save` method of the
+        plotter will be called.
+
+        If no plotter is provided at method call nor as property of the object,
+        the method will raise a respective exception.
+
+        The actual saving should be implemented within the private method
+        :func:`_save_plot`.
+
+        Parameters
+        ----------
+        plotter : `aspecd.plotting.Plotter`
+        """
+        if not self.filename:
+            raise MissingFilenameError
+        if not plotter:
+            if self.plotter:
+                self.plotter.save(self)
+            else:
+                raise MissingPlotError
+        else:
+            self.plotter = plotter
+        self._save_plot()
+
+    def _save_plot(self):
+        """Perform the actual saving of the plot.
+
+        The implementation of the actual saving goes in here in all
+        classes inheriting from Saver. This method is automatically
+        called by :func:`self.save`.
         """
         pass
