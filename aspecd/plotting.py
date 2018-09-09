@@ -226,8 +226,8 @@ class Saver:
         Raised if no plot is provided to act upon.
     """
 
-    def __init__(self):
-        self.filename = None
+    def __init__(self, filename=None):
+        self.filename = filename
         self.parameters = dict()
         self.plotter = None
         pass
@@ -275,8 +275,8 @@ class Saver:
         classes inheriting from Saver. This method is automatically
         called by :meth:`save`.
 
-        Saving will in the simplest case be a call to
-        :meth:`savefig` of the figure to save. To access this figure,
-        use the property :attr:`plotter.figure`.
+        In the simplest case, saving is a call to :meth:`savefig` of the
+        figure to save. To access this figure, use the property
+        :attr:`plotter.figure`.
         """
         pass

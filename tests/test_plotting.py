@@ -91,6 +91,11 @@ class TestSaver(unittest.TestCase):
         self.saver.filename = 'Testfile'
         self.saver.save()
 
+    def test_instantiate_with_filename_sets_filename(self):
+        filename = 'Testfile'
+        self.saver = plotting.Saver(filename)
+        self.assertEqual(self.saver.filename, filename)
+
     def test_save_without_plotter_raises(self):
         self.saver.filename = 'Testfile'
         with self.assertRaises(plotting.MissingPlotError):
