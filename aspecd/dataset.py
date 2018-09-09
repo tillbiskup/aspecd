@@ -315,6 +315,20 @@ class Dataset:
     def plot(self, plotter=None):
         """Perform plot with data of current dataset.
 
+        Every plotter is an object of type :class:`aspecd.plotting.Plotter`
+        and is passed as an argument to :func:`plot`.
+
+        .. todo::
+            Does :func:`plot` save some "PlotRecord" in a field like
+            "representations", similar to :func:`process` saves a
+            :class:`aspecd.processing.ProcessingStepRecord` to the history?
+            Idea there would be to have a list of representations performed
+            on the given dataset.
+
+            How to deal with the hietory? How to tie a representation (plot)
+            to a given state of the history? How to figure out when trying to
+            undo a step in history whether a representation is affected?
+
         Parameters
         ----------
         plotter : `aspecd.plotting.Plotter`
