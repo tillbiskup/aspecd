@@ -40,6 +40,9 @@ class TestPlotter(unittest.TestCase):
     def test_description_property_is_string(self):
         self.assertTrue(isinstance(self.plotter.description, str))
 
+    def test_has_figure_property(self):
+        self.assertTrue(hasattr(self.plotter, 'figure'))
+
     def test_has_save_method(self):
         self.assertTrue(hasattr(self.plotter, 'save'))
         self.assertTrue(callable(self.plotter.save))

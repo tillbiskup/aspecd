@@ -79,18 +79,18 @@ class Plotter:
     Each class actually plotting data of a dataset should inherit from this
     class. Furthermore, all parameters, implicit and explicit, necessary to
     perform the plot, should eventually be stored in the property
-    "self.parameters" (currently a dictionary).
+    :attr:`parameters` (currently a dictionary).
 
-    To perform the plot, call the :func:`plot` method of the dataset the plot
+    To perform the plot, call the :meth:`plot` method of the dataset the plot
     should be performed for, and provide a reference to the actual plotter
     object to it.
 
     Further things that need to be changed upon inheriting from this class
-    are the string stored in ``description``, being basically a one-liner.
+    are the string stored in :attr:`description`, being basically a one-liner.
 
     The actual implementation of the plotting is done in the private method
-    :func:`_perform_plot` that in turn gets called by :func:`plot`
-    which is called by the :func:`aspecd.dataset.Dataset.plot` method of the
+    :meth:`_create_plot` that in turn gets called by :meth:`plot`
+    which is called by the :meth:`aspecd.dataset.Dataset.plot` method of the
     dataset object.
 
     Raises
@@ -112,12 +112,14 @@ class Plotter:
         self.description = 'Abstract plotting step'
         # Reference to the dataset the plot should be performed for
         self.dataset = None
+        # Reference to figure object (:class:`matplotlib.figure.Figure`)
+        self.figure = None
 
     def plot(self, dataset=None):
         """Perform the actual plotting on the given dataset.
 
         If no dataset is provided at method call, but is set as property in the
-        Plotter object, the :func:`aspecd.dataset.Dataset.plot` method of the
+        Plotter object, the :meth:`aspecd.dataset.Dataset.plot` method of the
         dataset will be called and thus the history written.
 
         If no dataset is provided at method call nor as property in the object,
@@ -128,7 +130,7 @@ class Plotter:
         within the Plotter object is not necessary.
 
         The actual plotting should be implemented within the private
-        method :func:`_create_plot`. Besides that, the applicability of the
+        method :meth:`_create_plot`. Besides that, the applicability of the
         plotting to the given dataset will be checked automatically.
 
         Parameters
@@ -138,7 +140,7 @@ class Plotter:
 
         Raises
         ------
-        PlottingNotApplicableToDatasetError
+        PlotNotApplicableToDatasetError
             Raised when plotting is not applicable to dataset
         MissingDatasetError
             Raised when no dataset exists to act on
@@ -176,7 +178,9 @@ class Plotter:
 
         The implementation of the actual plotting goes in here in all
         classes inheriting from Plotter. This method is automatically
-        called by :func:`self.plot` after some background checks.
+        called by :meth:`plot` after some background checks.
+
+        The reference to the figure object should be stored in :attr:`figure`.
         """
         pass
 
@@ -228,18 +232,26 @@ class Saver:
         """Save the plot to a file.
 
         If no plotter is provided at method call, but is set as property in the
-        Saver object, the :func:`aspecd.plotting.Plotter.save` method of the
+        Saver object, the :meth:`aspecd.plotting.Plotter.save` method of the
         plotter will be called.
 
         If no plotter is provided at method call nor as property of the object,
         the method will raise a respective exception.
 
         The actual saving should be implemented within the private method
-        :func:`_save_plot`.
+        :meth:`_save_plot`.
 
         Parameters
         ----------
         plotter : `aspecd.plotting.Plotter`
+            plot to be saved
+
+        Raises
+        ------
+        MissingFilenameError
+            Raised if no filename is provided for saver.
+        MissingPlotError
+            Raised if no plot is provided to act upon.
         """
         if not self.filename:
             raise MissingFilenameError
@@ -257,6 +269,6 @@ class Saver:
 
         The implementation of the actual saving goes in here in all
         classes inheriting from Saver. This method is automatically
-        called by :func:`self.save`.
+        called by :meth:`save`.
         """
         pass
