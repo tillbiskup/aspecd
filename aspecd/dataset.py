@@ -128,7 +128,7 @@ class Dataset:
         """Apply processing step to dataset.
 
         Every processing step is an object of type
-        :class:`aspecd.processing.ProcessingStep'' and is passed as argument
+        :class:`aspecd.processing.ProcessingStep` and is passed as argument
         to :func:`process`.
 
         Calling this function ensures that the history record is added to the
