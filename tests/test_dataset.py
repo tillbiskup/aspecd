@@ -56,7 +56,6 @@ class TestDatasetProcessing(unittest.TestCase):
         with self.assertRaises(dataset.MissingProcessingStepError):
             self.dataset.process()
 
-
     def test_process_adds_history_record(self):
         self.dataset.process(self.processingStep)
         self.assertFalse(self.dataset.history == [])
@@ -261,3 +260,7 @@ class TestDatasetPlotting(unittest.TestCase):
         plotter_object = plotting.Plotter()
         plot = self.dataset.plot(plotter_object)
         self.assertTrue(isinstance(plot, plotting.Plotter))
+
+    def test_plot_without_plotter_raises(self):
+        with self.assertRaises(dataset.MissingPlotterError):
+            self.dataset.plot()

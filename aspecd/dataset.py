@@ -94,6 +94,19 @@ class ProcessingWithLeadingHistoryError(Error):
         self.message = message
 
 
+class MissingPlotterError(Error):
+    """Exception raised trying to plot without :class:`aspecd.plotting.Plotter`
+
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
+    """
+
+    def __init__(self, message=''):
+        self.message = message
+
+
 class Dataset:
     """Base class for all kinds of datasets.
 
@@ -195,7 +208,7 @@ class Dataset:
         Raises
         ------
         RedoAlreadyAtLatestChangeError
-            Raised  when trying to redo with empty history
+            Raised when trying to redo with empty history
         """
         if self._history_pointer == len(self.history) - 1:
             raise RedoAlreadyAtLatestChangeError
@@ -300,6 +313,26 @@ class Dataset:
         return history_record
 
     def plot(self, plotter=None):
+        """Perform plot with data of current dataset.
+
+        Parameters
+        ----------
+        plotter : `aspecd.plotting.Plotter`
+            plot to perform with data of current dataset
+
+        Returns
+        -------
+        plotter : `aspecd.plotting.Plotter`
+            plot performed on the current dataset
+
+        Raises
+        ------
+        MissingPlotterError
+            Raised when trying to plot without plotter
+        """
+        if not plotter:
+            raise MissingPlotterError
+        plotter.plot(self)
         return plotter
 
     def load(self):

@@ -22,7 +22,7 @@ class TestPlotter(unittest.TestCase):
 
     def test_plot_with_dataset(self):
         self.plotter.dataset = dataset.Dataset()
-        self.plotter.plot()
+        self.plotter.plot(self.plotter)
 
     def test_name_property_equals_full_class_name(self):
         full_class_name = utils.full_class_name(self.plotter)
@@ -43,3 +43,8 @@ class TestPlotter(unittest.TestCase):
     def test_has_save_method(self):
         self.assertTrue(hasattr(self.plotter, 'save'))
         self.assertTrue(callable(self.plotter.save))
+
+    def test_plot_with_dataset_sets_dataset(self):
+        test_dataset = dataset.Dataset()
+        plotter = test_dataset.plot(self.plotter)
+        self.assertTrue(isinstance(plotter.dataset, dataset.Dataset))
