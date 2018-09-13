@@ -12,6 +12,8 @@ Further plans are to include functionality to map the information contained
 in the info file to datasets.
 """
 
+import collections
+
 
 class Error(Exception):
     """Base class for exceptions in this module."""
@@ -47,7 +49,7 @@ class InfofileEmptyError(Error):
 class Infofile:
 
     def __init__(self, filename=None):
-        self.parameters = {}
+        self.parameters = collections.OrderedDict()
         self.filename = filename
 
         self._file_contents = []
@@ -66,7 +68,7 @@ class Infofile:
         blockname = ''
         key = ''
         value = ''
-        tmp_block = {}
+        tmp_block = collections.OrderedDict()
 
         for line in self._file_contents[1:]:
             if self._is_comment_block(blockname):
