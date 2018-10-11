@@ -127,6 +127,19 @@ class Dataset:
     containing both, (numeric) data and corresponding metadata, aka information
     available about the data.
 
+    Attributes
+    ----------
+    data : :class:`aspecd.data.Data`
+        numeric data and axes
+    metadata : :obj:`dict`
+        key-value store of metadata
+    history : :obj:`list`
+        processing steps performed on the numeric data
+    analyses : :obj:`list`
+        analysis steps performed on the dataset
+    annotations : :obj:`list`
+        annotations of the dataset
+
     Raises
     ------
     UndoWithEmptyHistoryError
@@ -338,7 +351,7 @@ class Dataset:
             Idea there would be to have a list of representations performed
             on the given dataset.
 
-            How to deal with the hietory? How to tie a representation (plot)
+            How to deal with the history? How to tie a representation (plot)
             to a given state of the history? How to figure out when trying to
             undo a step in history whether a representation is affected?
 
