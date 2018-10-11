@@ -155,6 +155,24 @@ class TestInfofileParserParse(unittest.TestCase):
         self.assertEqual(self.ifile.parameters['COMMENT'],
                          ['And here some comment without colon in line\n'])
 
+    def test_parameters_preserve_order_of_blocks_in_file(self):
+        file_content = [
+            'test Info File\n'
+            '\n'
+            'SAMPLE\n'
+            'foo: bar\n'
+            'bla: blub\n'
+            '\n'
+            'GENERAL\n'
+            'baz: frobnicate\n'
+        ]
+        self.write_list_to_file(file_content, self.ifile.filename)
+        self.ifile.parse()
+        self.assertEqual(['SAMPLE', 'GENERAL'],
+                         list(self.ifile.parameters.keys()))
+        self.assertEqual(['foo', 'bla'],
+                         list(self.ifile.parameters['SAMPLE'].keys()))
+
 
 class TestInfofileParserNonOOP(unittest.TestCase):
 
