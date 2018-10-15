@@ -34,6 +34,13 @@ class Importer:
     which is called by the :meth:`aspecd.dataset.Dataset.import_from` method
     of the dataset object.
 
+    Attributes
+    ----------
+    dataset : :obj:`aspecd.dataset.Dataset`
+        dataset to import data and metadata into
+    source : :obj:`string`
+        specifier of the source the data and metadata will be read from
+
     Raises
     ------
     MissingDatasetError
@@ -49,7 +56,7 @@ class Importer:
 
         If no dataset is provided at method call, but is set as property in the
         Importer object, the :meth:`aspecd.dataset.Dataset.import_from` method
-        of the dataset will be called and thus the history written.
+        of the dataset will be called.
 
         If no dataset is provided at method call nor as property in the object,
         the method will raise a respective exception.
@@ -60,7 +67,6 @@ class Importer:
 
         The actual import should be implemented within the private method
         :meth:`_import`.
-
 
         Parameters
         ----------
@@ -87,5 +93,13 @@ class Importer:
         The implementation of the actual import goes in here in all
         classes inheriting from Importer. This method is automatically
         called by :meth:`import_into`.
+
+        Importing data and metadata includes assigning both to the respective
+        fields of the :obj:`aspecd.dataset.Dataset` object. For details of
+        its structure, see there.
+
+        Usually, this method will successively call other private/protected
+        methods of the importer to perform the required tasks that are
+        specific for each data source.
         """
         pass
