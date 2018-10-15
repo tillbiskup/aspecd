@@ -129,7 +129,7 @@ class Dataset:
 
     Attributes
     ----------
-    data : :class:`aspecd.data.Data`
+    data : :obj:`aspecd.data.Data`
         numeric data and axes
     metadata : :obj:`dict`
         key-value store of metadata
@@ -178,12 +178,12 @@ class Dataset:
 
         Parameters
         ----------
-        processing_step : `aspecd.processing.ProcessingStep`
+        processing_step : :obj:`aspecd.processing.ProcessingStep`
             processing step to apply to the dataset
 
         Returns
         -------
-        processing_step : `aspecd.processing.ProcessingStep`
+        processing_step : :obj:`aspecd.processing.ProcessingStep`
             processing step applied to the dataset
 
         Raises
@@ -288,7 +288,7 @@ class Dataset:
 
         Parameters
         ----------
-        analysis_step : `aspecd.analysis.AnalysisStep`
+        analysis_step : :obj:`aspecd.analysis.AnalysisStep`
             analysis step to apply to the dataset
         """
         # Important: Need a copy, not the reference to the original object
@@ -322,7 +322,7 @@ class Dataset:
 
         Parameters
         ----------
-        annotation : `aspecd.annotation.Annotation`
+        annotation : :obj:`aspecd.annotation.Annotation`
             annotation to add to the dataset
         """
         # Important: Need a copy, not the reference to the original object
@@ -357,12 +357,12 @@ class Dataset:
 
         Parameters
         ----------
-        plotter : `aspecd.plotting.Plotter`
+        plotter : :obj:`aspecd.plotting.Plotter`
             plot to perform with data of current dataset
 
         Returns
         -------
-        plotter : `aspecd.plotting.Plotter`
+        plotter : :obj:`aspecd.plotting.Plotter`
             plot performed on the current dataset
 
         Raises
@@ -382,6 +382,26 @@ class Dataset:
         pass
 
     def import_from(self, importer=None):
+        """Import data and metadata contained in importer object.
+
+        This requires initialising an :obj:`aspecd.importer.Importer` object
+        first that is provided as an argument for this method.
+
+        .. note::
+            The same operation can be performed by calling the
+            :func:`import_into` method of an :obj:`aspecd.importer.Importer`
+            object taking an :obj:`aspecd.dataset.Dataset` object as argument.
+
+            However, as usually one wants to continue working with a dataset,
+            first creating an instance of a dataset and a respective importer
+            and then calling :func:`import_from` of the dataset is the preferred
+            way.
+
+        Parameters
+        ----------
+        importer : :class:`aspecd.importer.Importer`
+            Importer containing data and metadata read from some source
+        """
         if not importer:
             raise MissingImporterError("No importer provided")
         importer.import_into(self)
