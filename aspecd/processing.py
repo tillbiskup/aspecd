@@ -91,6 +91,8 @@ class ProcessingStep:
         self.name = utils.full_class_name(self)
         # All parameters, implicit and explicit
         self.parameters = dict()
+        # Additional information used, e.g., in a report (derived values, ...)
+        self.info = dict()
         # Short description, to be set in class definition
         self.description = 'Abstract processing step'
         # User-supplied comment describing intent, purpose, reason, ...
