@@ -90,17 +90,24 @@ class Annotation:
         self.content = dict()
         # Reference to dataset the annotation is for
         self.dataset = None
-        # Scope can be, e.g., dataset, slice, point, area, distance
+        # Scope of the annotation; see list of allowed scopes below
         self._scope = ''
         # List of allowed scopes
         self._allowed_scopes = ['dataset', 'slice', 'point', 'area',
                                 'distance']
+        # Default scope if none is set explicitly
+        self._default_scope = self._allowed_scopes[0]
 
     @property
     def scope(self):
         """
-        Get or set the scope the annotation applies to, such as "point",
-        "slice", "area", "distance", "dataset"
+        Get or set the scope the annotation applies to.
+
+        The list of allowed scopes is stored in the private property
+        `_allowed_scopes`, and if no scope is set when the annotation is
+        finally applied to a dataset, a default scope will be used that is
+        stored in the private property `_default_scope` (and is defined as
+        one element of the list of allowed scopes)
         """
         return self._scope
 
@@ -123,7 +130,9 @@ class Annotation:
         the method will raise a respective exception.
 
         If no scope is set in the :obj:`aspecd.annotation.Annotation`
-        object, "dataset" will be used as default.
+        object, a default value will be used that can be set in derived
+        classes in the private property `_default_scope`. A full list of
+        scopes is contained in the private property `_allowed_scopes`
 
         The Dataset object always calls this method with the respective dataset
         as argument. Therefore, in this case setting the dataset property
@@ -132,7 +141,7 @@ class Annotation:
         if not self.content:
             raise NoContentError
         if not self.scope:
-            self._scope = 'dataset'
+            self._scope = self._default_scope
         if not dataset:
             if self.dataset:
                 self.dataset.annotate(self)
