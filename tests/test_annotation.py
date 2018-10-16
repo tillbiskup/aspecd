@@ -57,6 +57,15 @@ class TestAnnotation(unittest.TestCase):
         with self.assertRaises(annotation.NoContentError):
             self.annotation.annotate()
 
+    def test_annotate_with_empty_scope_sets_default_scope(self):
+        self.annotation.dataset = dataset.Dataset()
+        self.annotation.annotate()
+        self.assertEqual(self.annotation.scope, 'dataset')
+
+    def test_setting_unknown_scope_raises(self):
+        with self.assertRaises(annotation.UnknownScopeError):
+            self.annotation.scope = 'foo'
+
 
 class TestComment(unittest.TestCase):
     def setUp(self):

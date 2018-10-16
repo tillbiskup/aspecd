@@ -189,7 +189,7 @@ class Dataset:
         Raises
         ------
         ProcessingWithLeadingHistoryError
-            Raised  when trying to process with leading history
+            Raised when trying to process with leading history
         """
         if self._has_leading_history():
             raise ProcessingWithLeadingHistoryError
