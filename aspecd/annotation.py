@@ -122,6 +122,9 @@ class Annotation:
         If no dataset is provided at method call nor as property in the object,
         the method will raise a respective exception.
 
+        If no scope is set in the :obj:`aspecd.annotation.Annotation`
+        object, "dataset" will be used as default.
+
         The Dataset object always calls this method with the respective dataset
         as argument. Therefore, in this case setting the dataset property
         within the Annotation object is not necessary.
