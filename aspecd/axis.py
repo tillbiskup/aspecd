@@ -64,6 +64,7 @@ class Axis:
 
     def __init__(self):
         self._values = np.zeros(0)
+        self._equidistant = None
         self.quantity = ''
         self.unit = ''
         self.label = ''
@@ -86,3 +87,26 @@ class Axis:
         if values.ndim > 1:
             raise AxisValuesDimensionError
         self._values = values
+        self.set_equidistant_value()
+
+    @property
+    def equidistant(self):
+        """
+        True if the axis values are equidistant, False otherwise. None in
+        case of no axis values.
+
+        The property is set automatically if axis values are set and
+        therefore read-only.
+
+        While simple plotting of data values against non-uniform axes with
+        non-equidistant values is usually straightforward, many processing
+        steps rely on equidistant axis values in their simplest possible
+        implementation.
+        """
+        return self._equidistant
+
+    def set_equidistant_value(self):
+        if len(self.values) == 0:
+            return
+        differences = self.values[1:]-self.values[0:-1]
+        self._equidistant = (differences == differences[0]).all()

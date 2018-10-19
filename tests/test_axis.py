@@ -41,6 +41,20 @@ class TestAxis(unittest.TestCase):
     def test_label_is_string(self):
         self.assertTrue(isinstance(self.axis.label, str))
 
+    def test_has_equidistant_property(self):
+        self.assertTrue(hasattr(self.axis, 'equidistant'))
+
+    def test_equidistant_is_none_by_default(self):
+        self.assertEqual(self.axis.equidistant, None)
+
+    def test_equidistant_is_true_for_equidistant_axes(self):
+        self.axis.values = np.arange(0,5,1)
+        self.assertTrue(self.axis.equidistant)
+
+    def test_equidistant_is_false_for_nonequidistant_axes(self):
+        self.axis.values = np.asarray([0, 1, 2, 4, 8])
+        self.assertFalse(self.axis.equidistant)
+
 
 class TestAxisSettings(unittest.TestCase):
 
