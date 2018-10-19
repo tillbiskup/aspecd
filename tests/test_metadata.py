@@ -58,3 +58,29 @@ class TestPhysicalQuantity(unittest.TestCase):
         string = '0.0 m'
         physical_quantity = metadata.PhysicalQuantity(string)
         self.assertEqual(str(physical_quantity), string)
+
+    def test_commensurable_with_same_unit(self):
+        string = '5.0 m'
+        physical_quantity1 = metadata.PhysicalQuantity(string)
+        physical_quantity2 = metadata.PhysicalQuantity(string)
+        self.assertTrue(physical_quantity1.commensurable(physical_quantity2))
+
+    def test_commensurable_with_same_dimension(self):
+        dimension = 'T'
+        physical_quantity1 = metadata.PhysicalQuantity()
+        physical_quantity1.dimension = dimension
+        physical_quantity2 = metadata.PhysicalQuantity()
+        physical_quantity2.dimension = dimension
+        self.assertTrue(physical_quantity1.commensurable(physical_quantity2))
+
+    def test_incommensurable_with_different_units(self):
+        physical_quantity1 = metadata.PhysicalQuantity('5.0 m')
+        physical_quantity2 = metadata.PhysicalQuantity('3 s')
+        self.assertFalse(physical_quantity1.commensurable(physical_quantity2))
+
+    def test_incommensurable_with_different_dimensions(self):
+        physical_quantity1 = metadata.PhysicalQuantity()
+        physical_quantity1.dimension = 'T'
+        physical_quantity2 = metadata.PhysicalQuantity()
+        physical_quantity2.dimension = 'L'
+        self.assertFalse(physical_quantity1.commensurable(physical_quantity2))

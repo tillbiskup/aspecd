@@ -6,9 +6,9 @@ class PhysicalQuantity:
     Class for storing all relevant informations about a physical quantity
 
     A physical quantity, Q, consists always of a value, {Q} and a
-    corresponding unit, [Q], hence
+    corresponding unit, [Q], hence:
 
-        Q = {Q} [Q]
+    Q = {Q} [Q] .
 
     See, e.g., the "IUPAC Green Book" for further details.
 
@@ -70,3 +70,31 @@ class PhysicalQuantity:
         parts = string.split()
         self.value = float(parts[0].strip())
         self.unit = parts[1].strip()
+
+    def commensurable(self, physical_quantity):
+        """
+        Check whether two physical quantities are commensurable.
+
+        There are two criteria for physical quantities to be commensurable.
+        Either they have the same unit, or they have the same dimension. In
+        the latter case, a unit conversion is generally possible.
+
+        Parameters
+        ----------
+        physical_quantity : :obj:`aspecd.metadata.PhysicalQuantity`
+            physical quantity to test commensurability with
+
+        Returns
+        -------
+        commensurable : `boolean`
+            True if both physical quantities have the same unit or
+            dimension, False otherwise
+        """
+        commensurable = False
+        if self.unit and physical_quantity.unit and self.unit == \
+                physical_quantity.unit:
+            commensurable = True
+        if self.dimension and physical_quantity.dimension and self.dimension\
+                == physical_quantity.dimension:
+            commensurable = True
+        return commensurable
