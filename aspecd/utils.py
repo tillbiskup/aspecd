@@ -4,7 +4,8 @@ import importlib
 
 
 def full_class_name(object_):
-    """Return full class name of an object including packages and modules.
+    """
+    Return full class name of an object including packages and modules.
 
     Parameters
     ----------
@@ -23,6 +24,22 @@ def full_class_name(object_):
 
 
 def object_from_class_name(full_class_name_string):
+    """
+    Create object from full class name.
+
+    To obtain the full class name of an object, you might want to use the
+    function :func:`full_class_name`
+
+    Parameters
+    ----------
+    full_class_name_string : `str`
+        string with full class name of an object that shall be instantiated
+
+    Returns
+    -------
+    object_ : `object`
+        object instantiated from the class given in `full_class_name_string`
+    """
     class_name_parts = full_class_name_string.split(".")
     class_name = class_name_parts[-1]
     module_name = '.'.join(class_name_parts[0:-1])
