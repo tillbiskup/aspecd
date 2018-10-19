@@ -76,7 +76,7 @@ class Axis:
 
         Values require to be a one-dimensional numpy array. Trying to set
         values to either a different type or a numpy array with more than one
-        dimension will raise a corresponding errors.
+        dimension will raise a corresponding error.
         """
         return self._values
 
