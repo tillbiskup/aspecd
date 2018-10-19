@@ -87,7 +87,7 @@ class Axis:
         if values.ndim > 1:
             raise AxisValuesDimensionError
         self._values = values
-        self.set_equidistant_value()
+        self.set_equidistant_property()
 
     @property
     def equidistant(self):
@@ -105,7 +105,7 @@ class Axis:
         """
         return self._equidistant
 
-    def set_equidistant_value(self):
+    def set_equidistant_property(self):
         if len(self.values) == 0:
             return
         differences = self.values[1:]-self.values[0:-1]
