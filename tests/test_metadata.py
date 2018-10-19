@@ -1,0 +1,60 @@
+"""Tests for metadata."""
+
+import unittest
+
+from aspecd import metadata
+
+
+class TestPhysicalQuantity(unittest.TestCase):
+    def setUp(self):
+        self.physical_quantity = metadata.PhysicalQuantity()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_value_property(self):
+        self.assertTrue(hasattr(self.physical_quantity, 'value'))
+
+    def test_value_is_float(self):
+        self.assertTrue(isinstance(self.physical_quantity.value, type(0.)))
+
+    def test_set_wrong_type_for_value_fails(self):
+        with self.assertRaises(TypeError):
+            self.physical_quantity.value = 0
+
+    def test_set_value(self):
+        value = 5.
+        self.physical_quantity.value = value
+        self.assertEqual(self.physical_quantity.value, value)
+
+    def test_has_unit_property(self):
+        self.assertTrue(hasattr(self.physical_quantity, 'unit'))
+
+    def test_has_dimension_property(self):
+        self.assertTrue(hasattr(self.physical_quantity, 'dimension'))
+
+    def test_has_name_property(self):
+        self.assertTrue(hasattr(self.physical_quantity, 'name'))
+
+    def test_instantiate_with_string(self):
+        physical_quantity = metadata.PhysicalQuantity('5 m')
+        self.assertEqual(physical_quantity.value, 5.)
+        self.assertEqual(physical_quantity.unit, 'm')
+
+    def test_instantiate_with_value_unit(self):
+        physical_quantity = metadata.PhysicalQuantity(value=5., unit='m')
+        self.assertEqual(physical_quantity.value, 5.)
+        self.assertEqual(physical_quantity.unit, 'm')
+
+    def test_string_representation(self):
+        string = '5.0 m'
+        physical_quantity = metadata.PhysicalQuantity(string)
+        self.assertEqual(str(physical_quantity), string)
+
+    def test_string_representation_with_empty_value_unit(self):
+        self.assertEqual(str(self.physical_quantity), '')
+
+    def test_string_representation_when_value_is_zero(self):
+        string = '0.0 m'
+        physical_quantity = metadata.PhysicalQuantity(string)
+        self.assertEqual(str(physical_quantity), string)

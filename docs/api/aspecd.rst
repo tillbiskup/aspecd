@@ -76,6 +76,14 @@ aspecd.internal module
     :undoc-members:
     :show-inheritance:
 
+aspecd.metadata module
+----------------------
+
+.. automodule:: aspecd.metadata
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 aspecd.plotting module
 ----------------------
 
