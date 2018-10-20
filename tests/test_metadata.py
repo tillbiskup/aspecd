@@ -41,6 +41,11 @@ class TestPhysicalQuantity(unittest.TestCase):
         self.assertEqual(physical_quantity.value, 5.)
         self.assertEqual(physical_quantity.unit, 'm')
 
+    def test_instantiate_with_string_without_unit(self):
+        physical_quantity = metadata.PhysicalQuantity('5')
+        self.assertEqual(physical_quantity.value, 5.)
+        self.assertFalse(physical_quantity.unit)
+
     def test_instantiate_with_value_unit(self):
         physical_quantity = metadata.PhysicalQuantity(value=5., unit='m')
         self.assertEqual(physical_quantity.value, 5.)
@@ -84,3 +89,22 @@ class TestPhysicalQuantity(unittest.TestCase):
         physical_quantity2 = metadata.PhysicalQuantity()
         physical_quantity2.dimension = 'L'
         self.assertFalse(physical_quantity1.commensurable(physical_quantity2))
+
+    def test_incommensurable_if_has_no_unit(self):
+        physical_quantity = metadata.PhysicalQuantity('5.0 m')
+        self.assertFalse(physical_quantity.commensurable([]))
+
+    def test_incommensurable_if_has_no_dimension(self):
+        physical_quantity = metadata.PhysicalQuantity()
+        physical_quantity.dimension = 'T'
+        self.assertFalse(physical_quantity.commensurable([]))
+
+    def test_set_value_and_unit_from_string(self):
+        self.physical_quantity.from_string('5 m')
+        self.assertEqual(self.physical_quantity.value, 5.0)
+        self.assertEqual(self.physical_quantity.unit, 'm')
+
+    def test_set_value_and_unit_from_empty_string(self):
+        self.physical_quantity.from_string('')
+        self.assertFalse(self.physical_quantity.value)
+        self.assertFalse(self.physical_quantity.unit)

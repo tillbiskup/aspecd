@@ -106,7 +106,7 @@ class Axis:
         return self._equidistant
 
     def _set_equidistant_property(self):
-        if len(self.values) == 0:
+        if not self.values.size:
             return
         differences = self.values[1:]-self.values[0:-1]
         self._equidistant = (differences == differences[0]).all()

@@ -3,7 +3,7 @@
 
 class PhysicalQuantity:
     """
-    Class for storing all relevant informations about a physical quantity
+    Class for storing all relevant informations about a physical quantity.
 
     A physical quantity, Q, consists always of a value, {Q} and a
     corresponding unit, [Q], hence:
@@ -19,12 +19,30 @@ class PhysicalQuantity:
     ----------
     unit : `str`
         symbol of the unit of the corresponding value
+
         SI units are preferred
     dimension : `str`
         dimension of the corresponding value
+
         useful for (automatic) conversions
     name : `str`
         name of the physical quantity in a given context
+
+    Parameters
+    ----------
+    string : `str`
+        String containing value and unit, separated by whitespace
+
+        Will be used to set value and unit correspondingly.
+
+        If no second element separated by whitespace is present,
+        only :attr:`value` will be set.
+    value : `float`
+        Numerical value
+    unit : `str`
+        String containing the unit of the corresponding value.
+
+        SI units are preferred, and their abbreviations should be used.
 
     Raises
     ------
@@ -57,6 +75,11 @@ class PhysicalQuantity:
         Get or set the value of a physical quantity.
 
         A value is always a float.
+
+        Raises
+        ------
+        ValueError
+            Raised if value is not a (scalar) float
         """
         return self._value
 
@@ -69,7 +92,8 @@ class PhysicalQuantity:
     def _set_value_unit_from_string(self, string):
         parts = string.split()
         self.value = float(parts[0].strip())
-        self.unit = parts[1].strip()
+        if len(parts) > 1:
+            self.unit = parts[1].strip()
 
     def commensurable(self, physical_quantity):
         """
@@ -91,10 +115,28 @@ class PhysicalQuantity:
             dimension, False otherwise
         """
         commensurable = False
-        if self.unit and physical_quantity.unit and self.unit == \
-                physical_quantity.unit:
+        if self.unit and hasattr(physical_quantity, 'unit') and \
+                physical_quantity.unit and self.unit == physical_quantity.unit:
             commensurable = True
-        if self.dimension and physical_quantity.dimension and self.dimension\
+        if self.dimension and hasattr(physical_quantity, 'dimension') and \
+                physical_quantity.dimension and self.dimension\
                 == physical_quantity.dimension:
             commensurable = True
         return commensurable
+
+    def from_string(self, string):
+        """
+        Set value and unit from string.
+
+        Parameters
+        ----------
+        string : `str`
+            String containing value and unit, separated by whitespace
+
+            Will be used to set value and unit correspondingly.
+
+            If no second element separated by whitespace is present,
+            only :attr:`value` will be set.
+        """
+        if string:
+            self._set_value_unit_from_string(string)
