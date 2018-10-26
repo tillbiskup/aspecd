@@ -279,7 +279,7 @@ class Measurement(Metadata):
     operator : `str`
         Name of the operator performing the measurement
         Beware of the implications for privacy protection
-    labbook : `str`
+    labbook_entry : `str`
         Identifier for lab book entry (usually either LOI or URL)
 
     Parameters
@@ -293,7 +293,7 @@ class Measurement(Metadata):
         self.end = None
         self.purpose = ''
         self.operator = ''
-        self.labbook = ''
+        self.labbook_entry = ''
         super().__init__(dict_=dict_)
 
     def from_dict(self, dict_):

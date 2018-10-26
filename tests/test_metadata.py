@@ -241,14 +241,14 @@ class TestMeasurement(unittest.TestCase):
 
     def test_instantiate_properties_from_dict(self):
         dict_ = {"purpose": "Kill time", "operator": "John Doe",
-                 "labbook": "loi:42.1001/foo/bar"}
+                 "labbook_entry": "loi:42.1001/foo/bar"}
         measurement = metadata.Measurement(dict_)
         for key in dict_:
             self.assertEqual(getattr(measurement, key), dict_[key])
 
     def test_set_properties_from_dict(self):
         dict_ = {"purpose": "Kill time", "operator": "John Doe",
-                 "labbook": "loi:42.1001/foo/bar"}
+                 "labbook_entry": "loi:42.1001/foo/bar"}
         self.measurement.from_dict(dict_)
         for key in dict_:
             self.assertEqual(getattr(self.measurement, key), dict_[key])
