@@ -184,3 +184,33 @@ class TestTemperatureControl(unittest.TestCase):
         self.temperature_control.from_dict(dict_)
         self.assertEqual(self.temperature_control.controller,
                          dict_["controller"])
+
+
+class TestMeasurement(unittest.TestCase):
+    def setUp(self):
+        self.measurement = metadata.Measurement()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_instantiate_properties_from_dict(self):
+        dict_ = {"purpose": "Kill time", "operator": "John Doe",
+                 "labbook": "loi:42.1001/foo/bar"}
+        measurement = metadata.Measurement(dict_)
+        for key in dict_:
+            self.assertEqual(getattr(measurement, key), dict_[key])
+
+    def test_set_properties_from_dict(self):
+        dict_ = {"purpose": "Kill time", "operator": "John Doe",
+                 "labbook": "loi:42.1001/foo/bar"}
+        self.measurement.from_dict(dict_)
+        for key in dict_:
+            self.assertEqual(getattr(self.measurement, key), dict_[key])
+
+    def test_instantiate_start_end_from_dict(self):
+        dict_ = {"start": {"date": "2017-01-02", "time": "11:00:00"},
+                 "end": {"date": "2017-01-02", "time": "11:01:00"}}
+        measurement = metadata.Measurement(dict_)
+        fmt = "%Y%m%dT%H%M%S"
+        self.assertEqual(measurement.start.strftime(fmt), "20170102T110000")
+        self.assertEqual(measurement.end.strftime(fmt), "20170102T110100")

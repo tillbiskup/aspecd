@@ -1,5 +1,7 @@
 """Metadata."""
 
+import datetime
+
 
 class PhysicalQuantity:
     """
@@ -194,8 +196,8 @@ class TemperatureControl:
         """
         Set properties from dictionary, e.g., from metadata.
 
-        Only parameters in the dict that are valid properties of the class
-        are set accordingly.
+        Only parameters in the dictionary that are valid properties of the
+        class are set accordingly.
 
         If "controlled" is set to False in the dictionary, the temperature
         value and unit will be cleared.
@@ -218,3 +220,77 @@ class TemperatureControl:
         # Checking "controlled" needs to be done after assigning other keys
         if "controlled" in dict_ and not dict_["controlled"]:
             self.temperature.from_string('')
+
+
+class Measurement:
+    """
+    General information available for each type of measurement.
+
+    Attributes
+    ----------
+    start : `datetime`
+        Date and time of start of measurement
+    end : `datetime`
+        Date and time of end of measurement
+    purpose: `str`
+        Purpose of measurement, often quite helpful to know
+    operator : `str`
+        Name of the operator performing the measurement
+        Beware of the implications for privacy protection
+    labbook : `str`
+        Identifier for lab book entry (usually either LOI or URL)
+
+    Parameters
+    ----------
+    dict_ : `dict`
+        Dictionary containing fields corresponding to attributes of the class
+    """
+
+    def __init__(self, dict_=None):
+        self.start = None
+        self.end = None
+        self.purpose = ''
+        self.operator = ''
+        self.labbook = ''
+        if dict_:
+            self.from_dict(dict_)
+
+    def from_dict(self, dict_):
+        """
+        Set properties from dictionary, e.g., from metadata.
+
+        Only parameters in the dictionary that are valid properties of the
+        class are set accordingly.
+
+        Parameters
+        ----------
+        dict_ : `dict`
+            Dictionary with keys corresponding to properties of the class.
+        """
+        for key in dict_:
+            if key in ("start", "end"):
+                self._set_datetime_from_dict(key, dict_[key])
+                continue
+            if hasattr(self, key):
+                setattr(self, key, dict_[key])
+
+    def _set_datetime_from_dict(self, key, dict_):
+        """
+        Set start and end properties from dictionary containing values.
+
+        The dictionary will usually be obtained from reading a metadata file.
+        Date and time formats are restricted, following "%Y-%m-%d" for date
+        and "%H:%M:%S" for time.
+
+        Note that datetime objects are immutable.
+
+        Parameters
+        ----------
+        key : `str`
+            Property of class to set
+        dict_ : `dict`
+            Dictionary with fields "date" and "time"
+        """
+        fmt = "%Y-%m-%d %H:%M:%S"
+        datetime_string = " ".join([dict_["date"], dict_["time"]])
+        setattr(self, key, datetime.datetime.strptime(datetime_string, fmt))
