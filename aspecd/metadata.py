@@ -140,3 +140,30 @@ class PhysicalQuantity:
         """
         if string:
             self._set_value_unit_from_string(string)
+
+
+class TemperatureControl:
+
+    def __init__(self, dict_=None, temperature=''):
+        self.temperature = PhysicalQuantity(temperature)
+        self.controller = ''
+        if dict_:
+            self.from_dict(dict_)
+
+    @property
+    def controlled(self):
+        return self.temperature.value
+
+    def from_dict(self, dict_):
+        for key in dict_:
+            if hasattr(self, key):
+                if key is "temperature":
+                    self.temperature.from_string(dict_[key])
+                elif key is "controlled":
+                    pass
+                else:
+                    setattr(self, key, dict_[key])
+        # Checking "controlled" needs to be done after assigning other keys
+        if "controlled" in dict_ and not dict_["controlled"]:
+            self.temperature.value = 0.
+            self.temperature.unit = ''

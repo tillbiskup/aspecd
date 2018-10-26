@@ -108,3 +108,73 @@ class TestPhysicalQuantity(unittest.TestCase):
         self.physical_quantity.from_string('')
         self.assertFalse(self.physical_quantity.value)
         self.assertFalse(self.physical_quantity.unit)
+
+
+class TestTemperatureControl(unittest.TestCase):
+    def setUp(self):
+        self.temperature_control = metadata.TemperatureControl()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_controlled_property(self):
+        self.assertTrue(hasattr(self.temperature_control, 'controlled'))
+
+    def test_has_temperature_property(self):
+        self.assertTrue(hasattr(self.temperature_control, 'temperature'))
+
+    def test_has_controller_property(self):
+        self.assertTrue(hasattr(self.temperature_control, 'controller'))
+
+    def test_instantiate_with_temperature_from_string(self):
+        temperature_control = metadata.TemperatureControl(temperature='270 K')
+        self.assertEqual(temperature_control.temperature.value, 270.)
+        self.assertEqual(temperature_control.temperature.unit, 'K')
+
+    def test_instantiate_with_temperature_sets_controlled(self):
+        temperature_control = metadata.TemperatureControl(temperature='270 K')
+        self.assertTrue(temperature_control.controlled)
+
+    def test_setting_temperature_sets_controlled(self):
+        self.temperature_control.temperature.from_string('270 K')
+        self.assertTrue(self.temperature_control.controlled)
+
+    def test_instantiate_properties_from_dict(self):
+        dict_ = {"controlled": True, "temperature": "270 K",
+                 "controller": "Oxford ITC 503S"}
+        temperature_control = metadata.TemperatureControl(dict_)
+        self.assertTrue(temperature_control.controlled)
+        self.assertEqual(temperature_control.temperature.value, 270.)
+        self.assertEqual(temperature_control.temperature.unit, 'K')
+        self.assertEqual(temperature_control.controller, dict_["controller"])
+
+    def test_instantiate_properties_from_dict_overwrites_controlled(self):
+        dict_ = {"controlled": False, "temperature": "270 K",
+                 "controller": "Oxford ITC 503S"}
+        temperature_control = metadata.TemperatureControl(dict_)
+        self.assertFalse(temperature_control.controlled)
+
+    def test_set_properties_from_dict(self):
+        dict_ = {"controlled": True, "temperature": "270 K",
+                 "controller": "Oxford ITC 503S"}
+        self.temperature_control.from_dict(dict_)
+        self.assertTrue(self.temperature_control.controlled)
+        self.assertEqual(self.temperature_control.temperature.value, 270.)
+        self.assertEqual(self.temperature_control.temperature.unit, 'K')
+        self.assertEqual(self.temperature_control.controller,
+                         dict_["controller"])
+
+    def test_set_properties_from_dict_with_missing_controlled_field(self):
+        dict_ = {"temperature": "270 K", "controller": "Oxford ITC 503S"}
+        self.temperature_control.from_dict(dict_)
+        self.assertTrue(self.temperature_control.controlled)
+        self.assertEqual(self.temperature_control.temperature.value, 270.)
+        self.assertEqual(self.temperature_control.temperature.unit, 'K')
+        self.assertEqual(self.temperature_control.controller,
+                         dict_["controller"])
+
+    def test_set_properties_from_dict_with_missing_temperature_field(self):
+        dict_ = {"controller": "Oxford ITC 503S"}
+        self.temperature_control.from_dict(dict_)
+        self.assertEqual(self.temperature_control.controller,
+                         dict_["controller"])
