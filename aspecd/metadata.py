@@ -148,8 +148,34 @@ class PhysicalQuantity:
 
 
 class TemperatureControl:
+    """
+    Temperature control is very often found in spectroscopy.
+
+    This class provides general means of storing relevant parameters for
+    temperature control.
+
+    Attributes
+    ----------
+    temperature : :class:`aspecd.metadata.PhysicalQuantity`
+        value and unit of the temperature set
+    controller : `str`
+        type and name of the temperature controller used
+    """
 
     def __init__(self, dict_=None, temperature=''):
+        """
+        Instantiate TemperatureControl object.
+
+        If both, temperature and dictionary containing a temperature key are
+        given, the dictionary key will overwrite the temperature parameter.
+
+        Parameters
+        ----------
+        dict_ : `dict`
+            Dictionary containing properties to set
+        temperature : `str`
+            Value and unit of temperature
+        """
         self.temperature = PhysicalQuantity(temperature)
         self.controller = ''
         if dict_:
@@ -157,9 +183,30 @@ class TemperatureControl:
 
     @property
     def controlled(self):
+        """
+        Has temperature been actively controlled during measurement?
+
+        Read-only property automatically set when setting a temperature value.
+        """
         return self.temperature.value
 
     def from_dict(self, dict_):
+        """
+        Set properties from dictionary, e.g., from metadata.
+
+        Only parameters in the dict that are valid properties of the class
+        are set accordingly.
+
+        If "controlled" is set to False in the dictionary, the temperature
+        value and unit will be cleared.
+
+        The value of the temperature key needs to be a string.
+
+        Parameters
+        ----------
+        dict_ : `dict`
+            Dictionary with keys corresponding to properties of the class.
+        """
         for key in dict_:
             if hasattr(self, key):
                 if key is "temperature":
