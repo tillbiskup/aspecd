@@ -1,4 +1,41 @@
-"""Metadata."""
+"""
+Metadata are one key concept of the ASpecD framework, and they come in
+different flavours. Perhaps the easiest to grasp is metadata that accompany
+measurements---and are often stored separately from the data in metadata
+files. Other types of metadata are those of processing steps or
+representations.
+
+Generally speaking, metadata can be thought of as key--value stores that
+might be hierarchically structured and thus cascaded. Nevertheless, classes
+have some advantages over using simple dictionaries, as there are certain
+operations that are common to some or all types of metadata.
+
+The most basic class is :class:`aspecd.metadata.PhysicalQuantity` storing
+all relevant information about a physical quantity in an easily accessible
+way, eventually allowing to test for commensurable quantities and
+converting between units.
+
+Next is :class:`aspecd.metadata.Metadata` as a generic class for all
+metadata containers. All other classes storing metadata, particularly those
+storing metadata accompanying measurements and therefore ending up in the
+metadata of a :class:`aspecd.dataset.Dataset`, should inherit from this class.
+
+Currently, three classes for actual metadata of datasets are contained in the
+ASpecD framework, namely :class:`aspecd.metadata.Measurement` for storing
+general information about a given measurement,
+:class:`aspecd.metadata.Sample` for all information regarding the sample
+investigated, and :class:`aspecd.metadata.TemperatureControl` for
+information about the temperature control (including whether temperature has
+been actively controlled at all during the measurement).
+
+The attribute `metadata` in the :class:`aspecd.dataset.Dataset` is of type
+:class:`aspecd.metadata.DatasetMetadata` and contains the three metadata
+classes named above. Derived packages should extend this class accordingly.
+
+All classes inheriting from :class:`aspecd.metadata.Metadata` provide a
+method :meth:`from_dict` allowing to set the attributes of the objects. This
+allows for easy use with metadata read from a file into a `dict`.
+"""
 
 import datetime
 
