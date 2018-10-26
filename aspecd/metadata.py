@@ -334,3 +334,29 @@ class Measurement(Metadata):
         fmt = "%Y-%m-%d %H:%M:%S"
         datetime_string = " ".join([dict_["date"], dict_["time"]])
         setattr(self, key, datetime.datetime.strptime(datetime_string, fmt))
+
+
+class Sample(Metadata):
+    """
+    Information on the sample measured.
+
+    Attributes
+    ----------
+    name : `str`
+        Short name of the sample
+    id : `str` or `int`
+        Unique identifier of the sample
+    loi : `str`
+        Lab Object Identifier (LOI) for the sample
+
+    Parameters
+    ----------
+    dict_ : `dict`
+        Dictionary containing fields corresponding to attributes of the class
+    """
+
+    def __init__(self, dict_=None):
+        self.name = ''
+        self.id = None
+        self.loi = ''
+        super().__init__(dict_=dict_)
