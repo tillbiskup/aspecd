@@ -150,12 +150,39 @@ class PhysicalQuantity:
 
 
 class Metadata:
+    """
+    General metadata class.
+
+    Metadata can be set from dict upon initialisation.
+    """
 
     def __init__(self, dict_=None):
+        """
+        Instantiate Metadata object.
+
+        Parameters
+        ----------
+        dict_ : `dict`
+            Dictionary containing properties to set
+        """
         if dict_:
             self.from_dict(dict_)
 
     def from_dict(self, dict_):
+        """
+        Set properties from dictionary, e.g., from metadata.
+
+        Only parameters in the dictionary that are valid properties of the
+        class are set accordingly.
+
+        If a property is of class :class:`aspecd.metadata.PhysicalQuantity`,
+        it is set accordingly.
+
+        Parameters
+        ----------
+        dict_ : `dict`
+            Dictionary containing properties to set
+        """
         for key in dict_:
             if hasattr(self, key):
                 if isinstance(getattr(self, key), type(PhysicalQuantity())):
@@ -164,7 +191,7 @@ class Metadata:
                     setattr(self, key, dict_[key])
 
 
-class TemperatureControl:
+class TemperatureControl(Metadata):
     """
     Temperature control is very often found in spectroscopy.
 
@@ -195,8 +222,7 @@ class TemperatureControl:
         """
         self.temperature = PhysicalQuantity(temperature)
         self.controller = ''
-        if dict_:
-            self.from_dict(dict_)
+        super().__init__(dict_=dict_)
 
     @property
     def controlled(self):
@@ -224,20 +250,21 @@ class TemperatureControl:
         dict_ : `dict`
             Dictionary with keys corresponding to properties of the class.
         """
-        for key in dict_:
-            if hasattr(self, key):
-                if isinstance(getattr(self, key), type(PhysicalQuantity())):
-                    getattr(self, key).from_string(dict_[key])
-                elif key is "controlled":
-                    pass
-                else:
-                    setattr(self, key, dict_[key])
+        # Get value for key "controlled" if it exists, and delete it from dict_
+        controlled_in_dict = "controlled" in dict_
+        if controlled_in_dict:
+            controlled_in_dict = True
+            controlled = dict_["controlled"]
+            del dict_["controlled"]
+        else:
+            controlled = False
+        super(TemperatureControl, self).from_dict(dict_)
         # Checking "controlled" needs to be done after assigning other keys
-        if "controlled" in dict_ and not dict_["controlled"]:
+        if controlled_in_dict and not controlled:
             self.temperature.from_string('')
 
 
-class Measurement:
+class Measurement(Metadata):
     """
     General information available for each type of measurement.
 
@@ -267,8 +294,7 @@ class Measurement:
         self.purpose = ''
         self.operator = ''
         self.labbook = ''
-        if dict_:
-            self.from_dict(dict_)
+        super().__init__(dict_=dict_)
 
     def from_dict(self, dict_):
         """
@@ -282,12 +308,11 @@ class Measurement:
         dict_ : `dict`
             Dictionary with keys corresponding to properties of the class.
         """
-        for key in dict_:
-            if key in ("start", "end"):
+        for key in ("start", "end"):
+            if key in dict_:
                 self._set_datetime_from_dict(key, dict_[key])
-                continue
-            if hasattr(self, key):
-                setattr(self, key, dict_[key])
+                del dict_[key]
+        super().from_dict(dict_=dict_)
 
     def _set_datetime_from_dict(self, key, dict_):
         """
