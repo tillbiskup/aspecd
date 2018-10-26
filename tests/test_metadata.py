@@ -280,3 +280,42 @@ class TestSample(unittest.TestCase):
         self.sample.from_dict(dict_)
         for key in dict_:
             self.assertEqual(getattr(self.sample, key), dict_[key])
+
+
+class TestDatasetMetadata(unittest.TestCase):
+    def setUp(self):
+        self.dataset_metadata = metadata.DatasetMetadata()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_set_measurement_metadata_from_dict(self):
+        dict_ = {"measurement": {"purpose": "Kill time",
+                                 "operator": "John Doe",
+                                 "labbook_entry": "loi:42.1001/foo/bar"}}
+        self.dataset_metadata.from_dict(dict_)
+        for key in dict_["measurement"]:
+            self.assertEqual(getattr(self.dataset_metadata.measurement, key),
+                             dict_["measurement"][key])
+
+    def test_set_temperature_metadata_from_dict(self):
+        dict_ = {"temperature_control": {"controlled": True,
+                                         "temperature": "270 K",
+                                         "controller": "Oxford ITC 503S"}}
+        self.dataset_metadata.from_dict(dict_)
+        self.assertTrue(self.dataset_metadata.temperature_control.controlled)
+        self.assertEqual(
+            self.dataset_metadata.temperature_control.temperature.value, 270.)
+        self.assertEqual(
+            self.dataset_metadata.temperature_control.temperature.unit, 'K')
+        self.assertEqual(self.dataset_metadata.temperature_control.controller,
+                         dict_["temperature_control"]["controller"])
+
+    def test_set_sample_metadata_from_dict(self):
+        dict_ = {"sample": {"name": "Sample1",
+                            "id": 42,
+                            "loi": "loi:42.1001/foo/bar"}}
+        self.dataset_metadata.from_dict(dict_)
+        for key in dict_["sample"]:
+            self.assertEqual(getattr(self.dataset_metadata.sample, key),
+                             dict_["sample"][key])

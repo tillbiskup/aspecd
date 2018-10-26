@@ -360,3 +360,49 @@ class Sample(Metadata):
         self.id = None
         self.loi = ''
         super().__init__(dict_=dict_)
+
+
+class DatasetMetadata:
+    """
+    Metadata for dataset.
+
+    This class contains the minimal set of metadata for a dataset.
+
+    Metadata of actual datasets should extend this class by adding
+    properties that are themselves classes inheriting from
+    :class:`aspecd.metadata.Metadata`.
+
+    Attributes
+    ----------
+    measurement : :class:`aspecd.metadata.Measurement`
+        Metadata of measurement
+    sample : :class:`aspecd.metadata.Sample`
+        Metadata of sample
+    temperature_control : :class:`aspecd.metadata.TemperatureControl`
+        Metadata of temperature control
+    """
+
+    def __init__(self):
+        self.measurement = Measurement()
+        self.sample = Sample()
+        self.temperature_control = TemperatureControl()
+
+    def from_dict(self, dict_=None):
+        """
+        Set properties from dictionary, e.g., from metadata.
+
+        Only parameters in the dictionary that are valid properties of the
+        class are set accordingly.
+
+        Parameters
+        ----------
+        dict_ : `dict`
+            Dictionary with metadata.
+
+            Each key of this dictionary corresponds to a class attribute and
+            is in itself a dictionary with the correct set of attributes for
+            the particular class.
+        """
+        for key in dict_:
+            if hasattr(self, key):
+                getattr(self, key).from_dict(dict_[key])
