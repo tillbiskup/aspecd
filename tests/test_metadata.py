@@ -214,3 +214,49 @@ class TestMeasurement(unittest.TestCase):
         fmt = "%Y%m%dT%H%M%S"
         self.assertEqual(measurement.start.strftime(fmt), "20170102T110000")
         self.assertEqual(measurement.end.strftime(fmt), "20170102T110100")
+
+
+class TestMetadata(unittest.TestCase):
+    def setUp(self):
+        self.metadata = metadata.Metadata()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_set_properties_from_dict(self):
+        dict_ = {"purpose": "Kill time", "operator": "John Doe",
+                 "labbook": "loi:42.1001/foo/bar"}
+        for key in dict_:
+            setattr(self.metadata, key, '')
+        self.metadata.from_dict(dict_)
+        for key in dict_:
+            self.assertEqual(getattr(self.metadata, key), dict_[key])
+
+    def test_instantiate_properties_from_dict_with_physical_quantities(self):
+        dict_ = {"purpose": "Kill time", "operator": "John Doe",
+                 "labbook": "loi:42.1001/foo/bar", "length": "1.0 mm"}
+        metadata_class = metadata.Metadata
+        for key in dict_:
+            setattr(metadata_class, key, '')
+        metadata_class.length = metadata.PhysicalQuantity()
+        metadata_ = metadata_class(dict_)
+        for key in dict_:
+            if isinstance(getattr(metadata_, key),
+                          metadata.PhysicalQuantity):
+                self.assertEqual(str(getattr(metadata_, key)), dict_[key])
+            else:
+                self.assertEqual(getattr(metadata_, key), dict_[key])
+
+    def test_set_properties_from_dict_with_physical_quantities(self):
+        dict_ = {"purpose": "Kill time", "operator": "John Doe",
+                 "labbook": "loi:42.1001/foo/bar", "length": "1.0 mm"}
+        for key in dict_:
+            setattr(self.metadata, key, '')
+        self.metadata.length = metadata.PhysicalQuantity()
+        self.metadata.from_dict(dict_)
+        for key in dict_:
+            if isinstance(getattr(self.metadata, key),
+                          metadata.PhysicalQuantity):
+                self.assertEqual(str(getattr(self.metadata, key)), dict_[key])
+            else:
+                self.assertEqual(getattr(self.metadata, key), dict_[key])

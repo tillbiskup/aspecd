@@ -92,7 +92,7 @@ class PhysicalQuantity:
         self._value = value
 
     def _set_value_unit_from_string(self, string):
-        parts = string.split()
+        parts = string.split(maxsplit=1)
         self.value = float(parts[0].strip())
         if len(parts) > 1:
             self.unit = parts[1].strip()
@@ -147,6 +147,21 @@ class PhysicalQuantity:
         else:
             self.value = 0.
             self.unit = ''
+
+
+class Metadata:
+
+    def __init__(self, dict_=None):
+        if dict_:
+            self.from_dict(dict_)
+
+    def from_dict(self, dict_):
+        for key in dict_:
+            if hasattr(self, key):
+                if isinstance(getattr(self, key), type(PhysicalQuantity())):
+                    getattr(self, key).from_string(dict_[key])
+                else:
+                    setattr(self, key, dict_[key])
 
 
 class TemperatureControl:
@@ -211,8 +226,8 @@ class TemperatureControl:
         """
         for key in dict_:
             if hasattr(self, key):
-                if key is "temperature":
-                    self.temperature.from_string(dict_[key])
+                if isinstance(getattr(self, key), type(PhysicalQuantity())):
+                    getattr(self, key).from_string(dict_[key])
                 elif key is "controlled":
                     pass
                 else:
