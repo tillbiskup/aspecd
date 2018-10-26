@@ -109,6 +109,12 @@ class TestPhysicalQuantity(unittest.TestCase):
         self.assertFalse(self.physical_quantity.value)
         self.assertFalse(self.physical_quantity.unit)
 
+    def test_empty_string_clears_value_and_unit(self):
+        self.physical_quantity.from_string('5 m')
+        self.physical_quantity.from_string('')
+        self.assertFalse(self.physical_quantity.value)
+        self.assertFalse(self.physical_quantity.unit)
+
 
 class TestTemperatureControl(unittest.TestCase):
     def setUp(self):

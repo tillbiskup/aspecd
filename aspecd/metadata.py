@@ -137,9 +137,14 @@ class PhysicalQuantity:
 
             If no second element separated by whitespace is present,
             only :attr:`value` will be set.
+
+            If an empty string is provided, value and unit are cleared.
         """
         if string:
             self._set_value_unit_from_string(string)
+        else:
+            self.value = 0.
+            self.unit = ''
 
 
 class TemperatureControl:
@@ -165,5 +170,4 @@ class TemperatureControl:
                     setattr(self, key, dict_[key])
         # Checking "controlled" needs to be done after assigning other keys
         if "controlled" in dict_ and not dict_["controlled"]:
-            self.temperature.value = 0.
-            self.temperature.unit = ''
+            self.temperature.from_string('')
