@@ -115,6 +115,12 @@ class TestPhysicalQuantity(unittest.TestCase):
         self.assertFalse(self.physical_quantity.value)
         self.assertFalse(self.physical_quantity.unit)
 
+    def test_to_dict(self):
+        self.physical_quantity.from_string('5 m')
+        test_dict = {"value": 5.0, "unit": "m", "dimension": "", "name": ""}
+        to_dict = self.physical_quantity.to_dict()
+        self.assertDictEqual(test_dict, to_dict)
+
 
 class TestMetadata(unittest.TestCase):
     def setUp(self):
@@ -160,6 +166,29 @@ class TestMetadata(unittest.TestCase):
                 self.assertEqual(str(getattr(self.metadata, key)), dict_[key])
             else:
                 self.assertEqual(getattr(self.metadata, key), dict_[key])
+
+    def test_to_dict(self):
+        dict_ = {"purpose": "Kill time", "operator": "John Doe",
+                 "labbook": "loi:42.1001/foo/bar"}
+        for key in dict_:
+            setattr(self.metadata, key, '')
+        self.metadata.from_dict(dict_)
+        to_dict = self.metadata.to_dict()
+        self.assertDictEqual(dict_, to_dict)
+
+    def test_to_dict_with_physical_quantities(self):
+        dict_ = {"purpose": "Kill time", "operator": "John Doe",
+                 "labbook": "loi:42.1001/foo/bar", "length": "1.0 mm"}
+        for key in dict_:
+            setattr(self.metadata, key, '')
+        self.metadata.length = metadata.PhysicalQuantity()
+        self.metadata.from_dict(dict_)
+        test_dict = {"purpose": "Kill time", "operator": "John Doe",
+                     "labbook": "loi:42.1001/foo/bar",
+                     "length": {"value": 1.0, "unit": "mm", "dimension": "",
+                                "name": ""}}
+        to_dict = self.metadata.to_dict()
+        self.assertDictEqual(test_dict, to_dict)
 
 
 class TestTemperatureControl(unittest.TestCase):

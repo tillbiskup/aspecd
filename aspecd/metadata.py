@@ -35,9 +35,15 @@ classes named above. Derived packages should extend this class accordingly.
 All classes inheriting from :class:`aspecd.metadata.Metadata` provide a
 method :meth:`from_dict` allowing to set the attributes of the objects. This
 allows for easy use with metadata read from a file into a `dict`.
+
+Similiarly, all classes inheriting from :class:`aspecd.metadata.Metadata` as
+well as :class:`aspecd.metadata.PhysicalQuantity` provide a method
+:meth:`to_dict` that returns a dictionary of all public attributes of the
+respective object. This allows to write metadata to a file.
 """
 
 import datetime
+import aspecd.utils
 
 
 class PhysicalQuantity:
@@ -185,8 +191,26 @@ class PhysicalQuantity:
             self.value = 0.
             self.unit = ''
 
+    def to_dict(self):
+        """
+        Create dictionary containing public attributes of an object.
 
-class Metadata:
+        Returns
+        -------
+        public_attributes : `dict`
+            Dictionary containing the public attributes of the object
+        """
+        output = {}
+        for key in self.__dict__:
+            if str(key).startswith('_'):
+                pass
+            else:
+                output[key] = self.__dict__[key]
+        output["value"] = self.value
+        return output
+
+
+class Metadata(aspecd.utils.ToDictMixin):
     """
     General metadata class.
 

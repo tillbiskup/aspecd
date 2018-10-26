@@ -1,6 +1,7 @@
-"""General purpose functions used in other modules."""
+"""General purpose functions and classes used in other modules."""
 
 import importlib
+import collections
 
 
 def full_class_name(object_):
@@ -46,3 +47,39 @@ def object_from_class_name(full_class_name_string):
     module = importlib.import_module(module_name)
     object_ = getattr(module, class_name)()
     return object_
+
+
+class ToDictMixin:
+    """
+    Mixin class providing a method for returning all public attributes as dict.
+    """
+
+    def to_dict(self):
+        """
+        Create dictionary containing public attributes of an object.
+
+        Returns
+        -------
+        public_attributes : `dict`
+            Dictionary containing the public attributes of the object
+        """
+        return self._traverse_dict(self.__dict__)
+
+    def _traverse_dict(self, instance_dict):
+        output = {}#collections.OrderedDict()
+        for key, value in instance_dict.items():
+            if str(key).startswith('_'):
+                pass
+            else:
+                output[key] = self._traverse(key, value)
+        return output
+
+    def _traverse(self, key, value):
+        if isinstance(value, ToDictMixin) or hasattr(value, 'to_dict'):
+            return value.to_dict()
+        elif hasattr(value, '__dict__'):
+            return self._traverse_dict(value.__dict__)
+        elif isinstance(value, list):
+            return [self._traverse(key, i) for i in value]
+        else:
+            return value
