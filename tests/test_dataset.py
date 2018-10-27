@@ -28,9 +28,6 @@ class TestDataset(unittest.TestCase):
     def test_has_metadata_property(self):
         self.assertTrue(hasattr(self.dataset, 'metadata'))
 
-    def test_metadata_is_dict(self):
-        self.assertTrue(isinstance(self.dataset.metadata, dict))
-
     def test_has_history_property(self):
         self.assertTrue(hasattr(self.dataset, 'history'))
 

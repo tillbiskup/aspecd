@@ -7,8 +7,9 @@ reproducibility. This is part of how the ASpecD framework tries to support good
 scientific practice.
 """
 
-from aspecd import data, history
 import copy
+
+from aspecd import data, history, metadata
 
 
 class Error(Exception):
@@ -131,8 +132,8 @@ class Dataset:
     ----------
     data : :obj:`aspecd.data.Data`
         numeric data and axes
-    metadata : :obj:`dict`
-        key-value store of metadata
+    metadata : :obj:`aspecd.metadata.DatasetMetadata`
+        hierarchical key-value store of metadata
     history : :obj:`list`
         processing steps performed on the numeric data
     analyses : :obj:`list`
@@ -157,7 +158,7 @@ class Dataset:
     def __init__(self):
         self.data = data.Data()
         self._origdata = data.Data()
-        self.metadata = dict()
+        self.metadata = metadata.DatasetMetadata()
         self.history = []
         self._history_pointer = -1
         self.analyses = []
@@ -394,8 +395,8 @@ class Dataset:
 
             However, as usually one wants to continue working with a dataset,
             first creating an instance of a dataset and a respective importer
-            and then calling :func:`import_from` of the dataset is the preferred
-            way.
+            and then calling :func:`import_from` of the dataset is the
+            preferred way.
 
         Parameters
         ----------
