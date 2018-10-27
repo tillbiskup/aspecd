@@ -18,6 +18,14 @@ class HistoryRecord:
     For this second type, a history class derived from
     :class:`aspecd.history.HistoryRecord` gets used, and it is this second type
     that is stored inside the Dataset object.
+
+    Attributes
+    ----------
+    date : :obj:`datetime.datetime`
+        datetime object with date current at HistoryRecord instantiation
+    sysinfo : :obj:`aspecd.system.SystemInfo`
+        key--value store with crucial system parameters, including user
+        login name
     """
 
     def __init__(self):
@@ -28,10 +36,15 @@ class HistoryRecord:
 class ProcessingHistoryRecord(HistoryRecord):
     """History record for processing steps on datasets.
 
+    Attributes
+    ----------
+    processing : `aspecd.processing.ProcessingStepRecord`
+        record of the processing step
+
     Parameters
     ----------
     processing_step : :class:`aspecd.processing.ProcessingStep`
-        record of the processing step the history is saved for
+        processing step the history is saved for
     """
 
     def __init__(self, processing_step=None):
@@ -56,7 +69,13 @@ class ProcessingHistoryRecord(HistoryRecord):
 
 
 class AnalysisHistoryRecord(HistoryRecord):
-    """History record for analysis steps on datasets."""
+    """History record for analysis steps on datasets.
+
+    Attributes
+    ----------
+    analysis : :class:`aspecd.analysis.AnalysisStep`
+        Analysis step the history is saved for
+    """
 
     def __init__(self):
         super().__init__()
@@ -64,7 +83,13 @@ class AnalysisHistoryRecord(HistoryRecord):
 
 
 class AnnotationHistoryRecord(HistoryRecord):
-    """History record for annotations of datasets."""
+    """History record for annotations of datasets.
+
+    Attributes
+    ----------
+    annotation : :class:`aspecd.analysis.Annotation`
+        Annotation the history is saved for
+    """
 
     def __init__(self):
         super().__init__()
