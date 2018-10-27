@@ -1,0 +1,9 @@
+# Include the README
+include README*
+
+# Include the VERSION
+include VERSION
+
+# Include the LICENSE
+include LICENSE*
+

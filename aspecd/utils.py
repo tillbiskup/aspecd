@@ -3,6 +3,7 @@
 import collections
 import datetime
 import importlib
+import os
 
 
 def full_class_name(object_):
@@ -87,3 +88,10 @@ class ToDictMixin:
             return str(value)
         else:
             return value
+
+
+def get_version():
+    with open(os.path.join(os.path.dirname(__file__), "..",
+                           'VERSION')) as version_file:
+        version = version_file.read().strip()
+    return version

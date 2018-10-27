@@ -125,3 +125,10 @@ class TestToDictMixin(unittest.TestCase):
         orig_dict = {"date": str(date)}
         obj_dict = self.mixed_in.to_dict()
         self.assertDictEqual(orig_dict, obj_dict)
+
+
+class TestGetVersion(unittest.TestCase):
+
+    def test_version_not_empty(self):
+        version = utils.get_version()
+        self.assertTrue(version)

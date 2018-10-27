@@ -9,7 +9,7 @@ with open('README.rst') as f:
     readme = f.read()
 
 with open('LICENSE') as f:
-    license = f.read()
+    license_ = f.read()
 
 
 setup(
@@ -20,6 +20,6 @@ setup(
     author='Till Biskup',
     author_email='till@till-biskup.de',
     url='https://aspecd.de/',
-    license=license,
+    license=license_,
     packages=find_packages(exclude=('tests', 'docs'))
 )
