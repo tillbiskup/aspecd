@@ -1,5 +1,6 @@
 """Tests for utils."""
 
+import datetime
 import unittest
 
 from aspecd import utils, dataset
@@ -98,5 +99,29 @@ class TestToDictMixin(unittest.TestCase):
         self.set_properties_from_dict(obj=obj2, dict_=toobj_dict)
         self.mixed_in.objects = [obj1, obj2]
         orig_dict = {"objects": [toobj_dict, toobj_dict]}
+        obj_dict = self.mixed_in.to_dict()
+        self.assertDictEqual(orig_dict, obj_dict)
+
+    def test_datetime_property(self):
+        date = datetime.datetime.now()
+        toobj_dict = {"date": date}
+        self.set_properties_from_dict(obj=self.mixed_in, dict_=toobj_dict)
+        orig_dict = {"date": str(date)}
+        obj_dict = self.mixed_in.to_dict()
+        self.assertDictEqual(orig_dict, obj_dict)
+
+    def test_date_property(self):
+        date = datetime.date.today()
+        toobj_dict = {"date": date}
+        self.set_properties_from_dict(obj=self.mixed_in, dict_=toobj_dict)
+        orig_dict = {"date": str(date)}
+        obj_dict = self.mixed_in.to_dict()
+        self.assertDictEqual(orig_dict, obj_dict)
+
+    def test_time_property(self):
+        date = datetime.time(12, 10, 30)
+        toobj_dict = {"date": date}
+        self.set_properties_from_dict(obj=self.mixed_in, dict_=toobj_dict)
+        orig_dict = {"date": str(date)}
         obj_dict = self.mixed_in.to_dict()
         self.assertDictEqual(orig_dict, obj_dict)

@@ -1,7 +1,8 @@
 """General purpose functions and classes used in other modules."""
 
-import importlib
 import collections
+import datetime
+import importlib
 
 
 def full_class_name(object_):
@@ -66,7 +67,7 @@ class ToDictMixin:
         return self._traverse_dict(self.__dict__)
 
     def _traverse_dict(self, instance_dict):
-        output = {}#collections.OrderedDict()
+        output = collections.OrderedDict()
         for key, value in instance_dict.items():
             if str(key).startswith('_'):
                 pass
@@ -81,5 +82,8 @@ class ToDictMixin:
             return self._traverse_dict(value.__dict__)
         elif isinstance(value, list):
             return [self._traverse(key, i) for i in value]
+        elif isinstance(value, (datetime.datetime, datetime.date,
+                                datetime.time)):
+            return str(value)
         else:
             return value
