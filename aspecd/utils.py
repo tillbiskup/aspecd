@@ -76,7 +76,7 @@ class ToDictMixin:
         return output
 
     def _traverse(self, key, value):
-        if isinstance(value, ToDictMixin) or hasattr(value, 'to_dict'):
+        if isinstance(value, ToDictMixin):
             return value.to_dict()
         elif hasattr(value, '__dict__'):
             return self._traverse_dict(value.__dict__)
