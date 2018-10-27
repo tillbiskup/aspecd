@@ -91,7 +91,37 @@ class ToDictMixin:
 
 
 def get_version():
+    """
+    Get version of ASpecD package.
+
+    The function directly reads the contents of the file VERSION in the root
+    directory of the package installation, not relying on introspection.
+
+    Returns
+    -------
+    version : `str`
+        Version number as string
+    """
     with open(os.path.join(os.path.dirname(__file__), "..",
                            'VERSION')) as version_file:
         version = version_file.read().strip()
     return version
+
+
+def config_dir():
+    """
+    Get config directory for per-user configurations.
+
+    Configuration on a per-user level should be stored within a directory
+    (only) readable by the currently logged-in user.
+
+    Returns
+    -------
+    config_dir : `str`
+        Path to config directory, usually in the user's directory
+    """
+    config_dir_ = os.environ.get(
+        'XDG_CONFIG_HOME',
+        os.path.join(os.path.expanduser('~'), '.config')
+        )
+    return config_dir_

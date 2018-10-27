@@ -12,7 +12,8 @@ data protection, and each and every user of the system should be made
 available of this fact.
 """
 
-import os
+import getpass
+import platform
 import sys
 
 import aspecd.utils
@@ -37,9 +38,9 @@ class SystemInfo(aspecd.utils.ToDictMixin):
     def __init__(self):
         self.python = dict()
         self.modules = dict()
-        self.platform = sys.platform
+        self.platform = platform.platform
         self.user = dict()
         # Set some properties of dicts
         self.python["version"] = sys.version
         self.modules["aspecd"] = aspecd.utils.get_version()
-        self.user["login"] = os.getlogin()
+        self.user["login"] = getpass.getuser()

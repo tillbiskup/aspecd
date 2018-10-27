@@ -1,6 +1,7 @@
 """Tests for system."""
 
 import os
+import platform
 import sys
 import unittest
 
@@ -19,8 +20,8 @@ class TestSystemInfo(unittest.TestCase):
         self.assertEqual(self.sysinfo.python["version"], python_version)
 
     def test_platform_property(self):
-        platform = sys.platform
-        self.assertEqual(self.sysinfo.platform, platform)
+        platform_ = platform.platform
+        self.assertEqual(self.sysinfo.platform, platform_)
 
     def test_user_property_login_key(self):
         login_name = os.getlogin()

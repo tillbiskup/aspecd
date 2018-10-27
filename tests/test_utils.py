@@ -132,3 +132,10 @@ class TestGetVersion(unittest.TestCase):
     def test_version_not_empty(self):
         version = utils.get_version()
         self.assertTrue(version)
+
+
+class TestConfigDir(unittest.TestCase):
+
+    def test_config_dir_not_empty(self):
+        version = utils.config_dir()
+        self.assertTrue(version)
