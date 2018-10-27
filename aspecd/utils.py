@@ -3,6 +3,7 @@
 import collections
 import datetime
 import importlib
+import inspect
 import os
 
 
@@ -106,6 +107,29 @@ def get_version():
                            'VERSION')) as version_file:
         version = version_file.read().strip()
     return version
+
+
+def package_name(obj=None):
+    """
+    Get name of package an object resides in.
+
+    Parameters
+    ----------
+    obj : `object`
+        Object the package it resides in should be returned.
+
+        If no object is given, the name of the package this function is
+        defined in ("aspecd") will be returned.
+
+    Returns
+    -------
+    package_name : `str`
+        Name of the package
+    """
+    if not obj:
+        obj = package_name
+    module = inspect.getmodule(obj)
+    return module.__package__
 
 
 def config_dir():

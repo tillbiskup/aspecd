@@ -68,14 +68,6 @@ aspecd.infofile module
     :undoc-members:
     :show-inheritance:
 
-aspecd.internal module
-----------------------
-
-.. automodule:: aspecd.internal
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 aspecd.metadata module
 ----------------------
 

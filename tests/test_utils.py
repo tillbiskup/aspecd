@@ -134,6 +134,17 @@ class TestGetVersion(unittest.TestCase):
         self.assertTrue(version)
 
 
+class TestPackageName(unittest.TestCase):
+
+    def test_package_name_returns_correct_package(self):
+        package_name = utils.package_name()
+        self.assertEqual(package_name, 'aspecd')
+
+    def test_package_name_with_object_returns_correct_package(self):
+        package_name = utils.package_name(unittest.TestCase())
+        self.assertEqual(package_name, 'unittest')
+
+
 class TestConfigDir(unittest.TestCase):
 
     def test_config_dir_not_empty(self):
