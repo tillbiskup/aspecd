@@ -46,7 +46,7 @@ import datetime
 import aspecd.utils
 
 
-class PhysicalQuantity:
+class PhysicalQuantity(aspecd.utils.ToDictMixin):
     """
     Class for storing all relevant informations about a physical quantity.
 
@@ -200,12 +200,8 @@ class PhysicalQuantity:
         public_attributes : `dict`
             Dictionary containing the public attributes of the object
         """
-        output = {}
-        for key in self.__dict__:
-            if str(key).startswith('_'):
-                pass
-            else:
-                output[key] = self.__dict__[key]
+        output = super().to_dict()
+        # Add "value" attribute only accessible via getter/setter
         output["value"] = self.value
         return output
 
