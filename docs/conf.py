@@ -42,6 +42,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
     'sphinx.ext.todo',
+    'sphinx.ext.viewcode',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -75,7 +76,12 @@ pygments_style = 'sphinx'
 todo_include_todos = True
 
 # Autodoc configuration
-autodoc_default_flags = ['members', 'undoc-members', 'show-inheritance','private-members']
+autodoc_default_flags = [
+    'members',
+    'undoc-members',
+    'show-inheritance',
+    'private-members',
+]
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
