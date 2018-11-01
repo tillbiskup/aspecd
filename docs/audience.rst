@@ -1,5 +1,5 @@
 ===============
-Target Audience
+Target audience
 ===============
 
 Who is the target audience of the ASpecD framework? Is it interesting for me?

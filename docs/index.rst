@@ -16,6 +16,9 @@ ASpecD is a framework for handling spectroscopic data focussing on reproducibili
    audience
    introduction
    concepts
+   applications
+   usecases
+
    api/modules
 
 
