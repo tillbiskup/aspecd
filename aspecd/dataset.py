@@ -326,7 +326,7 @@ class Dataset:
     def analyze(self, analysis_step=None):
         """Apply analysis to dataset.
 
-        Same method as :func:`self.analyse`, but for those preferring AE
+        Same method as :func:`analyse`, but for those preferring AE
         over BE.
 
         """
@@ -404,7 +404,7 @@ class Dataset:
     def load(self):
         """Load dataset object from persistence layer.
 
-        ..todo::
+        .. todo::
             The way how and in what format datasets are stored needs still to
             be discussed and implemented.
 
@@ -414,7 +414,7 @@ class Dataset:
     def save(self):
         """Save dataset to persistence layer.
 
-        ..todo::
+        .. todo::
             The way how and in what format datasets are stored needs still to
             be discussed and implemented.
 
@@ -450,7 +450,7 @@ class Dataset:
     def export_to(self):
         """Export data and metadata.
 
-        ..todo::
+        .. todo::
             This needs to be implemented, probably using a generic exporter.
 
         """

@@ -28,7 +28,8 @@ class Importer:
     Each class actually importing data into a dataset should inherit from this
     class.
 
-    To perform the import, call the :meth:`import_from` method of the dataset
+    To perform the import, call the
+    :meth:`~aspecd.dataset.Dataset.import_from` method of the dataset
     the import should be performed for, and provide a reference to the
     actual importer object to it.
 
