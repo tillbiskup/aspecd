@@ -433,7 +433,7 @@ class Sample(Metadata):
 
     def __init__(self, dict_=None):
         self.name = ''
-        self.id = None
+        self.id = None  # pylint: disable=invalid-name
         self.loi = ''
         super().__init__(dict_=dict_)
 

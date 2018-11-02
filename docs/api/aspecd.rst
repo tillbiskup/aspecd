@@ -1,8 +1,13 @@
 aspecd package
 ==============
 
-Submodules
-----------
+Package contents
+----------------
+
+.. automodule:: aspecd
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 aspecd.analysis module
 ----------------------
@@ -104,15 +109,6 @@ aspecd.utils module
 -------------------
 
 .. automodule:: aspecd.utils
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: aspecd
     :members:
     :undoc-members:
     :show-inheritance:
