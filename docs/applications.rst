@@ -100,6 +100,22 @@ All your metadata classes share this very same method, as long as they are based
   Should the metadata classes go into the dataset module (in the ASpecD framework as well), or should this be a separate module? At least in applications based on the ASpecD framework, having it in the dataset module seems more sensible, as there is otherwise not much content.
 
 
+Comments
+--------
+
+Comments often found (for good reason) in metadata files that accompany raw data and get written during data acquisition deserve special note. While they are usually contained in metadata files, they should *not* be put in the metadata property of the ``Dataset`` class. Technically, comments are annotations, and for this very purpose, a whole set of classes is available within the ASpecD framework.
+
+To add a comment to a dataset, you will need to instantiate an object of class :class:`aspecd.annotation.Comment`, assign the comment to it, and finally annotate your dataset::
+
+    import aspecd
+
+    comment = aspecd.annotation.Comment()
+    comment.comment = metadata_dict["comment"]
+    dataset.annotate(comment)
+
+Here, we assumed for simplicity that your metadata are contained in the dictionary ``metadata_dict``, and that your dataset resides in ``dataset``. If you implement this very functionality within your ``Importer`` class in its ``_import()`` method (`see above <#importer>`_), as you should do, you will have to adjust some of the variable names accordingly.
+
+
 Processing steps
 ================
 
