@@ -19,14 +19,20 @@
 
 # -- Project information -----------------------------------------------------
 
+import os
+
+with open(os.path.join(os.path.dirname(__file__), '..', 'VERSION')) as \
+        version_file:
+    release_ = version_file.read().strip()
+
 project = 'ASpecD'
 copyright = '2018, Till Biskup'
 author = 'Till Biskup'
 
 # The short X.Y version
-version = ''
+version = ".".join(release_.split('.')[0:2])
 # The full version, including alpha/beta/rc tags
-release = '0.1.0'
+release = release_
 
 
 # -- General configuration ---------------------------------------------------
