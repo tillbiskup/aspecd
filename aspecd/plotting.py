@@ -5,6 +5,7 @@ from aspecd import utils
 
 class Error(Exception):
     """Base class for exceptions in this module."""
+
     pass
 
 
@@ -15,9 +16,11 @@ class MissingDatasetError(Error):
     ----------
     message : `str`
         explanation of the error
+
     """
 
     def __init__(self, message=''):
+        super().__init__()
         self.message = message
 
 
@@ -28,9 +31,11 @@ class PlotNotApplicableToDatasetError(Error):
     ----------
     message : `str`
         explanation of the error
+
     """
 
     def __init__(self, message=''):
+        super().__init__()
         self.message = message
 
 
@@ -41,9 +46,11 @@ class MissingSaverError(Error):
     ----------
     message : `str`
         explanation of the error
+
     """
 
     def __init__(self, message=''):
+        super().__init__()
         self.message = message
 
 
@@ -54,9 +61,11 @@ class MissingFilenameError(Error):
     ----------
     message : `str`
         explanation of the error
+
     """
 
     def __init__(self, message=''):
+        super().__init__()
         self.message = message
 
 
@@ -67,9 +76,11 @@ class MissingPlotError(Error):
     ----------
     message : `str`
         explanation of the error
+
     """
 
     def __init__(self, message=''):
+        super().__init__()
         self.message = message
 
 
@@ -93,6 +104,21 @@ class Plotter:
     which is called by the :meth:`aspecd.dataset.Dataset.plot` method of the
     dataset object.
 
+    Attributes
+    ----------
+    name : `str`
+        Name of the plotter.
+
+        Defaults always to the full class name, don't change!
+    parameters : `dict`
+        All parameters necessary for the plot, implicit and explicit
+    description : `str`
+        Short description, to be set in class definition
+    dataset : :class:`aspecd.dataset.Dataset`
+        Dataset the analysis step should be performed on
+    figure : :class:`matplotlib.figure.Figure`
+        Reference to figure object
+
     Raises
     ------
     MissingDatasetError
@@ -101,6 +127,7 @@ class Plotter:
         Raised when processing step is not applicable to dataset
     MissingSaverError
         Raised when no saver is provided when trying to save
+
     """
 
     def __init__(self):
@@ -144,6 +171,7 @@ class Plotter:
             Raised when plotting is not applicable to dataset
         MissingDatasetError
             Raised when no dataset exists to act on
+
         """
         if not dataset:
             if self.dataset:
@@ -170,6 +198,7 @@ class Plotter:
         -------
         applicable : `bool`
             `True` if successful, `False` otherwise.
+
         """
         return True
 
@@ -185,6 +214,7 @@ class Plotter:
         Plotting should be done using a method of the
         :class:`matplotlib.axes.Axes` class. The axis can be inferred as
         property of the :attr:`figure` object stored in the plotter.
+
         """
         pass
 
@@ -208,6 +238,7 @@ class Plotter:
         ------
         MissingSaverError
             Raised if no Saver is provided as parameter.
+
         """
         if not saver:
             raise MissingSaverError
@@ -224,13 +255,13 @@ class Saver:
         Raised if no filename is provided for saver.
     MissingPlotError
         Raised if no plot is provided to act upon.
+
     """
 
     def __init__(self, filename=None):
         self.filename = filename
         self.parameters = dict()
         self.plotter = None
-        pass
 
     def save(self, plotter=None):
         """Save the plot to a file.
@@ -256,6 +287,7 @@ class Saver:
             Raised if no filename is provided for saver.
         MissingPlotError
             Raised if no plot is provided to act upon.
+
         """
         if not self.filename:
             raise MissingFilenameError
@@ -278,5 +310,6 @@ class Saver:
         In the simplest case, saving is a call to :meth:`savefig` of the
         figure to save. To access this figure, use the property
         :attr:`plotter.figure`.
+
         """
         pass

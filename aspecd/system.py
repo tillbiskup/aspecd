@@ -33,6 +33,7 @@ class SystemInfo(aspecd.utils.ToDictMixin):
         Identifier of the platform
     user : `dict`
         Currently only the login name of the currently logged-in user
+
     """
 
     def __init__(self):

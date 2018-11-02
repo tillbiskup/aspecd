@@ -7,6 +7,7 @@ from aspecd import axis
 
 class Error(Exception):
     """Base class for exceptions in this module."""
+
     pass
 
 
@@ -17,9 +18,11 @@ class AxesCountError(Error):
     ----------
     message : `str`
         explanation of the error
+
     """
 
     def __init__(self, message=''):
+        super().__init__()
         self.message = message
 
 
@@ -30,18 +33,49 @@ class AxesValuesInconsistentWithDataError(Error):
     ----------
     message : `str`
         explanation of the error
+
     """
 
     def __init__(self, message=''):
+        super().__init__()
         self.message = message
 
 
 class Data:
     """
-    Data contains both, the numeric data as well as the corresponding axes.
+    Unit containing both, numeric data and corresponding axes.
 
-    The data class ensures consistency in terms of dimensions between numerical
-    data and axes.
+    The data class ensures consistency in terms of dimensions between
+    numerical data and axes.
+
+    Parameters
+    ----------
+    data : `numpy.array`
+        Numerical data
+    axes : `list`
+        List of objects of type :class:`aspecd.axis.Axis`
+
+        The number of axes needs to be consistent with the dimensions of data.
+
+        Axes will be set automatically when setting data. Hence,
+        the easiest is to first set data and only afterwards set axis values.
+    calculated : `bool`
+        Indicator for the origin of the numerical data (calculation or
+        experiment).
+
+    Attributes
+    ----------
+    calculated : `bool`
+        Indicate whether numeric data are calculated rather than
+        experimentally recorded
+
+    Raises
+    ------
+    AxesCountError
+        Raised if number of axes is inconsistent with data dimensions
+    AxesValuesInconsistentWithDataError
+        Raised if axes values are inconsistent with data
+
     """
 
     def __init__(self, data=np.zeros(0), axes=None, calculated=False):
@@ -55,6 +89,14 @@ class Data:
 
     @property
     def data(self):
+        """Get (numeric) data.
+
+        Returns
+        -------
+        data : `numpy.array`
+            Numerical data
+
+        """
         return self._data
 
     @data.setter
@@ -64,6 +106,14 @@ class Data:
 
     @property
     def axes(self):
+        """Get axes.
+
+        Returns
+        -------
+        axes : `list`
+            List of objects of type :class:`aspecd.axis.Axis`
+
+        """
         return self._axes
 
     @axes.setter
@@ -73,12 +123,12 @@ class Data:
 
     def _create_axes(self):
         self._axes = []
-        missing_axes = self.data.ndim+1
+        missing_axes = self.data.ndim + 1
         for ax in range(missing_axes):
             self._axes.append(axis.Axis())
 
     def _check_axes(self):
-        if len(self._axes) > self.data.ndim+1:
+        if len(self._axes) > self.data.ndim + 1:
             raise AxesCountError
         data_shape = self.data.shape
         for index in range(self.data.ndim):

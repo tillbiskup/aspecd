@@ -13,10 +13,12 @@ in the info file to datasets.
 """
 
 import collections
+import string
 
 
 class Error(Exception):
     """Base class for exceptions in this module."""
+
     pass
 
 
@@ -27,9 +29,11 @@ class InfofileTypeError(Error):
     ----------
     message : `str`
         explanation of the error
+
     """
 
     def __init__(self, message=''):
+        super().__init__()
         self.message = message
 
 
@@ -40,13 +44,37 @@ class InfofileEmptyError(Error):
     ----------
     message : `str`
         explanation of the error
+
     """
 
     def __init__(self, message=''):
+        super().__init__()
         self.message = message
 
 
 class Infofile:
+    """Reading metadata contained in info files.
+
+    Attributes
+    ----------
+    parameters : `collections.OrderedDict`
+        Structure containing parameters read from info file.
+    filename : `str`
+        Name of the info file read
+
+    Parameters
+    ----------
+    filename : `str`
+        Name of the info file to read
+
+    Raises
+    ------
+    InfofileEmptyError
+        Raised if info file is empty
+    InfofileTypeError
+        Raised if file provided is no info file
+
+    """
 
     def __init__(self, filename=None):
         self.parameters = collections.OrderedDict()
@@ -57,6 +85,16 @@ class Infofile:
         self._escape_char = '\\'
 
     def parse(self):
+        """Parse info file.
+
+        Raises
+        ------
+        InfofileEmptyError
+            Raised if info file is empty
+        InfofileTypeError
+            Raised if file provided is no info file
+
+        """
         self._file_contents = self._read()
 
         if not self._file_contents:
@@ -110,8 +148,8 @@ class Infofile:
             raise FileExistsError
         if not os.path.exists(self.filename):
             raise FileNotFoundError
-        with open(self.filename) as f:
-            file_contents = list(f)
+        with open(self.filename) as file:
+            file_contents = list(file)
         return file_contents
 
     def _is_comment_line(self, line):
@@ -129,15 +167,24 @@ class Infofile:
         return line.replace("".join([self._escape_char, self._comment_char]),
                             self._comment_char)
 
-    def _is_continuation_line(self, line):
-        import string
+    @staticmethod
+    def _is_continuation_line(line):
         return line[0] in string.whitespace and line.strip()
 
-    def _is_comment_block(self, blockname):
+    @staticmethod
+    def _is_comment_block(blockname):
         return blockname.lower() == 'comment'
 
 
 def parse(filename=''):
+    """Parse info file.
+
+    Parameters
+    ----------
+    filename : `str`
+        Name of the info file to parse
+
+    """
     ifile = Infofile(filename)
     ifile.parse()
     return ifile.parameters

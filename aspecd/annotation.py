@@ -3,6 +3,7 @@
 
 class Error(Exception):
     """Base class for exceptions in this module."""
+
     pass
 
 
@@ -13,9 +14,11 @@ class MissingDatasetError(Error):
     ----------
     message : `str`
         explanation of the error
+
     """
 
     def __init__(self, message=''):
+        super().__init__()
         self.message = message
 
 
@@ -26,9 +29,11 @@ class NoContentError(Error):
     ----------
     message : `str`
         explanation of the error
+
     """
 
     def __init__(self, message=''):
+        super().__init__()
         self.message = message
 
 
@@ -39,9 +44,11 @@ class UnknownScopeError(Error):
     ----------
     message : `str`
         explanation of the error
+
     """
 
     def __init__(self, message=''):
+        super().__init__()
         self.message = message
 
 
@@ -57,7 +64,7 @@ class Annotation:
     Annotations can have different types, such as simple "comments",
     e.g. saying that a dataset is not useful as something during measurement
     went wrong, they can highlight "characteristics" of the data, they can
-    point to "artifacts". Each of these types is represented by a class on
+    point to "artefacts". Each of these types is represented by a class on
     its own that is derived from the "Annotation" base class. Additionally,
     the type is reflected in the "type" property that gets set automatically to
     the class name in lower-case letters.
@@ -81,6 +88,7 @@ class Annotation:
         Raised when annotation contains no content(s)
     MissingDatasetError
         Raised when no dataset exists to act on
+
     """
 
     def __init__(self):
@@ -108,6 +116,7 @@ class Annotation:
         finally applied to a dataset, a default scope will be used that is
         stored in the private property `_default_scope` (and is defined as
         one element of the list of allowed scopes)
+
         """
         return self._scope
 
@@ -122,21 +131,22 @@ class Annotation:
         """
         Annotate a dataset with the given annotation.
 
-        If no dataset is provided at method call, but is set as property in the
-        Annotation object, the process method of the dataset will be called and
-        thus the history written.
+        If no dataset is provided at method call, but is set as property in
+        the Annotation object, the process method of the dataset will be
+        called and thus the history written.
 
-        If no dataset is provided at method call nor as property in the object,
-        the method will raise a respective exception.
+        If no dataset is provided at method call nor as property in the
+        object, the method will raise a respective exception.
 
         If no scope is set in the :obj:`aspecd.annotation.Annotation`
         object, a default value will be used that can be set in derived
         classes in the private property `_default_scope`. A full list of
         scopes is contained in the private property `_allowed_scopes`
 
-        The Dataset object always calls this method with the respective dataset
-        as argument. Therefore, in this case setting the dataset property
-        within the Annotation object is not necessary.
+        The Dataset object always calls this method with the respective
+        dataset as argument. Therefore, in this case setting the dataset
+        property within the Annotation object is not necessary.
+
         """
         if not self.content:
             raise NoContentError
@@ -150,9 +160,7 @@ class Annotation:
 
 
 class Comment(Annotation):
-    """
-    Comments are the most basic form of annotation: a simple textual comment.
-    """
+    """The most basic form of annotation: a simple textual comment."""
 
     def __init__(self):
         super().__init__()
@@ -160,6 +168,15 @@ class Comment(Annotation):
 
     @property
     def comment(self):
+        """
+        Get comment of annotation.
+
+        Returns
+        -------
+        comment : `str`
+            Actual comment string
+
+        """
         return self.content['comment']
 
     @comment.setter
@@ -168,6 +185,7 @@ class Comment(Annotation):
 
 
 class Artefact(Annotation):
+    """Mark something as an artefact."""
 
     def __init__(self):
         super().__init__()
@@ -175,4 +193,6 @@ class Artefact(Annotation):
 
 
 class Characteristic(Annotation):
+    """Base class for characteristics."""
+
     pass

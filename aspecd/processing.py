@@ -7,6 +7,7 @@ the processing task on a given dataset.
 
 Each real processing step should inherit from
 :class:`aspecd.processing.ProcessingStep` as documented there.
+
 """
 
 from aspecd import utils
@@ -14,6 +15,7 @@ from aspecd import utils
 
 class Error(Exception):
     """Base class for exceptions in this module."""
+
     pass
 
 
@@ -24,9 +26,11 @@ class ProcessingNotApplicableToDatasetError(Error):
     ----------
     message : `str`
         explanation of the error
+
     """
 
     def __init__(self, message=''):
+        super().__init__()
         self.message = message
 
 
@@ -37,9 +41,11 @@ class MissingDatasetError(Error):
     ----------
     message : `str`
         explanation of the error
+
     """
 
     def __init__(self, message=''):
+        super().__init__()
         self.message = message
 
 
@@ -50,9 +56,11 @@ class MissingProcessingStepError(Error):
     ----------
     message : `str`
         explanation of the error
+
     """
 
     def __init__(self, message=''):
+        super().__init__()
         self.message = message
 
 
@@ -77,12 +85,34 @@ class ProcessingStep:
     which is called by the :func:`aspecd.dataset.Dataset.process` method of the
     dataset object.
 
+    Attributes
+    ----------
+    undoable : `bool`
+        Can this processing step be reverted?
+    name : `str`
+        Name of the analysis step.
+
+        Defaults to the lower-case class name, don't change!
+    parameters : `dict`
+        Parameters required for performing the processing step
+
+        All parameters, implicit and explicit.
+    info : `dict`
+        Additional information used, e.g., in a report (derived values, ...)
+    description : `str`
+        Short description, to be set in class definition
+    comment : `str`
+        User-supplied comment describing intent, purpose, reason, ...
+    dataset : :class:`aspecd.dataset.Dataset`
+        Dataset the analysis step should be performed on
+
     Raises
     ------
     ProcessingNotApplicableToDatasetError
         Raised when processing step is not applicable to dataset
     MissingDatasetError
         Raised when no dataset exists to act on
+
     """
 
     def __init__(self):
@@ -135,6 +165,7 @@ class ProcessingStep:
             Raised when processing step is not applicable to dataset
         MissingDatasetError
             Raised when no dataset exists to act on
+
         """
         if not dataset:
             if self.dataset:
@@ -160,6 +191,7 @@ class ProcessingStep:
         -------
         applicable : `bool`
             `True` if successful, `False` otherwise.
+
         """
         return True
 
@@ -170,6 +202,7 @@ class ProcessingStep:
         according to their needs. Most probably, you want to check for
         correct types of all parameters as well as values within sensible
         borders.
+
         """
         pass
 
@@ -179,6 +212,7 @@ class ProcessingStep:
         The implementation of the actual processing goes in here in all
         classes inheriting from ProcessingStep. This method is automatically
         called by :func:`self.processing` after some background checks.
+
         """
         pass
 
@@ -200,6 +234,21 @@ class ProcessingStepRecord:
         inheriting from the ASpecD framework. Hence, subclassing of this class
         should normally not be necessary.
 
+    Attributes
+    ----------
+    undoable : `bool`
+        Can this processing step be reverted?
+    description : `str`
+        Short description, to be set in class definition
+    parameters : `dict`
+        Parameters required for performing the processing step
+
+        All parameters, implicit and explicit.
+    comment : `str`
+        User-supplied comment describing intent, purpose, reason, ...
+    class_name : `str`
+        Fully qualified name of the class of the corresponding processing step
+
     Parameters
     ----------
     processing_step : :class:`aspecd.processing.ProcessingStep`
@@ -209,6 +258,7 @@ class ProcessingStepRecord:
     ------
     MissingProcessingStepError
         Raised when no processing step exists to act on
+
     """
 
     def __init__(self, processing_step=None):

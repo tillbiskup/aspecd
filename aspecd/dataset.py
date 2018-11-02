@@ -5,6 +5,7 @@ well as the corresponding metadata. Furthermore, a history of every processing,
 analysis and annotation step is recorded as well, aiming at a maximum of
 reproducibility. This is part of how the ASpecD framework tries to support good
 scientific practice.
+
 """
 
 import copy
@@ -14,6 +15,7 @@ from aspecd import data, history, metadata
 
 class Error(Exception):
     """Base class for exceptions in this module."""
+
     pass
 
 
@@ -24,9 +26,11 @@ class MissingProcessingStepError(Error):
     ----------
     message : `str`
         explanation of the error
+
     """
 
     def __init__(self, message=''):
+        super().__init__()
         self.message = message
 
 
@@ -37,9 +41,11 @@ class UndoWithEmptyHistoryError(Error):
     ----------
     message : `str`
         explanation of the error
+
     """
 
     def __init__(self, message=''):
+        super().__init__()
         self.message = message
 
 
@@ -50,9 +56,11 @@ class UndoAtBeginningOfHistoryError(Error):
     ----------
     message : `str`
         explanation of the error
+
     """
 
     def __init__(self, message=''):
+        super().__init__()
         self.message = message
 
 
@@ -63,9 +71,11 @@ class UndoStepUndoableError(Error):
     ----------
     message : `str`
         explanation of the error
+
     """
 
     def __init__(self, message=''):
+        super().__init__()
         self.message = message
 
 
@@ -76,9 +86,11 @@ class RedoAlreadyAtLatestChangeError(Error):
     ----------
     message : `str`
         explanation of the error
+
     """
 
     def __init__(self, message=''):
+        super().__init__()
         self.message = message
 
 
@@ -89,9 +101,11 @@ class ProcessingWithLeadingHistoryError(Error):
     ----------
     message : `str`
         explanation of the error
+
     """
 
     def __init__(self, message=''):
+        super().__init__()
         self.message = message
 
 
@@ -102,9 +116,11 @@ class MissingPlotterError(Error):
     ----------
     message : `str`
         explanation of the error
+
     """
 
     def __init__(self, message=''):
+        super().__init__()
         self.message = message
 
 
@@ -115,9 +131,11 @@ class MissingImporterError(Error):
     ----------
     message : `str`
         explanation of the error
+
     """
 
     def __init__(self, message=''):
+        super().__init__()
         self.message = message
 
 
@@ -153,6 +171,7 @@ class Dataset:
         Raised  when trying to redo with empty history
     ProcessingWithLeadingHistoryError
         Raised  when trying to process with leading history
+
     """
 
     def __init__(self):
@@ -191,6 +210,7 @@ class Dataset:
         ------
         ProcessingWithLeadingHistoryError
             Raised when trying to process with leading history
+
         """
         if self._has_leading_history():
             raise ProcessingWithLeadingHistoryError
@@ -219,8 +239,9 @@ class Dataset:
             Raised when trying to undo with history pointer at zero
         UndoStepUndoableError
             Raised when trying to undo an undoable step of history
+
         """
-        if len(self.history) == 0:
+        if not self.history:
             raise UndoWithEmptyHistoryError
         if self._history_pointer == -1:
             raise UndoAtBeginningOfHistoryError
@@ -236,6 +257,7 @@ class Dataset:
         ------
         RedoAlreadyAtLatestChangeError
             Raised when trying to redo with empty history
+
         """
         if self._history_pointer == len(self.history) - 1:
             raise RedoAlreadyAtLatestChangeError
@@ -246,10 +268,7 @@ class Dataset:
         self._increment_history_pointer()
 
     def _has_leading_history(self):
-        if len(self.history) - 1 > self._history_pointer:
-            return True
-        else:
-            return False
+        return len(self.history) - 1 > self._history_pointer
 
     @staticmethod
     def _create_processing_history_record(processing_step):
@@ -279,18 +298,20 @@ class Dataset:
         processing step on this very dataset, you need first to strip its
         history, as otherwise, a :class:`ProcessingWithLeadingHistoryError`
         will be raised.
+
         """
         if not self._has_leading_history():
             return
         del self.history[self._history_pointer + 1:]
 
-    def analyse(self, analysis_step):
+    def analyse(self, analysis_step=None):
         """Apply analysis to dataset.
 
         Parameters
         ----------
         analysis_step : :obj:`aspecd.analysis.AnalysisStep`
             analysis step to apply to the dataset
+
         """
         # Important: Need a copy, not the reference to the original object
         analysis_step = copy.deepcopy(analysis_step)
@@ -302,9 +323,12 @@ class Dataset:
         analysis_step.analyse(self)
         self.analyses.append(history_record)
 
-    def analyze(self, analysis_step):
-        """Same method as :func:`self.analyse`, but for those preferring AE
+    def analyze(self, analysis_step=None):
+        """Apply analysis to dataset.
+
+        Same method as :func:`self.analyse`, but for those preferring AE
         over BE.
+
         """
         self.analyse(analysis_step)
 
@@ -318,20 +342,20 @@ class Dataset:
         """Remove analysis step record from dataset."""
         del self.analyses[index]
 
-    def annotate(self, annotation):
+    def annotate(self, annotation=None):
         """Add annotation to dataset.
 
         Parameters
         ----------
         annotation : :obj:`aspecd.annotation.Annotation`
             annotation to add to the dataset
+
         """
         # Important: Need a copy, not the reference to the original object
         annotation = copy.deepcopy(annotation)
         history_record = self._create_annotation_history_record(annotation)
         annotation.annotate(self)
         self.annotations.append(history_record)
-        pass
 
     @staticmethod
     def _create_annotation_history_record(annotation):
@@ -370,6 +394,7 @@ class Dataset:
         ------
         MissingPlotterError
             Raised when trying to plot without plotter
+
         """
         if not plotter:
             raise MissingPlotterError
@@ -377,9 +402,23 @@ class Dataset:
         return plotter
 
     def load(self):
+        """Load dataset object from persistence layer.
+
+        ..todo::
+            The way how and in what format datasets are stored needs still to
+            be discussed and implemented.
+
+        """
         pass
 
     def save(self):
+        """Save dataset to persistence layer.
+
+        ..todo::
+            The way how and in what format datasets are stored needs still to
+            be discussed and implemented.
+
+        """
         pass
 
     def import_from(self, importer=None):
@@ -402,10 +441,17 @@ class Dataset:
         ----------
         importer : :class:`aspecd.importer.Importer`
             Importer containing data and metadata read from some source
+
         """
         if not importer:
             raise MissingImporterError("No importer provided")
         importer.import_into(self)
 
     def export_to(self):
+        """Export data and metadata.
+
+        ..todo::
+            This needs to be implemented, probably using a generic exporter.
+
+        """
         pass

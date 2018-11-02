@@ -3,19 +3,22 @@
 
 class Error(Exception):
     """Base class for exceptions in this module."""
+
     pass
 
 
 class MissingDatasetError(Error):
-    """Exception raised when no dataset exists to act on
+    """Exception raised when no dataset exists to act on.
 
     Attributes
     ----------
     message : `str`
         explanation of the error
+
     """
 
     def __init__(self, message=''):
+        super().__init__()
         self.message = message
 
 
@@ -45,6 +48,7 @@ class Importer:
     ------
     MissingDatasetError
         Raised when no dataset exists to act upon
+
     """
 
     def __init__(self, source=None):
@@ -77,6 +81,7 @@ class Importer:
         ------
         MissingDatasetError
             Raised if no dataset is provided.
+
         """
         if not dataset:
             if self.dataset:
@@ -101,5 +106,6 @@ class Importer:
         Usually, this method will successively call other private/protected
         methods of the importer to perform the required tasks that are
         specific for each data source.
+
         """
         pass

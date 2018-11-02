@@ -1,7 +1,8 @@
 """History."""
 
-from aspecd import processing, system, analysis, annotation
 from datetime import datetime
+
+from aspecd import processing, system, analysis, annotation
 
 
 class HistoryRecord:
@@ -26,6 +27,7 @@ class HistoryRecord:
     sysinfo : :obj:`aspecd.system.SystemInfo`
         key--value store with crucial system parameters, including user
         login name
+
     """
 
     def __init__(self):
@@ -45,6 +47,7 @@ class ProcessingHistoryRecord(HistoryRecord):
     ----------
     processing_step : :class:`aspecd.processing.ProcessingStep`
         processing step the history is saved for
+
     """
 
     def __init__(self, processing_step=None):
@@ -63,6 +66,7 @@ class ProcessingHistoryRecord(HistoryRecord):
         ----------
         dataset : :class:`aspecd.dataset.Dataset`
             dataset the processing step should be replayed to
+
         """
         processing_step = self.processing.create_processing_step()
         processing_step.process(dataset=dataset)
@@ -75,6 +79,7 @@ class AnalysisHistoryRecord(HistoryRecord):
     ----------
     analysis : :class:`aspecd.analysis.AnalysisStep`
         Analysis step the history is saved for
+
     """
 
     def __init__(self):
@@ -89,6 +94,7 @@ class AnnotationHistoryRecord(HistoryRecord):
     ----------
     annotation : :class:`aspecd.analysis.Annotation`
         Annotation the history is saved for
+
     """
 
     def __init__(self):

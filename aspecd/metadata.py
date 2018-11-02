@@ -1,4 +1,5 @@
-"""
+"""Metadata.
+
 Metadata are one key concept of the ASpecD framework, and they come in
 different flavours. Perhaps the easiest to grasp is metadata that accompany
 measurements---and are often stored separately from the data in metadata
@@ -94,6 +95,7 @@ class PhysicalQuantity(aspecd.utils.ToDictMixin):
     ------
     ValueError
         Raised if value is not a float
+
     """
 
     def __init__(self, string=None, value=None, unit=None):
@@ -109,6 +111,7 @@ class PhysicalQuantity(aspecd.utils.ToDictMixin):
             self.unit = unit
 
     def __str__(self):
+        """String representation of object."""
         if not self.unit and self.value == 0.0:
             string = ''
         else:
@@ -126,11 +129,12 @@ class PhysicalQuantity(aspecd.utils.ToDictMixin):
         ------
         ValueError
             Raised if value is not a (scalar) float
+
         """
         return self._value
 
     @value.setter
-    def value(self, value):
+    def value(self, value=None):
         if not isinstance(value, type(self._value)):
             raise TypeError
         self._value = value
@@ -141,7 +145,7 @@ class PhysicalQuantity(aspecd.utils.ToDictMixin):
         if len(parts) > 1:
             self.unit = parts[1].strip()
 
-    def commensurable(self, physical_quantity):
+    def commensurable(self, physical_quantity=None):
         """
         Check whether two physical quantities are commensurable.
 
@@ -159,6 +163,7 @@ class PhysicalQuantity(aspecd.utils.ToDictMixin):
         commensurable : `boolean`
             True if both physical quantities have the same unit or
             dimension, False otherwise
+
         """
         commensurable = False
         if self.unit and hasattr(physical_quantity, 'unit') and \
@@ -185,6 +190,7 @@ class PhysicalQuantity(aspecd.utils.ToDictMixin):
             only :attr:`value` will be set.
 
             If an empty string is provided, value and unit are cleared.
+
         """
         if string:
             self._set_value_unit_from_string(string)
@@ -200,6 +206,7 @@ class PhysicalQuantity(aspecd.utils.ToDictMixin):
         -------
         public_attributes : `dict`
             Dictionary containing the public attributes of the object
+
         """
         output = super().to_dict()
         # Add "value" attribute only accessible via getter/setter
@@ -212,6 +219,7 @@ class Metadata(aspecd.utils.ToDictMixin):
     General metadata class.
 
     Metadata can be set from dict upon initialisation.
+
     """
 
     def __init__(self, dict_=None):
@@ -222,11 +230,12 @@ class Metadata(aspecd.utils.ToDictMixin):
         ----------
         dict_ : `dict`
             Dictionary containing properties to set
+
         """
         if dict_:
             self.from_dict(dict_)
 
-    def from_dict(self, dict_):
+    def from_dict(self, dict_=None):
         """
         Set properties from dictionary, e.g., from metadata.
 
@@ -240,6 +249,7 @@ class Metadata(aspecd.utils.ToDictMixin):
         ----------
         dict_ : `dict`
             Dictionary containing properties to set
+
         """
         for key in dict_:
             if hasattr(self, key):
@@ -262,6 +272,7 @@ class TemperatureControl(Metadata):
         value and unit of the temperature set
     controller : `str`
         type and name of the temperature controller used
+
     """
 
     def __init__(self, dict_=None, temperature=''):
@@ -277,6 +288,7 @@ class TemperatureControl(Metadata):
             Dictionary containing properties to set
         temperature : `str`
             Value and unit of temperature
+
         """
         self.temperature = PhysicalQuantity(temperature)
         self.controller = ''
@@ -288,10 +300,11 @@ class TemperatureControl(Metadata):
         Has temperature been actively controlled during measurement?
 
         Read-only property automatically set when setting a temperature value.
+
         """
         return self.temperature.value
 
-    def from_dict(self, dict_):
+    def from_dict(self, dict_=None):
         """
         Set properties from dictionary, e.g., from metadata.
 
@@ -307,6 +320,7 @@ class TemperatureControl(Metadata):
         ----------
         dict_ : `dict`
             Dictionary with keys corresponding to properties of the class.
+
         """
         # Get value for key "controlled" if it exists, and delete it from dict_
         controlled_in_dict = "controlled" in dict_
@@ -344,6 +358,7 @@ class Measurement(Metadata):
     ----------
     dict_ : `dict`
         Dictionary containing fields corresponding to attributes of the class
+
     """
 
     def __init__(self, dict_=None):
@@ -354,7 +369,7 @@ class Measurement(Metadata):
         self.labbook_entry = ''
         super().__init__(dict_=dict_)
 
-    def from_dict(self, dict_):
+    def from_dict(self, dict_=None):
         """
         Set properties from dictionary, e.g., from metadata.
 
@@ -365,6 +380,7 @@ class Measurement(Metadata):
         ----------
         dict_ : `dict`
             Dictionary with keys corresponding to properties of the class.
+
         """
         for key in ("start", "end"):
             if key in dict_:
@@ -388,6 +404,7 @@ class Measurement(Metadata):
             Property of class to set
         dict_ : `dict`
             Dictionary with fields "date" and "time"
+
         """
         fmt = "%Y-%m-%d %H:%M:%S"
         datetime_string = " ".join([dict_["date"], dict_["time"]])
@@ -411,6 +428,7 @@ class Sample(Metadata):
     ----------
     dict_ : `dict`
         Dictionary containing fields corresponding to attributes of the class
+
     """
 
     def __init__(self, dict_=None):
@@ -438,6 +456,7 @@ class DatasetMetadata:
         Metadata of sample
     temperature_control : :class:`aspecd.metadata.TemperatureControl`
         Metadata of temperature control
+
     """
 
     def __init__(self):
@@ -460,6 +479,7 @@ class DatasetMetadata:
             Each key of this dictionary corresponds to a class attribute and
             is in itself a dictionary with the correct set of attributes for
             the particular class.
+
         """
         for key in dict_:
             if hasattr(self, key):

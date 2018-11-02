@@ -43,6 +43,7 @@ def object_from_class_name(full_class_name_string):
     -------
     object_ : `object`
         object instantiated from the class given in `full_class_name_string`
+
     """
     class_name_parts = full_class_name_string.split(".")
     class_name = class_name_parts[-1]
@@ -53,9 +54,7 @@ def object_from_class_name(full_class_name_string):
 
 
 class ToDictMixin:
-    """
-    Mixin class providing a method for returning all public attributes as dict.
-    """
+    """Mixin class for returning all public attributes as dict."""
 
     def to_dict(self):
         """
@@ -65,6 +64,7 @@ class ToDictMixin:
         -------
         public_attributes : `dict`
             Dictionary containing the public attributes of the object
+
         """
         return self._traverse_dict(self.__dict__)
 
@@ -102,6 +102,7 @@ def get_version():
     -------
     version : `str`
         Version number as string
+
     """
     with open(os.path.join(os.path.dirname(__file__), "..",
                            'VERSION')) as version_file:
@@ -125,6 +126,7 @@ def package_name(obj=None):
     -------
     package_name : `str`
         Name of the package
+
     """
     if not obj:
         obj = package_name
@@ -143,9 +145,10 @@ def config_dir():
     -------
     config_dir : `str`
         Path to config directory, usually in the user's directory
+
     """
     config_dir_ = os.environ.get(
         'XDG_CONFIG_HOME',
         os.path.join(os.path.expanduser('~'), '.config')
-        )
+    )
     return config_dir_

@@ -6,6 +6,7 @@ import numpy as np
 
 class Error(Exception):
     """Base class for exceptions in this module."""
+
     pass
 
 
@@ -16,9 +17,11 @@ class AxisValuesDimensionError(Error):
     ----------
     message : `str`
         explanation of the error
+
     """
 
     def __init__(self, message=''):
+        super().__init__()
         self.message = message
 
 
@@ -29,14 +32,17 @@ class AxisValuesTypeError(Error):
     ----------
     message : `str`
         explanation of the error
+
     """
 
     def __init__(self, message=''):
+        super().__init__()
         self.message = message
 
 
 class Axis:
-    """
+    """Axis for data in a dataset.
+
     An axis contains always both, numerical values as well as the metadata
     necessary to create axis labels and to make sense of the numerical
     information.
@@ -60,6 +66,7 @@ class Axis:
     AxisValuesDimensionError
         Raised when trying to set axis values to an array with more than one
         dimension.
+
     """
 
     def __init__(self):
@@ -77,6 +84,7 @@ class Axis:
         Values require to be a one-dimensional numpy array. Trying to set
         values to either a different type or a numpy array with more than one
         dimension will raise a corresponding error.
+
         """
         return self._values
 
@@ -91,7 +99,8 @@ class Axis:
 
     @property
     def equidistant(self):
-        """
+        """Return whether the axes values are equidistant.
+
         True if the axis values are equidistant, False otherwise. None in
         case of no axis values.
 
@@ -102,11 +111,12 @@ class Axis:
         non-equidistant values is usually straightforward, many processing
         steps rely on equidistant axis values in their simplest possible
         implementation.
+
         """
         return self._equidistant
 
     def _set_equidistant_property(self):
         if not self.values.size:
             return
-        differences = self.values[1:]-self.values[0:-1]
+        differences = self.values[1:] - self.values[0:-1]
         self._equidistant = (differences == differences[0]).all()
