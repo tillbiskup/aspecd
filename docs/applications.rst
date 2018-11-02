@@ -85,7 +85,7 @@ Eventually, you will need to extend your ``Dataset`` class that you have defined
             super().__init__()
             self.metadata = DatasetMetadata()
 
-Once you have created all the necessary classes for the different groups of metadata, the actual import of the metadata can become quite simple. The only prerequisite here is to have them initially stored in a Python dictionary whose structure resembles that of the hierarchy of objects contained in your :class:`DatasetMetadata` class. Therefore, make sure at least that the top-level keys of this dictionary have names corresponding to the (public) attributes of your :class:`DatasetMetadata` class.[#metadata_names]_
+Once you have created all the necessary classes for the different groups of metadata, the actual import of the metadata can become quite simple. The only prerequisite here is to have them initially stored in a Python dictionary whose structure resembles that of the hierarchy of objects contained in your :class:`DatasetMetadata` class. Therefore, make sure at least that the top-level keys of this dictionary have names corresponding to the (public) attributes of your :class:`DatasetMetadata` class. [#metadata_names]_
 
 Once you have a dictionary, e.g. ``metadata_dict``, with all your metadata and with (top-level) keys corresponding to the the attributes of your :class:`DatasetMetadata` class, you can import the metadata into your dataset with just one line::
 
