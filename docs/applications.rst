@@ -116,6 +116,7 @@ Let's assume for simplicity that you want to write a processing step called "MyP
         def __init__(self):
             super().__init__()
             self.description = 'My processing step'
+            self.undoable = True
 
         def _perform_task(self):
             # And here goes your code performing the actual processing step
@@ -123,6 +124,8 @@ Let's assume for simplicity that you want to write a processing step called "MyP
 A few comments to this code stub:
 
 * Always set the ``description`` attribute appropriately, as it gets stored in the history and is intended to give the user a first impression of what the processing step was good for. Be concise. Mote than about 60 characters are definitely too exhaustive.
+
+* Usually, the processing steps are undoable, hence, set the attribute ``undoable`` appropriately.
 
 * Store all parameters, implicit and explicit, in the public attribute ``parameters`` of the ProcessingStep class. This application of the "convention over configuration" strategy greatly facilitates automatic processing of your data and proper handling of the history.
 
