@@ -124,7 +124,7 @@ class Data:
     def _create_axes(self):
         self._axes = []
         missing_axes = self.data.ndim + 1
-        for ax in range(missing_axes):
+        for ax in range(missing_axes):  # pylint: disable=unused-variable
             self._axes.append(axis.Axis())
 
     def _check_axes(self):

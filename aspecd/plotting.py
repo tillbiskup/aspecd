@@ -184,8 +184,9 @@ class Plotter:
             raise PlotNotApplicableToDatasetError
         self._create_plot()
 
+    # noinspection PyUnusedLocal
     @staticmethod
-    def applicable(dataset):
+    def applicable(dataset):  # pylint: disable=unused-argument
         """Check whether plot is applicable to the given dataset.
 
         Returns `True` by default and needs to be implemented in classes

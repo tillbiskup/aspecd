@@ -180,8 +180,9 @@ class ProcessingStep:
         self._perform_task()
         return self.dataset
 
+    # noinspection PyUnusedLocal
     @staticmethod
-    def applicable(dataset):
+    def applicable(dataset):  # pylint: disable=unused-argument
         """Check whether processing step is applicable to the given dataset.
 
         Returns `True` by default and needs to be implemented in classes
