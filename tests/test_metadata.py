@@ -138,6 +138,15 @@ class TestMetadata(unittest.TestCase):
         for key in dict_:
             self.assertEqual(getattr(self.metadata, key), dict_[key])
 
+    def test_set_properties_from_dict_case_insensitive(self):
+        dict_ = {"Purpose": "Kill time", "Operator": "John Doe",
+                 "Labbook": "loi:42.1001/foo/bar"}
+        for key in dict_:
+            setattr(self.metadata, key.lower(), '')
+        self.metadata.from_dict(dict_)
+        for key in dict_:
+            self.assertEqual(getattr(self.metadata, key.lower()), dict_[key])
+
     def test_instantiate_properties_from_dict_with_physical_quantities(self):
         dict_ = {"purpose": "Kill time", "operator": "John Doe",
                  "labbook": "loi:42.1001/foo/bar", "length": "1.0 mm"}
@@ -326,6 +335,15 @@ class TestDatasetMetadata(unittest.TestCase):
         for key in dict_["measurement"]:
             self.assertEqual(getattr(self.dataset_metadata.measurement, key),
                              dict_["measurement"][key])
+
+    def test_set_measurement_metadata_from_dict_case_insensitive(self):
+        dict_ = {"Measurement": {"purpose": "Kill time",
+                                 "operator": "John Doe",
+                                 "labbook_entry": "loi:42.1001/foo/bar"}}
+        self.dataset_metadata.from_dict(dict_)
+        for key in dict_["Measurement"]:
+            self.assertEqual(getattr(self.dataset_metadata.measurement, key),
+                             dict_["Measurement"][key])
 
     def test_set_temperature_metadata_from_dict(self):
         dict_ = {"temperature_control": {"controlled": True,
