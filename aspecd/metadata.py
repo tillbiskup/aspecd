@@ -252,12 +252,13 @@ class Metadata(aspecd.utils.ToDictMixin):
 
         """
         for key in dict_:
-            if hasattr(self, key.lower()):
-                if isinstance(getattr(self, key.lower()),
+            attr = key.replace(' ', '_').lower()
+            if hasattr(self, attr):
+                if isinstance(getattr(self, attr),
                               type(PhysicalQuantity())):
-                    getattr(self, key.lower()).from_string(dict_[key])
+                    getattr(self, attr).from_string(dict_[key])
                 else:
-                    setattr(self, key.lower(), dict_[key])
+                    setattr(self, attr, dict_[key])
 
 
 class TemperatureControl(Metadata):

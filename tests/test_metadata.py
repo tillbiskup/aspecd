@@ -147,6 +147,17 @@ class TestMetadata(unittest.TestCase):
         for key in dict_:
             self.assertEqual(getattr(self.metadata, key.lower()), dict_[key])
 
+    def test_set_properties_from_dict_with_spaces_in_keys(self):
+        dict_ = {"Purpose": "Kill time", "Operator": "John Doe",
+                 "Lab book": "loi:42.1001/foo/bar"}
+        for key in dict_:
+            setattr(self.metadata, key.replace(' ', '_').lower(), '')
+        self.metadata.from_dict(dict_)
+        for key in dict_:
+            self.assertEqual(dict_[key],
+                             getattr(self.metadata,
+                                     key.replace(' ', '_').lower()))
+
     def test_instantiate_properties_from_dict_with_physical_quantities(self):
         dict_ = {"purpose": "Kill time", "operator": "John Doe",
                  "labbook": "loi:42.1001/foo/bar", "length": "1.0 mm"}
