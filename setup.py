@@ -19,7 +19,11 @@ setuptools.setup(
     long_description_content_type='text/x-rst',
     author='Till Biskup',
     author_email='till@till-biskup.de',
-    url='https://aspecd.de/',
+    url='https://www.aspecd.de/',
+    project_urls={
+        'Documentation': 'https://docs.aspecd.de/',
+        'Source': 'https://github.com/tillbiskup/aspecd-python',
+    },
     license=license_,
     packages=setuptools.find_packages(exclude=('tests', 'docs')),
     keywords=[
