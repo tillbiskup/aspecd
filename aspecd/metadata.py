@@ -112,7 +112,7 @@ class PhysicalQuantity(aspecd.utils.ToDictMixin):
 
     def __str__(self):
         """String representation of object."""
-        if not self.unit and self.value == 0.0:
+        if self.value == 0.0 and not self.unit:
             string = ''
         else:
             string = " ".join([str(self.value), self.unit])
