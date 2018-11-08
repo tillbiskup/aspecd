@@ -356,6 +356,15 @@ class TestDatasetMetadata(unittest.TestCase):
             self.assertEqual(getattr(self.dataset_metadata.measurement, key),
                              dict_["Measurement"][key])
 
+    def test_set_properties_from_dict_with_spaces_in_keys(self):
+        dict_ = {"Temperature Control": {"controller": "Oxford ITC503S"}}
+        self.dataset_metadata.from_dict(dict_)
+        for key in dict_["Temperature Control"]:
+            self.assertEqual(dict_["Temperature Control"][key],
+                             getattr(
+                                 self.dataset_metadata.temperature_control,
+                                 key))
+
     def test_set_temperature_metadata_from_dict(self):
         dict_ = {"temperature_control": {"controlled": True,
                                          "temperature": "270 K",
@@ -377,3 +386,49 @@ class TestDatasetMetadata(unittest.TestCase):
         for key in dict_["sample"]:
             self.assertEqual(getattr(self.dataset_metadata.sample, key),
                              dict_["sample"][key])
+
+
+class TestMetadataMapper(unittest.TestCase):
+    def setUp(self):
+        self.metadata_mapper = metadata.MetadataMapper()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_method_rename_key(self):
+        self.assertTrue(callable(self.metadata_mapper.rename_key))
+
+    def test_rename_key(self):
+        new_key = 'foo'
+        old_key = 'bar'
+        self.metadata_mapper.metadata[old_key] = 'bar'
+        self.metadata_mapper.rename_key(old_key, new_key)
+        self.assertTrue(new_key in self.metadata_mapper.metadata.keys())
+        self.assertFalse(old_key in self.metadata_mapper.metadata.keys())
+
+    def test_has_method_combine_items(self):
+        self.assertTrue(callable(self.metadata_mapper.combine_items))
+
+    def test_combine_items(self):
+        old_keys = {'key1': 'bla', 'key2': 'blub'}
+        new_key = 'new_key'
+        for key in old_keys.keys():
+            self.metadata_mapper.metadata[key] = old_keys[key]
+        self.metadata_mapper.combine_items(old_keys, new_key)
+
+        self.assertTrue(new_key in self.metadata_mapper.metadata.keys())
+        for key in old_keys.keys():
+            self.assertFalse(key in self.metadata_mapper.metadata.keys())
+        self.assertEqual(self.metadata_mapper.metadata[new_key], 'blablub')
+
+    def test_combine_items_joint_by_pattern(self):
+        old_keys = {'key1': 'bla', 'key2': 'blub'}
+        new_key = 'new_key'
+        for key in old_keys.keys():
+            self.metadata_mapper.metadata[key] = old_keys[key]
+        self.metadata_mapper.combine_items(old_keys, new_key, pattern=' ')
+
+        self.assertTrue(new_key in self.metadata_mapper.metadata.keys())
+        for key in old_keys.keys():
+            self.assertFalse(key in self.metadata_mapper.metadata.keys())
+        self.assertEqual(self.metadata_mapper.metadata[new_key], 'bla blub')

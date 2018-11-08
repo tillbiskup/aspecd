@@ -242,6 +242,9 @@ class Metadata(aspecd.utils.ToDictMixin):
         Only parameters in the dictionary that are valid properties of the
         class are set accordingly.
 
+        Keys in the dictionary are converted to lower case and spaces
+        converted to underscores to fit the naming scheme of attributes.
+
         If a property is of class :class:`aspecd.metadata.PhysicalQuantity`,
         it is set accordingly.
 
@@ -327,7 +330,6 @@ class TemperatureControl(Metadata):
         # Get value for key "controlled" if it exists, and delete it from dict_
         controlled_in_dict = "controlled" in dict_
         if controlled_in_dict:
-            controlled_in_dict = True
             controlled = dict_["controlled"]
             del dict_["controlled"]
         else:
@@ -473,6 +475,9 @@ class DatasetMetadata:
         Only parameters in the dictionary that are valid properties of the
         class are set accordingly.
 
+        Keys in the dictionary are converted to lower case and spaces
+        converted to underscores to fit the naming scheme of attributes.
+
         Parameters
         ----------
         dict_ : `dict`
@@ -484,5 +489,63 @@ class DatasetMetadata:
 
         """
         for key in dict_:
-            if hasattr(self, key.lower()):
-                getattr(self, key.lower()).from_dict(dict_[key])
+            attr = key.replace(' ', '_').lower()
+            if hasattr(self, attr):
+                getattr(self, attr).from_dict(dict_[key])
+
+
+class MetadataMapper:
+    """
+    Mapper for metadata.
+
+    Converts dictionary containing metadata read from a metadata file to a
+    dictionary that corresponds to the internal structure of the metadata
+    in a dataset stored in :class:`aspecd.metadata.DatasetMetadata`.
+
+    Attributes
+    ----------
+    metadata : `dict`
+        Dictionary containing the metadata that are converted in place
+
+    """
+
+    def __init__(self):
+        self.metadata = dict()
+
+    def rename_key(self, old_key='', new_key=''):
+        """
+        Rename key in dictionary.
+
+        Note that this method does *not* preserve the order of keys in an
+        ordered dictionary.
+
+        Parameters
+        ----------
+        old_key : str
+            Name of original key that shall be renamed
+        new_key : str
+            New name of key to be renamed
+
+        """
+        self.metadata[new_key] = self.metadata.pop(old_key)
+
+    def combine_items(self, old_keys=None, new_key='', pattern=''):
+        """
+        Combine two items in a dictionary.
+
+        Parameters
+        ----------
+        old_keys : list
+            Keys that should be combined
+        new_key : str
+            Name of new key
+        pattern : str
+            Pattern to use to join the keys together.
+
+            Defaults to the empty string.
+
+        """
+        value_tmp = list()
+        for key in old_keys:
+            value_tmp.append(self.metadata.pop(key))
+        self.metadata[new_key] = pattern.join(value_tmp)
