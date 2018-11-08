@@ -549,3 +549,24 @@ class MetadataMapper:
         for key in old_keys:
             value_tmp.append(self.metadata.pop(key))
         self.metadata[new_key] = pattern.join(value_tmp)
+
+    def keys_to_variable_names(self):
+        """
+        Convert keys in :attr:`metadata` to proper variable names.
+
+        Variable names in Python should be all lower case, with words
+        joined by underscores.
+
+        Due to recursively traversing through the :attr:`metadata`
+        dictionary, conversion is performed for (near) arbitrary depth.
+        """
+        self.metadata = self._traverse_keys_to_variable_names(self.metadata)
+
+    def _traverse_keys_to_variable_names(self, dict_=None):
+        for key, value in dict_.items():
+            if isinstance(value, dict):
+                dict_[key] = \
+                    self._traverse_keys_to_variable_names(value)
+            new_key = key.replace(' ', '_').lower()
+            dict_[new_key] = dict_.pop(key)
+        return dict_

@@ -432,3 +432,15 @@ class TestMetadataMapper(unittest.TestCase):
         for key in old_keys.keys():
             self.assertFalse(key in self.metadata_mapper.metadata.keys())
         self.assertEqual(self.metadata_mapper.metadata[new_key], 'bla blub')
+
+    def test_has_method_keys_to_variable_names(self):
+        self.assertTrue(callable(self.metadata_mapper.keys_to_variable_names))
+
+    def test_keys_to_variable_names(self):
+        dict_ = {'Temperature Control': {'Temperature': '278 K',
+                                         'Transfer Line': 'Oxford'}}
+        converted = {'temperature_control': {'temperature': '278 K',
+                                             'transfer_line': 'Oxford'}}
+        self.metadata_mapper.metadata = dict_
+        self.metadata_mapper.keys_to_variable_names()
+        self.assertDictEqual(self.metadata_mapper.metadata, converted)
