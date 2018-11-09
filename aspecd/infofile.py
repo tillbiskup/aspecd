@@ -4,12 +4,25 @@ Handle infofile files containing meta data for (experimental) data.
 The infofile format is a special format dedicated to storing meta data
 accompanying experimental data. Further information can be found online:
 
-http://till-biskup.de/en/software/info/format
+https://www.till-biskup.de/en/software/info/format
 
 This module reads and parses files complying with the infofile file format.
 
-Further plans are to include functionality to map the information contained
-in the info file to datasets.
+.. note::
+    For own purposes, you may prefer using YAML files to store metadata
+    that are collected in parallel to recording data over the infofile
+    format. For more information on this format and it specification,
+    consult its webpage: `<http://yaml.org/>`_.
+
+    As the lead developer of the ASpecD framework originally invented the
+    infofile format for own purposes, there are quite some datasets floating
+    around in his lab using this format for the corresponding metadata.
+    Hence the need of a module handling this particular file type.
+
+To map the information contained in the info file to datasets, have a look
+at the :class:`aspecd.metadata.MetadataMapper` class. You can define rather
+elaborate mapping tables, allowing to rename keys as well as to combine
+items of a dictionary.
 """
 
 import collections
@@ -183,6 +196,11 @@ def parse(filename=''):
     ----------
     filename : `str`
         Name of the info file to parse
+
+    Returns
+    -------
+    metadata : `dict`
+        Dictionary with metadata read from info file
 
     """
     ifile = Infofile(filename)

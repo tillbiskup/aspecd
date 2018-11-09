@@ -498,9 +498,32 @@ class MetadataMapper:
     """
     Mapper for metadata.
 
-    Converts dictionary containing metadata read, e.g., from a metadata file
-    to a dictionary that corresponds to the internal structure of the metadata
-    in a dataset stored in :class:`aspecd.metadata.DatasetMetadata`.
+    Allows to convert a dictionary containing metadata read, e.g., from a
+    metadata file to a dictionary that corresponds to the internal
+    structure of the metadata in a dataset stored in
+    :class:`aspecd.metadata.DatasetMetadata`.
+
+    If all you need is to convert the dictionary keys to proper variable
+    names conforming to the naming scheme proposed by `PEP 8
+    <https://pep8.org/>`_, you may simply use the method
+    :meth:`keys_to_variable_names`.
+
+    Tasks that can be currently performed to map a dictionary to the
+    internal structure of the metadata representation in a dataset contain
+    renaming of keys via :meth:`rename_key` and combining items via
+    :meth:`combine_items`.
+
+    Rather than performing the mappings by hand, calling these methods
+    repeatedly, you may use a mapping table contained in the
+    :attr:`mappings` attribute. If you pre-define such mapping tables,
+    you can easily apply different mappings depending on the version of
+    your original metadata structure. Once you assigned the appropriate
+    mapping table to the :attr:`mappings` attribute, simply call
+    :meth:`map`. If everything turns out well, this should map your
+    metadata contained in :attr:`metadata` according to the mapping table
+    contained in :meth:`mappings`. Finally, you may want to assing this
+    converted data structure to your dataset's metadata attribute,
+    using :meth:`DatasetMetadata.from_dict()`.
 
     Attributes
     ----------
