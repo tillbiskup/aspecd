@@ -506,11 +506,14 @@ class MetadataMapper:
     ----------
     metadata : `dict`
         Dictionary containing the metadata that are converted in place
+    mappings : `list`
+        Tasks to perform to map dictionary
 
     """
 
     def __init__(self):
         self.metadata = dict()
+        self.mappings = []
 
     def rename_key(self, old_key='', new_key=''):
         """
@@ -527,7 +530,12 @@ class MetadataMapper:
             New name of key to be renamed
 
         """
-        self.metadata[new_key] = self.metadata.pop(old_key)
+        self._rename_key_in_dict(old_key, new_key, self.metadata)
+
+    @staticmethod
+    def _rename_key_in_dict(old_key='', new_key='', dict_=None):
+        dict_[new_key] = dict_.pop(old_key)
+        return dict_
 
     def combine_items(self, old_keys=None, new_key='', pattern=''):
         """
@@ -545,10 +553,16 @@ class MetadataMapper:
             Defaults to the empty string.
 
         """
+        self._combine_keys_in_dict(old_keys, new_key, pattern, self.metadata)
+
+    @staticmethod
+    def _combine_keys_in_dict(old_keys=None, new_key='', pattern='',
+                              dict_=None):
         value_tmp = list()
         for key in old_keys:
-            value_tmp.append(self.metadata.pop(key))
-        self.metadata[new_key] = pattern.join(value_tmp)
+            value_tmp.append(dict_.pop(key))
+        dict_[new_key] = pattern.join(value_tmp)
+        return dict_
 
     def keys_to_variable_names(self):
         """
@@ -570,3 +584,46 @@ class MetadataMapper:
             new_key = key.replace(' ', '_').lower()
             dict_[new_key] = dict_.pop(key)
         return dict_
+
+    def map(self):
+        """
+        Map according to mappings in :attr:`mappings`.
+
+        Each mapping is defined as a list containing optionally a key for a
+        sub-dictionary as first element, the method to be performed as
+        second element, and the parameters for this method as third element.
+
+        An example for a mapping may look like this:
+
+            mapping = [['', 'rename_key', ['old', 'new']]]
+
+        This would rename the key ``old`` in :attr:`metadata` to ``new``.
+
+        To do the same for a key in a "sub-dictionary", you may provide a
+        mapping similar to the following:
+
+            mapping = [['test', 'rename_key', ['old', 'new']]]
+
+        This would rename the key ``old`` in the dictionary ``test`` in
+        :attr:`metadata` to ``new``.
+
+        Similarly, you can join two items to a new item. In this case,
+        a mapping may look like this:
+
+            mapping = [['', 'combine_items', [['key1', 'key2'], 'new']]]
+
+        This would join the values corresponding to the two keys ``key1`` and
+        ``key2`` and assign them to the new key ``new``. If you would like
+        to join the values with a particular string, this can be done as well:
+
+            mapping = [['', 'combine_items', [['key1', 'key2'], 'new', ' ']]]
+
+        Here, the two values will be joined using a space.
+        """
+        for mapping in self.mappings:
+            if mapping[0]:
+                method = getattr(self, ''.join(['_', mapping[1], '_in_dict']))
+                method(*mapping[2], self.metadata[mapping[0]])
+            else:
+                method = getattr(self, mapping[1])
+                method(*mapping[2])

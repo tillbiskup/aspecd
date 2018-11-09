@@ -444,3 +444,50 @@ class TestMetadataMapper(unittest.TestCase):
         self.metadata_mapper.metadata = dict_
         self.metadata_mapper.keys_to_variable_names()
         self.assertDictEqual(self.metadata_mapper.metadata, converted)
+
+    def test_has_attribute_mapping(self):
+        self.assertTrue(hasattr(self.metadata_mapper, 'mappings'))
+
+    def test_rename_key_via_mapping(self):
+        self.metadata_mapper.metadata['old'] = 'foo'
+        mapping = [['', 'rename_key', ['old', 'new']]]
+        self.metadata_mapper.mappings = mapping
+        self.metadata_mapper.map()
+        self.assertTrue('new' in self.metadata_mapper.metadata.keys())
+        self.assertFalse('old' in self.metadata_mapper.metadata.keys())
+
+    def test_rename_key_on_second_level_via_mapping(self):
+        self.metadata_mapper.metadata['test'] = {'old': 'foo'}
+        mapping = [['test', 'rename_key', ['old', 'new']]]
+        self.metadata_mapper.mappings = mapping
+        self.metadata_mapper.map()
+        self.assertTrue('new' in self.metadata_mapper.metadata['test'].keys())
+        self.assertFalse('old' in self.metadata_mapper.metadata['test'].keys())
+
+    def test_combine_items_via_mapping(self):
+        old_keys = {'key1': 'bla', 'key2': 'blub'}
+        new_key = 'new_key'
+        mapping = [['', 'combine_items', [["key1", "key2"], "new_key"]]]
+        self.metadata_mapper.mappings = mapping
+        for key in old_keys.keys():
+            self.metadata_mapper.metadata[key] = old_keys[key]
+        self.metadata_mapper.map()
+
+        self.assertTrue(new_key in self.metadata_mapper.metadata.keys())
+        for key in old_keys.keys():
+            self.assertFalse(key in self.metadata_mapper.metadata.keys())
+        self.assertEqual(self.metadata_mapper.metadata[new_key], 'blablub')
+
+    def test_combine_items_joint_by_pattern_via_mapping(self):
+        old_keys = {'key1': 'bla', 'key2': 'blub'}
+        new_key = 'new_key'
+        mapping = [['', 'combine_items', [["key1", "key2"], "new_key", " "]]]
+        self.metadata_mapper.mappings = mapping
+        for key in old_keys.keys():
+            self.metadata_mapper.metadata[key] = old_keys[key]
+        self.metadata_mapper.map()
+
+        self.assertTrue(new_key in self.metadata_mapper.metadata.keys())
+        for key in old_keys.keys():
+            self.assertFalse(key in self.metadata_mapper.metadata.keys())
+        self.assertEqual(self.metadata_mapper.metadata[new_key], 'bla blub')
