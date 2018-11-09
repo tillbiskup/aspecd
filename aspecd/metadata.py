@@ -498,8 +498,8 @@ class MetadataMapper:
     """
     Mapper for metadata.
 
-    Converts dictionary containing metadata read from a metadata file to a
-    dictionary that corresponds to the internal structure of the metadata
+    Converts dictionary containing metadata read, e.g., from a metadata file
+    to a dictionary that corresponds to the internal structure of the metadata
     in a dataset stored in :class:`aspecd.metadata.DatasetMetadata`.
 
     Attributes
@@ -508,6 +508,14 @@ class MetadataMapper:
         Dictionary containing the metadata that are converted in place
     mappings : `list`
         Tasks to perform to map dictionary
+
+        Each task is a list containing three entries:
+
+        (1) an optional key of a "sub-dictionary" to operate on
+        (2) the action to carry out
+        (3) a list containing the necessary parameters to carry out the action
+
+        For examples, see the documentation of the :meth:`map` method.
 
     """
 
@@ -593,14 +601,14 @@ class MetadataMapper:
         sub-dictionary as first element, the method to be performed as
         second element, and the parameters for this method as third element.
 
-        An example for a mapping may look like this:
+        An example for a mapping may look like this::
 
             mapping = [['', 'rename_key', ['old', 'new']]]
 
         This would rename the key ``old`` in :attr:`metadata` to ``new``.
 
         To do the same for a key in a "sub-dictionary", you may provide a
-        mapping similar to the following:
+        mapping similar to the following::
 
             mapping = [['test', 'rename_key', ['old', 'new']]]
 
@@ -608,13 +616,13 @@ class MetadataMapper:
         :attr:`metadata` to ``new``.
 
         Similarly, you can join two items to a new item. In this case,
-        a mapping may look like this:
+        a mapping may look like this::
 
             mapping = [['', 'combine_items', [['key1', 'key2'], 'new']]]
 
         This would join the values corresponding to the two keys ``key1`` and
         ``key2`` and assign them to the new key ``new``. If you would like
-        to join the values with a particular string, this can be done as well:
+        to join the values with a particular string, this can be done as well::
 
             mapping = [['', 'combine_items', [['key1', 'key2'], 'new', ' ']]]
 
