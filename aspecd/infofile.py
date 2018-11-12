@@ -74,6 +74,10 @@ class Infofile:
         Structure containing parameters read from info file.
     filename : `str`
         Name of the info file read
+    infofile_info : dict
+        Information about the infofile, such as kind, version, and date.
+
+        Helpful for mapping metadata contained in an infofile to datasets.
 
     Parameters
     ----------
@@ -92,6 +96,11 @@ class Infofile:
     def __init__(self, filename=None):
         self.parameters = collections.OrderedDict()
         self.filename = filename
+        self.infofile_info = dict()
+
+        self.infofile_info['kind'] = ''
+        self.infofile_info['version'] = ''
+        self.infofile_info['date'] = ''
 
         self._file_contents = []
         self._comment_char = '%'
@@ -115,6 +124,8 @@ class Infofile:
 
         if not self._is_infofile():
             raise InfofileTypeError
+
+        self._parse_infofile_info()
 
         blockname = ''
         key = ''
@@ -164,6 +175,14 @@ class Infofile:
         with open(self.filename) as file:
             file_contents = list(file)
         return file_contents
+
+    def _parse_infofile_info(self):
+        info_line = self._file_contents[0]
+        info_parts = info_line.split(' - ')
+        _, version, version_date = info_parts[1].split()
+        self.infofile_info['kind'] = info_parts[0].strip()
+        self.infofile_info['version'] = version
+        self.infofile_info['date'] = version_date[1:-1]
 
     def _is_comment_line(self, line):
         return line.strip().startswith(self._comment_char)

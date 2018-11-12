@@ -29,7 +29,8 @@ class TestInfofileParser(unittest.TestCase):
 
 class TestInfofileParserParse(unittest.TestCase):
 
-    def write_list_to_file(self, contents, filename):
+    @staticmethod
+    def write_list_to_file(contents, filename):
         with open(filename, 'w') as f:
             for line in contents:
                 f.write(line)
@@ -64,7 +65,7 @@ class TestInfofileParserParse(unittest.TestCase):
 
     def test_parse_minimal_file(self):
         file_content = [
-            'test Info File\n'
+            'test Info File - v. 0.1.0 (0000-00-00)\n'
             '\n'
             'GENERAL\n'
             'bla: blub\n'
@@ -77,7 +78,7 @@ class TestInfofileParserParse(unittest.TestCase):
 
     def test_parse_different_minimal_file(self):
         file_content = [
-            'test Info File\n'
+            'test Info File - v. 0.1.0 (0000-00-00)\n'
             '\n'
             'SAMPLE\n'
             'foo: bar\n'
@@ -90,7 +91,7 @@ class TestInfofileParserParse(unittest.TestCase):
 
     def test_parse_inline_comment(self):
         file_content = [
-            'test Info File\n'
+            'test Info File - v. 0.1.0 (0000-00-00)\n'
             '\n'
             'SAMPLE\n'
             'foo: bar % some comment\n'
@@ -101,7 +102,7 @@ class TestInfofileParserParse(unittest.TestCase):
 
     def test_parse_escaped_comment_character(self):
         file_content = [
-            'test Info File\n'
+            'test Info File - v. 0.1.0 (0000-00-00)\n'
             '\n'
             'SAMPLE\n'
             'foo: bar \%\n'
@@ -112,7 +113,7 @@ class TestInfofileParserParse(unittest.TestCase):
 
     def test_parse_comment_line(self):
         file_content = [
-            'test Info File\n'
+            'test Info File - v. 0.1.0 (0000-00-00)\n'
             '\n'
             '% Some comment line\n'
             'SAMPLE\n'
@@ -126,7 +127,7 @@ class TestInfofileParserParse(unittest.TestCase):
 
     def test_parse_continuation_line(self):
         file_content = [
-            'test Info File\n'
+            'test Info File - v. 0.1.0 (0000-00-00)\n'
             '\n'
             'SAMPLE\n'
             'foo: bar\n'
@@ -141,7 +142,7 @@ class TestInfofileParserParse(unittest.TestCase):
 
     def test_parse_file_with_comment_block(self):
         file_content = [
-            'test Info File\n'
+            'test Info File - v. 0.1.0 (0000-00-00)\n'
             '\n'
             'GENERAL\n'
             'bla: blub\n'
@@ -157,7 +158,7 @@ class TestInfofileParserParse(unittest.TestCase):
 
     def test_parameters_preserve_order_of_blocks_in_file(self):
         file_content = [
-            'test Info File\n'
+            'test Info File - v. 0.1.0 (0000-00-00)\n'
             '\n'
             'SAMPLE\n'
             'foo: bar\n'
@@ -173,10 +174,21 @@ class TestInfofileParserParse(unittest.TestCase):
         self.assertEqual(['foo', 'bla'],
                          list(self.ifile.parameters['SAMPLE'].keys()))
 
+    def test_parse_reads_version_info(self):
+        file_content = [
+            'trEPR Info file - v. 0.1.6 (2016-01-18)'
+        ]
+        self.write_list_to_file(file_content, self.ifile.filename)
+        self.ifile.parse()
+        self.assertEqual('trEPR Info file', self.ifile.infofile_info['kind'])
+        self.assertEqual('0.1.6' ,self.ifile.infofile_info['version'])
+        self.assertEqual('2016-01-18', self.ifile.infofile_info['date'])
+
 
 class TestInfofileParserNonOOP(unittest.TestCase):
 
-    def write_list_to_file(self, contents, filename):
+    @staticmethod
+    def write_list_to_file(contents, filename):
         with open(filename, 'w') as f:
             for line in contents:
                 f.write(line)
@@ -206,7 +218,7 @@ class TestInfofileParserNonOOP(unittest.TestCase):
 
     def test_parse_minimal_file(self):
         file_content = [
-            'test Info File\n'
+            'test Info File - v. 0.1.0 (0000-00-00)\n'
             '\n'
             'GENERAL\n'
             'bla: blub\n'
