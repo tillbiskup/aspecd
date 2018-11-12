@@ -74,7 +74,7 @@ class Infofile:
         Structure containing parameters read from info file.
     filename : `str`
         Name of the info file read
-    infofile_info : dict
+    infofile_info : `dict`
         Information about the infofile, such as kind, version, and date.
 
         Helpful for mapping metadata contained in an infofile to datasets.
@@ -210,6 +210,17 @@ class Infofile:
 
 def parse(filename=''):
     """Parse info file.
+
+    Conventional interface provided for convenience that gives easy access
+    to the metadata stored in an infofile. For full use of the capabilities
+    of the :class:`Infofile` class, use its object-oriented interface.
+
+    .. warning::
+        This will only return the metadata read from the info file, not the
+        version information that is read and parsed as well. To obtain this
+        version information, e.g., for mapping of metadata onto other
+        structures, you should use the object-oriented interface of the
+        :class:`Infofile` class.
 
     Parameters
     ----------
