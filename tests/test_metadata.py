@@ -1,5 +1,6 @@
 """Tests for metadata."""
 
+import collections
 import unittest
 
 from aspecd import metadata
@@ -410,7 +411,9 @@ class TestMetadataMapper(unittest.TestCase):
         self.assertTrue(callable(self.metadata_mapper.combine_items))
 
     def test_combine_items(self):
-        old_keys = {'key1': 'bla', 'key2': 'blub'}
+        old_keys = collections.OrderedDict()  # ordered dict for reproducibility
+        old_keys['key1'] = 'bla'
+        old_keys['key2'] = 'blub'
         new_key = 'new_key'
         for key in old_keys.keys():
             self.metadata_mapper.metadata[key] = old_keys[key]
@@ -422,7 +425,9 @@ class TestMetadataMapper(unittest.TestCase):
         self.assertEqual(self.metadata_mapper.metadata[new_key], 'blablub')
 
     def test_combine_items_joint_by_pattern(self):
-        old_keys = {'key1': 'bla', 'key2': 'blub'}
+        old_keys = collections.OrderedDict()  # ordered dict for reproducibility
+        old_keys['key1'] = 'bla'
+        old_keys['key2'] = 'blub'
         new_key = 'new_key'
         for key in old_keys.keys():
             self.metadata_mapper.metadata[key] = old_keys[key]

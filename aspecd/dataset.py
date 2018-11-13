@@ -10,7 +10,9 @@ scientific practice.
 
 import copy
 
-from aspecd import data, history, metadata
+import numpy as np
+
+from aspecd import history, metadata
 
 
 class Error(Exception):
@@ -175,8 +177,8 @@ class Dataset:
     """
 
     def __init__(self):
-        self.data = data.Data()
-        self._origdata = data.Data()
+        self.data = Data()
+        self._origdata = Data()
         self.metadata = metadata.DatasetMetadata()
         self.history = []
         self._history_pointer = -1
@@ -455,3 +457,242 @@ class Dataset:
 
         """
         pass
+
+
+class AxesCountError(Error):
+    """Exception raised for wrong number of axes
+
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
+class AxesValuesInconsistentWithDataError(Error):
+    """Exception raised for axes values inconsistent with data
+
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
+class Data:
+    """
+    Unit containing both, numeric data and corresponding axes.
+
+    The data class ensures consistency in terms of dimensions between
+    numerical data and axes.
+
+    Parameters
+    ----------
+    data : `numpy.array`
+        Numerical data
+    axes : `list`
+        List of objects of type :class:`aspecd.axis.Axis`
+
+        The number of axes needs to be consistent with the dimensions of data.
+
+        Axes will be set automatically when setting data. Hence,
+        the easiest is to first set data and only afterwards set axis values.
+    calculated : `bool`
+        Indicator for the origin of the numerical data (calculation or
+        experiment).
+
+    Attributes
+    ----------
+    calculated : `bool`
+        Indicate whether numeric data are calculated rather than
+        experimentally recorded
+
+    Raises
+    ------
+    AxesCountError
+        Raised if number of axes is inconsistent with data dimensions
+    AxesValuesInconsistentWithDataError
+        Raised if axes values are inconsistent with data
+
+    """
+
+    def __init__(self, data=np.zeros(0), axes=None, calculated=False):
+        self._data = data
+        self._axes = []
+        if axes is None:
+            self._create_axes()
+        else:
+            self.axes = axes
+        self.calculated = calculated
+
+    @property
+    def data(self):
+        """Get (numeric) data.
+
+        Returns
+        -------
+        data : `numpy.array`
+            Numerical data
+
+        """
+        return self._data
+
+    @data.setter
+    def data(self, data):
+        self._data = data
+        self._create_axes()
+
+    @property
+    def axes(self):
+        """Get axes.
+
+        Returns
+        -------
+        axes : `list`
+            List of objects of type :class:`aspecd.axis.Axis`
+
+        """
+        return self._axes
+
+    @axes.setter
+    def axes(self, axes):
+        self._axes = axes
+        self._check_axes()
+
+    def _create_axes(self):
+        self._axes = []
+        missing_axes = self.data.ndim + 1
+        # pylint: disable=unused-variable
+        # pylint: disable=invalid-name
+        for ax in range(missing_axes):
+            self._axes.append(Axis())
+
+    def _check_axes(self):
+        if len(self._axes) > self.data.ndim + 1:
+            raise AxesCountError
+        data_shape = self.data.shape
+        for index in range(self.data.ndim):
+            if len(self.axes[index].values) != data_shape[index]:
+                raise AxesValuesInconsistentWithDataError
+
+
+class AxisValuesDimensionError(Error):
+    """Exception raised for wrong dimension of values
+
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
+class AxisValuesTypeError(Error):
+    """Exception raised for wrong type of values
+
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
+class Axis:
+    """Axis for data in a dataset.
+
+    An axis contains always both, numerical values as well as the metadata
+    necessary to create axis labels and to make sense of the numerical
+    information.
+
+    Attributes
+    ----------
+    quantity : `string`
+        quantity of the numerical data, usually used as first part of an
+        automatically generated axis label
+    unit : `string`
+        unit of the numerical data, usually used as second part of an
+        automatically generated axis label
+    label : `string`
+        manual label for the axis, particularly useful in cases where no
+        quantity and unit are provided or should be overwritten.
+
+    Raises
+    ------
+    AxisValuesTypeError
+        Raised when trying to set axis values to another type than numpy array
+    AxisValuesDimensionError
+        Raised when trying to set axis values to an array with more than one
+        dimension.
+
+    """
+
+    def __init__(self):
+        self._values = np.zeros(0)
+        self._equidistant = None
+        self.quantity = ''
+        self.unit = ''
+        self.label = ''
+
+    @property
+    def values(self):
+        """
+        Get or set the numerical axis values.
+
+        Values require to be a one-dimensional numpy array. Trying to set
+        values to either a different type or a numpy array with more than one
+        dimension will raise a corresponding error.
+
+        """
+        return self._values
+
+    @values.setter
+    def values(self, values):
+        if not isinstance(values, type(self._values)):
+            raise AxisValuesTypeError
+        if values.ndim > 1:
+            raise AxisValuesDimensionError
+        self._values = values
+        self._set_equidistant_property()
+
+    @property
+    def equidistant(self):
+        """Return whether the axes values are equidistant.
+
+        True if the axis values are equidistant, False otherwise. None in
+        case of no axis values.
+
+        The property is set automatically if axis values are set and
+        therefore read-only.
+
+        While simple plotting of data values against non-uniform axes with
+        non-equidistant values is usually straightforward, many processing
+        steps rely on equidistant axis values in their simplest possible
+        implementation.
+
+        """
+        return self._equidistant
+
+    def _set_equidistant_property(self):
+        if not self.values.size:
+            return
+        differences = self.values[1:] - self.values[0:-1]
+        self._equidistant = (differences == differences[0]).all()
