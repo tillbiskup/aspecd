@@ -2,7 +2,7 @@
 
 One key aspect of reproducibility is to record sufficient details of the
 system used to perform analysis. Therefore, each
-:class:`aspecd.history.HistoryRecord` contains a field with system
+:class:`aspecd.dataset.HistoryRecord` contains a field with system
 information that is an :obj:`aspecd.system.SystemInfo` object.
 
 General information stored within the :class:`aspecd.system.SystemInfo`

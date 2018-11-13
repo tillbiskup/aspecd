@@ -9,10 +9,11 @@ scientific practice.
 """
 
 import copy
+from datetime import datetime
 
 import numpy as np
 
-from aspecd import history, metadata
+from aspecd import metadata, processing, system, analysis, annotation
 
 
 class Error(Exception):
@@ -150,7 +151,7 @@ class Dataset:
 
     Attributes
     ----------
-    data : :obj:`aspecd.data.Data`
+    data : :obj:`aspecd.dataset.Data`
         numeric data and axes
     metadata : :obj:`aspecd.metadata.DatasetMetadata`
         hierarchical key-value store of metadata
@@ -274,7 +275,7 @@ class Dataset:
 
     @staticmethod
     def _create_processing_history_record(processing_step):
-        historyrecord = history.ProcessingHistoryRecord(processing_step)
+        historyrecord = ProcessingHistoryRecord(processing_step)
         return historyrecord
 
     def _append_processing_history_record(self, history_record):
@@ -336,7 +337,7 @@ class Dataset:
 
     @staticmethod
     def _create_analysis_history_record(analysis_step):
-        history_record = history.AnalysisHistoryRecord()
+        history_record = AnalysisHistoryRecord()
         history_record.analysis = analysis_step
         return history_record
 
@@ -344,25 +345,25 @@ class Dataset:
         """Remove analysis step record from dataset."""
         del self.analyses[index]
 
-    def annotate(self, annotation=None):
+    def annotate(self, annotation_=None):
         """Add annotation to dataset.
 
         Parameters
         ----------
-        annotation : :obj:`aspecd.annotation.Annotation`
+        annotation_ : :obj:`aspecd.annotation.Annotation`
             annotation to add to the dataset
 
         """
         # Important: Need a copy, not the reference to the original object
-        annotation = copy.deepcopy(annotation)
-        history_record = self._create_annotation_history_record(annotation)
-        annotation.annotate(self)
+        annotation_ = copy.deepcopy(annotation_)
+        history_record = self._create_annotation_history_record(annotation_)
+        annotation_.annotate(self)
         self.annotations.append(history_record)
 
     @staticmethod
-    def _create_annotation_history_record(annotation):
-        history_record = history.AnnotationHistoryRecord()
-        history_record.annotation = annotation
+    def _create_annotation_history_record(annotation_):
+        history_record = AnnotationHistoryRecord()
+        history_record.annotation = annotation_
         return history_record
 
     def plot(self, plotter=None):
@@ -501,7 +502,7 @@ class Data:
     data : `numpy.array`
         Numerical data
     axes : `list`
-        List of objects of type :class:`aspecd.axis.Axis`
+        List of objects of type :class:`aspecd.dataset.Axis`
 
         The number of axes needs to be consistent with the dimensions of data.
 
@@ -559,7 +560,7 @@ class Data:
         Returns
         -------
         axes : `list`
-            List of objects of type :class:`aspecd.axis.Axis`
+            List of objects of type :class:`aspecd.dataset.Axis`
 
         """
         return self._axes
@@ -696,3 +697,100 @@ class Axis:
             return
         differences = self.values[1:] - self.values[0:-1]
         self._equidistant = (differences == differences[0]).all()
+
+
+class HistoryRecord:
+    """Generic base class for all kinds of history records.
+
+    For all classes operating on datasets, such as
+    :class:`aspecd.processing.ProcessingStep`,
+    :class:`aspecd.analysis.AnalysisStep` and others, there exist at least two
+    "representations": (i) the generic one not (necessarily) tied to any
+    concrete dataset, thus portable, and (ii) a concrete one having operated on
+    a dataset and thus being accompanied with information about who has done
+    what when how to what dataset.
+
+    For this second type, a history class derived from
+    :class:`aspecd.dataset.HistoryRecord` gets used, and it is this second type
+    that is stored inside the Dataset object.
+
+    Attributes
+    ----------
+    date : :obj:`datetime.datetime`
+        datetime object with date current at HistoryRecord instantiation
+    sysinfo : :obj:`aspecd.system.SystemInfo`
+        key--value store with crucial system parameters, including user
+        login name
+
+    """
+
+    def __init__(self):
+        self.date = datetime.today()
+        self.sysinfo = system.SystemInfo()
+
+
+class ProcessingHistoryRecord(HistoryRecord):
+    """History record for processing steps on datasets.
+
+    Attributes
+    ----------
+    processing : `aspecd.processing.ProcessingStepRecord`
+        record of the processing step
+
+    Parameters
+    ----------
+    processing_step : :class:`aspecd.processing.ProcessingStep`
+        processing step the history is saved for
+
+    """
+
+    def __init__(self, processing_step=None):
+        super().__init__()
+        self.processing = processing.ProcessingStepRecord(processing_step)
+
+    @property
+    def undoable(self):
+        """Can this processing step be reverted?"""
+        return self.processing.undoable
+
+    def replay(self, dataset):
+        """Replay the processing step saved in the history record.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset the processing step should be replayed to
+
+        """
+        processing_step = self.processing.create_processing_step()
+        processing_step.process(dataset=dataset)
+
+
+class AnalysisHistoryRecord(HistoryRecord):
+    """History record for analysis steps on datasets.
+
+    Attributes
+    ----------
+    analysis : :class:`aspecd.analysis.AnalysisStep`
+        Analysis step the history is saved for
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.analysis = analysis.AnalysisStep()
+
+
+class AnnotationHistoryRecord(HistoryRecord):
+    """History record for annotations of datasets.
+
+    Attributes
+    ----------
+    annotation : :class:`aspecd.analysis.Annotation`
+        Annotation the history is saved for
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.annotation = annotation.Annotation()

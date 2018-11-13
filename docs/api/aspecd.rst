@@ -25,34 +25,10 @@ aspecd.annotation module
     :undoc-members:
     :show-inheritance:
 
-aspecd.axis module
-------------------
-
-.. automodule:: aspecd.axis
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-aspecd.data module
-------------------
-
-.. automodule:: aspecd.data
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 aspecd.dataset module
 ---------------------
 
 .. automodule:: aspecd.dataset
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-aspecd.history module
----------------------
-
-.. automodule:: aspecd.history
     :members:
     :undoc-members:
     :show-inheritance:

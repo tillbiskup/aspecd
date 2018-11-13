@@ -1,11 +1,12 @@
 """Tests for datset."""
 
 import unittest
+from datetime import datetime, timedelta
 
 import numpy as np
 
-from aspecd import dataset, history, processing, analysis, plotting, \
-    importer
+from aspecd import analysis, dataset, importer, plotting, processing, \
+    system
 
 
 class TestDataset(unittest.TestCase):
@@ -63,7 +64,7 @@ class TestDatasetProcessing(unittest.TestCase):
     def test_added_history_record_is_historyrecord(self):
         self.dataset.process(self.processingStep)
         self.assertTrue(isinstance(self.dataset.history[-1],
-                                   history.ProcessingHistoryRecord))
+                                   dataset.ProcessingHistoryRecord))
 
     def test_process_increments_history_pointer(self):
         historypointer = self.dataset._history_pointer
@@ -226,7 +227,7 @@ class TestDatasetAnalysis(unittest.TestCase):
     def test_added_analysis_record_is_analysishistoryrecord(self):
         self.dataset.analyse(self.analysisstep)
         self.assertTrue(isinstance(self.dataset.analyses[-1],
-                                   history.AnalysisHistoryRecord))
+                                   dataset.AnalysisHistoryRecord))
 
     def test_has_delete_analysis_method(self):
         self.assertTrue(hasattr(self.dataset, 'delete_analysis'))
@@ -444,7 +445,7 @@ class TestAxis(unittest.TestCase):
         self.assertEqual(self.axis.equidistant, None)
 
     def test_equidistant_is_true_for_equidistant_axes(self):
-        self.axis.values = np.arange(0,5,1)
+        self.axis.values = np.arange(0, 5, 1)
         self.assertTrue(self.axis.equidistant)
 
     def test_equidistant_is_false_for_nonequidistant_axes(self):
@@ -467,3 +468,83 @@ class TestAxisSettings(unittest.TestCase):
     def test_set_multidimensional_values_fails(self):
         with self.assertRaises(dataset.AxisValuesDimensionError):
             self.axis.values = np.zeros([0, 0])
+
+
+class TestHistoryRecord(unittest.TestCase):
+    def setUp(self):
+        self.historyrecord = dataset.HistoryRecord()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_date_property(self):
+        self.assertTrue(hasattr(self.historyrecord, 'date'))
+
+    def test_date_is_datetime(self):
+        self.assertTrue(isinstance(self.historyrecord.date, datetime))
+
+    def test_date_is_current_date(self):
+        now = datetime.today()
+        self.assertAlmostEqual(now, self.historyrecord.date,
+                               delta=timedelta(seconds=1))
+
+    def test_has_sysinfo_property(self):
+        self.assertTrue(hasattr(self.historyrecord, 'sysinfo'))
+
+    def test_sysinfo_is_systeminfo(self):
+        self.assertTrue(
+            isinstance(self.historyrecord.sysinfo, system.SystemInfo))
+
+
+class TestProcessingHistoryRecord(unittest.TestCase):
+    def setUp(self):
+        self.processing_step = processing.ProcessingStep()
+        self.historyrecord = \
+            dataset.ProcessingHistoryRecord(self.processing_step)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_instantiate_class_with_processing_step(self):
+        dataset.ProcessingHistoryRecord(self.processing_step)
+
+    def test_has_processing_property(self):
+        self.assertTrue(hasattr(self.historyrecord, 'processing'))
+
+    def test_processing_is_processingsteprecord(self):
+        self.assertTrue(isinstance(self.historyrecord.processing,
+                                   processing.ProcessingStepRecord))
+
+    def test_has_date_property(self):
+        self.assertTrue(hasattr(self.historyrecord, 'date'))
+
+    def test_has_sysinfo_property(self):
+        self.assertTrue(hasattr(self.historyrecord, 'sysinfo'))
+
+    def test_has_undoable_property(self):
+        self.assertTrue(hasattr(self.historyrecord, 'undoable'))
+
+    def test_undoable_is_boolean(self):
+        self.assertTrue(isinstance(self.historyrecord.undoable, bool))
+
+    def test_has_replay_method(self):
+        self.assertTrue(hasattr(self.historyrecord, 'replay'))
+        self.assertTrue(callable(self.historyrecord.replay))
+
+    def test_replay(self):
+        self.historyrecord.replay(dataset.Dataset())
+
+
+class TestAnalysisHistoryRecord(unittest.TestCase):
+    def setUp(self):
+        self.historyrecord = dataset.AnalysisHistoryRecord()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_processing_property(self):
+        self.assertTrue(hasattr(self.historyrecord, 'analysis'))
+
+    def test_processing_is_processingstep(self):
+        self.assertTrue(isinstance(self.historyrecord.analysis,
+                                   analysis.AnalysisStep))
