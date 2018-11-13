@@ -41,11 +41,11 @@ However, life is a bit more complicated to get things working properly and to be
 Importer
 ========
 
-To actually be able to work on (numeric) data and to store them together with their accompanying metadata in a dataset, you need to write importer classes specific for each type of raw data. To do so, create a module named ``importer`` and include the following code::
+To actually be able to work on (numeric) data and to store them together with their accompanying metadata in a dataset, you need to write importer classes specific for each type of raw data. To do so, create a module named ``io`` and include the following code::
 
     import aspecd
 
-    class Importer(aspecd.importer.Importer):
+    class Importer(aspecd.io.Importer):
 
         def __init__(self, path=''):
             super().__init__()
