@@ -6,8 +6,8 @@ Available modules
 -----------------
 dataset
     Unit containing data and metadata
-importer
-    Import data into datasets
+io
+    Import and export data into and from datasets
 metadata
     Organise metadata in a dataset
 infofile
