@@ -155,11 +155,11 @@ class Dataset:
         numeric data and axes
     metadata : :obj:`aspecd.metadata.DatasetMetadata`
         hierarchical key-value store of metadata
-    history : :obj:`list`
+    history : `list`
         processing steps performed on the numeric data
-    analyses : :obj:`list`
+    analyses : `list`
         analysis steps performed on the dataset
-    annotations : :obj:`list`
+    annotations : `list`
         annotations of the dataset
 
     Raises
