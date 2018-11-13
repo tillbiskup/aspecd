@@ -181,7 +181,7 @@ class TestInfofileParserParse(unittest.TestCase):
         self.write_list_to_file(file_content, self.ifile.filename)
         self.ifile.parse()
         self.assertEqual('trEPR Info file', self.ifile.infofile_info['kind'])
-        self.assertEqual('0.1.6' ,self.ifile.infofile_info['version'])
+        self.assertEqual('0.1.6', self.ifile.infofile_info['version'])
         self.assertEqual('2016-01-18', self.ifile.infofile_info['date'])
 
 
