@@ -8,6 +8,8 @@ dataset
     Unit containing data and metadata
 importer
     Import data into datasets
+metadata
+    Organise metadata in a dataset
 infofile
     Import and parse info files
 processing
