@@ -33,10 +33,10 @@ aspecd.dataset module
     :undoc-members:
     :show-inheritance:
 
-aspecd.importer module
+aspecd.io module
 ----------------------
 
-.. automodule:: aspecd.importer
+.. automodule:: aspecd.io
     :members:
     :undoc-members:
     :show-inheritance:
