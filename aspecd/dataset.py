@@ -128,7 +128,22 @@ class MissingPlotterError(Error):
 
 
 class MissingImporterError(Error):
-    """Exception raised importing without :class:`aspecd.importer.Importer`
+    """Exception raised importing without :class:`aspecd.io.Importer`
+
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
+class MissingExporterError(Error):
+    """Exception raised importing without :class:`aspecd.io.Exporter`
 
     Attributes
     ----------
@@ -427,12 +442,12 @@ class Dataset:
     def import_from(self, importer=None):
         """Import data and metadata contained in importer object.
 
-        This requires initialising an :obj:`aspecd.importer.Importer` object
+        This requires initialising an :obj:`aspecd.io.Importer` object
         first that is provided as an argument for this method.
 
         .. note::
             The same operation can be performed by calling the
-            :func:`import_into` method of an :obj:`aspecd.importer.Importer`
+            :func:`import_into` method of an :obj:`aspecd.io.Importer`
             object taking an :obj:`aspecd.dataset.Dataset` object as argument.
 
             However, as usually one wants to continue working with a dataset,
@@ -442,7 +457,7 @@ class Dataset:
 
         Parameters
         ----------
-        importer : :class:`aspecd.importer.Importer`
+        importer : :class:`aspecd.io.Importer`
             Importer containing data and metadata read from some source
 
         """
@@ -450,14 +465,31 @@ class Dataset:
             raise MissingImporterError("No importer provided")
         importer.import_into(self)
 
-    def export_to(self):
+    def export_to(self, exporter=None):
         """Export data and metadata.
 
-        .. todo::
-            This needs to be implemented, probably using a generic exporter.
+        This requires initialising an :obj:`aspecd.io.Importer` object
+        first that is provided as an argument for this method.
+
+        .. note::
+            The same operation can be performed by calling the
+            :func:`export_from` method of an :obj:`aspecd.io.Exporter`
+            object taking an :obj:`aspecd.dataset.Dataset` object as argument.
+
+            However, as usually the dataset is already at hand,
+            first creating an instance of a respective exporter
+            and then calling :func:`export_to` of the dataset is the
+            preferred way.
+
+        Parameters
+        ----------
+        exporter : :class:`aspecd.io.Exporter`
+            Exporter writing data and metadata to specific output format
 
         """
-        pass
+        if not exporter:
+            raise MissingExporterError("No exporter provided")
+        exporter.export_from(self)
 
 
 class AxesCountError(Error):

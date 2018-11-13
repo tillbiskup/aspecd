@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 import numpy as np
 
-from aspecd import analysis, dataset, importer, plotting, processing, \
+from aspecd import analysis, dataset, io, plotting, processing, \
     system
 
 
@@ -270,7 +270,7 @@ class TestDatasetPlotting(unittest.TestCase):
 class TestDatasetImporting(unittest.TestCase):
     def setUp(self):
         self.dataset = dataset.Dataset()
-        self.importer = importer.Importer()
+        self.importer = io.Importer()
 
     def test_has_import_from_method(self):
         self.assertTrue(hasattr(self.dataset, 'import_from'))
@@ -279,6 +279,20 @@ class TestDatasetImporting(unittest.TestCase):
     def test_import_without_importer_raises(self):
         with self.assertRaises(dataset.MissingImporterError):
             self.dataset.import_from()
+
+
+class TestDatasetExporting(unittest.TestCase):
+    def setUp(self):
+        self.dataset = dataset.Dataset()
+        self.exporter = io.Exporter()
+
+    def test_has_export_to_method(self):
+        self.assertTrue(hasattr(self.dataset, 'export_to'))
+        self.assertTrue(callable(self.dataset.export_to))
+
+    def test_export_without_exporter_raises(self):
+        with self.assertRaises(dataset.MissingExporterError):
+            self.dataset.export_to()
 
 
 class TestData(unittest.TestCase):

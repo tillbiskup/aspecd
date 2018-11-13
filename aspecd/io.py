@@ -42,7 +42,7 @@ class Importer:
     ----------
     dataset : :obj:`aspecd.dataset.Dataset`
         dataset to import data and metadata into
-    source : :obj:`string`
+    source : string
         specifier of the source the data and metadata will be read from
 
     Raises
@@ -107,6 +107,92 @@ class Importer:
         Usually, this method will successively call other private/protected
         methods of the importer to perform the required tasks that are
         specific for each data source.
+
+        """
+        pass
+
+
+class Exporter:
+    """Base class for exporter.
+
+    Each class actually exporting data from a dataset to some other should
+    inherit from this class.
+
+    To perform the export, call the
+    :meth:`~aspecd.dataset.Dataset.export_to` method of the dataset
+    the export should be performed for, and provide a reference to the
+    actual exporter object to it.
+
+    The actual implementation of the exporting is done in the private method
+    :meth:`_export` that in turn gets called by :meth:`export_from`
+    which is called by the :meth:`aspecd.dataset.Dataset.export_to` method
+    of the dataset object.
+
+    Attributes
+    ----------
+    dataset : :obj:`aspecd.dataset.Dataset`
+        dataset to export data and metadata from
+    target : string
+        specifier of the target the data and metadata will be written to
+
+    Raises
+    ------
+    MissingDatasetError
+        Raised when no dataset exists to act upon
+
+    """
+
+    def __init__(self, target=None):
+        self.target = target
+        self.dataset = None
+
+    def export_from(self, dataset=None):
+        """Perform the actual export from the given dataset.
+
+        If no dataset is provided at method call, but is set as property in the
+        Exporter object, the :meth:`aspecd.dataset.Dataset.export_to` method
+        of the dataset will be called.
+
+        If no dataset is provided at method call nor as property in the object,
+        the method will raise a respective exception.
+
+        The Dataset object always calls this method with the respective dataset
+        as argument. Therefore, in this case setting the dataset property
+        within the Exporter object is not necessary.
+
+        The actual export should be implemented within the private method
+        :meth:`_export`.
+
+        Parameters
+        ----------
+        dataset : `aspecd.dataset.Dataset`
+            Dataset to import data and metadata into
+
+        Raises
+        ------
+        MissingDatasetError
+            Raised if no dataset is provided.
+
+        """
+        if not dataset:
+            if self.dataset:
+                self.dataset.export_to(self)
+            else:
+                raise MissingDatasetError("No dataset provided")
+        else:
+            self.dataset = dataset
+        self._export()
+
+    def _export(self):
+        """Perform the actual export of the data and metadata from the dataset.
+
+        The implementation of the actual export goes in here in all
+        classes inheriting from Exporter. This method is automatically
+        called by :meth:`export_from`.
+
+        Usually, this method will successively call other private/protected
+        methods of the exporter to perform the required tasks that are
+        specific for each target format.
 
         """
         pass
