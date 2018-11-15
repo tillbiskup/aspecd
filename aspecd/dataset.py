@@ -570,12 +570,13 @@ class Data:
 
     @property
     def data(self):
-        """Get (numeric) data.
+        """Get or set (numeric) data.
 
-        Returns
-        -------
-        data : `numpy.array`
-            Numerical data
+        .. warning::
+            If you set data that have different dimensions to the data
+            previously stored in the dataset, the axes will be cleared. In
+            such case, temporarily store those axes that shall not change
+            *before* setting new data and reassign them afterwards.
 
         """
         return self._data
@@ -589,12 +590,18 @@ class Data:
 
     @property
     def axes(self):
-        """Get axes.
+        """Get or set axes.
 
-        Returns
-        -------
-        axes : `list`
-            List of objects of type :class:`aspecd.dataset.Axis`
+        If you set axes, they will be checked for consistency with the data.
+        Therefore, first set the data and only afterwards the axes,
+        with values corresponding to the dimensions of the data.
+
+        Raises
+        ------
+        AxesCountError
+            Raised if number of axes is inconsistent with data dimensions
+        AxesValuesInconsistentWithDataError
+            Raised if axes values are inconsistent with data dimensions
 
         """
         return self._axes
@@ -695,6 +702,13 @@ class Axis:
         Values require to be a one-dimensional numpy array. Trying to set
         values to either a different type or a numpy array with more than one
         dimension will raise a corresponding error.
+
+        Raises
+        ------
+        AxisValuesTypeError
+            Raised of axis values are of wrong type
+        AxisValuesDimensionError
+            Raised if axis values are of wrong dimension, i.e. not a vector
 
         """
         return self._values
