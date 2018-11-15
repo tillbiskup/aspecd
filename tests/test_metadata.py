@@ -311,6 +311,15 @@ class TestMeasurement(unittest.TestCase):
         self.assertEqual(measurement.start.strftime(fmt), "20170102T110000")
         self.assertEqual(measurement.end.strftime(fmt), "20170102T110100")
 
+    def test_set_start_end_from_dict_with_strings(self):
+        dict_ = {"start": "2017-01-02 11:00:00",
+                 "end": "2017-01-02 11:01:00"}
+        measurement = metadata.Measurement(dict_)
+        fmt = "%Y%m%dT%H%M%S"
+        self.assertEqual(measurement.start.strftime(fmt), "20170102T110000")
+        self.assertEqual(measurement.end.strftime(fmt), "20170102T110100")
+
+
 
 class TestSample(unittest.TestCase):
     def setUp(self):

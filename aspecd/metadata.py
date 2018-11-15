@@ -388,11 +388,13 @@ class Measurement(Metadata):
         """
         for key in ("start", "end"):
             if key in dict_:
-                self._set_datetime_from_dict(key, dict_[key])
-                del dict_[key]
+                if isinstance(dict_[key], dict):
+                    self._set_datetime_from_dict(key, dict_.pop(key))
+                else:
+                    self._set_datetime_from_string(key, dict_.pop(key))
         super().from_dict(dict_=dict_)
 
-    def _set_datetime_from_dict(self, key, dict_):
+    def _set_datetime_from_dict(self, key='', dict_=None):
         """
         Set start and end properties from dictionary containing values.
 
@@ -410,9 +412,29 @@ class Measurement(Metadata):
             Dictionary with fields "date" and "time"
 
         """
-        fmt = "%Y-%m-%d %H:%M:%S"
         datetime_string = " ".join([dict_["date"], dict_["time"]])
-        setattr(self, key, datetime.datetime.strptime(datetime_string, fmt))
+        self._set_datetime_from_string(key=key, string=datetime_string)
+
+    def _set_datetime_from_string(self, key='', string=''):
+        """
+        Set start and end properties from string containing values.
+
+        The string will usually be obtained from reading a metadata file.
+        Date and time formats are restricted, following "%Y-%m-%d" for date
+        and "%H:%M:%S" for time, separated by a single space.
+
+        Note that datetime objects are immutable.
+
+        Parameters
+        ----------
+        key : `str`
+            Property of class to set
+        string : `str`
+            String containing date and time in format described above
+
+        """
+        fmt = "%Y-%m-%d %H:%M:%S"
+        setattr(self, key, datetime.datetime.strptime(string, fmt))
 
 
 class Sample(Metadata):
