@@ -582,8 +582,10 @@ class Data:
 
     @data.setter
     def data(self, data):
+        old_dim = self._data.ndim
         self._data = data
-        self._create_axes()
+        if old_dim is not data.ndim:
+            self._create_axes()
 
     @property
     def axes(self):

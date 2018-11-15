@@ -329,6 +329,14 @@ class TestData(unittest.TestCase):
     def test_calculated_is_boolean(self):
         self.assertTrue(isinstance(self.data.calculated, bool))
 
+    def test_modify_data_with_same_dimension_does_not_change_axes(self):
+        data = np.zeros([5, 1])
+        axis_values = np.arange(len(data))
+        self.data.data = data
+        self.data.axes[0].values = axis_values
+        self.data.data = data
+        self.assertTrue(np.allclose(self.data.axes[0].values, axis_values))
+
 
 class TestAxisSetupInConstructor(unittest.TestCase):
 
