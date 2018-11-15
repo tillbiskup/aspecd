@@ -514,3 +514,30 @@ class TestMetadataMapper(unittest.TestCase):
                              self.metadata_mapper.metadata['test'].keys())
         self.assertEqual(self.metadata_mapper.metadata['test'][new_key],
                          'blablub')
+
+    def test_has_method_copy_key(self):
+        self.assertTrue(callable(self.metadata_mapper.copy_key))
+
+    def test_copy_key(self):
+        new_key = 'foo'
+        old_key = 'bar'
+        self.metadata_mapper.metadata[old_key] = 'bar'
+        self.metadata_mapper.copy_key(old_key, new_key)
+        self.assertTrue(new_key in self.metadata_mapper.metadata.keys())
+        self.assertTrue(old_key in self.metadata_mapper.metadata.keys())
+
+    def test_copy_key_via_mapping(self):
+        self.metadata_mapper.metadata['old'] = 'foo'
+        mapping = [['', 'copy_key', ['old', 'new']]]
+        self.metadata_mapper.mappings = mapping
+        self.metadata_mapper.map()
+        self.assertTrue('new' in self.metadata_mapper.metadata.keys())
+        self.assertTrue('old' in self.metadata_mapper.metadata.keys())
+
+    def test_copy_key_on_second_level_via_mapping(self):
+        self.metadata_mapper.metadata['test'] = {'old': 'foo'}
+        mapping = [['test', 'copy_key', ['old', 'new']]]
+        self.metadata_mapper.mappings = mapping
+        self.metadata_mapper.map()
+        self.assertTrue('new' in self.metadata_mapper.metadata['test'].keys())
+        self.assertTrue('old' in self.metadata_mapper.metadata['test'].keys())

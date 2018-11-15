@@ -616,6 +616,29 @@ class MetadataMapper:
             dict_[new_key] = dict_.pop(key)
         return dict_
 
+    def copy_key(self, old_key='', new_key=''):
+        """
+        Copy key in dictionary to new key.
+
+        This method is particularly useful in cases where keys need to be
+        combined using :meth:`combine_keys`, but where one of the keys
+        should be combined several times with another key.
+
+        Parameters
+        ----------
+        old_key : str
+            Name of original key that shall be copied
+        new_key : str
+            Name of new key to be added
+
+        """
+        self._copy_key_in_dict(old_key=old_key, new_key=new_key,
+                               dict_=self.metadata)
+
+    @staticmethod
+    def _copy_key_in_dict(old_key='', new_key='', dict_=None):
+        dict_[new_key] = dict_[old_key]
+
     def map(self):
         """
         Map according to mappings in :attr:`mappings`.
@@ -650,6 +673,13 @@ class MetadataMapper:
             mapping = [['', 'combine_items', [['key1', 'key2'], 'new', ' ']]]
 
         Here, the two values will be joined using a space.
+
+        Sometimes you want to combine keys, but need one of the two keys
+        several times. Hence, you would like to *first* copy this key to
+        another one. This can be done in the following way::
+
+            mapping = [['', 'copy_key', ['old', 'new']]]
+
         """
         for mapping in self.mappings:
             if mapping[0]:
