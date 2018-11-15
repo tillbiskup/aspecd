@@ -572,21 +572,27 @@ class Data:
     def data(self):
         """Get or set (numeric) data.
 
-        .. warning::
+        .. note::
             If you set data that have different dimensions to the data
-            previously stored in the dataset, the axes will be cleared. In
-            such case, temporarily store those axes that shall not change
-            *before* setting new data and reassign them afterwards.
+            previously stored in the dataset, the axes values will be
+            set to an array with indices corresponding to the size of the
+            respective data dimension. You will most probably assign proper
+            axis values afterwards. On the other hand, all other
+            information stored in the axis object will be retained, namely
+            quantity, unit, and label.
 
         """
         return self._data
 
     @data.setter
     def data(self, data):
-        old_dim = self._data.ndim
+        old_shape = self._data.shape
         self._data = data
-        if old_dim is not data.ndim:
-            self._create_axes()
+        if old_shape != data.shape:
+            if self.axes[0].values.size == 0:
+                self._create_axes()
+            else:
+                self._update_axes()
 
     @property
     def axes(self):
@@ -618,6 +624,12 @@ class Data:
         # pylint: disable=invalid-name
         for ax in range(missing_axes):
             self._axes.append(Axis())
+
+    def _update_axes(self):
+        data_shape = self.data.shape
+        for index in range(self.data.ndim - 1):
+            if len(self.axes[index].values) != data_shape[index]:
+                self.axes[index].values = np.arange(data_shape[index])
 
     def _check_axes(self):
         if len(self._axes) > self.data.ndim + 1:

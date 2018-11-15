@@ -330,12 +330,30 @@ class TestData(unittest.TestCase):
         self.assertTrue(isinstance(self.data.calculated, bool))
 
     def test_modify_data_with_same_dimension_does_not_change_axes(self):
-        data = np.zeros([5, 1])
+        data = np.zeros(5)
         axis_values = np.arange(len(data))
         self.data.data = data
         self.data.axes[0].values = axis_values
         self.data.data = data
         self.assertTrue(np.allclose(self.data.axes[0].values, axis_values))
+
+    def test_modify_data_with_different_dimensions_keeps_axes_metadata(self):
+        old_data = np.zeros([5, 1])
+        new_data = np.zeros([5, 2])
+        axis_quantity = 'foobar'
+        self.data.data = old_data
+        self.data.axes[0].values = np.arange(len(old_data))
+        self.data.axes[0].quantity = axis_quantity
+        self.data.data = new_data
+        self.assertTrue(self.data.axes[0].quantity, axis_quantity)
+
+    def test_modify_data_with_different_dimensions_adjusts_axes_values(self):
+        old_data = np.zeros([5, 1])
+        new_data = np.zeros([7, 1])
+        self.data.data = old_data
+        self.data.axes[0].values = np.arange(len(old_data))
+        self.data.data = new_data
+        self.assertEqual(new_data.size, self.data.axes[0].values.size)
 
 
 class TestAxisSetupInConstructor(unittest.TestCase):
