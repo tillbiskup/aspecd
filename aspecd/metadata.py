@@ -584,11 +584,11 @@ class MetadataMapper:
             Defaults to the empty string.
 
         """
-        self._combine_keys_in_dict(old_keys, new_key, pattern, self.metadata)
+        self._combine_items_in_dict(old_keys, new_key, pattern, self.metadata)
 
     @staticmethod
-    def _combine_keys_in_dict(old_keys=None, new_key='', pattern='',
-                              dict_=None):
+    def _combine_items_in_dict(old_keys=None, new_key='', pattern='',
+                               dict_=None):
         value_tmp = list()
         for key in old_keys:
             value_tmp.append(dict_.pop(key))
@@ -654,7 +654,7 @@ class MetadataMapper:
         for mapping in self.mappings:
             if mapping[0]:
                 method = getattr(self, ''.join(['_', mapping[1], '_in_dict']))
-                method(*mapping[2], self.metadata[mapping[0]])
+                method(*mapping[2], dict_=self.metadata[mapping[0]])
             else:
                 method = getattr(self, mapping[1])
                 method(*mapping[2])

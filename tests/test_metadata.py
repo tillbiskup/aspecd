@@ -496,3 +496,21 @@ class TestMetadataMapper(unittest.TestCase):
         for key in old_keys.keys():
             self.assertFalse(key in self.metadata_mapper.metadata.keys())
         self.assertEqual(self.metadata_mapper.metadata[new_key], 'bla blub')
+
+    def test_combine_items_on_second_level_via_mapping(self):
+        old_keys = {'key1': 'bla', 'key2': 'blub'}
+        new_key = 'new_key'
+        mapping = [['test', 'combine_items', [["key1", "key2"], "new_key"]]]
+        self.metadata_mapper.mappings = mapping
+        self.metadata_mapper.metadata['test'] = dict()
+        for key in old_keys.keys():
+            self.metadata_mapper.metadata['test'][key] = old_keys[key]
+        self.metadata_mapper.map()
+
+        self.assertTrue(new_key in
+                        self.metadata_mapper.metadata['test'].keys())
+        for key in old_keys.keys():
+            self.assertFalse(key in
+                             self.metadata_mapper.metadata['test'].keys())
+        self.assertEqual(self.metadata_mapper.metadata['test'][new_key],
+                         'blablub')
