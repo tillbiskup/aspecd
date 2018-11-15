@@ -380,6 +380,21 @@ class Measurement(Metadata):
         Only parameters in the dictionary that are valid properties of the
         class are set accordingly.
 
+        For the "start" and "end" items, there are two different conventions
+        available how the dictionary can be structured. Either those fields
+        are dictionaries themselves, with fields "date" and "time"
+        accordingly, such as::
+
+            {"start": {"date": "yyyy-mm-dd", "time": "HH:MM:SS"},
+             "end": {"date": "yyyy-mm-dd", "time": "HH:MM:SS"}}
+
+        Alternatively, those fields can be strings containing a
+        representation of both, date and time::
+
+            {"start": "yyyy-mm-dd HH:MM:SS", "end": "yyyy-mm-dd HH:MM:SS"}
+
+        Use whichever is more appropriate for you.
+
         Parameters
         ----------
         dict_ : `dict`
