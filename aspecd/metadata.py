@@ -680,7 +680,7 @@ class MetadataMapper:
         """
         Move item (i.e., key-value pair) between dictionaries.
 
-        .. note:
+        .. note::
             Currently, the user is fully responsible to account for the
             target dictionary to exist, as this will not be created.
             Hence, if you move an item from one (existing) dictionary to
