@@ -48,6 +48,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
     'sphinx.ext.todo',
+    'sphinx.ext.intersphinx',
     # 'sphinx.ext.viewcode',
 ]
 
@@ -176,3 +177,4 @@ texinfo_documents = [
 
 
 # -- Extension configuration -------------------------------------------------
+intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
