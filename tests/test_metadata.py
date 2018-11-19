@@ -320,7 +320,6 @@ class TestMeasurement(unittest.TestCase):
         self.assertEqual(measurement.end.strftime(fmt), "20170102T110100")
 
 
-
 class TestSample(unittest.TestCase):
     def setUp(self):
         self.sample = metadata.Sample()
@@ -550,3 +549,40 @@ class TestMetadataMapper(unittest.TestCase):
         self.metadata_mapper.map()
         self.assertTrue('new' in self.metadata_mapper.metadata['test'].keys())
         self.assertTrue('old' in self.metadata_mapper.metadata['test'].keys())
+
+    def test_has_method_move_item(self):
+        self.assertTrue(callable(self.metadata_mapper.move_item))
+
+    def test_move_item(self):
+        key = 'foobar'
+        source = 'foo'
+        target = 'bar'
+        self.metadata_mapper.metadata = {'foo': {'foobar': 'baz'}, 'bar': {}}
+        self.metadata_mapper.move_item(key, source, target)
+        self.assertTrue(key in self.metadata_mapper.metadata[target].keys())
+        self.assertFalse(key in self.metadata_mapper.metadata[source].keys())
+
+    def test_move_item_via_mapping(self):
+        key = 'foobar'
+        source = 'foo'
+        target = 'bar'
+        self.metadata_mapper.metadata = {'foo': {'foobar': 'baz'}, 'bar': {}}
+        mapping = [['', 'move_item', [key, source, target]]]
+        self.metadata_mapper.mappings = mapping
+        self.metadata_mapper.map()
+        self.assertTrue(key in self.metadata_mapper.metadata[target].keys())
+        self.assertFalse(key in self.metadata_mapper.metadata[source].keys())
+
+    def test_move_item_on_second_level_via_mapping(self):
+        key = 'foobar'
+        source = 'foo'
+        target = 'bar'
+        self.metadata_mapper.metadata['test'] = {'foo': {'foobar': 'baz'},
+                                                 'bar': {}}
+        mapping = [['test', 'move_item', [key, source, target]]]
+        self.metadata_mapper.mappings = mapping
+        self.metadata_mapper.map()
+        self.assertTrue(key in self.metadata_mapper.metadata['test'][
+            target].keys())
+        self.assertFalse(key in self.metadata_mapper.metadata['test'][
+            source].keys())

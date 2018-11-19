@@ -676,6 +676,36 @@ class MetadataMapper:
     def _copy_key_in_dict(old_key='', new_key='', dict_=None):
         dict_[new_key] = dict_[old_key]
 
+    def move_item(self, key='', source_dict_name='', target_dict_name=''):
+        """
+        Move item (i.e., key-value pair) between dictionaries.
+
+        .. note:
+            Currently, the user is fully responsible to account for the
+            target dictionary to exist, as this will not be created.
+            Hence, if you move an item from one (existing) dictionary to
+            another not yet existing one, this will raise an exception.
+
+        Parameters
+        ----------
+        key : str
+            Name of the key of the corresponding item to move
+        source_dict_name : str
+            Name of the dict the item should be moved from
+        target_dict_name : str
+            Name of the dict the item should be moved to
+
+        """
+        self._move_item_in_dict(key=key,
+                                source_dict_name=source_dict_name,
+                                target_dict_name=target_dict_name,
+                                dict_=self.metadata)
+
+    @staticmethod
+    def _move_item_in_dict(key='', source_dict_name='',
+                           target_dict_name='', dict_=None):
+        dict_[target_dict_name][key] = dict_[source_dict_name].pop(key)
+
     def map(self):
         """
         Map according to mappings in :attr:`mappings`.
