@@ -676,15 +676,17 @@ class MetadataMapper:
     def _copy_key_in_dict(old_key='', new_key='', dict_=None):
         dict_[new_key] = dict_[old_key]
 
-    def move_item(self, key='', source_dict_name='', target_dict_name=''):
+    def move_item(self, key='', source_dict_name='', target_dict_name='',
+                  create_target_dict=False):
         """
         Move item (i.e., key-value pair) between dictionaries.
 
         .. note::
-            Currently, the user is fully responsible to account for the
-            target dictionary to exist, as this will not be created.
-            Hence, if you move an item from one (existing) dictionary to
-            another not yet existing one, this will raise an exception.
+            If the target dictionary does not exist, usually the method
+            will *not* create it and raise an appropriate exception.
+            However, if explicitly told to create the target dictionary,
+            it will do so. This is to prevent accidential typos from
+            messing up with the dictionary and result in hard to track bugs.
 
         Parameters
         ----------
@@ -694,16 +696,22 @@ class MetadataMapper:
             Name of the dict the item should be moved from
         target_dict_name : str
             Name of the dict the item should be moved to
+        create_target_dict : bool
+            Whether to create target dictionary if it doesn't exist
 
         """
         self._move_item_in_dict(key=key,
                                 source_dict_name=source_dict_name,
                                 target_dict_name=target_dict_name,
+                                create_target_dict=create_target_dict,
                                 dict_=self.metadata)
 
     @staticmethod
     def _move_item_in_dict(key='', source_dict_name='',
-                           target_dict_name='', dict_=None):
+                           target_dict_name='',
+                           create_target_dict=False, dict_=None):
+        if create_target_dict and target_dict_name not in dict_:
+            dict_[target_dict_name] = {}
         dict_[target_dict_name][key] = dict_[source_dict_name].pop(key)
 
     def map(self):
@@ -726,7 +734,9 @@ class MetadataMapper:
             mapping = [['test', 'rename_key', ['old', 'new']]]
 
         This would rename the key ``old`` in the dictionary ``test`` in
-        :attr:`metadata` to ``new``.
+        :attr:`metadata` to ``new``. The same pattern optionally specifying
+        a dictionary to operate on can be applied to all the other mappings
+        detailed below.
 
         Similarly, you can join two items to a new item. In this case,
         a mapping may look like this::
@@ -746,6 +756,26 @@ class MetadataMapper:
         another one. This can be done in the following way::
 
             mapping = [['', 'copy_key', ['old', 'new']]]
+
+        And finally, there are cases where you want to move an item from
+        one dictionary to another. This can be done using the following
+        mapping::
+
+            mapping = [['', 'move_item', ['key', 'source', 'target']]]
+
+        Here, "source" and "target" are the names of the respective
+        dictionaries the item should be moved between. If the target
+        dictionary does not exist, by default, the method will raise an
+        exception. If, however, you decide to exactly know what you do,
+        you can pass an additional parameter explicitly telling the method
+        to create the target dictionary::
+
+            mapping = [['', 'move_item', ['key', 'source', 'target', True]]]
+
+        In this particular case, however, you are solely responsible for
+        any typos when specifying the name of the target dictionary,
+        as this will most probably mess up your dictionaries and result in
+        hard to track bugs.
 
         """
         for mapping in self.mappings:

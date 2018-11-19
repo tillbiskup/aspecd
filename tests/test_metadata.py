@@ -586,3 +586,14 @@ class TestMetadataMapper(unittest.TestCase):
             target].keys())
         self.assertFalse(key in self.metadata_mapper.metadata['test'][
             source].keys())
+
+    def test_move_item_via_mapping_creating_target_dict(self):
+        key = 'foobar'
+        source = 'foo'
+        target = 'bar'
+        self.metadata_mapper.metadata = {'foo': {'foobar': 'baz'}}
+        mapping = [['', 'move_item', [key, source, target, True]]]
+        self.metadata_mapper.mappings = mapping
+        self.metadata_mapper.map()
+        self.assertTrue(key in self.metadata_mapper.metadata[target].keys())
+        self.assertFalse(key in self.metadata_mapper.metadata[source].keys())
