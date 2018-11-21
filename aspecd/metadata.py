@@ -220,6 +220,9 @@ class Metadata(aspecd.utils.ToDictMixin):
 
     Metadata can be set from dict upon initialisation.
 
+    Metadata can be converted to dict via
+    :meth:`aspecd.utils.ToDictMixin.to_dict()`.
+
     """
 
     def __init__(self, dict_=None):
@@ -479,7 +482,7 @@ class Sample(Metadata):
         super().__init__(dict_=dict_)
 
 
-class DatasetMetadata:
+class DatasetMetadata(aspecd.utils.ToDictMixin):
     """
     Metadata for dataset.
 
@@ -488,6 +491,10 @@ class DatasetMetadata:
     Metadata of actual datasets should extend this class by adding
     properties that are themselves classes inheriting from
     :class:`aspecd.metadata.Metadata`.
+
+    Metadata can be converted to dict via
+    :meth:`aspecd.utils.ToDictMixin.to_dict()`, e.g., for generating
+    reports using templates and template engines.
 
     Attributes
     ----------

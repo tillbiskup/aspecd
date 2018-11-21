@@ -396,6 +396,14 @@ class TestDatasetMetadata(unittest.TestCase):
             self.assertEqual(getattr(self.dataset_metadata.sample, key),
                              dict_["sample"][key])
 
+    def test_to_dict(self):
+        dict_ = {"sample": {"name": "Sample1",
+                            "id": 42,
+                            "loi": "loi:42.1001/foo/bar"}}
+        self.dataset_metadata.from_dict(dict_)
+        to_dict = self.dataset_metadata.to_dict()
+        self.assertDictEqual(dict_["sample"], to_dict["sample"])
+
 
 class TestMetadataMapper(unittest.TestCase):
     def setUp(self):
