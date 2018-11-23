@@ -100,7 +100,7 @@ class TestDatasetProcessing(unittest.TestCase):
         self.dataset._package_name = "numpy"
         self.dataset.process(self.processing_step)
         history_record = self.dataset.history[0]
-        self.assertTrue("numpy" in history_record.sysinfo.modules.keys())
+        self.assertTrue("numpy" in history_record.sysinfo.packages.keys())
 
 
 class TestDatasetUndo(unittest.TestCase):
@@ -262,7 +262,7 @@ class TestDatasetAnalysis(unittest.TestCase):
         self.dataset._package_name = "numpy"
         self.dataset.analyse(self.analysis_step)
         analysis_record = self.dataset.analyses[0]
-        self.assertTrue("numpy" in analysis_record.sysinfo.modules.keys())
+        self.assertTrue("numpy" in analysis_record.sysinfo.packages.keys())
 
 
 class TestDatasetAnnotation(unittest.TestCase):
@@ -307,7 +307,7 @@ class TestDatasetAnnotation(unittest.TestCase):
         self.dataset._package_name = "numpy"
         self.dataset.annotate(self.annotation)
         annotation_record = self.dataset.annotations[0]
-        self.assertTrue("numpy" in annotation_record.sysinfo.modules.keys())
+        self.assertTrue("numpy" in annotation_record.sysinfo.packages.keys())
 
 
 class TestDatasetPlotting(unittest.TestCase):
@@ -584,7 +584,7 @@ class TestHistoryRecord(unittest.TestCase):
 
     def test_instantiate_class_with_package_name_sets_sysinfo(self):
         history = dataset.HistoryRecord(package="numpy")
-        self.assertTrue("numpy" in history.sysinfo.modules.keys())
+        self.assertTrue("numpy" in history.sysinfo.packages.keys())
 
     def test_has_date_property(self):
         self.assertTrue(hasattr(self.historyrecord, 'date'))
@@ -625,7 +625,7 @@ class TestProcessingHistoryRecord(unittest.TestCase):
         processing_step = dataset.ProcessingHistoryRecord(
             processing_step=self.processing_step,
             package="numpy")
-        self.assertTrue("numpy" in processing_step.sysinfo.modules.keys())
+        self.assertTrue("numpy" in processing_step.sysinfo.packages.keys())
 
     def test_has_processing_property(self):
         self.assertTrue(hasattr(self.historyrecord, 'processing'))
@@ -666,7 +666,7 @@ class TestAnalysisHistoryRecord(unittest.TestCase):
 
     def test_instantiate_class_with_package_name_sets_sysinfo(self):
         analysis_step = dataset.AnalysisHistoryRecord(package="numpy")
-        self.assertTrue("numpy" in analysis_step.sysinfo.modules.keys())
+        self.assertTrue("numpy" in analysis_step.sysinfo.packages.keys())
 
     def test_has_analysis_property(self):
         self.assertTrue(hasattr(self.historyrecord, 'analysis'))
@@ -688,7 +688,7 @@ class TestAnnotationHistoryRecord(unittest.TestCase):
 
     def test_instantiate_class_with_package_name_sets_sysinfo(self):
         annotation_step = dataset.AnnotationHistoryRecord(package="numpy")
-        self.assertTrue("numpy" in annotation_step.sysinfo.modules.keys())
+        self.assertTrue("numpy" in annotation_step.sysinfo.packages.keys())
 
     def test_has_annotation_property(self):
         self.assertTrue(hasattr(self.annotationrecord, 'annotation'))

@@ -27,7 +27,7 @@ class SystemInfo(aspecd.utils.ToDictMixin):
     ----------
     python : `dict`
         Version of Python (and potentially further information)
-    modules : `dict`
+    packages : `dict`
         Relevant modules and their version numbers
     platform : `string`
         Identifier of the platform
@@ -49,12 +49,12 @@ class SystemInfo(aspecd.utils.ToDictMixin):
     def __init__(self, package=''):
         super().__init__()
         self.python = dict()
-        self.modules = dict()
+        self.packages = dict()
         self.platform = platform.platform
         self.user = dict()
         # Set some properties of dicts
         self.python["version"] = sys.version
-        self.modules["aspecd"] = aspecd.utils.get_aspecd_version()
+        self.packages["aspecd"] = aspecd.utils.get_aspecd_version()
         if package and package != "aspecd":
-            self.modules[package] = aspecd.utils.package_version(package)
+            self.packages[package] = aspecd.utils.package_version(package)
         self.user["login"] = getpass.getuser()

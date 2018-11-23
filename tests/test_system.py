@@ -31,21 +31,21 @@ class TestSystemInfo(unittest.TestCase):
         self.assertEqual(self.sysinfo.user["login"], login_name)
 
     def test_modules_property_contains_aspecd_key(self):
-        self.assertTrue("aspecd" in self.sysinfo.modules.keys())
+        self.assertTrue("aspecd" in self.sysinfo.packages.keys())
 
     def test_instantiate_class_with_package_name_adds_key_to_modules(self):
         sysinfo = system.SystemInfo(package="numpy")
-        self.assertTrue("numpy" in sysinfo.modules.keys())
+        self.assertTrue("numpy" in sysinfo.packages.keys())
 
     def test_instantiate_class_with_package_name_adds_package_version(self):
         package_name = "numpy"
         sysinfo = system.SystemInfo(package=package_name)
         self.assertEqual(utils.package_version(package_name),
-                         sysinfo.modules[package_name])
+                         sysinfo.packages[package_name])
 
     def test_modules_property_aspecd_key_has_correct_version(self):
         version = utils.get_aspecd_version()
-        self.assertEqual(self.sysinfo.modules["aspecd"], version)
+        self.assertEqual(self.sysinfo.packages["aspecd"], version)
 
     def test_to_dict(self):
         self.assertTrue(isinstance(self.sysinfo.to_dict(), dict))
