@@ -1,4 +1,4 @@
-"""IO of data and metadata contained in datasets."""
+"""Input and output (IO) of data and metadata contained in datasets."""
 
 
 class Error(Exception):
