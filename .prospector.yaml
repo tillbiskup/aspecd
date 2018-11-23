@@ -1,3 +1,6 @@
+# For general information of how to configure prospector visit
+# https://prospector.landscape.io/en/master/profiles.html
+
 inherits:
   - strictness_high
 
@@ -8,6 +11,10 @@ pep257:
     - D203
     - D212
     - D213
+
+pylint:
+  options:
+    max-attributes: 12
 
 pyroma:
   run: true
