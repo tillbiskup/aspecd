@@ -5,6 +5,7 @@ import datetime
 import importlib
 import inspect
 import os
+import pkg_resources
 
 
 def full_class_name(object_):
@@ -128,7 +129,7 @@ class ToDictMixin:
         return result
 
 
-def get_version():
+def get_aspecd_version():
     """
     Get version of ASpecD package.
 
@@ -144,6 +145,29 @@ def get_version():
     with open(os.path.join(os.path.dirname(__file__), "..",
                            'VERSION')) as version_file:
         version = version_file.read().strip()
+    return version
+
+
+def package_version(name=''):
+    """
+    Get version of arbitrary package.
+
+    The function relies on introspection using :mod:`pkg_resources`.
+
+    Parameters
+    ----------
+    name : `str`
+        Name of package the version should be obtained for
+
+    Returns
+    -------
+    version : `str`
+        Version number as string
+
+    """
+    version = None
+    if name:
+        version = pkg_resources.get_distribution(name).version
     return version
 
 

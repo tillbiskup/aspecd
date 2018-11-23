@@ -13,7 +13,7 @@ from datetime import datetime
 
 import numpy as np
 
-from aspecd import metadata, processing, system, analysis, annotation
+from aspecd import metadata, processing, system, analysis, annotation, utils
 
 
 class Error(Exception):
@@ -200,6 +200,8 @@ class Dataset:
         self._history_pointer = -1
         self.analyses = []
         self.annotations = []
+        # Package name is used to store the package version in history records
+        self._package_name = utils.package_name(self)
 
     def process(self, processing_step=None):
         """Apply processing step to dataset.
@@ -288,9 +290,10 @@ class Dataset:
     def _has_leading_history(self):
         return len(self.history) - 1 > self._history_pointer
 
-    @staticmethod
-    def _create_processing_history_record(processing_step):
-        historyrecord = ProcessingHistoryRecord(processing_step)
+    def _create_processing_history_record(self, processing_step):
+        historyrecord = \
+            ProcessingHistoryRecord(processing_step=processing_step,
+                                    package=self._package_name)
         return historyrecord
 
     def _append_processing_history_record(self, history_record):
@@ -350,14 +353,20 @@ class Dataset:
         """
         self.analyse(analysis_step)
 
-    @staticmethod
-    def _create_analysis_history_record(analysis_step):
-        history_record = AnalysisHistoryRecord()
+    def _create_analysis_history_record(self, analysis_step):
+        history_record = AnalysisHistoryRecord(package=self._package_name)
         history_record.analysis = analysis_step
         return history_record
 
-    def delete_analysis(self, index):
-        """Remove analysis step record from dataset."""
+    def delete_analysis(self, index=None):
+        """Remove analysis step record from dataset.
+
+        Parameters
+        ----------
+        index : `int`
+            Number of analysis in analyses to delete
+
+        """
         del self.analyses[index]
 
     def annotate(self, annotation_=None):
@@ -375,11 +384,21 @@ class Dataset:
         annotation_.annotate(self)
         self.annotations.append(history_record)
 
-    @staticmethod
-    def _create_annotation_history_record(annotation_):
-        history_record = AnnotationHistoryRecord()
+    def _create_annotation_history_record(self, annotation_):
+        history_record = AnnotationHistoryRecord(package=self._package_name)
         history_record.annotation = annotation_
         return history_record
+
+    def delete_annotation(self, index=None):
+        """Remove annotation record from dataset.
+
+        Parameters
+        ----------
+        index : `int`
+            Number of analysis in analyses to delete
+
+        """
+        del self.annotations[index]
 
     def plot(self, plotter=None):
         """Perform plot with data of current dataset.
@@ -782,11 +801,20 @@ class HistoryRecord:
         key--value store with crucial system parameters, including user
         login name
 
+    Parameters
+    ----------
+    package : `str`
+        Name of package the hstory record gets recorded for
+
+        Prerequisite for reproducibility, gets stored in the
+        :attr:`sysinfo` attribute. Will usually be provided automatically by
+        the dataset.
+
     """
 
-    def __init__(self):
+    def __init__(self, package=''):
         self.date = datetime.today()
-        self.sysinfo = system.SystemInfo()
+        self.sysinfo = system.SystemInfo(package=package)
 
 
 class ProcessingHistoryRecord(HistoryRecord):
@@ -802,10 +830,17 @@ class ProcessingHistoryRecord(HistoryRecord):
     processing_step : :class:`aspecd.processing.ProcessingStep`
         processing step the history is saved for
 
+    package : `str`
+        Name of package the hstory record gets recorded for
+
+        Prerequisite for reproducibility, gets stored in the
+        :attr:`aspecd.dataset.HistoryRecord.sysinfo` attribute.
+        Will usually be provided automatically by the dataset.
+
     """
 
-    def __init__(self, processing_step=None):
-        super().__init__()
+    def __init__(self, processing_step=None, package=''):
+        super().__init__(package=package)
         self.processing = processing.ProcessingStepRecord(processing_step)
 
     @property
@@ -834,10 +869,17 @@ class AnalysisHistoryRecord(HistoryRecord):
     analysis : :class:`aspecd.analysis.AnalysisStep`
         Analysis step the history is saved for
 
+    package : `str`
+        Name of package the hstory record gets recorded for
+
+        Prerequisite for reproducibility, gets stored in the
+        :attr:`aspecd.dataset.HistoryRecord.sysinfo` attribute.
+        Will usually be provided automatically by the dataset.
+
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, package=''):
+        super().__init__(package=package)
         self.analysis = analysis.AnalysisStep()
 
 
@@ -849,8 +891,15 @@ class AnnotationHistoryRecord(HistoryRecord):
     annotation : :class:`aspecd.analysis.Annotation`
         Annotation the history is saved for
 
+    package : `str`
+        Name of package the hstory record gets recorded for
+
+        Prerequisite for reproducibility, gets stored in the
+        :attr:`aspecd.dataset.HistoryRecord.sysinfo` attribute.
+        Will usually be provided automatically by the dataset.
+
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, package=''):
+        super().__init__(package=package)
         self.annotation = annotation.Annotation()

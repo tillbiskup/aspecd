@@ -148,11 +148,22 @@ class TestToDictMixin(unittest.TestCase):
         self.assertEqual(arguments, list(obj.__odict__.keys()))
 
 
+class TestGetAspecdVersion(unittest.TestCase):
+
+    def test_version_not_empty(self):
+        version = utils.get_aspecd_version()
+        self.assertTrue(version)
+
+
 class TestGetVersion(unittest.TestCase):
 
     def test_version_not_empty(self):
-        version = utils.get_version()
+        version = utils.package_version("aspecd")
         self.assertTrue(version)
+
+    def test_version_correct_for_aspecd_package(self):
+        version = utils.package_version("aspecd")
+        self.assertEqual(utils.get_aspecd_version(), version)
 
 
 class TestPackageName(unittest.TestCase):

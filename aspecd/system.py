@@ -34,9 +34,19 @@ class SystemInfo(aspecd.utils.ToDictMixin):
     user : `dict`
         Currently only the login name of the currently logged-in user
 
+    Parameters
+    ----------
+    package : `str`
+        Name of package whose version shall be added to the :attr:`modules`
+        dictionary
+
+        Useful (and necessary) for packages derived from the ASpecD
+        framework to store their version number in the SystemInfo class and
+        hence in the history records. Prerequisite for reproducibility.
+
     """
 
-    def __init__(self):
+    def __init__(self, package=''):
         super().__init__()
         self.python = dict()
         self.modules = dict()
@@ -44,5 +54,7 @@ class SystemInfo(aspecd.utils.ToDictMixin):
         self.user = dict()
         # Set some properties of dicts
         self.python["version"] = sys.version
-        self.modules["aspecd"] = aspecd.utils.get_version()
+        self.modules["aspecd"] = aspecd.utils.get_aspecd_version()
+        if package and package != "aspecd":
+            self.modules[package] = aspecd.utils.package_version(package)
         self.user["login"] = getpass.getuser()
