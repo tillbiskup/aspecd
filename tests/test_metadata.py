@@ -211,6 +211,13 @@ class TestMetadata(unittest.TestCase):
         to_dict = self.metadata.to_dict()
         self.assertDictEqual(test_dict, to_dict)
 
+    def test_to_dict_preserves_order(self):
+        arguments = ["purpose", "operator", "labbook"]
+        for argument in arguments:
+            setattr(self.metadata, argument, '')
+        to_dict = self.metadata.to_dict()
+        self.assertEqual(arguments, list(to_dict.keys()))
+
 
 class TestTemperatureControl(unittest.TestCase):
     def setUp(self):
@@ -353,8 +360,8 @@ class TestDatasetMetadata(unittest.TestCase):
                                  "labbook_entry": "loi:42.1001/foo/bar"}}
         self.dataset_metadata.from_dict(dict_)
         for key in dict_["measurement"]:
-            self.assertEqual(getattr(self.dataset_metadata.measurement, key),
-                             dict_["measurement"][key])
+            self.assertEqual(dict_["measurement"][key],
+                             getattr(self.dataset_metadata.measurement, key))
 
     def test_set_measurement_metadata_from_dict_case_insensitive(self):
         dict_ = {"Measurement": {"purpose": "Kill time",
@@ -362,8 +369,8 @@ class TestDatasetMetadata(unittest.TestCase):
                                  "labbook_entry": "loi:42.1001/foo/bar"}}
         self.dataset_metadata.from_dict(dict_)
         for key in dict_["Measurement"]:
-            self.assertEqual(getattr(self.dataset_metadata.measurement, key),
-                             dict_["Measurement"][key])
+            self.assertEqual(dict_["Measurement"][key],
+                             getattr(self.dataset_metadata.measurement, key))
 
     def test_set_properties_from_dict_with_spaces_in_keys(self):
         dict_ = {"Temperature Control": {"controller": "Oxford ITC503S"}}
@@ -384,8 +391,8 @@ class TestDatasetMetadata(unittest.TestCase):
             self.dataset_metadata.temperature_control.temperature.value, 270.)
         self.assertEqual(
             self.dataset_metadata.temperature_control.temperature.unit, 'K')
-        self.assertEqual(self.dataset_metadata.temperature_control.controller,
-                         dict_["temperature_control"]["controller"])
+        self.assertEqual(dict_["temperature_control"]["controller"],
+                         self.dataset_metadata.temperature_control.controller)
 
     def test_set_sample_metadata_from_dict(self):
         dict_ = {"sample": {"name": "Sample1",
@@ -393,8 +400,8 @@ class TestDatasetMetadata(unittest.TestCase):
                             "loi": "loi:42.1001/foo/bar"}}
         self.dataset_metadata.from_dict(dict_)
         for key in dict_["sample"]:
-            self.assertEqual(getattr(self.dataset_metadata.sample, key),
-                             dict_["sample"][key])
+            self.assertEqual(dict_["sample"][key],
+                             getattr(self.dataset_metadata.sample, key))
 
     def test_to_dict(self):
         dict_ = {"sample": {"name": "Sample1",

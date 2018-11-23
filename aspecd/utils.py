@@ -54,7 +54,34 @@ def object_from_class_name(full_class_name_string):
 
 
 class ToDictMixin:
-    """Mixin class for returning all public attributes as dict."""
+    """Mixin class for returning all public attributes as dict.
+
+    Attributes
+    ----------
+    __odict__ : `collections.OrderedDict`
+        Dictionary of attributes preserving the order of their definition
+
+    """
+
+    def __init__(self):
+        self.__odict__ = collections.OrderedDict()
+
+    def __setattr__(self, attribute, value):
+        """
+        Add attributes to :attr:`__odict__` to preserve order of definition.
+
+        Parameters
+        ----------
+        attribute : `str`
+            Name of attribute
+        value : `str`
+            Value of attribute
+
+        """
+        if '__odict__' not in self.__dict__:
+            super().__setattr__('__odict__', collections.OrderedDict())
+        self.__odict__[attribute] = value
+        super().__setattr__(attribute, value)
 
     def to_dict(self):
         """
@@ -62,11 +89,17 @@ class ToDictMixin:
 
         Returns
         -------
-        public_attributes : `dict`
-            Dictionary containing the public attributes of the object
+        public_attributes : `collections.OrderedDict`
+            Ordered dictionary containing the public attributes of the object
+
+            The order of attribute definition is preserved
 
         """
-        return self._traverse_dict(self.__dict__)
+        if hasattr(self, '__odict__'):
+            result = self._traverse_dict(self.__odict__)
+        else:
+            result = self._traverse_dict(self.__dict__)
+        return result
 
     def _traverse_dict(self, instance_dict):
         output = collections.OrderedDict()
@@ -79,16 +112,19 @@ class ToDictMixin:
 
     def _traverse(self, key, value):
         if isinstance(value, ToDictMixin):
-            return value.to_dict()
+            result = value.to_dict()
+        elif hasattr(value, '__odict__'):
+            result = self._traverse_dict(value.__odict__)
         elif hasattr(value, '__dict__'):
-            return self._traverse_dict(value.__dict__)
+            result = self._traverse_dict(value.__dict__)
         elif isinstance(value, list):
-            return [self._traverse(key, i) for i in value]
+            result = [self._traverse(key, i) for i in value]
         elif isinstance(value, (datetime.datetime, datetime.date,
                                 datetime.time)):
-            return str(value)
+            result = str(value)
         else:
-            return value
+            result = value
+        return result
 
 
 def get_version():

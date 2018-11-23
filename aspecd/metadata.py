@@ -99,6 +99,7 @@ class PhysicalQuantity(aspecd.utils.ToDictMixin):
     """
 
     def __init__(self, string=None, value=None, unit=None):
+        super().__init__()
         self._value = 0.
         self.unit = ''
         self.dimension = ''
@@ -235,6 +236,7 @@ class Metadata(aspecd.utils.ToDictMixin):
             Dictionary containing properties to set
 
         """
+        super().__init__()
         if dict_:
             self.from_dict(dict_)
 
@@ -508,6 +510,7 @@ class DatasetMetadata(aspecd.utils.ToDictMixin):
     """
 
     def __init__(self):
+        super().__init__()
         self.measurement = Measurement()
         self.sample = Sample()
         self.temperature_control = TemperatureControl()

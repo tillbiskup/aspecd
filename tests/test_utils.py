@@ -1,5 +1,6 @@
 """Tests for utils."""
 
+import collections
 import datetime
 import unittest
 
@@ -125,6 +126,26 @@ class TestToDictMixin(unittest.TestCase):
         orig_dict = {"date": str(date)}
         obj_dict = self.mixed_in.to_dict()
         self.assertDictEqual(orig_dict, obj_dict)
+
+    def test_has_odict_attribute(self):
+        self.assertTrue(hasattr(self.mixed_in, '__odict__'))
+
+    def test_odict_attribute_is_ordered_dict(self):
+        self.assertTrue(isinstance(self.mixed_in.__odict__,
+                                   collections.OrderedDict))
+
+    def test_odict_preserves_argument_definition_order(self):
+        arguments = ["purpose", "operator", "labbook"]
+
+        class Test(utils.ToDictMixin):
+            def __init__(self):
+                super().__init__()
+                self.purpose = ''
+                self.operator = ''
+                self.labbook = ''
+
+        obj = Test()
+        self.assertEqual(arguments, list(obj.__odict__.keys()))
 
 
 class TestGetVersion(unittest.TestCase):

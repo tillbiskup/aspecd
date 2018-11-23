@@ -37,6 +37,7 @@ class SystemInfo(aspecd.utils.ToDictMixin):
     """
 
     def __init__(self):
+        super().__init__()
         self.python = dict()
         self.modules = dict()
         self.platform = platform.platform
