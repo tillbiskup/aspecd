@@ -64,7 +64,8 @@ class ToDictMixin:
     """
 
     def __init__(self):
-        self.__odict__ = collections.OrderedDict()
+        if '__odict__' not in self.__dict__:
+            self.__odict__ = collections.OrderedDict()
 
     def __setattr__(self, attribute, value):
         """

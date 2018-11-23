@@ -326,6 +326,11 @@ class TestMeasurement(unittest.TestCase):
         self.assertEqual(measurement.start.strftime(fmt), "20170102T110000")
         self.assertEqual(measurement.end.strftime(fmt), "20170102T110100")
 
+    def test_to_dict_preserves_order(self):
+        arguments = ["start", "end", "purpose", "operator", "labbook_entry"]
+        to_dict = self.measurement.to_dict()
+        self.assertEqual(arguments, list(to_dict.keys()))
+
 
 class TestSample(unittest.TestCase):
     def setUp(self):
