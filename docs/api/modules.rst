@@ -1,5 +1,5 @@
-aspecd
-======
+API documentation
+=================
 
 .. toctree::
    :maxdepth: 4

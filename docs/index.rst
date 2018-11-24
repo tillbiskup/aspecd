@@ -18,9 +18,11 @@ A list of features, not all implemented yet but aimed at for the first public re
 
 * Framework for writing applications handling spectroscopic data
 
-* Handling of numeric data and corresponding metadata
+* Consistent handling of numeric data and corresponding metadata
 
-* History of each processing step, aiming at fully reproducible data analysis
+* History of each processing step, automatically generated, aiming at full reproducibility
+
+* Undo and redo of processing steps
 
 * Import and export of data
 
@@ -30,9 +32,14 @@ A list of features, not all implemented yet but aimed at for the first public re
 
 * Recipe-driven data analysis, allowing tasks to be performed fully unattended in the background
 
+
+And to make it even more convenient for users and future-proof:
+
 * Open source project written in Python (>= 3.5)
 
 * Developed fully test-driven
+
+* Extensive user and API documentation
 
 
 .. warning::
@@ -61,7 +68,7 @@ The :doc:`API documentation <api/aspecd>` is the definite source of information 
 
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`
