@@ -1,7 +1,7 @@
-"""System.
+"""Obtaining information on the system used for data processing and analysis.
 
 One key aspect of reproducibility is to record sufficient details of the
-system used to perform analysis. Therefore, each
+system used to perform processing and analysis. Therefore, each
 :class:`aspecd.dataset.HistoryRecord` contains a field with system
 information that is an :obj:`aspecd.system.SystemInfo` object.
 
@@ -10,6 +10,7 @@ class are the Python version, the platform, as well as the login name of the
 user currently logged in. Therefore, this is a relevant aspect for personal
 data protection, and each and every user of the system should be made
 available of this fact.
+
 """
 
 import getpass

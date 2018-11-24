@@ -1,4 +1,14 @@
-"""Annotation."""
+"""Annotations of data, e.g. characteristics, that cannot be automated.
+
+Annotations of data are eventually something that cannot be automated.
+Nevertheless, they can be quite important for the analysis and hence for
+providing new scientific insight.
+
+The simplest form of an annotation is a comment applying to an entire
+dataset, such as comments stored in the metadata written during data
+acquisition.
+
+"""
 
 
 class Error(Exception):

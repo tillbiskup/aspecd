@@ -1,4 +1,9 @@
-"""General purpose functions and classes used in other modules."""
+"""General purpose functions and classes used in other modules.
+
+To avoid circular dependencies, this module does *not* depend on any other
+modules of the ASpecD package, but it can be imported into every other module.
+
+"""
 
 import collections
 import datetime

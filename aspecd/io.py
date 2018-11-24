@@ -1,4 +1,30 @@
-"""Input and output (IO) of data and metadata contained in datasets."""
+"""Input and output (IO) of data and metadata contained in datasets.
+
+Currently, two generic classes are provided:
+
+* :class:`aspecd.io.Importer`
+
+* :class:`aspecd.io.Exporter`
+
+As the name says, these classes should be used to implement import and
+export functionality for your own purposes in applications derived from the
+ASpecD framework.
+
+Generally, both import and export should be handled via the respective
+methods of the :class:`aspecd.dataset.Dataset` class, thus first
+instantiating an object of that class and an appropriate importer or
+exporter, and afterwards only operating on the dataset using its methods.
+
+In its most generic form, this may look something like::
+
+    dataset = aspecd.dataset.Dataset()
+    importer = aspecd.io.Importer(source="/path/to/your/data")
+    dataset.import_from(importer)
+
+Similarly, you would handle the export of your data (and metadata)
+contained in a dataset object using an exporter object, respectively.
+
+"""
 
 
 class Error(Exception):

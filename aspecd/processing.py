@@ -6,7 +6,9 @@ self-contained, meaning it contains every necessary information to perform
 the processing task on a given dataset.
 
 Each real processing step should inherit from
-:class:`aspecd.processing.ProcessingStep` as documented there.
+:class:`aspecd.processing.ProcessingStep` as documented there. Furthermore,
+each processing step should be contained in one module named "processing".
+This allows for easy automation and replay of processing steps.
 
 """
 

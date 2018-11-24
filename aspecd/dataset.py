@@ -1,10 +1,16 @@
-"""Datasets.
+"""Datasets: units containing data and metadata.
 
-The dataset is one key concept of the ASpecD framework, containing the data as
-well as the corresponding metadata. Furthermore, a history of every processing,
-analysis and annotation step is recorded as well, aiming at a maximum of
-reproducibility. This is part of how the ASpecD framework tries to support good
-scientific practice.
+The dataset is one key concept of the ASpecD framework, consisting of the
+data as well as the corresponding metadata. Storing metadata in a
+structured way is a prerequisite for a semantic understanding within the
+routines. Furthermore, a history of every processing, analysis and
+annotation step is recorded as well, aiming at a maximum of
+reproducibility. This is part of how the ASpecD framework tries to support
+good scientific practice.
+
+Therefore, each processing and analysis step of data should always be
+performed using the respective methods of a dataset, at least as long as it
+can be performed on a single dataset.
 
 """
 
@@ -13,7 +19,7 @@ from datetime import datetime
 
 import numpy as np
 
-from aspecd import metadata, processing, system, analysis, annotation, utils
+from aspecd import analysis, annotation, metadata, processing, system, utils
 
 
 class Error(Exception):

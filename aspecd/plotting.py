@@ -1,4 +1,4 @@
-"""Plotting."""
+"""Plotting: Graphical representations of data extracted from datasets."""
 
 from aspecd import utils
 

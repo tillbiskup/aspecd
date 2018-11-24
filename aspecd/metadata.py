@@ -1,4 +1,4 @@
-"""Metadata.
+"""Metadata: Information on numeric data stored in a structured way.
 
 Metadata are one key concept of the ASpecD framework, and they come in
 different flavours. Perhaps the easiest to grasp is metadata that accompany
@@ -41,6 +41,17 @@ Similiarly, all classes inheriting from :class:`aspecd.metadata.Metadata` as
 well as :class:`aspecd.metadata.PhysicalQuantity` provide a method
 :meth:`to_dict` that returns a dictionary of all public attributes of the
 respective object. This allows to write metadata to a file.
+
+Generally, the representation and structure of metadata within the dataset
+of the ASpecD framework and each application derived from it is separate
+from the way the very same metadata are organised in files written mostly
+during data acquisition. To map the structure obtained by reading a
+metadata file to the internal representation within the dataset, as given
+by the :class:`aspecd.metadata.DatasetMetadata` class, there exists a
+generic mapper class :class:`aspecd.metadata.MetadataMapper`. This way,
+you can separate the representations of metadata and support mapping for
+different versions of metadata files.
+
 """
 
 import datetime
