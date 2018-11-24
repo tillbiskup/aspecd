@@ -19,7 +19,7 @@ Most probably, the first step when processing and analysing data will be to actu
     import spectro
 
     dataset_ = dataset.Dataset()
-    importer_ = importer.Importer(source="path/to/some/file/containing/data")
+    importer = io.Importer(source="path/to/some/file/containing/data")
 
     dataset_.import_from(importer)
 
@@ -27,7 +27,7 @@ This will import the data (and metadata) contained in the path provided to the a
 
 A few comments on this few lines of code:
 
-* Naming the dataset object ``dataset_`` prevents shadowing the module name. Feel free to give it another equally fitting name. Appending an underscore to a variable name in such case is a common solution complying to `PEP 8 <https://www.python.org/dev/peps/pep-0008/>`_. The same applies to the next line instantiating the importer object.
+* Naming the dataset object ``dataset_`` prevents shadowing the module name. Feel free to give it another equally fitting name. Appending an underscore to a variable name in such case is a common solution complying to `PEP 8 <https://www.python.org/dev/peps/pep-0008/>`_.
 
 * Always define first an instance of the dataset class, and afterwards use the public methods of this object, such as ``import_from()`` or ``process()``.
 
