@@ -1,21 +1,18 @@
 import os
 import setuptools
 
-with open(os.path.join(os.path.dirname(__file__), 'VERSION')) as version_file:
-    version = version_file.read().strip()
 
-with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as f:
-    readme = f.read()
-
-with open(os.path.join(os.path.dirname(__file__), 'LICENSE')) as f:
-    license_ = f.read()
+def read(fname):
+    with open(os.path.join(os.path.dirname(__file__), fname)) as f:
+        content = f.read()
+    return content
 
 
 setuptools.setup(
     name='ASpecD',
-    version=version,
+    version=read('VERSION').strip(),
     description='Framework for handling spectroscopic data.',
-    long_description=readme,
+    long_description=read('README.rst'),
     long_description_content_type='text/x-rst',
     author='Till Biskup',
     author_email='till@till-biskup.de',
@@ -24,7 +21,7 @@ setuptools.setup(
         'Documentation': 'https://docs.aspecd.de/',
         'Source': 'https://github.com/tillbiskup/aspecd-python',
     },
-    license=license_,
+    license=read('LICENSE'),
     packages=setuptools.find_packages(exclude=('tests', 'docs')),
     keywords=[
         'spectroscopy',
@@ -48,5 +45,9 @@ setuptools.setup(
     install_requires=[
         'numpy'
     ],
+    extras_require={
+        'dev': ['prospector'],
+        'docs': ['sphinx'],
+    },
     python_requires='>=3',
 )
