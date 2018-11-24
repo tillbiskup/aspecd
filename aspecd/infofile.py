@@ -126,12 +126,15 @@ class Infofile:
             raise InfofileTypeError
 
         self._parse_infofile_info()
+        self._parse_infofile_body()
 
+    def _parse_infofile_body(self):  # noqa: MC0001
         blockname = ''
         key = ''
         value = ''
         tmp_block = collections.OrderedDict()
 
+        # Start with second line of file, omitting format and version info
         for line in self._file_contents[1:]:
             if self._is_comment_block(blockname):
                 if blockname not in self.parameters:
@@ -150,14 +153,13 @@ class Infofile:
                 if blockname:
                     self.parameters[blockname] = tmp_block
                     blockname = ''
-                    tmp_block = {}
+                    tmp_block = collections.OrderedDict()
                 continue
             if not blockname:
                 blockname = line.strip()
                 continue
             [key, value] = [i.strip() for i in line.split(':', maxsplit=1)]
             tmp_block[key] = value
-
         # In case last block has not been assigned
         # (file didn't end with COMMENT block or empty line)
         if blockname and not self._is_comment_block(blockname):

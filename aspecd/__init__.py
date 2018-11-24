@@ -30,7 +30,7 @@ utils
 
 """
 
-from . import infofile
-from . import dataset
-from . import plotting
-from . import utils
+from . import infofile  # noqa: F401
+from . import dataset   # noqa: F401
+from . import plotting  # noqa: F401
+from . import utils     # noqa: F401
