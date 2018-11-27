@@ -1,5 +1,8 @@
 """Tests for plotting."""
 
+import matplotlib.figure
+import matplotlib.axes
+import matplotlib.pyplot as plt
 import unittest
 
 from aspecd import plotting, utils, dataset
@@ -43,6 +46,21 @@ class TestPlotter(unittest.TestCase):
     def test_has_figure_property(self):
         self.assertTrue(hasattr(self.plotter, 'figure'))
 
+    def test_has_fig_property(self):
+        self.assertTrue(hasattr(self.plotter, 'fig'))
+
+    def test_fig_property_and_figure_property_are_identical(self):
+        self.assertTrue(self.plotter.figure is self.plotter.fig)
+
+    def test_has_axes_property(self):
+        self.assertTrue(hasattr(self.plotter, 'axes'))
+
+    def test_has_ax_property(self):
+        self.assertTrue(hasattr(self.plotter, 'axes'))
+
+    def test_ax_property_and_axes_property_are_identical(self):
+        self.assertTrue(self.plotter.axes is self.plotter.ax)
+
     def test_has_save_method(self):
         self.assertTrue(hasattr(self.plotter, 'save'))
         self.assertTrue(callable(self.plotter.save))
@@ -51,6 +69,30 @@ class TestPlotter(unittest.TestCase):
         test_dataset = dataset.Dataset()
         plotter = test_dataset.plot(self.plotter)
         self.assertTrue(isinstance(plotter.dataset, dataset.Dataset))
+
+    def test_plot_with_dataset_sets_figure_property(self):
+        test_dataset = dataset.Dataset()
+        plotter = test_dataset.plot(self.plotter)
+        self.assertTrue(isinstance(plotter.figure, matplotlib.figure.Figure))
+        plt.close(plotter.figure)
+
+    def test_plot_with_dataset_sets_fig_property(self):
+        test_dataset = dataset.Dataset()
+        plotter = test_dataset.plot(self.plotter)
+        self.assertTrue(isinstance(plotter.fig, matplotlib.figure.Figure))
+        plt.close(plotter.fig)
+
+    def test_plot_with_dataset_sets_axes_property(self):
+        test_dataset = dataset.Dataset()
+        plotter = test_dataset.plot(self.plotter)
+        self.assertTrue(isinstance(plotter.axes, matplotlib.axes.Axes))
+        plt.close(plotter.figure)
+
+    def test_plot_with_dataset_sets_ax_property(self):
+        test_dataset = dataset.Dataset()
+        plotter = test_dataset.plot(self.plotter)
+        self.assertTrue(isinstance(plotter.ax, matplotlib.axes.Axes))
+        plt.close(plotter.figure)
 
     def test_save_without_saver_raises(self):
         with self.assertRaises(plotting.MissingSaverError):

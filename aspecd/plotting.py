@@ -1,5 +1,8 @@
 """Plotting: Graphical representations of data extracted from datasets."""
 
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+
 from aspecd import utils
 
 
@@ -118,6 +121,8 @@ class Plotter:
         Dataset the analysis step should be performed on
     figure : :class:`matplotlib.figure.Figure`
         Reference to figure object
+    axes : :class:`matplotlib.axes.Axes`
+        Reference to axes object used for actual plotting
 
     Raises
     ------
@@ -133,14 +138,21 @@ class Plotter:
     def __init__(self):
         # Name defaults always to the full class name, don't change!
         self.name = utils.full_class_name(self)
-        # All parameters, implicit and explicit
         self.parameters = dict()
-        # Short description, to be set in class definition
         self.description = 'Abstract plotting step'
-        # Reference to the dataset the plot should be performed for
         self.dataset = None
-        # Reference to figure object (:class:`matplotlib.figure.Figure`)
         self.figure = None
+        self.axes = None
+
+    @property
+    def fig(self):
+        """Shorthand for figure."""
+        return self.figure
+
+    @property
+    def ax(self):
+        """Shorthand for axes."""
+        return self.axes
 
     def plot(self, dataset=None):
         """Perform the actual plotting on the given dataset.
@@ -182,6 +194,7 @@ class Plotter:
             self.dataset = dataset
         if not self.applicable(self.dataset):
             raise PlotNotApplicableToDatasetError
+        self._create_figure_and_axes()
         self._create_plot()
 
     # noinspection PyUnusedLocal
@@ -202,6 +215,19 @@ class Plotter:
 
         """
         return True
+
+    def _create_figure_and_axes(self):
+        """Create figure and axes and assign to attributes.
+
+        Figure and axes will only be created upon calling the method
+        :meth:`plot`. If you need to change the way figure and axes are
+        created, override this method.
+
+        In any case, figure and axes need to be assigned to the
+        :attr:`figure` and :attr:`axes` properties of the plotter class.
+        """
+        mpl.interactive(False)  # Mac OS X: prevent a plot window from opening
+        self.figure, self.axes = plt.subplots()
 
     def _create_plot(self):
         """Perform the actual plotting of the data of the dataset.

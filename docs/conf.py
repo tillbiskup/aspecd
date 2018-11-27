@@ -196,4 +196,7 @@ texinfo_documents = [
 
 
 # -- Extension configuration -------------------------------------------------
-intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3', None),
+    'matplotlib': ('https://matplotlib.org/', None),
+}

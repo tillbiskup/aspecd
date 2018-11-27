@@ -43,7 +43,8 @@ setuptools.setup(
         "Topic :: Software Development :: Libraries :: Application Frameworks"
     ],
     install_requires=[
-        'numpy'
+        'numpy',
+        'matplotlib',
     ],
     extras_require={
         'dev': ['prospector'],
