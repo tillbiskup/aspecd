@@ -146,12 +146,12 @@ class Plotter:
 
     @property
     def fig(self):
-        """Shorthand for figure."""
+        """Short hand for figure."""
         return self.figure
 
     @property
     def ax(self):
-        """Shorthand for axes."""
+        """Short hand for axes."""
         return self.axes
 
     def plot(self, dataset=None):
