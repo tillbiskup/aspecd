@@ -236,11 +236,14 @@ class Plotter:
         classes inheriting from Plotter. This method is automatically
         called by :meth:`plot` after some background checks.
 
-        The reference to the figure object should be stored in :attr:`figure`.
+        The reference to the figure object is stored in :attr:`figure`. By
+        default, the backend is set to non-interactive, and to actually
+        display the figure, you would need to call :meth:`show()` on the
+        figure object stored in :attr:`figure`.
 
         Plotting should be done using a method of the
-        :class:`matplotlib.axes.Axes` class. The axis can be inferred as
-        property of the :attr:`figure` object stored in the plotter.
+        :class:`matplotlib.axes.Axes` class accessible via the :attr:`axes`
+        attribute of the plotter.
 
         """
         pass
