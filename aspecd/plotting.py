@@ -16,14 +16,14 @@ Generally, two types of plotters can be distinguished:
 * Plotters for handling single datasets
 * Plotters for handling multiple datasets
 
-In the first case, the plot is usually handled using the :meth:`plot()` method
+In the first case, the plot is usually handled using the :meth:`plot` method
 of the respective :obj:`aspecd.dataset.Dataset` object. Additionally,
 those plotters always only operate on the data of a single dataset, and the
 plot can easily be attached as a representation to the respective dataset.
 Plotters handling single datasets should always inherit from the
 :class:`aspecd.plotting.SinglePlotter` class.
 
-In the second case, the plot is handled using the :meth:`plot()` method of the
+In the second case, the plot is handled using the :meth:`plot` method of the
 :obj:`aspecd.plotting.Plotter` object, and the datasets are stored as a list
 within the plotter. As these plots span several datasets, there is no easy
 connection between a single dataset and such a plot in sense of
@@ -32,7 +32,7 @@ always inherit from the :class:`aspecd.plotting.MultiPlotter` class.
 
 Regardless of the type of plotter, saving plots is always done using objects of
 the :class:`aspecd.plotting.Saver` class. The actual task of saving a plot
-is as easy as calling the :meth:`save()` method of a plotter with a saver
+is as easy as calling the :meth:`save` method of a plotter with a saver
 object as its argument.
 
 """
@@ -170,12 +170,12 @@ class Plotter:
 
     @property
     def fig(self):
-        """Short hand for figure."""
+        """Short hand for :attr:`figure`."""
         return self.figure
 
     @property
     def ax(self):  # pylint: disable=invalid-name
-        """Short hand for axes."""
+        """Short hand for :attr:`axes`."""
         return self.axes
 
     def plot(self):
@@ -229,7 +229,7 @@ class Plotter:
 
         The reference to the figure object is stored in :attr:`figure`. By
         default, the backend is set to non-interactive, and to actually
-        display the figure, you would need to call :meth:`show()` on the
+        display the figure, you would need to call :meth:`show` on the
         figure object stored in :attr:`figure`.
 
         Plotting should be done using a method of the
