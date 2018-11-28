@@ -441,7 +441,8 @@ class Dataset:
         """
         if not plotter:
             raise MissingPlotterError
-        plotter.plot(self)
+        plotter.dataset = self
+        plotter.plot()
         return plotter
 
     def load(self):

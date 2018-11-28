@@ -269,29 +269,18 @@ class SinglePlotter(Plotter):
         self.dataset = None
         self.description = 'Abstract plotting step for single dataset'
 
-    def plot(self, dataset=None):
+    def plot(self):
         """Perform the actual plotting on the given dataset.
 
-        If no dataset is provided at method call, but is set as property in the
-        Plotter object, the :meth:`aspecd.dataset.Dataset.plot` method of the
-        dataset will be called and thus the history written.
-
-        If no dataset is provided at method call nor as property in the object,
-        the method will raise a respective exception.
-
-        The Dataset object always calls this method with the respective dataset
-        as argument. Therefore, in this case setting the dataset property
-        within the Plotter object is not necessary.
+        If no dataset is set as property in the object, the method will
+        raise a respective exception. The Dataset object :meth:`plot` method
+        always assigns its dataset as the respective dataset attribute of
+        the plotter class.
 
         The actual plotting should be implemented within the non-public
         method :meth:`_create_plot`. Besides that, the applicability of the
         plotting to the given dataset will be checked automatically. These
         checks should be implemented in the method :meth:`applicable`.
-
-        Parameters
-        ----------
-        dataset : :class:`aspecd.dataset.Dataset`
-            dataset to perform plot for
 
         Raises
         ------
@@ -301,13 +290,8 @@ class SinglePlotter(Plotter):
             Raised when no dataset exists to act on
 
         """
-        if not dataset:
-            if self.dataset:
-                self.dataset.plot(self)
-            else:
-                raise MissingDatasetError
-        else:
-            self.dataset = dataset
+        if not self.dataset:
+            raise MissingDatasetError
         if not self.applicable(self.dataset):
             raise PlotNotApplicableToDatasetError
         super().plot()
