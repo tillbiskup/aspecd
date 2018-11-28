@@ -118,6 +118,28 @@ class TestSinglePlotter(unittest.TestCase):
         self.assertTrue(isinstance(plotter.dataset, dataset.Dataset))
 
 
+class TestMultiPlotter(unittest.TestCase):
+    def setUp(self):
+        self.plotter = plotting.MultiPlotter()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_datasets_property(self):
+        self.assertTrue(hasattr(self.plotter, 'datasets'))
+
+    def test_datasets_property_is_dict(self):
+        self.assertTrue(isinstance(self.plotter.datasets, list))
+
+    def test_plot_without_datasets_raises(self):
+        with self.assertRaises(plotting.MissingDatasetError):
+            self.plotter.plot()
+
+    def test_plot_with_datasets(self):
+        self.plotter.datasets.append(dataset.Dataset())
+        self.plotter.plot()
+
+
 class TestSaver(unittest.TestCase):
     def setUp(self):
         self.saver = plotting.Saver()

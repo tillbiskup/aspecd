@@ -1,4 +1,41 @@
-"""Plotting: Graphical representations of data extracted from datasets."""
+"""Plotting: Graphical representations of data extracted from datasets.
+
+Plotting relies on `matplotlib <https://matplotlib.org/>`_, and mainly its
+object-oriented interface should be used for the actual plotting. Each
+plotter contains references to the respective figure and axes created usually
+by a call similar to::
+
+    fig, ax = matplotlib.pyplot.subplots()
+
+For convenience, short hands for the :attr:`figure` and :attr:`axes`
+properties of a plotter are available, named :attr:`fig` and :attr:`ax`,
+respectively.
+
+Generally, two types of plotters can be distinguished:
+
+* Plotters for handling single datasets
+* Plotters for handling multiple datasets
+
+In the first case, the plot is usually handled using the :meth:`plot()` method
+of the respective :obj:`aspecd.dataset.Dataset` object. Additionally,
+those plotters always only operate on the data of a single dataset, and the
+plot can easily be attached as a representation to the respective dataset.
+Plotters handling single datasets should always inherit from the
+:class:`aspecd.plotting.SinglePlotter` class.
+
+In the second case, the plot is handled using the :meth:`plot()` method of the
+:obj:`aspecd.plotting.Plotter` object, and the datasets are stored as a list
+within the plotter. As these plots span several datasets, there is no easy
+connection between a single dataset and such a plot in sense of
+representations stored in datasets. Plotters handling multiple datasets should
+always inherit from the :class:`aspecd.plotting.MultiPlotter` class.
+
+Regardless of the type of plotter, saving plots is always done using objects of
+the :class:`aspecd.plotting.Saver` class. The actual task of saving a plot
+is as easy as calling the :meth:`save()` method of a plotter with a saver
+object as its argument.
+
+"""
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -253,7 +290,7 @@ class SinglePlotter(Plotter):
     Attributes
     ----------
     dataset : :class:`aspecd.dataset.Dataset`
-        Dataset the analysis step should be performed on
+        Dataset the plotting should be done for
 
     Raises
     ------
@@ -294,6 +331,73 @@ class SinglePlotter(Plotter):
             raise MissingDatasetError
         if not self.applicable(self.dataset):
             raise PlotNotApplicableToDatasetError
+        super().plot()
+
+
+class MultiPlotter(Plotter):
+    """Base class for plots of single datasets.
+
+    Each class actually plotting data of a dataset should inherit from this
+    class. Furthermore, all parameters, implicit and explicit, necessary to
+    perform the plot, should eventually be stored in the property
+    :attr:`parameters` (currently a dictionary).
+
+    To perform the plot, call the :meth:`plot` method of the dataset the plot
+    should be performed for, and provide a reference to the actual plotter
+    object to it.
+
+    Further things that need to be changed upon inheriting from this class
+    are the string stored in :attr:`description`, being basically a one-liner.
+
+    The actual implementation of the plotting is done in the private method
+    :meth:`_create_plot` that in turn gets called by :meth:`plot`
+    which is called by the :meth:`aspecd.dataset.Dataset.plot` method of the
+    dataset object.
+
+    Attributes
+    ----------
+    datasets : `list`
+        List of dataset the plotting should be done for
+
+    Raises
+    ------
+    MissingDatasetError
+        Raised when no dataset exists to act on
+    PlotNotApplicableToDatasetError
+        Raised when processing step is not applicable to dataset
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.datasets = []
+        self.description = 'Abstract plotting step for multiple dataset'
+
+    def plot(self):
+        """Perform the actual plotting on the given list of datasets.
+
+        If no dataset is added to the list of datasets of the
+        object, the method will raise a respective exception.
+
+        The actual plotting should be implemented within the non-public
+        method :meth:`_create_plot`. Besides that, the applicability of the
+        plotting to the given list of datasets will be checked automatically.
+        These checks should be implemented in the method :meth:`applicable`.
+
+        Raises
+        ------
+        PlotNotApplicableToDatasetError
+            Raised when plotting is not applicable to at least one of the
+            datasets listed in :attr:`datasets`
+        MissingDatasetError
+            Raised when no datasets exist to act on
+
+        """
+        if not self.datasets:
+            raise MissingDatasetError
+        if not all([self.applicable(dataset) for dataset in self.datasets]):
+            raise PlotNotApplicableToDatasetError('Plot not applicable to one '
+                                                  'or more datasets')
         super().plot()
 
 
