@@ -170,7 +170,7 @@ Additional aspects you may want to consider and that will be detailed here a bit
 
 * Recipe-driven data processing and analysis
 
-Make sure to understand the :doc:`underlying concepts of the ASpecD framework <concepts>` and have a look at its :doc:`API documentation <api/aspecd>` as well as the source code.
+Make sure to understand the :doc:`underlying concepts of the ASpecD framework <concepts>` and have a look at its :doc:`API documentation <api/index>` as well as the source code.
 
 
 .. rubric:: Footnotes

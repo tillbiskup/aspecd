@@ -51,7 +51,7 @@ Where to start
 
 Users new to ASpecD should probably start :doc:`at the beginning <audience>`, those familiar with its :doc:`underlying concepts <concepts>` may jump straight to the section explaining how to :doc:`write applications based on the ASpecD framework <applications>`.
 
-The :doc:`API documentation <api/aspecd>` is the definite source of information for developers, besides having a look at the source code.
+The :doc:`API documentation <api/index>` is the definite source of information for developers, besides having a look at the source code.
 
 
 .. toctree::
@@ -64,7 +64,7 @@ The :doc:`API documentation <api/aspecd>` is the definite source of information 
    applications
    usecases
 
-   api/modules
+   api/index
 
 
 Indices and tables
