@@ -320,7 +320,7 @@ class TestDatasetPlotting(unittest.TestCase):
         self.assertTrue(callable(self.dataset.plot))
 
     def test_dataset_plot_returns_plotter_object(self):
-        plotter_object = plotting.Plotter()
+        plotter_object = plotting.SinglePlotter()
         plot = self.dataset.plot(plotter_object)
         self.assertTrue(isinstance(plot, plotting.Plotter))
 

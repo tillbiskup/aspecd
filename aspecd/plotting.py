@@ -90,22 +90,16 @@ class MissingPlotError(Error):
 class Plotter:
     """Base class for plots.
 
-    Each class actually plotting data of a dataset should inherit from this
-    class. Furthermore, all parameters, implicit and explicit, necessary to
+    Each class actually plotting data should inherit from this class.
+    Furthermore, all parameters, implicit and explicit, necessary to
     perform the plot, should eventually be stored in the property
     :attr:`parameters` (currently a dictionary).
-
-    To perform the plot, call the :meth:`plot` method of the dataset the plot
-    should be performed for, and provide a reference to the actual plotter
-    object to it.
 
     Further things that need to be changed upon inheriting from this class
     are the string stored in :attr:`description`, being basically a one-liner.
 
     The actual implementation of the plotting is done in the private method
-    :meth:`_create_plot` that in turn gets called by :meth:`plot`
-    which is called by the :meth:`aspecd.dataset.Dataset.plot` method of the
-    dataset object.
+    :meth:`_create_plot` that in turn gets called by :meth:`plot`.
 
     Attributes
     ----------
@@ -117,8 +111,6 @@ class Plotter:
         All parameters necessary for the plot, implicit and explicit
     description : `str`
         Short description, to be set in class definition
-    dataset : :class:`aspecd.dataset.Dataset`
-        Dataset the analysis step should be performed on
     figure : :class:`matplotlib.figure.Figure`
         Reference to figure object
     axes : :class:`matplotlib.axes.Axes`
@@ -126,10 +118,6 @@ class Plotter:
 
     Raises
     ------
-    MissingDatasetError
-        Raised when no dataset exists to act on
-    PlotNotApplicableToDatasetError
-        Raised when processing step is not applicable to dataset
     MissingSaverError
         Raised when no saver is provided when trying to save
 
@@ -140,7 +128,6 @@ class Plotter:
         self.name = utils.full_class_name(self)
         self.parameters = dict()
         self.description = 'Abstract plotting step'
-        self.dataset = None
         self.figure = None
         self.axes = None
 
@@ -150,50 +137,17 @@ class Plotter:
         return self.figure
 
     @property
-    def ax(self):
+    def ax(self):  # pylint: disable=invalid-name
         """Short hand for axes."""
         return self.axes
 
-    def plot(self, dataset=None):
-        """Perform the actual plotting on the given dataset.
-
-        If no dataset is provided at method call, but is set as property in the
-        Plotter object, the :meth:`aspecd.dataset.Dataset.plot` method of the
-        dataset will be called and thus the history written.
-
-        If no dataset is provided at method call nor as property in the object,
-        the method will raise a respective exception.
-
-        The Dataset object always calls this method with the respective dataset
-        as argument. Therefore, in this case setting the dataset property
-        within the Plotter object is not necessary.
+    def plot(self):
+        """Perform the actual plotting.
 
         The actual plotting should be implemented within the private
-        method :meth:`_create_plot`. Besides that, the applicability of the
-        plotting to the given dataset will be checked automatically.
-
-        Parameters
-        ----------
-        dataset : :class:`aspecd.dataset.Dataset`
-            dataset to perform plot for
-
-        Raises
-        ------
-        PlotNotApplicableToDatasetError
-            Raised when plotting is not applicable to dataset
-        MissingDatasetError
-            Raised when no dataset exists to act on
+        method :meth:`_create_plot`.
 
         """
-        if not dataset:
-            if self.dataset:
-                self.dataset.plot(self)
-            else:
-                raise MissingDatasetError
-        else:
-            self.dataset = dataset
-        if not self.applicable(self.dataset):
-            raise PlotNotApplicableToDatasetError
         self._create_figure_and_axes()
         self._create_plot()
 
@@ -274,6 +228,89 @@ class Plotter:
             raise MissingSaverError
         saver.save(self)
         return saver
+
+
+class SinglePlotter(Plotter):
+    """Base class for plots of single datasets.
+
+    Each class actually plotting data of a dataset should inherit from this
+    class. Furthermore, all parameters, implicit and explicit, necessary to
+    perform the plot, should eventually be stored in the property
+    :attr:`parameters` (currently a dictionary).
+
+    To perform the plot, call the :meth:`plot` method of the dataset the plot
+    should be performed for, and provide a reference to the actual plotter
+    object to it.
+
+    Further things that need to be changed upon inheriting from this class
+    are the string stored in :attr:`description`, being basically a one-liner.
+
+    The actual implementation of the plotting is done in the private method
+    :meth:`_create_plot` that in turn gets called by :meth:`plot`
+    which is called by the :meth:`aspecd.dataset.Dataset.plot` method of the
+    dataset object.
+
+    Attributes
+    ----------
+    dataset : :class:`aspecd.dataset.Dataset`
+        Dataset the analysis step should be performed on
+
+    Raises
+    ------
+    MissingDatasetError
+        Raised when no dataset exists to act on
+    PlotNotApplicableToDatasetError
+        Raised when processing step is not applicable to dataset
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.dataset = None
+        self.description = 'Abstract plotting step for single dataset'
+
+    def plot(self, dataset=None):
+        """Perform the actual plotting on the given dataset.
+
+        If no dataset is provided at method call, but is set as property in the
+        Plotter object, the :meth:`aspecd.dataset.Dataset.plot` method of the
+        dataset will be called and thus the history written.
+
+        If no dataset is provided at method call nor as property in the object,
+        the method will raise a respective exception.
+
+        The Dataset object always calls this method with the respective dataset
+        as argument. Therefore, in this case setting the dataset property
+        within the Plotter object is not necessary.
+
+        The actual plotting should be implemented within the non-public
+        method :meth:`_create_plot`. Besides that, the applicability of the
+        plotting to the given dataset will be checked automatically. These
+        checks should be implemented in the method :meth:`applicable`.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset to perform plot for
+
+        Raises
+        ------
+        PlotNotApplicableToDatasetError
+            Raised when plotting is not applicable to dataset
+        MissingDatasetError
+            Raised when no dataset exists to act on
+
+        """
+        if not dataset:
+            if self.dataset:
+                self.dataset.plot(self)
+            else:
+                raise MissingDatasetError
+        else:
+            self.dataset = dataset
+        if not self.applicable(self.dataset):
+            raise PlotNotApplicableToDatasetError
+        super().plot()
 
 
 class Saver:
