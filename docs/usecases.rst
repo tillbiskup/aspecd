@@ -25,7 +25,7 @@ Most probably, the first step when processing and analysing data will be to actu
 
 This will import the data (and metadata) contained in the path provided to the argument ``source`` when instantiating the ``Importer`` object.
 
-A few comments on this few lines of code:
+A few comments on these few lines of code:
 
 * Naming the dataset object ``dataset_`` prevents shadowing the module name. Feel free to give it another equally fitting name. Appending an underscore to a variable name in such case is a common solution complying to `PEP 8 <https://www.python.org/dev/peps/pep-0008/>`_.
 
