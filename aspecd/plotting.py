@@ -37,6 +37,8 @@ object as its argument.
 
 """
 
+import os
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
@@ -467,4 +469,21 @@ class Saver:
         :attr:`plotter.figure`.
 
         """
-        pass
+        self._add_file_extension()
+        self.plotter.figure.savefig(self.filename, **self.parameters)
+
+    def _add_file_extension(self):
+        """Add file extension to filename if available.
+
+        Check whether the filename contains an extension, and if a format
+        is provided, and if so, add the correct extension to the filename.
+
+        .. todo::
+            Should generally set the correct extension if a format is
+            given, regardless of an existing extension.
+
+        """
+        _, file_extension = os.path.splitext(self.filename)
+        if "format" in self.parameters and not file_extension:
+            self.filename = '.'.join([self.filename,
+                                      self.parameters["format"]])

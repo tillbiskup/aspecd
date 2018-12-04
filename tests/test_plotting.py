@@ -3,6 +3,7 @@
 import matplotlib.figure
 import matplotlib.axes
 import matplotlib.pyplot as plt
+import os
 import unittest
 
 from aspecd import plotting, utils, dataset
@@ -86,6 +87,7 @@ class TestPlotter(unittest.TestCase):
         filename = 'Testfile'
         saver = plotting.Saver()
         saver.filename = filename
+        self.plotter.plot()
         returned_saver = self.plotter.save(saver)
         self.assertTrue(isinstance(returned_saver, plotting.Saver))
 
@@ -93,6 +95,7 @@ class TestPlotter(unittest.TestCase):
         filename = 'Testfile'
         saver = plotting.Saver()
         saver.filename = filename
+        self.plotter.plot()
         returned_saver = self.plotter.save(saver)
         self.assertEqual(returned_saver.plotter, self.plotter)
 
@@ -143,6 +146,11 @@ class TestMultiPlotter(unittest.TestCase):
 class TestSaver(unittest.TestCase):
     def setUp(self):
         self.saver = plotting.Saver()
+        self.filename = 'test.pdf'
+
+    def tearDown(self):
+        if os.path.isfile(self.filename):
+            os.remove(self.filename)
 
     def test_instantiate_class(self):
         pass
@@ -157,22 +165,23 @@ class TestSaver(unittest.TestCase):
 
     def test_with_filename_set_previously(self):
         self.saver.plotter = plotting.Plotter()
-        self.saver.filename = 'Testfile'
+        self.saver.plotter.plot()
+        self.saver.filename = self.filename
         self.saver.save()
 
     def test_instantiate_with_filename_sets_filename(self):
-        filename = 'Testfile'
-        self.saver = plotting.Saver(filename)
-        self.assertEqual(self.saver.filename, filename)
+        self.saver = plotting.Saver(self.filename)
+        self.assertEqual(self.saver.filename, self.filename)
 
     def test_save_without_plotter_raises(self):
-        self.saver.filename = 'Testfile'
+        self.saver.filename = self.filename
         with self.assertRaises(plotting.MissingPlotError):
             self.saver.save()
 
     def test_save_with_plotter_sets_plotter(self):
         plotter = plotting.Plotter()
-        self.saver.filename = 'Testfile'
+        plotter.plot()
+        self.saver.filename = self.filename
         self.saver.save(plotter)
         self.assertEqual(self.saver.plotter, plotter)
 
@@ -181,3 +190,28 @@ class TestSaver(unittest.TestCase):
 
     def test_parameters_property_is_dict(self):
         self.assertTrue(isinstance(self.saver.parameters, dict))
+
+    def test_save_creates_file(self):
+        plotter = plotting.Plotter()
+        plotter.plot()
+        self.saver.filename = self.filename
+        self.saver.save(plotter)
+        self.assertTrue(os.path.isfile(self.filename))
+
+    def test_set_format_parameter_adds_extension(self):
+        plotter = plotting.Plotter()
+        plotter.plot()
+        self.filename = 'test.pdf'
+        self.saver.filename, _ = os.path.splitext(self.filename)
+        self.saver.parameters["format"] = 'pdf'
+        self.saver.save(plotter)
+        self.assertTrue(os.path.isfile(self.filename))
+
+    def test_set_format_parameter_writes_appropriate_file(self):
+        plotter = plotting.Plotter()
+        plotter.plot()
+        self.filename = 'test.pdf'
+        self.saver.filename, _ = os.path.splitext(self.filename)
+        self.saver.parameters["format"] = 'pdf'
+        self.saver.save(plotter)
+        self.assertTrue(os.path.isfile(self.filename))

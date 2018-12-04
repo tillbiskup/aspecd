@@ -1,5 +1,6 @@
 """Tests for infofile."""
 
+import os
 import unittest
 
 from aspecd import infofile
@@ -39,7 +40,6 @@ class TestInfofileParserParse(unittest.TestCase):
         self.ifile = infofile.Infofile('test.info')
 
     def tearDown(self):
-        import os
         if os.path.isfile('test.info'):
             os.remove('test.info')
 
