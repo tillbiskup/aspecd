@@ -406,6 +406,10 @@ class MultiPlotter(Plotter):
 class Saver:
     """Base class for saving plots.
 
+    For basic saving of plots, no subclassing is necessary, as the
+    :meth:`save` method uses :meth:`matplotlib.figure.Figure.savefig` and
+    can cope with all possible parameters via the :attr:`parameters` property.
+
     Attributes
     ----------
     filename : `str`
@@ -442,7 +446,7 @@ class Saver:
         If no plotter is provided at method call nor as property of the object,
         the method will raise a respective exception.
 
-        The actual saving should be implemented within the private method
+        The actual saving is implemented within the private method
         :meth:`_save_plot`.
 
         Parameters
