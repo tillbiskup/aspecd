@@ -406,6 +406,18 @@ class MultiPlotter(Plotter):
 class Saver:
     """Base class for saving plots.
 
+    Attributes
+    ----------
+    filename : `str`
+        Name of the file the plot should get saved to
+    parameters : `dict`
+        Key-value store of parameters for saving.
+
+        See :meth:`matplotlib.figure.Figure.savefig` for details and
+        available options.
+    plotter : :class:`aspecd.plotting.Plotter`
+        Plotter whose plot should be saved.
+
     Raises
     ------
     MissingFilenameError
