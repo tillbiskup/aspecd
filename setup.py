@@ -9,7 +9,7 @@ def read(fname):
 
 
 setuptools.setup(
-    name='ASpecD',
+    name='aspecd',
     version=read('VERSION').strip(),
     description='Framework for handling spectroscopic data.',
     long_description=read('README.rst'),
