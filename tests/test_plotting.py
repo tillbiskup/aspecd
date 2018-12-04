@@ -12,6 +12,11 @@ from aspecd import plotting, utils, dataset
 class TestPlotter(unittest.TestCase):
     def setUp(self):
         self.plotter = plotting.Plotter()
+        self.filename = 'Testfile.png'
+
+    def tearDown(self):
+        if os.path.isfile(self.filename):
+            os.remove(self.filename)
 
     def test_instantiate_class(self):
         pass
@@ -84,17 +89,15 @@ class TestPlotter(unittest.TestCase):
             self.plotter.save()
 
     def test_save_returns_saver(self):
-        filename = 'Testfile'
         saver = plotting.Saver()
-        saver.filename = filename
+        saver.filename = self.filename
         self.plotter.plot()
         returned_saver = self.plotter.save(saver)
         self.assertTrue(isinstance(returned_saver, plotting.Saver))
 
     def test_save_sets_plot_in_saver(self):
-        filename = 'Testfile'
         saver = plotting.Saver()
-        saver.filename = filename
+        saver.filename = self.filename
         self.plotter.plot()
         returned_saver = self.plotter.save(saver)
         self.assertEqual(returned_saver.plotter, self.plotter)
