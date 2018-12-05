@@ -334,6 +334,32 @@ class SinglePlotter(Plotter):
         if not self.applicable(self.dataset):
             raise PlotNotApplicableToDatasetError
         super().plot()
+        self._set_axes_labels()
+
+    def _set_axes_labels(self):
+        """Set axes labels from axes in dataset.
+
+        This method is called automatically by :meth:`plot`.
+
+        If you ever need to change the handling of your axes labels,
+        override this method in a child class.
+        """
+        xlabel = self._create_axis_label_string(self.dataset.data.axes[0])
+        ylabel = self._create_axis_label_string(self.dataset.data.axes[1])
+        self.axes.set_xlabel(xlabel)
+        self.axes.set_ylabel(ylabel)
+
+    @staticmethod
+    def _create_axis_label_string(axis):
+        """Create axis label conforming to conventions used in science
+
+        This method is called automatically and indirectly by :meth:`plot`.
+
+        If you ever need to change the appearance of your axes labels,
+        override this method in a child class.
+        """
+        label = '$' + axis.quantity + '$' + ' / ' + axis.unit
+        return label
 
 
 class MultiPlotter(Plotter):
