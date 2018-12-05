@@ -147,9 +147,12 @@ def get_aspecd_version():
         Version number as string
 
     """
-    with open(os.path.join(os.path.dirname(__file__), "..",
-                           'VERSION')) as version_file:
-        version = version_file.read().strip()
+    version_file_path = os.path.join(os.path.dirname(__file__), "..", 'VERSION')
+    if os.path.exists(version_file_path):
+        with open(version_file_path) as version_file:
+            version = version_file.read().strip()
+    else:
+        version = package_version("aspecd")
     return version
 
 
