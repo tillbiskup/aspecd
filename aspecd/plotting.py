@@ -321,6 +321,11 @@ class SinglePlotter(Plotter):
         plotting to the given dataset will be checked automatically. These
         checks should be implemented in the method :meth:`applicable`.
 
+        Note that the axis labels are added automatically. If you ever need
+        to change the handling or appearance of your axis labels, you may
+        want to override the corresponding methods :meth:`_set_axes_labels`
+        and :meth:`_create_axis_label_string`, respectively.
+
         Raises
         ------
         PlotNotApplicableToDatasetError
@@ -517,15 +522,25 @@ class Saver:
     def _add_file_extension(self):
         """Add file extension to filename if available.
 
-        Check whether the filename contains an extension, and if a format
-        is provided, and if so, add the correct extension to the filename.
+        Check whether an export file format has been explicitly given,
+        and if so, add proper extension to filename.
 
-        .. todo::
-            Should generally set the correct extension if a format is
-            given, regardless of an existing extension.
+        Two cases are possible, and are dealt with as follows:
+
+        (1) No file extension, but format specified.
+
+        The appropriate file extension (same as format) will be added.
+
+        (2) File extension does not match format specifier.
+
+        The file extension will be replaced by the one specified in format.
 
         """
-        _, file_extension = os.path.splitext(self.filename)
-        if "format" in self.parameters and not file_extension:
-            self.filename = '.'.join([self.filename,
-                                      self.parameters["format"]])
+        file_basename, file_extension = os.path.splitext(self.filename)
+        if "format" in self.parameters:
+            if file_extension != self.parameters["format"]:
+                self.filename = '.'.join([file_basename,
+                                          self.parameters["format"]])
+            elif not file_extension:
+                self.filename = '.'.join([self.filename,
+                                          self.parameters["format"]])

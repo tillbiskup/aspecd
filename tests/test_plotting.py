@@ -224,6 +224,16 @@ class TestSaver(unittest.TestCase):
         self.saver.save(plotter)
         self.assertTrue(os.path.isfile(self.filename))
 
+    def test_set_format_parameter_corrects_extension(self):
+        plotter = plotting.Plotter()
+        plotter.plot()
+        self.filename = 'test.pdf'
+        basename, _ = os.path.splitext(self.filename)
+        self.saver.parameters["format"] = 'pdf'
+        self.saver.filename = '.'.join([basename, "png"])
+        self.saver.save(plotter)
+        self.assertTrue(os.path.isfile(self.filename))
+
     def test_set_format_parameter_writes_appropriate_file(self):
         plotter = plotting.Plotter()
         plotter.plot()
