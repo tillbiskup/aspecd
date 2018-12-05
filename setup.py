@@ -43,8 +43,9 @@ setuptools.setup(
         "Topic :: Software Development :: Libraries :: Application Frameworks"
     ],
     install_requires=[
-        'numpy',
+        'jinja2',
         'matplotlib',
+        'numpy',
     ],
     extras_require={
         'dev': ['prospector'],
