@@ -2,6 +2,7 @@
 
 import collections
 import os
+import subprocess
 import unittest
 
 from aspecd import report
@@ -38,9 +39,9 @@ class TestReporter(unittest.TestCase):
     def test_has_environment_property(self):
         self.assertTrue(hasattr(self.report, 'environment'))
 
-    def test_environment_is_latex_environment(self):
+    def test_environment_is_jinja_environment(self):
         self.assertTrue(isinstance(self.report.environment,
-                                   report.LaTeXEnvironment))
+                                   report.GenericEnvironment))
 
     def test_has_report_property(self):
         self.assertTrue(hasattr(self.report, 'report'))
@@ -133,3 +134,69 @@ class TestLaTeXEnvironment(unittest.TestCase):
 
     def test_instantiate_class(self):
         pass
+
+
+class TestLaTeXReporter(unittest.TestCase):
+    def setUp(self):
+        self.report = report.LaTeXReporter()
+        self.template = 'test_template.tex'
+        self.filename = 'test_report.tex'
+        self.result = 'test_report.pdf'
+        self.report.template = self.template
+        self.report.filename = self.filename
+
+    def tearDown(self):
+        if os.path.exists(self.template):
+            os.remove(self.template)
+        if os.path.exists(self.filename):
+            os.remove(self.filename)
+        if os.path.exists(self.result):
+            os.remove(self.result)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_environment_is_latex_environment(self):
+        self.assertTrue(isinstance(self.report.environment,
+                                   report.LaTeXEnvironment))
+
+    def test_has_includes_property(self):
+        self.assertTrue(hasattr(self.report, 'includes'))
+
+    def test_has_compile_method(self):
+        self.assertTrue(hasattr(self.report, 'compile'))
+        self.assertTrue(callable(self.report.compile))
+
+    def test_has_latex_executable_property(self):
+        self.assertTrue(hasattr(self.report, 'latex_executable'))
+
+    def test_compile_with_inexisting_latex_executable_raises(self):
+        self.report.latex_executable = 'foo'
+        with self.assertRaises(report.LaTeXExecutableNotFoundError):
+            self.report.compile()
+
+    def test_compile_creates_output(self):
+        template_content = '\\documentclass{article}' \
+                            '\\begin{document}' \
+                            'test' \
+                            '\\end{document}'
+        with open(self.template, 'w+') as f:
+            f.write(template_content)
+        self.report.render()
+        self.report.save()
+        self.report.compile()
+        self.assertTrue(os.path.exists(self.result))
+
+    def test_compile_does_not_leave_temp_files(self):
+        template_content = '\\documentclass{article}' \
+                            '\\begin{document}' \
+                            'test' \
+                            '\\end{document}'
+        with open(self.template, 'w+') as f:
+            f.write(template_content)
+        self.report.render()
+        self.report.save()
+        self.report.compile()
+        basename, _ = os.path.splitext(self.result)
+        logfile = ".".join([basename, 'log'])
+        self.assertFalse(os.path.exists(logfile))

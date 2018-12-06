@@ -13,6 +13,9 @@ provided either by the user or by the package as such.
 
 import collections
 import os
+import shutil
+import subprocess
+import tempfile
 
 import jinja2
 
@@ -24,6 +27,21 @@ class Error(Exception):
 
 
 class MissingFilenameError(Error):
+    """Exception raised when no filename is provided
+
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
+class LaTeXExecutableNotFoundError(Error):
     """Exception raised when no filename is provided
 
     Attributes
@@ -76,11 +94,11 @@ class Reporter:
     context : :class:`collections.OrderedDict`
         Variables of a template that are replaced with the given content.
 
-    environment : :class:`aspecd.report.LaTeXEnvironment`
+    environment : :class:`aspecd.report.GenericEnvironment`
         Jinja2 environment used for rendering the template.
 
-        Defaults to a :obj:`aspecd.report.LaTeXEnvironment` object with
-        settings for rendering LaTeX-based templates.
+        Defaults to a :obj:`aspecd.report.GenericEnvironment` object with
+        settings for rendering generic templates.
 
     Parameters
     ----------
@@ -101,7 +119,7 @@ class Reporter:
         self.template = template
         self.filename = filename
         self.context = collections.OrderedDict()
-        self.environment = LaTeXEnvironment()
+        self.environment = GenericEnvironment()
         self.report = ''
 
     def render(self):
@@ -172,12 +190,129 @@ class Reporter:
         self.save()
 
 
+class LaTeXReporter(Reporter):
+    """LaTeX Reporter.
+
+    Often, templates for reports are written in LaTeX, and the results
+    typeset as PDF file upon a (pdf)LaTeX run. For convenience, this class
+    offers the necessary facilities to compile the template once written.
+
+    The whole procedure may look as follows::
+
+        template = "template.tex"
+        filename = "report.tex"
+        report_ = aspecd.report.Reporter(template=template, filename=filename)
+        report_.create()
+        report_.compile()
+
+    This will result with a file "report.pdf" in the current directory.
+
+    Note that for compiling a temporary directory is used, such as not to
+    clutter the current working directory with all the auxiliary files
+    usually created during a (pdf)LaTeX run.
+
+    Attributes
+    ----------
+    environment : :class:`aspecd.report.LaTeXEnvironment`
+        Jinja2 environment used for rendering the template.
+
+        Defaults to a :obj:`aspecd.report.LaTeXEnvironment` object with
+        settings for rendering LaTeX templates.
+
+    includes : `list`
+        List of files that need to be present for compiling the template.
+
+        These files will be copied into the temporary directory used for
+        compiling the template.
+
+    latex_executable : `str`
+        Name of/path to the LaTeX executable.
+
+        Defaults to "pdflatex"
+
+    Raises
+    ------
+    LaTeXExecutableNotFoundError
+        Raised if the LaTeX executable could not be found
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.environment = LaTeXEnvironment()
+        self.includes = list()
+        self.latex_executable = 'pdflatex'
+
+        self._temp_dir = tempfile.mkdtemp()
+        self._pwd = os.getcwd()
+
+    def compile(self):
+        """Compile LaTeX template.
+
+        The template is copied to a temporary directory and the LaTeX
+        executable specified in :attr:`latex_executable` called on the
+        report. Afterwards, the result is copied back to the original
+        directory.
+
+        Additionally, all files necessary to compile the report are copied
+        to the temporary directory as well.
+
+        .. todo::
+            Need to actually copy all files contained in :attr:`includes`
+            to the temporary directory as well.
+
+        """
+        if not shutil.which(self.latex_executable):
+            raise LaTeXExecutableNotFoundError
+        self._copy_files_to_temp_dir()
+        self._compile()
+        self._copy_files_from_temp_dir()
+        self._remove_temp_dir()
+
+    def _copy_files_to_temp_dir(self):
+        shutil.copy2(self.filename,
+                     os.path.join(self._temp_dir, self.filename))
+
+    def _compile(self):
+        os.chdir(self._temp_dir)
+        subprocess.run([self.latex_executable,
+                        '-output-directory', self._temp_dir,
+                        self.filename])
+        os.chdir(self._pwd)
+
+    def _copy_files_from_temp_dir(self):
+        basename, _ = os.path.splitext(self.filename)
+        pdf_filename = ".".join([basename, 'pdf'])
+        shutil.copy2(os.path.join(self._temp_dir, pdf_filename),
+                     os.path.join(self._pwd, pdf_filename))
+
+    def _remove_temp_dir(self):
+        shutil.rmtree(self._temp_dir)
+
+
+class GenericEnvironment(jinja2.Environment):
+    """Jinja2 environment for rendering generic templates.
+
+    .. todo::
+        Describe the settings in more detail, thus providing users of this
+        class and in turn the :class:`aspecd.report.Reporter` class with
+        ideas of how to create their templates.
+
+    """
+
+    def __init__(self):
+        env = {
+            "loader": jinja2.FileSystemLoader(os.path.abspath('.')),
+        }
+        super().__init__(**env)
+
+
 class LaTeXEnvironment(jinja2.Environment):
     """Jinja2 environment for rendering LaTeX-based templates.
 
     .. todo::
         Describe the settings in more detail, thus providing users of this
-        class and in turn the :class:`aspecd.report.Reporter` class with
+        class and in turn the :class:`aspecd.report.LaTeXReporter` class with
         ideas of how to create their templates.
 
     """
