@@ -59,6 +59,9 @@ class TestPlotter(unittest.TestCase):
     def test_ax_property_and_axes_property_are_identical(self):
         self.assertTrue(self.plotter.axes is self.plotter.ax)
 
+    def test_has_filename_property(self):
+        self.assertTrue(hasattr(self.plotter, 'filename'))
+
     def test_has_save_method(self):
         self.assertTrue(hasattr(self.plotter, 'save'))
         self.assertTrue(callable(self.plotter.save))
@@ -101,6 +104,13 @@ class TestPlotter(unittest.TestCase):
         self.plotter.plot()
         returned_saver = self.plotter.save(saver)
         self.assertEqual(returned_saver.plotter, self.plotter)
+
+    def test_save_sets_filename(self):
+        saver = plotting.Saver()
+        saver.filename = self.filename
+        self.plotter.plot()
+        self.plotter.save(saver)
+        self.assertEqual(self.filename, self.plotter.filename)
 
 
 class TestSinglePlotter(unittest.TestCase):
@@ -242,3 +252,75 @@ class TestSaver(unittest.TestCase):
         self.saver.parameters["format"] = 'pdf'
         self.saver.save(plotter)
         self.assertTrue(os.path.isfile(self.filename))
+
+
+class TestPlotRecord(unittest.TestCase):
+    def setUp(self):
+        self.plot_record = plotting.PlotRecord()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_name_property(self):
+        self.assertTrue(hasattr(self.plot_record, 'name'))
+
+    def test_has_parameters_property(self):
+        self.assertTrue(hasattr(self.plot_record, 'parameters'))
+
+    def test_has_description_property(self):
+        self.assertTrue(hasattr(self.plot_record, 'description'))
+
+    def test_has_filename_property(self):
+        self.assertTrue(hasattr(self.plot_record, 'filename'))
+
+    def test_has_from_plotter_method(self):
+        self.assertTrue(hasattr(self.plot_record, 'from_plotter'))
+        self.assertTrue(callable(self.plot_record.from_plotter))
+
+    def test_instantiate_with_plotter(self):
+        plotter = plotting.Plotter()
+        plotting.PlotRecord(plotter=plotter)
+
+    def test_from_plotter_without_plotter_raises(self):
+        with self.assertRaises(plotting.MissingPlotterError):
+            self.plot_record.from_plotter()
+
+    def test_from_plotter_sets_attributes(self):
+        plotter = plotting.Plotter()
+        plotter.filename = 'test'
+        self.plot_record.from_plotter(plotter)
+        self.assertEqual(plotter.name, self.plot_record.name)
+        self.assertEqual(plotter.filename, self.plot_record.filename)
+        self.assertEqual(plotter.parameters, self.plot_record.parameters)
+        self.assertEqual(plotter.description, self.plot_record.description)
+
+    def test_instantiate_with_plotter_sets_attributes_from_plotter(self):
+        plotter = plotting.Plotter()
+        plotter.filename = 'test'
+        plot_record = plotting.PlotRecord(plotter=plotter)
+        self.assertEqual(plotter.name, plot_record.name)
+        self.assertEqual(plotter.filename, plot_record.filename)
+        self.assertEqual(plotter.parameters, plot_record.parameters)
+        self.assertEqual(plotter.description, plot_record.description)
+
+
+class TestSinglePlotRecord(unittest.TestCase):
+    def setUp(self):
+        self.plot_record = plotting.SinglePlotRecord()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_processing_steps_property(self):
+        self.assertTrue(hasattr(self.plot_record, 'processing_steps'))
+
+
+class TestMultiPlotRecord(unittest.TestCase):
+    def setUp(self):
+        self.plot_record = plotting.MultiPlotRecord()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_datasets_property(self):
+        self.assertTrue(hasattr(self.plot_record, 'datasets'))

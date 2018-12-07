@@ -126,6 +126,21 @@ class MissingPlotError(Error):
         self.message = message
 
 
+class MissingPlotterError(Error):
+    """Exception raised when no plotter is provided.
+
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
 class Plotter:
     """Base class for plots.
 
@@ -169,6 +184,7 @@ class Plotter:
         self.description = 'Abstract plotting step'
         self.figure = None
         self.axes = None
+        self.filename = ''
 
     @property
     def fig(self):
@@ -266,6 +282,7 @@ class Plotter:
         if not saver:
             raise MissingSaverError
         saver.save(self)
+        self.filename = saver.filename
         return saver
 
 
@@ -368,16 +385,14 @@ class SinglePlotter(Plotter):
 
 
 class MultiPlotter(Plotter):
-    """Base class for plots of single datasets.
+    """Base class for plots of multiple datasets.
 
-    Each class actually plotting data of a dataset should inherit from this
-    class. Furthermore, all parameters, implicit and explicit, necessary to
-    perform the plot, should eventually be stored in the property
+    Each class actually plotting data of multiple dataset should inherit from
+    this class. Furthermore, all parameters, implicit and explicit,
+    necessary to perform the plot, should eventually be stored in the property
     :attr:`parameters` (currently a dictionary).
 
-    To perform the plot, call the :meth:`plot` method of the dataset the plot
-    should be performed for, and provide a reference to the actual plotter
-    object to it.
+    To perform the plot, call the :meth:`plot` method of the plotter directly.
 
     Further things that need to be changed upon inheriting from this class
     are the string stored in :attr:`description`, being basically a one-liner.
@@ -544,3 +559,121 @@ class Saver:
             elif not file_extension:
                 self.filename = '.'.join([self.filename,
                                           self.parameters["format"]])
+
+
+class PlotRecord:
+    """Base class for records storing information about a plot.
+
+    For reproducibility of plots performed on either a single dataset or
+    multiple datasets, information for each plot needs to be collected that
+    suffices to reproduce the plot. This is what a PlotRecord is good for.
+
+    All information will usually be obtained from a plotter object, either
+    by instantiating a PlotRecord object providing a plotter object,
+    or by calling :meth:`from_plotter` on a PlotRecord object.
+
+    Attributes
+    ----------
+    name : `str`
+        Name of the plotter.
+
+        Defaults to the plotter class name and shall never be set manually.
+    description : `str`
+        Short description of the plot
+    parameters : `dict`
+        All parameters necessary for the plot, implicit and explicit
+    filename : `str`
+        Name of the file the plot has been/should be saved to
+
+
+    Parameters
+    ----------
+    plotter : :obj:`aspecd.plotting.Plotter`
+        Plotter object to obtain information from
+
+    Raises
+    ------
+    MissingPlotterError
+        Raised if no plotter is provided.
+
+    """
+
+    def __init__(self, plotter=None):
+        self.name = ''
+        self.description = ''
+        self.parameters = dict()
+        self.filename = ''
+        if plotter:
+            self.from_plotter(plotter=plotter)
+
+    def from_plotter(self, plotter=None):
+        """Obtain information from plotter.
+
+        Parameters
+        ----------
+        plotter : :obj:`aspecd.plotting.Plotter`
+        Plotter object to obtain information from
+
+        Raises
+        ------
+        MissingPlotterError
+            Raised if no plotter is provided.
+
+        """
+        if not plotter:
+            raise MissingPlotterError
+        self.name = plotter.name
+        self.description = plotter.description
+        self.parameters = plotter.parameters
+        self.filename = plotter.filename
+
+
+class SinglePlotRecord(PlotRecord):
+    """Record for SinglePlotter objects.
+
+    When plotting data of a single dataset, classes derived from
+    :class:`aspecd.plotting.SinglePlotter` will be used. The information
+    obtained from these plotters will be stored in a SinglePlotRecord object.
+
+    Attributes
+    ----------
+    processing_steps : `list`
+        List of processing steps
+
+        The actual processing steps are objects of the class
+        :class:`aspecd.processing.ProcessingStepRecord`.
+
+    Parameters
+    ----------
+    plotter : :obj:`aspecd.plotting.Plotter`
+        Plotter object to obtain information from
+
+    """
+
+    def __init__(self, plotter=None):
+        self.processing_steps = list()
+        super().__init__(plotter=plotter)
+
+
+class MultiPlotRecord(PlotRecord):
+    """Record for MultiPlotter objects.
+
+    When plotting data of multiple datasets, classes derived from
+    :class:`aspecd.plotting.MultiPlotter` will be used. The information
+    obtained from these plotters will be stored in a MultiPlotRecord object.
+
+    Attributes
+    ----------
+    datasets : `list`
+        List of datasets whose data appear in the plot.
+
+    Parameters
+    ----------
+    plotter : :obj:`aspecd.plotting.Plotter`
+        Plotter object to obtain information from
+
+    """
+
+    def __init__(self, plotter=None):
+        self.datasets = list()
+        super().__init__(plotter=plotter)
