@@ -205,11 +205,15 @@ class LaTeXReporter(Reporter):
         report_.create()
         report_.compile()
 
-    This will result with a file "report.pdf" in the current directory.
+    This will result with a file "report.pdf" in the current directory. If
+    you specify a relative or absolute path for the filename of the report,
+    the resulting PDF file will be copied to that path accordingly.
 
     Note that for compiling a temporary directory is used, such as not to
     clutter the current working directory with all the auxiliary files
-    usually created during a (pdf)LaTeX run.
+    usually created during a (pdf)LaTeX run. Furthermore, currently, only a
+    single (pdf)LaTeX run is performed with option
+    "-interaction=nonstopmode" passed in order to not block further execution.
 
     Attributes
     ----------
@@ -257,10 +261,6 @@ class LaTeXReporter(Reporter):
         Additionally, all files necessary to compile the report are copied
         to the temporary directory as well.
 
-        .. todo::
-            Need to actually copy all files contained in :attr:`includes`
-            to the temporary directory as well.
-
         """
         if not shutil.which(self.latex_executable):
             raise LaTeXExecutableNotFoundError
@@ -270,23 +270,65 @@ class LaTeXReporter(Reporter):
         self._remove_temp_dir()
 
     def _copy_files_to_temp_dir(self):
+        """Copy all necessary files to compile the LaTeX report to temp_dir
+
+        Takes care of relative or absolute paths of both, report and includes.
+        """
+        _, filename_wo_path = os.path.split(self.filename)
         shutil.copy2(self.filename,
-                     os.path.join(self._temp_dir, self.filename))
+                     os.path.join(self._temp_dir, filename_wo_path))
+        for filename in self.includes:
+            _, filename_wo_path = os.path.split(filename)
+            shutil.copy2(filename,
+                         os.path.join(self._temp_dir, filename_wo_path))
 
     def _compile(self):
+        """Actual compiling of the report.
+
+        The compiling takes place in a temporary directory that gets
+        removed after the (successful) compile step using the
+        :meth:`_remove_temp_dir` method.
+
+        (pdf)LaTeX is currently called with the "-interaction=nonstopmode"
+        option in order to not block further execution.
+        """
         os.chdir(self._temp_dir)
+        _, filename_wo_path = os.path.split(self.filename)
         subprocess.run([self.latex_executable,
                         '-output-directory', self._temp_dir,
-                        self.filename])
+                        '-interaction=nonstopmode',
+                        filename_wo_path])
         os.chdir(self._pwd)
 
     def _copy_files_from_temp_dir(self):
+        """Copy result of compile step from temporary to target directory
+
+        Takes care of any relative or absolute paths provided for the
+        report output file provided in :attr:`filename`.
+        """
         basename, _ = os.path.splitext(self.filename)
+        path, basename = os.path.split(basename)
         pdf_filename = ".".join([basename, 'pdf'])
-        shutil.copy2(os.path.join(self._temp_dir, pdf_filename),
-                     os.path.join(self._pwd, pdf_filename))
+        if os.path.isabs(path):
+            shutil.copy2(os.path.join(self._temp_dir, pdf_filename),
+                         os.path.join(path, pdf_filename))
+        else:
+            shutil.copy2(os.path.join(self._temp_dir, pdf_filename),
+                         os.path.join(self._pwd, path, pdf_filename))
 
     def _remove_temp_dir(self):
+        """Remove temporary directory used for compile step.
+
+        The (pdf)LaTeX step is performed in a temporary directory such as
+        not to clutter the current working directory with all the auxiliary
+        files usually created during a (pdf)LaTeX run.
+
+        This temporary directory is removed after the (successful) compile
+        step. Note that therefore, all sometimes useful information stored,
+        e.g., in the log file, is lost. However, manually compiling the
+        report is probably the easiest way of figuring out if something
+        gets wrong with the (pdf)LaTeX compile step
+        """
         shutil.rmtree(self._temp_dir)
 
 

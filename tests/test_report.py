@@ -2,7 +2,7 @@
 
 import collections
 import os
-import subprocess
+import shutil
 import unittest
 
 from aspecd import report
@@ -142,6 +142,8 @@ class TestLaTeXReporter(unittest.TestCase):
         self.template = 'test_template.tex'
         self.filename = 'test_report.tex'
         self.result = 'test_report.pdf'
+        self.include = 'include.tex'
+        self.subdir = 'testdir'
         self.report.template = self.template
         self.report.filename = self.filename
 
@@ -152,6 +154,10 @@ class TestLaTeXReporter(unittest.TestCase):
             os.remove(self.filename)
         if os.path.exists(self.result):
             os.remove(self.result)
+        if os.path.exists(self.include):
+            os.remove(self.include)
+        if os.path.exists(self.subdir):
+            shutil.rmtree(self.subdir)
 
     def test_instantiate_class(self):
         pass
@@ -200,3 +206,52 @@ class TestLaTeXReporter(unittest.TestCase):
         basename, _ = os.path.splitext(self.result)
         logfile = ".".join([basename, 'log'])
         self.assertFalse(os.path.exists(logfile))
+
+    def test_compile_with_includes_creates_output(self):
+        include_name, _ = os.path.splitext(self.include)
+        template_content = '\\documentclass{article}' \
+                           '\\begin{document}' \
+                           '\\include{' + include_name + '}' \
+                           '\\end{document}'
+        with open(self.template, 'w+') as f:
+            f.write(template_content)
+        include_content = 'foobar'
+        with open(self.include, 'w+') as f:
+            f.write(include_content)
+        self.report.includes.append(self.include)
+        self.report.render()
+        self.report.save()
+        self.report.compile()
+        self.assertTrue(os.path.exists(self.result))
+
+    def test_compile_with_includes_and_path_creates_output(self):
+        os.mkdir(self.subdir)
+        include_name, _ = os.path.splitext(self.include)
+        template_content = '\\documentclass{article}' \
+                           '\\begin{document}' \
+                           '\\include{' + include_name + '}' \
+                           '\\end{document}'
+        with open(self.template, 'w+') as f:
+            f.write(template_content)
+        include_content = 'foobar'
+        with open(os.path.join(self.subdir, self.include), 'w+') as f:
+            f.write(include_content)
+        self.report.includes.append(os.path.join(self.subdir, self.include))
+        self.report.filename = os.path.join(self.subdir, self.filename)
+        self.report.render()
+        self.report.save()
+        self.report.compile()
+        self.assertTrue(os.path.exists(os.path.join(self.subdir, self.result)))
+
+    def test_compile_with_absolute_path_for_report_creates_output(self):
+        template_content = '\\documentclass{article}' \
+                            '\\begin{document}' \
+                            'test' \
+                            '\\end{document}'
+        with open(self.template, 'w+') as f:
+            f.write(template_content)
+        self.report.filename = os.path.join(os.getcwd(), self.filename)
+        self.report.render()
+        self.report.save()
+        self.report.compile()
+        self.assertTrue(os.path.exists(self.result))
