@@ -214,7 +214,7 @@ class Dataset:
 
         Every processing step is an object of type
         :class:`aspecd.processing.ProcessingStep` and is passed as argument
-        to :func:`process`.
+        to :meth:`process`.
 
         Calling this function ensures that the history record is added to the
         dataset as well as a few basic checks are performed such as for leading
@@ -353,7 +353,7 @@ class Dataset:
     def analyze(self, analysis_step=None):
         """Apply analysis to dataset.
 
-        Same method as :func:`analyse`, but for those preferring AE
+        Same method as :meth:`analyse`, but for those preferring AE
         over BE.
 
         """
@@ -410,11 +410,11 @@ class Dataset:
         """Perform plot with data of current dataset.
 
         Every plotter is an object of type :class:`aspecd.plotting.Plotter`
-        and is passed as an argument to :func:`plot`.
+        and is passed as an argument to :meth:`plot`.
 
         .. todo::
-            Does :func:`plot` save some "PlotRecord" in a field like
-            "representations", similar to :func:`process` saves a
+            Does :meth:`plot` save some "PlotRecord" in a field like
+            "representations", similar to :meth:`process` saves a
             :class:`aspecd.processing.ProcessingStepRecord` to the history?
             Idea there would be to have a list of representations performed
             on the given dataset.
@@ -473,12 +473,12 @@ class Dataset:
 
         .. note::
             The same operation can be performed by calling the
-            :func:`import_into` method of an :obj:`aspecd.io.Importer`
+            :meth:`import_into` method of an :obj:`aspecd.io.Importer`
             object taking an :obj:`aspecd.dataset.Dataset` object as argument.
 
             However, as usually one wants to continue working with a dataset,
             first creating an instance of a dataset and a respective importer
-            and then calling :func:`import_from` of the dataset is the
+            and then calling :meth:`import_from` of the dataset is the
             preferred way.
 
         Parameters
@@ -499,12 +499,12 @@ class Dataset:
 
         .. note::
             The same operation can be performed by calling the
-            :func:`export_from` method of an :obj:`aspecd.io.Exporter`
+            :meth:`export_from` method of an :obj:`aspecd.io.Exporter`
             object taking an :obj:`aspecd.dataset.Dataset` object as argument.
 
             However, as usually the dataset is already at hand,
             first creating an instance of a respective exporter
-            and then calling :func:`export_to` of the dataset is the
+            and then calling :meth:`export_to` of the dataset is the
             preferred way.
 
         Parameters

@@ -74,7 +74,7 @@ class ProcessingStep:
     perform the processing step, should eventually be stored in the property
     "self.parameters" (currently a dictionary).
 
-    To perform the processing step, call the :func:`process` method of the
+    To perform the processing step, call the :meth:`process` method of the
     dataset the processing should be applied to, and provide a reference to the
     actual processing_step object to it.
 
@@ -83,8 +83,8 @@ class ProcessingStep:
     and the flag ``undoable`` if necessary.
 
     The actual implementation of the processing step is done in the private
-    method :func:`_perform_task` that in turn gets called by :func:`process`
-    which is called by the :func:`aspecd.dataset.Dataset.process` method of the
+    method :meth:`_perform_task` that in turn gets called by :meth:`process`
+    which is called by the :meth:`aspecd.dataset.Dataset.process` method of the
     dataset object.
 
     Attributes
@@ -136,7 +136,7 @@ class ProcessingStep:
         """Perform the actual processing step on the given dataset.
 
         If no dataset is provided at method call, but is set as property in the
-        ProcessingStep object, the :func:`aspecd.dataset.Dataset.process`
+        ProcessingStep object, the :meth:`aspecd.dataset.Dataset.process`
         method of the dataset will be called and thus the history written.
 
         If no dataset is provided at method call nor as property in the object,
@@ -147,7 +147,7 @@ class ProcessingStep:
         within the ProcessingStep object is not necessary.
 
         The actual processing step should be implemented within the private
-        method :func:`_perform_task`. Besides that, the applicability of the
+        method :meth:`_perform_task`. Besides that, the applicability of the
         processing step to the given dataset will be checked automatically and
         the parameters will be sanitised.
 
@@ -214,7 +214,7 @@ class ProcessingStep:
 
         The implementation of the actual processing goes in here in all
         classes inheriting from ProcessingStep. This method is automatically
-        called by :func:`self.processing` after some background checks.
+        called by :meth:`self.processing` after some background checks.
 
         """
         pass
