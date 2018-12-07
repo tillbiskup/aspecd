@@ -226,15 +226,10 @@ class Dataset:
         current tip of the history of the dataset. In this case, an error is
         raised.
 
-        .. todo::
-            If processing_step is undoable, set _origdata to data.
-            The only true undoable processing steps I can currently think of
-            are those that add several datasets together. Changing _origdata
-            here prevents the need of exposing _origdata in any way.
-            In such case, all previous plots stored in the (to be implemented)
-            list of representations need to be removed, or at least the user
-            should be notified on that, as these plots cannot be reproduced
-            due to a change in _origdata.
+        .. note::
+            If processing_step is undoable, all previous plots stored in
+            the list of representations will be removed, as these plots
+            cannot be reproduced due to a change in :attr:`_origdata`.
 
         Parameters
         ----------
@@ -262,6 +257,9 @@ class Dataset:
         history_record = \
             self._create_processing_history_record(processing_step)
         self._append_processing_history_record(history_record)
+        if processing_step.undoable:
+            self._origdata = copy.deepcopy(self.data)
+            self.representations = []
         return processing_step
 
     def undo(self):
@@ -348,6 +346,16 @@ class Dataset:
     def analyse(self, analysis_step=None):
         """Apply analysis to dataset.
 
+        Every analysis step is an object of type
+        :class:`aspecd.analysis.AnalysisStep` and is passed as an argument
+        to :meth:`analyse`.
+
+        The information necessary to reproduce an analysis is stored in the
+        :attr:`analyses` attribute as object of class
+        :class:`aspecd.dataset.AnalysisHistoryRecord`. This record contains as
+        well a (deep) copy of the complete history of the dataset stored in
+        :attr:`history`.
+
         Parameters
         ----------
         analysis_step : :obj:`aspecd.analysis.AnalysisStep`
@@ -356,10 +364,6 @@ class Dataset:
         """
         # Important: Need a copy, not the reference to the original object
         analysis_step = copy.deepcopy(analysis_step)
-        # TODO: Add all processing steps in history of dataset to AnalysisStep.
-        # At least if preprocessing list in AnalysisStep is empty.
-        # Otherwise, perhaps copy dataset object, perform processing steps from
-        # preprocessing list in AnalysisStep and analyse this one...
         history_record = self._create_analysis_history_record(analysis_step)
         analysis_step.analyse(self)
         self.analyses.append(history_record)
@@ -376,6 +380,7 @@ class Dataset:
     def _create_analysis_history_record(self, analysis_step):
         history_record = AnalysisHistoryRecord(package=self._package_name)
         history_record.analysis = analysis_step
+        history_record.analysis.preprocessing = copy.deepcopy(self.history)
         return history_record
 
     def delete_analysis(self, index=None):
@@ -462,7 +467,7 @@ class Dataset:
     def _create_plot_record(self, plotter=None):
         plot_record = PlotHistoryRecord(package=self._package_name)
         plot_record.plot = plotting.SinglePlotRecord(plotter=plotter)
-        plot_record.plot.processing_steps = copy.deepcopy(self.history)
+        plot_record.plot.preprocessing = copy.deepcopy(self.history)
         return plot_record
 
     def delete_representation(self, index=None):
@@ -521,6 +526,7 @@ class Dataset:
         if not importer:
             raise MissingImporterError("No importer provided")
         importer.import_into(self)
+        self._origdata = copy.deepcopy(self.data)
 
     def export_to(self, exporter=None):
         """Export data and metadata.

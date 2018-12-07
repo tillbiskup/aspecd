@@ -93,17 +93,37 @@ class TestDatasetProcessing(unittest.TestCase):
         self.assertIsNot(self.processing_step,
                          self.dataset.history[-1].processing)
 
-    def test_dataset_process_returns_processing_object(self):
+    def test_process_returns_processing_object(self):
         processing_object = processing.ProcessingStep()
         processing_step = self.dataset.process(processing_object)
         self.assertTrue(isinstance(processing_step, processing.ProcessingStep))
 
-    def test_dataset_process_sets_package_in_sysinfo(self):
+    def test_process_sets_package_in_sysinfo(self):
         # Fake package name
         self.dataset._package_name = "numpy"
         self.dataset.process(self.processing_step)
         history_record = self.dataset.history[0]
         self.assertTrue("numpy" in history_record.sysinfo.packages.keys())
+
+    def test_undoable_processing_step_does_not_touch_origdata(self):
+        processing_step = processing.ProcessingStep()
+        processing_step.undoable = False
+        old_origdata = self.dataset._origdata
+        self.dataset.process(processing_step)
+        self.assertIs(self.dataset._origdata, old_origdata)
+
+    def test_not_undoable_processing_step_resets_origdata(self):
+        processing_step = processing.ProcessingStep()
+        processing_step.undoable = True
+        old_origdata = self.dataset._origdata
+        self.dataset.process(processing_step)
+        self.assertIsNot(self.dataset._origdata, old_origdata)
+
+    def test_not_undoable_processing_step_empties_representations(self):
+        processing_step = processing.ProcessingStep()
+        processing_step.undoable = True
+        self.dataset.process(processing_step)
+        self.assertEqual(self.dataset.representations, [])
 
 
 class TestDatasetUndo(unittest.TestCase):
@@ -197,6 +217,12 @@ class TestDatasetIO(unittest.TestCase):
         self.assertTrue(hasattr(self.dataset, 'export_to'))
         self.assertTrue(callable(self.dataset.export_to))
 
+    def test_importfrom_sets_origdata(self):
+        importer = io.Importer()
+        old_origdata = self.dataset._origdata
+        self.dataset.import_from(importer)
+        self.assertIsNot(self.dataset._origdata, old_origdata)
+
 
 class TestDatasetProcessingWithHistory(unittest.TestCase):
     def setUp(self):
@@ -241,6 +267,22 @@ class TestDatasetAnalysis(unittest.TestCase):
         self.dataset.analyse(self.analysis_step)
         self.assertTrue(isinstance(self.dataset.analyses[-1],
                                    dataset.AnalysisHistoryRecord))
+
+    def test_added_analysis_record_contains_history(self):
+        processing_step = processing.ProcessingStep()
+        self.dataset.process(processing_step)
+        self.dataset.analyse(self.analysis_step)
+        analysis_ = self.dataset.analyses[-1]
+        self.assertEqual(len(self.dataset.history),
+                         len(analysis_.analysis.preprocessing))
+
+    def test_added_analysis_record_history_is_deepcopy(self):
+        processing_step = processing.ProcessingStep()
+        self.dataset.process(processing_step)
+        self.dataset.analyse(self.analysis_step)
+        analysis_ = self.dataset.analyses[-1]
+        self.assertNotEqual(self.dataset.history,
+                            analysis_.analysis.preprocessing)
 
     def test_has_delete_analysis_method(self):
         self.assertTrue(hasattr(self.dataset, 'delete_analysis'))
@@ -352,7 +394,7 @@ class TestDatasetRepresentations(unittest.TestCase):
         self.dataset.plot(self.plotter)
         representation = self.dataset.representations[-1]
         self.assertEqual(len(self.dataset.history),
-                         len(representation.plot.processing_steps))
+                         len(representation.plot.preprocessing))
 
     def test_added_plot_record_history_is_deepcopy(self):
         processing_step = processing.ProcessingStep()
@@ -360,7 +402,7 @@ class TestDatasetRepresentations(unittest.TestCase):
         self.dataset.plot(self.plotter)
         representation = self.dataset.representations[-1]
         self.assertNotEqual(self.dataset.history,
-                            representation.plot.processing_steps)
+                            representation.plot.preprocessing)
 
     def test_has_delete_representation_method(self):
         self.assertTrue(hasattr(self.dataset, 'delete_representation'))
