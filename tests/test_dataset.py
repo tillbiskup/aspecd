@@ -46,6 +46,9 @@ class TestDataset(unittest.TestCase):
     def test_has_package_name_property(self):
         self.assertTrue(hasattr(self.dataset, '_package_name'))
 
+    def test_has_representations_property(self):
+        self.assertTrue(hasattr(self.dataset, 'representations'))
+
 
 class TestDatasetProcessing(unittest.TestCase):
     def setUp(self):
@@ -327,6 +330,55 @@ class TestDatasetPlotting(unittest.TestCase):
     def test_plot_without_plotter_raises(self):
         with self.assertRaises(dataset.MissingPlotterError):
             self.dataset.plot()
+
+
+class TestDatasetRepresentations(unittest.TestCase):
+    def setUp(self):
+        self.dataset = dataset.Dataset()
+        self.plotter = plotting.Plotter()
+
+    def test_plot_adds_plot_record_to_representations(self):
+        self.dataset.plot(self.plotter)
+        self.assertFalse(self.dataset.representations == [])
+
+    def test_added_plot_record_is_plotrecord(self):
+        self.dataset.plot(self.plotter)
+        self.assertTrue(isinstance(self.dataset.representations[-1],
+                                   dataset.PlotHistoryRecord))
+
+    def test_added_plot_record_contains_history(self):
+        processing_step = processing.ProcessingStep()
+        self.dataset.process(processing_step)
+        self.dataset.plot(self.plotter)
+        representation = self.dataset.representations[-1]
+        self.assertEqual(len(self.dataset.history),
+                         len(representation.plot.processing_steps))
+
+    def test_added_plot_record_history_is_deepcopy(self):
+        processing_step = processing.ProcessingStep()
+        self.dataset.process(processing_step)
+        self.dataset.plot(self.plotter)
+        representation = self.dataset.representations[-1]
+        self.assertNotEqual(self.dataset.history,
+                            representation.plot.processing_steps)
+
+    def test_has_delete_representation_method(self):
+        self.assertTrue(hasattr(self.dataset, 'delete_representation'))
+        self.assertTrue(callable(self.dataset.delete_representation))
+
+    def test_delete_representation_deletes_representation_record(self):
+        self.dataset.plot(self.plotter)
+        orig_len_representations = len(self.dataset.representations)
+        self.dataset.delete_representation(0)
+        new_len_representations = len(self.dataset.representations)
+        self.assertGreater(orig_len_representations, new_len_representations)
+
+    def test_delete_representation_deletes_correct_representation_record(self):
+        self.dataset.plot(self.plotter)
+        self.dataset.plot(self.plotter)
+        representation = self.dataset.representations[-1]
+        self.dataset.delete_representation(0)
+        self.assertIs(representation, self.dataset.representations[-1])
 
 
 class TestDatasetImporting(unittest.TestCase):

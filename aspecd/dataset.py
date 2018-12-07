@@ -19,7 +19,8 @@ from datetime import datetime
 
 import numpy as np
 
-from aspecd import analysis, annotation, metadata, processing, system, utils
+from aspecd import analysis, annotation, metadata, plotting, processing, \
+    system, utils
 
 
 class Error(Exception):
@@ -182,6 +183,8 @@ class Dataset:
         analysis steps performed on the dataset
     annotations : `list`
         annotations of the dataset
+    representations : `list`
+        representations of the dataset, e.g., plots
 
     Raises
     ------
@@ -206,6 +209,7 @@ class Dataset:
         self._history_pointer = -1
         self.analyses = []
         self.annotations = []
+        self.representations = []
         # Package name is used to store the package version in history records
         self._package_name = utils.package_name(self)
 
@@ -422,16 +426,14 @@ class Dataset:
         Every plotter is an object of type :class:`aspecd.plotting.Plotter`
         and is passed as an argument to :meth:`plot`.
 
-        .. todo::
-            Does :meth:`plot` save some "PlotRecord" in a field like
-            "representations", similar to :meth:`process` saves a
-            :class:`aspecd.processing.ProcessingStepRecord` to the history?
-            Idea there would be to have a list of representations performed
-            on the given dataset.
-
-            How to deal with the history? How to tie a representation (plot)
-            to a given state of the history? How to figure out when trying to
-            undo a step in history whether a representation is affected?
+        The information necessary to reproduce a plot is stored in the
+        :attr:`representations` attribute as object of class
+        :class:`aspecd.dataset.PlotHistoryRecord`. This record contains as
+        well a (deep) copy of the complete history of the dataset stored in
+        :attr:`history`. Besides being a necessary prerequisite to
+        reproduce a plot, this allows to automatically recreate plots
+        requiring different incompatible preprocessing steps in arbitrary
+        order.
 
         Parameters
         ----------
@@ -453,7 +455,26 @@ class Dataset:
             raise MissingPlotterError
         plotter.dataset = self
         plotter.plot()
+        plot_record = self._create_plot_record(plotter=plotter)
+        self.representations.append(plot_record)
         return plotter
+
+    def _create_plot_record(self, plotter=None):
+        plot_record = PlotHistoryRecord(package=self._package_name)
+        plot_record.plot = plotting.SinglePlotRecord(plotter=plotter)
+        plot_record.plot.processing_steps = copy.deepcopy(self.history)
+        return plot_record
+
+    def delete_representation(self, index=None):
+        """Remove representation record from dataset.
+
+        Parameters
+        ----------
+        index : `int`
+            Number of analysis in analyses to delete
+
+        """
+        del self.representations[index]
 
     def load(self):
         """Load dataset object from persistence layer.
@@ -920,3 +941,25 @@ class AnnotationHistoryRecord(HistoryRecord):
     def __init__(self, package=''):
         super().__init__(package=package)
         self.annotation = annotation.Annotation()
+
+
+class PlotHistoryRecord(HistoryRecord):
+    """History record for plots of datasets.
+
+    Attributes
+    ----------
+    plot : :class:`aspecd.plotting.SinglePlotRecord`
+        Plot the history is saved for
+
+    package : `str`
+        Name of package the hstory record gets recorded for
+
+        Prerequisite for reproducibility, gets stored in the
+        :attr:`aspecd.dataset.HistoryRecord.sysinfo` attribute.
+        Will usually be provided automatically by the dataset.
+
+    """
+
+    def __init__(self, package=''):
+        super().__init__(package=package)
+        self.plot = plotting.SinglePlotRecord()

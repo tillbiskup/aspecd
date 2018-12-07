@@ -572,6 +572,11 @@ class PlotRecord:
     by instantiating a PlotRecord object providing a plotter object,
     or by calling :meth:`from_plotter` on a PlotRecord object.
 
+    Subclasses for :obj:`aspecd.plotting.SinglePlotter` and
+    :obj:`aspecd.plotting.MultiPlotter` objects are available, namely
+    :class:`aspecd.plotting.SinglePlotRecord` and
+    :class:`aspecd.plotting.MultiPlotRecord`.
+
     Attributes
     ----------
     name : `str`
