@@ -656,7 +656,7 @@ class SinglePlotRecord(PlotRecord):
     """
 
     def __init__(self, plotter=None):
-        self.processing_steps = list()
+        self.preprocessing = list()
         super().__init__(plotter=plotter)
 
 

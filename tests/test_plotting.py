@@ -311,8 +311,8 @@ class TestSinglePlotRecord(unittest.TestCase):
     def test_instantiate_class(self):
         pass
 
-    def test_has_processing_steps_property(self):
-        self.assertTrue(hasattr(self.plot_record, 'processing_steps'))
+    def test_has_preprocessing_property(self):
+        self.assertTrue(hasattr(self.plot_record, 'preprocessing'))
 
 
 class TestMultiPlotRecord(unittest.TestCase):
