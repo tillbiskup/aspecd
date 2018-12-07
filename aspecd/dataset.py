@@ -222,6 +222,16 @@ class Dataset:
         current tip of the history of the dataset. In this case, an error is
         raised.
 
+        .. todo::
+            If processing_step is undoable, set _origdata to data.
+            The only true undoable processing steps I can currently think of
+            are those that add several datasets together. Changing _origdata
+            here prevents the need of exposing _origdata in any way.
+            In such case, all previous plots stored in the (to be implemented)
+            list of representations need to be removed, or at least the user
+            should be notified on that, as these plots cannot be reproduced
+            due to a change in _origdata.
+
         Parameters
         ----------
         processing_step : :obj:`aspecd.processing.ProcessingStep`

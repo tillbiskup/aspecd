@@ -282,7 +282,7 @@ class ProcessingStepRecord:
         self.class_name = processing_step.name
 
     def create_processing_step(self):
-        """Return a processing step object.
+        """Create a processing step object from the parameters stored.
 
         Returns
         -------
