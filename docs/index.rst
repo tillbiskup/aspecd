@@ -73,3 +73,11 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+
+
+A note on the logo
+------------------
+
+The snake (obviously a python, look at how it's holding the magnifying glass) is well familiar with the scientific method and illustrates the basic idea of the ASpecD framework: reproducible data analysis. The copyright of the logo belongs to J. Popp.
+
