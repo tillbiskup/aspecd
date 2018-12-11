@@ -21,6 +21,10 @@ Make sure to install your package in an editable fashion, using the ``-e`` switc
 With this, you should be ready to start developing your application.
 
 
+.. note::
+    Before starting to write your own classes, make sure that you have obtained a decent understanding of the role and interactions of each of the different classes in the ASpecD framework. Many aspects rely on "convention over configuration", and therefore, it is crucial to understand and follow these conventions, as detailed in the :doc:`API documentation <api/index>`. The ultimate goal of a good object-oriented design is a set of coherent and loosely-coupled classes and units that allow to easily extend and modify a program in response to new requirements. Whereas far from perfect, the ASpecD framework tries to follow these guidelines as set out in the respective literature.
+
+
 Datasets
 ========
 
@@ -53,7 +57,7 @@ To actually be able to work on (numeric) data and to store them together with th
         def _import(self):
             # And here goes your code actually importing the data and metadata
 
-Of course, you have to add appropriate code to the non-public function ``_import`` of the importer class you just created. And if you have more than one type of raw data, make sure to give your classes better names than just "Importer". Even if you start with one type of raw data, naming the importer class closer to the actual file format is always helpful. This prevents you from having to change your depending code later on.
+Of course, you need to add appropriate code to the non-public function ``_import`` of the importer class you just created. And if you have more than one type of raw data, make sure to give your classes better names than just "Importer". Even if you start with one type of raw data, naming the importer class closer to the actual file format is always helpful. This prevents you from having to change your depending code later on.
 
 The importer should make sure not only to import the numeric data appropriately into the dataset object (they go into its ``data.data`` attribute), but to also create appropriate axes and to read the metadata accompanying the (raw) data. For the necessary structures within the dataset's ``metadata`` attribute and how to eventually fill the metadata into this hierachy of objects, see the `metadata`_ section.
 
