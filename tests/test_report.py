@@ -162,6 +162,14 @@ class TestLaTeXReporter(unittest.TestCase):
     def test_instantiate_class(self):
         pass
 
+    def test_instantiate_with_template_sets_template(self):
+        report_ = report.LaTeXReporter(template=self.template)
+        self.assertEqual(self.template, report_.template)
+
+    def test_instantiate_with_filename_sets_filename(self):
+        report_ = report.LaTeXReporter(filename=self.filename)
+        self.assertEqual(self.filename, report_.filename)
+
     def test_environment_is_latex_environment(self):
         self.assertTrue(isinstance(self.report.environment,
                                    report.LaTeXEnvironment))

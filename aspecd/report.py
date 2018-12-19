@@ -105,6 +105,9 @@ class Reporter:
     template : `str`
         Path to template file used to generate report.
 
+    filename : `str`
+        Path to the output file the report should be rendered to.
+
     Raises
     ------
     FileNotFoundError
@@ -201,7 +204,8 @@ class LaTeXReporter(Reporter):
 
         template = "template.tex"
         filename = "report.tex"
-        report_ = aspecd.report.Reporter(template=template, filename=filename)
+        report_ = aspecd.report.LaTeXReporter(template=template,
+                                              filename=filename)
         report_.create()
         report_.compile()
 
@@ -234,6 +238,14 @@ class LaTeXReporter(Reporter):
 
         Defaults to "pdflatex"
 
+    Parameters
+    ----------
+    template : `str`
+        Path to template file used to generate report.
+
+    filename : `str`
+        Path to the output file the report should be rendered to.
+
     Raises
     ------
     LaTeXExecutableNotFoundError
@@ -241,8 +253,8 @@ class LaTeXReporter(Reporter):
 
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, template='', filename=''):
+        super().__init__(template=template, filename=filename)
         self.environment = LaTeXEnvironment()
         self.includes = list()
         self.latex_executable = 'pdflatex'
