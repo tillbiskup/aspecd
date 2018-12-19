@@ -257,7 +257,7 @@ class Dataset:
         history_record = \
             self._create_processing_history_record(processing_step)
         self._append_processing_history_record(history_record)
-        if processing_step.undoable:
+        if not processing_step.undoable:
             self._origdata = copy.deepcopy(self.data)
             self.representations = []
         return processing_step

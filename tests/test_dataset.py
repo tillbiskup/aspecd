@@ -107,21 +107,21 @@ class TestDatasetProcessing(unittest.TestCase):
 
     def test_undoable_processing_step_does_not_touch_origdata(self):
         processing_step = processing.ProcessingStep()
-        processing_step.undoable = False
+        processing_step.undoable = True
         old_origdata = self.dataset._origdata
         self.dataset.process(processing_step)
         self.assertIs(self.dataset._origdata, old_origdata)
 
     def test_not_undoable_processing_step_resets_origdata(self):
         processing_step = processing.ProcessingStep()
-        processing_step.undoable = True
+        processing_step.undoable = False
         old_origdata = self.dataset._origdata
         self.dataset.process(processing_step)
         self.assertIsNot(self.dataset._origdata, old_origdata)
 
     def test_not_undoable_processing_step_empties_representations(self):
         processing_step = processing.ProcessingStep()
-        processing_step.undoable = True
+        processing_step.undoable = False
         self.dataset.process(processing_step)
         self.assertEqual(self.dataset.representations, [])
 
