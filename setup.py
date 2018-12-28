@@ -46,6 +46,7 @@ setuptools.setup(
         'jinja2',
         'matplotlib',
         'numpy',
+        'oyaml',
     ],
     extras_require={
         'dev': ['prospector'],

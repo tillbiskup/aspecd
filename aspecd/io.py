@@ -26,6 +26,10 @@ contained in a dataset object using an exporter object, respectively.
 
 """
 
+import collections
+
+import oyaml as yaml
+
 
 class Error(Exception):
     """Base class for exceptions in this module."""
@@ -35,6 +39,21 @@ class Error(Exception):
 
 class MissingDatasetError(Error):
     """Exception raised when no dataset exists to act on.
+
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
+class MissingFilenameError(Error):
+    """Exception raised when expecting a filename but none is provided
 
     Attributes
     ----------
@@ -222,3 +241,66 @@ class Exporter:
 
         """
         pass
+
+
+class Yaml:
+    """
+    Handle reading from and writing to YAML files.
+
+    YAML file contents are read into an ordered dict, making use of the
+    oyaml package. This preserves the order of the entries of any dict.
+
+    Attributes
+    ----------
+    dict : :class:`collections.OrderedDict`
+        Contents read from/written to a YAML file
+
+    Raises
+    ------
+    MissingFilenameError
+        Raised if no filename is given to read from/write to
+
+    """
+
+    def __init__(self):
+        self.dict = collections.OrderedDict()
+
+    def read_from(self, filename=''):
+        """
+        Read from YAML file.
+
+        Parameters
+        ----------
+        filename : `str`
+            Name of the YAML file to read from.
+
+        Raises
+        ------
+        MissingFilenameError
+            Raised if no filename is given to read from.
+
+        """
+        if not filename:
+            raise MissingFilenameError
+        with open(filename, 'r') as file:
+            self.dict = yaml.load(file)
+
+    def write_to(self, filename=''):
+        """
+        Write to YAML file.
+
+        Parameters
+        ----------
+        filename : `str`
+            Name of the YAML file to write to.
+
+        Raises
+        ------
+        MissingFilenameError
+            Raised if no filename is given to write to.
+
+        """
+        if not filename:
+            raise MissingFilenameError
+        with open(filename, 'w') as file:
+            yaml.dump(self.dict, file)
