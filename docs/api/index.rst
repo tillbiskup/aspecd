@@ -22,6 +22,7 @@ An alphabetic list of the submodules available within the ASpecD framework. The 
    aspecd.processing
    aspecd.report
    aspecd.system
+   aspecd.tasks
    aspecd.utils
 
 Module contents
