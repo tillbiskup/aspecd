@@ -71,7 +71,12 @@ class PhysicalQuantity(aspecd.utils.ToDictMixin):
     See, e.g., the "IUPAC Green Book" for further details.
 
     To get a string representation of a physical quantity, i.e., its value
-    and unit separated by a single space, simply use :func:`str()`
+    and unit separated by a single space, simply use :meth:`str()`.
+
+    To set value (and unit) from a string, either use :meth:`from_string` or
+    supply the string as argument while instantiating the object. Make sure
+    the value part of the string to be convertible to float. Otherwise,
+    a :class:`ValueError` will be raised.
 
     Attributes
     ----------
