@@ -59,6 +59,14 @@ class TestRecipe(unittest.TestCase):
         self.recipe.read_from(self.filename)
         self.assertEqual(self.recipe.datasets, datasets)
 
+    def test_read_from_yaml_file_with_tasks_sets_tasks(self):
+        tasks_ = ['foo', 'bar']
+        yaml_contents = {'tasks': tasks_}
+        with open(self.filename, 'w') as file:
+            io.yaml.dump(yaml_contents, file)
+        self.recipe.read_from(self.filename)
+        self.assertEqual(self.recipe.tasks, tasks_)
+
 
 class TestChef(unittest.TestCase):
     def setUp(self):
@@ -87,3 +95,51 @@ class TestChef(unittest.TestCase):
     def test_cook_without_recipe_raises(self):
         with self.assertRaises(tasks.MissingRecipeError):
             self.chef.cook()
+
+
+class TestTask(unittest.TestCase):
+    def setUp(self):
+        self.task = tasks.Task()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_kind_property(self):
+        self.assertTrue(hasattr(self.task, 'kind'))
+
+    def test_has_type_property(self):
+        self.assertTrue(hasattr(self.task, 'type'))
+
+    def test_has_metadata_property(self):
+        self.assertTrue(hasattr(self.task, 'metadata'))
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.task, 'to_dict'))
+        self.assertTrue(callable(self.task.to_dict))
+
+    def test_has_from_dict_method(self):
+        self.assertTrue(hasattr(self.task, 'from_dict'))
+        self.assertTrue(callable(self.task.from_dict))
+
+    def test_from_dict_without_dict_raises(self):
+        with self.assertRaises(tasks.MissingDictError):
+            self.task.from_dict()
+
+    def test_from_dict_sets_kind(self):
+        kind = 'foo'
+        dict_ = {'kind': kind}
+        self.task.from_dict(dict_)
+        self.assertEqual(kind, self.task.kind)
+
+    def test_from_dict_sets_type(self):
+        type_ = 'foo'
+        dict_ = {'type': type_}
+        self.task.from_dict(dict_)
+        self.assertEqual(type_, self.task.type)
+
+    def test_from_dict_does_not_set_unknown_attribute(self):
+        attribute = 'foo'
+        dict_ = dict()
+        dict_[attribute] = 'foo'
+        self.task.from_dict(dict_)
+        self.assertFalse(hasattr(self.task, attribute))
