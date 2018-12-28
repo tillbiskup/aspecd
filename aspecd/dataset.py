@@ -361,12 +361,18 @@ class Dataset:
         analysis_step : :obj:`aspecd.analysis.AnalysisStep`
             analysis step to apply to the dataset
 
+        Returns
+        -------
+        analysis_step : :obj:`aspecd.analysis.AnalysisStep`
+            analysis step applied to the dataset
+
         """
         # Important: Need a copy, not the reference to the original object
         analysis_step = copy.deepcopy(analysis_step)
         history_record = self._create_analysis_history_record(analysis_step)
         analysis_step.analyse(self)
         self.analyses.append(history_record)
+        return analysis_step
 
     def analyze(self, analysis_step=None):
         """Apply analysis to dataset.
@@ -375,7 +381,8 @@ class Dataset:
         over BE.
 
         """
-        self.analyse(analysis_step)
+        analysis_step = self.analyse(analysis_step)
+        return analysis_step
 
     def _create_analysis_history_record(self, analysis_step):
         history_record = AnalysisHistoryRecord(package=self._package_name)

@@ -284,6 +284,14 @@ class TestDatasetAnalysis(unittest.TestCase):
         self.assertNotEqual(self.dataset.history,
                             analysis_.analysis.preprocessing)
 
+    def test_analyse_returns_analysis_object(self):
+        analysis_step = self.dataset.analyse(self.analysis_step)
+        self.assertTrue(isinstance(analysis_step, analysis.AnalysisStep))
+
+    def test_analyze_returns_analysis_object(self):
+        analysis_step = self.dataset.analyze(self.analysis_step)
+        self.assertTrue(isinstance(analysis_step, analysis.AnalysisStep))
+
     def test_has_delete_analysis_method(self):
         self.assertTrue(hasattr(self.dataset, 'delete_analysis'))
         self.assertTrue(callable(self.dataset.delete_analysis))
