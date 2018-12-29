@@ -70,8 +70,8 @@ class MissingFilenameError(Error):
 class Importer:
     """Base class for importer.
 
-    Each class actually importing data into a dataset should inherit from this
-    class.
+    Each class actually importing data and metadata into a dataset should
+    inherit from this class.
 
     To perform the import, call the
     :meth:`~aspecd.dataset.Dataset.import_from` method of the dataset
@@ -82,6 +82,16 @@ class Importer:
     :meth:`_import` that in turn gets called by :meth:`import_into`
     which is called by the :meth:`aspecd.dataset.Dataset.import_from` method
     of the dataset object.
+
+    One question arising when actually implementing an importer for a
+    specific file format: How do the data get into the dataset? The simple
+    answer: The :meth:`_import` method of the importer knows about the
+    dataset and its structure (see :class:`aspecd.dataset.Dataset` for
+    details) and assigns data (and metadata) read from an external source
+    to the respective fields of the dataset. In terms of a broader software
+    architecture point of view: The dataset knows nothing about the
+    importer besides its bare existence and interface, whereas the importer
+    knows about the dataset and how to map data and metadata.
 
     Attributes
     ----------
@@ -104,16 +114,16 @@ class Importer:
     def import_into(self, dataset=None):
         """Perform the actual import into the given dataset.
 
-        If no dataset is provided at method call, but is set as property in the
-        Importer object, the :meth:`aspecd.dataset.Dataset.import_from` method
-        of the dataset will be called.
+        If no dataset is provided at method call, but is set as property in
+        the importer object, the :meth:`aspecd.dataset.Dataset.import_from`
+        method of the dataset will be called.
 
-        If no dataset is provided at method call nor as property in the object,
-        the method will raise a respective exception.
+        If no dataset is provided at method call nor as property in the
+        object, the method will raise a respective exception.
 
-        The Dataset object always calls this method with the respective dataset
-        as argument. Therefore, in this case setting the dataset property
-        within the Importer object is not necessary.
+        The dataset object always calls this method with the respective
+        dataset as argument. Therefore, in this case setting the dataset
+        property within the importer object is not necessary.
 
         The actual import should be implemented within the private method
         :meth:`_import`.
@@ -139,7 +149,7 @@ class Importer:
         self._import()
 
     def _import(self):
-        """Perform the actual import of the data and metadata into the dataset.
+        """Perform the actual import of data and metadata into the dataset.
 
         The implementation of the actual import goes in here in all
         classes inheriting from Importer. This method is automatically
@@ -194,16 +204,16 @@ class Exporter:
     def export_from(self, dataset=None):
         """Perform the actual export from the given dataset.
 
-        If no dataset is provided at method call, but is set as property in the
-        Exporter object, the :meth:`aspecd.dataset.Dataset.export_to` method
-        of the dataset will be called.
+        If no dataset is provided at method call, but is set as property in
+        the exporter object, the :meth:`aspecd.dataset.Dataset.export_to`
+        method of the dataset will be called.
 
-        If no dataset is provided at method call nor as property in the object,
-        the method will raise a respective exception.
+        If no dataset is provided at method call nor as property in the
+        object, the method will raise a respective exception.
 
-        The Dataset object always calls this method with the respective dataset
-        as argument. Therefore, in this case setting the dataset property
-        within the Exporter object is not necessary.
+        The dataset object always calls this method with the respective
+        dataset as argument. Therefore, in this case setting the dataset
+        property within the exporter object is not necessary.
 
         The actual export should be implemented within the private method
         :meth:`_export`.
@@ -229,7 +239,7 @@ class Exporter:
         self._export()
 
     def _export(self):
-        """Perform the actual export of the data and metadata from the dataset.
+        """Perform the actual export of data and metadata from the dataset.
 
         The implementation of the actual export goes in here in all
         classes inheriting from Exporter. This method is automatically
