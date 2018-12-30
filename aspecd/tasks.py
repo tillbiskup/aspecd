@@ -211,9 +211,9 @@ class Task(aspecd.utils.ToDictMixin):
 
     def __init__(self):
         super().__init__()
-        self.kind = None
-        self.type = None
-        self.metadata = None
+        self.kind = ''
+        self.type = ''
+        self.metadata = dict()
 
     def from_dict(self, dict_=None):
         """
@@ -235,3 +235,63 @@ class Task(aspecd.utils.ToDictMixin):
         for key in dict_:
             if hasattr(self, key):
                 setattr(self, key, dict_[key])
+
+    def get_object(self):
+        """
+        Return object for a particular task including all attributes.
+
+        Returns
+        -------
+        obj : `object`
+            Object of a class defined in the :attr:`type` attribute of a task
+
+        """
+        obj = self._create_object()
+        self._set_object_attributes(obj)
+        return obj
+
+    def _create_object(self):
+        """
+        Create object for a particular task.
+
+        To create the object, the current package is prepended to kind and
+        type stored in :attr:`kind' and :attr:`type`, respectively.
+
+        .. todo::
+            Think about whether preprending the current package gets
+            problematic and if so, how to cope with it.
+
+        Returns
+        -------
+        obj : `object`
+            Object of a class defined in the :attr:`type` attribute of a task
+
+        """
+        class_name = '.'.join([aspecd.utils.package_name(self),
+                               self.kind,
+                               self.type])
+        obj = aspecd.utils.object_from_class_name(class_name)
+        return obj
+
+    def _set_object_attributes(self, obj):
+        """
+        Set attributes in object from the keys of the :attr:`metadata` dict.
+
+        Only those keys that have a matching attribute in the object are
+        actually mapped, all others silently ignored.
+
+        .. todo::
+            Eventually, with the advent of logging in the ASpecD framework,
+            it might be sensible to at least add a log message if a key
+            gets ignored, such that it is no longer silently ignored. This
+            might be helpful for debugging purposes.
+
+        Parameters
+        ----------
+        obj : `object`
+            Object of a class defined in the :attr:`type` attribute of a task
+
+        """
+        for key in self.metadata:
+            if hasattr(obj, key):
+                setattr(obj, key, self.metadata[key])

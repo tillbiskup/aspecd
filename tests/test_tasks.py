@@ -3,7 +3,7 @@
 import os
 import unittest
 
-from aspecd import io, tasks
+from aspecd import io, processing, tasks
 
 
 class TestRecipe(unittest.TestCase):
@@ -143,3 +143,31 @@ class TestTask(unittest.TestCase):
         dict_[attribute] = 'foo'
         self.task.from_dict(dict_)
         self.assertFalse(hasattr(self.task, attribute))
+
+    def test_get_task_returns_correct_object(self):
+        kind = 'processing'
+        type_ = 'ProcessingStep'
+        self.task.kind = kind
+        self.task.type = type_
+        obj = self.task.get_object()
+        self.assertTrue(isinstance(obj, processing.ProcessingStep))
+
+    def test_get_task_sets_object_attributes(self):
+        kind = 'processing'
+        type_ = 'ProcessingStep'
+        metadata = {'parameters': {'foo': 'bar'}}
+        self.task.kind = kind
+        self.task.type = type_
+        self.task.metadata = metadata
+        obj = self.task.get_object()
+        self.assertEqual(metadata['parameters'], getattr(obj, 'parameters'))
+
+    def test_get_task_sets_only_existing_object_attributes(self):
+        kind = 'processing'
+        type_ = 'ProcessingStep'
+        metadata = {'foo': {'foo': 'bar'}}
+        self.task.kind = kind
+        self.task.type = type_
+        self.task.metadata = metadata
+        obj = self.task.get_object()
+        self.assertFalse(hasattr(obj, 'foo'))
