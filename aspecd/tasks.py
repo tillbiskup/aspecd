@@ -94,7 +94,32 @@ class Recipe(aspecd.utils.ToDictMixin):
     def __init__(self):
         super().__init__()
         self.datasets = []
-        self.tasks = []
+        self.tasks = list()
+
+    def from_dict(self, dict_=None):
+        """
+        Set attributes from dictionary.
+
+        Parameters
+        ----------
+        dict_ : `dict`
+            Dictionary containing information of a recipe.
+
+        Raises
+        ------
+        MissingDictError
+            Raised if no dict is provided.
+
+        """
+        if not dict_:
+            raise MissingDictError
+        if 'datasets' in dict_:
+            self.datasets = dict_['datasets']
+        if 'tasks' in dict_:
+            for key in dict_['tasks']:
+                task = Task()
+                task.from_dict(key)
+                self.tasks.append(task)
 
     def read_from(self, filename=''):
         """
@@ -115,10 +140,7 @@ class Recipe(aspecd.utils.ToDictMixin):
             raise MissingFilenameError
         yaml = aspecd.io.Yaml()
         yaml.read_from(filename=filename)
-        if 'datasets' in yaml.dict:
-            self.datasets = yaml.dict['datasets']
-        if 'tasks' in yaml.dict:
-            self.tasks = yaml.dict['tasks']
+        self.from_dict(yaml.dict)
 
     def write_to(self, filename=''):
         """
@@ -165,10 +187,22 @@ class Chef:
         """
         Cook recipe, i.e. carry out tasks contained therein.
 
+        A recipe is an object of class :class:`aspecd.tasks.Recipe` and
+        contains both, a list of datasets and a list of tasks to be
+        performed on these datasets.
+
+        .. todo::
+            How does the chef know which importer to use for a particular
+            dataset? The most simple option---to add this information to a
+            recipe---is not necessarily the best, at least not in a long run.
+            How about implementing the LOI system together with a file named
+            "Manifest.yaml" or similar containing the information necessary
+            to decide about the importer (i.e., the file format)?
+
         Parameters
         ----------
         recipe : :class:`aspecd.tasks.Recipe`
-            Recipe to cook, i.e. to carry out
+            Recipe to cook, i.e. tasks to carry out on particular datasets
 
         Raises
         ------
@@ -201,6 +235,18 @@ class Task(aspecd.utils.ToDictMixin):
 
         Should have keys corresponding to the properties of the class given
         as type attribute.
+    apply_to : `list`
+        List of datasets the task should be applied to.
+
+        Defaults to an empty list, meaning that the task will be performed
+        for all datasets contained in a :class:`aspecd.tasks.Recipe`.
+
+        .. todo::
+            What kind of information should be stored in this list? Numbers
+            corresponding to the indices in the datasets list in a recipe?
+            Or better LOIs that can be compared to the list of datasets?
+            The latter seems more robust, as changes in the order of
+            datasets do not affect the information.
 
     Raises
     ------
@@ -214,6 +260,7 @@ class Task(aspecd.utils.ToDictMixin):
         self.kind = ''
         self.type = ''
         self.metadata = dict()
+        self.apply_to = []
 
     def from_dict(self, dict_=None):
         """
@@ -259,7 +306,12 @@ class Task(aspecd.utils.ToDictMixin):
 
         .. todo::
             Think about whether preprending the current package gets
-            problematic and if so, how to cope with it.
+            problematic and if so, how to cope with it. If another package
+            than the current one is necessary, this information needs to be
+            stored in the persisted recipe (i.e., usually a YAML file),
+            either in an additional field or as a prefix to the kind
+            attribute. In any case, using a try...except clause might be an
+            option.
 
         Returns
         -------

@@ -59,13 +59,32 @@ class TestRecipe(unittest.TestCase):
         self.recipe.read_from(self.filename)
         self.assertEqual(self.recipe.datasets, datasets)
 
-    def test_read_from_yaml_file_with_tasks_sets_tasks(self):
-        tasks_ = ['foo', 'bar']
-        yaml_contents = {'tasks': tasks_}
+    def test_read_from_yaml_file_with_task_sets_task(self):
+        task = {'kind': 'processing', 'type': 'ProcessingStep'}
+        yaml_contents = {'tasks': [task]}
         with open(self.filename, 'w') as file:
             io.yaml.dump(yaml_contents, file)
         self.recipe.read_from(self.filename)
-        self.assertEqual(self.recipe.tasks, tasks_)
+        for key in task:
+            self.assertEqual(getattr(self.recipe.tasks[0], key), task[key])
+
+    def test_from_dict_without_dict_raises(self):
+        with self.assertRaises(tasks.MissingDictError):
+            self.recipe.from_dict()
+
+    def test_from_dict_with_datasets_sets_datasets(self):
+        datasets = ['foo', 'bar']
+        dict_ = {'datasets': datasets}
+        self.recipe.from_dict(dict_)
+        self.assertEqual(datasets, self.recipe.datasets)
+
+    def test_from_dict_with_task_adds_task(self):
+        task = {'kind': 'processing', 'type': 'ProcessingStep'}
+        dict_ = {'tasks': [task]}
+        self.recipe.from_dict(dict_)
+        self.assertTrue(isinstance(self.recipe.tasks[0], tasks.Task))
+        for key in task:
+            self.assertEqual(getattr(self.recipe.tasks[0], key), task[key])
 
 
 class TestChef(unittest.TestCase):
@@ -112,6 +131,12 @@ class TestTask(unittest.TestCase):
 
     def test_has_metadata_property(self):
         self.assertTrue(hasattr(self.task, 'metadata'))
+
+    def test_has_apply_to_property(self):
+        self.assertTrue(hasattr(self.task, 'apply_to'))
+
+    def test_apply_to_is_empty(self):
+        self.assertEqual(0, len(self.task.apply_to))
 
     def test_has_to_dict_method(self):
         self.assertTrue(hasattr(self.task, 'to_dict'))
