@@ -77,12 +77,46 @@ class Recipe(aspecd.utils.ToDictMixin):
     recipe can be written back into a YAML file using the :meth:`write_to`
     method.
 
+    .. todo::
+        Need to implement own :meth:`to_dict` method, as the recipe does
+        not store LOIs, paths, or similar as datasets, but dataset objects,
+        whereas the recipe file as such that is visible to the user
+        contains only LOIs/paths.
+
+    .. todo::
+        Rename :meth:`read_from` and :meth:`write_to` in
+        :meth:`import_from` and :meth:`export_to` and create
+        importer/exporter base classes in :mod:`aspecd.io` module.
+
+    .. todo::
+        Can recipes have LOIs themselves and therefore be retrieved from
+        the extended data safe? Might be a sensible option, although
+        generic LOIs are much harder to create than LOIs for datasets and
+        alike.
+
     Attributes
     ----------
     datasets : `list`
         List of datasets the tasks should be performed for
+
+        Each dataset is an object of class :class:`aspecd.dataset.Dataset`.
+
+        .. todo::
+            How does the recipe know which importer to use for a particular
+            dataset? The most simple option---to add this information to a
+            recipe---is not necessarily the best, at least not in a long run.
+            How about implementing the LOI system and data safe together
+            with a file named "Manifest.yaml" or similar containing the
+            information necessary to decide about the importer (i.e.,
+            the file format)?
+
+            At the same time, loading/importing could be delegated to a
+            dispatcher taking care of choosing the correct importer. In any
+            case, for the recipe-driven data analysis, this can be mocked.
     tasks : `list`
         List of tasks to be performed on the datasets
+
+        Each task is an object of class :class:`aspecd.tasks.Task`.
 
     Raises
     ------
@@ -99,6 +133,9 @@ class Recipe(aspecd.utils.ToDictMixin):
     def from_dict(self, dict_=None):
         """
         Set attributes from dictionary.
+
+        Loads datasets and creates :obj:`aspecd.tasks.Task` objects that
+        are stored as lists respectively.
 
         Parameters
         ----------
@@ -168,7 +205,24 @@ class Chef:
     """
     Chefs cook recipes in recipe-driven data analysis.
 
+    As a result, they create some kind of history of the tasks performed.
+    In this respect, they make the history independent of a singe dataset
+    and allow to trace processing and analysis of multiple datasets. One
+    necessary prerequisite is therefore the LOI as a persistent and
+    unique identifier for each dataset.
+
+    .. todo::
+        Decide about the way this kind of history gets stored and
+        persisted. One reasonable idea might be to persist it in a form
+        that can be used as a recipe again. The file format for persistence
+        will most probably be YAML for the time being.
+
     Parameters
+    ----------
+    recipe : :class:`aspecd.tasks.Recipe`
+        Recipe to cook, i.e. to carry out
+
+    Attributes
     ----------
     recipe : :class:`aspecd.tasks.Recipe`
         Recipe to cook, i.e. to carry out
@@ -190,14 +244,6 @@ class Chef:
         A recipe is an object of class :class:`aspecd.tasks.Recipe` and
         contains both, a list of datasets and a list of tasks to be
         performed on these datasets.
-
-        .. todo::
-            How does the chef know which importer to use for a particular
-            dataset? The most simple option---to add this information to a
-            recipe---is not necessarily the best, at least not in a long run.
-            How about implementing the LOI system together with a file named
-            "Manifest.yaml" or similar containing the information necessary
-            to decide about the importer (i.e., the file format)?
 
         Parameters
         ----------
