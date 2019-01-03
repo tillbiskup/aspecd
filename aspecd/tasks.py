@@ -81,16 +81,29 @@ class MissingImporterFactoryError(Error):
         self.message = message
 
 
-class Recipe():
+class Recipe:
     """
     Recipes get cooked by chefs in recipe-driven data analysis.
 
     A recipe contains a list of tasks to be performed on a list of
-    datasets. From a user's perspective, recipes "live" usually in YAML
+    datasets. From a user's perspective, recipes reside usually in YAML
     files from where they are read into a :obj:`aspecd.tasks.Recipe` object
     using its respective :meth:`read_from` method. Similarly, a given
     recipe can be written back into a YAML file using the :meth:`write_to`
     method.
+
+    In contrast to the persistent form of a recipe (e.g., as file on the
+    file system), the object contains actual datasets and tasks that are
+    objects of the respective classes. Therefore, the attributes of a
+    recipe are normally set by the respective methods from either a file or
+    a dictionary (that in turn will normally be created from contents of a
+    file).
+
+    Importing datasets is delegated to an
+    :class:`aspecd.io.DatasetImporterFactory` instance stored in
+    :attr:`importer_factory`. This provides a maximum of flexibility but
+    makes it necessary to specify (and first implement) such factory in
+    packages derived from the ASpecD framework.
 
     .. todo::
         Rename :meth:`read_from` and :meth:`write_to` in
@@ -113,8 +126,11 @@ class Recipe():
         List of tasks to be performed on the datasets
 
         Each task is an object of class :class:`aspecd.tasks.Task`.
-    importer_factory : :class:`aspecd.io.ImporterFactory`
+    importer_factory : :class:`aspecd.io.DatasetImporterFactory`
         Factory for importers used to import datasets
+
+        If no factory is set, but a recipe imported from a file or set from
+        a dictionary, an exception will be raised.
 
     Raises
     ------
@@ -209,7 +225,7 @@ class Recipe():
         """
         if not filename:
             raise MissingFilenameError
-        yaml = aspecd.io.Yaml()
+        yaml = aspecd.utils.Yaml()
         yaml.read_from(filename=filename)
         self.from_dict(yaml.dict)
 
@@ -230,7 +246,7 @@ class Recipe():
         """
         if not filename:
             raise MissingFilenameError
-        yaml = aspecd.io.Yaml()
+        yaml = aspecd.utils.Yaml()
         yaml.dict = self.to_dict()
         yaml.write_to(filename=filename)
 
@@ -321,12 +337,9 @@ class Task(aspecd.utils.ToDictMixin):
         Defaults to an empty list, meaning that the task will be performed
         for all datasets contained in a :class:`aspecd.tasks.Recipe`.
 
-        .. todo::
-            What kind of information should be stored in this list? Numbers
-            corresponding to the indices in the datasets list in a recipe?
-            Or better LOIs that can be compared to the list of datasets?
-            The latter seems more robust, as changes in the order of
-            datasets do not affect the information.
+        Each dataset is referred to by the value of its
+        :attr:`aspecd.dataset.Dataset.source` attribute. This should be
+        unique and can consist of a filename, path, URL/URI, LOI, or alike.
 
     Raises
     ------

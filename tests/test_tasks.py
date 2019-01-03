@@ -3,7 +3,7 @@
 import os
 import unittest
 
-from aspecd import dataset, io, processing, tasks
+from aspecd import dataset, io, processing, tasks, utils
 
 
 class TestRecipe(unittest.TestCase):
@@ -13,7 +13,7 @@ class TestRecipe(unittest.TestCase):
         self.dataset = 'foo'
         self.datasets = ['foo', 'bar']
         self.task = {'kind': 'processing', 'type': 'ProcessingStep'}
-        self.importer_factory = io.ImporterFactory()
+        self.importer_factory = io.DatasetImporterFactory()
 
     def tearDown(self):
         if os.path.exists(self.filename):
@@ -51,13 +51,13 @@ class TestRecipe(unittest.TestCase):
         self.recipe.write_to(self.filename)
         to_dict_contents = self.recipe.to_dict()
         with open(self.filename, 'r') as file:
-            contents = io.yaml.load(file)
+            contents = utils.yaml.load(file)
         self.assertEqual(to_dict_contents, contents)
 
     def test_read_from_yaml_file_with_datasets_sets_datasets(self):
         yaml_contents = {'datasets': self.datasets}
         with open(self.filename, 'w') as file:
-            io.yaml.dump(yaml_contents, file)
+            utils.yaml.dump(yaml_contents, file)
         self.recipe.importer_factory = self.importer_factory
         self.recipe.read_from(self.filename)
         for dataset_ in self.recipe.datasets:
@@ -66,7 +66,7 @@ class TestRecipe(unittest.TestCase):
     def test_read_from_yaml_file_with_task_sets_task(self):
         yaml_contents = {'tasks': [self.task]}
         with open(self.filename, 'w') as file:
-            io.yaml.dump(yaml_contents, file)
+            utils.yaml.dump(yaml_contents, file)
         self.recipe.importer_factory = self.importer_factory
         self.recipe.read_from(self.filename)
         for key in self.task:

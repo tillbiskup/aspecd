@@ -135,7 +135,7 @@ class MissingPlotterError(Error):
 
 
 class MissingImporterError(Error):
-    """Exception raised importing without :class:`aspecd.io.Importer`
+    """Exception raised importing without :class:`aspecd.io.DatasetImporter`
 
     Attributes
     ----------
@@ -150,7 +150,7 @@ class MissingImporterError(Error):
 
 
 class MissingExporterError(Error):
-    """Exception raised importing without :class:`aspecd.io.Exporter`
+    """Exception raised importing without :class:`aspecd.io.DatasetExporter`
 
     Attributes
     ----------
@@ -529,7 +529,7 @@ class Dataset:
 
         Parameters
         ----------
-        importer : :class:`aspecd.io.Importer`
+        importer : :class:`aspecd.io.DatasetImporter`
             Importer containing data and metadata read from some source
 
         """
@@ -541,7 +541,7 @@ class Dataset:
     def export_to(self, exporter=None):
         """Export data and metadata.
 
-        This requires initialising an :obj:`aspecd.io.Importer` object
+        This requires initialising an :obj:`aspecd.io.DatasetImporter` object
         first that is provided as an argument for this method.
 
         .. note::
@@ -556,7 +556,7 @@ class Dataset:
 
         Parameters
         ----------
-        exporter : :class:`aspecd.io.Exporter`
+        exporter : :class:`aspecd.io.DatasetExporter`
             Exporter writing data and metadata to specific output format
 
         """

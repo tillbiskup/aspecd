@@ -2,9 +2,9 @@
 
 Currently, two generic classes are provided:
 
-* :class:`aspecd.io.Importer`
+* :class:`aspecd.io.DatasetImporter`
 
-* :class:`aspecd.io.Exporter`
+* :class:`aspecd.io.DatasetExporter`
 
 As the name says, these classes should be used to implement import and
 export functionality for your own purposes in applications derived from the
@@ -18,17 +18,13 @@ exporter, and afterwards only operating on the dataset using its methods.
 In its most generic form, this may look something like::
 
     dataset = aspecd.dataset.Dataset()
-    importer = aspecd.io.Importer(source="/path/to/your/data")
+    importer = aspecd.io.DatasetImporter(source="/path/to/your/data")
     dataset.import_from(importer)
 
 Similarly, you would handle the export of your data (and metadata)
 contained in a dataset object using an exporter object, respectively.
 
 """
-
-import collections
-
-import oyaml as yaml
 
 
 class Error(Exception):
@@ -82,7 +78,7 @@ class MissingSourceError(Error):
         self.message = message
 
 
-class Importer:
+class DatasetImporter:
     """Base class for importer.
 
     Each class actually importing data and metadata into a dataset should
@@ -168,7 +164,7 @@ class Importer:
         """Perform the actual import of data and metadata into the dataset.
 
         The implementation of the actual import goes in here in all
-        classes inheriting from Importer. This method is automatically
+        classes inheriting from DatasetImporter. This method is automatically
         called by :meth:`import_into`.
 
         Importing data and metadata includes assigning both to the respective
@@ -183,7 +179,7 @@ class Importer:
         pass
 
 
-class ImporterFactory:
+class DatasetImporterFactory:
     """
     Factory for creating importer objects based on the source provided.
 
@@ -200,6 +196,16 @@ class ImporterFactory:
     The actual code for deciding which type of importer to return in what
     case should be implemented in the non-public method :meth:`_get_importer`
     in any package based on the ASpecD framework.
+
+    In its most basic implementation, as done here, the non-public method
+    :meth:`_get_importer` simply returns the standard importer::
+
+        def _get_importer(self, source):
+            return DatasetImporter(source=source)
+
+    This might be a viable way for an own :class:`DatasetImporterFactory`
+    implementation in the rare case of having only one single type of data,
+    but provides a sensible starting point for own developments.
 
     Raises
     ------
@@ -225,7 +231,7 @@ class ImporterFactory:
 
         Returns
         -------
-        importer : :class:`aspecd.io.Importer`
+        importer : :class:`aspecd.io.DatasetImporter`
             importer object of appropriate class
 
         Raises
@@ -242,10 +248,10 @@ class ImporterFactory:
     # noinspection PyMethodMayBeStatic
     # pylint: disable=no-self-use
     def _get_importer(self, source):
-        return Importer(source=source)
+        return DatasetImporter(source=source)
 
 
-class Exporter:
+class DatasetExporter:
     """Base class for exporter.
 
     Each class actually exporting data from a dataset to some other should
@@ -320,7 +326,7 @@ class Exporter:
         """Perform the actual export of data and metadata from the dataset.
 
         The implementation of the actual export goes in here in all
-        classes inheriting from Exporter. This method is automatically
+        classes inheriting from DatasetExporter. This method is automatically
         called by :meth:`export_from`.
 
         Usually, this method will successively call other private/protected
@@ -329,66 +335,3 @@ class Exporter:
 
         """
         pass
-
-
-class Yaml:
-    """
-    Handle reading from and writing to YAML files.
-
-    YAML file contents are read into an ordered dict, making use of the
-    oyaml package. This preserves the order of the entries of any dict.
-
-    Attributes
-    ----------
-    dict : :class:`collections.OrderedDict`
-        Contents read from/written to a YAML file
-
-    Raises
-    ------
-    MissingFilenameError
-        Raised if no filename is given to read from/write to
-
-    """
-
-    def __init__(self):
-        self.dict = collections.OrderedDict()
-
-    def read_from(self, filename=''):
-        """
-        Read from YAML file.
-
-        Parameters
-        ----------
-        filename : `str`
-            Name of the YAML file to read from.
-
-        Raises
-        ------
-        MissingFilenameError
-            Raised if no filename is given to read from.
-
-        """
-        if not filename:
-            raise MissingFilenameError
-        with open(filename, 'r') as file:
-            self.dict = yaml.load(file)
-
-    def write_to(self, filename=''):
-        """
-        Write to YAML file.
-
-        Parameters
-        ----------
-        filename : `str`
-            Name of the YAML file to write to.
-
-        Raises
-        ------
-        MissingFilenameError
-            Raised if no filename is given to write to.
-
-        """
-        if not filename:
-            raise MissingFilenameError
-        with open(filename, 'w') as file:
-            yaml.dump(self.dict, file)

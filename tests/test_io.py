@@ -1,24 +1,20 @@
 """Tests for input and output (IO)."""
 
-import collections
-import os
 import unittest
-
-import oyaml as yaml
 
 from aspecd import io, dataset
 
 
 class TestImporter(unittest.TestCase):
     def setUp(self):
-        self.importer = io.Importer()
+        self.importer = io.DatasetImporter()
 
     def test_instantiate_class(self):
         pass
 
     def test_instantiate_with_source_sets_source(self):
         source = 'filename'
-        importer_ = io.Importer(source)
+        importer_ = io.DatasetImporter(source)
         self.assertEqual(importer_.source, source)
 
     def test_has_import_into_method(self):
@@ -43,14 +39,14 @@ class TestImporter(unittest.TestCase):
 
 class TestExporter(unittest.TestCase):
     def setUp(self):
-        self.exporter = io.Exporter()
+        self.exporter = io.DatasetExporter()
 
     def test_instantiate_class(self):
         pass
 
     def test_instantiate_with_target_sets_target(self):
         target = 'filename'
-        exporter_ = io.Exporter(target=target)
+        exporter_ = io.DatasetExporter(target=target)
         self.assertEqual(exporter_.target, target)
 
     def test_has_export_from_method(self):
@@ -67,58 +63,9 @@ class TestExporter(unittest.TestCase):
         self.assertIs(self.exporter.dataset, test_dataset)
 
 
-class TestYaml(unittest.TestCase):
-    def setUp(self):
-        self.yaml = io.Yaml()
-        self.filename = 'test.yaml'
-        self.dict = {'foo': 'bar'}
-
-    def tearDown(self):
-        if os.path.exists(self.filename):
-            os.remove(self.filename)
-
-    def test_instantiate_class(self):
-        pass
-
-    def test_has_dict_property(self):
-        self.assertTrue(hasattr(self.yaml, 'dict'))
-
-    def test_dict_property_is_ordered_dict(self):
-        self.assertTrue(isinstance(self.yaml.dict, collections.OrderedDict))
-
-    def test_has_read_from_method(self):
-        self.assertTrue(hasattr(self.yaml, 'read_from'))
-        self.assertTrue(callable(self.yaml.read_from))
-
-    def test_read_from_without_filename_raises(self):
-        with self.assertRaises(io.MissingFilenameError):
-            self.yaml.read_from()
-
-    def test_has_write_to_method(self):
-        self.assertTrue(hasattr(self.yaml, 'write_to'))
-        self.assertTrue(callable(self.yaml.write_to))
-
-    def test_write_to_without_filename_raises(self):
-        with self.assertRaises(io.MissingFilenameError):
-            self.yaml.write_to()
-
-    def test_read_from_reads_file(self):
-        with open(self.filename, 'w') as file:
-            yaml.dump(self.dict, file)
-        self.yaml.read_from(self.filename)
-        self.assertEqual(self.dict, self.yaml.dict)
-
-    def test_writes_to_writes_file(self):
-        self.yaml.dict = self.dict
-        self.yaml.write_to(self.filename)
-        with open(self.filename, 'r') as file:
-            contents = yaml.load(file)
-        self.assertEqual(contents, self.yaml.dict)
-
-
 class TestImporterFactory(unittest.TestCase):
     def setUp(self):
-        self.factory = io.ImporterFactory()
+        self.factory = io.DatasetImporterFactory()
         self.source = 'foo'
 
     def test_instantiate_class(self):
@@ -126,7 +73,7 @@ class TestImporterFactory(unittest.TestCase):
 
     def test_get_importer_returns_importer(self):
         importer = self.factory.get_importer(source=self.source)
-        self.assertTrue(isinstance(importer, io.Importer))
+        self.assertTrue(isinstance(importer, io.DatasetImporter))
 
     def test_get_importer_sets_source_in_importer(self):
         importer = self.factory.get_importer(source=self.source)

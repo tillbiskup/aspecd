@@ -221,7 +221,7 @@ class TestDatasetIO(unittest.TestCase):
         self.assertTrue(callable(self.dataset.export_to))
 
     def test_importfrom_sets_origdata(self):
-        importer = io.Importer()
+        importer = io.DatasetImporter()
         old_origdata = self.dataset._origdata
         self.dataset.import_from(importer)
         self.assertIsNot(self.dataset._origdata, old_origdata)
@@ -437,7 +437,7 @@ class TestDatasetRepresentations(unittest.TestCase):
 class TestDatasetImporting(unittest.TestCase):
     def setUp(self):
         self.dataset = dataset.Dataset()
-        self.importer = io.Importer()
+        self.importer = io.DatasetImporter()
 
     def test_has_import_from_method(self):
         self.assertTrue(hasattr(self.dataset, 'import_from'))
@@ -451,7 +451,7 @@ class TestDatasetImporting(unittest.TestCase):
 class TestDatasetExporting(unittest.TestCase):
     def setUp(self):
         self.dataset = dataset.Dataset()
-        self.exporter = io.Exporter()
+        self.exporter = io.DatasetExporter()
 
     def test_has_export_to_method(self):
         self.assertTrue(hasattr(self.dataset, 'export_to'))

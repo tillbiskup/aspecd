@@ -2,7 +2,10 @@
 
 import collections
 import datetime
+import os
 import unittest
+
+import oyaml as yaml
 
 from aspecd import utils, dataset
 
@@ -182,3 +185,52 @@ class TestConfigDir(unittest.TestCase):
     def test_config_dir_not_empty(self):
         version = utils.config_dir()
         self.assertTrue(version)
+
+
+class TestYaml(unittest.TestCase):
+    def setUp(self):
+        self.yaml = utils.Yaml()
+        self.filename = 'test.yaml'
+        self.dict = {'foo': 'bar'}
+
+    def tearDown(self):
+        if os.path.exists(self.filename):
+            os.remove(self.filename)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_dict_property(self):
+        self.assertTrue(hasattr(self.yaml, 'dict'))
+
+    def test_dict_property_is_ordered_dict(self):
+        self.assertTrue(isinstance(self.yaml.dict, collections.OrderedDict))
+
+    def test_has_read_from_method(self):
+        self.assertTrue(hasattr(self.yaml, 'read_from'))
+        self.assertTrue(callable(self.yaml.read_from))
+
+    def test_read_from_without_filename_raises(self):
+        with self.assertRaises(utils.MissingFilenameError):
+            self.yaml.read_from()
+
+    def test_has_write_to_method(self):
+        self.assertTrue(hasattr(self.yaml, 'write_to'))
+        self.assertTrue(callable(self.yaml.write_to))
+
+    def test_write_to_without_filename_raises(self):
+        with self.assertRaises(utils.MissingFilenameError):
+            self.yaml.write_to()
+
+    def test_read_from_reads_file(self):
+        with open(self.filename, 'w') as file:
+            yaml.dump(self.dict, file)
+        self.yaml.read_from(self.filename)
+        self.assertEqual(self.dict, self.yaml.dict)
+
+    def test_writes_to_writes_file(self):
+        self.yaml.dict = self.dict
+        self.yaml.write_to(self.filename)
+        with open(self.filename, 'r') as file:
+            contents = yaml.load(file)
+        self.assertEqual(contents, self.yaml.dict)

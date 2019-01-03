@@ -10,7 +10,11 @@ import datetime
 import importlib
 import inspect
 import os
+
+import oyaml as yaml
 import pkg_resources
+
+from aspecd.io import MissingFilenameError
 
 
 def full_class_name(object_):
@@ -221,3 +225,66 @@ def config_dir():
         os.path.join(os.path.expanduser('~'), '.config')
     )
     return config_dir_
+
+
+class Yaml:
+    """
+    Handle reading from and writing to YAML files.
+
+    YAML file contents are read into an ordered dict, making use of the
+    oyaml package. This preserves the order of the entries of any dict.
+
+    Attributes
+    ----------
+    dict : :class:`collections.OrderedDict`
+        Contents read from/written to a YAML file
+
+    Raises
+    ------
+    MissingFilenameError
+        Raised if no filename is given to read from/write to
+
+    """
+
+    def __init__(self):
+        self.dict = collections.OrderedDict()
+
+    def read_from(self, filename=''):
+        """
+        Read from YAML file.
+
+        Parameters
+        ----------
+        filename : `str`
+            Name of the YAML file to read from.
+
+        Raises
+        ------
+        MissingFilenameError
+            Raised if no filename is given to read from.
+
+        """
+        if not filename:
+            raise MissingFilenameError
+        with open(filename, 'r') as file:
+            self.dict = yaml.load(file)
+
+    def write_to(self, filename=''):
+        """
+        Write to YAML file.
+
+        Parameters
+        ----------
+        filename : `str`
+            Name of the YAML file to write to.
+
+        Raises
+        ------
+        MissingFilenameError
+            Raised if no filename is given to write to.
+
+        """
+        if not filename:
+            raise MissingFilenameError
+        with open(filename, 'w') as file:
+            yaml.dump(self.dict, file)
