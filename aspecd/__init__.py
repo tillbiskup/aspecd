@@ -4,28 +4,30 @@ Tools for reproducible and traceable analysis of spectral data.
 
 Available modules
 -----------------
-dataset
+:mod:`aspecd.dataset`
     Unit containing data and metadata
-io
+:mod:`aspecd.io`
     Import and export data into and from datasets
-metadata
+:mod:`aspecd.metadata`
     Organise metadata in a dataset
-infofile
+:mod:`aspecd.infofile`
     Import and parse info files
-processing
+:mod:`aspecd.processing`
     Process data in datasets
-analysis
+:mod:`aspecd.analysis`
     Analyse data in datasets
-annotation
+:mod:`aspecd.annotation`
     Annotate datasets
-plotting
+:mod:`aspecd.plotting`
     Plot data in datasets
+:mod:`aspecd.tasks`
+    Recipe-driven data analysis
 
 Utilities
 ---------
-system
+:mod:`aspecd.system`
     Information about the system used
-utils
+:mod:`aspecd.utils`
     Basic functionality used by several modules.
 
 """

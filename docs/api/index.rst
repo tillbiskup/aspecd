@@ -10,7 +10,7 @@ Submodules
 An alphabetic list of the submodules available within the ASpecD framework. The actual documentation is split in pages for each submodule, respectively. For a short description of each of these modules, see below.
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 1
 
    aspecd.analysis
    aspecd.annotation
