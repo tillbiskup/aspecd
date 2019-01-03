@@ -10,8 +10,10 @@ class TestRecipe(unittest.TestCase):
     def setUp(self):
         self.recipe = tasks.Recipe()
         self.filename = 'test.yaml'
+        self.dataset = 'foo'
         self.datasets = ['foo', 'bar']
         self.task = {'kind': 'processing', 'type': 'ProcessingStep'}
+        self.importer_factory = io.ImporterFactory()
 
     def tearDown(self):
         if os.path.exists(self.filename):
@@ -25,6 +27,9 @@ class TestRecipe(unittest.TestCase):
 
     def test_has_tasks_property(self):
         self.assertTrue(hasattr(self.recipe, 'tasks'))
+
+    def test_has_importer_factory_property(self):
+        self.assertTrue(hasattr(self.recipe, 'importer_factory'))
 
     def test_has_read_from_method(self):
         self.assertTrue(hasattr(self.recipe, 'read_from'))
@@ -53,13 +58,16 @@ class TestRecipe(unittest.TestCase):
         yaml_contents = {'datasets': self.datasets}
         with open(self.filename, 'w') as file:
             io.yaml.dump(yaml_contents, file)
+        self.recipe.importer_factory = self.importer_factory
         self.recipe.read_from(self.filename)
-        self.assertEqual(self.datasets, self.recipe.datasets)
+        for dataset_ in self.recipe.datasets:
+            self.assertTrue(isinstance(dataset_, dataset.Dataset))
 
     def test_read_from_yaml_file_with_task_sets_task(self):
         yaml_contents = {'tasks': [self.task]}
         with open(self.filename, 'w') as file:
             io.yaml.dump(yaml_contents, file)
+        self.recipe.importer_factory = self.importer_factory
         self.recipe.read_from(self.filename)
         for key in self.task:
             self.assertEqual(getattr(self.recipe.tasks[0], key),
@@ -69,13 +77,33 @@ class TestRecipe(unittest.TestCase):
         with self.assertRaises(tasks.MissingDictError):
             self.recipe.from_dict()
 
-    def test_from_dict_with_datasets_sets_datasets(self):
-        dict_ = {'datasets': self.datasets}
+    def test_from_dict_with_dataset_without_importer_factory_raises(self):
+        dict_ = {'datasets': [self.dataset]}
+        with self.assertRaises(tasks.MissingImporterFactoryError):
+            self.recipe.from_dict(dict_)
+
+    def test_from_dict_with_dataset_sets_dataset(self):
+        dict_ = {'datasets': [self.dataset]}
+        self.recipe.importer_factory = self.importer_factory
         self.recipe.from_dict(dict_)
-        self.assertEqual(self.datasets, self.recipe.datasets)
+        self.assertTrue(isinstance(self.recipe.datasets[0], dataset.Dataset))
+
+    def test_from_dict_with_dataset_sets_dataset_source(self):
+        dict_ = {'datasets': [self.dataset]}
+        self.recipe.importer_factory = self.importer_factory
+        self.recipe.from_dict(dict_)
+        self.assertEqual(self.dataset, self.recipe.datasets[0].source)
+
+    def test_from_dict_with_multiple_datasets_sets_datasets(self):
+        dict_ = {'datasets': self.datasets}
+        self.recipe.importer_factory = self.importer_factory
+        self.recipe.from_dict(dict_)
+        for dataset_ in self.recipe.datasets:
+            self.assertTrue(isinstance(dataset_, dataset.Dataset))
 
     def test_from_dict_with_task_adds_task(self):
         dict_ = {'tasks': [self.task]}
+        self.recipe.importer_factory = self.importer_factory
         self.recipe.from_dict(dict_)
         self.assertTrue(isinstance(self.recipe.tasks[0], tasks.Task))
         for key in self.task:

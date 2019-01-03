@@ -67,6 +67,21 @@ class MissingFilenameError(Error):
         self.message = message
 
 
+class MissingSourceError(Error):
+    """Exception raised when expecting a filename but none is provided
+
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
 class Importer:
     """Base class for importer.
 
@@ -166,6 +181,68 @@ class Importer:
 
         """
         pass
+
+
+class ImporterFactory:
+    """
+    Factory for creating importer objects based on the source provided.
+
+    Often, data are available in different formats, and deciding which
+    importer is appropriate for a given format can be quite involved. To
+    free other classes from having to contain the relevant code, a factory
+    can be used.
+
+    Currently, the sole information provided to decide about the
+    appropriate importer is the source (a string). A concrete importer
+    object is returned by the method :meth:`get_importer`. If no source is
+    provided, an exception will be raised.
+
+    The actual code for deciding which type of importer to return in what
+    case should be implemented in the non-public method :meth:`_get_importer`
+    in any package based on the ASpecD framework.
+
+    Raises
+    ------
+    MissingSourceError
+        Raised if no source is provided
+
+    """
+
+    def get_importer(self, source=''):
+        """
+        Return importer object for dataset specified by its source.
+
+        The actual code for deciding which type of importer to return in what
+        case should be implemented in the non-public method
+        :meth:`_get_importer` in any package based on the ASpecD framework.
+
+        Parameters
+        ----------
+        source : `str`
+            string describing the source of the dataset
+
+            May be a filename or path, a URL/URI, a LOI, or similar
+
+        Returns
+        -------
+        importer : :class:`aspecd.io.Importer`
+            importer object of appropriate class
+
+        Raises
+        ------
+        MissingSourceError
+            Raised if no source is provided
+
+        """
+        if not source:
+            raise MissingSourceError('A source is required to return an '
+                                     'appropriate importer')
+        return self._get_importer(source)
+
+    # noinspection PyMethodMayBeStatic
+    # pylint: disable=no-self-use
+    def _get_importer(self, source):
+        return Importer(source=source)
 
 
 class Exporter:

@@ -114,3 +114,24 @@ class TestYaml(unittest.TestCase):
         with open(self.filename, 'r') as file:
             contents = yaml.load(file)
         self.assertEqual(contents, self.yaml.dict)
+
+
+class TestImporterFactory(unittest.TestCase):
+    def setUp(self):
+        self.factory = io.ImporterFactory()
+        self.source = 'foo'
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_get_importer_returns_importer(self):
+        importer = self.factory.get_importer(source=self.source)
+        self.assertTrue(isinstance(importer, io.Importer))
+
+    def test_get_importer_sets_source_in_importer(self):
+        importer = self.factory.get_importer(source=self.source)
+        self.assertEqual(self.source, importer.source)
+
+    def test_get_importer_without_source_raises(self):
+        with self.assertRaises(io.MissingSourceError):
+            self.factory.get_importer()

@@ -66,6 +66,21 @@ class MissingDictError(Error):
         self.message = message
 
 
+class MissingImporterFactoryError(Error):
+    """Exception raised when expecting a filename but none is provided
+
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
 class Recipe():
     """
     Recipes get cooked by chefs in recipe-driven data analysis.
@@ -94,28 +109,21 @@ class Recipe():
         List of datasets the tasks should be performed for
 
         Each dataset is an object of class :class:`aspecd.dataset.Dataset`.
-
-        .. todo::
-            How does the recipe know which importer to use for a particular
-            dataset? The most simple option---to add this information to a
-            recipe---is not necessarily the best, at least not in a long run.
-            How about implementing the LOI system and data safe together
-            with a file named "Manifest.yaml" or similar containing the
-            information necessary to decide about the importer (i.e.,
-            the file format)?
-
-            At the same time, loading/importing could be delegated to a
-            dispatcher taking care of choosing the correct importer. In any
-            case, for the recipe-driven data analysis, this can be mocked.
     tasks : `list`
         List of tasks to be performed on the datasets
 
         Each task is an object of class :class:`aspecd.tasks.Task`.
+    importer_factory : :class:`aspecd.io.ImporterFactory`
+        Factory for importers used to import datasets
 
     Raises
     ------
+    MissingDictError
+        Raised if no dict is provided.
     MissingFilenameError
         Raised if no filename is given to read from/write to.
+    MissingImporterFactoryError
+        Raised if :attr:`importer_factory` is invalid.
 
     """
 
@@ -123,6 +131,7 @@ class Recipe():
         super().__init__()
         self.datasets = []
         self.tasks = list()
+        self.importer_factory = None
 
     def from_dict(self, dict_=None):
         """
@@ -140,17 +149,31 @@ class Recipe():
         ------
         MissingDictError
             Raised if no dict is provided.
+        MissingImporterFactoryError
+            Raised if :attr:`importer_factory` is invalid.
 
         """
         if not dict_:
             raise MissingDictError
+        if not self.importer_factory:
+            raise MissingImporterFactoryError
         if 'datasets' in dict_:
-            self.datasets = dict_['datasets']
+            for key in dict_['datasets']:
+                self._append_dataset(key)
         if 'tasks' in dict_:
             for key in dict_['tasks']:
-                task = Task()
-                task.from_dict(key)
-                self.tasks.append(task)
+                self._append_task(key)
+
+    def _append_dataset(self, key):
+        dataset = aspecd.dataset.Dataset()
+        importer = self.importer_factory.get_importer(source=key)
+        dataset.import_from(importer)
+        self.datasets.append(dataset)
+
+    def _append_task(self, key):
+        task = Task()
+        task.from_dict(key)
+        self.tasks.append(task)
 
     def to_dict(self):
         """
