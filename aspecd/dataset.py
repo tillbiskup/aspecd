@@ -185,6 +185,8 @@ class Dataset:
         annotations of the dataset
     representations : `list`
         representations of the dataset, e.g., plots
+    source : `str`
+        source of the dataset (i.e., path, LOI, or else)
 
     Raises
     ------
@@ -210,6 +212,7 @@ class Dataset:
         self.analyses = []
         self.annotations = []
         self.representations = []
+        self.source = ''
         # Package name is used to store the package version in history records
         self._package_name = utils.package_name(self)
 

@@ -49,6 +49,9 @@ class TestDataset(unittest.TestCase):
     def test_has_representations_property(self):
         self.assertTrue(hasattr(self.dataset, 'representations'))
 
+    def test_has_source_property(self):
+        self.assertTrue(hasattr(self.dataset, 'source'))
+
 
 class TestDatasetProcessing(unittest.TestCase):
     def setUp(self):

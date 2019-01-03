@@ -34,6 +34,12 @@ class TestImporter(unittest.TestCase):
         self.importer.import_into(test_dataset)
         self.assertIs(self.importer.dataset, test_dataset)
 
+    def test_import_into_with_dataset_sets_source(self):
+        test_dataset = dataset.Dataset()
+        self.importer.source = 'filename'
+        self.importer.import_into(test_dataset)
+        self.assertIs(test_dataset.source, self.importer.source)
+
 
 class TestExporter(unittest.TestCase):
     def setUp(self):

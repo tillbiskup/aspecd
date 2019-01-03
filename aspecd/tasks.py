@@ -66,7 +66,7 @@ class MissingDictError(Error):
         self.message = message
 
 
-class Recipe(aspecd.utils.ToDictMixin):
+class Recipe():
     """
     Recipes get cooked by chefs in recipe-driven data analysis.
 
@@ -76,12 +76,6 @@ class Recipe(aspecd.utils.ToDictMixin):
     using its respective :meth:`read_from` method. Similarly, a given
     recipe can be written back into a YAML file using the :meth:`write_to`
     method.
-
-    .. todo::
-        Need to implement own :meth:`to_dict` method, as the recipe does
-        not store LOIs, paths, or similar as datasets, but dataset objects,
-        whereas the recipe file as such that is visible to the user
-        contains only LOIs/paths.
 
     .. todo::
         Rename :meth:`read_from` and :meth:`write_to` in
@@ -157,6 +151,23 @@ class Recipe(aspecd.utils.ToDictMixin):
                 task = Task()
                 task.from_dict(key)
                 self.tasks.append(task)
+
+    def to_dict(self):
+        """
+        Return dict from attributes.
+
+        Returns
+        -------
+        dict_ : `dict`
+            Dictionary with fields "datasets" and "tasks"
+
+        """
+        dict_ = {'datasets': [], 'tasks': []}
+        for dataset in self.datasets:
+            dict_['datasets'].append(dataset.source)
+        for task in self.tasks:
+            dict_['tasks'].append(task.to_dict())
+        return dict_
 
     def read_from(self, filename=''):
         """

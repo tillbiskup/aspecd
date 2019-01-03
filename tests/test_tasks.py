@@ -3,13 +3,15 @@
 import os
 import unittest
 
-from aspecd import io, processing, tasks
+from aspecd import dataset, io, processing, tasks
 
 
 class TestRecipe(unittest.TestCase):
     def setUp(self):
         self.recipe = tasks.Recipe()
         self.filename = 'test.yaml'
+        self.datasets = ['foo', 'bar']
+        self.task = {'kind': 'processing', 'type': 'ProcessingStep'}
 
     def tearDown(self):
         if os.path.exists(self.filename):
@@ -40,10 +42,6 @@ class TestRecipe(unittest.TestCase):
         with self.assertRaises(tasks.MissingFilenameError):
             self.recipe.write_to()
 
-    def test_has_to_dict_method(self):
-        self.assertTrue(hasattr(self.recipe, 'to_dict'))
-        self.assertTrue(callable(self.recipe.to_dict))
-
     def test_write_to_writes_yaml_file(self):
         self.recipe.write_to(self.filename)
         to_dict_contents = self.recipe.to_dict()
@@ -52,39 +50,56 @@ class TestRecipe(unittest.TestCase):
         self.assertEqual(to_dict_contents, contents)
 
     def test_read_from_yaml_file_with_datasets_sets_datasets(self):
-        datasets = ['foo', 'bar']
-        yaml_contents = {'datasets': datasets}
+        yaml_contents = {'datasets': self.datasets}
         with open(self.filename, 'w') as file:
             io.yaml.dump(yaml_contents, file)
         self.recipe.read_from(self.filename)
-        self.assertEqual(self.recipe.datasets, datasets)
+        self.assertEqual(self.datasets, self.recipe.datasets)
 
     def test_read_from_yaml_file_with_task_sets_task(self):
-        task = {'kind': 'processing', 'type': 'ProcessingStep'}
-        yaml_contents = {'tasks': [task]}
+        yaml_contents = {'tasks': [self.task]}
         with open(self.filename, 'w') as file:
             io.yaml.dump(yaml_contents, file)
         self.recipe.read_from(self.filename)
-        for key in task:
-            self.assertEqual(getattr(self.recipe.tasks[0], key), task[key])
+        for key in self.task:
+            self.assertEqual(getattr(self.recipe.tasks[0], key),
+                             self.task[key])
 
     def test_from_dict_without_dict_raises(self):
         with self.assertRaises(tasks.MissingDictError):
             self.recipe.from_dict()
 
     def test_from_dict_with_datasets_sets_datasets(self):
-        datasets = ['foo', 'bar']
-        dict_ = {'datasets': datasets}
+        dict_ = {'datasets': self.datasets}
         self.recipe.from_dict(dict_)
-        self.assertEqual(datasets, self.recipe.datasets)
+        self.assertEqual(self.datasets, self.recipe.datasets)
 
     def test_from_dict_with_task_adds_task(self):
-        task = {'kind': 'processing', 'type': 'ProcessingStep'}
-        dict_ = {'tasks': [task]}
+        dict_ = {'tasks': [self.task]}
         self.recipe.from_dict(dict_)
         self.assertTrue(isinstance(self.recipe.tasks[0], tasks.Task))
-        for key in task:
-            self.assertEqual(getattr(self.recipe.tasks[0], key), task[key])
+        for key in self.task:
+            self.assertEqual(getattr(self.recipe.tasks[0], key),
+                             self.task[key])
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.recipe, 'to_dict'))
+        self.assertTrue(callable(self.recipe.to_dict))
+
+    def test_to_dict_with_datasets_returns_dataset_sources(self):
+        for dataset_ in self.datasets:
+            tmp = dataset.Dataset()
+            tmp.source = dataset_
+            self.recipe.datasets.append(tmp)
+        dict_ = self.recipe.to_dict()
+        self.assertEqual(self.datasets, dict_['datasets'])
+
+    def test_to_dict_with_task_returns_task_dict(self):
+        task = tasks.Task()
+        task.from_dict(self.task)
+        self.recipe.tasks.append(task)
+        dict_ = self.recipe.to_dict()
+        self.assertEqual(task.to_dict(), dict_['tasks'][0])
 
 
 class TestChef(unittest.TestCase):
