@@ -31,47 +31,43 @@ class TestRecipe(unittest.TestCase):
     def test_has_importer_factory_property(self):
         self.assertTrue(hasattr(self.recipe, 'importer_factory'))
 
-    def test_has_read_from_method(self):
-        self.assertTrue(hasattr(self.recipe, 'read_from'))
-        self.assertTrue(callable(self.recipe.read_from))
+    def test_import_from_without_importer_raises(self):
+        with self.assertRaises(tasks.MissingImporterError):
+            self.recipe.import_from()
 
-    def test_read_from_without_filename_raises(self):
-        with self.assertRaises(tasks.MissingFilenameError):
-            self.recipe.read_from()
+    def test_import_from_yaml_importer_with_task_sets_task(self):
+        yaml_contents = {'tasks': [self.task]}
+        with open(self.filename, 'w') as file:
+            utils.yaml.dump(yaml_contents, file)
+        importer = io.RecipeYamlImporter(source=self.filename)
+        self.recipe.importer_factory = self.importer_factory
+        self.recipe.import_from(importer=importer)
+        for key in self.task:
+            self.assertEqual(getattr(self.recipe.tasks[0], key),
+                             self.task[key])
 
-    def test_has_write_to_method(self):
-        self.assertTrue(hasattr(self.recipe, 'write_to'))
-        self.assertTrue(callable(self.recipe.write_to))
+    def test_import_from_yaml_importer_with_datasets_sets_datasets(self):
+        yaml_contents = {'datasets': self.datasets}
+        with open(self.filename, 'w') as file:
+            utils.yaml.dump(yaml_contents, file)
+        importer = io.RecipeYamlImporter(source=self.filename)
+        self.recipe.importer_factory = self.importer_factory
+        self.recipe.import_from(importer=importer)
+        self.assertEqual(len(self.recipe.datasets), len(self.datasets))
+        for dataset_ in self.recipe.datasets:
+            self.assertTrue(isinstance(dataset_, dataset.Dataset))
 
-    def test_write_to_without_filename_raises(self):
-        with self.assertRaises(tasks.MissingFilenameError):
-            self.recipe.write_to()
+    def test_export_to_without_exporter_raises(self):
+        with self.assertRaises(tasks.MissingExporterError):
+            self.recipe.export_to()
 
-    def test_write_to_writes_yaml_file(self):
-        self.recipe.write_to(self.filename)
+    def test_export_to_yaml_exporter_writes_yaml_file(self):
+        exporter = io.RecipeYamlExporter(target=self.filename)
+        self.recipe.export_to(exporter)
         to_dict_contents = self.recipe.to_dict()
         with open(self.filename, 'r') as file:
             contents = utils.yaml.load(file)
         self.assertEqual(to_dict_contents, contents)
-
-    def test_read_from_yaml_file_with_datasets_sets_datasets(self):
-        yaml_contents = {'datasets': self.datasets}
-        with open(self.filename, 'w') as file:
-            utils.yaml.dump(yaml_contents, file)
-        self.recipe.importer_factory = self.importer_factory
-        self.recipe.read_from(self.filename)
-        for dataset_ in self.recipe.datasets:
-            self.assertTrue(isinstance(dataset_, dataset.Dataset))
-
-    def test_read_from_yaml_file_with_task_sets_task(self):
-        yaml_contents = {'tasks': [self.task]}
-        with open(self.filename, 'w') as file:
-            utils.yaml.dump(yaml_contents, file)
-        self.recipe.importer_factory = self.importer_factory
-        self.recipe.read_from(self.filename)
-        for key in self.task:
-            self.assertEqual(getattr(self.recipe.tasks[0], key),
-                             self.task[key])
 
     def test_from_dict_without_dict_raises(self):
         with self.assertRaises(tasks.MissingDictError):

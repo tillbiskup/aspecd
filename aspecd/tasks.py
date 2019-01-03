@@ -1,14 +1,15 @@
 """
-Tasks.
+Constituents of a recipe-driven data analysis.
 
-One main aspect of tasks is the constituents of a recipe-driven data
-analysis, i.e. :class:`aspecd.tasks.Recipe` and :class:`aspecd.tasks.Chef`.
-In its simplest form, a recipe gets cooked by a chef, resulting in a series
-of tasks being performed on a list of datasets.
+One main aspect of tasks is to provide the constituents of a recipe-driven
+data analysis, i.e. :class:`aspecd.tasks.Recipe` and
+:class:`aspecd.tasks.Chef`. In its simplest form, a recipe gets cooked by a
+chef, resulting in a series of tasks being performed on a list of datasets.
 
 From a user's perspective, a recipe is usually stored in a YAML file. This
 allows to easily create and modify recipes without knowing too much about
 the underlying processes.
+
 """
 
 import aspecd.io
@@ -23,21 +24,6 @@ class Error(Exception):
 
 class MissingRecipeError(Error):
     """Exception raised trying to cook without recipe
-
-    Attributes
-    ----------
-    message : `str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class MissingFilenameError(Error):
-    """Exception raised when expecting a filename but none is provided
 
     Attributes
     ----------
@@ -66,8 +52,38 @@ class MissingDictError(Error):
         self.message = message
 
 
+class MissingImporterError(Error):
+    """Exception raised when no Importer instance is provided
+
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
+class MissingExporterError(Error):
+    """Exception raised when no Importer instance is provided
+
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
 class MissingImporterFactoryError(Error):
-    """Exception raised when expecting a filename but none is provided
+    """Exception raised when no ImporterFactory instance is provided
 
     Attributes
     ----------
@@ -87,10 +103,11 @@ class Recipe:
 
     A recipe contains a list of tasks to be performed on a list of
     datasets. From a user's perspective, recipes reside usually in YAML
-    files from where they are read into a :obj:`aspecd.tasks.Recipe` object
-    using its respective :meth:`read_from` method. Similarly, a given
-    recipe can be written back into a YAML file using the :meth:`write_to`
-    method.
+    files from where they are imported into an :obj:`aspecd.tasks.Recipe`
+    object using its respective :meth:`import_into` method and an object of
+    class :class:`aspecd.io.RecipeImporter`. Similarly, a given
+    recipe can be exported back to a YAML file using the :meth:`export_to`
+    method and an object of class :class:`aspecd.io.RecipeExporter`.
 
     In contrast to the persistent form of a recipe (e.g., as file on the
     file system), the object contains actual datasets and tasks that are
@@ -104,11 +121,6 @@ class Recipe:
     :attr:`importer_factory`. This provides a maximum of flexibility but
     makes it necessary to specify (and first implement) such factory in
     packages derived from the ASpecD framework.
-
-    .. todo::
-        Rename :meth:`read_from` and :meth:`write_to` in
-        :meth:`import_from` and :meth:`export_to` and create
-        importer/exporter base classes in :mod:`aspecd.io` module.
 
     .. todo::
         Can recipes have LOIs themselves and therefore be retrieved from
@@ -136,8 +148,10 @@ class Recipe:
     ------
     MissingDictError
         Raised if no dict is provided.
-    MissingFilenameError
-        Raised if no filename is given to read from/write to.
+    MissingImporterError
+        Raised if no importer is provided.
+    MissingExporterError
+        Raised if no exporter is provided.
     MissingImporterFactoryError
         Raised if :attr:`importer_factory` is invalid.
 
@@ -208,47 +222,53 @@ class Recipe:
             dict_['tasks'].append(task.to_dict())
         return dict_
 
-    def read_from(self, filename=''):
+    def import_from(self, importer=None):
         """
-        Read recipe from YAML file.
+        Import recipe using importer.
+
+        Importers can be created to read recipes from different sources.
+        Thus the recipe as such is entirely independent of the persistence
+        layer.
 
         Parameters
         ----------
-        filename : `str`
-            Name of the YAML file to read from.
+        importer : :class:`aspecd.io.RecipeImporter`
+            importer used to actually import recipe
 
         Raises
         ------
-        MissingFilenameError
-            Raised if no filename is given to read from.
+        MissingImporterError
+            Raised if no importer is provided
 
         """
-        if not filename:
-            raise MissingFilenameError
-        yaml = aspecd.utils.Yaml()
-        yaml.read_from(filename=filename)
-        self.from_dict(yaml.dict)
+        if not importer:
+            raise MissingImporterError('An importer instance is needed to '
+                                       'import a recipe.')
+        importer.import_into(self)
 
-    def write_to(self, filename=''):
+    def export_to(self, exporter=None):
         """
-        Write recipe to YAML file.
+        Export recipe using exporter.
+
+        Exporters can be created to write recipes to different targets.
+        Thus the recipe as such is entirely independent of the persistence
+        layer.
 
         Parameters
         ----------
-        filename : `str`
-            Name of the YAML file to write to.
+        exporter : :class:`aspecd.io.RecipeExporter`
+            exporter used to actually export recipe
 
         Raises
         ------
-        MissingFilenameError
-            Raised if no filename is given to write to.
+        MissingExporterError
+            Raised if no exporter is provided
 
         """
-        if not filename:
-            raise MissingFilenameError
-        yaml = aspecd.utils.Yaml()
-        yaml.dict = self.to_dict()
-        yaml.write_to(filename=filename)
+        if not exporter:
+            raise MissingExporterError('An exporter instance is needed to '
+                                       'export a recipe.')
+        exporter.export_from(self)
 
 
 class Chef:

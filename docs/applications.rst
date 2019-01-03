@@ -49,7 +49,7 @@ To actually be able to work on (numeric) data and to store them together with th
 
     import aspecd
 
-    class Importer(aspecd.io.Importer):
+    class DatasetImporter(aspecd.io.DatasetImporter):
 
         def __init__(self, source=''):
             super().__init__(source=source)
@@ -57,7 +57,7 @@ To actually be able to work on (numeric) data and to store them together with th
         def _import(self):
             # And here goes your code actually importing the data and metadata
 
-Of course, you need to add appropriate code to the non-public function ``_import`` of the importer class you just created. And if you have more than one type of raw data, make sure to give your classes better names than just "Importer". Even if you start with one type of raw data, naming the importer class closer to the actual file format is always helpful. This prevents you from having to change your depending code later on.
+Of course, you need to add appropriate code to the non-public function ``_import`` of the importer class you just created. And if you have more than one type of raw data, make sure to give your classes better names than just "DatasetImporter". Even if you start with one type of raw data, naming the importer class closer to the actual file format is always helpful. This prevents you from having to change your depending code later on.
 
 The importer should make sure not only to import the numeric data appropriately into the dataset object (they go into its ``data.data`` attribute), but to also create appropriate axes and to read the metadata accompanying the (raw) data. For the necessary structures within the dataset's ``metadata`` attribute and how to eventually fill the metadata into this hierachy of objects, see the `metadata`_ section.
 

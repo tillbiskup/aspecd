@@ -14,7 +14,26 @@ import os
 import oyaml as yaml
 import pkg_resources
 
-from aspecd.io import MissingFilenameError
+
+class Error(Exception):
+    """Base class for exceptions in this module."""
+
+    pass
+
+
+class MissingFilenameError(Error):
+    """Exception raised when expecting a filename but none is provided
+
+    Attributes
+    ----------
+    message : `str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
 
 
 def full_class_name(object_):

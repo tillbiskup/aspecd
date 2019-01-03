@@ -35,11 +35,11 @@ Most probably, the first step when processing and analysing data will be to actu
     import spectro
 
     dataset_ = dataset.Dataset()
-    importer = io.Importer(source="path/to/some/file/containing/data")
+    importer = io.DatasetImporter(source="path/to/some/file/containing/data")
 
     dataset_.import_from(importer)
 
-This will import the data (and metadata) contained in the path provided to the argument ``source`` when instantiating the ``Importer`` object.
+This will import the data (and metadata) contained in the path provided to the argument ``source`` when instantiating the ``DatasetImporter`` object.
 
 A few comments on these few lines of code:
 
