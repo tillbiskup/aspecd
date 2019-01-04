@@ -47,6 +47,16 @@ class TestAnnotation(unittest.TestCase):
         self.annotation.annotate()
         self.assertGreater(len(self.annotation.dataset.annotations), 0)
 
+    def test_annotate_via_dataset_annotate(self):
+        test_dataset = dataset.Dataset()
+        test_dataset.annotate(self.annotation)
+        self.assertGreater(len(test_dataset.annotations), 0)
+
+    def test_annotate_with_dataset(self):
+        test_dataset = dataset.Dataset()
+        self.annotation.annotate(test_dataset)
+        self.assertGreater(len(test_dataset.annotations), 0)
+
     def test_annotate_without_argument_nor_dataset_raises(self):
         with self.assertRaises(annotation.MissingDatasetError):
             self.annotation.annotate()
@@ -65,6 +75,18 @@ class TestAnnotation(unittest.TestCase):
     def test_setting_unknown_scope_raises(self):
         with self.assertRaises(annotation.UnknownScopeError):
             self.annotation.scope = 'foo'
+
+    def test_annotate_returns_dataset(self):
+        test_dataset = self.annotation.annotate(dataset.Dataset())
+        self.assertTrue(isinstance(test_dataset, dataset.Dataset))
+
+    def test_has_execute_method(self):
+        self.assertTrue(hasattr(self.annotation, 'execute'))
+        self.assertTrue(callable(self.annotation.execute))
+
+    def test_execute_on_dataset(self):
+        test_dataset = self.annotation.execute(dataset=dataset.Dataset())
+        self.assertGreater(len(test_dataset.annotations), 0)
 
 
 class TestComment(unittest.TestCase):

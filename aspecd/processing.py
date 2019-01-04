@@ -179,14 +179,14 @@ class ProcessingStep(aspecd.utils.ExecuteOnDatasetMixin):
             Raised when no dataset exists to act on
 
         """
-        self._set_dataset(dataset=dataset)
+        self._assign_dataset(dataset=dataset)
         self._call_from_dataset(from_dataset=from_dataset)
         self._check_applicability()
         self._sanitise_parameters()
         self._perform_task()
         return self.dataset
 
-    def _set_dataset(self, dataset=None):
+    def _assign_dataset(self, dataset=None):
         if not dataset:
             if not self.dataset:
                 raise MissingDatasetError

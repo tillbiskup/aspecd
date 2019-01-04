@@ -428,7 +428,7 @@ class Dataset:
         # Important: Need a copy, not the reference to the original object
         annotation_ = copy.deepcopy(annotation_)
         history_record = self._create_annotation_history_record(annotation_)
-        annotation_.annotate(self)
+        annotation_.annotate(self, from_dataset=True)
         self.annotations.append(history_record)
 
     def _create_annotation_history_record(self, annotation_):

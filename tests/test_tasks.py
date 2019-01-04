@@ -136,6 +136,8 @@ class TestChef(unittest.TestCase):
                                 'type': 'ProcessingStep'}
         self.analysis_task = {'kind': 'analysis',
                               'type': 'AnalysisStep'}
+        self.annotation_task = {'kind': 'annotation',
+                                'type': 'Comment'}
 
     def test_instantiate_class(self):
         pass
@@ -182,6 +184,14 @@ class TestChef(unittest.TestCase):
         recipe.from_dict(recipe_dict)
         self.chef.cook(recipe=recipe)
         self.assertTrue(self.chef.recipe.datasets[0].analyses)
+
+    def test_cook_recipe_with_annotation_task_performs_task(self):
+        recipe = self.recipe
+        recipe_dict = {'datasets': [self.dataset],
+                       'tasks': [self.annotation_task]}
+        recipe.from_dict(recipe_dict)
+        self.chef.cook(recipe=recipe)
+        self.assertTrue(self.chef.recipe.datasets[0].annotations)
 
 
 class TestTask(unittest.TestCase):

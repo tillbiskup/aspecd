@@ -1,4 +1,5 @@
-"""Annotations of data, e.g. characteristics, that cannot be automated.
+"""
+Annotations of data, e.g. characteristics, that cannot be automated.
 
 Annotations of data are eventually something that cannot be automated.
 Nevertheless, they can be quite important for the analysis and hence for
@@ -6,9 +7,19 @@ providing new scientific insight.
 
 The simplest form of an annotation is a comment applying to an entire
 dataset, such as comments stored in the metadata written during data
-acquisition.
+acquisition. Hence, those comments do *not* belong to the metadata part of
+a dataset, but to the annotations in form of a
+:obj:`aspecd.annotation.Comment` object.
+
+Other frequent types of annotations are artefacts and characteristics,
+for which dedicated classes are available within the ASpecD framework:
+:class:`aspecd.annotations.Artefact` and
+:class:`aspecd.annotations.Characteristic`. For other types of annotations,
+simply subclass the :class:`aspecd.annotations.Annotation` base class.
 
 """
+
+import aspecd.utils
 
 
 class Error(Exception):
@@ -62,7 +73,7 @@ class UnknownScopeError(Error):
         self.message = message
 
 
-class Annotation:
+class Annotation(aspecd.utils.ExecuteOnDatasetMixin):
     """
     Annotations are user-supplied additional information to datasets.
 
@@ -87,8 +98,12 @@ class Annotation:
     ----------
     type : `str`
         Textual description of the type of annotation: lowercase class name
+
+        Set automatically, don't change
     content : `dict`
         Actual content of the annotation
+
+        Generic place for more information
     dataset : :obj:`aspecd.dataset.Dataset`
         Dataset the annotation belongs to
 
@@ -102,11 +117,8 @@ class Annotation:
     """
 
     def __init__(self):
-        # Type is used as easy identifier: lower-case version of class name
         self.type = self.__class__.__name__.lower()
-        # Generic place for more information, therefore dictionary
         self.content = dict()
-        # Reference to dataset the annotation is for
         self.dataset = None
         # Scope of the annotation; see list of allowed scopes below
         self._scope = ''
@@ -137,7 +149,7 @@ class Annotation:
                                     ' '.join(self._allowed_scopes))
         self._scope = scope
 
-    def annotate(self, dataset=None):
+    def annotate(self, dataset=None, from_dataset=False):
         """
         Annotate a dataset with the given annotation.
 
@@ -157,16 +169,67 @@ class Annotation:
         dataset as argument. Therefore, in this case setting the dataset
         property within the Annotation object is not necessary.
 
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset to annotate
+
+        from_dataset : `boolean`
+            whether we are called from within a dataset
+
+            Defaults to "False" and shall never be set manually.
+
+        Returns
+        -------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset that has been annotated
+
         """
+        self._check_prerequisites()
+        self._set_scope()
+        self._assign_dataset(dataset)
+        self._call_from_dataset(from_dataset)
+        return self.dataset
+
+    def _check_prerequisites(self):
         if not self.content:
             raise NoContentError
+
+    def _set_scope(self):
         if not self.scope:
             self._scope = self._default_scope
+
+    def _assign_dataset(self, dataset):
         if not dataset:
-            if self.dataset:
-                self.dataset.annotate(self)
-            else:
+            if not self.dataset:
                 raise MissingDatasetError
+        else:
+            self.dataset = dataset
+
+    def _call_from_dataset(self, from_dataset):
+        if not from_dataset:
+            self.dataset.annotate(self)
+
+    def execute(self, dataset=None):
+        """
+        Execute task on dataset.
+
+        Used mainly in recipe-driven data analysis requiring generically
+        executing tasks independent of their type. For details of
+        recipe-driven data analysis, see the :mod:`tasks` module.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset to act on
+
+        Returns
+        -------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset acted on
+
+        """
+        return self.annotate(dataset=dataset)
 
 
 class Comment(Annotation):
