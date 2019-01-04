@@ -124,14 +124,19 @@ class TestSinglePlotter(unittest.TestCase):
         with self.assertRaises(plotting.MissingDatasetError):
             self.plotter.plot()
 
-    def test_plot_with_dataset(self):
+    def test_plot_with_preset_dataset(self):
         self.plotter.dataset = dataset.Dataset()
         self.plotter.plot()
 
-    def test_plot_with_dataset_sets_dataset(self):
+    def test_plot_from_dataset_sets_dataset(self):
         test_dataset = dataset.Dataset()
         plotter = test_dataset.plot(self.plotter)
         self.assertTrue(isinstance(plotter.dataset, dataset.Dataset))
+
+    def test_plot_with_dataset(self):
+        test_dataset = dataset.Dataset()
+        self.plotter.plot(dataset=test_dataset)
+        self.assertGreater(len(test_dataset.representations), 0)
 
     def test_plot_with_dataset_sets_axes_labels(self):
         test_dataset = dataset.Dataset()
@@ -146,6 +151,19 @@ class TestSinglePlotter(unittest.TestCase):
         plotter = test_dataset.plot(self.plotter)
         self.assertEqual(xlabel, plotter.axes.get_xlabel())
         self.assertEqual(ylabel, plotter.axes.get_ylabel())
+
+    def test_plot_returns_dataset(self):
+        test_dataset = self.plotter.plot(dataset=dataset.Dataset())
+        self.assertTrue(isinstance(test_dataset, dataset.Dataset))
+
+    def test_has_execute_method(self):
+        self.assertTrue(hasattr(self.plotter, 'execute'))
+        self.assertTrue(callable(self.plotter.execute))
+
+    def test_execute_on_dataset(self):
+        test_dataset = dataset.Dataset()
+        self.plotter.execute(dataset=test_dataset)
+        self.assertGreater(len(test_dataset.representations), 0)
 
 
 class TestMultiPlotter(unittest.TestCase):

@@ -287,7 +287,7 @@ class Plotter:
         return saver
 
 
-class SinglePlotter(Plotter):
+class SinglePlotter(Plotter, aspecd.utils.ExecuteOnDatasetMixin):
     """Base class for plots of single datasets.
 
     Each class actually plotting data of a dataset should inherit from this
@@ -326,7 +326,7 @@ class SinglePlotter(Plotter):
         self.dataset = None
         self.description = 'Abstract plotting step for single dataset'
 
-    def plot(self):
+    def plot(self, dataset=None, from_dataset=False):
         """Perform the actual plotting on the given dataset.
 
         If no dataset is set as property in the object, the method will
@@ -344,6 +344,21 @@ class SinglePlotter(Plotter):
         want to override the corresponding methods :meth:`_set_axes_labels`
         and :meth:`_create_axis_label_string`, respectively.
 
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset to perform plot for
+
+        from_dataset : `boolean`
+            whether we are called from within a dataset
+
+            Defaults to "False" and shall never be set manually.
+
+        Returns
+        -------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset plot has been performed for
+
         Raises
         ------
         PlotNotApplicableToDatasetError
@@ -352,12 +367,27 @@ class SinglePlotter(Plotter):
             Raised when no dataset exists to act on
 
         """
-        if not self.dataset:
-            raise MissingDatasetError
-        if not self.applicable(self.dataset):
-            raise PlotNotApplicableToDatasetError
+        self._assign_dataset(dataset)
+        self._call_from_dataset(from_dataset)
+        self._check_applicability()
         super().plot()
         self._set_axes_labels()
+        return self.dataset
+
+    def _assign_dataset(self, dataset):
+        if not dataset:
+            if not self.dataset:
+                raise MissingDatasetError
+        else:
+            self.dataset = dataset
+
+    def _call_from_dataset(self, from_dataset):
+        if not from_dataset:
+            self.dataset.plot(self)
+
+    def _check_applicability(self):
+        if not self.applicable(self.dataset):
+            raise PlotNotApplicableToDatasetError
 
     def _set_axes_labels(self):
         """Set axes labels from axes in dataset.
@@ -383,6 +413,27 @@ class SinglePlotter(Plotter):
         """
         label = '$' + axis.quantity + '$' + ' / ' + axis.unit
         return label
+
+    def execute(self, dataset=None):
+        """
+        Execute task on dataset.
+
+        Used mainly in recipe-driven data analysis requiring generically
+        executing tasks independent of their type. For details of
+        recipe-driven data analysis, see the :mod:`tasks` module.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset to act on
+
+        Returns
+        -------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset acted on
+
+        """
+        return self.plot(dataset=dataset)
 
 
 class MultiPlotter(Plotter):

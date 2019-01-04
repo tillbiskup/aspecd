@@ -480,8 +480,7 @@ class Dataset:
         """
         if not plotter:
             raise MissingPlotterError
-        plotter.dataset = self
-        plotter.plot()
+        plotter.plot(dataset=self, from_dataset=True)
         plot_record = self._create_plot_record(plotter=plotter)
         self.representations.append(plot_record)
         return plotter

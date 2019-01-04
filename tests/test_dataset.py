@@ -388,7 +388,7 @@ class TestDatasetPlotting(unittest.TestCase):
 class TestDatasetRepresentations(unittest.TestCase):
     def setUp(self):
         self.dataset = dataset.Dataset()
-        self.plotter = plotting.Plotter()
+        self.plotter = plotting.SinglePlotter()
 
     def test_plot_adds_plot_record_to_representations(self):
         self.dataset.plot(self.plotter)
