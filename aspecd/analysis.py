@@ -1,9 +1,31 @@
-"""Analysis."""
+"""
+Data analysis functionality.
+
+Key to reproducible science is automatic documentation of each analysis
+step applied to the data of a dataset. Such an analysis step each is
+self-contained, meaning it contains every necessary information to perform
+the analysis task on a given dataset.
+
+Analysis steps, in contrast to processing steps (see
+:mod:`aspecd.processing` for details), operate on data of a
+:class:`aspecd.dataset.Dataset`, but don't change its data. Rather,
+some result is obtained that is stored separately, together with the
+parameters of the analysis step, in the
+:attr:`aspecd.dataset.Dataset.analyses` attribute of the dataset.
+
+Each real analysis step should inherit from
+:class:`aspecd.analysis.AnalysisStep` as documented there. Furthermore,
+each analysis step should be contained in one module named "analysis".
+This allows for easy automation and replay of analysis steps, particularly
+in context of recipe-driven data analysis (for details, see the
+:mod:`aspecd.tasks` module).
+
+"""
 
 
 import copy
 
-from aspecd import utils
+import aspecd.utils
 
 
 class Error(Exception):
@@ -27,7 +49,7 @@ class MissingDatasetError(Error):
         self.message = message
 
 
-class AnalysisStep:
+class AnalysisStep(aspecd.utils.ExecuteOnDatasetMixin):
     """
     Base class for analysis steps.
 
@@ -60,46 +82,67 @@ class AnalysisStep:
     """
 
     def __init__(self):
-        # Name defaults always to the full class name, don't change!
-        self.name = utils.full_class_name(self)
-        # All parameters, implicit and explicit
+        self.name = aspecd.utils.full_class_name(self)
         self.parameters = dict()
-        # Results of the analysis step
         self.results = dict()
-        # List of necessary preprocessing steps to perform analysis
         self.preprocessing = []
-        # Short description, to be set in class definition
         self.description = 'Abstract analysis step'
-        # User-supplied comment describing intent, purpose, reason, ...
         self.comment = ''
-        # Reference to the dataset the analysis step should be performed on
         self.dataset = None
 
-    def analyse(self, dataset=None):
+    def analyse(self, dataset=None, from_dataset=False):
         """Perform the actual analysis step on the given dataset.
 
-        If no dataset is provided at method call, but is set as property in the
-        AnalysisStep object, the process method of the dataset will be called
-        and thus the history written.
+        If no dataset is provided at method call, but is set as property in
+        the AnalysisStep object, the process method of the dataset will be
+        called and thus the history written.
 
-        If no dataset is provided at method call nor as property in the object,
-        the method will raise a respective exception.
+        If no dataset is provided at method call nor as property in the
+        object, the method will raise a respective exception.
 
-        The Dataset object always call this method with the respective dataset
-        as argument. Therefore, in this case setting the dataset property
-        within the Analysis object is not necessary.
+        The :obj:`aspecd.dataset.Dataset` object always call this method with
+        the respective dataset as argument. Therefore, in this case setting
+        the dataset property within the :obj:`aspecd.analysis.AnalysisStep`
+        object is not necessary.
+
+        The actual analysis step should be implemented within the non-public
+        method :meth:`_perform_task`. Besides that, the applicability of the
+        analysis step to the given dataset will be checked automatically and
+        the parameters will be sanitised by calling the non-public method
+        :meth:`_sanitise_parameters`.
 
         Parameters
         ----------
         dataset : :class:`aspecd.dataset.Dataset`
             dataset to perform analysis for
 
+        from_dataset : `boolean`
+            whether we are called from within a dataset
+
+            Defaults to "False" and shall never be set manually.
+
+        Returns
+        -------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset analysis has been performed for
+
         """
+        self._assign_dataset(dataset=dataset)
+        self._call_from_dataset(from_dataset=from_dataset)
+        self._sanitise_parameters()
+        self._perform_task()
+        return self.dataset
+
+    def _assign_dataset(self, dataset=None):
         if not dataset:
-            if self.dataset:
-                self.dataset.analyse(self)
-            else:
+            if not self.dataset:
                 raise MissingDatasetError
+        else:
+            self.dataset = dataset
+
+    def _call_from_dataset(self, from_dataset=False):
+        if not from_dataset:
+            self.dataset.analyse(self)
 
     def analyze(self, dataset=None):
         """Perform the actual analysis step on the given dataset.
@@ -107,7 +150,28 @@ class AnalysisStep:
         Same method as self.analyse, but for those preferring AE over BE
 
         """
-        self.analyse(dataset)
+        return self.analyse(dataset)
+
+    def execute(self, dataset=None):
+        """
+        Execute task on dataset.
+
+        Used mainly in recipe-driven data analysis requiring generically
+        executing tasks independent of their type. For details of
+        recipe-driven data analysis, see the :mod:`tasks` module.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset to act on
+
+        Returns
+        -------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset acted on
+
+        """
+        return self.analyse(dataset=dataset)
 
     def add_preprocessing_step(self, processingstep=None):
         """
@@ -126,3 +190,24 @@ class AnalysisStep:
         # Important: Need a copy, not the reference to the original object
         processingstep = copy.deepcopy(processingstep)
         self.preprocessing.append(processingstep)
+
+    def _sanitise_parameters(self):
+        """Ensure parameters provided for analysis step are correct.
+
+        Needs to be implemented in classes inheriting from AnalyisStep
+        according to their needs. Most probably, you want to check for
+        correct types of all parameters as well as values within sensible
+        borders.
+
+        """
+        pass
+
+    def _perform_task(self):
+        """Perform the actual analysis step on the dataset.
+
+        The implementation of the actual analysis step goes in here in all
+        classes inheriting from AnalysisStep. This method is automatically
+        called by :meth:`self.analyse` after some background checks.
+
+        """
+        pass

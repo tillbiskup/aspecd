@@ -385,7 +385,7 @@ class Dataset:
         # Important: Need a copy, not the reference to the original object
         analysis_step = copy.deepcopy(analysis_step)
         history_record = self._create_analysis_history_record(analysis_step)
-        analysis_step.analyse(self)
+        analysis_step.analyse(self, from_dataset=True)
         self.analyses.append(history_record)
         return analysis_step
 

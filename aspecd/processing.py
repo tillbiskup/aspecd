@@ -1,14 +1,23 @@
-"""Data processing functionality.
+"""
+Data processing functionality.
 
 Key to reproducible science is automatic documentation of each processing
 step applied to the data of a dataset. Such a processing step each is
 self-contained, meaning it contains every necessary information to perform
 the processing task on a given dataset.
 
+Processing steps, in contrast to analysis steps (see :mod:`aspecd.analysis`
+for details), not only operate on data of a :class:`aspecd.dataset.Dataset`,
+but change its data. The information necessary to reproduce each processing
+step gets added to the :attr:`aspecd.dataset.Dataset.history` attribute of a
+dataset.
+
 Each real processing step should inherit from
 :class:`aspecd.processing.ProcessingStep` as documented there. Furthermore,
 each processing step should be contained in one module named "processing".
-This allows for easy automation and replay of processing steps.
+This allows for easy automation and replay of processing steps, particularly
+in context of recipe-driven data analysis (for details, see the
+:mod:`aspecd.tasks` module).
 
 """
 
@@ -119,37 +128,33 @@ class ProcessingStep(aspecd.utils.ExecuteOnDatasetMixin):
 
     def __init__(self):
         self.undoable = False
-        # Name defaults always to the full class name, don't change!
         self.name = aspecd.utils.full_class_name(self)
-        # All parameters, implicit and explicit
         self.parameters = dict()
-        # Additional information used, e.g., in a report (derived values, ...)
         self.info = dict()
-        # Short description, to be set in class definition
         self.description = 'Abstract processing step'
-        # User-supplied comment describing intent, purpose, reason, ...
         self.comment = ''
-        # Reference to the dataset the processing step should be performed on
         self.dataset = None
 
     def process(self, dataset=None, from_dataset=False):
         """Perform the actual processing step on the given dataset.
 
-        If no dataset is provided at method call, but is set as property in the
-        ProcessingStep object, the :meth:`aspecd.dataset.Dataset.process`
+        If no dataset is provided at method call, but is set as property in
+        the ProcessingStep object, the :meth:`aspecd.dataset.Dataset.process`
         method of the dataset will be called and thus the history written.
 
-        If no dataset is provided at method call nor as property in the object,
-        the method will raise a respective exception.
+        If no dataset is provided at method call nor as property in the
+        object, the method will raise a respective exception.
 
-        The Dataset object always calls this method with the respective dataset
-        as argument. Therefore, in this case setting the dataset property
-        within the ProcessingStep object is not necessary.
+        The :obj:`aspecd.dataset.Dataset` object always call this method with
+        the respective dataset as argument. Therefore, in this case setting
+        the dataset property within the
+        :obj:`aspecd.processing.ProcessingStep` object is not necessary.
 
-        The actual processing step should be implemented within the private
+        The actual processing step should be implemented within the non-public
         method :meth:`_perform_task`. Besides that, the applicability of the
         processing step to the given dataset will be checked automatically and
-        the parameters will be sanitised.
+        the parameters will be sanitised by calling the non-public method
+        :meth:`_sanitise_parameters`.
 
         Parameters
         ----------

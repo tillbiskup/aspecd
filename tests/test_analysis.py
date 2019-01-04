@@ -57,6 +57,11 @@ class TestAnalysis(unittest.TestCase):
         self.assertTrue(hasattr(self.analysisstep, 'analyze'))
         self.assertTrue(callable(self.analysisstep.analyze))
 
+    def test_analyse_with_dataset(self):
+        test_dataset = dataset.Dataset()
+        self.analysisstep.analyse(test_dataset)
+        self.assertGreater(len(test_dataset.analyses), 0)
+
     def test_analyse_without_argument_and_with_dataset(self):
         self.analysisstep.dataset = dataset.Dataset()
         self.analysisstep.analyse()
@@ -65,6 +70,19 @@ class TestAnalysis(unittest.TestCase):
     def test_analyse_without_analysisstep_nor_dataset_raises(self):
         with self.assertRaises(analysis.MissingDatasetError):
             self.analysisstep.analyse()
+
+    def test_analyse_returns_dataset(self):
+        test_dataset = self.analysisstep.analyse(dataset.Dataset())
+        self.assertTrue(isinstance(test_dataset, dataset.Dataset))
+
+    def test_has_execute_method(self):
+        self.assertTrue(hasattr(self.analysisstep, 'execute'))
+        self.assertTrue(callable(self.analysisstep.execute))
+
+    def test_execute_on_dataset(self):
+        test_dataset = dataset.Dataset()
+        self.analysisstep.execute(dataset=test_dataset)
+        self.assertGreater(len(test_dataset.analyses), 0)
 
 
 class TestPreprocessing(unittest.TestCase):

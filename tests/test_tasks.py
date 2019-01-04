@@ -132,7 +132,10 @@ class TestChef(unittest.TestCase):
         self.recipe = tasks.Recipe()
         self.recipe.importer_factory = io.DatasetImporterFactory()
         self.dataset = 'foo'
-        self.task = {'kind': 'processing', 'type': 'ProcessingStep'}
+        self.processing_task = {'kind': 'processing',
+                                'type': 'ProcessingStep'}
+        self.analysis_task = {'kind': 'analysis',
+                              'type': 'AnalysisStep'}
 
     def test_instantiate_class(self):
         pass
@@ -166,10 +169,19 @@ class TestChef(unittest.TestCase):
 
     def test_cook_recipe_with_processing_task_performs_task(self):
         recipe = self.recipe
-        recipe_dict = {'datasets': [self.dataset], 'tasks': [self.task]}
+        recipe_dict = {'datasets': [self.dataset],
+                       'tasks': [self.processing_task]}
         recipe.from_dict(recipe_dict)
         self.chef.cook(recipe=recipe)
         self.assertTrue(self.chef.recipe.datasets[0].history)
+
+    def test_cook_recipe_with_analysis_task_performs_task(self):
+        recipe = self.recipe
+        recipe_dict = {'datasets': [self.dataset],
+                       'tasks': [self.analysis_task]}
+        recipe.from_dict(recipe_dict)
+        self.chef.cook(recipe=recipe)
+        self.assertTrue(self.chef.recipe.datasets[0].analyses)
 
 
 class TestTask(unittest.TestCase):
