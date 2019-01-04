@@ -326,9 +326,15 @@ class Chef:
             Raised if no recipe is available to be cooked
 
         """
-        self.recipe = recipe
-        if not self.recipe:
-            raise MissingRecipeError
+        if not recipe:
+            if not self.recipe:
+                raise MissingRecipeError
+        else:
+            self.recipe = recipe
+        for task in self.recipe.tasks:
+            obj = task.get_object()
+            for dataset in self.recipe.datasets:
+                obj.execute(dataset=dataset)
 
 
 class Task(aspecd.utils.ToDictMixin):

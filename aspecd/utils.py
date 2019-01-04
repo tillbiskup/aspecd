@@ -170,7 +170,8 @@ def get_aspecd_version():
         Version number as string
 
     """
-    version_file_path = os.path.join(os.path.dirname(__file__), "..", 'VERSION')
+    version_file_path = os.path.join(os.path.dirname(__file__),
+                                     "..", 'VERSION')
     if os.path.exists(version_file_path):
         with open(version_file_path) as version_file:
             version = version_file.read().strip()
@@ -307,3 +308,42 @@ class Yaml:
             raise MissingFilenameError
         with open(filename, 'w') as file:
             yaml.dump(self.dict, file)
+
+
+class ExecuteOnDatasetMixin:
+    """Mixin class for executing task on a dataset.
+
+    All tasks (such as processing steps, analyses, plots, annotations) that
+    can be carried out on a single dataset should mixin this class and
+    override the :meth:`execute` method accordingly. For all respective base
+    classes in the ASpecD framework, this has been done already. This
+    allows for a very easy automation of tasks in recipe-driven data
+    analysis. See :mod:`tasks` for more details on this.
+
+    """
+
+    # pylint: disable=no-self-use
+    def execute(self, dataset=None):
+        """
+        Execute task on dataset.
+
+        Should be overridden by each (base) class mixing in
+        :class:`aspecd.dataset.ExecuteOnDatasetMixin` and forward the call
+        to the respective method. An example for the
+        :class:`aspecd.processing.ProcessingStep` class::
+
+            def execute(self):
+                return self.process(dataset=dataset)
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset to operate on
+
+        Returns
+        -------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset to operate on
+
+        """
+        return dataset

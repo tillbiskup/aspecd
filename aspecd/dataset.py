@@ -250,20 +250,26 @@ class Dataset:
             Raised when trying to process with leading history
 
         """
+        self._check_processing_prerequisites(processing_step=processing_step)
+        # Important: Need a copy, not the reference to the original object
+        processing_step = copy.deepcopy(processing_step)
+        processing_step.process(self, from_dataset=True)
+        history_record = \
+            self._create_processing_history_record(processing_step)
+        self._append_processing_history_record(history_record)
+        self._handle_not_undoable(processing_step=processing_step)
+        return processing_step
+
+    def _check_processing_prerequisites(self, processing_step=None):
         if self._has_leading_history():
             raise ProcessingWithLeadingHistoryError
         if not processing_step:
             raise MissingProcessingStepError
-        # Important: Need a copy, not the reference to the original object
-        processing_step = copy.deepcopy(processing_step)
-        processing_step.process(self)
-        history_record = \
-            self._create_processing_history_record(processing_step)
-        self._append_processing_history_record(history_record)
+
+    def _handle_not_undoable(self, processing_step=None):
         if not processing_step.undoable:
             self._origdata = copy.deepcopy(self.data)
             self.representations = []
-        return processing_step
 
     def undo(self):
         """Revert last processing step.
@@ -282,14 +288,17 @@ class Dataset:
             Raised when trying to undo an undoable step of history
 
         """
+        self._check_undo_prerequisites()
+        self._decrement_history_pointer()
+        self._replay_history()
+
+    def _check_undo_prerequisites(self):
         if not self.history:
             raise UndoWithEmptyHistoryError
         if self._history_pointer == -1:
             raise UndoAtBeginningOfHistoryError
         if self.history[self._history_pointer].undoable:
             raise UndoStepUndoableError
-        self._decrement_history_pointer()
-        self._replay_history()
 
     def redo(self):
         """Reapply previously undone processing step.
@@ -300,13 +309,16 @@ class Dataset:
             Raised when trying to redo with empty history
 
         """
-        if self._history_pointer == len(self.history) - 1:
+        if self._at_tip_of_history():
             raise RedoAlreadyAtLatestChangeError
         processing_step_record = \
             self.history[self._history_pointer + 1].processing
         processing_step = processing_step_record.create_processing_step()
-        processing_step.process(self)
+        processing_step.process(self, from_dataset=True)
         self._increment_history_pointer()
+
+    def _at_tip_of_history(self):
+        return self._history_pointer == len(self.history) - 1
 
     def _has_leading_history(self):
         return len(self.history) - 1 > self._history_pointer

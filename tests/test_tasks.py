@@ -129,6 +129,10 @@ class TestRecipe(unittest.TestCase):
 class TestChef(unittest.TestCase):
     def setUp(self):
         self.chef = tasks.Chef()
+        self.recipe = tasks.Recipe()
+        self.recipe.importer_factory = io.DatasetImporterFactory()
+        self.dataset = 'foo'
+        self.task = {'kind': 'processing', 'type': 'ProcessingStep'}
 
     def test_instantiate_class(self):
         pass
@@ -141,18 +145,31 @@ class TestChef(unittest.TestCase):
         self.assertTrue(hasattr(self.chef, 'recipe'))
 
     def test_cook_sets_recipe(self):
-        recipe = tasks.Recipe()
+        recipe = self.recipe
         self.chef.cook(recipe)
         self.assertEqual(self.chef.recipe, recipe)
 
     def test_instantiate_with_recipe_sets_recipe(self):
-        recipe = tasks.Recipe()
+        recipe = self.recipe
         chef = tasks.Chef(recipe=recipe)
         self.assertEqual(chef.recipe, recipe)
 
     def test_cook_without_recipe_raises(self):
         with self.assertRaises(tasks.MissingRecipeError):
             self.chef.cook()
+
+    def test_cook_with_preset_recipe(self):
+        recipe = self.recipe
+        self.chef.recipe = recipe
+        self.chef.cook()
+        self.assertEqual(recipe, self.chef.recipe)
+
+    def test_cook_recipe_with_processing_task_performs_task(self):
+        recipe = self.recipe
+        recipe_dict = {'datasets': [self.dataset], 'tasks': [self.task]}
+        recipe.from_dict(recipe_dict)
+        self.chef.cook(recipe=recipe)
+        self.assertTrue(self.chef.recipe.datasets[0].history)
 
 
 class TestTask(unittest.TestCase):

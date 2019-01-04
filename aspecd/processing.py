@@ -12,7 +12,7 @@ This allows for easy automation and replay of processing steps.
 
 """
 
-from aspecd import utils
+import aspecd.utils
 
 
 class Error(Exception):
@@ -66,7 +66,7 @@ class MissingProcessingStepError(Error):
         self.message = message
 
 
-class ProcessingStep:
+class ProcessingStep(aspecd.utils.ExecuteOnDatasetMixin):
     """Base class for processing steps.
 
     Each class actually performing a processing step should inherit from this
@@ -120,7 +120,7 @@ class ProcessingStep:
     def __init__(self):
         self.undoable = False
         # Name defaults always to the full class name, don't change!
-        self.name = utils.full_class_name(self)
+        self.name = aspecd.utils.full_class_name(self)
         # All parameters, implicit and explicit
         self.parameters = dict()
         # Additional information used, e.g., in a report (derived values, ...)
@@ -132,7 +132,7 @@ class ProcessingStep:
         # Reference to the dataset the processing step should be performed on
         self.dataset = None
 
-    def process(self, dataset=None):
+    def process(self, dataset=None, from_dataset=False):
         """Perform the actual processing step on the given dataset.
 
         If no dataset is provided at method call, but is set as property in the
@@ -156,6 +156,11 @@ class ProcessingStep:
         dataset : :class:`aspecd.dataset.Dataset`
             dataset to apply processing step to
 
+        from_dataset : `boolean`
+            whether we are called from within a dataset
+
+            Defaults to "False" and shall never be set manually.
+
         Returns
         -------
         dataset : :class:`aspecd.dataset.Dataset`
@@ -169,18 +174,27 @@ class ProcessingStep:
             Raised when no dataset exists to act on
 
         """
-        if not dataset:
-            if self.dataset:
-                self.dataset.process(self)
-            else:
-                raise MissingDatasetError
-        else:
-            self.dataset = dataset
-        if not self.applicable(self.dataset):
-            raise ProcessingNotApplicableToDatasetError
+        self._set_dataset(dataset=dataset)
+        self._call_from_dataset(from_dataset=from_dataset)
+        self._check_applicability()
         self._sanitise_parameters()
         self._perform_task()
         return self.dataset
+
+    def _set_dataset(self, dataset=None):
+        if not dataset:
+            if not self.dataset:
+                raise MissingDatasetError
+        else:
+            self.dataset = dataset
+
+    def _call_from_dataset(self, from_dataset=False):
+        if not from_dataset:
+            self.dataset.process(self)
+
+    def _check_applicability(self):
+        if not self.applicable(self.dataset):
+            raise ProcessingNotApplicableToDatasetError
 
     # noinspection PyUnusedLocal
     @staticmethod
@@ -218,6 +232,27 @@ class ProcessingStep:
 
         """
         pass
+
+    def execute(self, dataset=None):
+        """
+        Execute task on dataset.
+
+        Used mainly in recipe-driven data analysis requiring generically
+        executing tasks independent of their type. For details of
+        recipe-driven data analysis, see the :mod:`tasks` module.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset to act on
+
+        Returns
+        -------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset acted on
+
+        """
+        return self.process(dataset=dataset)
 
 
 class ProcessingStepRecord:
@@ -291,7 +326,7 @@ class ProcessingStepRecord:
             e.g., in context of undo/redo
 
         """
-        processing_step = utils.object_from_class_name(self.class_name)
+        processing_step = aspecd.utils.object_from_class_name(self.class_name)
         processing_step.undoable = self.undoable
         processing_step.parameters = self.parameters
         processing_step.description = self.description

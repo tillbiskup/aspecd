@@ -7,6 +7,7 @@ import unittest
 
 import oyaml as yaml
 
+import aspecd.utils
 from aspecd import utils, dataset
 
 
@@ -234,3 +235,15 @@ class TestYaml(unittest.TestCase):
         with open(self.filename, 'r') as file:
             contents = yaml.load(file)
         self.assertEqual(contents, self.yaml.dict)
+
+
+class TestExecuteOnDatasetMixin(unittest.TestCase):
+    def setUp(self):
+        self.mixin = utils.ExecuteOnDatasetMixin()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_execute_method(self):
+        self.assertTrue(hasattr(self.mixin, 'execute'))
+        self.assertTrue(callable(self.mixin.execute))

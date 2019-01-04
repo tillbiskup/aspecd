@@ -64,14 +64,26 @@ class TestProcessingStep(unittest.TestCase):
         processing_step = test_dataset.process(self.processing)
         self.assertTrue(isinstance(processing_step.dataset, dataset.Dataset))
 
-    def test_process_with_dataset(self):
+    def test_process_with_dataset_writes_history(self):
+        test_dataset = self.processing.process(dataset=dataset.Dataset())
+        self.assertGreater(len(test_dataset.history), 0)
+
+    def test_process_with_dataset_using_dataset_process_writes_history(self):
         test_dataset = dataset.Dataset()
         test_dataset.process(self.processing)
         self.assertGreater(len(test_dataset.history), 0)
 
-    def test_calling_process_returns_dataset(self):
+    def test_process_returns_dataset(self):
         test_dataset = self.processing.process(dataset.Dataset())
         self.assertTrue(isinstance(test_dataset, dataset.Dataset))
+
+    def test_has_execute_method(self):
+        self.assertTrue(hasattr(self.processing, 'execute'))
+        self.assertTrue(callable(self.processing.execute))
+
+    def test_execute_on_dataset(self):
+        test_dataset = self.processing.execute(dataset=dataset.Dataset())
+        self.assertGreater(len(test_dataset.history), 0)
 
 
 class TestProcessingStepRecord(unittest.TestCase):
