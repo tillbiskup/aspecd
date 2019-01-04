@@ -6,10 +6,10 @@ Available modules
 -----------------
 :mod:`aspecd.dataset`
     Unit containing data and metadata
-:mod:`aspecd.io`
-    Import and export data into and from datasets
 :mod:`aspecd.metadata`
     Organise metadata in a dataset
+:mod:`aspecd.io`
+    Import and export data into and from datasets
 :mod:`aspecd.infofile`
     Import and parse info files
 :mod:`aspecd.processing`
@@ -20,6 +20,8 @@ Available modules
     Annotate datasets
 :mod:`aspecd.plotting`
     Plot data in datasets
+:mod:`aspecd.report`
+    General facilities for generating reports
 :mod:`aspecd.tasks`
     Recipe-driven data analysis
 
