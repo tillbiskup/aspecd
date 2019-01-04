@@ -42,7 +42,7 @@ Representing data---both graphically as well as in tabular form---is an integral
 
 Already graphically representing one-dimensional data leaves nearly endless possibilities, considering line styles, colours, and alike. Multi-dimensional data add an additional level of complexity. Here, the slice or view chosen is often crucial.
 
-The key idea behind representations is to store the necessary metadata to (automatically) reproduce a representation starting from the data. Representations can generally be both, graphically or tabular in character.
+The key idea behind representations is to store the necessary metadata to (automatically) reproduce a representation starting from the data. Representations can generally be both, graphical or tabular in character.
 
 
 Annotations

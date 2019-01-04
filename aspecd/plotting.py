@@ -1,4 +1,5 @@
-"""Plotting: Graphical representations of data extracted from datasets.
+"""
+Plotting: Graphical representations of data extracted from datasets.
 
 Plotting relies on `matplotlib <https://matplotlib.org/>`_, and mainly its
 object-oriented interface should be used for the actual plotting. Each
@@ -30,10 +31,10 @@ connection between a single dataset and such a plot in sense of
 representations stored in datasets. Plotters handling multiple datasets should
 always inherit from the :class:`aspecd.plotting.MultiPlotter` class.
 
-Regardless of the type of plotter, saving plots is always done using objects of
-the :class:`aspecd.plotting.Saver` class. The actual task of saving a plot
-is as easy as calling the :meth:`save` method of a plotter with a saver
-object as its argument.
+Regardless of the type of plotter, saving plots is always done using
+objects of the :class:`aspecd.plotting.Saver` class. The actual task of
+saving a plot is as easy as calling the :meth:`save` method of a plotter
+with a saver object as its argument.
 
 """
 
@@ -42,7 +43,7 @@ import os
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-from aspecd import utils
+import aspecd.utils
 
 
 class Error(Exception):
@@ -179,7 +180,7 @@ class Plotter:
 
     def __init__(self):
         # Name defaults always to the full class name, don't change!
-        self.name = utils.full_class_name(self)
+        self.name = aspecd.utils.full_class_name(self)
         self.parameters = dict()
         self.description = 'Abstract plotting step'
         self.figure = None
@@ -642,7 +643,7 @@ class SinglePlotRecord(PlotRecord):
 
     Attributes
     ----------
-    processing_steps : `list`
+    preprocessing : `list`
         List of processing steps
 
         The actual processing steps are objects of the class
