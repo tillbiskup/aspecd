@@ -326,6 +326,7 @@ class SinglePlotter(Plotter, aspecd.utils.ExecuteOnDatasetMixin):
         self.dataset = None
         self.description = 'Abstract plotting step for single dataset'
 
+    # pylint: disable=arguments-differ
     def plot(self, dataset=None, from_dataset=False):
         """Perform the actual plotting on the given dataset.
 

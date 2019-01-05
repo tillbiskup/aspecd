@@ -20,6 +20,14 @@ This allows for easy automation and replay of analysis steps, particularly
 in context of recipe-driven data analysis (for details, see the
 :mod:`aspecd.tasks` module).
 
+.. todo::
+    Add capabilities of handling analysis steps spanning multiple datasets,
+    in a similar fashion to what has been done for plots (see the
+    :mod:`plotting` module for details). In contrast to processing steps,
+    analysis steps can span multiple datasets. Prominent examples would be
+    comparing intensities of different datasets or global fits of multiple
+    datasets.
+
 """
 
 

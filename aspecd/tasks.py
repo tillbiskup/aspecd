@@ -326,15 +326,18 @@ class Chef:
             Raised if no recipe is available to be cooked
 
         """
+        self._assign_recipe(recipe)
+        for task in self.recipe.tasks:
+            obj = task.get_object()
+            for dataset in self.recipe.datasets:
+                obj.execute(dataset=dataset)
+
+    def _assign_recipe(self, recipe):
         if not recipe:
             if not self.recipe:
                 raise MissingRecipeError
         else:
             self.recipe = recipe
-        for task in self.recipe.tasks:
-            obj = task.get_object()
-            for dataset in self.recipe.datasets:
-                obj.execute(dataset=dataset)
 
 
 class Task(aspecd.utils.ToDictMixin):
@@ -420,17 +423,11 @@ class Task(aspecd.utils.ToDictMixin):
         """
         Create object for a particular task.
 
-        To create the object, the current package is prepended to kind and
-        type stored in :attr:`kind' and :attr:`type`, respectively.
-
-        .. todo::
-            Think about whether preprending the current package gets
-            problematic and if so, how to cope with it. If another package
-            than the current one is necessary, this information needs to be
-            stored in the persisted recipe (i.e., usually a YAML file),
-            either in an additional field or as a prefix to the kind
-            attribute. In any case, using a try...except clause might be an
-            option.
+        In case no object can be retrieved from the class name provided,
+        the current package is prepended to kind and type stored in
+        :attr:`kind' and :attr:`type`, respectively. This allows for
+        specifying explicit class names including packages, but at the same
+        time to omit the package name for classes from the current package.
 
         Returns
         -------
@@ -438,10 +435,13 @@ class Task(aspecd.utils.ToDictMixin):
             Object of a class defined in the :attr:`type` attribute of a task
 
         """
-        class_name = '.'.join([aspecd.utils.package_name(self),
-                               self.kind,
-                               self.type])
-        obj = aspecd.utils.object_from_class_name(class_name)
+        class_name = '.'.join([self.kind, self.type])
+        try:
+            obj = aspecd.utils.object_from_class_name(class_name)
+        except ModuleNotFoundError:
+            package_name = aspecd.utils.package_name(self)
+            class_name = '.'.join([package_name, class_name])
+            obj = aspecd.utils.object_from_class_name(class_name)
         return obj
 
     def _set_object_attributes(self, obj):
