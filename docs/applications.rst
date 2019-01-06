@@ -7,6 +7,12 @@ As the name says, the ASpecD framework in itself only provides the scaffold for 
 Writing applications based on the ASpecD framework should be fairly straight-forward once familiar with its :doc:`concepts <concepts>`.
 
 
+Before you start
+================
+
+ASpecD is all about reproducible data analysis, hence more reproducible and reliable science. Therefore, before you start writing your own applications based on the ASpecD framework, make sure to have a minimal infrastructure available and use it for your developments. Without a version control system (VCS) and a scheme for version numbers that you follow thoroughly, fundamental aspects of the ASpecD framework simply won't work. Additionally, do choose an appropriate license for your program. After all, the time frame of reproducibility is not the typical length of a PhD thesis, but rather decades.
+
+
 How to start
 ============
 
