@@ -438,7 +438,7 @@ class Task(aspecd.utils.ToDictMixin):
         class_name = '.'.join([self.kind, self.type])
         try:
             obj = aspecd.utils.object_from_class_name(class_name)
-        except ModuleNotFoundError:
+        except ImportError:
             package_name = aspecd.utils.package_name(self)
             class_name = '.'.join([package_name, class_name])
             obj = aspecd.utils.object_from_class_name(class_name)
