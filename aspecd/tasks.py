@@ -105,9 +105,9 @@ class Recipe:
     datasets. From a user's perspective, recipes reside usually in YAML
     files from where they are imported into an :obj:`aspecd.tasks.Recipe`
     object using its respective :meth:`import_into` method and an object of
-    class :class:`aspecd.io.RecipeImporter`. Similarly, a given
+    class :class:`aspecd.io.RecipeYamlImporter`. Similarly, a given
     recipe can be exported back to a YAML file using the :meth:`export_to`
-    method and an object of class :class:`aspecd.io.RecipeExporter`.
+    method and an object of class :class:`aspecd.io.RecipeYamlExporter`.
 
     In contrast to the persistent form of a recipe (e.g., as file on the
     file system), the object contains actual datasets and tasks that are
