@@ -240,7 +240,7 @@ class Plotter:
         self.figure, self.axes = plt.subplots()
 
     def _create_plot(self):
-        """Perform the actual plotting of the data of the dataset.
+        """Perform the actual plotting of the data of the dataset(s).
 
         The implementation of the actual plotting goes in here in all
         classes inheriting from Plotter. This method is automatically
@@ -451,9 +451,8 @@ class MultiPlotter(Plotter):
     are the string stored in :attr:`description`, being basically a one-liner.
 
     The actual implementation of the plotting is done in the private method
-    :meth:`_create_plot` that in turn gets called by :meth:`plot`
-    which is called by the :meth:`aspecd.dataset.Dataset.plot` method of the
-    dataset object.
+    :meth:`_create_plot` that in turn gets called by :meth:`plot` that
+    needs to be called directly (not from a dataset).
 
     Attributes
     ----------
