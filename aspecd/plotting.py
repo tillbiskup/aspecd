@@ -370,9 +370,6 @@ class SinglePlotter(Plotter, aspecd.utils.ExecuteOnDatasetMixin):
         """
         self._assign_dataset(dataset)
         self._call_from_dataset(from_dataset)
-        self._check_applicability()
-        super().plot()
-        self._set_axes_labels()
         return self.dataset
 
     def _assign_dataset(self, dataset):
@@ -385,6 +382,10 @@ class SinglePlotter(Plotter, aspecd.utils.ExecuteOnDatasetMixin):
     def _call_from_dataset(self, from_dataset):
         if not from_dataset:
             self.dataset.plot(self)
+        else:
+            self._check_applicability()
+            super().plot()
+            self._set_axes_labels()
 
     def _check_applicability(self):
         if not self.applicable(self.dataset):

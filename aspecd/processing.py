@@ -181,9 +181,6 @@ class ProcessingStep(aspecd.utils.ExecuteOnDatasetMixin):
         """
         self._assign_dataset(dataset=dataset)
         self._call_from_dataset(from_dataset=from_dataset)
-        self._check_applicability()
-        self._sanitise_parameters()
-        self._perform_task()
         return self.dataset
 
     def _assign_dataset(self, dataset=None):
@@ -196,6 +193,10 @@ class ProcessingStep(aspecd.utils.ExecuteOnDatasetMixin):
     def _call_from_dataset(self, from_dataset=False):
         if not from_dataset:
             self.dataset.process(self)
+        else:
+            self._check_applicability()
+            self._sanitise_parameters()
+            self._perform_task()
 
     def _check_applicability(self):
         if not self.applicable(self.dataset):

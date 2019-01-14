@@ -137,8 +137,6 @@ class AnalysisStep(aspecd.utils.ExecuteOnDatasetMixin):
         """
         self._assign_dataset(dataset=dataset)
         self._call_from_dataset(from_dataset=from_dataset)
-        self._sanitise_parameters()
-        self._perform_task()
         return self.dataset
 
     def _assign_dataset(self, dataset=None):
@@ -151,6 +149,9 @@ class AnalysisStep(aspecd.utils.ExecuteOnDatasetMixin):
     def _call_from_dataset(self, from_dataset=False):
         if not from_dataset:
             self.dataset.analyse(self)
+        else:
+            self._sanitise_parameters()
+            self._perform_task()
 
     def analyze(self, dataset=None):
         """Perform the actual analysis step on the given dataset.
