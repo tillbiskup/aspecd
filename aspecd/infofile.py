@@ -12,7 +12,7 @@ This module reads and parses files complying with the infofile file format.
     For own purposes, you may prefer using YAML files to store metadata
     that are collected in parallel to recording data over the infofile
     format. For more information on this format and it specification,
-    consult its webpage: :class:`<http://yaml.org/>`_.
+    consult its webpage: `<http://yaml.org/>`_.
 
     As the lead developer of the ASpecD framework originally invented the
     infofile format for own purposes, there are quite some datasets floating
