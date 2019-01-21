@@ -495,6 +495,9 @@ class TestCalculatedDataset(unittest.TestCase):
         self.assertTrue(isinstance(self.dataset.metadata,
                                    aspecd.metadata.CalculatedDatasetMetadata))
 
+    def test_has_experimental_dataset_property(self):
+        self.assertTrue(hasattr(self.dataset, 'experimental_dataset'))
+
 
 class TestData(unittest.TestCase):
 

@@ -12,7 +12,7 @@ This module reads and parses files complying with the infofile file format.
     For own purposes, you may prefer using YAML files to store metadata
     that are collected in parallel to recording data over the infofile
     format. For more information on this format and it specification,
-    consult its webpage: `<http://yaml.org/>`_.
+    consult its webpage: :class:`<http://yaml.org/>`_.
 
     As the lead developer of the ASpecD framework originally invented the
     infofile format for own purposes, there are quite some datasets floating
@@ -40,7 +40,7 @@ class InfofileTypeError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -55,7 +55,7 @@ class InfofileEmptyError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -70,18 +70,18 @@ class Infofile:
 
     Attributes
     ----------
-    parameters : `collections.OrderedDict`
+    parameters : :class:`collections.OrderedDict`
         Structure containing parameters read from info file.
-    filename : `str`
+    filename : :class:`str`
         Name of the info file read
-    infofile_info : `dict`
+    infofile_info : :class:`dict`
         Information about the infofile, such as kind, version, and date.
 
         Helpful for mapping metadata contained in an infofile to datasets.
 
     Parameters
     ----------
-    filename : `str`
+    filename : :class:`str`
         Name of the info file to read
 
     Raises
@@ -226,12 +226,12 @@ def parse(filename=''):
 
     Parameters
     ----------
-    filename : `str`
+    filename : :class:`str`
         Name of the info file to parse
 
     Returns
     -------
-    metadata : `dict`
+    metadata : :class:`dict`
         Dictionary with metadata read from info file
 
     """

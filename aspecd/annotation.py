@@ -33,7 +33,7 @@ class MissingDatasetError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -48,7 +48,7 @@ class NoContentError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -63,7 +63,7 @@ class UnknownScopeError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -96,11 +96,11 @@ class Annotation(aspecd.utils.ExecuteOnDatasetMixin):
 
     Attributes
     ----------
-    type : `str`
+    type : :class:`str`
         Textual description of the type of annotation: lowercase class name
 
         Set automatically, don't change
-    content : `dict`
+    content : :class:`dict`
         Actual content of the annotation
 
         Generic place for more information
@@ -174,7 +174,7 @@ class Annotation(aspecd.utils.ExecuteOnDatasetMixin):
         dataset : :class:`aspecd.dataset.Dataset`
             dataset to annotate
 
-        from_dataset : `boolean`
+        from_dataset : :class:`bool`
             whether we are called from within a dataset
 
             Defaults to "False" and shall never be set manually.
@@ -246,7 +246,7 @@ class Comment(Annotation):
 
         Returns
         -------
-        comment : `str`
+        comment : :class:`str`
             Actual comment string
 
         """

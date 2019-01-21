@@ -47,7 +47,7 @@ class MissingDatasetError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -63,21 +63,21 @@ class AnalysisStep(aspecd.utils.ExecuteOnDatasetMixin):
 
     Attributes
     ----------
-    name : `str`
+    name : :class:`str`
         Name of the analysis step.
 
         Defaults to the lower-case class name, don't change!
-    parameters : `dict`
+    parameters : :class:`dict`
         Parameters required for performing the analysis step
 
         All parameters, implicit and explicit.
-    results : `dict`
+    results : :class:`dict`
         Results of the analysis step
-    preprocessing : `list`
+    preprocessing : :class:`list`
         List of necessary preprocessing steps to perform the analysis.
-    description : `str`
+    description : :class:`str`
         Short description, to be set in class definition
-    comment : `str`
+    comment : :class:`str`
         User-supplied comment describing intent, purpose, reason, ...
     dataset : :class:`aspecd.dataset.Dataset`
         Dataset the analysis step should be performed on

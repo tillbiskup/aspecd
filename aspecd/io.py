@@ -113,7 +113,7 @@ class MissingDatasetError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -128,7 +128,7 @@ class MissingSourceError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -143,7 +143,7 @@ class MissingRecipeError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -216,7 +216,7 @@ class DatasetImporter:
 
         Parameters
         ----------
-        dataset : `aspecd.dataset.Dataset`
+        dataset : :class:`aspecd.dataset.Dataset`
             Dataset to import data and metadata into
 
         Raises
@@ -299,7 +299,7 @@ class DatasetImporterFactory:
 
         Parameters
         ----------
-        source : `str`
+        source : :class:`str`
             string describing the source of the dataset
 
             May be a filename or path, a URL/URI, a LOI, or similar
@@ -379,7 +379,7 @@ class DatasetExporter:
 
         Parameters
         ----------
-        dataset : `aspecd.dataset.Dataset`
+        dataset : :class:`aspecd.dataset.Dataset`
             Dataset to export data and metadata from
 
         Raises
@@ -443,7 +443,7 @@ class RecipeImporter:
     ----------
     recipe : :obj:`aspecd.tasks.Recipe`
         recipe to import into
-    source : `str`
+    source : :class:`str`
         specifier of the source the information will be read from
 
     Raises
@@ -564,7 +564,7 @@ class RecipeExporter:
 
         Parameters
         ----------
-        recipe : `aspecd.tasks.Recipe`
+        recipe : :class:`aspecd.tasks.Recipe`
             Recipe to export from
 
         Raises
@@ -611,7 +611,7 @@ class RecipeYamlImporter(RecipeImporter):
 
     Parameters
     ----------
-    source : `str`
+    source : :class:`str`
         filename of a YAML file to read from
 
     """
@@ -634,7 +634,7 @@ class RecipeYamlExporter(RecipeExporter):
 
     Parameters
     ----------
-    target : `str`
+    target : :class:`str`
         filename of a YAML file to write to
 
     """

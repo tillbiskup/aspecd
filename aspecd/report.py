@@ -31,7 +31,7 @@ class MissingFilenameError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -46,7 +46,7 @@ class LaTeXExecutableNotFoundError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -85,10 +85,10 @@ class Reporter:
 
     Attributes
     ----------
-    template : `str`
+    template : :class:`str`
         Template file used to generate report.
 
-    filename : `str`
+    filename : :class:`str`
         Name of the resulting template file.
 
     context : :class:`collections.OrderedDict`
@@ -100,15 +100,15 @@ class Reporter:
         Defaults to a :obj:`aspecd.report.GenericEnvironment` object with
         settings for rendering generic templates.
 
-    report : `str`
+    report : :class:`str`
         Actual report, i.e. rendered template
 
     Parameters
     ----------
-    template : `str`
+    template : :class:`str`
         Path to template file used to generate report.
 
-    filename : `str`
+    filename : :class:`str`
         Path to the output file the report should be rendered to.
 
     Raises
@@ -230,23 +230,23 @@ class LaTeXReporter(Reporter):
         Defaults to a :obj:`aspecd.report.LaTeXEnvironment` object with
         settings for rendering LaTeX templates.
 
-    includes : `list`
+    includes : :class:`list`
         List of files that need to be present for compiling the template.
 
         These files will be copied into the temporary directory used for
         compiling the template.
 
-    latex_executable : `str`
+    latex_executable : :class:`str`
         Name of/path to the LaTeX executable.
 
         Defaults to "pdflatex"
 
     Parameters
     ----------
-    template : `str`
+    template : :class:`str`
         Path to template file used to generate report.
 
-    filename : `str`
+    filename : :class:`str`
         Path to the output file the report should be rendered to.
 
     Raises

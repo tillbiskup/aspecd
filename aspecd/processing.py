@@ -35,7 +35,7 @@ class ProcessingNotApplicableToDatasetError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -50,7 +50,7 @@ class MissingDatasetError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -65,7 +65,7 @@ class MissingProcessingStepError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -98,21 +98,21 @@ class ProcessingStep(aspecd.utils.ExecuteOnDatasetMixin):
 
     Attributes
     ----------
-    undoable : `bool`
+    undoable : :class:`bool`
         Can this processing step be reverted?
-    name : `str`
+    name : :class:`str`
         Name of the analysis step.
 
         Defaults to the lower-case class name, don't change!
-    parameters : `dict`
+    parameters : :class:`dict`
         Parameters required for performing the processing step
 
         All parameters, implicit and explicit.
-    info : `dict`
+    info : :class:`dict`
         Additional information used, e.g., in a report (derived values, ...)
-    description : `str`
+    description : :class:`str`
         Short description, to be set in class definition
-    comment : `str`
+    comment : :class:`str`
         User-supplied comment describing intent, purpose, reason, ...
     dataset : :class:`aspecd.dataset.Dataset`
         Dataset the analysis step should be performed on
@@ -212,7 +212,7 @@ class ProcessingStep(aspecd.utils.ExecuteOnDatasetMixin):
 
         Returns
         -------
-        applicable : `bool`
+        applicable : :class:`bool`
             `True` if successful, `False` otherwise.
 
         """
@@ -280,17 +280,17 @@ class ProcessingStepRecord:
 
     Attributes
     ----------
-    undoable : `bool`
+    undoable : :class:`bool`
         Can this processing step be reverted?
-    description : `str`
+    description : :class:`str`
         Short description, to be set in class definition
-    parameters : `dict`
+    parameters : :class:`dict`
         Parameters required for performing the processing step
 
         All parameters, implicit and explicit.
-    comment : `str`
+    comment : :class:`str`
         User-supplied comment describing intent, purpose, reason, ...
-    class_name : `str`
+    class_name : :class:`str`
         Fully qualified name of the class of the corresponding processing step
 
     Parameters

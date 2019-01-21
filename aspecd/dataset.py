@@ -12,6 +12,68 @@ Therefore, each processing and analysis step of data should always be
 performed using the respective methods of a dataset, at least as long as it
 can be performed on a single dataset.
 
+Generally, there are two types of datasets: Those containing experimental
+data and those containing calculated data. Therefore, two corresponding
+subclasses exist, and packages building upon the ASpecD framework should
+inherit from either of them:
+
+  * :class:`aspecd.dataset.ExperimentalDataset`
+  * :class:`aspecd.dataset.CalculatedDataset`
+
+Additional classes used within the dataset that are normally not necessary
+to implement directly on your own in packages building upon the ASpecD
+framework, are:
+
+  * :class:`aspecd.dataset.Data`
+
+    Unit containing both, numeric data and corresponding axes.
+
+    The data class ensures consistency in terms of dimensions between
+    numerical data and axes.
+
+  * :class:`aspecd.dataset.Axis`
+
+    Axis for data in a dataset.
+
+    An axis contains always both, numerical values as well as the metadata
+    necessary to create axis labels and to make sense of the numerical
+    information.
+
+In addition, to handle the history contained within a dataset, there is a
+series of classes for storing history records:
+
+  * :class:`aspecd.dataset.HistoryRecord`
+
+    Generic base class for all kinds of history records.
+
+    For all classes operating on datasets, such as
+    :class:`aspecd.processing.ProcessingStep`,
+    :class:`aspecd.analysis.AnalysisStep` and others, there exist at least two
+    "representations": (i) the generic one not (necessarily) tied to any
+    concrete dataset, thus portable, and (ii) a concrete one having operated on
+    a dataset and thus being accompanied with information about who has done
+    what when how to what dataset.
+
+    For this second type, a history class derived from
+    :class:`aspecd.dataset.HistoryRecord` gets used, and it is this second type
+    that is stored inside the Dataset object.
+
+  * :class:`aspecd.dataset.ProcessingHistoryRecord`
+
+    History record for processing steps on datasets.
+
+  * :class:`aspecd.dataset.AnalysisHistoryRecord`
+
+    History record for analysis steps on datasets.
+
+  * :class:`aspecd.dataset.AnnotationHistoryRecord`
+
+    History record for annotations of datasets.
+
+  * :class:`aspecd.dataset.PlotHistoryRecord`
+
+    History record for plots of datasets.
+
 """
 
 import copy
@@ -39,7 +101,7 @@ class MissingProcessingStepError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -54,7 +116,7 @@ class UndoWithEmptyHistoryError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -69,7 +131,7 @@ class UndoAtBeginningOfHistoryError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -84,7 +146,7 @@ class UndoStepUndoableError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -99,7 +161,7 @@ class RedoAlreadyAtLatestChangeError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -114,7 +176,7 @@ class ProcessingWithLeadingHistoryError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -129,7 +191,7 @@ class MissingPlotterError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -144,7 +206,7 @@ class MissingImporterError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -159,7 +221,67 @@ class MissingExporterError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
+class AxesCountError(Error):
+    """Exception raised for wrong number of axes
+
+    Attributes
+    ----------
+    message : :class:`str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
+class AxesValuesInconsistentWithDataError(Error):
+    """Exception raised for axes values inconsistent with data
+
+    Attributes
+    ----------
+    message : :class:`str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
+class AxisValuesDimensionError(Error):
+    """Exception raised for wrong dimension of values
+
+    Attributes
+    ----------
+    message : :class:`str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
+class AxisValuesTypeError(Error):
+    """Exception raised for wrong type of values
+
+    Attributes
+    ----------
+    message : :class:`str`
         explanation of the error
 
     """
@@ -176,6 +298,14 @@ class Dataset(aspecd.utils.ToDictMixin):
     containing both, (numeric) data and corresponding metadata, aka information
     available about the data.
 
+    Generally, there are two types of datasets: Those containing
+    experimental data and those containing calculated data. Therefore,
+    two corresponding subclasses exist, and packages building upon the
+    ASpecD framework should inherit from either of them:
+
+      * :class:`aspecd.dataset.ExperimentalDataset`
+      * :class:`aspecd.dataset.CalculatedDataset`
+
     The public attributes of a dataset can be converted to a dict via
     :meth:`aspecd.utils.ToDictMixin.to_dict()`.
 
@@ -183,17 +313,17 @@ class Dataset(aspecd.utils.ToDictMixin):
     ----------
     data : :obj:`aspecd.dataset.Data`
         numeric data and axes
-    metadata : :obj:`aspecd.metadata.ExperimentalDatasetMetadata`
+    metadata : :obj:`aspecd.metadata.DatasetMetadata`
         hierarchical key-value store of metadata
-    history : `list`
+    history : :class:`list`
         processing steps performed on the numeric data
-    analyses : `list`
+    analyses : :class:`list`
         analysis steps performed on the dataset
-    annotations : `list`
+    annotations : :class:`list`
         annotations of the dataset
-    representations : `list`
+    representations : :class:`list`
         representations of the dataset, e.g., plots
-    source : `str`
+    source : :class:`str`
         source of the dataset (i.e., path, LOI, or else)
 
     Raises
@@ -214,7 +344,7 @@ class Dataset(aspecd.utils.ToDictMixin):
     def __init__(self):
         self.data = Data()
         self._origdata = Data()
-        self.metadata = None  # aspecd.metadata.ExperimentalDatasetMetadata()
+        self.metadata = aspecd.metadata.DatasetMetadata()
         self.history = []
         self._history_pointer = -1
         self.analyses = []
@@ -586,6 +716,21 @@ class Dataset(aspecd.utils.ToDictMixin):
 
 
 class ExperimentalDataset(Dataset):
+    """Base class for experimental datasets.
+
+    The dataset is one of the core elements of the ASpecD framework, basically
+    containing both, (numeric) data and corresponding metadata, aka information
+    available about the data.
+
+    The public attributes of a dataset can be converted to a dict via
+    :meth:`aspecd.utils.ToDictMixin.to_dict()`.
+
+    Attributes
+    ----------
+    metadata : :obj:`aspecd.metadata.ExperimentalDatasetMetadata`
+        hierarchical key-value store of metadata
+
+    """
 
     def __init__(self):
         super().__init__()
@@ -593,40 +738,36 @@ class ExperimentalDataset(Dataset):
 
 
 class CalculatedDataset(Dataset):
+    """Base class for datasets containing calculated data.
+
+    The dataset is one of the core elements of the ASpecD framework, basically
+    containing both, (numeric) data and corresponding metadata, aka information
+    available about the data.
+
+    The public attributes of a dataset can be converted to a dict via
+    :meth:`aspecd.utils.ToDictMixin.to_dict()`.
+
+    Attributes
+    ----------
+    metadata : :obj:`aspecd.metadata.CalculatedDatasetMetadata`
+        hierarchical key-value store of metadata
+
+    experimental_dataset : :class:`str`
+        reference to an experimental dataset connected to the calculation
+
+        Whereas calculations can be entirely independent, often, they are
+        connected to experimental data stored in a dataset of type
+        :class:`aspecd.dataset.ExperimentalDataset`.
+
+        Usually, the reference consists of the information contained in the
+        :attr:`aspecd.dataset.Dataset.source` attribute of a dataset.
+
+    """
 
     def __init__(self):
         super().__init__()
         self.metadata = aspecd.metadata.CalculatedDatasetMetadata()
-
-
-class AxesCountError(Error):
-    """Exception raised for wrong number of axes
-
-    Attributes
-    ----------
-    message : `str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class AxesValuesInconsistentWithDataError(Error):
-    """Exception raised for axes values inconsistent with data
-
-    Attributes
-    ----------
-    message : `str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
+        self.experimental_dataset = ''
 
 
 class Data:
@@ -640,20 +781,20 @@ class Data:
     ----------
     data : `numpy.array`
         Numerical data
-    axes : `list`
+    axes : :class:`list`
         List of objects of type :class:`aspecd.dataset.Axis`
 
         The number of axes needs to be consistent with the dimensions of data.
 
         Axes will be set automatically when setting data. Hence,
         the easiest is to first set data and only afterwards set axis values.
-    calculated : `bool`
+    calculated : :class:`bool`
         Indicator for the origin of the numerical data (calculation or
         experiment).
 
     Attributes
     ----------
-    calculated : `bool`
+    calculated : :class:`bool`
         Indicate whether numeric data are calculated rather than
         experimentally recorded
 
@@ -745,36 +886,6 @@ class Data:
         for index in range(self.data.ndim):
             if len(self.axes[index].values) != data_shape[index]:
                 raise AxesValuesInconsistentWithDataError
-
-
-class AxisValuesDimensionError(Error):
-    """Exception raised for wrong dimension of values
-
-    Attributes
-    ----------
-    message : `str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class AxisValuesTypeError(Error):
-    """Exception raised for wrong type of values
-
-    Attributes
-    ----------
-    message : `str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
 
 
 class Axis:
@@ -891,7 +1002,7 @@ class HistoryRecord:
 
     Parameters
     ----------
-    package : `str`
+    package : :class:`str`
         Name of package the hstory record gets recorded for
 
         Prerequisite for reproducibility, gets stored in the
@@ -918,7 +1029,7 @@ class ProcessingHistoryRecord(HistoryRecord):
     processing_step : :class:`aspecd.processing.ProcessingStep`
         processing step the history is saved for
 
-    package : `str`
+    package : :class:`str`
         Name of package the hstory record gets recorded for
 
         Prerequisite for reproducibility, gets stored in the
@@ -958,7 +1069,7 @@ class AnalysisHistoryRecord(HistoryRecord):
     analysis : :class:`aspecd.analysis.AnalysisStep`
         Analysis step the history is saved for
 
-    package : `str`
+    package : :class:`str`
         Name of package the hstory record gets recorded for
 
         Prerequisite for reproducibility, gets stored in the
@@ -980,7 +1091,7 @@ class AnnotationHistoryRecord(HistoryRecord):
     annotation : :class:`aspecd.analysis.Annotation`
         Annotation the history is saved for
 
-    package : `str`
+    package : :class:`str`
         Name of package the hstory record gets recorded for
 
         Prerequisite for reproducibility, gets stored in the
@@ -1002,7 +1113,7 @@ class PlotHistoryRecord(HistoryRecord):
     plot : :class:`aspecd.plotting.SinglePlotRecord`
         Plot the history is saved for
 
-    package : `str`
+    package : :class:`str`
         Name of package the hstory record gets recorded for
 
         Prerequisite for reproducibility, gets stored in the

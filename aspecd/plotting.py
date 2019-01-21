@@ -57,7 +57,7 @@ class MissingDatasetError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -72,7 +72,7 @@ class PlotNotApplicableToDatasetError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -87,7 +87,7 @@ class MissingSaverError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -102,7 +102,7 @@ class MissingFilenameError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -117,7 +117,7 @@ class MissingPlotError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -132,7 +132,7 @@ class MissingPlotterError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -158,13 +158,13 @@ class Plotter:
 
     Attributes
     ----------
-    name : `str`
+    name : :class:`str`
         Name of the plotter.
 
         Defaults always to the full class name, don't change!
-    parameters : `dict`
+    parameters : :class:`dict`
         All parameters necessary for the plot, implicit and explicit
-    description : `str`
+    description : :class:`str`
         Short description, to be set in class definition
     figure : :class:`matplotlib.figure.Figure`
         Reference to figure object
@@ -220,7 +220,7 @@ class Plotter:
 
         Returns
         -------
-        applicable : `bool`
+        applicable : :class:`bool`
             `True` if successful, `False` otherwise.
 
         """
@@ -457,7 +457,7 @@ class MultiPlotter(Plotter):
 
     Attributes
     ----------
-    datasets : `list`
+    datasets : :class:`list`
         List of dataset the plotting should be done for
 
     Raises
@@ -511,9 +511,9 @@ class Saver:
 
     Attributes
     ----------
-    filename : `str`
+    filename : :class:`str`
         Name of the file the plot should get saved to
-    parameters : `dict`
+    parameters : :class:`dict`
         Key-value store of parameters for saving.
 
         See :meth:`matplotlib.figure.Figure.savefig` for details and
@@ -632,15 +632,15 @@ class PlotRecord:
 
     Attributes
     ----------
-    name : `str`
+    name : :class:`str`
         Name of the plotter.
 
         Defaults to the plotter class name and shall never be set manually.
-    description : `str`
+    description : :class:`str`
         Short description of the plot
-    parameters : `dict`
+    parameters : :class:`dict`
         All parameters necessary for the plot, implicit and explicit
-    filename : `str`
+    filename : :class:`str`
         Name of the file the plot has been/should be saved to
 
 
@@ -695,7 +695,7 @@ class SinglePlotRecord(PlotRecord):
 
     Attributes
     ----------
-    preprocessing : `list`
+    preprocessing : :class:`list`
         List of processing steps
 
         The actual processing steps are objects of the class
@@ -722,7 +722,7 @@ class MultiPlotRecord(PlotRecord):
 
     Attributes
     ----------
-    datasets : `list`
+    datasets : :class:`list`
         List of datasets whose data appear in the plot.
 
     Parameters

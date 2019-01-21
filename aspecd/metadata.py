@@ -81,20 +81,20 @@ class PhysicalQuantity(aspecd.utils.ToDictMixin):
 
     Attributes
     ----------
-    unit : `str`
+    unit : :class:`str`
         symbol of the unit of the corresponding value
 
         SI units are preferred
-    dimension : `str`
+    dimension : :class:`str`
         dimension of the corresponding value
 
         useful for (automatic) conversions
-    name : `str`
+    name : :class:`str`
         name of the physical quantity in a given context
 
     Parameters
     ----------
-    string : `str`
+    string : :class:`str`
         String containing value and unit, separated by whitespace
 
         Will be used to set value and unit correspondingly.
@@ -103,7 +103,7 @@ class PhysicalQuantity(aspecd.utils.ToDictMixin):
         only :attr:`value` will be set.
     value : `float`
         Numerical value
-    unit : `str`
+    unit : :class:`str`
         String containing the unit of the corresponding value.
 
         SI units are preferred, and their abbreviations should be used.
@@ -178,7 +178,7 @@ class PhysicalQuantity(aspecd.utils.ToDictMixin):
 
         Returns
         -------
-        commensurable : `boolean`
+        commensurable : :class:`bool`
             True if both physical quantities have the same unit or
             dimension, False otherwise
 
@@ -199,7 +199,7 @@ class PhysicalQuantity(aspecd.utils.ToDictMixin):
 
         Parameters
         ----------
-        string : `str`
+        string : :class:`str`
             String containing value and unit, separated by whitespace
 
             Will be used to set value and unit correspondingly.
@@ -222,7 +222,7 @@ class PhysicalQuantity(aspecd.utils.ToDictMixin):
 
         Returns
         -------
-        public_attributes : `dict`
+        public_attributes : :class:`dict`
             Dictionary containing the public attributes of the object
 
         """
@@ -249,7 +249,7 @@ class Metadata(aspecd.utils.ToDictMixin):
 
         Parameters
         ----------
-        dict_ : `dict`
+        dict_ : :class:`dict`
             Dictionary containing properties to set
 
         """
@@ -272,7 +272,7 @@ class Metadata(aspecd.utils.ToDictMixin):
 
         Parameters
         ----------
-        dict_ : `dict`
+        dict_ : :class:`dict`
             Dictionary containing properties to set
 
         """
@@ -297,7 +297,7 @@ class TemperatureControl(Metadata):
     ----------
     temperature : :class:`aspecd.metadata.PhysicalQuantity`
         value and unit of the temperature set
-    controller : `str`
+    controller : :class:`str`
         type and name of the temperature controller used
 
     """
@@ -311,9 +311,9 @@ class TemperatureControl(Metadata):
 
         Parameters
         ----------
-        dict_ : `dict`
+        dict_ : :class:`dict`
             Dictionary containing properties to set
-        temperature : `str`
+        temperature : :class:`str`
             Value and unit of temperature
 
         """
@@ -345,7 +345,7 @@ class TemperatureControl(Metadata):
 
         Parameters
         ----------
-        dict_ : `dict`
+        dict_ : :class:`dict`
             Dictionary with keys corresponding to properties of the class.
 
         """
@@ -372,17 +372,17 @@ class Measurement(Metadata):
         Date and time of start of measurement
     end : `datetime`
         Date and time of end of measurement
-    purpose: `str`
+    purpose: :class:`str`
         Purpose of measurement, often quite helpful to know
-    operator : `str`
+    operator : :class:`str`
         Name of the operator performing the measurement
         Beware of the implications for privacy protection
-    labbook_entry : `str`
+    labbook_entry : :class:`str`
         Identifier for lab book entry (usually either LOI or URL)
 
     Parameters
     ----------
-    dict_ : `dict`
+    dict_ : :class:`dict`
         Dictionary containing fields corresponding to attributes of the class
 
     """
@@ -419,7 +419,7 @@ class Measurement(Metadata):
 
         Parameters
         ----------
-        dict_ : `dict`
+        dict_ : :class:`dict`
             Dictionary with keys corresponding to properties of the class.
 
         """
@@ -443,9 +443,9 @@ class Measurement(Metadata):
 
         Parameters
         ----------
-        key : `str`
+        key : :class:`str`
             Property of class to set
-        dict_ : `dict`
+        dict_ : :class:`dict`
             Dictionary with fields "date" and "time"
 
         """
@@ -464,9 +464,9 @@ class Measurement(Metadata):
 
         Parameters
         ----------
-        key : `str`
+        key : :class:`str`
             Property of class to set
-        string : `str`
+        string : :class:`str`
             String containing date and time in format described above
 
         """
@@ -480,16 +480,16 @@ class Sample(Metadata):
 
     Attributes
     ----------
-    name : `str`
+    name : :class:`str`
         Short name of the sample
-    id : `str` or `int`
+    id : :class:`str` or `int`
         Unique identifier of the sample
-    loi : `str`
+    loi : :class:`str`
         Lab Object Identifier (LOI) for the sample
 
     Parameters
     ----------
-    dict_ : `dict`
+    dict_ : :class:`dict`
         Dictionary containing fields corresponding to attributes of the class
 
     """
@@ -517,6 +517,7 @@ class DatasetMetadata(aspecd.utils.ToDictMixin):
 
     """
 
+    # pylint: disable=useless-super-delegation
     def __init__(self):
         super().__init__()
 
@@ -532,7 +533,7 @@ class DatasetMetadata(aspecd.utils.ToDictMixin):
 
         Parameters
         ----------
-        dict_ : `dict`
+        dict_ : :class:`dict`
             Dictionary with metadata.
 
             Each key of this dictionary corresponds to a class attribute and
@@ -550,7 +551,8 @@ class ExperimentalDatasetMetadata(DatasetMetadata):
     """
     Metadata for an experimental dataset.
 
-    This class contains the minimal set of metadata for an experimental dataset.
+    This class contains the minimal set of metadata for an experimental
+    dataset, i.e., :class:`aspecd.dataset.ExperimentalDataset`.
 
     Metadata of actual datasets should extend this class by adding
     properties that are themselves classes inheriting from
@@ -583,7 +585,7 @@ class CalculatedDatasetMetadata(DatasetMetadata):
     Metadata for a dataset with calculated data.
 
     This class contains the minimal set of metadata for a dataset consisting
-    of calculated data.
+    of calculated data, i.e., :class:`aspecd.dataset.CalculatedDataset`.
 
     Metadata of actual datasets should extend this class by adding
     properties that are themselves classes inheriting from
@@ -637,9 +639,9 @@ class MetadataMapper:
 
     Attributes
     ----------
-    metadata : `dict`
+    metadata : :class:`dict`
         Dictionary containing the metadata that are converted in place
-    mappings : `list`
+    mappings : :class:`list`
         Tasks to perform to map dictionary
 
         Each task is a list containing three entries:

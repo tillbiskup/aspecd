@@ -26,7 +26,7 @@ class MissingFilenameError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -47,7 +47,7 @@ def full_class_name(object_):
 
     Returns
     -------
-    class_name : `str`
+    class_name : :class:`str`
         string with full class name of object
 
     """
@@ -65,7 +65,7 @@ def object_from_class_name(full_class_name_string):
 
     Parameters
     ----------
-    full_class_name_string : `str`
+    full_class_name_string : :class:`str`
         string with full class name of an object that shall be instantiated
 
     Returns
@@ -102,9 +102,9 @@ class ToDictMixin:
 
         Parameters
         ----------
-        attribute : `str`
+        attribute : :class:`str`
             Name of attribute
-        value : `str`
+        value : :class:`str`
             Value of attribute
 
         """
@@ -166,7 +166,7 @@ def get_aspecd_version():
 
     Returns
     -------
-    version : `str`
+    version : :class:`str`
         Version number as string
 
     """
@@ -188,12 +188,12 @@ def package_version(name=''):
 
     Parameters
     ----------
-    name : `str`
+    name : :class:`str`
         Name of package the version should be obtained for
 
     Returns
     -------
-    version : `str`
+    version : :class:`str`
         Version number as string
 
     """
@@ -217,7 +217,7 @@ def package_name(obj=None):
 
     Returns
     -------
-    package_name : `str`
+    package_name : :class:`str`
         Name of the package
 
     """
@@ -236,7 +236,7 @@ def config_dir():
 
     Returns
     -------
-    config_dir : `str`
+    config_dir : :class:`str`
         Path to config directory, usually in the user's directory
 
     """
@@ -275,7 +275,7 @@ class Yaml:
 
         Parameters
         ----------
-        filename : `str`
+        filename : :class:`str`
             Name of the YAML file to read from.
 
         Raises
@@ -295,7 +295,7 @@ class Yaml:
 
         Parameters
         ----------
-        filename : `str`
+        filename : :class:`str`
             Name of the YAML file to write to.
 
         Raises

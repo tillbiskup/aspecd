@@ -27,7 +27,7 @@ class MissingRecipeError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -42,7 +42,7 @@ class MissingDictError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -57,7 +57,7 @@ class MissingImporterError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -72,7 +72,7 @@ class MissingExporterError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -87,7 +87,7 @@ class MissingImporterFactoryError(Error):
 
     Attributes
     ----------
-    message : `str`
+    message : :class:`str`
         explanation of the error
 
     """
@@ -130,11 +130,11 @@ class Recipe:
 
     Attributes
     ----------
-    datasets : `list`
+    datasets : :class:`list`
         List of datasets the tasks should be performed for
 
         Each dataset is an object of class :class:`aspecd.dataset.Dataset`.
-    tasks : `list`
+    tasks : :class:`list`
         List of tasks to be performed on the datasets
 
         Each task is an object of class :class:`aspecd.tasks.Task`.
@@ -172,7 +172,7 @@ class Recipe:
 
         Parameters
         ----------
-        dict_ : `dict`
+        dict_ : :class:`dict`
             Dictionary containing information of a recipe.
 
         Raises
@@ -211,7 +211,7 @@ class Recipe:
 
         Returns
         -------
-        dict_ : `dict`
+        dict_ : :class:`dict`
             Dictionary with fields "datasets" and "tasks"
 
         """
@@ -346,21 +346,21 @@ class Task(aspecd.utils.ToDictMixin):
 
     Attributes
     ----------
-    kind : `str`
+    kind : :class:`str`
         Kind of task.
 
         Corresponds to module name the type (class) is defined in.
-    type : `str`
+    type : :class:`str`
         Type of task.
 
         Corresponds to the class name eventually responsible for performing
         the task.
-    metadata : `dict`
+    metadata : :class:`dict`
         Metadata necessary to perform the task.
 
         Should have keys corresponding to the properties of the class given
         as type attribute.
-    apply_to : `list`
+    apply_to : :class:`list`
         List of datasets the task should be applied to.
 
         Defaults to an empty list, meaning that the task will be performed
@@ -390,7 +390,7 @@ class Task(aspecd.utils.ToDictMixin):
 
         Parameters
         ----------
-        dict_ : `dict`
+        dict_ : :class:`dict`
             Dictionary containing information of a task.
 
         Raises

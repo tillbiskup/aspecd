@@ -26,18 +26,18 @@ class SystemInfo(aspecd.utils.ToDictMixin):
 
     Attributes
     ----------
-    python : `dict`
+    python : :class:`dict`
         Version of Python (and potentially further information)
-    packages : `dict`
+    packages : :class:`dict`
         Relevant modules and their version numbers
-    platform : `string`
+    platform : :class:`string`
         Identifier of the platform
-    user : `dict`
+    user : :class:`dict`
         Currently only the login name of the currently logged-in user
 
     Parameters
     ----------
-    package : `str`
+    package : :class:`str`
         Name of package whose version shall be added to the :attr:`modules`
         dictionary
 
