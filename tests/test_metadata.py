@@ -354,7 +354,7 @@ class TestSample(unittest.TestCase):
 
 class TestDatasetMetadata(unittest.TestCase):
     def setUp(self):
-        self.dataset_metadata = metadata.DatasetMetadata()
+        self.dataset_metadata = metadata.ExperimentalDatasetMetadata()
 
     def test_instantiate_class(self):
         pass

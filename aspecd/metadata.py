@@ -30,7 +30,7 @@ information about the temperature control (including whether temperature has
 been actively controlled at all during the measurement).
 
 The attribute `metadata` in the :class:`aspecd.dataset.Dataset` is of type
-:class:`aspecd.metadata.DatasetMetadata` and contains the three metadata
+:class:`aspecd.metadata.ExperimentalDatasetMetadata` and contains the three metadata
 classes named above. Derived packages should extend this class accordingly.
 
 All classes inheriting from :class:`aspecd.metadata.Metadata` provide a
@@ -47,7 +47,7 @@ of the ASpecD framework and each application derived from it is separate
 from the way the very same metadata are organised in files written mostly
 during data acquisition. To map the structure obtained by reading a
 metadata file to the internal representation within the dataset, as given
-by the :class:`aspecd.metadata.DatasetMetadata` class, there exists a
+by the :class:`aspecd.metadata.ExperimentalDatasetMetadata` class, there exists a
 generic mapper class :class:`aspecd.metadata.MetadataMapper`. This way,
 you can separate the representations of metadata and support mapping for
 different versions of metadata files.
@@ -500,7 +500,7 @@ class Sample(Metadata):
         super().__init__(dict_=dict_)
 
 
-class DatasetMetadata(aspecd.utils.ToDictMixin):
+class ExperimentalDatasetMetadata(aspecd.utils.ToDictMixin):
     """
     Metadata for dataset.
 
@@ -564,7 +564,7 @@ class MetadataMapper:
     Allows to convert a dictionary containing metadata read, e.g., from a
     metadata file to a dictionary that corresponds to the internal
     structure of the metadata in a dataset stored in
-    :class:`aspecd.metadata.DatasetMetadata`.
+    :class:`aspecd.metadata.ExperimentalDatasetMetadata`.
 
     If all you need is to convert the dictionary keys to proper variable
     names conforming to the naming scheme proposed by `PEP 8
@@ -586,7 +586,7 @@ class MetadataMapper:
     metadata contained in :attr:`metadata` according to the mapping table
     contained in :meth:`mappings`. Finally, you may want to assing this
     converted data structure to your dataset's metadata attribute,
-    using :meth:`DatasetMetadata.from_dict()`.
+    using :meth:`ExperimentalDatasetMetadata.from_dict()`.
 
     Attributes
     ----------

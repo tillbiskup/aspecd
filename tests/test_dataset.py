@@ -462,6 +462,15 @@ class TestDatasetExporting(unittest.TestCase):
             self.dataset.export_to()
 
 
+class TestDatasetToDict(unittest.TestCase):
+    def setUp(self):
+        self.dataset = dataset.Dataset()
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.dataset, 'to_dict'))
+        self.assertTrue(callable(self.dataset.to_dict))
+
+
 class TestData(unittest.TestCase):
 
     def setUp(self):

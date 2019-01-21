@@ -71,13 +71,13 @@ The importer should make sure not only to import the numeric data appropriately 
 Metadata
 ========
 
-The ``metadata`` attribute of the dataset is actually an instance of :class:`aspecd.metadata.DatasetMetadata` that in itself contains a list of attributes found in any case, namely general information about the measurement (``measurement``), the sample (``sample``) and the temperature control (``temperature_control``). Each of these attributes are instances of their respective classes defined as well within the ASpecD framework.
+The ``metadata`` attribute of the dataset is actually an instance of :class:`aspecd.metadata.ExperimentalDatasetMetadata` that in itself contains a list of attributes found in any case, namely general information about the measurement (``measurement``), the sample (``sample``) and the temperature control (``temperature_control``). Each of these attributes are instances of their respective classes defined as well within the ASpecD framework.
 
-In order to store all the metadata usually contained in files written at the time of data acquisition, you will need to create additional metadata classes and extend :class:`aspecd.metadata.DatasetMetadata` by writing your own "DatasetMetadata" class subclassing the one from the ASpecD framework::
+In order to store all the metadata usually contained in files written at the time of data acquisition, you will need to create additional metadata classes and extend :class:`aspecd.metadata.ExperimentalDatasetMetadata` by writing your own "ExperimentalDatasetMetadata" class subclassing the one from the ASpecD framework::
 
     import aspecd
 
-    class DatasetMetadata(aspecd.metadata.DatasetMetadata):
+    class ExperimentalDatasetMetadata(aspecd.metadata.ExperimentalDatasetMetadata):
 
         def __init__(self, path=''):
             super().__init__()
@@ -93,14 +93,14 @@ Eventually, you will need to extend your ``Dataset`` class that you have defined
 
         def __init__(self):
             super().__init__()
-            self.metadata = DatasetMetadata()
+            self.metadata = ExperimentalDatasetMetadata()
 
-Once you have created all the necessary classes for the different groups of metadata, the actual import of the metadata can become quite simple. The only prerequisite here is to have them initially stored in a Python dictionary whose structure resembles that of the hierarchy of objects contained in your :class:`DatasetMetadata` class. Therefore, make sure that at least the top-level keys of this dictionary have names corresponding to the (public) attributes of your :class:`DatasetMetadata` class. [#metadata_names]_
+Once you have created all the necessary classes for the different groups of metadata, the actual import of the metadata can become quite simple. The only prerequisite here is to have them initially stored in a Python dictionary whose structure resembles that of the hierarchy of objects contained in your :class:`ExperimentalDatasetMetadata` class. Therefore, make sure that at least the top-level keys of this dictionary have names corresponding to the (public) attributes of your :class:`ExperimentalDatasetMetadata` class. [#metadata_names]_
 
 .. note::
-  The organisation of metadata in a metadata file that gets created during measurement and the representation of the very same metadata within the ``Dataset`` class need not be the same, and they will most probably diverge at least over time. To nevertheless be able to map the metadata read from a file and contained in a dictionary (ideally in a :class:`collections.OrderedDict`), there exists the :class:`aspecd.metadata.MetadataMapper` class allowing to map the dictionary to the structure of the class hierarchy in your :class:`DatasetMetadata` class.
+  The organisation of metadata in a metadata file that gets created during measurement and the representation of the very same metadata within the ``Dataset`` class need not be the same, and they will most probably diverge at least over time. To nevertheless be able to map the metadata read from a file and contained in a dictionary (ideally in a :class:`collections.OrderedDict`), there exists the :class:`aspecd.metadata.MetadataMapper` class allowing to map the dictionary to the structure of the class hierarchy in your :class:`ExperimentalDatasetMetadata` class.
 
-Once you have a dictionary, e.g. ``metadata_dict``, with all your metadata and with (top-level) keys corresponding to the the attributes of your :class:`DatasetMetadata` class, you can import the metadata into your dataset with just one line::
+Once you have a dictionary, e.g. ``metadata_dict``, with all your metadata and with (top-level) keys corresponding to the the attributes of your :class:`ExperimentalDatasetMetadata` class, you can import the metadata into your dataset with just one line::
 
     dataset.metadata.from_dict(metadata_dict)
 

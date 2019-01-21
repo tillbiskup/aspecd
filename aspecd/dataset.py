@@ -19,8 +19,13 @@ from datetime import datetime
 
 import numpy as np
 
-from aspecd import analysis, annotation, metadata, plotting, processing, \
-    system, utils
+import aspecd.analysis
+import aspecd.annotation
+import aspecd.metadata
+import aspecd.plotting
+import aspecd.processing
+import aspecd.system
+import aspecd.utils
 
 
 class Error(Exception):
@@ -164,18 +169,28 @@ class MissingExporterError(Error):
         self.message = message
 
 
-class Dataset:
+class Dataset(aspecd.utils.ToDictMixin):
     """Base class for all kinds of datasets.
 
     The dataset is one of the core elements of the ASpecD framework, basically
     containing both, (numeric) data and corresponding metadata, aka information
     available about the data.
 
+    The public attributes of a dataset can be converted to a dict via
+    :meth:`aspecd.utils.ToDictMixin.to_dict()`.
+
+    .. todo::
+        Change type of metadata attribute to more general DatasetMetadata
+        class and create two subclasses of Dataset, named ExperimentalDataset
+        and CalculatedDataset, respectively. This allows for handling data
+        that result from calculations of whatever type (from polynomial
+        baselines to quantum-chemical simulations) as datasets.
+
     Attributes
     ----------
     data : :obj:`aspecd.dataset.Data`
         numeric data and axes
-    metadata : :obj:`aspecd.metadata.DatasetMetadata`
+    metadata : :obj:`aspecd.metadata.ExperimentalDatasetMetadata`
         hierarchical key-value store of metadata
     history : `list`
         processing steps performed on the numeric data
@@ -206,7 +221,7 @@ class Dataset:
     def __init__(self):
         self.data = Data()
         self._origdata = Data()
-        self.metadata = metadata.DatasetMetadata()
+        self.metadata = aspecd.metadata.ExperimentalDatasetMetadata()
         self.history = []
         self._history_pointer = -1
         self.analyses = []
@@ -214,7 +229,8 @@ class Dataset:
         self.representations = []
         self.source = ''
         # Package name is used to store the package version in history records
-        self._package_name = utils.package_name(self)
+        self._package_name = aspecd.utils.package_name(self)
+        super().__init__()
 
     def process(self, processing_step=None):
         """Apply processing step to dataset.
@@ -487,7 +503,7 @@ class Dataset:
 
     def _create_plot_record(self, plotter=None):
         plot_record = PlotHistoryRecord(package=self._package_name)
-        plot_record.plot = plotting.SinglePlotRecord(plotter=plotter)
+        plot_record.plot = aspecd.plotting.SinglePlotRecord(plotter=plotter)
         plot_record.plot.preprocessing = copy.deepcopy(self.history)
         return plot_record
 
@@ -879,7 +895,7 @@ class HistoryRecord:
 
     def __init__(self, package=''):
         self.date = datetime.today()
-        self.sysinfo = system.SystemInfo(package=package)
+        self.sysinfo = aspecd.system.SystemInfo(package=package)
 
 
 class ProcessingHistoryRecord(HistoryRecord):
@@ -906,7 +922,8 @@ class ProcessingHistoryRecord(HistoryRecord):
 
     def __init__(self, processing_step=None, package=''):
         super().__init__(package=package)
-        self.processing = processing.ProcessingStepRecord(processing_step)
+        self.processing = \
+            aspecd.processing.ProcessingStepRecord(processing_step)
 
     @property
     def undoable(self):
@@ -945,7 +962,7 @@ class AnalysisHistoryRecord(HistoryRecord):
 
     def __init__(self, package=''):
         super().__init__(package=package)
-        self.analysis = analysis.AnalysisStep()
+        self.analysis = aspecd.analysis.AnalysisStep()
 
 
 class AnnotationHistoryRecord(HistoryRecord):
@@ -967,7 +984,7 @@ class AnnotationHistoryRecord(HistoryRecord):
 
     def __init__(self, package=''):
         super().__init__(package=package)
-        self.annotation = annotation.Annotation()
+        self.annotation = aspecd.annotation.Annotation()
 
 
 class PlotHistoryRecord(HistoryRecord):
@@ -989,4 +1006,4 @@ class PlotHistoryRecord(HistoryRecord):
 
     def __init__(self, package=''):
         super().__init__(package=package)
-        self.plot = plotting.SinglePlotRecord()
+        self.plot = aspecd.plotting.SinglePlotRecord()
