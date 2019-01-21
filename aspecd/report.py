@@ -100,6 +100,9 @@ class Reporter:
         Defaults to a :obj:`aspecd.report.GenericEnvironment` object with
         settings for rendering generic templates.
 
+    report : `str`
+        Actual report, i.e. rendered template
+
     Parameters
     ----------
     template : `str`
