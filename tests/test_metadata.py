@@ -352,7 +352,7 @@ class TestSample(unittest.TestCase):
             self.assertEqual(getattr(self.sample, key), dict_[key])
 
 
-class TestDatasetMetadata(unittest.TestCase):
+class TestExperimentalDatasetMetadata(unittest.TestCase):
     def setUp(self):
         self.dataset_metadata = metadata.ExperimentalDatasetMetadata()
 

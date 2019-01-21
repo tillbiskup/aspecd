@@ -5,8 +5,9 @@ from datetime import datetime, timedelta
 
 import numpy as np
 
-from aspecd import annotation, analysis, dataset, io, plotting, processing, \
-    system
+from aspecd import annotation, analysis, dataset, io, plotting, \
+    processing, system
+import aspecd.metadata
 
 
 class TestDataset(unittest.TestCase):
@@ -469,6 +470,30 @@ class TestDatasetToDict(unittest.TestCase):
     def test_has_to_dict_method(self):
         self.assertTrue(hasattr(self.dataset, 'to_dict'))
         self.assertTrue(callable(self.dataset.to_dict))
+
+
+class TestExperimentalDataset(unittest.TestCase):
+    def setUp(self):
+        self.dataset = dataset.ExperimentalDataset()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_metadata_is_ExperimentalDatasetMetadata(self):
+        self.assertTrue(isinstance(self.dataset.metadata,
+                                   aspecd.metadata.ExperimentalDatasetMetadata))
+
+
+class TestCalculatedDataset(unittest.TestCase):
+    def setUp(self):
+        self.dataset = dataset.CalculatedDataset()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_metadata_is_CalculatedDatasetMetadata(self):
+        self.assertTrue(isinstance(self.dataset.metadata,
+                                   aspecd.metadata.CalculatedDatasetMetadata))
 
 
 class TestData(unittest.TestCase):

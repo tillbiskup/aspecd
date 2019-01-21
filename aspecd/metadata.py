@@ -30,8 +30,9 @@ information about the temperature control (including whether temperature has
 been actively controlled at all during the measurement).
 
 The attribute `metadata` in the :class:`aspecd.dataset.Dataset` is of type
-:class:`aspecd.metadata.ExperimentalDatasetMetadata` and contains the three metadata
-classes named above. Derived packages should extend this class accordingly.
+:class:`aspecd.metadata.ExperimentalDatasetMetadata` and contains the three
+metadata classes named above. Derived packages should extend this class
+accordingly.
 
 All classes inheriting from :class:`aspecd.metadata.Metadata` provide a
 method :meth:`from_dict` allowing to set the attributes of the objects. This
@@ -47,10 +48,10 @@ of the ASpecD framework and each application derived from it is separate
 from the way the very same metadata are organised in files written mostly
 during data acquisition. To map the structure obtained by reading a
 metadata file to the internal representation within the dataset, as given
-by the :class:`aspecd.metadata.ExperimentalDatasetMetadata` class, there exists a
-generic mapper class :class:`aspecd.metadata.MetadataMapper`. This way,
-you can separate the representations of metadata and support mapping for
-different versions of metadata files.
+by the :class:`aspecd.metadata.ExperimentalDatasetMetadata` class,
+there exists a generic mapper class :class:`aspecd.metadata.MetadataMapper`.
+This way, you can separate the representations of metadata and support
+mapping for different versions of metadata files.
 
 """
 
@@ -500,11 +501,56 @@ class Sample(Metadata):
         super().__init__(dict_=dict_)
 
 
-class ExperimentalDatasetMetadata(aspecd.utils.ToDictMixin):
+class DatasetMetadata(aspecd.utils.ToDictMixin):
     """
     Metadata for dataset.
 
     This class contains the minimal set of metadata for a dataset.
+
+    Metadata of actual datasets should extend this class by adding
+    properties that are themselves classes inheriting from
+    :class:`aspecd.metadata.Metadata`.
+
+    Metadata can be converted to dict via
+    :meth:`aspecd.utils.ToDictMixin.to_dict()`, e.g., for generating
+    reports using templates and template engines.
+
+    """
+
+    def __init__(self):
+        super().__init__()
+
+    def from_dict(self, dict_=None):
+        """
+        Set properties from dictionary, e.g., from metadata.
+
+        Only parameters in the dictionary that are valid properties of the
+        class are set accordingly.
+
+        Keys in the dictionary are converted to lower case and spaces
+        converted to underscores to fit the naming scheme of attributes.
+
+        Parameters
+        ----------
+        dict_ : `dict`
+            Dictionary with metadata.
+
+            Each key of this dictionary corresponds to a class attribute and
+            is in itself a dictionary with the correct set of attributes for
+            the particular class.
+
+        """
+        for key in dict_:
+            attr = key.replace(' ', '_').lower()
+            if hasattr(self, attr):
+                getattr(self, attr).from_dict(dict_[key])
+
+
+class ExperimentalDatasetMetadata(DatasetMetadata):
+    """
+    Metadata for an experimental dataset.
+
+    This class contains the minimal set of metadata for an experimental dataset.
 
     Metadata of actual datasets should extend this class by adding
     properties that are themselves classes inheriting from
@@ -531,30 +577,31 @@ class ExperimentalDatasetMetadata(aspecd.utils.ToDictMixin):
         self.sample = Sample()
         self.temperature_control = TemperatureControl()
 
-    def from_dict(self, dict_=None):
-        """
-        Set properties from dictionary, e.g., from metadata.
 
-        Only parameters in the dictionary that are valid properties of the
-        class are set accordingly.
+class CalculatedDatasetMetadata(DatasetMetadata):
+    """
+    Metadata for a dataset with calculated data.
 
-        Keys in the dictionary are converted to lower case and spaces
-        converted to underscores to fit the naming scheme of attributes.
+    This class contains the minimal set of metadata for a dataset consisting
+    of calculated data.
 
-        Parameters
-        ----------
-        dict_ : `dict`
-            Dictionary with metadata.
+    Metadata of actual datasets should extend this class by adding
+    properties that are themselves classes inheriting from
+    :class:`aspecd.metadata.Metadata`.
 
-            Each key of this dictionary corresponds to a class attribute and
-            is in itself a dictionary with the correct set of attributes for
-            the particular class.
+    Metadata can be converted to dict via
+    :meth:`aspecd.utils.ToDictMixin.to_dict()`, e.g., for generating
+    reports using templates and template engines.
 
-        """
-        for key in dict_:
-            attr = key.replace(' ', '_').lower()
-            if hasattr(self, attr):
-                getattr(self, attr).from_dict(dict_[key])
+    .. todo::
+        Define sensible attributes for datasets containing calculated data
+        and add them afterwards to this class. Currently, there are no
+        attributes at all, what is not necessarily sensible...
+
+    """
+
+    def __init__(self):
+        super().__init__()
 
 
 class MetadataMapper:

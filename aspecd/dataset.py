@@ -179,13 +179,6 @@ class Dataset(aspecd.utils.ToDictMixin):
     The public attributes of a dataset can be converted to a dict via
     :meth:`aspecd.utils.ToDictMixin.to_dict()`.
 
-    .. todo::
-        Change type of metadata attribute to more general DatasetMetadata
-        class and create two subclasses of Dataset, named ExperimentalDataset
-        and CalculatedDataset, respectively. This allows for handling data
-        that result from calculations of whatever type (from polynomial
-        baselines to quantum-chemical simulations) as datasets.
-
     Attributes
     ----------
     data : :obj:`aspecd.dataset.Data`
@@ -221,7 +214,7 @@ class Dataset(aspecd.utils.ToDictMixin):
     def __init__(self):
         self.data = Data()
         self._origdata = Data()
-        self.metadata = aspecd.metadata.ExperimentalDatasetMetadata()
+        self.metadata = None  # aspecd.metadata.ExperimentalDatasetMetadata()
         self.history = []
         self._history_pointer = -1
         self.analyses = []
@@ -590,6 +583,20 @@ class Dataset(aspecd.utils.ToDictMixin):
         if not exporter:
             raise MissingExporterError("No exporter provided")
         exporter.export_from(self)
+
+
+class ExperimentalDataset(Dataset):
+
+    def __init__(self):
+        super().__init__()
+        self.metadata = aspecd.metadata.ExperimentalDatasetMetadata()
+
+
+class CalculatedDataset(Dataset):
+
+    def __init__(self):
+        super().__init__()
+        self.metadata = aspecd.metadata.CalculatedDatasetMetadata()
 
 
 class AxesCountError(Error):
