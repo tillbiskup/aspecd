@@ -34,11 +34,11 @@ With this, you should be ready to start developing your application.
 Datasets
 ========
 
-Probably the most fundamental unit of the ASpecD framework is the dataset. Hence, you should first create a dataset class of your own that inherits from the dataset class of the ASpecD framework. To do so, create a module named ``dataset`` and include the following code::
+Probably the most fundamental unit of the ASpecD framework is the dataset. Hence, you should first create a dataset class of your own that inherits from the dataset class of the ASpecD framework. Here, we assume that you start with experimental datasets, as opposed to datasets containing calculated data. Therefore, create a module named ``dataset`` and include the following code::
 
     import aspecd
 
-    class Dataset(aspecd.dataset.Dataset):
+    class ExperimentalDataset(aspecd.dataset.ExperimentalDataset):
 
         def __init__(self):
             super().__init__()
@@ -67,11 +67,20 @@ Of course, you need to add appropriate code to the non-public function ``_import
 
 The importer should make sure not only to import the numeric data appropriately into the dataset object (they go into its ``data.data`` attribute), but to also create appropriate axes and to read the metadata accompanying the (raw) data. For the necessary structures within the dataset's ``metadata`` attribute and how to eventually fill the metadata into this hierachy of objects, see the `metadata`_ section.
 
+In the (usual) case where you have more than one raw format data are stored in, you would like to create a single class that takes care of returning the correct importer, given a string specifying the source of the data. This is what factories are good for: Returning different subtypes of a common basetype depending on the particular needs. To achieve this for the importers of your application, create a class ``DatasetImporterFactory`` that inherits from :class:`aspecd.io.DatasetImporterFactory`::
+
+    import aspecd
+
+    class DatasetImporterFactory(aspecd.io.DatasetImporterFactory):
+
+        def _get_importer(self, source):
+            # And here goes your code actually choosing the correct importer
+
 
 Metadata
 ========
 
-The ``metadata`` attribute of the dataset is actually an instance of :class:`aspecd.metadata.ExperimentalDatasetMetadata` that in itself contains a list of attributes found in any case, namely general information about the measurement (``measurement``), the sample (``sample``) and the temperature control (``temperature_control``). Each of these attributes are instances of their respective classes defined as well within the ASpecD framework.
+The ``metadata`` attribute of the (experimental) dataset is actually an instance of :class:`aspecd.metadata.ExperimentalDatasetMetadata` that in itself contains a list of attributes found in any case, namely general information about the measurement (``measurement``), the sample (``sample``) and the temperature control (``temperature_control``). Each of these attributes are instances of their respective classes defined as well within the ASpecD framework.
 
 In order to store all the metadata usually contained in files written at the time of data acquisition, you will need to create additional metadata classes and extend :class:`aspecd.metadata.ExperimentalDatasetMetadata` by writing your own "ExperimentalDatasetMetadata" class subclassing the one from the ASpecD framework::
 
@@ -89,7 +98,7 @@ Eventually, you will need to extend your ``Dataset`` class that you have defined
 
     import aspecd
 
-    class Dataset(aspecd.dataset.Dataset):
+    class ExperimentalDataset(aspecd.dataset.ExperimentalDataset):
 
         def __init__(self):
             super().__init__()
@@ -173,6 +182,8 @@ What's next?
 Of course, there is much more to a full-fledged application for processing and analysis of spectroscopic data, but the steps described so far should get you somehow started.
 
 Additional aspects you may want to consider and that will be detailed here a bit more in the future include:
+
+* Analysis steps
 
 * Plotting
 
