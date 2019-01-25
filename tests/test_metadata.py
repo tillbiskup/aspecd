@@ -365,6 +365,12 @@ class TestCalculation(unittest.TestCase):
         for key in dict_:
             self.assertEqual(getattr(calculation, key), dict_[key])
 
+    def test_set_properties_from_dict(self):
+        dict_ = {"type": "foo", "parameters": {"foo": "bar"}}
+        self.calculation.from_dict(dict_)
+        for key in dict_:
+            self.assertEqual(getattr(self.calculation, key), dict_[key])
+
 
 class TestExperimentalDatasetMetadata(unittest.TestCase):
     def setUp(self):

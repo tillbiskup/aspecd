@@ -21,18 +21,27 @@ metadata containers. All other classes storing metadata, particularly those
 storing metadata accompanying measurements and therefore ending up in the
 metadata of a :class:`aspecd.dataset.Dataset`, should inherit from this class.
 
-Currently, three classes for actual metadata of datasets are contained in the
-ASpecD framework, namely :class:`aspecd.metadata.Measurement` for storing
+Currently, three classes for actual metadata of experimental datasets and
+one class for calculated datasets are contained in the ASpecD framework,
+namely :class:`aspecd.metadata.Measurement` for storing
 general information about a given measurement,
 :class:`aspecd.metadata.Sample` for all information regarding the sample
 investigated, and :class:`aspecd.metadata.TemperatureControl` for
 information about the temperature control (including whether temperature has
-been actively controlled at all during the measurement).
+been actively controlled at all during the measurement) for experimental
+datasets and :class:`aspecd.metadata.Calculation` for storing details about
+the calculation underlying the (numeric) data for calculated datasets.
 
-The attribute `metadata` in the :class:`aspecd.dataset.Dataset` is of type
-:class:`aspecd.metadata.ExperimentalDatasetMetadata` and contains the three
-metadata classes named above. Derived packages should extend this class
-accordingly.
+The attribute `metadata` in the :class:`aspecd.dataset.ExperimentalDataset`
+is of type :class:`aspecd.metadata.ExperimentalDatasetMetadata` and
+contains the three metadata classes for experimental datasets named above.
+Derived packages should extend this class accordingly.
+
+Similarly, the attribute `metadata` in the
+:class:`aspecd.dataset.CalculatedDataset` is of type
+:class:`aspecd.metadata.CalculatedDatasetMetadata` and contains the respective
+metadata class named above. Derived packages should extend this class
+accordingly wherever necessary.
 
 All classes inheriting from :class:`aspecd.metadata.Metadata` provide a
 method :meth:`from_dict` allowing to set the attributes of the objects. This
