@@ -766,6 +766,8 @@ class CalculatedDataset(Dataset):
 
     def __init__(self):
         super().__init__()
+        self.data.calculated = True
+        self._origdata.calculated = True
         self.metadata = aspecd.metadata.CalculatedDatasetMetadata()
         self.experimental_dataset = ''
 
