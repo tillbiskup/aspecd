@@ -352,6 +352,20 @@ class TestSample(unittest.TestCase):
             self.assertEqual(getattr(self.sample, key), dict_[key])
 
 
+class TestCalculation(unittest.TestCase):
+    def setUp(self):
+        self.calculation = metadata.Calculation()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_instantiate_properties_from_dict(self):
+        dict_ = {"type": "foo", "parameters": {"foo": "bar"}}
+        calculation = metadata.Calculation(dict_)
+        for key in dict_:
+            self.assertEqual(getattr(calculation, key), dict_[key])
+
+
 class TestExperimentalDatasetMetadata(unittest.TestCase):
     def setUp(self):
         self.dataset_metadata = metadata.ExperimentalDatasetMetadata()
@@ -415,6 +429,21 @@ class TestExperimentalDatasetMetadata(unittest.TestCase):
         self.dataset_metadata.from_dict(dict_)
         to_dict = self.dataset_metadata.to_dict()
         self.assertDictEqual(dict_["sample"], to_dict["sample"])
+
+
+class TestCalculatedDatasetMetadata(unittest.TestCase):
+    def setUp(self):
+        self.dataset_metadata = metadata.CalculatedDatasetMetadata()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_calculation_property(self):
+        self.assertTrue(hasattr(self.dataset_metadata, 'calculation'))
+
+    def test_calculation_property_is_calculation(self):
+        self.assertTrue(isinstance(self.dataset_metadata.calculation,
+                                   metadata.Calculation))
 
 
 class TestMetadataMapper(unittest.TestCase):

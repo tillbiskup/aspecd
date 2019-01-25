@@ -501,6 +501,30 @@ class Sample(Metadata):
         super().__init__(dict_=dict_)
 
 
+class Calculation(Metadata):
+    """
+    Information on the calculation.
+
+    Attributes
+    ----------
+    type : :class:`str`
+        Type of the calculation -- usually the full class name
+    parameters : :class:`dict`
+        Parameters of the calculation
+
+    Parameters
+    ----------
+    dict_ : :class:`dict`
+        Dictionary containing fields corresponding to attributes of the class
+
+    """
+
+    def __init__(self, dict_=None):
+        self.type = ''
+        self.parameters = dict()
+        super().__init__(dict_=dict_)
+
+
 class DatasetMetadata(aspecd.utils.ToDictMixin):
     """
     Metadata for dataset.
@@ -595,15 +619,16 @@ class CalculatedDatasetMetadata(DatasetMetadata):
     :meth:`aspecd.utils.ToDictMixin.to_dict()`, e.g., for generating
     reports using templates and template engines.
 
-    .. todo::
-        Define sensible attributes for datasets containing calculated data
-        and add them afterwards to this class. Currently, there are no
-        attributes at all, what is not necessarily sensible...
+    Attributes
+    ----------
+    calculation : :class:`aspecd.metadata.Calculation`
+        Metadata of calculation underlying the numeric data
 
     """
 
     def __init__(self):
         super().__init__()
+        self.calculation = aspecd.metadata.Calculation()
 
 
 class MetadataMapper:

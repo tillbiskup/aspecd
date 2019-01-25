@@ -39,6 +39,19 @@ framework, are:
     necessary to create axis labels and to make sense of the numerical
     information.
 
+  * :class:`aspecd.dataset.DatasetReference`
+
+    Reference to a dataset.
+
+    Often, one dataset needs to reference other datasets. A typical example
+    would be a simulation stored in a dataset of class
+    :class:`aspecd.dataset.CalculatedDataset` that needs to reference the
+    corresponding experimental data, stored in a dataset of class
+    :class:`aspecd.dataset.ExperimentalDataset`. Vice versa,
+    the experimental dataset might want to store a reference to one (or
+    more) simulations.
+
+
 In addition, to handle the history contained within a dataset, there is a
 series of classes for storing history records:
 
@@ -740,7 +753,8 @@ class Dataset(aspecd.utils.ToDictMixin):
         Add a reference to another dataset to the list of references.
 
         A reference is always an object of type
-        :class:`aspecd.dataset.DatasetReference`.
+        :class:`aspecd.dataset.DatasetReference` that will be automatically
+        created from the dataset provided.
 
         Parameters
         ----------
@@ -764,7 +778,8 @@ class Dataset(aspecd.utils.ToDictMixin):
         Remove a reference to another dataset from the list of references.
 
         A reference is always an object of type
-        :class:`aspecd.dataset.DatasetReference`.
+        :class:`aspecd.dataset.DatasetReference` that was automatically
+        created from the respective dataset when adding the reference.
 
         Parameters
         ----------
