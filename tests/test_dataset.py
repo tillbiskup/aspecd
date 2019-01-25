@@ -50,8 +50,11 @@ class TestDataset(unittest.TestCase):
     def test_has_representations_property(self):
         self.assertTrue(hasattr(self.dataset, 'representations'))
 
-    def test_has_source_property(self):
-        self.assertTrue(hasattr(self.dataset, 'source'))
+    def test_has_id_property(self):
+        self.assertTrue(hasattr(self.dataset, 'id'))
+
+    def test_has_references_property(self):
+        self.assertTrue(hasattr(self.dataset, 'references'))
 
 
 class TestDatasetProcessing(unittest.TestCase):
@@ -472,6 +475,52 @@ class TestDatasetToDict(unittest.TestCase):
         self.assertTrue(callable(self.dataset.to_dict))
 
 
+class TestDatasetReferences(unittest.TestCase):
+    def setUp(self):
+        self.dataset = dataset.Dataset()
+
+    def test_has_add_reference_method(self):
+        self.assertTrue(hasattr(self.dataset, 'add_reference'))
+        self.assertTrue(callable(self.dataset.add_reference))
+
+    def test_add_reference_without_dataset_raises(self):
+        with self.assertRaises(aspecd.dataset.MissingDatasetError):
+            self.dataset.add_reference()
+
+    def test_add_reference_adds_dataset_to_references(self):
+        new_dataset = aspecd.dataset.CalculatedDataset()
+        self.dataset.add_reference(new_dataset)
+        self.assertTrue(self.dataset.references)
+
+    def test_add_reference_adds_dataset_references_to_references(self):
+        new_dataset = aspecd.dataset.CalculatedDataset()
+        self.dataset.add_reference(new_dataset)
+        self.assertTrue(isinstance(self.dataset.references[0],
+                                   aspecd.dataset.DatasetReference))
+
+    def test_has_remove_reference_method(self):
+        self.assertTrue(hasattr(self.dataset, 'remove_reference'))
+        self.assertTrue(callable(self.dataset.remove_reference))
+
+    def test_remove_reference_without_id_raises(self):
+        with self.assertRaises(aspecd.dataset.MissingDatasetError):
+            self.dataset.remove_reference()
+
+    def test_remove_reference_removes_dataset_from_references(self):
+        new_dataset = aspecd.dataset.CalculatedDataset()
+        new_dataset.id = 'foo'
+        self.dataset.add_reference(new_dataset)
+        self.dataset.remove_reference(dataset_id=new_dataset.id)
+        self.assertFalse(self.dataset.references)
+
+    def test_remove_reference_with_wrong_id_doesnt_remove_dataset(self):
+        new_dataset = aspecd.dataset.CalculatedDataset()
+        new_dataset.id = 'foo'
+        self.dataset.add_reference(new_dataset)
+        self.dataset.remove_reference(dataset_id='bar')
+        self.assertTrue(self.dataset.references)
+
+
 class TestExperimentalDataset(unittest.TestCase):
     def setUp(self):
         self.dataset = dataset.ExperimentalDataset()
@@ -501,8 +550,86 @@ class TestCalculatedDataset(unittest.TestCase):
     def test_origdata_is_calculated(self):
         self.assertTrue(self.dataset._origdata.calculated)
 
-    def test_has_experimental_dataset_property(self):
-        self.assertTrue(hasattr(self.dataset, 'experimental_dataset'))
+
+class TestDatasetReference(unittest.TestCase):
+    def setUp(self):
+        self.reference = dataset.DatasetReference()
+        self.dataset = dataset.Dataset()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_type_property(self):
+        self.assertTrue(hasattr(self.reference, 'type'))
+
+    def test_has_id_property(self):
+        self.assertTrue(hasattr(self.reference, 'id'))
+
+    def test_has_history_property(self):
+        self.assertTrue(hasattr(self.reference, 'history'))
+
+    def test_has_from_dataset_method(self):
+        self.assertTrue(hasattr(self.reference, 'from_dataset'))
+        self.assertTrue(callable(self.reference.from_dataset))
+
+    def test_from_dataset_without_dataset_raises(self):
+        with self.assertRaises(aspecd.dataset.MissingDatasetError):
+            self.reference.from_dataset()
+
+    def test_from_dataset_sets_type(self):
+        self.reference.from_dataset(self.dataset)
+        self.assertEqual(aspecd.utils.full_class_name(self.dataset),
+                         self.reference.type)
+
+    def test_from_dataset_sets_id(self):
+        self.dataset.source = 'foo'
+        self.reference.from_dataset(self.dataset)
+        self.assertEqual(self.dataset.id, self.reference.id)
+
+    def test_from_dataset_sets_history(self):
+        processing_step = aspecd.processing.ProcessingStep()
+        self.dataset.process(processing_step)
+        self.reference.from_dataset(self.dataset)
+        self.assertTrue(self.reference.history)
+
+    def test_from_dataset_copies_history(self):
+        processing_step = aspecd.processing.ProcessingStep()
+        self.dataset.process(processing_step)
+        self.reference.from_dataset(self.dataset)
+        self.assertIsNot(self.dataset.history, self.reference.history)
+
+    def test_has_to_dataset_method(self):
+        self.assertTrue(hasattr(self.reference, 'to_dataset'))
+        self.assertTrue(callable(self.reference.to_dataset))
+
+    def test_to_dataset_without_type_raises(self):
+        with self.assertRaises(aspecd.dataset.MissingDatasetError):
+            self.reference.to_dataset()
+
+    def test_to_dataset_returns_dataset(self):
+        self.reference.type = aspecd.utils.full_class_name(self.dataset)
+        dataset_ = self.reference.to_dataset()
+        self.assertTrue(isinstance(dataset_, aspecd.dataset.Dataset))
+
+    def test_to_dataset_returns_dataset_of_correct_type(self):
+        original_dataset = aspecd.dataset.CalculatedDataset()
+        self.reference.from_dataset(original_dataset)
+        new_dataset = self.reference.to_dataset()
+        self.assertTrue(isinstance(new_dataset,
+                                   aspecd.dataset.CalculatedDataset))
+
+    def test_to_dataset_sets_dataset_id(self):
+        self.reference.type = aspecd.utils.full_class_name(self.dataset)
+        self.reference.id = 'foo'
+        dataset_ = self.reference.to_dataset()
+        self.assertEqual(self.reference.id, dataset_.id)
+
+    def test_to_dataset_applies_history(self):
+        processing_step = aspecd.processing.ProcessingStep()
+        self.dataset.process(processing_step)
+        self.reference.from_dataset(self.dataset)
+        dataset_ = self.reference.to_dataset()
+        self.assertTrue(dataset_.history)
 
 
 class TestData(unittest.TestCase):

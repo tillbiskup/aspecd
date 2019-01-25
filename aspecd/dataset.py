@@ -231,6 +231,21 @@ class MissingExporterError(Error):
         self.message = message
 
 
+class MissingDatasetError(Error):
+    """Exception raised when trying to create a reference without a dataset.
+
+    Attributes
+    ----------
+    message : :class:`str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
 class AxesCountError(Error):
     """Exception raised for wrong number of axes
 
@@ -323,8 +338,13 @@ class Dataset(aspecd.utils.ToDictMixin):
         annotations of the dataset
     representations : :class:`list`
         representations of the dataset, e.g., plots
-    source : :class:`str`
-        source of the dataset (i.e., path, LOI, or else)
+    id : :class:`str`
+        identifier of the dataset (i.e., path, LOI, or else)
+    references : :class:`list`
+        references to other datasets
+
+        Each reference is an object of type
+        :class:`aspecd.dataset.DatasetReference`
 
     Raises
     ------
@@ -350,7 +370,8 @@ class Dataset(aspecd.utils.ToDictMixin):
         self.analyses = []
         self.annotations = []
         self.representations = []
-        self.source = ''
+        self.id = ''  # pylint: disable=invalid-name
+        self.references = []
         # Package name is used to store the package version in history records
         self._package_name = aspecd.utils.package_name(self)
         super().__init__()
@@ -714,6 +735,55 @@ class Dataset(aspecd.utils.ToDictMixin):
             raise MissingExporterError("No exporter provided")
         exporter.export_from(self)
 
+    def add_reference(self, dataset=None):
+        """
+        Add a reference to another dataset to the list of references.
+
+        A reference is always an object of type
+        :class:`aspecd.dataset.DatasetReference`.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset a reference for should be added to the list of references
+
+        Raises
+        ------
+        MissingDatasetError
+            Raised if no dataset was provided
+
+        """
+        if not dataset:
+            raise aspecd.dataset.MissingDatasetError
+        dataset_reference = aspecd.dataset.DatasetReference()
+        dataset_reference.from_dataset(dataset=dataset)
+        self.references.append(dataset_reference)
+
+    def remove_reference(self, dataset_id=None):
+        """
+        Remove a reference to another dataset from the list of references.
+
+        A reference is always an object of type
+        :class:`aspecd.dataset.DatasetReference`.
+
+        Parameters
+        ----------
+        dataset_id : :class:`string`
+            ID of the dataset the reference should be removed for
+
+        Raises
+        ------
+        MissingDatasetError
+            Raised if no dataset ID was provided
+
+        """
+        if not dataset_id:
+            raise aspecd.dataset.MissingDatasetError
+        for index, reference in enumerate(self.references):
+            if dataset_id == reference.id:
+                del self.references[index]
+                break
+
 
 class ExperimentalDataset(Dataset):
     """Base class for experimental datasets.
@@ -752,16 +822,6 @@ class CalculatedDataset(Dataset):
     metadata : :obj:`aspecd.metadata.CalculatedDatasetMetadata`
         hierarchical key-value store of metadata
 
-    experimental_dataset : :class:`str`
-        reference to an experimental dataset connected to the calculation
-
-        Whereas calculations can be entirely independent, often, they are
-        connected to experimental data stored in a dataset of type
-        :class:`aspecd.dataset.ExperimentalDataset`.
-
-        Usually, the reference consists of the information contained in the
-        :attr:`aspecd.dataset.Dataset.source` attribute of a dataset.
-
     """
 
     def __init__(self):
@@ -769,7 +829,94 @@ class CalculatedDataset(Dataset):
         self.data.calculated = True
         self._origdata.calculated = True
         self.metadata = aspecd.metadata.CalculatedDatasetMetadata()
-        self.experimental_dataset = ''
+
+
+class DatasetReference:
+    """
+    Reference to a given dataset.
+
+    Often, one dataset needs to reference other datasets. A typical example
+    would be a simulation stored in a dataset of class
+    :class:`aspecd.dataset.CalculatedDataset` that needs to reference the
+    corresponding experimental data, stored in a dataset of class
+    :class:`aspecd.dataset.ExperimentalDataset`. Vice versa,
+    the experimental dataset might want to store a reference to one (or
+    more) simulations.
+
+    As the dataset ID is not sufficient, both, the ID as well as the
+    history of the dataset at the time the reference has been created gets
+    stored in the reference and restored upon creating a (new) dataset.
+    Hence, at least the data of the dataset returned should be identical to
+    the data of the original dataset the reference has been created for.
+
+    Attributes
+    ----------
+    type : :class:`str`
+        type of dataset
+
+        Will be inferred directly from dataset when creating a reference
+        from a given dataset and is used to return a dataset of same type.
+    id : :class:`str`
+        (unique) id of the dataset, i.e. path, LOI, or else
+    history : :class:`list`
+        history of processing steps performed on the dataset to be referenced
+
+    Raises
+    ------
+    MissingDatasetError
+        Raised if no dataset was provided when calling :meth:`from_dataset`
+
+    """
+
+    def __init__(self):
+        self.type = ''
+        self.id = ''  # pylint: disable=invalid-name
+        self.history = list()
+
+    def from_dataset(self, dataset=None):
+        """
+        Create dataset reference from dataset.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            Dataset the reference should be created for
+
+        Raises
+        ------
+        MissingDatasetError
+            Raised if no dataset was provided
+
+        """
+        if not dataset:
+            raise MissingDatasetError
+        self.type = aspecd.utils.full_class_name(dataset)
+        self.id = dataset.id
+        self.history = copy.deepcopy(dataset.history)
+
+    def to_dataset(self):
+        """
+        Create (new) dataset from reference
+
+        The history stored will be applied to the newly created dataset,
+        hence the dataset should be in the same state with respect to
+        processing steps as the original dataset was upon creating the
+        reference.
+
+        Returns
+        -------
+        dataset : :class:`aspecd.dataset.Dataset`
+            Dataset with identical data to the one the reference has been
+            created for
+
+        """
+        if not self.type:
+            raise aspecd.dataset.MissingDatasetError
+        dataset = aspecd.utils.object_from_class_name(self.type)
+        dataset.id = self.id
+        for history_record in self.history:
+            history_record.replay(dataset)
+        return dataset
 
 
 class Data:

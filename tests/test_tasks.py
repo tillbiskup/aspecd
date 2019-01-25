@@ -84,11 +84,11 @@ class TestRecipe(unittest.TestCase):
         self.recipe.from_dict(dict_)
         self.assertTrue(isinstance(self.recipe.datasets[0], dataset.Dataset))
 
-    def test_from_dict_with_dataset_sets_dataset_source(self):
+    def test_from_dict_with_dataset_sets_dataset_id(self):
         dict_ = {'datasets': [self.dataset]}
         self.recipe.importer_factory = self.importer_factory
         self.recipe.from_dict(dict_)
-        self.assertEqual(self.dataset, self.recipe.datasets[0].source)
+        self.assertEqual(self.dataset, self.recipe.datasets[0].id)
 
     def test_from_dict_with_multiple_datasets_sets_datasets(self):
         dict_ = {'datasets': self.datasets}

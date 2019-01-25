@@ -233,7 +233,7 @@ class DatasetImporter:
         else:
             self.dataset = dataset
         self._import()
-        self.dataset.source = self.source
+        self.dataset.id = self.source
 
     def _import(self):
         """Perform the actual import of data and metadata into the dataset.
