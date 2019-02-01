@@ -156,15 +156,6 @@ class TestSinglePlotter(unittest.TestCase):
         test_dataset = self.plotter.plot(dataset=dataset.Dataset())
         self.assertTrue(isinstance(test_dataset, dataset.Dataset))
 
-    def test_has_execute_method(self):
-        self.assertTrue(hasattr(self.plotter, 'execute'))
-        self.assertTrue(callable(self.plotter.execute))
-
-    def test_execute_on_dataset(self):
-        test_dataset = dataset.Dataset()
-        self.plotter.execute(dataset=test_dataset)
-        self.assertGreater(len(test_dataset.representations), 0)
-
 
 class TestMultiPlotter(unittest.TestCase):
     def setUp(self):

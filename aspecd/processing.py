@@ -239,27 +239,6 @@ class ProcessingStep(aspecd.utils.ExecuteOnDatasetMixin):
         """
         pass
 
-    def execute(self, dataset=None):
-        """
-        Execute task on dataset.
-
-        Used mainly in recipe-driven data analysis requiring generically
-        executing tasks independent of their type. For details of
-        recipe-driven data analysis, see the :mod:`tasks` module.
-
-        Parameters
-        ----------
-        dataset : :class:`aspecd.dataset.Dataset`
-            dataset to act on
-
-        Returns
-        -------
-        dataset : :class:`aspecd.dataset.Dataset`
-            dataset acted on
-
-        """
-        return self.process(dataset=dataset)
-
 
 class ProcessingStepRecord:
     """Base class for processing step records stored in the dataset history.

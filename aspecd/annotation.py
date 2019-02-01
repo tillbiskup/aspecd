@@ -210,27 +210,6 @@ class Annotation(aspecd.utils.ExecuteOnDatasetMixin):
         if not from_dataset:
             self.dataset.annotate(self)
 
-    def execute(self, dataset=None):
-        """
-        Execute task on dataset.
-
-        Used mainly in recipe-driven data analysis requiring generically
-        executing tasks independent of their type. For details of
-        recipe-driven data analysis, see the :mod:`tasks` module.
-
-        Parameters
-        ----------
-        dataset : :class:`aspecd.dataset.Dataset`
-            dataset to act on
-
-        Returns
-        -------
-        dataset : :class:`aspecd.dataset.Dataset`
-            dataset acted on
-
-        """
-        return self.annotate(dataset=dataset)
-
 
 class Comment(Annotation):
     """The most basic form of annotation: a simple textual comment."""

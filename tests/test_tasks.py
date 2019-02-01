@@ -31,6 +31,9 @@ class TestRecipe(unittest.TestCase):
     def test_has_importer_factory_property(self):
         self.assertTrue(hasattr(self.recipe, 'importer_factory'))
 
+    def test_has_task_factory_property(self):
+        self.assertTrue(hasattr(self.recipe, 'task_factory'))
+
     def test_import_from_without_importer_raises(self):
         with self.assertRaises(tasks.MissingImporterError):
             self.recipe.import_from()
@@ -97,6 +100,13 @@ class TestRecipe(unittest.TestCase):
         for dataset_ in self.recipe.datasets:
             self.assertTrue(isinstance(dataset_, dataset.Dataset))
 
+    def test_from_dict_with_tasks_without_task_factory_raises(self):
+        dict_ = {'tasks': [self.task]}
+        self.recipe.importer_factory = self.importer_factory
+        self.recipe.task_factory = None
+        with self.assertRaises(tasks.MissingTaskFactoryError):
+            self.recipe.from_dict(dict_)
+
     def test_from_dict_with_task_adds_task(self):
         dict_ = {'tasks': [self.task]}
         self.recipe.importer_factory = self.importer_factory
@@ -105,6 +115,13 @@ class TestRecipe(unittest.TestCase):
         for key in self.task:
             self.assertEqual(getattr(self.recipe.tasks[0], key),
                              self.task[key])
+
+    def test_from_dict_with_task_adds_task_with_correct_type(self):
+        dict_ = {'tasks': [self.task]}
+        self.recipe.importer_factory = self.importer_factory
+        self.recipe.from_dict(dict_)
+        self.assertTrue(isinstance(self.recipe.tasks[0],
+                                   tasks.ProcessingTask))
 
     def test_has_to_dict_method(self):
         self.assertTrue(hasattr(self.recipe, 'to_dict'))
@@ -124,6 +141,28 @@ class TestRecipe(unittest.TestCase):
         self.recipe.tasks.append(task)
         dict_ = self.recipe.to_dict()
         self.assertEqual(task.to_dict(), dict_['tasks'][0])
+
+    def test_has_get_dataset_method(self):
+        self.assertTrue(hasattr(self.recipe, 'get_dataset'))
+        self.assertTrue(callable(self.recipe.get_dataset))
+
+    def test_get_dataset_without_identifier_raises(self):
+        with self.assertRaises(tasks.MissingDatasetIdentifierError):
+            self.recipe.get_dataset()
+
+    def test_get_dataset_with_valid_identifier_returns_dataset(self):
+        dict_ = {'datasets': [self.dataset]}
+        self.recipe.importer_factory = self.importer_factory
+        self.recipe.from_dict(dict_)
+        dataset_ = self.recipe.get_dataset(identifier=self.dataset)
+        self.assertTrue(isinstance(dataset_, dataset.Dataset))
+
+    def test_get_dataset_with_invalid_identifier_returns_nothing(self):
+        dict_ = {'datasets': [self.dataset]}
+        self.recipe.importer_factory = self.importer_factory
+        self.recipe.from_dict(dict_)
+        dataset_ = self.recipe.get_dataset(identifier='invalid')
+        self.assertFalse(dataset_)
 
 
 class TestChef(unittest.TestCase):
@@ -223,6 +262,14 @@ class TestTask(unittest.TestCase):
     def test_has_apply_to_property(self):
         self.assertTrue(hasattr(self.task, 'apply_to'))
 
+    def test_has_recipe_property(self):
+        self.assertTrue(hasattr(self.task, 'recipe'))
+
+    def test_instantiate_with_recipe_sets_recipe(self):
+        recipe = tasks.Recipe()
+        task = tasks.Task(recipe=recipe)
+        self.assertEqual(recipe, task.recipe)
+
     def test_apply_to_is_empty(self):
         self.assertEqual(0, len(self.task.apply_to))
 
@@ -256,6 +303,14 @@ class TestTask(unittest.TestCase):
         dict_[attribute] = 'foo'
         self.task.from_dict(dict_)
         self.assertFalse(hasattr(self.task, attribute))
+
+    def test_has_perform_method(self):
+        self.assertTrue(hasattr(self.task, 'perform'))
+        self.assertTrue(callable(self.task.perform))
+
+    def test_perform_without_recipe_raises(self):
+        with self.assertRaises(tasks.MissingRecipeError):
+            self.task.perform()
 
     def test_get_object_with_full_class_name_returns_correct_object(self):
         kind = 'aspecd.processing'
@@ -292,3 +347,119 @@ class TestTask(unittest.TestCase):
         self.task.metadata = metadata
         obj = self.task.get_object()
         self.assertFalse(hasattr(obj, 'foo'))
+
+
+class TestProcessingTask(unittest.TestCase):
+    def setUp(self):
+        self.task = tasks.ProcessingTask()
+        self.recipe = tasks.Recipe()
+        self.dataset = ['foo']
+
+    def prepare_recipe(self):
+        self.processing_task = {'kind': 'processing',
+                                'type': 'ProcessingStep',
+                                'apply_to': self.dataset}
+        self.recipe.importer_factory = io.DatasetImporterFactory()
+        recipe_dict = {'datasets': self.dataset,
+                       'tasks': [self.processing_task]}
+        self.recipe.from_dict(recipe_dict)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_perform_task(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(self.recipe.datasets[0].history)
+
+    def test_perform_task_on_multiple_datasets(self):
+        self.dataset = ['foo', 'bar']
+        self.prepare_recipe()
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        for dataset_ in self.recipe.datasets:
+            self.assertTrue(dataset_.history)
+
+
+class TestAnalysisTask(unittest.TestCase):
+    def setUp(self):
+        self.task = tasks.AnalysisTask()
+
+    def test_instantiate_class(self):
+        pass
+
+
+class TestAnnotationTask(unittest.TestCase):
+    def setUp(self):
+        self.task = tasks.AnnotationTask()
+
+    def test_instantiate_class(self):
+        pass
+
+
+class TestPlottingTask(unittest.TestCase):
+    def setUp(self):
+        self.task = tasks.PlottingTask()
+
+    def test_instantiate_class(self):
+        pass
+
+
+class TestReportTask(unittest.TestCase):
+    def setUp(self):
+        self.task = tasks.ReportTask()
+
+    def test_instantiate_class(self):
+        pass
+
+
+class TestTaskFactory(unittest.TestCase):
+    def setUp(self):
+        self.task_factory = tasks.TaskFactory()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_get_task_method(self):
+        self.assertTrue(hasattr(self.task_factory, 'get_task'))
+        self.assertTrue(callable(self.task_factory.get_task))
+
+    def test_get_task_without_kind_raises(self):
+        with self.assertRaises(tasks.MissingTaskDescriptionError):
+            self.task_factory.get_task()
+
+    def test_get_task_returns_task(self):
+        task = self.task_factory.get_task(kind='processing')
+        self.assertTrue(isinstance(task, tasks.Task))
+
+    def test_has_get_task_from_dict_method(self):
+        self.assertTrue(hasattr(self.task_factory, 'get_task_from_dict'))
+        self.assertTrue(callable(self.task_factory.get_task_from_dict))
+
+    def test_get_task_from_dict_without_dict_raises(self):
+        with self.assertRaises(tasks.MissingTaskDescriptionError):
+            self.task_factory.get_task_from_dict()
+
+    def test_get_task_from_dict_without_kind_key_raises(self):
+        dict_ = {'foo': 'bar'}
+        with self.assertRaises(KeyError):
+            self.task_factory.get_task_from_dict(dict_=dict_)
+
+    def test_get_task_from_dict_returns_task(self):
+        dict_ = {'kind': 'processing'}
+        task = self.task_factory.get_task_from_dict(dict_=dict_)
+        self.assertTrue(isinstance(task, tasks.Task))
+
+    def test_get_processing_task_from_kind(self):
+        kind = 'processing'
+        task = self.task_factory.get_task(kind=kind)
+        self.assertTrue(isinstance(task, tasks.ProcessingTask))
+
+    def test_get_processing_task_from_dict(self):
+        kind = 'processing'
+        dict_ = {'kind': kind}
+        task = self.task_factory.get_task_from_dict(dict_=dict_)
+        self.assertTrue(isinstance(task, tasks.ProcessingTask))

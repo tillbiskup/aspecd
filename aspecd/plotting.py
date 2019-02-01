@@ -416,27 +416,6 @@ class SinglePlotter(Plotter, aspecd.utils.ExecuteOnDatasetMixin):
         label = '$' + axis.quantity + '$' + ' / ' + axis.unit
         return label
 
-    def execute(self, dataset=None):
-        """
-        Execute task on dataset.
-
-        Used mainly in recipe-driven data analysis requiring generically
-        executing tasks independent of their type. For details of
-        recipe-driven data analysis, see the :mod:`tasks` module.
-
-        Parameters
-        ----------
-        dataset : :class:`aspecd.dataset.Dataset`
-            dataset to act on
-
-        Returns
-        -------
-        dataset : :class:`aspecd.dataset.Dataset`
-            dataset acted on
-
-        """
-        return self.plot(dataset=dataset)
-
 
 class MultiPlotter(Plotter):
     """Base class for plots of multiple datasets.

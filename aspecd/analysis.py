@@ -161,27 +161,6 @@ class AnalysisStep(aspecd.utils.ExecuteOnDatasetMixin):
         """
         return self.analyse(dataset)
 
-    def execute(self, dataset=None):
-        """
-        Execute task on dataset.
-
-        Used mainly in recipe-driven data analysis requiring generically
-        executing tasks independent of their type. For details of
-        recipe-driven data analysis, see the :mod:`tasks` module.
-
-        Parameters
-        ----------
-        dataset : :class:`aspecd.dataset.Dataset`
-            dataset to act on
-
-        Returns
-        -------
-        dataset : :class:`aspecd.dataset.Dataset`
-            dataset acted on
-
-        """
-        return self.analyse(dataset=dataset)
-
     def add_preprocessing_step(self, processingstep=None):
         """
         Add a preprocessing step to the internal list.

@@ -97,6 +97,51 @@ class MissingImporterFactoryError(Error):
         self.message = message
 
 
+class MissingTaskFactoryError(Error):
+    """Exception raised when no TaskFactory instance is provided
+
+    Attributes
+    ----------
+    message : :class:`str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
+class MissingTaskDescriptionError(Error):
+    """Exception raised when no description for creating a task is provided
+
+    Attributes
+    ----------
+    message : :class:`str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
+class MissingDatasetIdentifierError(Error):
+    """Exception raised when no dataset id is provided
+
+    Attributes
+    ----------
+    message : :class:`str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
 class Recipe:
     """
     Recipes get cooked by chefs in recipe-driven data analysis.
@@ -143,6 +188,13 @@ class Recipe:
 
         If no factory is set, but a recipe imported from a file or set from
         a dictionary, an exception will be raised.
+    task_factory : :class:`aspecd.tasks.TaskFactory`
+        Factory for tasks
+
+        Defaults to an object of class :class:`aspecd.tasks.TaskFactory`.
+
+        If no factory is set, but a recipe imported from a file or set from
+        a dictionary, an exception will be raised.
 
     Raises
     ------
@@ -154,6 +206,8 @@ class Recipe:
         Raised if no exporter is provided.
     MissingImporterFactoryError
         Raised if :attr:`importer_factory` is invalid.
+    MissingTaskFactoryError
+        Raised if :attr:`task_factory` is invalid.
 
     """
 
@@ -162,6 +216,7 @@ class Recipe:
         self.datasets = []
         self.tasks = list()
         self.importer_factory = None
+        self.task_factory = TaskFactory()
 
     def from_dict(self, dict_=None):
         """
@@ -181,12 +236,16 @@ class Recipe:
             Raised if no dict is provided.
         MissingImporterFactoryError
             Raised if :attr:`importer_factory` is invalid.
+        MissingTaskFactoryError
+            Raised if :attr:`task_factory` is invalid.
 
         """
         if not dict_:
             raise MissingDictError
         if not self.importer_factory:
             raise MissingImporterFactoryError
+        if not self.task_factory:
+            raise MissingTaskFactoryError
         if 'datasets' in dict_:
             for key in dict_['datasets']:
                 self._append_dataset(key)
@@ -201,8 +260,9 @@ class Recipe:
         self.datasets.append(dataset)
 
     def _append_task(self, key):
-        task = Task()
+        task = self.task_factory.get_task_from_dict(key)
         task.from_dict(key)
+        task.recipe = self
         self.tasks.append(task)
 
     def to_dict(self):
@@ -270,6 +330,38 @@ class Recipe:
                                        'export a recipe.')
         exporter.export_from(self)
 
+    def get_dataset(self, identifier=''):
+        """
+        Return dataset corresponding to given identifier.
+
+        Parameters
+        ----------
+        identifier : :class:`str`
+            Identifier matching the :attr:`aspecd.dataset.Dataset.id`
+            attribute.
+
+        Returns
+        -------
+        dataset : :class:`aspecd.dataset.Dataset`
+            Dataset corresponding to given identifier
+
+            If no dataset corresponding to the given identifier could be
+            found, :obj:`None` is returned.
+
+        Raises
+        ------
+        MissingDatasetIdentifierError
+            Raised if no identifier is provided.
+
+        """
+        if not identifier:
+            raise MissingDatasetIdentifierError
+        return_value = None
+        for dataset in self.datasets:
+            if dataset.id == identifier:
+                return_value = dataset
+        return return_value
+
 
 class Chef:
     """
@@ -328,9 +420,7 @@ class Chef:
         """
         self._assign_recipe(recipe)
         for task in self.recipe.tasks:
-            obj = task.get_object()
-            for dataset in self.recipe.datasets:
-                obj.execute(dataset=dataset)
+            task.perform()
 
     def _assign_recipe(self, recipe):
         if not recipe:
@@ -342,7 +432,11 @@ class Chef:
 
 class Task(aspecd.utils.ToDictMixin):
     """
-    Property class storing information for a single task.
+    Base class storing information for a single task.
+
+    Different underlying objects have different methods used to actually
+    perform the respective task. In order to generically perform a task,
+    for each kind of task a subclass of this class needs to be created.
 
     Attributes
     ----------
@@ -369,6 +463,8 @@ class Task(aspecd.utils.ToDictMixin):
         Each dataset is referred to by the value of its
         :attr:`aspecd.dataset.Dataset.source` attribute. This should be
         unique and can consist of a filename, path, URL/URI, LOI, or alike.
+    recipe : :class:`aspecd.tasks.Recipe`
+        Recipe containing the task and the list of datasets the task refers to
 
     Raises
     ------
@@ -377,12 +473,13 @@ class Task(aspecd.utils.ToDictMixin):
 
     """
 
-    def __init__(self):
+    def __init__(self, recipe=None):
         super().__init__()
         self.kind = ''
         self.type = ''
         self.metadata = dict()
         self.apply_to = []
+        self.recipe = recipe
 
     def from_dict(self, dict_=None):
         """
@@ -405,13 +502,58 @@ class Task(aspecd.utils.ToDictMixin):
             if hasattr(self, key):
                 setattr(self, key, dict_[key])
 
+    def perform(self):
+        """
+        Call the appropriate method of the underlying object.
+
+        The actual implementation is contained in the non-public method
+        :meth:`aspecd.tasks.Task._perform`.
+
+        Different underlying objects have different methods used to
+        actually perform the respective task. In order to generically
+        perform a task, classes derived from the :class:`aspecd.tasks.Task`
+        base class need to override :meth:`aspecd.tasks.Task._perform`
+        accordingly.
+
+        Use :meth:`aspecd.tasks.Task.get_object` to get an instance of the
+        actual object necessary to perform the task, and afterwards call
+        its appropriate method.
+
+        Similarly, to get the actual dataset using the dataset id stored in
+        :attr:`aspecd.tasks.Task.apply_to`, use the method
+        :meth:`aspecd.tasks.Recipe.get_dataset` of the recipe stored in
+        :attr:`aspecd.tasks.Task.recipe`.
+
+        Raises
+        ------
+        MissingRecipeError
+            Raised if no recipe is available.
+
+        """
+        if not self.recipe:
+            raise MissingRecipeError
+        if not self.apply_to:
+            for dataset in self.recipe.datasets:
+                self.apply_to.append(dataset.id)
+        self._perform()
+
+    def _perform(self):
+        """
+        Call the appropriate method of the underlying object.
+
+        Classes derived from :class:`aspecd.tasks.Task` need to override
+        this method and provide the actual implementation.
+
+        """
+        pass
+
     def get_object(self):
         """
         Return object for a particular task including all attributes.
 
         Returns
         -------
-        obj : `object`
+        obj : :class:`object`
             Object of a class defined in the :attr:`type` attribute of a task
 
         """
@@ -466,3 +608,201 @@ class Task(aspecd.utils.ToDictMixin):
         for key in self.metadata:
             if hasattr(obj, key):
                 setattr(obj, key, self.metadata[key])
+
+
+class ProcessingTask(Task):
+    """
+    Processing step defined as task in recipe-driven data analysis.
+
+    Processing steps will always be performed individually for each dataset.
+
+    """
+
+    def _perform(self):
+        for dataset_id in self.apply_to:
+            dataset = self.recipe.get_dataset(dataset_id)
+            task = self.get_object()
+            # noinspection PyUnresolvedReferences
+            task.process(dataset=dataset)
+
+
+class AnalysisTask(Task):
+    """
+    Analysis step defined as task in recipe-driven data analysis.
+
+    Analysis steps can be performed individually for each dataset or the
+    results combined, depending on the type of analysis step.
+
+    """
+
+    def _perform(self):
+        for dataset_id in self.apply_to:
+            dataset = self.recipe.get_dataset(dataset_id)
+            task = self.get_object()
+            # noinspection PyUnresolvedReferences
+            task.analyse(dataset=dataset)
+
+
+class AnnotationTask(Task):
+    """
+    Annotation step defined as task in recipe-driven data analysis.
+
+    Annotation steps will always be performed individually for each dataset.
+
+    """
+
+    def _perform(self):
+        for dataset_id in self.apply_to:
+            dataset = self.recipe.get_dataset(dataset_id)
+            task = self.get_object()
+            # noinspection PyUnresolvedReferences
+            task.annotate(dataset=dataset)
+
+
+class PlottingTask(Task):
+    """
+    Plotting step defined as task in recipe-driven data analysis.
+
+    Plotting steps can be performed individually for each dataset or the
+    results combined, depending on the type of analysis step.
+
+    """
+
+    def _perform(self):
+        for dataset_id in self.apply_to:
+            dataset = self.recipe.get_dataset(dataset_id)
+            task = self.get_object()
+            # noinspection PyUnresolvedReferences
+            task.plot(dataset=dataset)
+
+
+class ReportTask(Task):
+    """
+    Reporting step defined as task in recipe-driven data analysis.
+
+    Reporting steps can be performed individually for each dataset or the
+    results combined, depending on the type of analysis step.
+
+    """
+
+    pass
+
+
+class TaskFactory:
+    """
+    Factory for creating task objects based on the kind provided.
+
+    The kind reflects the name of the module the actual object required for
+    performing the task resides in. Furthermore, two ways are available for
+    specifying the kind, either directly as argument provided to
+    :meth:`aspecd.tasks.TaskFactory.get_task` or as key in a dict used as
+    an argument for :meth:`aspecd.tasks.TaskFactory.get_task_from_dict`.
+
+    The classes for the different tasks follow a simple convention:
+    "<Module>Task" with "<Module>" being the capitalised module name the
+    actual class necessary for performing the task resides in. Therefore,
+    for each new module tasks should be available for, you will need to
+    create an appropriate task class deriving from :class:`aspecd.tasks.Task`.
+
+    Raises
+    ------
+    MissingTaskDescriptionError
+        Raised if no description is given necessary to create task.
+    KeyError
+        Raised if dict with task description does not contain "kind" key.
+
+    """
+
+    def get_task(self, kind=None):
+        """
+        Return task object specified by its kind.
+
+        Parameters
+        ----------
+        kind : :class:`str`
+            Kind of task to create
+
+            Reflects the name of the module the actual object required for
+            performing the task resides in.
+
+        Returns
+        -------
+        task : :class:`aspecd.tasks.Task`
+            Task object
+
+            The actual subclass depends on the kind.
+
+        Raises
+        ------
+        MissingTaskDescriptionError
+            Raised if no description is given necessary to create task.
+
+        """
+        if not kind:
+            raise MissingTaskDescriptionError
+        task = self._create_task_object(kind=kind)
+        return task
+
+    def get_task_from_dict(self, dict_=None):
+        """
+        Return task object specified by the "kind" key in the dict.
+
+        Parameters
+        ----------
+        dict_ : :class:`dict`
+            Dictionary containing "kind" key
+
+            The "kind" key reflects the name of the module the actual object
+            required for performing the task resides in.
+
+        Returns
+        -------
+        task : :class:`aspecd.tasks.Task`
+            Task object
+
+            The actual subclass depends on the kind.
+
+        Raises
+        ------
+        MissingTaskDescriptionError
+            Raised if no description is given necessary to create task.
+        KeyError
+            Raised if dict does not contain "kind" key.
+
+        """
+        if not dict_:
+            raise MissingTaskDescriptionError
+        if 'kind' not in dict_:
+            raise KeyError
+        task = self._create_task_object(kind=dict_['kind'])
+        return task
+
+    def _create_task_object(self, kind=None):
+        """
+        Create and return actual task object based on the kind provided.
+
+        The classes for the different tasks follow a simple convention:
+        "<Module>Task" with "<Module>" being the capitalised module name
+        the actual class necessary for performing the task resides in.
+
+        Parameters
+        ----------
+        kind : :class:`str`
+            Kind of task to create
+
+            Reflects the name of the module the actual object required for
+            performing the task resides in.
+
+        Returns
+        -------
+        task : :class:`aspecd.tasks.Task`
+            Task object
+
+            The actual subclass depends on the kind.
+
+        """
+        class_name = ''.join([kind.capitalize(), 'Task'])
+        package_name = aspecd.utils.package_name(self)
+        full_class_name = '.'.join([package_name, 'tasks', class_name])
+        task = aspecd.utils.object_from_class_name(full_class_name)
+        return task

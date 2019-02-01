@@ -75,15 +75,6 @@ class TestAnalysis(unittest.TestCase):
         test_dataset = self.analysisstep.analyse(dataset.Dataset())
         self.assertTrue(isinstance(test_dataset, dataset.Dataset))
 
-    def test_has_execute_method(self):
-        self.assertTrue(hasattr(self.analysisstep, 'execute'))
-        self.assertTrue(callable(self.analysisstep.execute))
-
-    def test_execute_on_dataset(self):
-        test_dataset = dataset.Dataset()
-        self.analysisstep.execute(dataset=test_dataset)
-        self.assertGreater(len(test_dataset.analyses), 0)
-
 
 class TestPreprocessing(unittest.TestCase):
     def setUp(self):
