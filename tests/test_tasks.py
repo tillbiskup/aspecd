@@ -387,25 +387,79 @@ class TestProcessingTask(unittest.TestCase):
 class TestAnalysisTask(unittest.TestCase):
     def setUp(self):
         self.task = tasks.AnalysisTask()
+        self.recipe = tasks.Recipe()
+        self.dataset = ['foo']
+
+    def prepare_recipe(self):
+        self.analysis_task = {'kind': 'analysis',
+                              'type': 'AnalysisStep',
+                              'apply_to': self.dataset}
+        self.recipe.importer_factory = io.DatasetImporterFactory()
+        recipe_dict = {'datasets': self.dataset,
+                       'tasks': [self.analysis_task]}
+        self.recipe.from_dict(recipe_dict)
 
     def test_instantiate_class(self):
         pass
+
+    def test_perform_task(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.analysis_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(self.recipe.datasets[0].analyses)
 
 
 class TestAnnotationTask(unittest.TestCase):
     def setUp(self):
         self.task = tasks.AnnotationTask()
+        self.recipe = tasks.Recipe()
+        self.dataset = ['foo']
+
+    def prepare_recipe(self):
+        self.annotation_task = {'kind': 'annotation',
+                                'type': 'Comment',
+                                'apply_to': self.dataset}
+        self.recipe.importer_factory = io.DatasetImporterFactory()
+        recipe_dict = {'datasets': self.dataset,
+                       'tasks': [self.annotation_task]}
+        self.recipe.from_dict(recipe_dict)
 
     def test_instantiate_class(self):
         pass
+
+    def test_perform_task(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.annotation_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(self.recipe.datasets[0].annotations)
 
 
 class TestPlottingTask(unittest.TestCase):
     def setUp(self):
         self.task = tasks.PlottingTask()
+        self.recipe = tasks.Recipe()
+        self.dataset = ['foo']
+
+    def prepare_recipe(self):
+        self.plotting_task = {'kind': 'plotting',
+                              'type': 'SinglePlotter',
+                              'apply_to': self.dataset}
+        self.recipe.importer_factory = io.DatasetImporterFactory()
+        recipe_dict = {'datasets': self.dataset,
+                       'tasks': [self.plotting_task]}
+        self.recipe.from_dict(recipe_dict)
 
     def test_instantiate_class(self):
         pass
+
+    def test_perform_task(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(self.recipe.datasets[0].representations)
 
 
 class TestReportTask(unittest.TestCase):
