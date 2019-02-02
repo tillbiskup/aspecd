@@ -177,7 +177,7 @@ class TestChef(unittest.TestCase):
                               'type': 'AnalysisStep'}
         self.annotation_task = {'kind': 'annotation',
                                 'type': 'Comment'}
-        self.plotting_task = {'kind': 'plotting',
+        self.plotting_task = {'kind': 'singleplot',
                               'type': 'SinglePlotter'}
 
     def test_instantiate_class(self):
@@ -436,14 +436,14 @@ class TestAnnotationTask(unittest.TestCase):
         self.assertTrue(self.recipe.datasets[0].annotations)
 
 
-class TestPlottingTask(unittest.TestCase):
+class TestSinglePlotTask(unittest.TestCase):
     def setUp(self):
-        self.task = tasks.PlottingTask()
+        self.task = tasks.SingleplotTask()
         self.recipe = tasks.Recipe()
         self.dataset = ['foo']
 
     def prepare_recipe(self):
-        self.plotting_task = {'kind': 'plotting',
+        self.plotting_task = {'kind': 'singleplot',
                               'type': 'SinglePlotter',
                               'apply_to': self.dataset}
         self.recipe.importer_factory = io.DatasetImporterFactory()

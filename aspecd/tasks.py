@@ -434,16 +434,18 @@ class Task(aspecd.utils.ToDictMixin):
     """
     Base class storing information for a single task.
 
-    Different underlying objects have different methods used to actually
-    perform the respective task. In order to generically perform a task,
-    for each kind of task a subclass of this class needs to be created.
+    Different underlying objects used to actually perform the respective
+    task have different requirements and different signatures. In order to
+    generically perform a task, for each kind of task -- such as
+    processing, analysis, plotting -- this class needs to be subclassed.
 
     Attributes
     ----------
     kind : :class:`str`
         Kind of task.
 
-        Corresponds to module name the type (class) is defined in.
+        Usually corresponds to the module name the type (class) is defined in.
+        See the note below for special cases.
     type : :class:`str`
         Type of task.
 
@@ -466,6 +468,16 @@ class Task(aspecd.utils.ToDictMixin):
     recipe : :class:`aspecd.tasks.Recipe`
         Recipe containing the task and the list of datasets the task refers to
 
+
+    .. note::
+        A note to developers: Usually, the :attr:`aspecd.tasks.Task.kind`
+        attribute is identical to the module name the respective class
+        resides in. However, sometimes this is not the case, as with the
+        plotters. In this case, an additional, non-public attribute
+        :attr:`aspecd.tasks.Task._module` can be set in classes derived from
+        :class:`aspecd.tasks.Task`.
+
+
     Raises
     ------
     MissingDictError
@@ -480,6 +492,7 @@ class Task(aspecd.utils.ToDictMixin):
         self.metadata = dict()
         self.apply_to = []
         self.recipe = recipe
+        self._module = ''
 
     def from_dict(self, dict_=None):
         """
@@ -577,7 +590,10 @@ class Task(aspecd.utils.ToDictMixin):
             Object of a class defined in the :attr:`type` attribute of a task
 
         """
-        class_name = '.'.join([self.kind, self.type])
+        if self._module:
+            class_name = '.'.join([self._module, self.type])
+        else:
+            class_name = '.'.join([self.kind, self.type])
         try:
             obj = aspecd.utils.object_from_class_name(class_name)
         except ImportError:
@@ -659,14 +675,18 @@ class AnnotationTask(Task):
             task.annotate(dataset=dataset)
 
 
-class PlottingTask(Task):
+class SingleplotTask(Task):
     """
-    Plotting step defined as task in recipe-driven data analysis.
+    Singleplot step defined as task in recipe-driven data analysis.
 
-    Plotting steps can be performed individually for each dataset or the
-    results combined, depending on the type of analysis step.
+    Singleplot steps can only be performed individually for each dataset.
+    For plots combining multiple datasets,
+    see :class:`aspecd.tasks.MultiplotTask`.
 
     """
+    def __init__(self):
+        super().__init__()
+        self._module = 'plotting'
 
     def _perform(self):
         for dataset_id in self.apply_to:
@@ -799,6 +819,11 @@ class TaskFactory:
             Task object
 
             The actual subclass depends on the kind.
+
+        .. todo::
+            Check whether there are some ways to circumvent "package_name"
+            to automatically be prefixed, as this would allow to use
+            classes from different packages (if that is sensible to do).
 
         """
         class_name = ''.join([kind.capitalize(), 'Task'])
