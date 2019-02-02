@@ -10,6 +10,19 @@ From a user's perspective, a recipe is usually stored in a YAML file. This
 allows to easily create and modify recipes without knowing too much about
 the underlying processes.
 
+Recipes always consist of two major parts: A list of datasets to operate
+on, and a list of tasks to be performed on the datasets. Of course, you can
+specify for each task on which datasets it should be performed, and if
+possible, whether it should be performed on each dataset separately or
+combined. The latter is particularly interesting for representations (e.g.,
+plots) consisting of multiple datasets, or analysis steps spanning multiple
+datasets.
+
+Each task is internally represented by an :obj:`aspecd.tasks.Task` object,
+more precisely an object instantiated from a subclass of
+:class:`aspecd.tasks.Task`. This polymorphism of task classes makes it
+possible to easily extend the scope.
+
 """
 
 import aspecd.io
@@ -482,6 +495,8 @@ class Task(aspecd.utils.ToDictMixin):
     ------
     MissingDictError
         Raised if no dict is provided when calling :meth:`from_dict`.
+    MissingRecipeError
+        Raised if no recipe is available upon performing the task.
 
     """
 
@@ -684,6 +699,7 @@ class SingleplotTask(Task):
     see :class:`aspecd.tasks.MultiplotTask`.
 
     """
+
     def __init__(self):
         super().__init__()
         self._module = 'plotting'
