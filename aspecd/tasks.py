@@ -21,7 +21,19 @@ datasets.
 Each task is internally represented by an :obj:`aspecd.tasks.Task` object,
 more precisely an object instantiated from a subclass of
 :class:`aspecd.tasks.Task`. This polymorphism of task classes makes it
-possible to easily extend the scope.
+possible to easily extend the scope of recipe-driven data analysis.
+
+.. todo::
+    There is a number of things that are not yet implemented, but required
+    for a working recipe-driven data analysis that follows good practice
+    for reproducible research. This includes (but may not be limited to):
+
+      * Store history of each task (in a way the result can be used as a
+        recipe again).
+      * Handle results of analyses, i.e. store them as an additional
+        dataset with an ID they can be referred to later on in the recipe.
+      * Parser for recipes performing a static analysis of their syntax.
+        Useful particulary for larger datasets and/or longer lists of tasks.
 
 """
 
@@ -160,12 +172,16 @@ class Recipe:
     Recipes get cooked by chefs in recipe-driven data analysis.
 
     A recipe contains a list of tasks to be performed on a list of
-    datasets. From a user's perspective, recipes reside usually in YAML
-    files from where they are imported into an :obj:`aspecd.tasks.Recipe`
-    object using its respective :meth:`import_into` method and an object of
-    class :class:`aspecd.io.RecipeYamlImporter`. Similarly, a given
-    recipe can be exported back to a YAML file using the :meth:`export_to`
-    method and an object of class :class:`aspecd.io.RecipeYamlExporter`.
+    datasets. To actually carry out all tasks in a recipe, it is handed
+    over to a :obj:`aspecd.tasks.Chef` object for cooking using the
+    respective :meth:`aspecd.tasks.Chef.cook` method.
+
+    From a user's perspective, recipes reside usually in YAML files from
+    where they are imported into an :obj:`aspecd.tasks.Recipe` object using
+    its respective :meth:`import_into` method and an object of class
+    :class:`aspecd.io.RecipeYamlImporter`. Similarly, a given recipe can be
+    exported back to a YAML file using the :meth:`export_to` method and an
+    object of class :class:`aspecd.io.RecipeYamlExporter`.
 
     In contrast to the persistent form of a recipe (e.g., as file on the
     file system), the object contains actual datasets and tasks that are
@@ -183,8 +199,15 @@ class Recipe:
     .. todo::
         Can recipes have LOIs themselves and therefore be retrieved from
         the extended data safe? Might be a sensible option, although
-        generic LOIs are much harder to create than LOIs for datasets and
-        alike.
+        generic (and at the same time unique) LOIs for recipes are much
+        harder to create than LOIs for datasets and alike.
+
+        Generally, the concept of a LOI is nothing a recipe needs to know
+        about. But it does know about an ID of any kind. Whether this ID
+        is a (local) path or a LOI doesn't matter. Somewhere in the ASpecD
+        framework there may exist a resolver (factory) for handling IDs of
+        any kind and eventually retrieving the respective information.
+
 
     Attributes
     ----------
@@ -348,7 +371,7 @@ class Recipe:
         Return dataset corresponding to given identifier.
 
         In case of having a list of identifiers, use the similar method
-        :meth:`aspecd.task.Recipe.get_datasets`.
+        :meth:`aspecd.tasks.Recipe.get_datasets`.
 
         Parameters
         ----------
@@ -383,7 +406,7 @@ class Recipe:
         Return datasets corresponding to given list of identifiers.
 
         In case of having a single identifier, use the similar method
-        :meth:`aspecd.task.Recipe.get_dataset`.
+        :meth:`aspecd.tasks.Recipe.get_dataset`.
 
         Parameters
         ----------
