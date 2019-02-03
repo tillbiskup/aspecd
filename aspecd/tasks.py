@@ -347,6 +347,9 @@ class Recipe:
         """
         Return dataset corresponding to given identifier.
 
+        In case of having a list of identifiers, use the similar method
+        :meth:`aspecd.task.Recipe.get_datasets`.
+
         Parameters
         ----------
         identifier : :class:`str`
@@ -373,6 +376,46 @@ class Recipe:
         for dataset in self.datasets:
             if dataset.id == identifier:
                 return_value = dataset
+        return return_value
+
+    def get_datasets(self, identifiers=None):
+        """
+        Return datasets corresponding to given list of identifiers.
+
+        In case of having a single identifier, use the similar method
+        :meth:`aspecd.task.Recipe.get_dataset`.
+
+        Parameters
+        ----------
+        identifiers : :class:`list`
+            Identifiers matching the :attr:`aspecd.dataset.Dataset.id`
+            attribute.
+
+        Returns
+        -------
+        datasets : :class:`list`
+            Datasets corresponding to given identifier
+
+            Each dataset is an instance of :class:`aspecd.dataset.Dataset`.
+
+            If no datasets corresponding to the given identifiers could be
+            found, an empty list is returned.
+
+        Raises
+        ------
+        MissingDatasetIdentifierError
+            Raised if no identifiers are provided.
+
+        """
+        if not identifiers:
+            raise MissingDatasetIdentifierError
+        return_value = []
+        for dataset in self.datasets:
+            for id_ in identifiers:
+                if dataset.id == id_:
+                    return_value.append(dataset)
+                    identifiers.remove(id_)
+                    break
         return return_value
 
 
@@ -451,6 +494,24 @@ class Task(aspecd.utils.ToDictMixin):
     task have different requirements and different signatures. In order to
     generically perform a task, for each kind of task -- such as
     processing, analysis, plotting -- this class needs to be subclassed.
+    For a number of basic tasks available in the ASpecD package, this has
+    already been done. See:
+
+      * :class:`aspecd.tasks.ProcessingTask`
+      * :class:`aspecd.tasks.AnalysisTask`
+      * :class:`aspecd.tasks.AnnotationTask`
+      * :class:`aspecd.tasks.SingleplotTask`
+      * :class:`aspecd.tasks.MultiplotTask`
+      * :class:`aspecd.tasks.ReportTask`
+
+    Note that imports of datasets are usually not handled using tasks,
+    as this is taken care of automatically by defining a list of datasets
+    in a :class:`aspecd.tasks.Recipe`.
+
+    Usually, you need not care to instantiate objects of the correct type,
+    as this is done automatically by the :class:`aspecd.tasks.Recipe` using
+    the :class:`aspecd.tasks.TaskFactory`.
+
 
     Attributes
     ----------
@@ -647,6 +708,9 @@ class ProcessingTask(Task):
 
     Processing steps will always be performed individually for each dataset.
 
+    For more information on the underlying general class,
+    see :class:`aspecd.processing.ProcessingStep`.
+
     """
 
     def _perform(self):
@@ -664,6 +728,9 @@ class AnalysisTask(Task):
     Analysis steps can be performed individually for each dataset or the
     results combined, depending on the type of analysis step.
 
+    For more information on the underlying general class,
+    see :class:`aspecd.analysis.AnalysisStep`.
+
     """
 
     def _perform(self):
@@ -679,6 +746,9 @@ class AnnotationTask(Task):
     Annotation step defined as task in recipe-driven data analysis.
 
     Annotation steps will always be performed individually for each dataset.
+
+    For more information on the underlying general class,
+    see :class:`aspecd.processing.Annotation`.
 
     """
 
@@ -698,6 +768,9 @@ class SingleplotTask(Task):
     For plots combining multiple datasets,
     see :class:`aspecd.tasks.MultiplotTask`.
 
+    For more information on the underlying general class,
+    see :class:`aspecd.plotting.SinglePlotter`.
+
     """
 
     def __init__(self):
@@ -712,12 +785,39 @@ class SingleplotTask(Task):
             task.plot(dataset=dataset)
 
 
+class MultiplotTask(Task):
+    """
+    Multiplot step defined as task in recipe-driven data analysis.
+
+    Multiplot steps are performed on a list of datasets and combine them in
+    one single plot. For plots performed on individual datasets,
+    see :class:`aspecd.tasks.SingleplotTask`.
+
+    For more information on the underlying general class,
+    see :class:`aspecd.plotting.MultiPlotter`.
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self._module = 'plotting'
+
+    def _perform(self):
+        task = self.get_object()
+        task.datasets = self.recipe.get_datasets(self.apply_to)
+        # noinspection PyUnresolvedReferences
+        task.plot()
+
+
 class ReportTask(Task):
     """
     Reporting step defined as task in recipe-driven data analysis.
 
     Reporting steps can be performed individually for each dataset or the
     results combined, depending on the type of analysis step.
+
+    For more information on the underlying general class,
+    see :class:`aspecd.report.Reporter`.
 
     """
 

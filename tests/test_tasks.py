@@ -164,6 +164,30 @@ class TestRecipe(unittest.TestCase):
         dataset_ = self.recipe.get_dataset(identifier='invalid')
         self.assertFalse(dataset_)
 
+    def test_has_get_datasets_method(self):
+        self.assertTrue(hasattr(self.recipe, 'get_datasets'))
+        self.assertTrue(callable(self.recipe.get_datasets))
+
+    def test_get_datasets_without_identifier_raises(self):
+        with self.assertRaises(tasks.MissingDatasetIdentifierError):
+            self.recipe.get_datasets()
+
+    def test_get_datasets_with_valid_identifier_returns_dataset(self):
+        dict_ = {'datasets': self.datasets}
+        self.recipe.importer_factory = self.importer_factory
+        self.recipe.from_dict(dict_)
+        datasets = self.recipe.get_datasets(identifiers=self.datasets)
+        for dataset_ in datasets:
+            self.assertTrue(isinstance(dataset_, dataset.Dataset))
+
+    def test_get_datasets_with_invalid_identifier_returns_nothing(self):
+        dict_ = {'datasets': self.datasets}
+        self.recipe.importer_factory = self.importer_factory
+        self.recipe.from_dict(dict_)
+        datasets = self.recipe.get_datasets(
+            identifiers=['invalid', 'invalid2'])
+        self.assertFalse(datasets)
+
 
 class TestChef(unittest.TestCase):
     def setUp(self):
@@ -460,6 +484,31 @@ class TestSinglePlotTask(unittest.TestCase):
         self.task.recipe = self.recipe
         self.task.perform()
         self.assertTrue(self.recipe.datasets[0].representations)
+
+
+class TestMultiPlotTask(unittest.TestCase):
+    def setUp(self):
+        self.task = tasks.MultiplotTask()
+        self.recipe = tasks.Recipe()
+        self.dataset = ['foo']
+
+    def prepare_recipe(self):
+        self.plotting_task = {'kind': 'multiplot',
+                              'type': 'MultiPlotter',
+                              'apply_to': self.dataset}
+        self.recipe.importer_factory = io.DatasetImporterFactory()
+        recipe_dict = {'datasets': self.dataset,
+                       'tasks': [self.plotting_task]}
+        self.recipe.from_dict(recipe_dict)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_perform_task(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
 
 
 class TestReportTask(unittest.TestCase):
