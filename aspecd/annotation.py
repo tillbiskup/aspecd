@@ -196,7 +196,7 @@ class Annotation:
         Create history record to be added to the dataset.
 
         Usually, this method gets called from within the
-        :meth:`aspecd.dataset.analyse` method of the
+        :meth:`aspecd.dataset.annotate` method of the
         :class:`aspecd.dataset.Dataset` class and ensures the history of
         each annotation step to get written properly.
 
