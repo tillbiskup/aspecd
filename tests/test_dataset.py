@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 
 import numpy as np
 
+import aspecd.analysis
 from aspecd import annotation, analysis, dataset, io, plotting, \
     processing, system
 import aspecd.metadata
@@ -44,7 +45,7 @@ class TestDataset(unittest.TestCase):
     def test_analyses_is_list(self):
         self.assertTrue(isinstance(self.dataset.analyses, list))
 
-    def test_has_package_name_property(self):
+    def test_has_protected_package_name_property(self):
         self.assertTrue(hasattr(self.dataset, '_package_name'))
 
     def test_has_representations_property(self):
@@ -55,6 +56,14 @@ class TestDataset(unittest.TestCase):
 
     def test_has_references_property(self):
         self.assertTrue(hasattr(self.dataset, 'references'))
+
+    def test_has_package_name_property(self):
+        self.assertTrue(hasattr(self.dataset, 'package_name'))
+
+    def test_package_name_property_is_readonly(self):
+        with self.assertRaises(AttributeError):
+            # noinspection PyPropertyAccess
+            self.dataset.package_name = 'foo'
 
 
 class TestDatasetProcessing(unittest.TestCase):
@@ -273,7 +282,7 @@ class TestDatasetAnalysis(unittest.TestCase):
     def test_added_analysis_record_is_analysishistoryrecord(self):
         self.dataset.analyse(self.analysis_step)
         self.assertTrue(isinstance(self.dataset.analyses[-1],
-                                   dataset.AnalysisHistoryRecord))
+                                   aspecd.analysis.AnalysisHistoryRecord))
 
     def test_added_analysis_record_contains_history(self):
         processing_step = processing.ProcessingStep()
@@ -869,6 +878,7 @@ class TestHistoryRecord(unittest.TestCase):
 
     def test_date_is_current_date(self):
         now = datetime.today()
+        # noinspection PyTypeChecker
         self.assertAlmostEqual(now, self.historyrecord.date,
                                delta=timedelta(seconds=1))
 
@@ -927,28 +937,6 @@ class TestProcessingHistoryRecord(unittest.TestCase):
 
     def test_replay(self):
         self.historyrecord.replay(dataset.Dataset())
-
-
-class TestAnalysisHistoryRecord(unittest.TestCase):
-    def setUp(self):
-        self.historyrecord = dataset.AnalysisHistoryRecord()
-
-    def test_instantiate_class(self):
-        pass
-
-    def test_instantiate_class_with_package_name(self):
-        dataset.AnalysisHistoryRecord(package="numpy")
-
-    def test_instantiate_class_with_package_name_sets_sysinfo(self):
-        analysis_step = dataset.AnalysisHistoryRecord(package="numpy")
-        self.assertTrue("numpy" in analysis_step.sysinfo.packages.keys())
-
-    def test_has_analysis_property(self):
-        self.assertTrue(hasattr(self.historyrecord, 'analysis'))
-
-    def test_analysis_is_analysisstep(self):
-        self.assertTrue(isinstance(self.historyrecord.analysis,
-                                   analysis.AnalysisStep))
 
 
 class TestAnnotationHistoryRecord(unittest.TestCase):

@@ -33,6 +33,7 @@ in context of recipe-driven data analysis (for details, see the
 
 import copy
 
+import aspecd.dataset
 import aspecd.utils
 
 
@@ -73,6 +74,8 @@ class AnalysisStep(aspecd.utils.ExecuteOnDatasetMixin):
         All parameters, implicit and explicit.
     results : :class:`dict`
         Results of the analysis step
+    resulting_dataset : :class:`aspecd.dataset.CalculatedDataset`
+        Results of the analysis step in form of a dataset
     preprocessing : :class:`list`
         List of necessary preprocessing steps to perform the analysis.
     description : :class:`str`
@@ -93,6 +96,7 @@ class AnalysisStep(aspecd.utils.ExecuteOnDatasetMixin):
         self.name = aspecd.utils.full_class_name(self)
         self.parameters = dict()
         self.results = dict()
+        self.resulting_dataset = None
         self.preprocessing = []
         self.description = 'Abstract analysis step'
         self.comment = ''
@@ -179,6 +183,14 @@ class AnalysisStep(aspecd.utils.ExecuteOnDatasetMixin):
         processingstep = copy.deepcopy(processingstep)
         self.preprocessing.append(processingstep)
 
+    def create_history_record(self):
+        history_record = AnalysisHistoryRecord(
+            package=self.dataset.package_name)
+        history_record.analysis = self
+        history_record.analysis.preprocessing = copy.deepcopy(
+            self.dataset.history)
+        return history_record
+
     def _sanitise_parameters(self):
         """Ensure parameters provided for analysis step are correct.
 
@@ -199,3 +211,25 @@ class AnalysisStep(aspecd.utils.ExecuteOnDatasetMixin):
 
         """
         pass
+
+
+class AnalysisHistoryRecord(aspecd.dataset.HistoryRecord):
+    """History record for analysis steps on datasets.
+
+    Attributes
+    ----------
+    analysis : :class:`aspecd.analysis.AnalysisStep`
+        Analysis step the history is saved for
+
+    package : :class:`str`
+        Name of package the hstory record gets recorded for
+
+        Prerequisite for reproducibility, gets stored in the
+        :attr:`aspecd.dataset.HistoryRecord.sysinfo` attribute.
+        Will usually be provided automatically by the dataset.
+
+    """
+
+    def __init__(self, package=''):
+        super().__init__(package=package)
+        self.analysis = AnalysisStep()

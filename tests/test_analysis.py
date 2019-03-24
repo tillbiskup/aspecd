@@ -75,6 +75,19 @@ class TestAnalysis(unittest.TestCase):
         test_dataset = self.analysisstep.analyse(dataset.Dataset())
         self.assertTrue(isinstance(test_dataset, dataset.Dataset))
 
+    def test_has_resulting_dataset_property(self):
+        self.assertTrue(hasattr(self.analysisstep, 'resulting_dataset'))
+
+    def test_has_create_history_record_method(self):
+        self.assertTrue(hasattr(self.analysisstep, 'create_history_record'))
+        self.assertTrue(callable(self.analysisstep.create_history_record))
+
+    def test_create_history_record_returns_history_record(self):
+        self.analysisstep.dataset = dataset.Dataset()
+        history_record = self.analysisstep.create_history_record()
+        self.assertTrue(isinstance(history_record,
+                                   analysis.AnalysisHistoryRecord))
+
 
 class TestPreprocessing(unittest.TestCase):
     def setUp(self):
@@ -89,3 +102,25 @@ class TestPreprocessing(unittest.TestCase):
         self.analysisstep.add_preprocessing_step(self.processingstep)
         self.assertIsNot(self.processingstep,
                          self.analysisstep.preprocessing[-1])
+
+
+class TestAnalysisHistoryRecord(unittest.TestCase):
+    def setUp(self):
+        self.historyrecord = analysis.AnalysisHistoryRecord()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_instantiate_class_with_package_name(self):
+        analysis.AnalysisHistoryRecord(package="numpy")
+
+    def test_instantiate_class_with_package_name_sets_sysinfo(self):
+        analysis_step = analysis.AnalysisHistoryRecord(package="numpy")
+        self.assertTrue("numpy" in analysis_step.sysinfo.packages.keys())
+
+    def test_has_analysis_property(self):
+        self.assertTrue(hasattr(self.historyrecord, 'analysis'))
+
+    def test_analysis_is_analysisstep(self):
+        self.assertTrue(isinstance(self.historyrecord.analysis,
+                                   analysis.AnalysisStep))

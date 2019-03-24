@@ -94,7 +94,6 @@ from datetime import datetime
 
 import numpy as np
 
-import aspecd.analysis
 import aspecd.annotation
 import aspecd.metadata
 import aspecd.plotting
@@ -389,6 +388,10 @@ class Dataset(aspecd.utils.ToDictMixin):
         self._package_name = aspecd.utils.package_name(self)
         super().__init__()
 
+    @property
+    def package_name(self):
+        return self._package_name
+
     def process(self, processing_step=None):
         """Apply processing step to dataset.
 
@@ -557,8 +560,8 @@ class Dataset(aspecd.utils.ToDictMixin):
         """
         # Important: Need a copy, not the reference to the original object
         analysis_step = copy.deepcopy(analysis_step)
-        history_record = self._create_analysis_history_record(analysis_step)
         analysis_step.analyse(self, from_dataset=True)
+        history_record = analysis_step.create_history_record()
         self.analyses.append(history_record)
         return analysis_step
 
@@ -571,12 +574,6 @@ class Dataset(aspecd.utils.ToDictMixin):
         """
         analysis_step = self.analyse(analysis_step)
         return analysis_step
-
-    def _create_analysis_history_record(self, analysis_step):
-        history_record = AnalysisHistoryRecord(package=self._package_name)
-        history_record.analysis = analysis_step
-        history_record.analysis.preprocessing = copy.deepcopy(self.history)
-        return history_record
 
     def delete_analysis(self, index=None):
         """Remove analysis step record from dataset.
@@ -1223,28 +1220,6 @@ class ProcessingHistoryRecord(HistoryRecord):
         """
         processing_step = self.processing.create_processing_step()
         processing_step.process(dataset=dataset)
-
-
-class AnalysisHistoryRecord(HistoryRecord):
-    """History record for analysis steps on datasets.
-
-    Attributes
-    ----------
-    analysis : :class:`aspecd.analysis.AnalysisStep`
-        Analysis step the history is saved for
-
-    package : :class:`str`
-        Name of package the hstory record gets recorded for
-
-        Prerequisite for reproducibility, gets stored in the
-        :attr:`aspecd.dataset.HistoryRecord.sysinfo` attribute.
-        Will usually be provided automatically by the dataset.
-
-    """
-
-    def __init__(self, package=''):
-        super().__init__(package=package)
-        self.analysis = aspecd.analysis.AnalysisStep()
 
 
 class AnnotationHistoryRecord(HistoryRecord):
