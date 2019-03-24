@@ -38,12 +38,14 @@ with a saver object as its argument.
 
 """
 
+import copy
 import os
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 import aspecd.utils
+import aspecd.dataset
 
 
 class Error(Exception):
@@ -371,6 +373,27 @@ class SinglePlotter(Plotter):
         self._assign_dataset(dataset)
         self._call_from_dataset(from_dataset)
         return self.dataset
+
+    def create_history_record(self):
+        """
+        Create history record to be added to the dataset.
+
+        Usually, this method gets called from within the
+        :meth:`aspecd.dataset.plot` method of the
+        :class:`aspecd.dataset.Dataset` class and ensures the history of
+        each plotting step to get written properly.
+
+        Returns
+        -------
+        history_record : :class:`aspecd.plotting.PlotHistoryRecord`
+            history record for plotting step
+
+        """
+        history_record = PlotHistoryRecord(package=self.dataset.package_name)
+        history_record.plot = SinglePlotRecord(plotter=self)
+        history_record.plot.preprocessing = copy.deepcopy(
+            self.dataset.history)
+        return history_record
 
     def _assign_dataset(self, dataset):
         if not dataset:
@@ -714,3 +737,25 @@ class MultiPlotRecord(PlotRecord):
     def __init__(self, plotter=None):
         self.datasets = list()
         super().__init__(plotter=plotter)
+
+
+class PlotHistoryRecord(aspecd.dataset.HistoryRecord):
+    """History record for plots of datasets.
+
+    Attributes
+    ----------
+    plot : :class:`aspecd.plotting.SinglePlotRecord`
+        Plot the history is saved for
+
+    package : :class:`str`
+        Name of package the hstory record gets recorded for
+
+        Prerequisite for reproducibility, gets stored in the
+        :attr:`aspecd.dataset.HistoryRecord.sysinfo` attribute.
+        Will usually be provided automatically by the dataset.
+
+    """
+
+    def __init__(self, package=''):
+        super().__init__(package=package)
+        self.plot = aspecd.plotting.SinglePlotRecord()

@@ -6,6 +6,9 @@ from datetime import datetime, timedelta
 import numpy as np
 
 import aspecd.analysis
+import aspecd.annotation
+import aspecd.plotting
+import aspecd.processing
 from aspecd import annotation, analysis, dataset, io, plotting, \
     processing, system
 import aspecd.metadata
@@ -86,7 +89,7 @@ class TestDatasetProcessing(unittest.TestCase):
     def test_added_history_record_is_historyrecord(self):
         self.dataset.process(self.processing_step)
         self.assertTrue(isinstance(self.dataset.history[-1],
-                                   dataset.ProcessingHistoryRecord))
+                                   aspecd.processing.ProcessingHistoryRecord))
 
     def test_process_increments_history_pointer(self):
         historypointer = self.dataset._history_pointer
@@ -351,7 +354,7 @@ class TestDatasetAnnotation(unittest.TestCase):
     def test_added_annotation_record_is_annotationhistoryrecord(self):
         self.dataset.annotate(self.annotation)
         self.assertTrue(isinstance(self.dataset.annotations[-1],
-                                   dataset.AnnotationHistoryRecord))
+                                   aspecd.annotation.AnnotationHistoryRecord))
 
     def test_has_delete_annotation_method(self):
         self.assertTrue(hasattr(self.dataset, 'delete_annotation'))
@@ -410,7 +413,7 @@ class TestDatasetRepresentations(unittest.TestCase):
     def test_added_plot_record_is_plotrecord(self):
         self.dataset.plot(self.plotter)
         self.assertTrue(isinstance(self.dataset.representations[-1],
-                                   dataset.PlotHistoryRecord))
+                                   aspecd.plotting.PlotHistoryRecord))
 
     def test_added_plot_record_contains_history(self):
         processing_step = processing.ProcessingStep()
@@ -888,74 +891,3 @@ class TestHistoryRecord(unittest.TestCase):
     def test_sysinfo_is_systeminfo(self):
         self.assertTrue(
             isinstance(self.historyrecord.sysinfo, system.SystemInfo))
-
-
-class TestProcessingHistoryRecord(unittest.TestCase):
-    def setUp(self):
-        self.processing_step = processing.ProcessingStep()
-        self.historyrecord = \
-            dataset.ProcessingHistoryRecord(self.processing_step)
-
-    def test_instantiate_class(self):
-        pass
-
-    def test_instantiate_class_with_processing_step(self):
-        dataset.ProcessingHistoryRecord(self.processing_step)
-
-    def test_instantiate_class_with_package_name(self):
-        dataset.ProcessingHistoryRecord(processing_step=self.processing_step,
-                                        package="numpy")
-
-    def test_instantiate_class_with_package_name_sets_sysinfo(self):
-        processing_step = dataset.ProcessingHistoryRecord(
-            processing_step=self.processing_step,
-            package="numpy")
-        self.assertTrue("numpy" in processing_step.sysinfo.packages.keys())
-
-    def test_has_processing_property(self):
-        self.assertTrue(hasattr(self.historyrecord, 'processing'))
-
-    def test_processing_is_processingsteprecord(self):
-        self.assertTrue(isinstance(self.historyrecord.processing,
-                                   processing.ProcessingStepRecord))
-
-    def test_has_date_property(self):
-        self.assertTrue(hasattr(self.historyrecord, 'date'))
-
-    def test_has_sysinfo_property(self):
-        self.assertTrue(hasattr(self.historyrecord, 'sysinfo'))
-
-    def test_has_undoable_property(self):
-        self.assertTrue(hasattr(self.historyrecord, 'undoable'))
-
-    def test_undoable_is_boolean(self):
-        self.assertTrue(isinstance(self.historyrecord.undoable, bool))
-
-    def test_has_replay_method(self):
-        self.assertTrue(hasattr(self.historyrecord, 'replay'))
-        self.assertTrue(callable(self.historyrecord.replay))
-
-    def test_replay(self):
-        self.historyrecord.replay(dataset.Dataset())
-
-
-class TestAnnotationHistoryRecord(unittest.TestCase):
-    def setUp(self):
-        self.annotationrecord = dataset.AnnotationHistoryRecord()
-
-    def test_instantiate_class(self):
-        pass
-
-    def test_instantiate_class_with_package_name(self):
-        dataset.AnnotationHistoryRecord(package="numpy")
-
-    def test_instantiate_class_with_package_name_sets_sysinfo(self):
-        annotation_step = dataset.AnnotationHistoryRecord(package="numpy")
-        self.assertTrue("numpy" in annotation_step.sysinfo.packages.keys())
-
-    def test_has_annotation_property(self):
-        self.assertTrue(hasattr(self.annotationrecord, 'annotation'))
-
-    def test_annotation_is_annotation(self):
-        self.assertTrue(isinstance(self.annotationrecord.annotation,
-                                   annotation.Annotation))

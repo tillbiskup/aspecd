@@ -2,6 +2,7 @@
 
 import unittest
 
+import aspecd.processing
 from aspecd import processing, dataset, utils
 
 
@@ -76,6 +77,16 @@ class TestProcessingStep(unittest.TestCase):
     def test_process_returns_dataset(self):
         test_dataset = self.processing.process(dataset.Dataset())
         self.assertTrue(isinstance(test_dataset, dataset.Dataset))
+
+    def test_has_create_history_record_method(self):
+        self.assertTrue(hasattr(self.processing, 'create_history_record'))
+        self.assertTrue(callable(self.processing.create_history_record))
+
+    def test_create_history_record_returns_history_record(self):
+        self.processing.dataset = dataset.Dataset()
+        history_record = self.processing.create_history_record()
+        self.assertTrue(isinstance(history_record,
+                                   processing.ProcessingHistoryRecord))
 
 
 class TestProcessingStepRecord(unittest.TestCase):
@@ -157,3 +168,52 @@ class TestProcessingStepRecord(unittest.TestCase):
             processing.ProcessingStepRecord(self.processing_step)
         test_object = self.processing_record.create_processing_step()
         self.assertEqual(test_object.comment, test_comment)
+
+
+class TestProcessingHistoryRecord(unittest.TestCase):
+    def setUp(self):
+        self.processing_step = processing.ProcessingStep()
+        self.historyrecord = \
+            aspecd.processing.ProcessingHistoryRecord(self.processing_step)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_instantiate_class_with_processing_step(self):
+        aspecd.processing.ProcessingHistoryRecord(self.processing_step)
+
+    def test_instantiate_class_with_package_name(self):
+        aspecd.processing.ProcessingHistoryRecord(processing_step=self.processing_step,
+                                                  package="numpy")
+
+    def test_instantiate_class_with_package_name_sets_sysinfo(self):
+        processing_step = aspecd.processing.ProcessingHistoryRecord(
+            processing_step=self.processing_step,
+            package="numpy")
+        self.assertTrue("numpy" in processing_step.sysinfo.packages.keys())
+
+    def test_has_processing_property(self):
+        self.assertTrue(hasattr(self.historyrecord, 'processing'))
+
+    def test_processing_is_processingsteprecord(self):
+        self.assertTrue(isinstance(self.historyrecord.processing,
+                                   processing.ProcessingStepRecord))
+
+    def test_has_date_property(self):
+        self.assertTrue(hasattr(self.historyrecord, 'date'))
+
+    def test_has_sysinfo_property(self):
+        self.assertTrue(hasattr(self.historyrecord, 'sysinfo'))
+
+    def test_has_undoable_property(self):
+        self.assertTrue(hasattr(self.historyrecord, 'undoable'))
+
+    def test_undoable_is_boolean(self):
+        self.assertTrue(isinstance(self.historyrecord.undoable, bool))
+
+    def test_has_replay_method(self):
+        self.assertTrue(hasattr(self.historyrecord, 'replay'))
+        self.assertTrue(callable(self.historyrecord.replay))
+
+    def test_replay(self):
+        self.historyrecord.replay(dataset.Dataset())

@@ -2,6 +2,7 @@
 
 import unittest
 
+import aspecd.annotation
 from aspecd import annotation, dataset
 
 
@@ -80,6 +81,16 @@ class TestAnnotation(unittest.TestCase):
         test_dataset = self.annotation.annotate(dataset.Dataset())
         self.assertTrue(isinstance(test_dataset, dataset.Dataset))
 
+    def test_has_create_history_record_method(self):
+        self.assertTrue(hasattr(self.annotation, 'create_history_record'))
+        self.assertTrue(callable(self.annotation.create_history_record))
+
+    def test_create_history_record_returns_history_record(self):
+        self.annotation.dataset = dataset.Dataset()
+        history_record = self.annotation.create_history_record()
+        self.assertTrue(isinstance(history_record,
+                                   annotation.AnnotationHistoryRecord))
+
 
 class TestComment(unittest.TestCase):
     def setUp(self):
@@ -126,3 +137,26 @@ class TestCharacteristic(unittest.TestCase):
 
     def test_instantiate_class(self):
         pass
+
+
+class TestAnnotationHistoryRecord(unittest.TestCase):
+    def setUp(self):
+        self.annotationrecord = aspecd.annotation.AnnotationHistoryRecord()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_instantiate_class_with_package_name(self):
+        aspecd.annotation.AnnotationHistoryRecord(package="numpy")
+
+    def test_instantiate_class_with_package_name_sets_sysinfo(self):
+        annotation_step = aspecd.annotation.AnnotationHistoryRecord(
+            package="numpy")
+        self.assertTrue("numpy" in annotation_step.sysinfo.packages.keys())
+
+    def test_has_annotation_property(self):
+        self.assertTrue(hasattr(self.annotationrecord, 'annotation'))
+
+    def test_annotation_is_annotation(self):
+        self.assertTrue(isinstance(self.annotationrecord.annotation,
+                                   annotation.Annotation))

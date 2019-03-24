@@ -22,6 +22,7 @@ in context of recipe-driven data analysis (for details, see the
 """
 
 import aspecd.utils
+import aspecd.dataset
 
 
 class Error(Exception):
@@ -183,6 +184,25 @@ class ProcessingStep:
         self._call_from_dataset(from_dataset=from_dataset)
         return self.dataset
 
+    def create_history_record(self):
+        """
+        Create history record to be added to the dataset.
+
+        Usually, this method gets called from within the
+        :meth:`aspecd.dataset.analyse` method of the
+        :class:`aspecd.dataset.Dataset` class and ensures the history of
+        each processing step to get written properly.
+
+        Returns
+        -------
+        history_record : :class:`aspecd.processing.ProcessingHistoryRecord`
+            history record for processing step
+
+        """
+        history_record = ProcessingHistoryRecord(
+            package=self.dataset.package_name, processing_step=self)
+        return history_record
+
     def _assign_dataset(self, dataset=None):
         if not dataset:
             if not self.dataset:
@@ -317,3 +337,48 @@ class ProcessingStepRecord:
         processing_step.description = self.description
         processing_step.comment = self.comment
         return processing_step
+
+
+class ProcessingHistoryRecord(aspecd.dataset.HistoryRecord):
+    """History record for processing steps on datasets.
+
+    Attributes
+    ----------
+    processing : `aspecd.processing.ProcessingStepRecord`
+        record of the processing step
+
+    Parameters
+    ----------
+    processing_step : :class:`aspecd.processing.ProcessingStep`
+        processing step the history is saved for
+
+    package : :class:`str`
+        Name of package the hstory record gets recorded for
+
+        Prerequisite for reproducibility, gets stored in the
+        :attr:`aspecd.dataset.HistoryRecord.sysinfo` attribute.
+        Will usually be provided automatically by the dataset.
+
+    """
+
+    def __init__(self, processing_step=None, package=''):
+        super().__init__(package=package)
+        self.processing = \
+            aspecd.processing.ProcessingStepRecord(processing_step)
+
+    @property
+    def undoable(self):
+        """Can this processing step be reverted?"""
+        return self.processing.undoable
+
+    def replay(self, dataset):
+        """Replay the processing step saved in the history record.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset the processing step should be replayed to
+
+        """
+        processing_step = self.processing.create_processing_step()
+        processing_step.process(dataset=dataset)

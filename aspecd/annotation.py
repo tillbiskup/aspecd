@@ -19,6 +19,8 @@ simply subclass the :class:`aspecd.annotations.Annotation` base class.
 
 """
 
+import aspecd.dataset
+
 
 class Error(Exception):
     """Base class for exceptions in this module."""
@@ -189,6 +191,26 @@ class Annotation:
         self._call_from_dataset(from_dataset)
         return self.dataset
 
+    def create_history_record(self):
+        """
+        Create history record to be added to the dataset.
+
+        Usually, this method gets called from within the
+        :meth:`aspecd.dataset.analyse` method of the
+        :class:`aspecd.dataset.Dataset` class and ensures the history of
+        each annotation step to get written properly.
+
+        Returns
+        -------
+        history_record : :class:`aspecd.annotation.AnnotationHistoryRecord`
+            history record for annotation step
+
+        """
+        history_record = AnnotationHistoryRecord(
+            package=self.dataset.package_name)
+        history_record.annotation = self
+        return history_record
+
     def _check_prerequisites(self):
         if not self.content:
             raise NoContentError
@@ -246,3 +268,25 @@ class Characteristic(Annotation):
     """Base class for characteristics."""
 
     pass
+
+
+class AnnotationHistoryRecord(aspecd.dataset.HistoryRecord):
+    """History record for annotations of datasets.
+
+    Attributes
+    ----------
+    annotation : :class:`aspecd.analysis.Annotation`
+        Annotation the history is saved for
+
+    package : :class:`str`
+        Name of package the hstory record gets recorded for
+
+        Prerequisite for reproducibility, gets stored in the
+        :attr:`aspecd.dataset.HistoryRecord.sysinfo` attribute.
+        Will usually be provided automatically by the dataset.
+
+    """
+
+    def __init__(self, package=''):
+        super().__init__(package=package)
+        self.annotation = Annotation()

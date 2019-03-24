@@ -94,10 +94,7 @@ from datetime import datetime
 
 import numpy as np
 
-import aspecd.annotation
 import aspecd.metadata
-import aspecd.plotting
-import aspecd.processing
 import aspecd.system
 import aspecd.utils
 
@@ -437,8 +434,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         # Important: Need a copy, not the reference to the original object
         processing_step = copy.deepcopy(processing_step)
         processing_step.process(self, from_dataset=True)
-        history_record = \
-            self._create_processing_history_record(processing_step)
+        history_record = processing_step.create_history_record()
         self._append_processing_history_record(history_record)
         self._handle_not_undoable(processing_step=processing_step)
         return processing_step
@@ -505,12 +501,6 @@ class Dataset(aspecd.utils.ToDictMixin):
 
     def _has_leading_history(self):
         return len(self.history) - 1 > self._history_pointer
-
-    def _create_processing_history_record(self, processing_step):
-        historyrecord = \
-            ProcessingHistoryRecord(processing_step=processing_step,
-                                    package=self._package_name)
-        return historyrecord
 
     def _append_processing_history_record(self, history_record):
         self.history.append(history_record)
@@ -604,14 +594,9 @@ class Dataset(aspecd.utils.ToDictMixin):
         """
         # Important: Need a copy, not the reference to the original object
         annotation_ = copy.deepcopy(annotation_)
-        history_record = self._create_annotation_history_record(annotation_)
         annotation_.annotate(self, from_dataset=True)
+        history_record = annotation_.create_history_record()
         self.annotations.append(history_record)
-
-    def _create_annotation_history_record(self, annotation_):
-        history_record = AnnotationHistoryRecord(package=self._package_name)
-        history_record.annotation = annotation_
-        return history_record
 
     def delete_annotation(self, index=None):
         """Remove annotation record from dataset.
@@ -658,15 +643,9 @@ class Dataset(aspecd.utils.ToDictMixin):
         if not plotter:
             raise MissingPlotterError
         plotter.plot(dataset=self, from_dataset=True)
-        plot_record = self._create_plot_record(plotter=plotter)
+        plot_record = plotter.create_history_record()
         self.representations.append(plot_record)
         return plotter
-
-    def _create_plot_record(self, plotter=None):
-        plot_record = PlotHistoryRecord(package=self._package_name)
-        plot_record.plot = aspecd.plotting.SinglePlotRecord(plotter=plotter)
-        plot_record.plot.preprocessing = copy.deepcopy(self.history)
-        return plot_record
 
     def delete_representation(self, index=None):
         """Remove representation record from dataset.
@@ -1182,92 +1161,3 @@ class HistoryRecord:
     def __init__(self, package=''):
         self.date = datetime.today()
         self.sysinfo = aspecd.system.SystemInfo(package=package)
-
-
-class ProcessingHistoryRecord(HistoryRecord):
-    """History record for processing steps on datasets.
-
-    Attributes
-    ----------
-    processing : `aspecd.processing.ProcessingStepRecord`
-        record of the processing step
-
-    Parameters
-    ----------
-    processing_step : :class:`aspecd.processing.ProcessingStep`
-        processing step the history is saved for
-
-    package : :class:`str`
-        Name of package the hstory record gets recorded for
-
-        Prerequisite for reproducibility, gets stored in the
-        :attr:`aspecd.dataset.HistoryRecord.sysinfo` attribute.
-        Will usually be provided automatically by the dataset.
-
-    """
-
-    def __init__(self, processing_step=None, package=''):
-        super().__init__(package=package)
-        self.processing = \
-            aspecd.processing.ProcessingStepRecord(processing_step)
-
-    @property
-    def undoable(self):
-        """Can this processing step be reverted?"""
-        return self.processing.undoable
-
-    def replay(self, dataset):
-        """Replay the processing step saved in the history record.
-
-        Parameters
-        ----------
-        dataset : :class:`aspecd.dataset.Dataset`
-            dataset the processing step should be replayed to
-
-        """
-        processing_step = self.processing.create_processing_step()
-        processing_step.process(dataset=dataset)
-
-
-class AnnotationHistoryRecord(HistoryRecord):
-    """History record for annotations of datasets.
-
-    Attributes
-    ----------
-    annotation : :class:`aspecd.analysis.Annotation`
-        Annotation the history is saved for
-
-    package : :class:`str`
-        Name of package the hstory record gets recorded for
-
-        Prerequisite for reproducibility, gets stored in the
-        :attr:`aspecd.dataset.HistoryRecord.sysinfo` attribute.
-        Will usually be provided automatically by the dataset.
-
-    """
-
-    def __init__(self, package=''):
-        super().__init__(package=package)
-        self.annotation = aspecd.annotation.Annotation()
-
-
-class PlotHistoryRecord(HistoryRecord):
-    """History record for plots of datasets.
-
-    Attributes
-    ----------
-    plot : :class:`aspecd.plotting.SinglePlotRecord`
-        Plot the history is saved for
-
-    package : :class:`str`
-        Name of package the hstory record gets recorded for
-
-        Prerequisite for reproducibility, gets stored in the
-        :attr:`aspecd.dataset.HistoryRecord.sysinfo` attribute.
-        Will usually be provided automatically by the dataset.
-
-    """
-
-    def __init__(self, package=''):
-        super().__init__(package=package)
-        self.plot = aspecd.plotting.SinglePlotRecord()
