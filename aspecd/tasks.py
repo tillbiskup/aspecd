@@ -395,11 +395,11 @@ class Recipe:
         """
         if not identifier:
             raise MissingDatasetIdentifierError
-        return_value = None
+        matching_dataset = None
         for dataset in self.datasets:
             if dataset.id == identifier:
-                return_value = dataset
-        return return_value
+                matching_dataset = dataset
+        return matching_dataset
 
     def get_datasets(self, identifiers=None):
         """
@@ -432,14 +432,14 @@ class Recipe:
         """
         if not identifiers:
             raise MissingDatasetIdentifierError
-        return_value = []
+        matching_datasets = []
         for dataset in self.datasets:
-            for id_ in identifiers:
-                if dataset.id == id_:
-                    return_value.append(dataset)
-                    identifiers.remove(id_)
+            for identifier in identifiers:
+                if dataset.id == identifier:
+                    matching_datasets.append(dataset)
+                    identifiers.remove(identifier)
                     break
-        return return_value
+        return matching_datasets
 
 
 class Chef:
