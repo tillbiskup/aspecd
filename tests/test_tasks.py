@@ -298,8 +298,8 @@ class TestTask(unittest.TestCase):
     def test_has_type_property(self):
         self.assertTrue(hasattr(self.task, 'type'))
 
-    def test_has_metadata_property(self):
-        self.assertTrue(hasattr(self.task, 'metadata'))
+    def test_has_properties_property(self):
+        self.assertTrue(hasattr(self.task, 'properties'))
 
     def test_has_apply_to_property(self):
         self.assertTrue(hasattr(self.task, 'apply_to'))
@@ -376,7 +376,7 @@ class TestTask(unittest.TestCase):
         metadata = {'parameters': {'foo': 'bar'}}
         self.task.kind = kind
         self.task.type = type_
-        self.task.metadata = metadata
+        self.task.properties = metadata
         obj = self.task.get_object()
         self.assertEqual(metadata['parameters'], getattr(obj, 'parameters'))
 
@@ -386,7 +386,7 @@ class TestTask(unittest.TestCase):
         metadata = {'foo': {'foo': 'bar'}}
         self.task.kind = kind
         self.task.type = type_
-        self.task.metadata = metadata
+        self.task.properties = metadata
         obj = self.task.get_object()
         self.assertFalse(hasattr(obj, 'foo'))
 

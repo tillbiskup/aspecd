@@ -30,8 +30,6 @@ possible to easily extend the scope of recipe-driven data analysis.
 
       * Store history of each task (in a way the result can be used as a
         recipe again).
-      * Handle results of analyses, i.e. store them as an additional
-        dataset with an ID they can be referred to later on in the recipe.
       * Parser for recipes performing a static analysis of their syntax.
         Useful particulary for larger datasets and/or longer lists of tasks.
 
@@ -553,8 +551,8 @@ class Task(aspecd.utils.ToDictMixin):
 
         Corresponds to the class name eventually responsible for performing
         the task.
-    metadata : :class:`dict`
-        Metadata necessary to perform the task.
+    properties : :class:`dict`
+        Properties necessary to perform the task.
 
         Should have keys corresponding to the properties of the class given
         as type attribute.
@@ -593,7 +591,7 @@ class Task(aspecd.utils.ToDictMixin):
         super().__init__()
         self.kind = ''
         self.type = ''
-        self.metadata = dict()
+        self.properties = dict()
         self.apply_to = []
         self.recipe = recipe
         self._module = ''
@@ -725,9 +723,9 @@ class Task(aspecd.utils.ToDictMixin):
             Object of a class defined in the :attr:`type` attribute of a task
 
         """
-        for key in self.metadata:
+        for key in self.properties:
             if hasattr(obj, key):
-                setattr(obj, key, self.metadata[key])
+                setattr(obj, key, self.properties[key])
 
 
 class ProcessingTask(Task):
