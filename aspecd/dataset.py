@@ -390,6 +390,13 @@ class Dataset(aspecd.utils.ToDictMixin):
 
     @property
     def package_name(self):
+        """Return package name.
+
+        The name of the package the dataset is implemented in is a crucial
+        detail for writing the history. The value is set automatically and
+        is read-only.
+
+        """
         return self._package_name
 
     def process(self, processing_step=None):
