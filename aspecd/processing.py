@@ -75,7 +75,7 @@ class MissingProcessingStepError(Error):
         self.message = message
 
 
-class ProcessingStep(aspecd.utils.ExecuteOnDatasetMixin):
+class ProcessingStep:
     """Base class for processing steps.
 
     Each class actually performing a processing step should inherit from this

@@ -73,7 +73,7 @@ class UnknownScopeError(Error):
         self.message = message
 
 
-class Annotation(aspecd.utils.ExecuteOnDatasetMixin):
+class Annotation:
     """
     Annotations are user-supplied additional information to datasets.
 

@@ -287,7 +287,7 @@ class Plotter:
         return saver
 
 
-class SinglePlotter(Plotter, aspecd.utils.ExecuteOnDatasetMixin):
+class SinglePlotter(Plotter):
     """Base class for plots of single datasets.
 
     Each class actually plotting data of a dataset should inherit from this

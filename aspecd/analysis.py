@@ -58,7 +58,7 @@ class MissingDatasetError(Error):
         self.message = message
 
 
-class AnalysisStep(aspecd.utils.ExecuteOnDatasetMixin):
+class AnalysisStep:
     """
     Base class for analysis steps.
 
