@@ -62,6 +62,20 @@ class AnalysisStep:
     """
     Base class for analysis steps.
 
+    Analysis steps, in contrast to processing steps (see
+    :mod:`aspecd.processing` for details), operate on data of a
+    :class:`aspecd.dataset.Dataset`, but don't change its data. Rather,
+    some result is obtained. This result is stored separately,
+    together with the parameters of the analysis step, in the
+    :attr:`aspecd.dataset.Dataset.analyses` attribute of the dataset and
+    can be found in the :attr:`aspecd.analysis.AnalysisStep.results` and
+    :attr:`aspecd.analysis.AnalysisStep.resulting_dataset` atributes.
+
+    The :attr:`aspecd.analysis.AnalysisStep.resulting_dataset` attribute is
+    a calculated dataset (:class:`aspecd.dataset.CalculatedDataset`),
+    and the idea behind storing the result in form of a dataset is to be
+    able to plot and further process these results in a fully generic manner.
+
     Attributes
     ----------
     name : :class:`str`
