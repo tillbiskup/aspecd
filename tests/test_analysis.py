@@ -78,6 +78,10 @@ class TestAnalysis(unittest.TestCase):
     def test_has_resulting_dataset_property(self):
         self.assertTrue(hasattr(self.analysisstep, 'resulting_dataset'))
 
+    def test_resulting_dataset_is_calculated_dataset(self):
+        self.assertTrue(isinstance(self.analysisstep.resulting_dataset,
+                                   dataset.CalculatedDataset))
+
     def test_has_create_history_record_method(self):
         self.assertTrue(hasattr(self.analysisstep, 'create_history_record'))
         self.assertTrue(callable(self.analysisstep.create_history_record))

@@ -96,7 +96,7 @@ class AnalysisStep(aspecd.utils.ExecuteOnDatasetMixin):
         self.name = aspecd.utils.full_class_name(self)
         self.parameters = dict()
         self.results = dict()
-        self.resulting_dataset = None
+        self.resulting_dataset = aspecd.dataset.CalculatedDataset()
         self.preprocessing = []
         self.description = 'Abstract analysis step'
         self.comment = ''

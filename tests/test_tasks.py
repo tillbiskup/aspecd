@@ -34,6 +34,9 @@ class TestRecipe(unittest.TestCase):
     def test_has_task_factory_property(self):
         self.assertTrue(hasattr(self.recipe, 'task_factory'))
 
+    def test_has_results_property(self):
+        self.assertTrue(hasattr(self.recipe, 'results'))
+
     def test_import_from_without_importer_raises(self):
         with self.assertRaises(tasks.MissingImporterError):
             self.recipe.import_from()
@@ -164,6 +167,13 @@ class TestRecipe(unittest.TestCase):
         dataset_ = self.recipe.get_dataset(identifier='invalid')
         self.assertFalse(dataset_)
 
+    def test_get_dataset_from_results_returns_dataset(self):
+        dataset_ = dataset.CalculatedDataset()
+        dataset_.id = self.dataset
+        self.recipe.results = [dataset_]
+        dataset_ = self.recipe.get_dataset(identifier=self.dataset)
+        self.assertTrue(isinstance(dataset_, dataset.Dataset))
+
     def test_has_get_datasets_method(self):
         self.assertTrue(hasattr(self.recipe, 'get_datasets'))
         self.assertTrue(callable(self.recipe.get_datasets))
@@ -187,6 +197,14 @@ class TestRecipe(unittest.TestCase):
         datasets = self.recipe.get_datasets(
             identifiers=['invalid', 'invalid2'])
         self.assertFalse(datasets)
+
+    def test_get_datasets_from_results_returns_dataset(self):
+        dataset_ = dataset.CalculatedDataset()
+        dataset_.id = self.dataset
+        self.recipe.results = [dataset_]
+        datasets = self.recipe.get_datasets(identifiers=[self.dataset])
+        for dataset_ in datasets:
+            self.assertTrue(isinstance(dataset_, dataset.Dataset))
 
 
 class TestChef(unittest.TestCase):
@@ -432,6 +450,35 @@ class TestAnalysisTask(unittest.TestCase):
         self.task.recipe = self.recipe
         self.task.perform()
         self.assertTrue(self.recipe.datasets[0].analyses)
+
+    def test_has_result_property(self):
+        self.assertTrue(hasattr(self.task, 'result'))
+
+    def test_result_attribute_gets_set_from_dict(self):
+        self.prepare_recipe()
+        result = 'foo'
+        self.analysis_task['result'] = result
+        self.task.from_dict(self.analysis_task)
+        self.assertEqual(result, self.task.result)
+
+    def test_perform_task_with_result_adds_resulting_dataset(self):
+        self.prepare_recipe()
+        result = 'foo'
+        self.analysis_task['result'] = result
+        self.task.from_dict(self.analysis_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(isinstance(self.recipe.results[0],
+                                   dataset.CalculatedDataset))
+
+    def test_perform_task_with_result_sets_resulting_dataset_id(self):
+        self.prepare_recipe()
+        result = 'foo'
+        self.analysis_task['result'] = result
+        self.task.from_dict(self.analysis_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertEqual(self.recipe.results[0].id, result)
 
 
 class TestAnnotationTask(unittest.TestCase):

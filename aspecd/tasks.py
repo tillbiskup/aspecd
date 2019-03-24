@@ -219,6 +219,10 @@ class Recipe:
         List of tasks to be performed on the datasets
 
         Each task is an object of class :class:`aspecd.tasks.Task`.
+    results : :class:`list`
+        List of datasets that are results of analysis tasks
+
+        Each dataset is an object of class :class:`aspecd.dataset.Dataset`.
     importer_factory : :class:`aspecd.io.DatasetImporterFactory`
         Factory for importers used to import datasets
 
@@ -250,6 +254,7 @@ class Recipe:
     def __init__(self):
         super().__init__()
         self.datasets = []
+        self.results = []
         self.tasks = list()
         self.importer_factory = None
         self.task_factory = TaskFactory()
@@ -396,7 +401,7 @@ class Recipe:
         if not identifier:
             raise MissingDatasetIdentifierError
         matching_dataset = None
-        for dataset in self.datasets:
+        for dataset in self.datasets + self.results:
             if dataset.id == identifier:
                 matching_dataset = dataset
         return matching_dataset
@@ -433,7 +438,7 @@ class Recipe:
         if not identifiers:
             raise MissingDatasetIdentifierError
         matching_datasets = []
-        for dataset in self.datasets:
+        for dataset in self.datasets + self.results:
             for identifier in identifiers:
                 if dataset.id == identifier:
                     matching_datasets.append(dataset)
@@ -754,14 +759,36 @@ class AnalysisTask(Task):
     For more information on the underlying general class,
     see :class:`aspecd.analysis.AnalysisStep`.
 
+    .. todo::
+        Handle analyses spanning multiple datasets. Needs some additional
+        boolean attribute (that can be set in the recipe) - perhaps
+        "span_multiple" or "individual". See
+        :class:`aspecd.analysis.AnalysisStep` for more details.
+
+
+    Attributes
+    ----------
+    result : :class:`str`
+        Label for the dataset resulting from an analysis step.
+
+        This label will be used to refer to the dataset later on when
+        further processing the recipe.
+
     """
 
+    def __init__(self, recipe=None):
+        super().__init__(recipe=recipe)
+        self.result = ''
+
+    # noinspection PyUnresolvedReferences
     def _perform(self):
         for dataset_id in self.apply_to:
             dataset = self.recipe.get_dataset(dataset_id)
             task = self.get_object()
-            # noinspection PyUnresolvedReferences
             task.analyse(dataset=dataset)
+            if self.result:
+                task.resulting_dataset.id = self.result
+                self.recipe.results.append(task.resulting_dataset)
 
 
 class AnnotationTask(Task):
