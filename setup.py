@@ -31,7 +31,6 @@ setuptools.setup(
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
@@ -50,7 +49,7 @@ setuptools.setup(
     ],
     extras_require={
         'dev': ['prospector'],
-        'docs': ['sphinx'],
+        'docs': ['sphinx', 'sphinx-rtd-theme'],
     },
-    python_requires='>=3',
+    python_requires='>=3.5',
 )
