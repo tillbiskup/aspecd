@@ -270,6 +270,21 @@ class MissingSourceError(Error):
         self.message = message
 
 
+class MissingImporterFactoryError(Error):
+    """Exception raised when no ImporterFactory instance is provided
+
+    Attributes
+    ----------
+    message : :class:`str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
 class AxesCountError(Error):
     """Exception raised for wrong number of axes
 
@@ -933,19 +948,96 @@ class DatasetReference:
 
 
 class DatasetFactory:
+    """
+    Factory for creating dataset objects based on the source provided.
+
+    Particularly in case of recipe-driven data analysis (c.f. :mod:`tasks`),
+    there is a need to automatically retrieve datasets using nothing more
+    than a source string that can be, e.g., a path or LOI.
+
+    Packages derived from ASpecD should implement a :class:`DatasetFactory`
+    inheriting from :class:`aspecd.dataset.DatasetFactory` and overriding
+    the protected method :meth:`_create_dataset`. The only task of this
+    protected method is to provide the correct dataset object, in most
+    cases an instance of a class inheriting from
+    :class:`aspecd.dataset.ExperimentalDataset`.
+
+    Attributes
+    ----------
+    importer_factory : :class:`aspecd.io.DatasetImporterFactory`
+        ImporterFactory instance used for importing datasets
+
+    Raises
+    ------
+    MissingSourceError
+        Raised if no source is provided
+    MissingImporterFactoryError
+        Raised if no ImporterFactory is available
+
+    """
+
+    def __init__(self):
+        self.importer_factory = None
 
     def get_dataset(self, source=''):
-        if not source:
-            raise MissingSourceError('A source is required to return a dataset')
-        return self._get_dataset(source=source)
+        """
+        Return dataset object for dataset specified by its source.
 
-    def _get_dataset(self, source=''):
-        dataset_ = Dataset()
-        # TODO: Need to call an importer here... and decide somehow sensibly
-        #  whether we need an experimental or calculated dataset
-        # importer = self.importer_factory.get_importer(source=source)
-        # dataset_.import_from(importer)
+        The import of data into the dataset is handled using an instance of
+        :class:`aspecd.io.DatasetImporterFactory`.
+
+        The actual code for deciding which type of dataset to return in what
+        case should be implemented in the non-public method
+        :meth:`_create_dataset` in any package based on the ASpecD framework.
+
+        Parameters
+        ----------
+        source : :class:`str`
+            string describing the source of the dataset
+
+            May be a filename or path, a URL/URI, a LOI, or similar
+
+        Returns
+        -------
+        dataset : :class:`aspecd.dataset.Dataset`
+            Dataset object of appropriate class
+
+        Raises
+        ------
+        MissingSourceError
+            Raised if no source is provided
+        MissingImporterFactoryError
+            Raised if no ImporterFactory is available
+
+        """
+        if not source:
+            raise MissingSourceError(
+                'A source is required to return a dataset')
+        if not self.importer_factory:
+            raise MissingImporterFactoryError(
+                'An ImporterFactory is required to return a dataset')
+        dataset_ = self._create_dataset()
+        importer = self.importer_factory.get_importer(source=source)
+        dataset_.import_from(importer)
         return dataset_
+
+    @staticmethod
+    def _create_dataset():
+        """
+        Non-public method creating the actual (empty) dataset object.
+
+        Classes inheriting from :class:`aspecd.dataset.DatasetFactory`
+        should return an instance of the appropriate class that should in
+        all cases inherit from :class:`aspecd.dataset.Dataset` or one of
+        its subclasses.
+
+        Returns
+        -------
+        dataset : :class:`aspecd.dataset.Dataset`
+            Dataset object of appropriate type
+
+        """
+        return ExperimentalDataset()
 
 
 class Data:

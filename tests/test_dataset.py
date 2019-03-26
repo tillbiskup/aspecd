@@ -652,13 +652,26 @@ class TestDatasetFactory(unittest.TestCase):
     def test_instantiate_class(self):
         pass
 
+    def test_has_importer_factory_property(self):
+        self.assertTrue(hasattr(self.factory, 'importer_factory'))
+
     def test_get_dataset_returns_dataset(self):
+        self.factory.importer_factory = io.DatasetImporterFactory()
         dataset_ = self.factory.get_dataset(source=self.source)
         self.assertTrue(isinstance(dataset_, dataset.Dataset))
 
     def test_get_dataset_without_source_raises(self):
         with self.assertRaises(dataset.MissingSourceError):
             self.factory.get_dataset()
+
+    def test_get_dataset_without_importer_factory_raises(self):
+        with self.assertRaises(dataset.MissingImporterFactoryError):
+            self.factory.get_dataset(source=self.source)
+
+    def test_get_dataset_sets_id_from_source_in_dataset(self):
+        self.factory.importer_factory = io.DatasetImporterFactory()
+        dataset_ = self.factory.get_dataset(source=self.source)
+        self.assertEqual(self.source, dataset_.id)
 
 
 class TestData(unittest.TestCase):
