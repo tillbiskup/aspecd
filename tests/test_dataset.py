@@ -644,6 +644,23 @@ class TestDatasetReference(unittest.TestCase):
         self.assertTrue(dataset_.history)
 
 
+class TestDatasetFactory(unittest.TestCase):
+    def setUp(self):
+        self.factory = dataset.DatasetFactory()
+        self.source = 'foo'
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_get_dataset_returns_dataset(self):
+        dataset_ = self.factory.get_dataset(source=self.source)
+        self.assertTrue(isinstance(dataset_, dataset.Dataset))
+
+    def test_get_dataset_without_source_raises(self):
+        with self.assertRaises(dataset.MissingSourceError):
+            self.factory.get_dataset()
+
+
 class TestData(unittest.TestCase):
 
     def setUp(self):

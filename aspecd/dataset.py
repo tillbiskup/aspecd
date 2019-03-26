@@ -255,6 +255,21 @@ class MissingDatasetError(Error):
         self.message = message
 
 
+class MissingSourceError(Error):
+    """Exception raised when expecting a filename but none is provided
+
+    Attributes
+    ----------
+    message : :class:`str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
 class AxesCountError(Error):
     """Exception raised for wrong number of axes
 
@@ -915,6 +930,22 @@ class DatasetReference:
         for history_record in self.history:
             history_record.replay(dataset)
         return dataset
+
+
+class DatasetFactory:
+
+    def get_dataset(self, source=''):
+        if not source:
+            raise MissingSourceError('A source is required to return a dataset')
+        return self._get_dataset(source=source)
+
+    def _get_dataset(self, source=''):
+        dataset_ = Dataset()
+        # TODO: Need to call an importer here... and decide somehow sensibly
+        #  whether we need an experimental or calculated dataset
+        # importer = self.importer_factory.get_importer(source=source)
+        # dataset_.import_from(importer)
+        return dataset_
 
 
 class Data:
