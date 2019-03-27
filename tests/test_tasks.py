@@ -13,7 +13,8 @@ class TestRecipe(unittest.TestCase):
         self.dataset = 'foo'
         self.datasets = ['foo', 'bar']
         self.task = {'kind': 'processing', 'type': 'ProcessingStep'}
-        self.importer_factory = io.DatasetImporterFactory()
+        self.dataset_factory = dataset.DatasetFactory()
+        self.dataset_factory.importer_factory = io.DatasetImporterFactory()
 
     def tearDown(self):
         if os.path.exists(self.filename):
@@ -28,8 +29,8 @@ class TestRecipe(unittest.TestCase):
     def test_has_tasks_property(self):
         self.assertTrue(hasattr(self.recipe, 'tasks'))
 
-    def test_has_importer_factory_property(self):
-        self.assertTrue(hasattr(self.recipe, 'importer_factory'))
+    def test_has_dataset_factory_property(self):
+        self.assertTrue(hasattr(self.recipe, 'dataset_factory'))
 
     def test_has_task_factory_property(self):
         self.assertTrue(hasattr(self.recipe, 'task_factory'))
@@ -46,7 +47,7 @@ class TestRecipe(unittest.TestCase):
         with open(self.filename, 'w') as file:
             utils.yaml.dump(yaml_contents, file)
         importer = io.RecipeYamlImporter(source=self.filename)
-        self.recipe.importer_factory = self.importer_factory
+        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.import_from(importer=importer)
         for key in self.task:
             self.assertEqual(getattr(self.recipe.tasks[0], key),
@@ -57,7 +58,7 @@ class TestRecipe(unittest.TestCase):
         with open(self.filename, 'w') as file:
             utils.yaml.dump(yaml_contents, file)
         importer = io.RecipeYamlImporter(source=self.filename)
-        self.recipe.importer_factory = self.importer_factory
+        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.import_from(importer=importer)
         self.assertEqual(len(self.recipe.datasets), len(self.datasets))
         for dataset_ in self.recipe.datasets:
@@ -81,38 +82,38 @@ class TestRecipe(unittest.TestCase):
 
     def test_from_dict_with_dataset_without_importer_factory_raises(self):
         dict_ = {'datasets': [self.dataset]}
-        with self.assertRaises(tasks.MissingImporterFactoryError):
+        with self.assertRaises(tasks.MissingDatasetFactoryError):
             self.recipe.from_dict(dict_)
 
     def test_from_dict_with_dataset_sets_dataset(self):
         dict_ = {'datasets': [self.dataset]}
-        self.recipe.importer_factory = self.importer_factory
+        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         self.assertTrue(isinstance(self.recipe.datasets[0], dataset.Dataset))
 
     def test_from_dict_with_dataset_sets_dataset_id(self):
         dict_ = {'datasets': [self.dataset]}
-        self.recipe.importer_factory = self.importer_factory
+        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         self.assertEqual(self.dataset, self.recipe.datasets[0].id)
 
     def test_from_dict_with_multiple_datasets_sets_datasets(self):
         dict_ = {'datasets': self.datasets}
-        self.recipe.importer_factory = self.importer_factory
+        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         for dataset_ in self.recipe.datasets:
             self.assertTrue(isinstance(dataset_, dataset.Dataset))
 
     def test_from_dict_with_tasks_without_task_factory_raises(self):
         dict_ = {'tasks': [self.task]}
-        self.recipe.importer_factory = self.importer_factory
+        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.task_factory = None
         with self.assertRaises(tasks.MissingTaskFactoryError):
             self.recipe.from_dict(dict_)
 
     def test_from_dict_with_task_adds_task(self):
         dict_ = {'tasks': [self.task]}
-        self.recipe.importer_factory = self.importer_factory
+        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         self.assertTrue(isinstance(self.recipe.tasks[0], tasks.Task))
         for key in self.task:
@@ -121,7 +122,7 @@ class TestRecipe(unittest.TestCase):
 
     def test_from_dict_with_task_adds_task_with_correct_type(self):
         dict_ = {'tasks': [self.task]}
-        self.recipe.importer_factory = self.importer_factory
+        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         self.assertTrue(isinstance(self.recipe.tasks[0],
                                    tasks.ProcessingTask))
@@ -155,14 +156,14 @@ class TestRecipe(unittest.TestCase):
 
     def test_get_dataset_with_valid_identifier_returns_dataset(self):
         dict_ = {'datasets': [self.dataset]}
-        self.recipe.importer_factory = self.importer_factory
+        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         dataset_ = self.recipe.get_dataset(identifier=self.dataset)
         self.assertTrue(isinstance(dataset_, dataset.Dataset))
 
     def test_get_dataset_with_invalid_identifier_returns_nothing(self):
         dict_ = {'datasets': [self.dataset]}
-        self.recipe.importer_factory = self.importer_factory
+        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         dataset_ = self.recipe.get_dataset(identifier='invalid')
         self.assertFalse(dataset_)
@@ -184,7 +185,7 @@ class TestRecipe(unittest.TestCase):
 
     def test_get_datasets_with_valid_identifier_returns_dataset(self):
         dict_ = {'datasets': self.datasets}
-        self.recipe.importer_factory = self.importer_factory
+        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         datasets = self.recipe.get_datasets(identifiers=self.datasets)
         for dataset_ in datasets:
@@ -192,7 +193,7 @@ class TestRecipe(unittest.TestCase):
 
     def test_get_datasets_with_invalid_identifier_returns_nothing(self):
         dict_ = {'datasets': self.datasets}
-        self.recipe.importer_factory = self.importer_factory
+        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         datasets = self.recipe.get_datasets(
             identifiers=['invalid', 'invalid2'])
@@ -211,7 +212,9 @@ class TestChef(unittest.TestCase):
     def setUp(self):
         self.chef = tasks.Chef()
         self.recipe = tasks.Recipe()
-        self.recipe.importer_factory = io.DatasetImporterFactory()
+        dataset_factory = dataset.DatasetFactory()
+        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        self.recipe.dataset_factory = dataset_factory
         self.dataset = 'foo'
         self.processing_task = {'kind': 'processing',
                                 'type': 'ProcessingStep'}
@@ -401,7 +404,9 @@ class TestProcessingTask(unittest.TestCase):
         self.processing_task = {'kind': 'processing',
                                 'type': 'ProcessingStep',
                                 'apply_to': self.dataset}
-        self.recipe.importer_factory = io.DatasetImporterFactory()
+        dataset_factory = dataset.DatasetFactory()
+        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        self.recipe.dataset_factory = dataset_factory
         recipe_dict = {'datasets': self.dataset,
                        'tasks': [self.processing_task]}
         self.recipe.from_dict(recipe_dict)
@@ -436,7 +441,9 @@ class TestAnalysisTask(unittest.TestCase):
         self.analysis_task = {'kind': 'analysis',
                               'type': 'AnalysisStep',
                               'apply_to': self.dataset}
-        self.recipe.importer_factory = io.DatasetImporterFactory()
+        dataset_factory = dataset.DatasetFactory()
+        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        self.recipe.dataset_factory = dataset_factory
         recipe_dict = {'datasets': self.dataset,
                        'tasks': [self.analysis_task]}
         self.recipe.from_dict(recipe_dict)
@@ -491,7 +498,9 @@ class TestAnnotationTask(unittest.TestCase):
         self.annotation_task = {'kind': 'annotation',
                                 'type': 'Comment',
                                 'apply_to': self.dataset}
-        self.recipe.importer_factory = io.DatasetImporterFactory()
+        dataset_factory = dataset.DatasetFactory()
+        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        self.recipe.dataset_factory = dataset_factory
         recipe_dict = {'datasets': self.dataset,
                        'tasks': [self.annotation_task]}
         self.recipe.from_dict(recipe_dict)
@@ -517,7 +526,9 @@ class TestSinglePlotTask(unittest.TestCase):
         self.plotting_task = {'kind': 'singleplot',
                               'type': 'SinglePlotter',
                               'apply_to': self.dataset}
-        self.recipe.importer_factory = io.DatasetImporterFactory()
+        dataset_factory = dataset.DatasetFactory()
+        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        self.recipe.dataset_factory = dataset_factory
         recipe_dict = {'datasets': self.dataset,
                        'tasks': [self.plotting_task]}
         self.recipe.from_dict(recipe_dict)
@@ -543,7 +554,9 @@ class TestMultiPlotTask(unittest.TestCase):
         self.plotting_task = {'kind': 'multiplot',
                               'type': 'MultiPlotter',
                               'apply_to': self.dataset}
-        self.recipe.importer_factory = io.DatasetImporterFactory()
+        dataset_factory = dataset.DatasetFactory()
+        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        self.recipe.dataset_factory = dataset_factory
         recipe_dict = {'datasets': self.dataset,
                        'tasks': [self.plotting_task]}
         self.recipe.from_dict(recipe_dict)

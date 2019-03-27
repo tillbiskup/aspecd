@@ -105,7 +105,7 @@ class MissingExporterError(Error):
         self.message = message
 
 
-class MissingImporterFactoryError(Error):
+class MissingDatasetFactoryError(Error):
     """Exception raised when no ImporterFactory instance is provided
 
     Attributes
@@ -221,8 +221,8 @@ class Recipe:
         List of datasets that are results of analysis tasks
 
         Each dataset is an object of class :class:`aspecd.dataset.Dataset`.
-    importer_factory : :class:`aspecd.io.DatasetImporterFactory`
-        Factory for importers used to import datasets
+    dataset_factory : :class:`aspecd.dataset.DatasetFactory`
+        Factory for datasets used to retrieve datasets
 
         If no factory is set, but a recipe imported from a file or set from
         a dictionary, an exception will be raised.
@@ -242,8 +242,8 @@ class Recipe:
         Raised if no importer is provided.
     MissingExporterError
         Raised if no exporter is provided.
-    MissingImporterFactoryError
-        Raised if :attr:`importer_factory` is invalid.
+    MissingDatasetFactoryError
+        Raised if :attr:`dataset_factory` is invalid.
     MissingTaskFactoryError
         Raised if :attr:`task_factory` is invalid.
 
@@ -254,7 +254,7 @@ class Recipe:
         self.datasets = []
         self.results = []
         self.tasks = list()
-        self.importer_factory = None
+        self.dataset_factory = None
         self.task_factory = TaskFactory()
 
     def from_dict(self, dict_=None):
@@ -273,7 +273,7 @@ class Recipe:
         ------
         MissingDictError
             Raised if no dict is provided.
-        MissingImporterFactoryError
+        MissingDatasetFactoryError
             Raised if :attr:`importer_factory` is invalid.
         MissingTaskFactoryError
             Raised if :attr:`task_factory` is invalid.
@@ -281,8 +281,8 @@ class Recipe:
         """
         if not dict_:
             raise MissingDictError
-        if not self.importer_factory:
-            raise MissingImporterFactoryError
+        if not self.dataset_factory:
+            raise MissingDatasetFactoryError
         if not self.task_factory:
             raise MissingTaskFactoryError
         if 'datasets' in dict_:
@@ -293,9 +293,7 @@ class Recipe:
                 self._append_task(key)
 
     def _append_dataset(self, key):
-        dataset = aspecd.dataset.Dataset()
-        importer = self.importer_factory.get_importer(source=key)
-        dataset.import_from(importer)
+        dataset = self.dataset_factory.get_dataset(source=key)
         self.datasets.append(dataset)
 
     def _append_task(self, key):
