@@ -1,8 +1,10 @@
+.. _recipes:
+
 ===========================
 Recipe-driven data analysis
 ===========================
 
-Recipes have been briefly introduced already with the concept of :ref:`tasks <tasks>`. However, the idea of recipe-driven data analysis is a bit more complex, and this page will provide more details.
+Recipes have been briefly introduced already with the concept of :ref:`tasks <tasks>`. However, the idea of recipe-driven data analysis is a bit more complex, and this page will provide more details, although still on a rather abstract level. Those readers interested in actually implementing recipe-driven data analysis are referred to the documentation of the :mod:`aspecd.tasks` module.
 
 Basically, recipe-driven data analysis can be thought of a special type of user interface to the ASpecD framework and derived packages. The normal user of such package has a clear idea how to process and analyse data, but is not necessarily interested in actually programming a lot. Furthermore, reproducible science requires the history of each and every processing and analysis step to be recorded and stored in a way that can be used and understood long after the steps have been carried out (think of decades rather than weeks or months).
 

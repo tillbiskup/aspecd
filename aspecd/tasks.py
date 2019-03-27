@@ -1,10 +1,11 @@
 """
 Constituents of a recipe-driven data analysis.
 
-One main aspect of tasks is to provide the constituents of a recipe-driven
-data analysis, i.e. :class:`aspecd.tasks.Recipe` and
-:class:`aspecd.tasks.Chef`. In its simplest form, a recipe gets cooked by a
-chef, resulting in a series of tasks being performed on a list of datasets.
+One main aspect of tasks is to provide the constituents of a
+:ref:`recipe-driven data analysis <recipes>`, i.e.
+:class:`aspecd.tasks.Recipe` and :class:`aspecd.tasks.Chef`. In its
+simplest form, a recipe gets cooked by a chef, resulting in a series of
+tasks being performed on a list of datasets.
 
 From a user's perspective, a recipe is usually stored in a YAML file. This
 allows to easily create and modify recipes without knowing too much about
@@ -18,10 +19,57 @@ combined. The latter is particularly interesting for representations (e.g.,
 plots) consisting of multiple datasets, or analysis steps spanning multiple
 datasets.
 
+To give a first impression of how such a recipe may look like::
+
+    datasets:
+      - loi:xxx
+      - loi:yyy
+
+    tasks:
+      -
+        kind: processing
+        type: ProcessingStep
+        properties:
+          parameters:
+            param1: bar
+            param2: foo
+          prop2: blub
+      -
+        kind: analysis
+        type: AnalysisStep
+        properties:
+          parameters:
+            param1: bar
+            param2: foo
+          prop2: blub
+        apply_to:
+          - loi:xxx
+        result: new_dataset
+
+Here, ``tasks`` is a list of dictionary-style entries. The key ``kind``
+determines which kind of task should be performed. For each kind, a class
+subclassing :class:`aspecd.tasks.Task` needs to exist. For details,
+see below. The key ``type`` stores the name of the actual class, such as a
+concrete processing step derived from
+:class:`aspecd.processing.ProcessingStep`. The dictionary ``properties``
+contains keys corresponding to the attributes of the respective class.
+Depending on the type of task, additional keys can be used, such as
+``apply_to`` to determine the datasets this task should be applied to,
+or ``result`` providing a label for a dataset created newly by an analysis
+task.
+
 Each task is internally represented by an :obj:`aspecd.tasks.Task` object,
 more precisely an object instantiated from a subclass of
 :class:`aspecd.tasks.Task`. This polymorphism of task classes makes it
 possible to easily extend the scope of recipe-driven data analysis.
+Currently, the following subclasses are implemented:
+
+  * :class:`aspecd.tasks.ProcessingTask`
+  * :class:`aspecd.tasks.AnalysisTask`
+  * :class:`aspecd.tasks.AnnotationTask`
+  * :class:`aspecd.tasks.SingleplotTask`
+  * :class:`aspecd.tasks.MultiplotTask`
+  * :class:`aspecd.tasks.ReportTask`
 
 For each task, you can set all attributes of the underlying class.
 Therefore, to know which parameters can be set for what type of task means
