@@ -1016,13 +1016,15 @@ class DatasetFactory:
         if not self.importer_factory:
             raise MissingImporterFactoryError(
                 'An ImporterFactory is required to return a dataset')
-        dataset_ = self._create_dataset()
+        dataset_ = self._create_dataset(source=source)
         importer = self.importer_factory.get_importer(source=source)
         dataset_.import_from(importer)
         return dataset_
 
+    # noinspection PyUnusedLocal
+    # pylint: disable=unused-argument
     @staticmethod
-    def _create_dataset():
+    def _create_dataset(source=''):
         """
         Non-public method creating the actual (empty) dataset object.
 
@@ -1030,6 +1032,16 @@ class DatasetFactory:
         should return an instance of the appropriate class that should in
         all cases inherit from :class:`aspecd.dataset.Dataset` or one of
         its subclasses.
+
+        The parameter :param:`source` may be used to distinguish which type of
+        dataset should be returned.
+
+        Parameters
+        ----------
+        source : :class:`str`
+            string describing the source of the dataset
+
+            May be a filename or path, a URL/URI, a LOI, or similar
 
         Returns
         -------
