@@ -188,9 +188,9 @@ class Recipe:
     a dictionary (that in turn will normally be created from contents of a
     file).
 
-    Importing datasets is delegated to an
-    :class:`aspecd.io.DatasetImporterFactory` instance stored in
-    :attr:`importer_factory`. This provides a maximum of flexibility but
+    Retrieving datasets is delegated to an
+    :class:`aspecd.dataset.DatasetImporterFactory` instance stored in
+    :attr:`dataset_factory`. This provides a maximum of flexibility but
     makes it necessary to specify (and first implement) such factory in
     packages derived from the ASpecD framework.
 
