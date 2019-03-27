@@ -23,6 +23,13 @@ more precisely an object instantiated from a subclass of
 :class:`aspecd.tasks.Task`. This polymorphism of task classes makes it
 possible to easily extend the scope of recipe-driven data analysis.
 
+For each task, you can set all attributes of the underlying class.
+Therefore, to know which parameters can be set for what type of task means
+simply to check the documentation for the respective classes. I.e.,
+for a task represented by an :obj:`aspecd.tasks.ProcessingTask` object,
+check out the appropriate class from the :mod:`aspecd.processing` module.
+The same is true for packages derived from ASpecD.
+
 .. todo::
     There is a number of things that are not yet implemented, but required
     for a working recipe-driven data analysis that follows good practice
@@ -189,7 +196,7 @@ class Recipe:
     file).
 
     Retrieving datasets is delegated to an
-    :class:`aspecd.dataset.DatasetImporterFactory` instance stored in
+    :class:`aspecd.dataset.DatasetFactory` instance stored in
     :attr:`dataset_factory`. This provides a maximum of flexibility but
     makes it necessary to specify (and first implement) such factory in
     packages derived from the ASpecD framework.
