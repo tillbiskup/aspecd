@@ -452,9 +452,9 @@ class Recipe:
         if not identifier:
             raise MissingDatasetIdentifierError
         matching_dataset = None
-        for dataset in self.datasets + self.results:
-            if dataset.id == identifier:
-                matching_dataset = dataset
+        for item in self.datasets + self.results:
+            if item.id == identifier:
+                matching_dataset = item
         return matching_dataset
 
     def get_datasets(self, identifiers=None):
@@ -489,10 +489,10 @@ class Recipe:
         if not identifiers:
             raise MissingDatasetIdentifierError
         matching_datasets = []
-        for dataset in self.datasets + self.results:
+        for item in self.datasets + self.results:
             for identifier in identifiers:
-                if dataset.id == identifier:
-                    matching_datasets.append(dataset)
+                if item.id == identifier:
+                    matching_datasets.append(item)
                     identifiers.remove(identifier)
                     break
         return matching_datasets
@@ -608,7 +608,7 @@ class Task(aspecd.utils.ToDictMixin):
         Properties necessary to perform the task.
 
         Should have keys corresponding to the properties of the class given
-        as type attribute.
+        as :attr:`type` attribute.
     apply_to : :class:`list`
         List of datasets the task should be applied to.
 
@@ -775,6 +775,9 @@ class Task(aspecd.utils.ToDictMixin):
             are dictionaries, therefore potentially loosing fields.
             Therefore, this needs to be handled properly, although currently
             I have no idea how to properly test and therefore test-drive it...
+
+            Should eventually be done recursively, traversing through the
+            dict, using :func:`aspecd.utils.copy_values_between_dicts`.
 
         .. todo::
             Need to check if a (sub)key in self.properties is a key of
