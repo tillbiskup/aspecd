@@ -184,8 +184,8 @@ class TestPackageName(unittest.TestCase):
 class TestConfigDir(unittest.TestCase):
 
     def test_config_dir_not_empty(self):
-        version = utils.config_dir()
-        self.assertTrue(version)
+        config_dir = utils.config_dir()
+        self.assertTrue(config_dir)
 
 
 class TestYaml(unittest.TestCase):
@@ -235,3 +235,44 @@ class TestYaml(unittest.TestCase):
         with open(self.filename, 'r') as file:
             contents = yaml.load(file)
         self.assertEqual(contents, self.yaml.dict)
+
+
+class TestReplaceValueInDict(unittest.TestCase):
+
+    def test_replace_value_returns_dict(self):
+        target_dict = {'kfoo': 'vfoo', 'kbar': 'vbar'}
+        replacement = {'kfoo': 'vbar'}
+        target_dict = utils.replace_value_in_dict(replacement, target_dict)
+        self.assertTrue(isinstance(target_dict, dict))
+
+    def test_replace_value_replaces_existing_value(self):
+        target_dict = {'kfoo': 'vfoo', 'kbar': 'vbar'}
+        replacement = {'vfoo': 'vbar'}
+        target_dict = utils.replace_value_in_dict(replacement, target_dict)
+        self.assertEqual(replacement['vfoo'], target_dict['kfoo'])
+
+    def test_replace_value_replaces_existing_value_in_cascaded_dict(self):
+        target_dict = {'kfoo': {'kbar': 'vfoo'}}
+        replacement = {'vfoo': 'vbar'}
+        target_dict = utils.replace_value_in_dict(replacement, target_dict)
+        self.assertEqual(replacement['vfoo'], target_dict['kfoo']['kbar'])
+
+    def test_replace_value_replaces_existing_value_in_doubly_cascaded_dict(
+            self):
+        target_dict = {'kfoo': {'kfoobar': {'kbar': 'vfoo'}}}
+        replacement = {'vfoo': 'vbar'}
+        target_dict = utils.replace_value_in_dict(replacement, target_dict)
+        self.assertEqual(replacement['vfoo'],
+                         target_dict['kfoo']['kfoobar']['kbar'])
+
+    def test_replace_value_ignores_nonexisting_value(self):
+        target_dict = {'kfoo': 'vfoo', 'kbar': 'vbar'}
+        replacement = {'kfoo': 'vbar'}
+        modified_dict = utils.replace_value_in_dict(replacement, target_dict)
+        self.assertEqual(modified_dict, target_dict)
+
+    def test_replace_value_ignores_nonexisting_value_in_cascaded_dict(self):
+        target_dict = {'kfoo': {'kbar': 'vfoo'}}
+        replacement = {'kfoo': 'vbar'}
+        modified_dict = utils.replace_value_in_dict(replacement, target_dict)
+        self.assertEqual(modified_dict, target_dict)

@@ -759,7 +759,7 @@ class Task(aspecd.utils.ToDictMixin):
 
     def _set_object_attributes(self, obj):
         """
-        Set attributes in object from the keys of the :attr:`metadata` dict.
+        Set attributes in object from the keys of the :attr:`properties` dict.
 
         Only those keys that have a matching attribute in the object are
         actually mapped, all others silently ignored.
@@ -769,6 +769,18 @@ class Task(aspecd.utils.ToDictMixin):
             it might be sensible to at least add a log message if a key
             gets ignored, such that it is no longer silently ignored. This
             might be helpful for debugging purposes.
+
+        .. todo::
+            Currenty, the implementation overwrites properties that
+            are dictionaries, therefore potentially loosing fields.
+            Therefore, this needs to be handled properly, although currently
+            I have no idea how to properly test and therefore test-drive it...
+
+        .. todo::
+            Need to check if a (sub)key in self.properties is a key of
+            recipe.results, and if so, replace value with value from
+            recipe.results dict. Should be done recursively, traversing
+            through the dict, using :func:`aspecd.utils.replace_value_in_dict`.
 
         Parameters
         ----------

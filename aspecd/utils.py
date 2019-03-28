@@ -308,3 +308,36 @@ class Yaml:
             raise MissingFilenameError
         with open(filename, 'w') as file:
             yaml.dump(self.dict, file)
+
+
+def replace_value_in_dict(replacement=None, target_dict=None):
+    """
+    Replace value for given key in a dictionary, traversing recursively.
+
+    The key in ``replacement`` needs to correspond to the value in
+    ``target_dict`` that should be replaced. Keys inthe dict ``replacement``
+    that have no corresponding value in ``target_dict`` are silently ignored.
+
+    Parameters
+    ----------
+    replacement : :class:`dict`
+        dict containing key corresponding to the value in ``target_dict``
+        that should be replaced by the associated value
+    target_dict : :class:`dict`
+        dict containing the key whose value should be replaced by the value
+        of the key in ``replacement`` named identical to the value
+
+    Returns
+    -------
+    target_dict : :class:`dict`
+        dict containing the key whose value has been replaced by the value
+        of the corresponding key in ``replacement``
+
+    """
+    for key, value in target_dict.items():
+        if isinstance(target_dict[key], dict):
+            target_dict[key] = replace_value_in_dict(replacement,
+                                                     target_dict[key])
+        elif value in replacement:
+            target_dict[key] = replacement[value]
+    return target_dict
