@@ -276,3 +276,28 @@ class TestReplaceValueInDict(unittest.TestCase):
         replacement = {'kfoo': 'vbar'}
         modified_dict = utils.replace_value_in_dict(replacement, target_dict)
         self.assertEqual(modified_dict, target_dict)
+
+
+class TestCopyValuesBetweenDicts(unittest.TestCase):
+
+    def test_copy_values_returns_dict(self):
+        target_dict = utils.copy_values_between_dicts(dict(), dict())
+        self.assertTrue(isinstance(target_dict, dict))
+
+    def test_copy_values_copies_existing_value(self):
+        source = {'kfoo': 'vbar'}
+        target = {'kfoo': 'vfoo', 'kbar': 'vbar'}
+        target = utils.copy_values_between_dicts(source, target)
+        self.assertEqual(source['kfoo'], target['kfoo'])
+
+    def test_copy_values_ignores_nonexisting_value(self):
+        source = {'kfoobar': 'vbar'}
+        target = {'kfoo': 'vfoo', 'kbar': 'vbar'}
+        modified_target = utils.copy_values_between_dicts(source, target)
+        self.assertEqual(modified_target, target)
+
+    def test_copy_values_copies_existing_value_in_cascaded_target_dict(self):
+        source = {'kbar': 'vfoo'}
+        target = {'kfoo': {'kbar': 'vbar'}}
+        target = utils.copy_values_between_dicts(source, target)
+        self.assertEqual(source['kbar'], target['kfoo']['kbar'])

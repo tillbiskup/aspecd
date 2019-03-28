@@ -310,7 +310,7 @@ class Yaml:
             yaml.dump(self.dict, file)
 
 
-def replace_value_in_dict(replacement=None, target_dict=None):
+def replace_value_in_dict(replacement=None, target=None):
     """
     Replace value for given key in a dictionary, traversing recursively.
 
@@ -323,21 +323,49 @@ def replace_value_in_dict(replacement=None, target_dict=None):
     replacement : :class:`dict`
         dict containing key corresponding to the value in ``target_dict``
         that should be replaced by the associated value
-    target_dict : :class:`dict`
+    target : :class:`dict`
         dict containing the key whose value should be replaced by the value
         of the key in ``replacement`` named identical to the value
 
     Returns
     -------
-    target_dict : :class:`dict`
+    target : :class:`dict`
         dict containing the key whose value has been replaced by the value
         of the corresponding key in ``replacement``
 
     """
-    for key, value in target_dict.items():
-        if isinstance(target_dict[key], dict):
-            target_dict[key] = replace_value_in_dict(replacement,
-                                                     target_dict[key])
+    for key, value in target.items():
+        if isinstance(target[key], dict):
+            target[key] = replace_value_in_dict(replacement, target[key])
         elif value in replacement:
-            target_dict[key] = replacement[value]
-    return target_dict
+            target[key] = replacement[value]
+    return target
+
+
+def copy_values_between_dicts(source=None, target=None):
+    """
+    Copy values between two dicts in case of identical keys.
+
+    Each value in ``source`` is copied to ``target`` in case of matching
+    keys in a recursive manner. Non-matching keys in ```source`` are
+    silently ignored.
+
+    Parameters
+    ----------
+    source : :class:`dict`
+        Dictionary the values should be copied from in case of matching keys
+    target : :class:`dict`
+        Dictionary the values should be copied to in case of matching keys
+
+    Returns
+    -------
+    target  : :class:`dict`
+        Dictionary the values have been copied to in case of matching keys
+
+    """
+    for key in target:
+        if isinstance(target[key], dict):
+            target[key] = copy_values_between_dicts(source, target[key])
+        elif key in source:
+            target[key] = source[key]
+    return target
