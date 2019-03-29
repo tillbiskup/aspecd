@@ -90,6 +90,8 @@ The same is true for packages derived from ASpecD.
 
 """
 
+import collections
+
 import aspecd.io
 import aspecd.utils
 
@@ -264,18 +266,22 @@ class Recipe:
 
     Attributes
     ----------
-    datasets : :class:`list`
-        List of datasets the tasks should be performed for
+    datasets : :class:`collections.OrderedDict`
+        Ordered dictionary of datasets the tasks should be performed for
 
         Each dataset is an object of class :class:`aspecd.dataset.Dataset`.
+
+        The keys are the dataset ids.
     tasks : :class:`list`
         List of tasks to be performed on the datasets
 
         Each task is an object of class :class:`aspecd.tasks.Task`.
-    results : :class:`list`
-        List of datasets that are results of analysis tasks
+    results : :class:`collections.OrderedDict`
+        Ordered dictionary of results originating from analysis tasks
 
-        Each dataset is an object of class :class:`aspecd.dataset.Dataset`.
+        Results can be of any type, but are mostly either instances of
+        :class:`aspecd.dataset.Dataset` or
+        :class:`aspecd.metadata.PhysicalQuantity`.
     dataset_factory : :class:`aspecd.dataset.DatasetFactory`
         Factory for datasets used to retrieve datasets
 
@@ -306,8 +312,8 @@ class Recipe:
 
     def __init__(self):
         super().__init__()
-        self.datasets = []
-        self.results = []
+        self.datasets = collections.OrderedDict()
+        self.results = collections.OrderedDict()
         self.tasks = list()
         self.dataset_factory = None
         self.task_factory = TaskFactory()
@@ -349,7 +355,7 @@ class Recipe:
 
     def _append_dataset(self, key):
         dataset = self.dataset_factory.get_dataset(source=key)
-        self.datasets.append(dataset)
+        self.datasets[key] = dataset
 
     def _append_task(self, key):
         task = self.task_factory.get_task_from_dict(key)
@@ -369,7 +375,7 @@ class Recipe:
         """
         dict_ = {'datasets': [], 'tasks': []}
         for dataset in self.datasets:
-            dict_['datasets'].append(dataset.source)
+            dict_['datasets'].append(self.datasets[dataset].id)
         for task in self.tasks:
             dict_['tasks'].append(task.to_dict())
         return dict_
@@ -452,9 +458,15 @@ class Recipe:
         if not identifier:
             raise MissingDatasetIdentifierError
         matching_dataset = None
-        for item in self.datasets + self.results:
-            if item.id == identifier:
+        if identifier in self.datasets:
+            matching_dataset = self.datasets[identifier]
+        for item in self.results:
+            if isinstance(item, aspecd.dataset.Dataset) \
+                    and item.id == identifier:
                 matching_dataset = item
+#        if identifier in self.results:
+#            if isinstance(self.results[identifier], aspecd.dataset.Dataset):
+#                matching_dataset = self.results[identifier]
         return matching_dataset
 
     def get_datasets(self, identifiers=None):
@@ -488,10 +500,12 @@ class Recipe:
         """
         if not identifiers:
             raise MissingDatasetIdentifierError
-        matching_datasets = []
-        for item in self.datasets + self.results:
+        matching_datasets = [self.datasets[key] for key in identifiers if
+                             key in self.datasets]
+        for item in self.results:
             for identifier in identifiers:
-                if item.id == identifier:
+                if isinstance(item, aspecd.dataset.Dataset) \
+                        and item.id == identifier:
                     matching_datasets.append(item)
                     identifiers.remove(identifier)
                     break
@@ -702,7 +716,7 @@ class Task(aspecd.utils.ToDictMixin):
             raise MissingRecipeError
         if not self.apply_to:
             for dataset in self.recipe.datasets:
-                self.apply_to.append(dataset.id)
+                self.apply_to.append(self.recipe.datasets[dataset].id)
         self._perform()
 
     def _perform(self):
@@ -853,8 +867,9 @@ class AnalysisTask(Task):
             task = self.get_object()
             task.analyse(dataset=dataset)
             if self.result:
-                task.resulting_dataset.id = self.result
-                self.recipe.results.append(task.resulting_dataset)
+                if isinstance(task.result, aspecd.dataset.Dataset):
+                    task.result.id = self.result
+                self.recipe.results[self.result] = task.result
 
 
 class AnnotationTask(Task):
@@ -928,9 +943,6 @@ class MultiplotTask(Task):
 class ReportTask(Task):
     """
     Reporting step defined as task in recipe-driven data analysis.
-
-    Reporting steps can be performed individually for each dataset or the
-    results combined, depending on the type of analysis step.
 
     For more information on the underlying general class,
     see :class:`aspecd.report.Reporter`.
