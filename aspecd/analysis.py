@@ -86,10 +86,11 @@ class AnalysisStep:
         Parameters required for performing the analysis step
 
         All parameters, implicit and explicit.
-    results : :class:`dict`
+    result
         Results of the analysis step
-    resulting_dataset : :class:`aspecd.dataset.CalculatedDataset`
-        Results of the analysis step in form of a dataset
+
+        Can be either a :class:`aspecd.dataset.Dataset` or some other
+        class, *e.g.*, :class:`aspecd.metadata.PhysicalQuantity`.
     preprocessing : :class:`list`
         List of necessary preprocessing steps to perform the analysis.
     description : :class:`str`
@@ -109,8 +110,7 @@ class AnalysisStep:
     def __init__(self):
         self.name = aspecd.utils.full_class_name(self)
         self.parameters = dict()
-        self.results = dict()
-        self.resulting_dataset = aspecd.dataset.CalculatedDataset()
+        self.result = None
         self.preprocessing = []
         self.description = 'Abstract analysis step'
         self.comment = ''

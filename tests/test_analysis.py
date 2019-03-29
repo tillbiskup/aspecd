@@ -25,11 +25,8 @@ class TestAnalysis(unittest.TestCase):
     def test_parameters_property_is_dict(self):
         self.assertTrue(isinstance(self.analysisstep.parameters, dict))
 
-    def test_has_results_property(self):
-        self.assertTrue(hasattr(self.analysisstep, 'results'))
-
-    def test_parameters_results_is_dict(self):
-        self.assertTrue(isinstance(self.analysisstep.results, dict))
+    def test_has_result_property(self):
+        self.assertTrue(hasattr(self.analysisstep, 'result'))
 
     def test_has_preprocessing_property(self):
         self.assertTrue(hasattr(self.analysisstep, 'preprocessing'))
@@ -74,13 +71,6 @@ class TestAnalysis(unittest.TestCase):
     def test_analyse_returns_dataset(self):
         test_dataset = self.analysisstep.analyse(dataset.Dataset())
         self.assertTrue(isinstance(test_dataset, dataset.Dataset))
-
-    def test_has_resulting_dataset_property(self):
-        self.assertTrue(hasattr(self.analysisstep, 'resulting_dataset'))
-
-    def test_resulting_dataset_is_calculated_dataset(self):
-        self.assertTrue(isinstance(self.analysisstep.resulting_dataset,
-                                   dataset.CalculatedDataset))
 
     def test_has_create_history_record_method(self):
         self.assertTrue(hasattr(self.analysisstep, 'create_history_record'))
