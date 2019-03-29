@@ -778,26 +778,15 @@ class Task(aspecd.utils.ToDictMixin):
         Only those keys that have a matching attribute in the object are
         actually mapped, all others silently ignored.
 
+        Properties or values of dicts in properties that correspond to keys
+        in :attr:`aspecd.recipe.results` of the recipe stored in
+        :attr:`aspecd.task.recipe` will be replaced accordingly.
+
         .. todo::
             Eventually, with the advent of logging in the ASpecD framework,
             it might be sensible to at least add a log message if a key
             gets ignored, such that it is no longer silently ignored. This
             might be helpful for debugging purposes.
-
-        .. todo::
-            Currenty, the implementation overwrites properties that
-            are dictionaries, therefore potentially loosing fields.
-            Therefore, this needs to be handled properly, although currently
-            I have no idea how to properly test and therefore test-drive it...
-
-            Should eventually be done recursively, traversing through the
-            dict, using :func:`aspecd.utils.copy_values_between_dicts`.
-
-        .. todo::
-            Need to check if a (sub)key in self.properties is a key of
-            recipe.results, and if so, replace value with value from
-            recipe.results dict. Should be done recursively, traversing
-            through the dict, using :func:`aspecd.utils.replace_value_in_dict`.
 
         Parameters
         ----------
@@ -805,9 +794,20 @@ class Task(aspecd.utils.ToDictMixin):
             Object of a class defined in the :attr:`type` attribute of a task
 
         """
-        for key in self.properties:
+        if self.recipe and self.recipe.results:
+            properties = aspecd.utils.replace_value_in_dict(
+                self.recipe.results, self.properties)
+        else:
+            properties = self.properties
+        for key in properties:
             if hasattr(obj, key):
-                setattr(obj, key, self.properties[key])
+                attr = getattr(obj, key)
+                if isinstance(attr, dict) and attr:
+                    prop = aspecd.utils.copy_values_between_dicts(
+                        properties[key], attr)
+                    setattr(obj, key, prop)
+                else:
+                    setattr(obj, key, properties[key])
 
 
 class ProcessingTask(Task):

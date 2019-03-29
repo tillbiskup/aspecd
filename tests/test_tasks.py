@@ -397,6 +397,47 @@ class TestTask(unittest.TestCase):
         obj = self.task.get_object()
         self.assertFalse(hasattr(obj, 'foo'))
 
+    # ATTENTION: The following tests acccces protected methods - due to not
+    # knowing better how to do it properly for the time being...
+    def test_set_object_attributes_sets_field_in_dict(self):
+        processing_step = processing.ProcessingStep()
+        processing_step.parameters = {'foo': 'a', 'bar': 'b'}
+        metadata = {'parameters': {'foo': 'bar'}}
+        self.task.properties = metadata
+        self.task._set_object_attributes(processing_step)
+        self.assertEqual(metadata['parameters']['foo'],
+                         processing_step.parameters['foo'])
+
+    def test_set_object_attributes_sets_fields_in_dict(self):
+        processing_step = processing.ProcessingStep()
+        processing_step.parameters = {'foo': 'a', 'bar': 'b'}
+        metadata = {'parameters': {'foo': 'bar', 'bar': 'foo'}}
+        self.task.properties = metadata
+        self.task._set_object_attributes(processing_step)
+        self.assertEqual(metadata['parameters']['foo'],
+                         processing_step.parameters['foo'])
+        self.assertEqual(metadata['parameters']['bar'],
+                         processing_step.parameters['bar'])
+
+    def test_set_object_attributes_does_not_override_dict(self):
+        processing_step = processing.ProcessingStep()
+        processing_step.parameters = {'foo': 'a', 'bar': 'b'}
+        metadata = {'parameters': {'foo': 'bar'}}
+        self.task.properties = metadata
+        self.task._set_object_attributes(processing_step)
+        self.assertTrue('bar' in processing_step.parameters)
+
+    def test_set_object_attributes_replaces_results_from_recipe(self):
+        processing_step = processing.ProcessingStep()
+        processing_step.parameters = {'foo': '', 'bar': ''}
+        metadata = {'parameters': {'foo': 'bar'}}
+        self.task.properties = metadata
+        self.task.recipe = tasks.Recipe()
+        self.task.recipe.results['bar'] = dataset.Dataset()
+        self.task._set_object_attributes(processing_step)
+        self.assertEqual(self.task.recipe.results['bar'],
+                         processing_step.parameters['foo'])
+
 
 class TestProcessingTask(unittest.TestCase):
     def setUp(self):
