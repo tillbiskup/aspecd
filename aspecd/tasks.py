@@ -682,7 +682,14 @@ class Task(aspecd.utils.ToDictMixin):
             raise MissingDictError
         for key in dict_:
             if hasattr(self, key):
-                setattr(self, key, dict_[key])
+                if isinstance(getattr(self, key), list):
+                    if isinstance(dict_[key], list):
+                        for element in dict_[key]:
+                            getattr(self, key).append(element)
+                    else:
+                        getattr(self, key).append(dict_[key])
+                else:
+                    setattr(self, key, dict_[key])
 
     def perform(self):
         """

@@ -346,6 +346,13 @@ class TestTask(unittest.TestCase):
         self.task.from_dict(dict_)
         self.assertEqual(type_, self.task.type)
 
+    def test_from_dict_with_append_to_appends_to_list(self):
+        dataset_id = 'foo'
+        dict_ = {'apply_to': dataset_id}
+        self.task.from_dict(dict_)
+        self.assertTrue(isinstance(self.task.apply_to, list))
+        self.assertEqual(dataset_id, self.task.apply_to[0])
+
     def test_from_dict_does_not_set_unknown_attribute(self):
         attribute = 'foo'
         dict_ = dict()
