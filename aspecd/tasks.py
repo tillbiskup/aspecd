@@ -832,8 +832,7 @@ class ProcessingTask(Task):
         for dataset_id in self.apply_to:
             dataset = self.recipe.get_dataset(dataset_id)
             task = self.get_object()
-            # noinspection PyUnresolvedReferences
-            task.process(dataset=dataset)
+            dataset.process(processing_step=task)
 
 
 class AnalysisTask(Task):
@@ -872,7 +871,7 @@ class AnalysisTask(Task):
         for dataset_id in self.apply_to:
             dataset = self.recipe.get_dataset(dataset_id)
             task = self.get_object()
-            task.analyse(dataset=dataset)
+            task = dataset.analyse(analysis_step=task)
             if self.result:
                 if isinstance(task.result, aspecd.dataset.Dataset):
                     task.result.id = self.result
@@ -894,8 +893,7 @@ class AnnotationTask(Task):
         for dataset_id in self.apply_to:
             dataset = self.recipe.get_dataset(dataset_id)
             task = self.get_object()
-            # noinspection PyUnresolvedReferences
-            task.annotate(dataset=dataset)
+            dataset.annotate(annotation_=task)
 
 
 class SingleplotTask(Task):
@@ -919,8 +917,7 @@ class SingleplotTask(Task):
         for dataset_id in self.apply_to:
             dataset = self.recipe.get_dataset(dataset_id)
             task = self.get_object()
-            # noinspection PyUnresolvedReferences
-            task.plot(dataset=dataset)
+            dataset.plot(plotter=task)
 
 
 class MultiplotTask(Task):
