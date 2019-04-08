@@ -9,6 +9,40 @@ present the information stored. This is the task of reports.
 This module provides functionality to create reports based on templates
 provided either by the user or by the package as such.
 
+The report functionality relies heavily on the `Jinja2 template engine
+<http://jinja.pocoo.org/>`_ . Therefore, it is very useful to be generally
+familiar with the concepts of Jinja2. Basically, this template engine
+allows users to specify rather complicated replacements and logic within
+the template. However, logic within templates should be used sparingly,
+and the template should always be rendered correctly even without
+processing it by the template engine. Only then templates are easy to
+develop and adapt.
+
+Two concepts used by Jinja2 the user of the report facilities of the ASpecD
+framework should be familiar with are "environment" and "context". The
+former is a list of settings determining the type of delimiters used within
+a certein template for the control structures that are understood by
+Jinja2. As Jinja2 is developed with web applications (and hence HTML) in
+mind, those delimiters may not be feasible for other types of languages a
+template may be written in, such as LaTeX. Currently, the :mod:`aspecd.report`
+module of the ASpecD framework provides a generic environment as well as a
+dedicated LaTeX environment, implemented as respective classes:
+
+  * :class:`GenericEnvironment` and
+  * :class:`LaTeXEnvironment`.
+
+These two environments get automatically loaded by the respective reporter
+classes:
+
+  * :class:`Reporter` and
+  * :class:`LaTeXReporter`.
+
+The second important concept of Jinja2 is that of the "context": Think of
+it as a dictionary containing all the key--value pairs you can use to
+replace placeholders within a template with their actual values. In the
+simplest of all cases within the context of the ASpecD framework,
+this could be the metadata of an :class:`aspecd.dataset.Dataset`.
+
 """
 
 import collections
@@ -42,7 +76,7 @@ class MissingFilenameError(Error):
 
 
 class LaTeXExecutableNotFoundError(Error):
-    """Exception raised when no filename is provided
+    """Exception raised when the LaTeX executable could not be found
 
     Attributes
     ----------
@@ -367,10 +401,31 @@ class GenericEnvironment(jinja2.Environment):
 class LaTeXEnvironment(jinja2.Environment):
     """Jinja2 environment for rendering LaTeX-based templates.
 
-    .. todo::
-        Describe the settings in more detail, thus providing users of this
-        class and in turn the :class:`aspecd.report.LaTeXReporter` class with
-        ideas of how to create their templates.
+    This environment is designed for using templates written in LaTeX that
+    can be rendered by LaTeX without having their control code replaced by
+    Jinja2. While variables are usually output in LaTeX, control structures
+    are prefixed by a LaTeX comment character (``%``). For convenience,
+    the following table lists all the variables currently set within this
+    environment.
+
+    ===================== =====
+    Variable              Value
+    ===================== =====
+    block_start_string    %{
+    block_end_string      }%
+    variable_start_string {@
+    variable_end_string   }
+    comment_start_string  %#{
+    comment_end_string    }
+    line_statement_prefix %%
+    line_comment_prefix   %#
+    trim_blocks           True
+    autoescape            False
+    ===================== =====
+
+    While every measure is taken to keep the above information as accurate
+    as possible, for authoritative information the reader is referred to
+    the actual source code.
 
     """
 

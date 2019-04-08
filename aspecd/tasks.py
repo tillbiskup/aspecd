@@ -7,9 +7,11 @@ One main aspect of tasks is to provide the constituents of a
 simplest form, a recipe gets cooked by a chef, resulting in a series of
 tasks being performed on a list of datasets.
 
-From a user's perspective, a recipe is usually stored in a YAML file. This
-allows to easily create and modify recipes without knowing too much about
-the underlying processes.
+From a user's perspective, a recipe is usually stored in a `YAML
+<https://yaml.org/>`_ file. This allows to easily create and modify recipes
+without knowing too much about the underlying processes. For an accessible
+overview of the YAML syntax, see the `introduction provided by ansible
+<https://docs.ansible.com/ansible/reference_appendices/YAMLSyntax.html>`_ .
 
 Recipes always consist of two major parts: A list of datasets to operate
 on, and a list of tasks to be performed on the datasets. Of course, you can
@@ -57,6 +59,13 @@ Depending on the type of task, additional keys can be used, such as
 ``apply_to`` to determine the datasets this task should be applied to,
 or ``result`` providing a label for a dataset created newly by an analysis
 task.
+
+
+.. note::
+    The use of ``loi:`` markers in the example above points to a situation
+    in which every dataset can be accessed by a unique identifier. For
+    details, see the `LabInform documentation <https://www.labinform.de/>`_.
+
 
 Each task is internally represented by an :obj:`aspecd.tasks.Task` object,
 more precisely an object instantiated from a subclass of
