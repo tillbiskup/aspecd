@@ -969,7 +969,13 @@ class ReportTask(Task):
 
     """
 
-    pass
+    # noinspection PyUnresolvedReferences
+    def _perform(self):
+        for dataset_id in self.apply_to:
+            dataset = self.recipe.get_dataset(dataset_id)
+            task = self.get_object()
+            task.context['dataset'] = dataset.to_dict()
+            task.create()
 
 
 class TaskFactory:

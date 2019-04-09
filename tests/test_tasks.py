@@ -637,9 +637,57 @@ class TestMultiPlotTask(unittest.TestCase):
 class TestReportTask(unittest.TestCase):
     def setUp(self):
         self.task = tasks.ReportTask()
+        self.recipe = tasks.Recipe()
+        self.dataset = ['foo']
+        self.template = 'test_template.tex'
+        self.filename = 'test_report.tex'
+        self.result = 'test_report.pdf'
+
+    def tearDown(self):
+        if os.path.exists(self.template):
+            os.remove(self.template)
+        if os.path.exists(self.filename):
+            os.remove(self.filename)
+        if os.path.exists(self.result):
+            os.remove(self.result)
+
+    def prepare_recipe(self):
+        self.report_task = {'kind': 'report',
+                            'type': 'LaTeXReporter',
+                            'properties': {'template': self.template,
+                                           'filename': self.filename},
+                            'apply_to': self.dataset}
+        dataset_factory = dataset.DatasetFactory()
+        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        self.recipe.dataset_factory = dataset_factory
+        recipe_dict = {'datasets': self.dataset,
+                       'tasks': [self.report_task]}
+        self.recipe.from_dict(recipe_dict)
+
+    def prepare_template(self):
+        template_content = "{@dataset['id']}"
+        with open(self.template, 'w+') as f:
+            f.write(template_content)
 
     def test_instantiate_class(self):
         pass
+
+    def test_perform_task(self):
+        self.prepare_recipe()
+        self.prepare_template()
+        self.task.from_dict(self.report_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+
+    def test_perform_task_adds_dataset_to_context(self):
+        self.prepare_recipe()
+        self.prepare_template()
+        self.task.from_dict(self.report_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        with open(self.filename) as f:
+            read_content = f.read()
+        self.assertEqual(read_content, 'foo')
 
 
 class TestTaskFactory(unittest.TestCase):
