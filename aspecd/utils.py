@@ -337,6 +337,10 @@ def replace_value_in_dict(replacement=None, target=None):
     for key, value in target.items():
         if isinstance(target[key], dict):
             target[key] = replace_value_in_dict(replacement, target[key])
+        elif isinstance(target[key], list):
+            for list_index, list_element in enumerate(target[key]):
+                if list_element in replacement:
+                    target[key][list_index] = replacement[list_element]
         elif value in replacement:
             target[key] = replacement[value]
     return target
