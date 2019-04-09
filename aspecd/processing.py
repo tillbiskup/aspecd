@@ -363,8 +363,7 @@ class ProcessingHistoryRecord(aspecd.dataset.HistoryRecord):
 
     def __init__(self, processing_step=None, package=''):
         super().__init__(package=package)
-        self.processing = \
-            aspecd.processing.ProcessingStepRecord(processing_step)
+        self.processing = ProcessingStepRecord(processing_step)
 
     @property
     def undoable(self):
