@@ -258,6 +258,50 @@ class AnalysisStep:
 
 
 class AnalysisStepRecord:
+    """Base class for analysis step records stored in the dataset analyses.
+
+    The analysis of a :class:`aspecd.dataset.Dataset` should *not* contain
+    references to :class:`aspecd.analysis.AnalysisStep` objects, but rather
+    records that contain all necessary information to create the respective
+    objects inherited from :class:`aspecd.analysis.AnalysisStep`. One
+    reason for this is simply that we want to import datasets containing
+    analysis steps in their analyses for which no corresponding processing
+    class exists in the current installation of the application. Another is
+    to not have an infinite recursion of datasets, as the dataset is stored
+    in an :obj:`aspecd.analysis.AnalysisStep` object.
+
+    .. note::
+        Each analyses entry in a dataset stores the analysis step as a
+        :class:`aspecd.analysis.AnalysisStepRecord`, even in applications
+        inheriting from the ASpecD framework. Hence, subclassing of this class
+        should normally not be necessary.
+
+    Attributes
+    ----------
+    description : :class:`str`
+        Short description, to be set in class definition
+    parameters : :class:`dict`
+        Parameters required for performing the processing step
+
+        All parameters, implicit and explicit.
+    preprocessing : :class:`list`
+        List of necessary preprocessing steps to perform the analysis.
+    comment : :class:`str`
+        User-supplied comment describing intent, purpose, reason, ...
+    class_name : :class:`str`
+        Fully qualified name of the class of the corresponding processing step
+
+    Parameters
+    ----------
+    analysis_step : :class:`aspecd.analysis.AnalysisStep`
+        Analysis step the record should be created for.
+
+    Raises
+    ------
+    MissingAnalysisStepError
+        Raised when no analysis step exists to act on
+
+    """
 
     def __init__(self, analysis_step=None):
         if not analysis_step:
@@ -277,6 +321,14 @@ class AnalysisStepRecord:
         self.class_name = analysis_step.name
 
     def create_analysis_step(self):
+        """Create an analysis step object from the parameters stored.
+
+        Returns
+        -------
+        analysis_step : :class:`aspecd.analysis.AnalysisStep`
+            actual analysis step object that can be used for analysis
+
+        """
         analysis_step = aspecd.utils.object_from_class_name(self.class_name)
         analysis_step.comment = self.comment
         analysis_step.parameters = self.parameters
