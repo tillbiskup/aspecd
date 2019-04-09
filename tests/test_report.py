@@ -263,3 +263,14 @@ class TestLaTeXReporter(unittest.TestCase):
         self.report.save()
         self.report.compile()
         self.assertTrue(os.path.exists(self.result))
+
+    def test_render_replaces_underscore_with_space_in_context_dict(self):
+        template_content = '\\documentclass{article}' \
+                            '\\begin{document}' \
+                            'test' \
+                            '\\end{document}'
+        with open(self.template, 'w+') as f:
+            f.write(template_content)
+        self.report.context = {'bla_blub': 'foo'}
+        self.report.render()
+        self.assertTrue('bla blub' in self.report.context)

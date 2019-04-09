@@ -256,6 +256,13 @@ class LaTeXReporter(Reporter):
     single (pdf)LaTeX run is performed with option
     "-interaction=nonstopmode" passed in order to not block further execution.
 
+    .. note::
+        Due to problems with LaTeX rendering text containing underscores,
+        the keys in the context dict are recursively parsed and each
+        underscore replaced by a single space. Thus, the template can be
+        compiled using LaTeX without having to replace the placeholder
+        variables beforehand.
+
     Attributes
     ----------
     environment : :class:`aspecd.report.LaTeXEnvironment`
@@ -298,6 +305,26 @@ class LaTeXReporter(Reporter):
 
         self._temp_dir = tempfile.mkdtemp()
         self._pwd = os.getcwd()
+
+    def _render(self):
+        """Perform the actual rendering of the template.
+
+        Additionally to the usual tasks performed in the base class,
+        for LaTeX templates, underscores are replaced by spaces in key names
+        of the context dict to allow LaTeX to render the template with
+        variable names included.
+        """
+        template = self.environment.get_template(self.template)
+        self.context = self._change_keys_in_dict_recursively(self.context)
+        self.report = template.render(self.context)
+
+    def _change_keys_in_dict_recursively(self, dict_=None):
+        tmp_dict = collections.OrderedDict()
+        for key, value in dict_.items():
+            if isinstance(value, dict):
+                dict_[key] = self._change_keys_in_dict_recursively(value)
+            tmp_dict[key.replace('_', ' ')] = dict_[key]
+        return tmp_dict
 
     def compile(self):
         """Compile LaTeX template.
