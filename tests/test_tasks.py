@@ -445,6 +445,17 @@ class TestTask(unittest.TestCase):
         self.assertEqual(self.task.recipe.results['bar'],
                          processing_step.parameters['foo'])
 
+    def test_set_object_attributes_replaces_datasets_from_recipe(self):
+        processing_step = processing.ProcessingStep()
+        processing_step.parameters = {'foo': '', 'bar': ''}
+        metadata = {'parameters': {'foo': 'bar'}}
+        self.task.properties = metadata
+        self.task.recipe = tasks.Recipe()
+        self.task.recipe.datasets['bar'] = dataset.Dataset()
+        self.task._set_object_attributes(processing_step)
+        self.assertEqual(self.task.recipe.datasets['bar'],
+                         processing_step.parameters['foo'])
+
 
 class TestProcessingTask(unittest.TestCase):
     def setUp(self):

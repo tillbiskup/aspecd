@@ -796,7 +796,11 @@ class Task(aspecd.utils.ToDictMixin):
 
         Properties or values of dicts in properties that correspond to keys
         in :attr:`aspecd.recipe.results` of the recipe stored in
-        :attr:`aspecd.task.recipe` will be replaced accordingly.
+        :attr:`aspecd.task.recipe` will be replaced accordingly. The same is
+        true for properties corresponding to keys in
+        :attr:`aspecd.recipe.datasets` of the recipe stored in
+        :attr:`aspecd.task.recipe`. Thus, dataset references can be used in
+        properties and get replaced by the actual datasets.
 
         .. todo::
             Eventually, with the advent of logging in the ASpecD framework,
@@ -810,9 +814,12 @@ class Task(aspecd.utils.ToDictMixin):
             Object of a class defined in the :attr:`type` attribute of a task
 
         """
-        if self.recipe and self.recipe.results:
+        if self.recipe:
             properties = aspecd.utils.replace_value_in_dict(
-                self.recipe.results, self.properties)
+                self.recipe.datasets, self.properties)
+            if self.recipe.results:
+                properties = aspecd.utils.replace_value_in_dict(
+                    self.recipe.results, self.properties)
         else:
             properties = self.properties
         for key in properties:

@@ -172,6 +172,19 @@ class Plotter:
         Reference to figure object
     axes : :class:`matplotlib.axes.Axes`
         Reference to axes object used for actual plotting
+    caption : :class:`dict`
+        User-supplied information for the figure caption.
+
+        Has three fields: "title", "free_text", and "parameters".
+
+        "title" is usually one sentence describing the intent of the figure
+        and often plotted bold-face in a figure caption.
+
+        "free_text" is additional text directly following the title,
+        containing more information about the plot.
+
+        "parameters" is a list of parameter names that should be included in
+        the figure caption, usually at the very end.
 
     Raises
     ------
@@ -188,6 +201,11 @@ class Plotter:
         self.figure = None
         self.axes = None
         self.filename = ''
+        self.caption = {
+            'title': '',
+            'free_text': '',
+            'parameters': []
+        }
 
     @property
     def fig(self):

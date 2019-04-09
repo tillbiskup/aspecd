@@ -62,6 +62,14 @@ class TestPlotter(unittest.TestCase):
     def test_has_filename_property(self):
         self.assertTrue(hasattr(self.plotter, 'filename'))
 
+    def test_has_caption_property(self):
+        self.assertTrue(hasattr(self.plotter, 'caption'))
+
+    def test_caption_dict_has_fields_title_free_text_parameters(self):
+        fieldnames = ['title', 'free_text', 'parameters']
+        for fieldname in fieldnames:
+            self.assertTrue(fieldname in self.plotter.caption.keys())
+
     def test_has_save_method(self):
         self.assertTrue(hasattr(self.plotter, 'save'))
         self.assertTrue(callable(self.plotter.save))
