@@ -13,6 +13,10 @@ without knowing too much about the underlying processes. For an accessible
 overview of the YAML syntax, see the `introduction provided by ansible
 <https://docs.ansible.com/ansible/reference_appendices/YAMLSyntax.html>`_ .
 
+
+Recipe-driven data analysis by example
+======================================
+
 Recipes always consist of two major parts: A list of datasets to operate
 on, and a list of tasks to be performed on the datasets. Of course, you can
 specify for each task on which datasets it should be performed, and if
@@ -67,6 +71,9 @@ task.
     details, see the `LabInform documentation <https://www.labinform.de/>`_.
 
 
+Types of tasks
+==============
+
 Each task is internally represented by an :obj:`aspecd.tasks.Task` object,
 more precisely an object instantiated from a subclass of
 :class:`aspecd.tasks.Task`. This polymorphism of task classes makes it
@@ -80,12 +87,17 @@ Currently, the following subclasses are implemented:
   * :class:`aspecd.tasks.MultiplotTask`
   * :class:`aspecd.tasks.ReportTask`
 
-For each task, you can set all attributes of the underlying class.
-Therefore, to know which parameters can be set for what type of task means
-simply to check the documentation for the respective classes. I.e.,
-for a task represented by an :obj:`aspecd.tasks.ProcessingTask` object,
-check out the appropriate class from the :mod:`aspecd.processing` module.
-The same is true for packages derived from ASpecD.
+For each task, you can set all attributes of the underlying class using the
+``properties`` dictionary in the recipe. Therefore, to know which
+parameters can be set for what type of task means simply to check the
+documentation for the respective classes. I.e., for a task represented by
+an :obj:`aspecd.tasks.ProcessingTask` object, check out the appropriate
+class from the :mod:`aspecd.processing` module. The same is true for
+packages derived from ASpecD.
+
+Furthermore, depending on the type of task, you may be able to set
+additional parameters controlling in more detail how the particular task is
+performed. For details, see the documentation of the respective task subclass.
 
 .. todo::
     There is a number of things that are not yet implemented, but required
@@ -842,6 +854,25 @@ class ProcessingTask(Task):
     For more information on the underlying general class,
     see :class:`aspecd.processing.ProcessingStep`.
 
+    For an example of how such a processing task may be included into a
+    recipe, see the YAML listing below::
+
+        kind: processing
+        type: ProcessingStep
+        properties:
+          parameters:
+            param1: bar
+            param2: foo
+          comment: >
+            Some free text describing in more details the processing step
+        apply_to:
+          - loi:xxx
+
+    Note that you can refer to datasets and results created during cooking
+    of a recipe using their respective labels. Those labels will
+    automatically be replaced by the actual dataset/result prior to
+    performing the task.
+
     """
 
     def _perform(self):
@@ -866,6 +897,26 @@ class AnalysisTask(Task):
         boolean attribute (that can be set in the recipe) - perhaps
         "span_multiple" or "individual". See
         :class:`aspecd.analysis.AnalysisStep` for more details.
+
+    For an example of how such an analysis task may be included into a
+    recipe, see the YAML listing below::
+
+        kind: analysis
+        type: AnalysisStep
+        properties:
+          parameters:
+            param1: bar
+            param2: foo
+          comment: >
+            Some free text describing in more details the analysis step
+        apply_to:
+          - loi:xxx
+        result: label
+
+    Note that you can refer to datasets and results created during cooking
+    of a recipe using their respective labels. Those labels will
+    automatically be replaced by the actual dataset/result prior to
+    performing the task.
 
 
     Attributes
@@ -966,6 +1017,33 @@ class ReportTask(Task):
 
     For more information on the underlying general class,
     see :class:`aspecd.report.Reporter`.
+
+    For an example of how such an analysis task may be included into a
+    recipe, see the YAML listing below::
+
+        kind: report
+        type: LaTeXReporter
+        properties:
+          context:
+            general:
+              title: Some fancy title
+              author: John Doe
+            free_text:
+              intro: >
+                Short introduction of the experiment performed
+              metadata: >
+                Tabular and customisable overview of the dataset's metadata
+              history: >
+                Presentation of all processing, analysis and representation
+                steps
+        apply_to:
+          - loi:xxx
+        result: label
+
+    Note that you can refer to datasets and results created during cooking
+    of a recipe using their respective labels. Those labels will
+    automatically be replaced by the actual dataset/result prior to
+    performing the task.
 
     """
 
