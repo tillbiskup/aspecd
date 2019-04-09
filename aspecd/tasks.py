@@ -1024,6 +1024,8 @@ class ReportTask(Task):
         kind: report
         type: LaTeXReporter
         properties:
+          template: my-fancy-latex-template.tex
+          filename: some-filename-for-final-report.tex
           context:
             general:
               title: Some fancy title
@@ -1044,6 +1046,16 @@ class ReportTask(Task):
     of a recipe using their respective labels. Those labels will
     automatically be replaced by the actual dataset/result prior to
     performing the task.
+
+    Whatever fields you set as property ``context`` can be accessed
+    directly from within the template using the usual Python syntax for
+    accessing keys of dictionaries. The fields shown here assume
+    a certain structure of your template containing user-supplied free text
+    for the introduction to several sections.
+
+    Additionally, the task will provide the key ``dataset`` containing the
+    result of the :meth:`aspecd.dataset.Dataset.to_dict` method, thus the full
+    information contained in the dataset.
 
     """
 
