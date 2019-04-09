@@ -420,7 +420,12 @@ class GenericEnvironment(jinja2.Environment):
 
     def __init__(self):
         env = {
-            "loader": jinja2.FileSystemLoader(os.path.abspath('.')),
+            "loader": jinja2.FileSystemLoader(
+                [
+                    os.path.abspath('.'),
+                    os.path.abspath('/')
+                ]
+            )
         }
         super().__init__(**env)
 
@@ -468,6 +473,11 @@ class LaTeXEnvironment(jinja2.Environment):
             "line_comment_prefix": '%#',
             "trim_blocks": True,
             "autoescape": False,
-            "loader": jinja2.FileSystemLoader(os.path.abspath('.')),
+            "loader": jinja2.FileSystemLoader(
+                [
+                    os.path.abspath('.'),
+                    os.path.abspath('/')
+                ]
+            )
         }
         super().__init__(**env)

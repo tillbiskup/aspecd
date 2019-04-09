@@ -12,11 +12,14 @@ class TestReporter(unittest.TestCase):
     def setUp(self):
         self.report = report.Reporter()
         self.template = 'test_template.tex'
+        self.template2 = os.path.abspath('test_template.tex')
         self.filename = 'test_report.tex'
 
     def tearDown(self):
         if os.path.exists(self.template):
             os.remove(self.template)
+        if os.path.exists(self.template2):
+            os.remove(self.template2)
         if os.path.exists(self.filename):
             os.remove(self.filename)
 
@@ -63,6 +66,12 @@ class TestReporter(unittest.TestCase):
         with open(self.template, 'w+') as f:
             f.write('')
         self.report.template = self.template
+        self.report.render()
+
+    def test_render_with_template_with_absolute_path(self):
+        with open(self.template2, 'w+') as f:
+            f.write('')
+        self.report.template = self.template2
         self.report.render()
 
     def test_render_with_template_provided_at_initialisation(self):
@@ -140,6 +149,7 @@ class TestLaTeXReporter(unittest.TestCase):
     def setUp(self):
         self.report = report.LaTeXReporter()
         self.template = 'test_template.tex'
+        self.template2 = os.path.abspath('test_template.tex')
         self.filename = 'test_report.tex'
         self.result = 'test_report.pdf'
         self.include = 'include.tex'
@@ -150,6 +160,8 @@ class TestLaTeXReporter(unittest.TestCase):
     def tearDown(self):
         if os.path.exists(self.template):
             os.remove(self.template)
+        if os.path.exists(self.template2):
+            os.remove(self.template2)
         if os.path.exists(self.filename):
             os.remove(self.filename)
         if os.path.exists(self.result):
@@ -183,6 +195,12 @@ class TestLaTeXReporter(unittest.TestCase):
 
     def test_has_latex_executable_property(self):
         self.assertTrue(hasattr(self.report, 'latex_executable'))
+
+    def test_render_with_template_with_absolute_path(self):
+        with open(self.template2, 'w+') as f:
+            f.write('')
+        self.report.template = self.template2
+        self.report.render()
 
     def test_compile_with_inexisting_latex_executable_raises(self):
         self.report.latex_executable = 'foo'
