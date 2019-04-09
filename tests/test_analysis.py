@@ -98,23 +98,105 @@ class TestPreprocessing(unittest.TestCase):
                          self.analysisstep.preprocessing[-1])
 
 
+class TestAnalysisStepRecord(unittest.TestCase):
+    def setUp(self):
+        self.analysis_step = analysis.AnalysisStep()
+        self.analysis_record = \
+            analysis.AnalysisStepRecord(self.analysis_step)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_instantiate_without_analysis_step_raises(self):
+        with self.assertRaises(analysis.MissingAnalysisStepError):
+            analysis.AnalysisStepRecord()
+
+    def test_instantiate_class_with_analysis_step(self):
+        analysis.AnalysisStepRecord(self.analysis_step)
+
+    def test_instantiate_description_from_analysis_step(self):
+        self.analysis_step.description = 'Test'
+        analysis_record = \
+            analysis.AnalysisStepRecord(self.analysis_step)
+        self.assertEqual(analysis_record.description, 'Test')
+
+    def test_has_create_analysis_step_method(self):
+        self.assertTrue(hasattr(self.analysis_record,
+                                'create_analysis_step'))
+        self.assertTrue(
+            callable(self.analysis_record.create_analysis_step))
+
+    def test_create_analysis_step_returns_analysis_object(self):
+        test_object = self.analysis_record.create_analysis_step()
+        self.assertTrue(isinstance(test_object, analysis.AnalysisStep))
+
+    def test_has_parameters_property(self):
+        self.assertTrue(hasattr(self.analysis_record, 'parameters'))
+
+    def test_analysis_object_has_correct_parameters_value(self):
+        self.analysis_record.parameters['test'] = True
+        test_object = self.analysis_record.create_analysis_step()
+        self.assertEqual(test_object.parameters['test'], True)
+
+    def test_has_description_property(self):
+        self.assertTrue(hasattr(self.analysis_record, 'description'))
+
+    def test_analysis_object_has_correct_description_value(self):
+        self.analysis_record.description = 'Test'
+        test_object = self.analysis_record.create_analysis_step()
+        self.assertEqual(test_object.description, 'Test')
+
+    def test_has_class_name_property(self):
+        self.assertTrue(hasattr(self.analysis_record, 'class_name'))
+
+    def test_has_comment_property(self):
+        self.assertTrue(hasattr(self.analysis_record, 'comment'))
+
+    def test_analysis_object_gets_correct_parameters_value(self):
+        test_dictionary = dict(bla='blub', foo='bar')
+        self.analysis_step.parameters = test_dictionary
+        self.analysis_record = \
+            analysis.AnalysisStepRecord(self.analysis_step)
+        test_object = self.analysis_record.create_analysis_step()
+        self.assertEqual(test_object.parameters, test_dictionary)
+
+    def test_analysis_object_gets_correct_comment_value(self):
+        test_comment = 'Frobnicate the bizbaz'
+        self.analysis_step.comment = test_comment
+        self.analysis_record= \
+            analysis.AnalysisStepRecord(self.analysis_step)
+        test_object = self.analysis_record.create_analysis_step()
+        self.assertEqual(test_object.comment, test_comment)
+
+
 class TestAnalysisHistoryRecord(unittest.TestCase):
     def setUp(self):
-        self.historyrecord = analysis.AnalysisHistoryRecord()
+        self.analysis_step = analysis.AnalysisStep()
+        self.historyrecord = \
+            analysis.AnalysisHistoryRecord(self.analysis_step)
 
     def test_instantiate_class(self):
         pass
 
     def test_instantiate_class_with_package_name(self):
-        analysis.AnalysisHistoryRecord(package="numpy")
+        analysis.AnalysisHistoryRecord(analysis_step=self.analysis_step,
+                                       package="numpy")
 
     def test_instantiate_class_with_package_name_sets_sysinfo(self):
-        analysis_step = analysis.AnalysisHistoryRecord(package="numpy")
+        analysis_step = analysis.AnalysisHistoryRecord(
+            analysis_step=self.analysis_step, package="numpy")
         self.assertTrue("numpy" in analysis_step.sysinfo.packages.keys())
 
     def test_has_analysis_property(self):
         self.assertTrue(hasattr(self.historyrecord, 'analysis'))
 
-    def test_analysis_is_analysisstep(self):
+    def test_analysis_is_analysissteprecord(self):
         self.assertTrue(isinstance(self.historyrecord.analysis,
-                                   analysis.AnalysisStep))
+                                   analysis.AnalysisStepRecord))
+
+    def test_has_replay_method(self):
+        self.assertTrue(hasattr(self.historyrecord, 'replay'))
+        self.assertTrue(callable(self.historyrecord.replay))
+
+    def test_replay(self):
+        self.historyrecord.replay(dataset.Dataset())

@@ -183,8 +183,8 @@ class TestProcessingHistoryRecord(unittest.TestCase):
         aspecd.processing.ProcessingHistoryRecord(self.processing_step)
 
     def test_instantiate_class_with_package_name(self):
-        aspecd.processing.ProcessingHistoryRecord(processing_step=self.processing_step,
-                                                  package="numpy")
+        aspecd.processing.ProcessingHistoryRecord(
+            processing_step=self.processing_step, package="numpy")
 
     def test_instantiate_class_with_package_name_sets_sysinfo(self):
         processing_step = aspecd.processing.ProcessingHistoryRecord(

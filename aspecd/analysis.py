@@ -58,6 +58,21 @@ class MissingDatasetError(Error):
         self.message = message
 
 
+class MissingAnalysisStepError(Error):
+    """Exception raised when no analysis step exists to act on
+
+    Attributes
+    ----------
+    message : :class:`str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
 class AnalysisStep:
     """
     Base class for analysis steps.
@@ -213,6 +228,7 @@ class AnalysisStep:
 
         """
         history_record = AnalysisHistoryRecord(
+            analysis_step=self,
             package=self.dataset.package_name)
         history_record.analysis = self
         history_record.analysis.preprocessing = copy.deepcopy(
@@ -241,6 +257,33 @@ class AnalysisStep:
         pass
 
 
+class AnalysisStepRecord:
+
+    def __init__(self, analysis_step=None):
+        if not analysis_step:
+            raise MissingAnalysisStepError
+        self.description = ''
+        self.preprocessing = []
+        self.parameters = dict()
+        self.comment = ''
+        self.class_name = ''
+        self._copy_fields_from_analysis_step(analysis_step)
+
+    def _copy_fields_from_analysis_step(self, analysis_step):
+        self.description = analysis_step.description
+        self.parameters = analysis_step.parameters
+        self.comment = analysis_step.comment
+        self.preprocessing = analysis_step.preprocessing
+        self.class_name = analysis_step.name
+
+    def create_analysis_step(self):
+        analysis_step = aspecd.utils.object_from_class_name(self.class_name)
+        analysis_step.comment = self.comment
+        analysis_step.parameters = self.parameters
+        analysis_step.description = self.description
+        return analysis_step
+
+
 class AnalysisHistoryRecord(aspecd.dataset.HistoryRecord):
     """History record for analysis steps on datasets.
 
@@ -258,6 +301,18 @@ class AnalysisHistoryRecord(aspecd.dataset.HistoryRecord):
 
     """
 
-    def __init__(self, package=''):
+    def __init__(self, analysis_step=None, package=''):
         super().__init__(package=package)
-        self.analysis = AnalysisStep()
+        self.analysis = AnalysisStepRecord(analysis_step)
+
+    def replay(self, dataset):
+        """Replay the analysis step saved in the history record.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset the analysis step should be replayed to
+
+        """
+        analysis_step = self.analysis.create_analysis_step()
+        dataset.analyse(analysis_step=analysis_step)
