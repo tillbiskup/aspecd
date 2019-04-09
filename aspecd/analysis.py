@@ -230,7 +230,6 @@ class AnalysisStep:
         history_record = AnalysisHistoryRecord(
             analysis_step=self,
             package=self.dataset.package_name)
-        history_record.analysis = self
         history_record.analysis.preprocessing = copy.deepcopy(
             self.dataset.history)
         return history_record
