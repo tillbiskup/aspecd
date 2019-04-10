@@ -259,8 +259,8 @@ class LaTeXReporter(Reporter):
     .. note::
         Due to problems with LaTeX rendering text containing underscores,
         the keys in the context dict are recursively parsed and each
-        underscore replaced by a single space. Thus, the template can be
-        compiled using LaTeX without having to replace the placeholder
+        key containing underscores converted to camel case. Thus, the template
+        can be compiled using LaTeX without having to replace the placeholder
         variables beforehand.
 
     Attributes
@@ -323,7 +323,11 @@ class LaTeXReporter(Reporter):
         for key, value in dict_.items():
             if isinstance(value, dict):
                 dict_[key] = self._change_keys_in_dict_recursively(value)
-            tmp_dict[key.replace('_', ' ')] = dict_[key]
+            if '_' in key:
+                tmp_key = ''.join([x.capitalize() for x in key.split(sep='_')])
+            else:
+                tmp_key = key
+            tmp_dict[tmp_key] = dict_[key]
         return tmp_dict
 
     def compile(self):

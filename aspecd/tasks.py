@@ -1040,7 +1040,6 @@ class ReportTask(Task):
                 steps
         apply_to:
           - loi:xxx
-        result: label
 
     Note that you can refer to datasets and results created during cooking
     of a recipe using their respective labels. Those labels will

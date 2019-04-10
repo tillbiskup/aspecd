@@ -282,7 +282,7 @@ class TestLaTeXReporter(unittest.TestCase):
         self.report.compile()
         self.assertTrue(os.path.exists(self.result))
 
-    def test_render_replaces_underscore_with_space_in_context_dict(self):
+    def test_render_replaces_underscore_with_camel_case_in_context_dict(self):
         template_content = '\\documentclass{article}' \
                             '\\begin{document}' \
                             'test' \
@@ -291,4 +291,4 @@ class TestLaTeXReporter(unittest.TestCase):
             f.write(template_content)
         self.report.context = {'bla_blub': 'foo'}
         self.report.render()
-        self.assertTrue('bla blub' in self.report.context)
+        self.assertTrue('BlaBlub' in self.report.context)
