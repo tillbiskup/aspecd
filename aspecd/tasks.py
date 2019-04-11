@@ -1397,6 +1397,7 @@ class FigureRecord(aspecd.utils.ToDictMixin):
         Parameters
         ----------
         plotter : :class:`aspecd.plotting.Plotter`
+            Plotter the figure record should be created for.
 
         Raises
         ------
