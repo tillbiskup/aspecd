@@ -83,8 +83,11 @@ Currently, the following subclasses are implemented:
   * :class:`aspecd.tasks.ProcessingTask`
   * :class:`aspecd.tasks.AnalysisTask`
   * :class:`aspecd.tasks.AnnotationTask`
-  * :class:`aspecd.tasks.SingleplotTask`
-  * :class:`aspecd.tasks.MultiplotTask`
+  * :class:`aspecd.tasks.PlotTask`
+
+     * :class:`aspecd.tasks.SingleplotTask`
+     * :class:`aspecd.tasks.MultiplotTask`
+
   * :class:`aspecd.tasks.ReportTask`
 
 For each task, you can set all attributes of the underlying class using the
@@ -633,12 +636,15 @@ class Task(aspecd.utils.ToDictMixin):
     For a number of basic tasks available in the ASpecD package, this has
     already been done. See:
 
-      * :class:`aspecd.tasks.ProcessingTask`
-      * :class:`aspecd.tasks.AnalysisTask`
-      * :class:`aspecd.tasks.AnnotationTask`
-      * :class:`aspecd.tasks.SingleplotTask`
-      * :class:`aspecd.tasks.MultiplotTask`
-      * :class:`aspecd.tasks.ReportTask`
+        * :class:`aspecd.tasks.ProcessingTask`
+        * :class:`aspecd.tasks.AnalysisTask`
+        * :class:`aspecd.tasks.AnnotationTask`
+        * :class:`aspecd.tasks.PlotTask`
+
+           * :class:`aspecd.tasks.SingleplotTask`
+           * :class:`aspecd.tasks.MultiplotTask`
+
+        * :class:`aspecd.tasks.ReportTask`
 
     Note that imports of datasets are usually not handled using tasks,
     as this is taken care of automatically by defining a list of datasets
@@ -985,7 +991,44 @@ class AnnotationTask(Task):
             dataset.annotate(annotation_=task)
 
 
-class SingleplotTask(Task):
+class PlotTask(Task):
+    """
+    Plot step defined as task in recipe-driven data analysis.
+
+    A PlotTask should not be used directly but rather the two classes
+    derived from this class, namely:
+
+      * :class:`aspecd.tasks.SingleplotTask` and
+      * :class:`aspecd.tasks.MultiplotTask`.
+
+    For more information on the underlying general class,
+    see :class:`aspecd.plotting.Plotter`.
+
+
+    Attributes
+    ----------
+    label : :class:`str`
+        Label for the fighure resulting from a plotting step.
+
+        This label will be used to refer to the plot later on when
+        further processing the recipe. Actually, in the recipe's
+        :attr:`aspecd.tasks.Recipe.figures` dict, this label is used as a
+        key and a :obj:`aspecd.tasks.FigureRecord` object stored containing
+        all information necessary for further handling the results of the plot.
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.label = ''
+        self._module = 'plotting'
+
+    def perform(self):
+        super().perform()
+        self.recipe.figures[self.label] = self
+
+
+class SingleplotTask(PlotTask):
     """
     Singleplot step defined as task in recipe-driven data analysis.
 
@@ -996,11 +1039,35 @@ class SingleplotTask(Task):
     For more information on the underlying general class,
     see :class:`aspecd.plotting.SinglePlotter`.
 
-    """
+    For an example of how such a analysis task may be included into a
+    recipe, see the YAML listing below::
 
-    def __init__(self):
-        super().__init__()
-        self._module = 'plotting'
+        kind: plotting
+        type: SinglePlotter
+        properties:
+          parameters:
+            param1: bar
+            param2: foo
+          caption:
+            title: >
+              Ideally a single sentence summarising the intend of the figure
+            text: >
+              More text for the figure caption
+            parameters:
+              - a list of parameters
+              - that shall (additionally) be listed
+              - in the figure caption
+          filename: fancyfigure.pdf
+        apply_to:
+          - loi:xxx
+        label: label
+
+    Note that you can refer to datasets and results created during cooking
+    of a recipe using their respective labels. Those labels will
+    automatically be replaced by the actual dataset/result prior to
+    performing the task.
+
+    """
 
     def _perform(self):
         for dataset_id in self.apply_to:
@@ -1009,7 +1076,7 @@ class SingleplotTask(Task):
             dataset.plot(plotter=task)
 
 
-class MultiplotTask(Task):
+class MultiplotTask(PlotTask):
     """
     Multiplot step defined as task in recipe-driven data analysis.
 
@@ -1020,11 +1087,36 @@ class MultiplotTask(Task):
     For more information on the underlying general class,
     see :class:`aspecd.plotting.MultiPlotter`.
 
-    """
+    For an example of how such a analysis task may be included into a
+    recipe, see the YAML listing below::
 
-    def __init__(self):
-        super().__init__()
-        self._module = 'plotting'
+        kind: plotting
+        type: SinglePlotter
+        properties:
+          parameters:
+            param1: bar
+            param2: foo
+          caption:
+            title: >
+              Ideally a single sentence summarising the intend of the figure
+            text: >
+              More text for the figure caption
+            parameters:
+              - a list of parameters
+              - that shall (additionally) be listed
+              - in the figure caption
+          filename: fancyfigure.pdf
+        apply_to:
+          - loi:xxx
+          - loi:yyy
+        label: label
+
+    Note that you can refer to datasets and results created during cooking
+    of a recipe using their respective labels. Those labels will
+    automatically be replaced by the actual dataset/result prior to
+    performing the task.
+
+    """
 
     def _perform(self):
         task = self.get_object()

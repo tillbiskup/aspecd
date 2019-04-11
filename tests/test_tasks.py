@@ -582,6 +582,52 @@ class TestAnnotationTask(unittest.TestCase):
         self.assertTrue(self.recipe.datasets[self.dataset[0]].annotations)
 
 
+class TestPlotTask(unittest.TestCase):
+    def setUp(self):
+        self.task = tasks.PlotTask()
+        self.recipe = tasks.Recipe()
+        self.dataset = ['foo']
+
+    def prepare_recipe(self):
+        self.plotting_task = {'kind': 'plot',
+                              'type': 'Plotter',
+                              'apply_to': self.dataset}
+        dataset_factory = dataset.DatasetFactory()
+        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        self.recipe.dataset_factory = dataset_factory
+        recipe_dict = {'datasets': self.dataset,
+                       'tasks': [self.plotting_task]}
+        self.recipe.from_dict(recipe_dict)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_perform_task(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+
+    def test_has_label_property(self):
+        self.assertTrue(hasattr(self.task, 'label'))
+
+    def test_label_attribute_gets_set_from_dict(self):
+        self.prepare_recipe()
+        label = 'foo'
+        self.plotting_task['label'] = label
+        self.task.from_dict(self.plotting_task)
+        self.assertEqual(label, self.task.label)
+
+    def test_perform_task_with_result_adds_figure(self):
+        self.prepare_recipe()
+        result = 'foo'
+        self.plotting_task['result'] = result
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(len(self.recipe.figures))
+
+
 class TestSinglePlotTask(unittest.TestCase):
     def setUp(self):
         self.task = tasks.SingleplotTask()
