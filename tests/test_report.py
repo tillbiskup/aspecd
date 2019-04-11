@@ -291,4 +291,4 @@ class TestLaTeXReporter(unittest.TestCase):
             f.write(template_content)
         self.report.context = {'bla_blub': 'foo'}
         self.report.render()
-        self.assertTrue('BlaBlub' in self.report.context)
+        self.assertTrue('blaBlub' in self.report.context)

@@ -1056,7 +1056,22 @@ class ReportTask(Task):
     result of the :meth:`aspecd.dataset.Dataset.to_dict` method, thus the full
     information contained in the dataset.
 
+
+    Attributes
+    ----------
+    compile : :class:`bool`
+        Option for compiling a template.
+
+        Some types of templates need an additional "compile" step to create
+        output, most prominently LaTeX templates. If the Reporter class does
+        not support compiling, but :attr:`compile` is set to True, it gets
+        silently ignored.
+
     """
+
+    def __init__(self):
+        super().__init__()
+        self.compile = False
 
     # noinspection PyUnresolvedReferences
     def _perform(self):
@@ -1065,6 +1080,8 @@ class ReportTask(Task):
             task = self.get_object()
             task.context['dataset'] = dataset.to_dict()
             task.create()
+            if self.compile and hasattr(task, 'compile'):
+                task.compile()
 
 
 class TaskFactory:

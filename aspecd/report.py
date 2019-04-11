@@ -259,9 +259,10 @@ class LaTeXReporter(Reporter):
     .. note::
         Due to problems with LaTeX rendering text containing underscores,
         the keys in the context dict are recursively parsed and each
-        key containing underscores converted to camel case. Thus, the template
-        can be compiled using LaTeX without having to replace the placeholder
-        variables beforehand.
+        key containing underscores converted to camel case (but preserving
+        the case of the first character: "foo_bar" => "fooBar"). Thus,
+        the template can be compiled using LaTeX without having to replace
+        the placeholder variables beforehand.
 
     Attributes
     ----------
@@ -325,6 +326,7 @@ class LaTeXReporter(Reporter):
                 dict_[key] = self._change_keys_in_dict_recursively(value)
             if '_' in key:
                 tmp_key = ''.join([x.capitalize() for x in key.split(sep='_')])
+                tmp_key = ''.join([tmp_key[0].lower(), tmp_key[1:]])
             else:
                 tmp_key = key
             tmp_dict[tmp_key] = dict_[key]

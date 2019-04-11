@@ -664,8 +664,8 @@ class TestReportTask(unittest.TestCase):
                        'tasks': [self.report_task]}
         self.recipe.from_dict(recipe_dict)
 
-    def prepare_template(self):
-        template_content = "{@dataset['id']}"
+    def prepare_template(self, content=''):
+        template_content = content
         with open(self.template, 'w+') as f:
             f.write(template_content)
 
@@ -674,20 +674,47 @@ class TestReportTask(unittest.TestCase):
 
     def test_perform_task(self):
         self.prepare_recipe()
-        self.prepare_template()
+        template_content = "{@dataset['id']}"
+        self.prepare_template(template_content)
         self.task.from_dict(self.report_task)
         self.task.recipe = self.recipe
         self.task.perform()
 
     def test_perform_task_adds_dataset_to_context(self):
         self.prepare_recipe()
-        self.prepare_template()
+        template_content = "{@dataset['id']}"
+        self.prepare_template(template_content)
         self.task.from_dict(self.report_task)
         self.task.recipe = self.recipe
         self.task.perform()
         with open(self.filename) as f:
             read_content = f.read()
         self.assertEqual(read_content, 'foo')
+
+    def test_perform_task_compiles_template(self):
+        self.prepare_recipe()
+        template_content = '\\documentclass{article}' \
+                           '\\begin{document}' \
+                           "{@dataset['id']}" \
+                           '\\end{document}'
+        self.prepare_template(template_content)
+        # noinspection PyTypeChecker
+        self.report_task['compile'] = True
+        self.task.from_dict(self.report_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(os.path.exists(self.result))
+
+    def test_perform_task_does_not_compile_if_not_possible(self):
+        self.prepare_recipe()
+        template_content = "{@dataset['id']}"
+        self.prepare_template(template_content)
+        # noinspection PyTypeChecker
+        self.report_task['compile'] = True
+        self.report_task['type'] = 'Reporter'
+        self.task.from_dict(self.report_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
 
 
 class TestTaskFactory(unittest.TestCase):
