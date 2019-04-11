@@ -243,6 +243,21 @@ class MissingDatasetIdentifierError(Error):
         self.message = message
 
 
+class MissingPlotterError(Error):
+    """Exception raised when no Plotter instance is provided
+
+    Attributes
+    ----------
+    message : :class:`str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
 class Recipe:
     """
     Recipes get cooked by chefs in recipe-driven data analysis.
@@ -303,6 +318,12 @@ class Recipe:
         Results can be of any type, but are mostly either instances of
         :class:`aspecd.dataset.Dataset` or
         :class:`aspecd.metadata.PhysicalQuantity`.
+
+        The keys are those defined by :attr:`aspecd.tasks.AnalysisTask.result`.
+    figures : :class:`collections.OrderedDict`
+        Ordered dictionary of figures originating from plotting tasks
+
+        Each entry is an object of class :class:`aspecd.tasks.FigureRecord`.
     dataset_factory : :class:`aspecd.dataset.DatasetFactory`
         Factory for datasets used to retrieve datasets
 
@@ -335,6 +356,7 @@ class Recipe:
         super().__init__()
         self.datasets = collections.OrderedDict()
         self.results = collections.OrderedDict()
+        self.figures = collections.OrderedDict()
         self.tasks = list()
         self.dataset_factory = None
         self.task_factory = TaskFactory()
@@ -1207,3 +1229,24 @@ class TaskFactory:
         full_class_name = '.'.join([package_name, 'tasks', class_name])
         task = aspecd.utils.object_from_class_name(full_class_name)
         return task
+
+
+class FigureRecord(aspecd.utils.ToDictMixin):
+
+    def __init__(self):
+        super().__init__()
+        self.caption = {
+            'title': '',
+            'text': '',
+            'parameters': []
+        }
+        self.parameters = dict()
+        self.label = ''
+        self.filename = ''
+
+    def from_plotter(self, plotter=None):
+        if not plotter:
+            raise MissingPlotterError
+        for attribute in ['caption', 'parameters', 'filename']:
+            setattr(self, attribute, getattr(plotter, attribute))
+

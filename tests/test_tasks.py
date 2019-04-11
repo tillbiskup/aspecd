@@ -3,7 +3,7 @@
 import os
 import unittest
 
-from aspecd import dataset, io, processing, tasks, utils
+from aspecd import dataset, io, plotting, processing, tasks, utils
 
 
 class TestRecipe(unittest.TestCase):
@@ -37,6 +37,9 @@ class TestRecipe(unittest.TestCase):
 
     def test_has_results_property(self):
         self.assertTrue(hasattr(self.recipe, 'results'))
+
+    def test_has_figures_property(self):
+        self.assertTrue(hasattr(self.recipe, 'figures'))
 
     def test_import_from_without_importer_raises(self):
         with self.assertRaises(tasks.MissingImporterError):
@@ -764,3 +767,63 @@ class TestTaskFactory(unittest.TestCase):
         dict_ = {'kind': kind}
         task = self.task_factory.get_task_from_dict(dict_=dict_)
         self.assertTrue(isinstance(task, tasks.ProcessingTask))
+
+
+class TestFigureRecord(unittest.TestCase):
+    def setUp(self):
+        self.figure_record = tasks.FigureRecord()
+        self.plotter = plotting.Plotter()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_caption_property(self):
+        self.assertTrue(hasattr(self.figure_record, 'caption'))
+
+    def test_caption_dict_has_fields_title_text_parameters(self):
+        fieldnames = ['title', 'text', 'parameters']
+        for fieldname in fieldnames:
+            self.assertTrue(fieldname in self.figure_record.caption.keys())
+
+    def test_has_parameters_property(self):
+        self.assertTrue(hasattr(self.figure_record, 'parameters'))
+
+    def test_has_label_property(self):
+        self.assertTrue(hasattr(self.figure_record, 'label'))
+
+    def test_has_filename_property(self):
+        self.assertTrue(hasattr(self.figure_record, 'filename'))
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.figure_record, 'to_dict'))
+        self.assertTrue(callable(self.figure_record.to_dict))
+
+    def test_has_from_plotter_method(self):
+        self.assertTrue(hasattr(self.figure_record, 'from_plotter'))
+        self.assertTrue(callable(self.figure_record.from_plotter))
+
+    def test_from_plotter_without_plotter_raises(self):
+        with self.assertRaises(tasks.MissingPlotterError):
+            self.figure_record.from_plotter()
+
+    def test_from_plotter_sets_caption(self):
+        caption = {
+            'title': 'Title',
+            'text': 'Text',
+            'parameters': ['foo', 'bar']
+        }
+        self.plotter.caption = caption
+        self.figure_record.from_plotter(self.plotter)
+        self.assertEqual(caption, self.figure_record.caption)
+
+    def test_from_plotter_sets_parameters(self):
+        parameters = ['foo', 'bar']
+        self.plotter.parameters = parameters
+        self.figure_record.from_plotter(self.plotter)
+        self.assertEqual(parameters, self.figure_record.parameters)
+
+    def test_from_plotter_sets_filename(self):
+        filename = 'foo.pdf'
+        self.plotter.filename = filename
+        self.figure_record.from_plotter(self.plotter)
+        self.assertEqual(filename, self.figure_record.filename)
