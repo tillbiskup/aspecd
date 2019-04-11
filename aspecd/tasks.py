@@ -1025,7 +1025,13 @@ class PlotTask(Task):
 
     def perform(self):
         super().perform()
-        self.recipe.figures[self.label] = self
+        if self.label:
+            self._add_figure_to_recipe()
+
+    def _add_figure_to_recipe(self):
+        figure_record = FigureRecord()
+        figure_record.from_plotter(self.get_object())
+        self.recipe.figures[self.label] = figure_record
 
 
 class SingleplotTask(PlotTask):

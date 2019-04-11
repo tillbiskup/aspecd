@@ -618,14 +618,48 @@ class TestPlotTask(unittest.TestCase):
         self.task.from_dict(self.plotting_task)
         self.assertEqual(label, self.task.label)
 
-    def test_perform_task_with_result_adds_figure(self):
+    def test_perform_task_without_label_doesnt_add_figure_to_recipe(self):
         self.prepare_recipe()
-        result = 'foo'
-        self.plotting_task['result'] = result
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertFalse(self.recipe.figures)
+
+    def test_perform_task_with_label_adds_figure_to_recipe(self):
+        self.prepare_recipe()
+        label = 'foo'
+        self.plotting_task['label'] = label
         self.task.from_dict(self.plotting_task)
         self.task.recipe = self.recipe
         self.task.perform()
         self.assertTrue(len(self.recipe.figures))
+
+    def test_figure_added_to_recipe_is_figure_record(self):
+        self.prepare_recipe()
+        label = 'foo'
+        self.plotting_task['label'] = label
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(isinstance(self.recipe.figures[label],
+                                   tasks.FigureRecord))
+
+    def test_figure_added_to_recipe_contains_content_from_task(self):
+        self.prepare_recipe()
+        label = 'foo'
+        self.plotting_task['label'] = label
+        # noinspection PyTypeChecker
+        self.plotting_task['properties'] = {
+            'caption': {
+                'title': 'My fancy figure title',
+            }
+        }
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        # noinspection PyTypeChecker
+        self.assertEqual(self.plotting_task['properties']['caption']['title'],
+                         self.recipe.figures[label].caption['title'])
 
 
 class TestSinglePlotTask(unittest.TestCase):
