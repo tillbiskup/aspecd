@@ -65,8 +65,8 @@ class TestPlotter(unittest.TestCase):
     def test_has_caption_property(self):
         self.assertTrue(hasattr(self.plotter, 'caption'))
 
-    def test_caption_dict_has_fields_title_free_text_parameters(self):
-        fieldnames = ['title', 'free_text', 'parameters']
+    def test_caption_dict_has_fields_title_text_parameters(self):
+        fieldnames = ['title', 'text', 'parameters']
         for fieldname in fieldnames:
             self.assertTrue(fieldname in self.plotter.caption.keys())
 

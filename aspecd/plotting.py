@@ -172,15 +172,19 @@ class Plotter:
         Reference to figure object
     axes : :class:`matplotlib.axes.Axes`
         Reference to axes object used for actual plotting
+    filename : :class:`str`
+        Name of file to save the plot to
+
+        Actual saving is done using an :obj:`aspecd.plotting.Saver` object.
     caption : :class:`dict`
         User-supplied information for the figure caption.
 
-        Has three fields: "title", "free_text", and "parameters".
+        Has three fields: "title", "text", and "parameters".
 
         "title" is usually one sentence describing the intent of the figure
         and often plotted bold-face in a figure caption.
 
-        "free_text" is additional text directly following the title,
+        "text" is additional text directly following the title,
         containing more information about the plot.
 
         "parameters" is a list of parameter names that should be included in
@@ -203,7 +207,7 @@ class Plotter:
         self.filename = ''
         self.caption = {
             'title': '',
-            'free_text': '',
+            'text': '',
             'parameters': []
         }
 
