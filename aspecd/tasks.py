@@ -1024,6 +1024,18 @@ class PlotTask(Task):
         self._module = 'plotting'
 
     def perform(self):
+        """
+        Call the appropriate method of the underlying object.
+
+        For details, see the method :meth:`aspecd.tasks.Task.perform` of the
+        base class.
+
+        Additionally to what is done in the base class, a PlotTask adds a
+        :obj:`aspecd.tasks.FigureRecord` object to the
+        :attr:`aspecd.tasks.Recipe.figures` property of the underlying
+        recipe in case an :attr:`aspecd.tasks.PlotTask.label` has been set.
+
+        """
         super().perform()
         if self.label:
             self._add_figure_to_recipe()
@@ -1330,6 +1342,39 @@ class TaskFactory:
 
 
 class FigureRecord(aspecd.utils.ToDictMixin):
+    """
+    Information about a figure created by a PlotTask.
+
+    Figures created during recipe-driven data analysis may need to be added,
+    e.g., to a report. Therefore, the information contained in the PlotTask
+    needs to be accessible by the recipe and other tasks in turn.
+
+    Attributes
+    ----------
+    caption : :class:`dict`
+        User-supplied information for the figure caption.
+
+        Has three fields: "title", "text", and "parameters".
+
+        "title" is usually one sentence describing the intent of the figure
+        and often plotted bold-face in a figure caption.
+
+        "text" is additional text directly following the title,
+        containing more information about the plot.
+
+        "parameters" is a list of parameter names that should be included in
+        the figure caption, usually at the very end.
+    parameters : :class:`dict`
+        All parameters necessary for the plot, implicit and explicit
+    label : :class:`str`
+        Label the figure should be referred to from within the recipe
+
+        Similar to the :attr:`aspecd.tasks.AnalysisTask.result` attribute of
+        the :class:`aspecd.tasks.AnalysisTask` class.
+    filename : :class:`str`
+        Name of file to save the plot to
+
+    """
 
     def __init__(self):
         super().__init__()
@@ -1343,8 +1388,23 @@ class FigureRecord(aspecd.utils.ToDictMixin):
         self.filename = ''
 
     def from_plotter(self, plotter=None):
+        """
+        Set attributes from plotter
+
+        Usually, a plotter contains all information necessary for an
+        :obj:`aspecd.tasks.FigureRecord` object.
+
+        Parameters
+        ----------
+        plotter : :class:`aspecd.plotting.Plotter`
+
+        Raises
+        ------
+        MissingPlotterError
+            Raised if no plotter is provided
+
+        """
         if not plotter:
             raise MissingPlotterError
         for attribute in ['caption', 'parameters', 'filename']:
             setattr(self, attribute, getattr(plotter, attribute))
-
