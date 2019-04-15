@@ -86,9 +86,9 @@ class Infofile:
 
     Raises
     ------
-    InfofileEmptyError
+    aspecd.infofile.InfofileEmptyError
         Raised if info file is empty
-    InfofileTypeError
+    aspecd.infofile.InfofileTypeError
         Raised if file provided is no info file
 
     """
@@ -111,9 +111,9 @@ class Infofile:
 
         Raises
         ------
-        InfofileEmptyError
+        aspecd.infofile.InfofileEmptyError
             Raised if info file is empty
-        InfofileTypeError
+        aspecd.infofile.InfofileTypeError
             Raised if file provided is no info file
 
         """

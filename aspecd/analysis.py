@@ -117,7 +117,7 @@ class AnalysisStep:
 
     Raises
     ------
-    MissingDatasetError
+    aspecd.analysis.MissingDatasetError
         Raised when no dataset exists to act on
 
     """
@@ -297,7 +297,7 @@ class AnalysisStepRecord:
 
     Raises
     ------
-    MissingAnalysisStepError
+    aspecd.analysis.MissingAnalysisStepError
         Raised when no analysis step exists to act on
 
     """

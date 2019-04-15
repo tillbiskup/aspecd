@@ -109,9 +109,9 @@ class Annotation:
 
     Raises
     ------
-    NoContentError
+    aspecd.annotation.NoContentError
         Raised when annotation contains no content(s)
-    MissingDatasetError
+    aspecd.annotation.MissingDatasetError
         Raised when no dataset exists to act on
 
     """

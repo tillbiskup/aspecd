@@ -188,7 +188,7 @@ class DatasetImporter:
 
     Raises
     ------
-    MissingDatasetError
+    aspecd.io.MissingDatasetError
         Raised when no dataset exists to act upon
 
     """
@@ -221,7 +221,7 @@ class DatasetImporter:
 
         Raises
         ------
-        MissingDatasetError
+        aspecd.io.MissingDatasetError
             Raised if no dataset is provided.
 
         """
@@ -284,7 +284,7 @@ class DatasetImporterFactory:
 
     Raises
     ------
-    MissingSourceError
+    aspecd.io.MissingSourceError
         Raised if no source is provided
 
     """
@@ -311,7 +311,7 @@ class DatasetImporterFactory:
 
         Raises
         ------
-        MissingSourceError
+        aspecd.io.MissingSourceError
             Raised if no source is provided
 
         """
@@ -351,7 +351,7 @@ class DatasetExporter:
 
     Raises
     ------
-    MissingDatasetError
+    aspecd.io.MissingDatasetError
         Raised when no dataset exists to act upon
 
     """
@@ -384,7 +384,7 @@ class DatasetExporter:
 
         Raises
         ------
-        MissingDatasetError
+        aspecd.io.MissingDatasetError
             Raised if no dataset is provided.
 
         """
@@ -448,7 +448,7 @@ class RecipeImporter:
 
     Raises
     ------
-    MissingRecipeError
+    aspecd.io.MissingRecipeError
         Raised when no dataset exists to act upon
 
     """
@@ -481,8 +481,8 @@ class RecipeImporter:
 
         Raises
         ------
-        MissingDatasetError
-            Raised if no dataset is provided.
+        aspecd.io.MissingRecipeError
+            Raised if no recipe is provided.
 
         """
         if not recipe:
@@ -536,7 +536,7 @@ class RecipeExporter:
 
     Raises
     ------
-    MissingRecipeError
+    aspecd.io.MissingRecipeError
         Raised when no dataset exists to act upon
 
     """
@@ -569,8 +569,8 @@ class RecipeExporter:
 
         Raises
         ------
-        MissingDatasetError
-            Raised if no dataset is provided.
+        aspecd.io.MissingRecipeError
+            Raised if no recipe is provided.
 
         """
         if not recipe:

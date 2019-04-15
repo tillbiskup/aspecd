@@ -120,9 +120,9 @@ class ProcessingStep:
 
     Raises
     ------
-    ProcessingNotApplicableToDatasetError
+    aspecd.processing.ProcessingNotApplicableToDatasetError
         Raised when processing step is not applicable to dataset
-    MissingDatasetError
+    aspecd.processing.MissingDatasetError
         Raised when no dataset exists to act on
 
     """
@@ -174,9 +174,9 @@ class ProcessingStep:
 
         Raises
         ------
-        ProcessingNotApplicableToDatasetError
+        aspecd.processing.ProcessingNotApplicableToDatasetError
             Raised when processing step is not applicable to dataset
-        MissingDatasetError
+        aspecd.processing.MissingDatasetError
             Raised when no dataset exists to act on
 
         """
@@ -299,7 +299,7 @@ class ProcessingStepRecord:
 
     Raises
     ------
-    MissingProcessingStepError
+    aspecd.processing.MissingProcessingStepError
         Raised when no processing step exists to act on
 
     """

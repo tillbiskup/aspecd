@@ -147,10 +147,10 @@ class Reporter:
 
     Raises
     ------
-    FileNotFoundError
+    aspecd.report.FileNotFoundError
         Raised if the template file provided does not exist.
 
-    MissingFilenameError
+    aspecd.report.MissingFilenameError
         Raised if no output file for the report is provided.
 
     """
@@ -209,7 +209,7 @@ class Reporter:
 
         Raises
         ------
-        MissingFilenameError
+        aspecd.report.MissingFilenameError
             Raised if no output file for the report is provided.
 
         """
@@ -293,7 +293,7 @@ class LaTeXReporter(Reporter):
 
     Raises
     ------
-    LaTeXExecutableNotFoundError
+    aspecd.report.LaTeXExecutableNotFoundError
         Raised if the LaTeX executable could not be found
 
     """
@@ -342,6 +342,11 @@ class LaTeXReporter(Reporter):
 
         Additionally, all files necessary to compile the report are copied
         to the temporary directory as well.
+
+        Raises
+        ------
+        aspecd.report.LaTeXExecutableNotFoundError
+            Raised if the LaTeX executable could not be found
 
         """
         if not shutil.which(self.latex_executable):

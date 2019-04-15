@@ -261,7 +261,7 @@ class Yaml:
 
     Raises
     ------
-    MissingFilenameError
+    aspecd.utils.MissingFilenameError
         Raised if no filename is given to read from/write to
 
     """
@@ -280,7 +280,7 @@ class Yaml:
 
         Raises
         ------
-        MissingFilenameError
+        aspecd.processing.MissingFilenameError
             Raised if no filename is given to read from.
 
         """
@@ -300,7 +300,7 @@ class Yaml:
 
         Raises
         ------
-        MissingFilenameError
+        aspecd.processing.MissingFilenameError
             Raised if no filename is given to write to.
 
         """

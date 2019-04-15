@@ -192,7 +192,7 @@ class Plotter:
 
     Raises
     ------
-    MissingSaverError
+    aspecd.plotting.MissingSaverError
         Raised when no saver is provided when trying to save
 
     """
@@ -300,7 +300,7 @@ class Plotter:
 
         Raises
         ------
-        MissingSaverError
+        aspecd.plotting.MissingSaverError
             Raised if no Saver is provided as parameter.
 
         """
@@ -338,9 +338,9 @@ class SinglePlotter(Plotter):
 
     Raises
     ------
-    MissingDatasetError
+    aspecd.plotting.MissingDatasetError
         Raised when no dataset exists to act on
-    PlotNotApplicableToDatasetError
+    aspecd.plotting.PlotNotApplicableToDatasetError
         Raised when processing step is not applicable to dataset
 
     """
@@ -386,9 +386,9 @@ class SinglePlotter(Plotter):
 
         Raises
         ------
-        PlotNotApplicableToDatasetError
+        aspecd.plotting.PlotNotApplicableToDatasetError
             Raised when plotting is not applicable to dataset
-        MissingDatasetError
+        aspecd.plotting.MissingDatasetError
             Raised when no dataset exists to act on
 
         """
@@ -486,9 +486,9 @@ class MultiPlotter(Plotter):
 
     Raises
     ------
-    MissingDatasetError
+    aspecd.plotting.MissingDatasetError
         Raised when no dataset exists to act on
-    PlotNotApplicableToDatasetError
+    aspecd.plotting.PlotNotApplicableToDatasetError
         Raised when processing step is not applicable to dataset
 
     """
@@ -511,10 +511,10 @@ class MultiPlotter(Plotter):
 
         Raises
         ------
-        PlotNotApplicableToDatasetError
+        aspecd.plotting.PlotNotApplicableToDatasetError
             Raised when plotting is not applicable to at least one of the
             datasets listed in :attr:`datasets`
-        MissingDatasetError
+        aspecd.plotting.MissingDatasetError
             Raised when no datasets exist to act on
 
         """
@@ -547,9 +547,9 @@ class Saver:
 
     Raises
     ------
-    MissingFilenameError
+    aspecd.plotting.MissingFilenameError
         Raised if no filename is provided for saver.
-    MissingPlotError
+    aspecd.plotting.MissingPlotError
         Raised if no plot is provided to act upon.
 
     """
@@ -579,9 +579,9 @@ class Saver:
 
         Raises
         ------
-        MissingFilenameError
+        aspecd.plotting.MissingFilenameError
             Raised if no filename is provided for saver.
-        MissingPlotError
+        aspecd.plotting.MissingPlotError
             Raised if no plot is provided to act upon.
 
         """
@@ -675,7 +675,7 @@ class PlotRecord:
 
     Raises
     ------
-    MissingPlotterError
+    aspecd.plotting.MissingPlotterError
         Raised if no plotter is provided.
 
     """
@@ -698,7 +698,7 @@ class PlotRecord:
 
         Raises
         ------
-        MissingPlotterError
+        aspecd.plotting.MissingPlotterError
             Raised if no plotter is provided.
 
         """

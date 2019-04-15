@@ -387,15 +387,15 @@ class Dataset(aspecd.utils.ToDictMixin):
 
     Raises
     ------
-    UndoWithEmptyHistoryError
+    aspecd.dataset.UndoWithEmptyHistoryError
         Raised when trying to undo with empty history
-    UndoAtBeginningOfHistoryError
+    aspecd.dataset.UndoAtBeginningOfHistoryError
         Raised when trying to undo with history pointer at zero
-    UndoStepUndoableError
+    aspecd.dataset.UndoStepUndoableError
         Raised when trying to undo an undoable step of history
-    RedoAlreadyAtLatestChangeError
+    aspecd.dataset.RedoAlreadyAtLatestChangeError
         Raised  when trying to redo with empty history
-    ProcessingWithLeadingHistoryError
+    aspecd.dataset.ProcessingWithLeadingHistoryError
         Raised  when trying to process with leading history
 
     """
@@ -456,7 +456,7 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         Raises
         ------
-        ProcessingWithLeadingHistoryError
+        aspecd.dataset.ProcessingWithLeadingHistoryError
             Raised when trying to process with leading history
 
         """
@@ -489,11 +489,11 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         Raises
         ------
-        UndoWithEmptyHistoryError
+        aspecd.dataset.UndoWithEmptyHistoryError
             Raised when trying to undo with empty history
-        UndoAtBeginningOfHistoryError
+        aspecd.dataset.UndoAtBeginningOfHistoryError
             Raised when trying to undo with history pointer at zero
-        UndoStepUndoableError
+        aspecd.dataset.UndoStepUndoableError
             Raised when trying to undo an undoable step of history
 
         """
@@ -514,7 +514,7 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         Raises
         ------
-        RedoAlreadyAtLatestChangeError
+        aspecd.dataset.RedoAlreadyAtLatestChangeError
             Raised when trying to redo with empty history
 
         """
@@ -666,7 +666,7 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         Raises
         ------
-        MissingPlotterError
+        aspecd.dataset.MissingPlotterError
             Raised when trying to plot without plotter
 
         """
@@ -776,7 +776,7 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         Raises
         ------
-        MissingDatasetError
+        aspecd.dataset.MissingDatasetError
             Raised if no dataset was provided
 
         """
@@ -801,7 +801,7 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         Raises
         ------
-        MissingDatasetError
+        aspecd.dataset.MissingDatasetError
             Raised if no dataset ID was provided
 
         """
@@ -891,7 +891,7 @@ class DatasetReference:
 
     Raises
     ------
-    MissingDatasetError
+    aspecd.dataset.MissingDatasetError
         Raised if no dataset was provided when calling :meth:`from_dataset`
 
     """
@@ -912,7 +912,7 @@ class DatasetReference:
 
         Raises
         ------
-        MissingDatasetError
+        aspecd.dataset.MissingDatasetError
             Raised if no dataset was provided
 
         """
@@ -969,9 +969,9 @@ class DatasetFactory:
 
     Raises
     ------
-    MissingSourceError
+    aspecd.dataset.MissingSourceError
         Raised if no source is provided
-    MissingImporterFactoryError
+    aspecd.dataset.MissingImporterFactoryError
         Raised if no ImporterFactory is available
 
     """
@@ -1004,9 +1004,9 @@ class DatasetFactory:
 
         Raises
         ------
-        MissingSourceError
+        aspecd.dataset.MissingSourceError
             Raised if no source is provided
-        MissingImporterFactoryError
+        aspecd.dataset.MissingImporterFactoryError
             Raised if no ImporterFactory is available
 
         """
@@ -1082,9 +1082,9 @@ class Data:
 
     Raises
     ------
-    AxesCountError
+    aspecd.dataset.AxesCountError
         Raised if number of axes is inconsistent with data dimensions
-    AxesValuesInconsistentWithDataError
+    aspecd.dataset.AxesValuesInconsistentWithDataError
         Raised if axes values are inconsistent with data
 
     """
@@ -1134,9 +1134,9 @@ class Data:
 
         Raises
         ------
-        AxesCountError
+        aspecd.dataset.AxesCountError
             Raised if number of axes is inconsistent with data dimensions
-        AxesValuesInconsistentWithDataError
+        aspecd.dataset.AxesValuesInconsistentWithDataError
             Raised if axes values are inconsistent with data dimensions
 
         """
@@ -1191,9 +1191,9 @@ class Axis:
 
     Raises
     ------
-    AxisValuesTypeError
+    aspecd.dataset.AxisValuesTypeError
         Raised when trying to set axis values to another type than numpy array
-    AxisValuesDimensionError
+    aspecd.dataset.AxisValuesDimensionError
         Raised when trying to set axis values to an array with more than one
         dimension.
 
@@ -1217,9 +1217,9 @@ class Axis:
 
         Raises
         ------
-        AxisValuesTypeError
+        aspecd.dataset.AxisValuesTypeError
             Raised of axis values are of wrong type
-        AxisValuesDimensionError
+        aspecd.dataset.AxisValuesDimensionError
             Raised if axis values are of wrong dimension, i.e. not a vector
 
         """

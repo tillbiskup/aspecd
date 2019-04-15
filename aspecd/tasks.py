@@ -342,15 +342,15 @@ class Recipe:
 
     Raises
     ------
-    MissingDictError
+    aspecd.tasks.MissingDictError
         Raised if no dict is provided.
-    MissingImporterError
+    aspecd.tasks.MissingImporterError
         Raised if no importer is provided.
-    MissingExporterError
+    aspecd.tasks.MissingExporterError
         Raised if no exporter is provided.
-    MissingDatasetFactoryError
+    aspecd.tasks.MissingDatasetFactoryError
         Raised if :attr:`dataset_factory` is invalid.
-    MissingTaskFactoryError
+    aspecd.tasks.MissingTaskFactoryError
         Raised if :attr:`task_factory` is invalid.
 
     """
@@ -378,11 +378,11 @@ class Recipe:
 
         Raises
         ------
-        MissingDictError
+        aspecd.tasks.MissingDictError
             Raised if no dict is provided.
-        MissingDatasetFactoryError
+        aspecd.tasks.MissingDatasetFactoryError
             Raised if :attr:`importer_factory` is invalid.
-        MissingTaskFactoryError
+        aspecd.tasks.MissingTaskFactoryError
             Raised if :attr:`task_factory` is invalid.
 
         """
@@ -441,7 +441,7 @@ class Recipe:
 
         Raises
         ------
-        MissingImporterError
+        aspecd.tasks.MissingImporterError
             Raised if no importer is provided
 
         """
@@ -465,7 +465,7 @@ class Recipe:
 
         Raises
         ------
-        MissingExporterError
+        aspecd.tasks.MissingExporterError
             Raised if no exporter is provided
 
         """
@@ -497,7 +497,7 @@ class Recipe:
 
         Raises
         ------
-        MissingDatasetIdentifierError
+        aspecd.tasks.MissingDatasetIdentifierError
             Raised if no identifier is provided.
 
         """
@@ -540,7 +540,7 @@ class Recipe:
 
         Raises
         ------
-        MissingDatasetIdentifierError
+        aspecd.tasks.MissingDatasetIdentifierError
             Raised if no identifiers are provided.
 
         """
@@ -586,7 +586,7 @@ class Chef:
 
     Raises
     ------
-    MissingRecipeError
+    aspecd.tasks.MissingRecipeError
         Raised if no recipe is available to be cooked
 
     """
@@ -609,7 +609,7 @@ class Chef:
 
         Raises
         ------
-        MissingRecipeError
+        aspecd.tasks.MissingRecipeError
             Raised if no recipe is available to be cooked
 
         """
@@ -707,9 +707,9 @@ class Task(aspecd.utils.ToDictMixin):
 
     Raises
     ------
-    MissingDictError
+    aspecd.tasks.MissingDictError
         Raised if no dict is provided when calling :meth:`from_dict`.
-    MissingRecipeError
+    aspecd.tasks.MissingRecipeError
         Raised if no recipe is available upon performing the task.
 
     """
@@ -734,7 +734,7 @@ class Task(aspecd.utils.ToDictMixin):
 
         Raises
         ------
-        MissingDictError
+        aspecd.tasks.MissingDictError
             Raised if no dict is provided.
 
         """
@@ -775,7 +775,7 @@ class Task(aspecd.utils.ToDictMixin):
 
         Raises
         ------
-        MissingRecipeError
+        aspecd.tasks.MissingRecipeError
             Raised if no recipe is available.
 
         """
@@ -1246,7 +1246,7 @@ class TaskFactory:
 
     Raises
     ------
-    MissingTaskDescriptionError
+    aspecd.tasks.MissingTaskDescriptionError
         Raised if no description is given necessary to create task.
     KeyError
         Raised if dict with task description does not contain "kind" key.
@@ -1274,7 +1274,7 @@ class TaskFactory:
 
         Raises
         ------
-        MissingTaskDescriptionError
+        aspecd.tasks.MissingTaskDescriptionError
             Raised if no description is given necessary to create task.
 
         """
@@ -1304,7 +1304,7 @@ class TaskFactory:
 
         Raises
         ------
-        MissingTaskDescriptionError
+        aspecd.tasks.MissingTaskDescriptionError
             Raised if no description is given necessary to create task.
         KeyError
             Raised if dict does not contain "kind" key.
@@ -1386,6 +1386,11 @@ class FigureRecord(aspecd.utils.ToDictMixin):
     filename : :class:`str`
         Name of file to save the plot to
 
+    Raises
+    ------
+    aspecd.tasks.MissingPlotterError
+        Raised if no plotter is provided
+
     """
 
     def __init__(self):
@@ -1413,7 +1418,7 @@ class FigureRecord(aspecd.utils.ToDictMixin):
 
         Raises
         ------
-        MissingPlotterError
+        aspecd.tasks.MissingPlotterError
             Raised if no plotter is provided
 
         """
