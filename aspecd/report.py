@@ -348,6 +348,10 @@ class LaTeXReporter(Reporter):
             raise LaTeXExecutableNotFoundError
         self._copy_files_to_temp_dir()
         self._compile()
+        # Note: In order to resolve references in LaTeX, compile twice.
+        #       There might be a better option, automatically detecting
+        #       whether compiling twice is necessary, but for now...
+        self._compile()
         self._copy_files_from_temp_dir()
         self._remove_temp_dir()
 
