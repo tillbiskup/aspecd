@@ -112,6 +112,41 @@ performed. For details, see the documentation of the respective task subclass.
       * Parser for recipes performing a static analysis of their syntax.
         Useful particulary for larger datasets and/or longer lists of tasks.
 
+
+Prerequisites for recipe-driven data analysis
+=============================================
+
+To be able to use recipe-driven data analysis in packages derived from the
+ASpecD framework, a series of prerequisites needs to be met, *i.e.*, classes
+implemented. Besides the usual suspects such as
+:class:`aspecd.dataset.Dataset` and its constituents as well as the
+different processing and analysis steps based on
+:class:`aspecd.processing.ProcessingStep` and
+:class:`aspecd.analysis.AnalysisStep`, two different factory
+classes need to be implemented in particular, subclassing
+
+  * :class:`aspecd.dataset.DatasetFactory` and
+  * :class:`aspecd.io.DatasetImporterFactory`,
+
+respectively. Actually, only :class:`aspecd.dataset.DatasetFactory` is
+directly used by :class:`aspecd.tasks.Recipe`, however, internally it relies
+on the existence of :class:`aspecd.io.DatasetImporterFactory` to return a
+dataset based solely on a (unique) ID.
+
+Besides implementing these classes, the facilities provided by the
+:mod:`aspecd.tasks` module should be fully sufficient for regular
+recipe-driven data analysis. In particular, normally there should be no need
+to subclass any of the classes within this module in a package derived from
+the ASpecD framework. One particular design goal of recipe-driven data
+analysis is to decouple the actual tasks being performed from the
+general handling of recipes. The former is implemented within each
+respective package built upon the ASpecD framework, the latter is taken care
+of fully by the ASpecD framework itself. You might want to implement a simple
+proxy within a derived package to prevent the user from having to call out to
+functionality provided directly by the ASpecD framework (what might be
+confusing for those unfamiliar with the underlying details, *i.e.*,
+most common users).
+
 """
 
 import collections

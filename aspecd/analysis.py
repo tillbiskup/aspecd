@@ -83,10 +83,9 @@ class AnalysisStep:
     some result is obtained. This result is stored separately,
     together with the parameters of the analysis step, in the
     :attr:`aspecd.dataset.Dataset.analyses` attribute of the dataset and
-    can be found in the :attr:`aspecd.analysis.AnalysisStep.results` and
-    :attr:`aspecd.analysis.AnalysisStep.resulting_dataset` atributes.
+    can be found in the :attr:`aspecd.analysis.AnalysisStep.result` attribute.
 
-    The :attr:`aspecd.analysis.AnalysisStep.resulting_dataset` attribute is
+    In case :attr:`aspecd.analysis.AnalysisStep.result` is a dataset, it is
     a calculated dataset (:class:`aspecd.dataset.CalculatedDataset`),
     and the idea behind storing the result in form of a dataset is to be
     able to plot and further process these results in a fully generic manner.
@@ -106,6 +105,9 @@ class AnalysisStep:
 
         Can be either a :class:`aspecd.dataset.Dataset` or some other
         class, *e.g.*, :class:`aspecd.metadata.PhysicalQuantity`.
+
+        In case of a dataset, it is a calculated dataset
+        (:class:`aspecd.dataset.CalculatedDataset`)
     preprocessing : :class:`list`
         List of necessary preprocessing steps to perform the analysis.
     description : :class:`str`
