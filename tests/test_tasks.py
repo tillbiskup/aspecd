@@ -407,7 +407,7 @@ class TestTask(unittest.TestCase):
         obj = self.task.get_object()
         self.assertFalse(hasattr(obj, 'foo'))
 
-    # ATTENTION: The following tests acccces protected methods - due to not
+    # ATTENTION: The following tests access protected methods - due to not
     # knowing better how to do it properly for the time being...
     def test_set_object_attributes_sets_field_in_dict(self):
         processing_step = processing.ProcessingStep()
