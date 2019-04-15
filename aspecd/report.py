@@ -311,9 +311,11 @@ class LaTeXReporter(Reporter):
         """Perform the actual rendering of the template.
 
         Additionally to the usual tasks performed in the base class,
-        for LaTeX templates, underscores are replaced by spaces in key names
-        of the context dict to allow LaTeX to render the template with
-        variable names included.
+        for LaTeX templates, each key containing underscores is converted to
+        camel case (but preserving the case of the first character:
+        "foo_bar" => "fooBar"). Thus, the template can be compiled using
+        LaTeX without having to replace the placeholder variables beforehand.
+
         """
         template = self.environment.get_template(self.template)
         self.context = self._change_keys_in_dict_recursively(self.context)
