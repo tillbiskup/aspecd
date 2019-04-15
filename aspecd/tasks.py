@@ -672,6 +672,17 @@ class Task(aspecd.utils.ToDictMixin):
 
         Should have keys corresponding to the properties of the class given
         as :attr:`type` attribute.
+
+        Generally, all keys in :attr:`aspecd.tasks.Task.properties` will be
+        mapped to the underlying object created to perform the actual task.
+
+        In contrast, all additional attributes of a given task object
+        subclassing :class:`aspecd.tasks.Task` that are specific to the task
+        object as such and its operation, but not for the object created by
+        the task object to perform the task, are not part of the
+        :attr:`aspecd.tasks.Task.properties` dict. For a recipe, this means
+        that these additional attributes are at the same level as
+        :attr:`aspecd.tasks.Task.properties`.
     apply_to : :class:`list`
         List of datasets the task should be applied to.
 
@@ -1170,6 +1181,7 @@ class ReportTask(Task):
               history: >
                 Presentation of all processing, analysis and representation
                 steps
+        compile: True
         apply_to:
           - loi:xxx
 
