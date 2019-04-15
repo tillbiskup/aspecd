@@ -3,7 +3,7 @@
 import os
 import unittest
 
-from aspecd import dataset, io, plotting, processing, tasks, utils
+from aspecd import dataset, io, plotting, processing, report, tasks, utils
 
 
 class TestRecipe(unittest.TestCase):
@@ -458,6 +458,17 @@ class TestTask(unittest.TestCase):
         self.task._set_object_attributes(processing_step)
         self.assertEqual(self.task.recipe.datasets['bar'],
                          processing_step.parameters['foo'])
+
+    def test_set_object_attributes_replaces_figure_from_recipe(self):
+        report_step = report.Reporter()
+        report_step.context = {'foo': '', 'bar': ''}
+        metadata = {'context': {'foo': 'bar'}}
+        self.task.properties = metadata
+        self.task.recipe = tasks.Recipe()
+        self.task.recipe.figures['bar'] = tasks.FigureRecord()
+        self.task._set_object_attributes(report_step)
+        self.assertEqual(self.task.recipe.figures['bar'],
+                         report_step.context['foo'])
 
 
 class TestProcessingTask(unittest.TestCase):

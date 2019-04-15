@@ -886,7 +886,10 @@ class Task(aspecd.utils.ToDictMixin):
         true for properties corresponding to keys in
         :attr:`aspecd.recipe.datasets` of the recipe stored in
         :attr:`aspecd.task.recipe`. Thus, dataset references can be used in
-        properties and get replaced by the actual datasets.
+        properties and get replaced by the actual datasets. Similarly,
+        figures stored in :attr:`aspecd.recipe.figures` can be referenced
+        and will be replaced by the actual :obj:`aspecd.tasks.FigureRecord`
+        objects.
 
         .. todo::
             Eventually, with the advent of logging in the ASpecD framework,
@@ -906,6 +909,9 @@ class Task(aspecd.utils.ToDictMixin):
             if self.recipe.results:
                 properties = aspecd.utils.replace_value_in_dict(
                     self.recipe.results, self.properties)
+            if self.recipe.figures:
+                properties = aspecd.utils.replace_value_in_dict(
+                    self.recipe.figures, self.properties)
         else:
             properties = self.properties
         for key in properties:
@@ -1216,12 +1222,14 @@ class ReportTask(Task):
               history: >
                 Presentation of all processing, analysis and representation
                 steps
+            figures:
+              title: my_fancy_figure
         compile: True
         apply_to:
           - loi:xxx
 
-    Note that you can refer to datasets and results created during cooking
-    of a recipe using their respective labels. Those labels will
+    Note that you can refer to datasets, results, and figures created during
+    cooking of a recipe using their respective labels. Those labels will
     automatically be replaced by the actual dataset/result prior to
     performing the task.
 
