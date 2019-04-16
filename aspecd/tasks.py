@@ -1142,6 +1142,13 @@ class SingleplotTask(PlotTask):
     automatically be replaced by the actual dataset/result prior to
     performing the task.
 
+    .. note::
+        As soon as you provide a filename in the properties of your recipe,
+        the resulting plot will automatically be saved to that filename,
+        inferring the file format from the extension of the filename. For
+        details of how the format is inferred see the documentation for the
+        :meth:`matplotlib.figure.Figure.savefig` method.
+
     """
 
     def _perform(self):
@@ -1191,6 +1198,13 @@ class MultiplotTask(PlotTask):
     of a recipe using their respective labels. Those labels will
     automatically be replaced by the actual dataset/result prior to
     performing the task.
+
+    .. note::
+        As soon as you provide a filename in the properties of your recipe,
+        the resulting plot will automatically be saved to that filename,
+        inferring the file format from the extension of the filename. For
+        details of how the format is inferred see the documentation for the
+        :meth:`matplotlib.figure.Figure.savefig` method.
 
     """
 
