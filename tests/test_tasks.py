@@ -749,7 +749,8 @@ class TestReportTask(unittest.TestCase):
         self.report_task = {'kind': 'report',
                             'type': 'LaTeXReporter',
                             'properties': {'template': self.template,
-                                           'filename': self.filename},
+                                           'filename': self.filename,
+                                           },
                             'apply_to': self.dataset}
         dataset_factory = dataset.DatasetFactory()
         dataset_factory.importer_factory = io.DatasetImporterFactory()
@@ -809,6 +810,18 @@ class TestReportTask(unittest.TestCase):
         self.task.from_dict(self.report_task)
         self.task.recipe = self.recipe
         self.task.perform()
+
+    def test_perform_task_adds_figure_filenames_to_includes(self):
+        self.prepare_recipe()
+        figure_record = tasks.FigureRecord()
+        figure_record.filename = 'bar'
+        self.recipe.figures['foo'] = figure_record
+        template_content = ""
+        self.prepare_template(template_content)
+        self.task.from_dict(self.report_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertIn(figure_record.filename, self.task.properties['includes'])
 
 
 class TestTaskFactory(unittest.TestCase):

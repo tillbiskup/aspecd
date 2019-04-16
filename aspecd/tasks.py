@@ -1262,6 +1262,11 @@ class ReportTask(Task):
 
     # noinspection PyUnresolvedReferences
     def _perform(self):
+        if 'includes' in self.properties:
+            self.properties['includes'].append(
+                self._get_filenames_from_figures())
+        else:
+            self.properties['includes'] = self._get_filenames_from_figures()
         for dataset_id in self.apply_to:
             dataset = self.recipe.get_dataset(dataset_id)
             task = self.get_object()
@@ -1269,6 +1274,12 @@ class ReportTask(Task):
             task.create()
             if self.compile and hasattr(task, 'compile'):
                 task.compile()
+
+    def _get_filenames_from_figures(self):
+        filenames = []
+        for figure in self.recipe.figures:
+            filenames.append(self.recipe.figures[figure].filename)
+        return filenames
 
 
 class TaskFactory:
