@@ -1117,7 +1117,7 @@ class SingleplotTask(PlotTask):
     For an example of how such a analysis task may be included into a
     recipe, see the YAML listing below::
 
-        kind: plotting
+        kind: singleplot
         type: SinglePlotter
         properties:
           parameters:
@@ -1173,8 +1173,8 @@ class MultiplotTask(PlotTask):
     For an example of how such a analysis task may be included into a
     recipe, see the YAML listing below::
 
-        kind: plotting
-        type: SinglePlotter
+        kind: multiplot
+        type: MultiPlotter
         properties:
           parameters:
             param1: bar
