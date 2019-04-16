@@ -68,6 +68,9 @@ class TestDataset(unittest.TestCase):
             # noinspection PyPropertyAccess
             self.dataset.package_name = 'foo'
 
+    def test_has_tasks_property(self):
+        self.assertTrue(hasattr(self.dataset, 'tasks'))
+
 
 class TestDatasetProcessing(unittest.TestCase):
     def setUp(self):
@@ -143,6 +146,19 @@ class TestDatasetProcessing(unittest.TestCase):
         processing_step.undoable = False
         self.dataset.process(processing_step)
         self.assertEqual(self.dataset.representations, [])
+
+    def test_process_adds_task(self):
+        self.dataset.process(self.processing_step)
+        self.assertNotEqual(self.dataset.tasks, [])
+
+    def test_added_task_has_kind_processing(self):
+        self.dataset.process(self.processing_step)
+        self.assertEqual(self.dataset.tasks[0]['kind'], 'processing')
+
+    def test_added_task_has_processing_history_record(self):
+        self.dataset.process(self.processing_step)
+        self.assertIsInstance(self.dataset.tasks[0]['task'],
+                              aspecd.processing.ProcessingHistoryRecord)
 
 
 class TestDatasetUndo(unittest.TestCase):
@@ -336,6 +352,19 @@ class TestDatasetAnalysis(unittest.TestCase):
         analysis_record = self.dataset.analyses[0]
         self.assertTrue("numpy" in analysis_record.sysinfo.packages.keys())
 
+    def test_analyse_adds_task(self):
+        self.dataset.analyse(self.analysis_step)
+        self.assertNotEqual(self.dataset.tasks, [])
+
+    def test_added_task_has_kind_analysis(self):
+        self.dataset.analyse(self.analysis_step)
+        self.assertEqual(self.dataset.tasks[0]['kind'], 'analysis')
+
+    def test_added_task_has_analysis_history_record(self):
+        self.dataset.analyse(self.analysis_step)
+        self.assertIsInstance(self.dataset.tasks[0]['task'],
+                              aspecd.analysis.AnalysisHistoryRecord)
+
 
 class TestDatasetAnnotation(unittest.TestCase):
     def setUp(self):
@@ -381,11 +410,24 @@ class TestDatasetAnnotation(unittest.TestCase):
         annotation_record = self.dataset.annotations[0]
         self.assertTrue("numpy" in annotation_record.sysinfo.packages.keys())
 
+    def test_annotate_adds_task(self):
+        self.dataset.annotate(self.annotation)
+        self.assertNotEqual(self.dataset.tasks, [])
+
+    def test_added_task_has_kind_annotation(self):
+        self.dataset.annotate(self.annotation)
+        self.assertEqual(self.dataset.tasks[0]['kind'], 'annotation')
+
+    def test_added_task_has_annotation_history_record(self):
+        self.dataset.annotate(self.annotation)
+        self.assertIsInstance(self.dataset.tasks[0]['task'],
+                              aspecd.annotation.AnnotationHistoryRecord)
+
 
 class TestDatasetPlotting(unittest.TestCase):
     def setUp(self):
         self.dataset = dataset.Dataset()
-        self.plotter = plotting.Plotter()
+        self.plotter = plotting.SinglePlotter()
 
     def test_has_plot_method(self):
         self.assertTrue(hasattr(self.dataset, 'plot'))
@@ -399,6 +441,19 @@ class TestDatasetPlotting(unittest.TestCase):
     def test_plot_without_plotter_raises(self):
         with self.assertRaises(dataset.MissingPlotterError):
             self.dataset.plot()
+
+    def test_plot_adds_task(self):
+        self.dataset.plot(self.plotter)
+        self.assertNotEqual(self.dataset.tasks, [])
+
+    def test_added_task_has_kind_representation(self):
+        self.dataset.plot(self.plotter)
+        self.assertEqual(self.dataset.tasks[0]['kind'], 'representation')
+
+    def test_added_task_has_plot_history_record(self):
+        self.dataset.plot(self.plotter)
+        self.assertIsInstance(self.dataset.tasks[0]['task'],
+                              aspecd.plotting.PlotHistoryRecord)
 
 
 class TestDatasetRepresentations(unittest.TestCase):

@@ -365,25 +365,48 @@ class Dataset(aspecd.utils.ToDictMixin):
 
     Attributes
     ----------
+    id : :class:`str`
+        (unique) identifier of the dataset (i.e., path, LOI, or else)
     data : :obj:`aspecd.dataset.Data`
         numeric data and axes
     metadata : :obj:`aspecd.metadata.DatasetMetadata`
         hierarchical key-value store of metadata
     history : :class:`list`
         processing steps performed on the numeric data
+
+        For a full list of tasks performed on a dataset in *chronological*
+        order see the :attr:`aspecd.dataset.Dataset.tasks` attribute.
     analyses : :class:`list`
         analysis steps performed on the dataset
+
+        For a full list of tasks performed on a dataset in *chronological*
+        order see the :attr:`aspecd.dataset.Dataset.tasks` attribute.
     annotations : :class:`list`
         annotations of the dataset
+
+        For a full list of tasks performed on a dataset in *chronological*
+        order see the :attr:`aspecd.dataset.Dataset.tasks` attribute.
     representations : :class:`list`
         representations of the dataset, e.g., plots
-    id : :class:`str`
-        identifier of the dataset (i.e., path, LOI, or else)
+
+        For a full list of tasks performed on a dataset in *chronological*
+        order see the :attr:`aspecd.dataset.Dataset.tasks` attribute.
     references : :class:`list`
         references to other datasets
 
         Each reference is an object of type
-        :class:`aspecd.dataset.DatasetReference`
+        :class:`aspecd.dataset.DatasetReference`.
+    tasks : :class:`list`
+        tasks performed on the dataset in *chronological* order
+
+        Each entry in the list is a dict containing information about the
+        type of task (*i.e.*, processing, analysis, annotation,
+        representation) and a reference to the object containing more
+        information about the respective task.
+
+        Tasks come in quite handy in cases where the exact chronological order
+        of steps performed on a dataset are of relevance, regardless of
+        their particular type, *e.g.*, in context of reports.
 
     Raises
     ------
@@ -411,6 +434,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         self.representations = []
         self.id = ''  # pylint: disable=invalid-name
         self.references = []
+        self.tasks = []
         # Package name is used to store the package version in history records
         self._package_name = aspecd.utils.package_name(self)
         super().__init__()
@@ -466,6 +490,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         processing_step.process(self, from_dataset=True)
         history_record = processing_step.create_history_record()
         self._append_processing_history_record(history_record)
+        self._append_task(kind='processing', task=history_record)
         self._handle_not_undoable(processing_step=processing_step)
         return processing_step
 
@@ -536,6 +561,13 @@ class Dataset(aspecd.utils.ToDictMixin):
         self.history.append(history_record)
         self._increment_history_pointer()
 
+    def _append_task(self, kind='', task=None):
+        task = {
+            'kind': kind,
+            'task': task,
+        }
+        self.tasks.append(task)
+
     def _increment_history_pointer(self):
         self._history_pointer += 1
 
@@ -590,6 +622,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         analysis_step.analyse(self, from_dataset=True)
         history_record = analysis_step.create_history_record()
         self.analyses.append(history_record)
+        self._append_task(kind='analysis', task=history_record)
         return analysis_step
 
     def analyze(self, analysis_step=None):
@@ -627,6 +660,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         annotation_.annotate(self, from_dataset=True)
         history_record = annotation_.create_history_record()
         self.annotations.append(history_record)
+        self._append_task(kind='annotation', task=history_record)
 
     def delete_annotation(self, index=None):
         """Remove annotation record from dataset.
@@ -675,6 +709,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         plotter.plot(dataset=self, from_dataset=True)
         plot_record = plotter.create_history_record()
         self.representations.append(plot_record)
+        self._append_task(kind='representation', task=plot_record)
         return plotter
 
     def delete_representation(self, index=None):
