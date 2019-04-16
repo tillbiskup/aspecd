@@ -458,7 +458,9 @@ class SinglePlotter(Plotter):
         If you ever need to change the appearance of your axes labels,
         override this method in a child class.
         """
-        label = '$' + axis.quantity + '$' + ' / ' + axis.unit
+        label = ''
+        if axis.quantity:
+            label = '$' + axis.quantity + '$' + ' / ' + axis.unit
         return label
 
 

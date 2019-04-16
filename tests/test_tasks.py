@@ -678,6 +678,11 @@ class TestSinglePlotTask(unittest.TestCase):
         self.task = tasks.SingleplotTask()
         self.recipe = tasks.Recipe()
         self.dataset = ['foo']
+        self.figure_filename = 'foo.pdf'
+
+    def tearDown(self):
+        if os.path.exists(self.figure_filename):
+            os.remove(self.figure_filename)
 
     def prepare_recipe(self):
         self.plotting_task = {'kind': 'singleplot',
@@ -700,12 +705,26 @@ class TestSinglePlotTask(unittest.TestCase):
         self.task.perform()
         self.assertTrue(self.recipe.datasets[self.dataset[0]].representations)
 
+    def test_perform_task_with_filename_saves_plot(self):
+        self.prepare_recipe()
+        # noinspection PyTypeChecker
+        self.plotting_task['properties'] = {'filename': self.figure_filename}
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(os.path.exists(self.figure_filename))
+
 
 class TestMultiPlotTask(unittest.TestCase):
     def setUp(self):
         self.task = tasks.MultiplotTask()
         self.recipe = tasks.Recipe()
         self.dataset = ['foo']
+        self.figure_filename = 'foo.pdf'
+
+    def tearDown(self):
+        if os.path.exists(self.figure_filename):
+            os.remove(self.figure_filename)
 
     def prepare_recipe(self):
         self.plotting_task = {'kind': 'multiplot',
@@ -726,6 +745,15 @@ class TestMultiPlotTask(unittest.TestCase):
         self.task.from_dict(self.plotting_task)
         self.task.recipe = self.recipe
         self.task.perform()
+
+    def test_perform_task_with_filename_saves_plot(self):
+        self.prepare_recipe()
+        # noinspection PyTypeChecker
+        self.plotting_task['properties'] = {'filename': self.figure_filename}
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(os.path.exists(self.figure_filename))
 
 
 class TestReportTask(unittest.TestCase):

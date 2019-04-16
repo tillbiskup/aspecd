@@ -1097,6 +1097,11 @@ class PlotTask(Task):
         figure_record.from_plotter(self.get_object())
         self.recipe.figures[self.label] = figure_record
 
+    def save_plot(self, plot=None):
+        if 'filename' in self.properties and self.properties['filename']:
+            saver = aspecd.plotting.Saver(filename=self.properties['filename'])
+            plot.save(saver)
+
 
 class SingleplotTask(PlotTask):
     """
@@ -1144,6 +1149,7 @@ class SingleplotTask(PlotTask):
             dataset = self.recipe.get_dataset(dataset_id)
             task = self.get_object()
             dataset.plot(plotter=task)
+            self.save_plot(plot=task)
 
 
 class MultiplotTask(PlotTask):
@@ -1193,6 +1199,7 @@ class MultiplotTask(PlotTask):
         task.datasets = self.recipe.get_datasets(self.apply_to)
         # noinspection PyUnresolvedReferences
         task.plot()
+        self.save_plot(plot=task)
 
 
 class ReportTask(Task):
