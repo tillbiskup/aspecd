@@ -976,3 +976,7 @@ class TestHistoryRecord(unittest.TestCase):
     def test_sysinfo_is_systeminfo(self):
         self.assertTrue(
             isinstance(self.historyrecord.sysinfo, system.SystemInfo))
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.historyrecord, 'to_dict'))
+        self.assertTrue(callable(self.historyrecord.to_dict))

@@ -1294,7 +1294,7 @@ class Axis:
         self._equidistant = (differences == differences[0]).all()
 
 
-class HistoryRecord:
+class HistoryRecord(aspecd.utils.ToDictMixin):
     """Generic base class for all kinds of history records.
 
     For all classes operating on datasets, such as
