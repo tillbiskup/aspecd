@@ -1094,10 +1094,20 @@ class PlotTask(Task):
 
     def _add_figure_to_recipe(self):
         figure_record = FigureRecord()
+        # noinspection PyTypeChecker
         figure_record.from_plotter(self.get_object())
         self.recipe.figures[self.label] = figure_record
 
     def save_plot(self, plot=None):
+        """
+        Save the figure of the plot created by the task.
+
+        Parameters
+        ----------
+        plot : :class:`aspecd.plotting.Plotter`
+            Plot whose figure should be saved
+
+        """
         if 'filename' in self.properties and self.properties['filename']:
             saver = aspecd.plotting.Saver(filename=self.properties['filename'])
             plot.save(saver)
@@ -1156,6 +1166,7 @@ class SingleplotTask(PlotTask):
             dataset = self.recipe.get_dataset(dataset_id)
             task = self.get_object()
             dataset.plot(plotter=task)
+            # noinspection PyTypeChecker
             self.save_plot(plot=task)
 
 
@@ -1213,6 +1224,7 @@ class MultiplotTask(PlotTask):
         task.datasets = self.recipe.get_datasets(self.apply_to)
         # noinspection PyUnresolvedReferences
         task.plot()
+        # noinspection PyTypeChecker
         self.save_plot(plot=task)
 
 

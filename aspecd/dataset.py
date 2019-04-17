@@ -1331,3 +1331,4 @@ class HistoryRecord(aspecd.utils.ToDictMixin):
     def __init__(self, package=''):
         self.date = datetime.today()
         self.sysinfo = aspecd.system.SystemInfo(package=package)
+        super().__init__()
