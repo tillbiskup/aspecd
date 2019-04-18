@@ -1,6 +1,7 @@
 """Tests for utils."""
 
 import collections
+import copy
 import datetime
 import os
 import unittest
@@ -37,6 +38,7 @@ class TestToDictMixin(unittest.TestCase):
 
     @staticmethod
     def set_properties_from_dict(obj=None, dict_=None):
+        dict_ = copy.deepcopy(dict_)
         for key in dict_:
             setattr(obj, key, dict_[key])
 
@@ -96,6 +98,12 @@ class TestToDictMixin(unittest.TestCase):
         obj_dict = self.mixed_in.to_dict()
         self.assertDictEqual(orig_dict, obj_dict)
 
+    def test_list_of_dicts_containing_dicts_property(self):
+        orig_dict = {"foo": [{"foo": {"foobar": "bar"}}, {"bar": "baz"}]}
+        self.set_properties_from_dict(obj=self.mixed_in, dict_=orig_dict)
+        obj_dict = self.mixed_in.to_dict()
+        self.assertDictEqual(orig_dict, obj_dict)
+
     def test_list_of_objects_property(self):
         toobj_dict = {"foo": "bar"}
         obj1 = utils.ToDictMixin()
@@ -106,6 +114,19 @@ class TestToDictMixin(unittest.TestCase):
         orig_dict = {"objects": [toobj_dict, toobj_dict]}
         obj_dict = self.mixed_in.to_dict()
         self.assertDictEqual(orig_dict, obj_dict)
+
+    def test_list_of_dicts_containing_objects_property(self):
+        toobj_dict = {"foo": "bar"}
+        obj1 = utils.ToDictMixin()
+        obj2 = utils.ToDictMixin()
+        self.set_properties_from_dict(obj=obj1, dict_=toobj_dict)
+        self.set_properties_from_dict(obj=obj2, dict_=toobj_dict)
+        orig_dict = {"foo": [{"foo": toobj_dict}, {"bar": toobj_dict}]}
+        self.set_properties_from_dict(obj=self.mixed_in, dict_=orig_dict)
+        self.mixed_in.foo[0]["foo"] = obj1
+        self.mixed_in.foo[1]["bar"] = obj2
+        obj_dict = self.mixed_in.to_dict()
+        self.assertEqual(orig_dict["foo"], obj_dict["foo"])
 
     def test_datetime_property(self):
         date = datetime.datetime.now()

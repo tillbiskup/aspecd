@@ -149,6 +149,8 @@ class ToDictMixin:
             result = self._traverse_dict(value.__dict__)
         elif isinstance(value, list):
             result = [self._traverse(key, i) for i in value]
+        elif isinstance(value, dict):
+            result = self._traverse_dict(value)
         elif isinstance(value, (datetime.datetime, datetime.date,
                                 datetime.time)):
             result = str(value)
