@@ -323,6 +323,7 @@ class AnnotationRecord:
         Raised when no annotation exists to act on
 
     """
+
     def __init__(self, annotation=None):
         if not annotation:
             raise MissingAnnotationError
