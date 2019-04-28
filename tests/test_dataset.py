@@ -541,6 +541,30 @@ class TestDatasetToDict(unittest.TestCase):
         self.assertTrue(hasattr(self.dataset, 'to_dict'))
         self.assertTrue(callable(self.dataset.to_dict))
 
+    def test_to_dict_with_empty_dataset(self):
+        self.dataset.to_dict()
+
+    def test_to_dict_with_processing_step(self):
+        processing_step = aspecd.processing.ProcessingStep()
+        self.dataset.process(processing_step)
+        self.dataset.to_dict()
+
+    def test_to_dict_with_analysis_step(self):
+        analysis_step = aspecd.analysis.AnalysisStep()
+        self.dataset.analyse(analysis_step)
+        self.dataset.to_dict()
+
+    def test_to_dict_with_annotation(self):
+        annotation_step = aspecd.annotation.Annotation()
+        annotation_step.content = 'foo'
+        self.dataset.annotate(annotation_step)
+        self.dataset.to_dict()
+
+    def test_to_dict_with_representation(self):
+        plotter = aspecd.plotting.SinglePlotter()
+        self.dataset.plot(plotter)
+        self.dataset.to_dict()
+
 
 class TestDatasetReferences(unittest.TestCase):
     def setUp(self):
