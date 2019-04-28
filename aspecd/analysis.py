@@ -266,7 +266,7 @@ class AnalysisStepRecord:
     records that contain all necessary information to create the respective
     objects inherited from :class:`aspecd.analysis.AnalysisStep`. One
     reason for this is simply that we want to import datasets containing
-    analysis steps in their analyses for which no corresponding processing
+    analysis steps in their analyses for which no corresponding analysis
     class exists in the current installation of the application. Another is
     to not have an infinite recursion of datasets, as the dataset is stored
     in an :obj:`aspecd.analysis.AnalysisStep` object.
@@ -282,7 +282,7 @@ class AnalysisStepRecord:
     description : :class:`str`
         Short description, to be set in class definition
     parameters : :class:`dict`
-        Parameters required for performing the processing step
+        Parameters required for performing the analysis step
 
         All parameters, implicit and explicit.
     preprocessing : :class:`list`
@@ -290,7 +290,7 @@ class AnalysisStepRecord:
     comment : :class:`str`
         User-supplied comment describing intent, purpose, reason, ...
     class_name : :class:`str`
-        Fully qualified name of the class of the corresponding processing step
+        Fully qualified name of the class of the corresponding analysis step
 
     Parameters
     ----------
@@ -346,11 +346,19 @@ class AnalysisHistoryRecord(aspecd.dataset.HistoryRecord):
         Analysis step the history is saved for
 
     package : :class:`str`
-        Name of package the hstory record gets recorded for
+        Name of package the history record gets recorded for
 
         Prerequisite for reproducibility, gets stored in the
         :attr:`aspecd.dataset.HistoryRecord.sysinfo` attribute.
         Will usually be provided automatically by the dataset.
+
+    Parameters
+    ----------
+    analysis_step : :class:`aspecd.analysis.AnalysisStep`
+        Analysis step the history is saved for
+
+    package : :class:`str`
+        Name of package the history record gets recorded for
 
     """
 
