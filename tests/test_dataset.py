@@ -1,6 +1,7 @@
 """Tests for datset."""
 
 import unittest
+import os
 from datetime import datetime, timedelta
 
 import numpy as np
@@ -536,6 +537,11 @@ class TestDatasetExporting(unittest.TestCase):
 class TestDatasetToDict(unittest.TestCase):
     def setUp(self):
         self.dataset = dataset.Dataset()
+        self.figure_filename = 'foo.pdf'
+
+    def tearDown(self):
+        if os.path.exists(self.figure_filename):
+            os.remove(self.figure_filename)
 
     def test_has_to_dict_method(self):
         self.assertTrue(hasattr(self.dataset, 'to_dict'))
@@ -563,6 +569,18 @@ class TestDatasetToDict(unittest.TestCase):
     def test_to_dict_with_representation(self):
         plotter = aspecd.plotting.SinglePlotter()
         self.dataset.plot(plotter)
+        self.dataset.to_dict()
+
+    def test_to_dict_with_representation_from_plotter(self):
+        plotter = aspecd.plotting.SinglePlotter()
+        plotter.plot(self.dataset)
+        self.dataset.to_dict()
+
+    def test_to_dict_with_saved_representation(self):
+        plotter = aspecd.plotting.SinglePlotter()
+        saver = aspecd.plotting.Saver(filename=self.figure_filename)
+        plot = self.dataset.plot(plotter)
+        plot.save(saver)
         self.dataset.to_dict()
 
 
