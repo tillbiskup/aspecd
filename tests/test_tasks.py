@@ -177,7 +177,7 @@ class TestRecipe(unittest.TestCase):
     def test_get_dataset_from_results_returns_dataset(self):
         dataset_ = dataset.CalculatedDataset()
         dataset_.id = self.dataset
-        self.recipe.results = [dataset_]
+        self.recipe.results = {self.dataset: dataset_}
         dataset_ = self.recipe.get_dataset(identifier=self.dataset)
         self.assertTrue(isinstance(dataset_, dataset.Dataset))
 
@@ -206,10 +206,14 @@ class TestRecipe(unittest.TestCase):
         self.assertFalse(datasets)
 
     def test_get_datasets_from_results_returns_dataset(self):
-        dataset_ = dataset.CalculatedDataset()
-        dataset_.id = self.dataset
-        self.recipe.results = [dataset_]
-        datasets = self.recipe.get_datasets(identifiers=[self.dataset])
+        dataset0 = dataset.CalculatedDataset()
+        dataset0.id = self.datasets[0]
+        dataset1 = dataset.CalculatedDataset()
+        dataset1.id = self.datasets[1]
+        self.recipe.results = {self.datasets[0]: dataset0}
+        self.recipe.datasets = [dataset1]
+        datasets = self.recipe.get_datasets(identifiers=self.datasets)
+        self.assertTrue(datasets)
         for dataset_ in datasets:
             self.assertTrue(isinstance(dataset_, dataset.Dataset))
 

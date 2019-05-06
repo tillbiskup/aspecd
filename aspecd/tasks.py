@@ -541,13 +541,9 @@ class Recipe:
         matching_dataset = None
         if identifier in self.datasets:
             matching_dataset = self.datasets[identifier]
-        for item in self.results:
-            if isinstance(item, aspecd.dataset.Dataset) \
-                    and item.id == identifier:
-                matching_dataset = item
-#        if identifier in self.results:
-#            if isinstance(self.results[identifier], aspecd.dataset.Dataset):
-#                matching_dataset = self.results[identifier]
+        if identifier in self.results:
+            if isinstance(self.results[identifier], aspecd.dataset.Dataset):
+                matching_dataset = self.results[identifier]
         return matching_dataset
 
     def get_datasets(self, identifiers=None):
@@ -583,11 +579,11 @@ class Recipe:
             raise MissingDatasetIdentifierError
         matching_datasets = [self.datasets[key] for key in identifiers if
                              key in self.datasets]
-        for item in self.results:
-            for identifier in identifiers:
-                if isinstance(item, aspecd.dataset.Dataset) \
-                        and item.id == identifier:
-                    matching_datasets.append(item)
+        for identifier in identifiers:
+            if identifier in self.results:
+                if isinstance(self.results[identifier],
+                              aspecd.dataset.Dataset):
+                    matching_datasets.append(self.results[identifier])
                     identifiers.remove(identifier)
                     break
         return matching_datasets
