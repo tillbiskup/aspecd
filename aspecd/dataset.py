@@ -61,7 +61,7 @@ series of classes for storing history records:
 
     For all classes operating on datasets, such as
     :class:`aspecd.processing.ProcessingStep`,
-    :class:`aspecd.analysis.AnalysisStep` and others, there exist at least two
+    :class:`aspecd.analysis.SingleAnalysisStep` and others, there exist at least two
     "representations": (i) the generic one not (necessarily) tied to any
     concrete dataset, thus portable, and (ii) a concrete one having operated on
     a dataset and thus being accompanied with information about who has done
@@ -597,7 +597,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         """Apply analysis to dataset.
 
         Every analysis step is an object of type
-        :class:`aspecd.analysis.AnalysisStep` and is passed as an argument
+        :class:`aspecd.analysis.SingleAnalysisStep` and is passed as an argument
         to :meth:`analyse`.
 
         The information necessary to reproduce an analysis is stored in the
@@ -608,12 +608,12 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         Parameters
         ----------
-        analysis_step : :obj:`aspecd.analysis.AnalysisStep`
+        analysis_step : :obj:`aspecd.analysis.SingleAnalysisStep`
             analysis step to apply to the dataset
 
         Returns
         -------
-        analysis_step : :obj:`aspecd.analysis.AnalysisStep`
+        analysis_step : :obj:`aspecd.analysis.SingleAnalysisStep`
             analysis step applied to the dataset
 
         """
@@ -1299,7 +1299,7 @@ class HistoryRecord(aspecd.utils.ToDictMixin):
 
     For all classes operating on datasets, such as
     :class:`aspecd.processing.ProcessingStep`,
-    :class:`aspecd.analysis.AnalysisStep` and others, there exist at least two
+    :class:`aspecd.analysis.SingleAnalysisStep` and others, there exist at least two
     "representations": (i) the generic one not (necessarily) tied to any
     concrete dataset, thus portable, and (ii) a concrete one having operated on
     a dataset and thus being accompanied with information about who has done

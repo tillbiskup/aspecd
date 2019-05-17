@@ -295,7 +295,7 @@ class AnnotationRecord:
     annotations in their analyses for which no corresponding annotation
     class exists in the current installation of the application. Another is
     to not have an infinite recursion of datasets, as the dataset is stored
-    in an :obj:`aspecd.analysis.AnalysisStep` object.
+    in an :obj:`aspecd.analysis.SingleAnalysisStep` object.
 
     .. note::
         Each annotation entry in a dataset stores the annotation as a
@@ -340,7 +340,7 @@ class AnnotationRecord:
 
         Returns
         -------
-        analysis_step : :class:`aspecd.analysis.AnalysisStep`
+        analysis_step : :class:`aspecd.analysis.SingleAnalysisStep`
             actual analysis step object that can be used for analysis
 
         """

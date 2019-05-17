@@ -5,7 +5,7 @@ import unittest
 from aspecd import analysis, processing, dataset
 
 
-class TestAnalysis(unittest.TestCase):
+class TestAnalysisStep(unittest.TestCase):
     def setUp(self):
         self.analysisstep = analysis.AnalysisStep()
 
@@ -28,12 +28,6 @@ class TestAnalysis(unittest.TestCase):
     def test_has_result_property(self):
         self.assertTrue(hasattr(self.analysisstep, 'result'))
 
-    def test_has_preprocessing_property(self):
-        self.assertTrue(hasattr(self.analysisstep, 'preprocessing'))
-
-    def test_parameters_preprocessing_is_list(self):
-        self.assertTrue(isinstance(self.analysisstep.preprocessing, list))
-
     def test_has_description_property(self):
         self.assertTrue(hasattr(self.analysisstep, 'description'))
 
@@ -54,6 +48,30 @@ class TestAnalysis(unittest.TestCase):
         self.assertTrue(hasattr(self.analysisstep, 'analyze'))
         self.assertTrue(callable(self.analysisstep.analyze))
 
+    def test_has_create_history_record_method(self):
+        self.assertTrue(hasattr(self.analysisstep, 'create_history_record'))
+        self.assertTrue(callable(self.analysisstep.create_history_record))
+
+    def test_create_history_record_returns_history_record(self):
+        self.analysisstep.dataset = dataset.Dataset()
+        history_record = self.analysisstep.create_history_record()
+        self.assertTrue(isinstance(history_record,
+                                   analysis.AnalysisHistoryRecord))
+
+
+class TestSingleAnalysisStep(unittest.TestCase):
+    def setUp(self):
+        self.analysisstep = analysis.SingleAnalysisStep()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_preprocessing_property(self):
+        self.assertTrue(hasattr(self.analysisstep, 'preprocessing'))
+
+    def test_preprocessing_is_list(self):
+        self.assertTrue(isinstance(self.analysisstep.preprocessing, list))
+
     def test_analyse_with_dataset(self):
         test_dataset = dataset.Dataset()
         self.analysisstep.analyse(test_dataset)
@@ -72,20 +90,18 @@ class TestAnalysis(unittest.TestCase):
         test_dataset = self.analysisstep.analyse(dataset.Dataset())
         self.assertTrue(isinstance(test_dataset, dataset.Dataset))
 
-    def test_has_create_history_record_method(self):
-        self.assertTrue(hasattr(self.analysisstep, 'create_history_record'))
-        self.assertTrue(callable(self.analysisstep.create_history_record))
 
-    def test_create_history_record_returns_history_record(self):
-        self.analysisstep.dataset = dataset.Dataset()
-        history_record = self.analysisstep.create_history_record()
-        self.assertTrue(isinstance(history_record,
-                                   analysis.AnalysisHistoryRecord))
+class TestMultiAnalysisStep(unittest.TestCase):
+    def setUp(self):
+        self.analysisstep = analysis.MultiAnalysisStep()
+
+    def test_instantiate_class(self):
+        pass
 
 
 class TestPreprocessing(unittest.TestCase):
     def setUp(self):
-        self.analysisstep = analysis.AnalysisStep()
+        self.analysisstep = analysis.SingleAnalysisStep()
         self.processingstep = processing.ProcessingStep()
 
     def test_has_add_preprocessing_step_method(self):
@@ -100,7 +116,7 @@ class TestPreprocessing(unittest.TestCase):
 
 class TestAnalysisStepRecord(unittest.TestCase):
     def setUp(self):
-        self.analysis_step = analysis.AnalysisStep()
+        self.analysis_step = analysis.SingleAnalysisStep()
         self.analysis_record = \
             analysis.AnalysisStepRecord(self.analysis_step)
 
@@ -128,7 +144,7 @@ class TestAnalysisStepRecord(unittest.TestCase):
 
     def test_create_analysis_step_returns_analysis_object(self):
         test_object = self.analysis_record.create_analysis_step()
-        self.assertTrue(isinstance(test_object, analysis.AnalysisStep))
+        self.assertTrue(isinstance(test_object, analysis.SingleAnalysisStep))
 
     def test_has_parameters_property(self):
         self.assertTrue(hasattr(self.analysis_record, 'parameters'))
@@ -171,7 +187,7 @@ class TestAnalysisStepRecord(unittest.TestCase):
 
 class TestAnalysisHistoryRecord(unittest.TestCase):
     def setUp(self):
-        self.analysis_step = analysis.AnalysisStep()
+        self.analysis_step = analysis.SingleAnalysisStep()
         self.historyrecord = \
             analysis.AnalysisHistoryRecord(self.analysis_step)
 

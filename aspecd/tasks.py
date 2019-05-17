@@ -42,7 +42,7 @@ To give a first impression of how such a recipe may look like::
           prop2: blub
       -
         kind: analysis
-        type: AnalysisStep
+        type: SingleAnalysisStep
         properties:
           parameters:
             param1: bar
@@ -122,7 +122,7 @@ implemented. Besides the usual suspects such as
 :class:`aspecd.dataset.Dataset` and its constituents as well as the
 different processing and analysis steps based on
 :class:`aspecd.processing.ProcessingStep` and
-:class:`aspecd.analysis.AnalysisStep`, two different factory
+:class:`aspecd.analysis.SingleAnalysisStep`, two different factory
 classes need to be implemented in particular, subclassing
 
   * :class:`aspecd.dataset.DatasetFactory` and
@@ -966,19 +966,19 @@ class AnalysisTask(Task):
     results combined, depending on the type of analysis step.
 
     For more information on the underlying general class,
-    see :class:`aspecd.analysis.AnalysisStep`.
+    see :class:`aspecd.analysis.SingleAnalysisStep`.
 
     .. todo::
         Handle analyses spanning multiple datasets. Needs some additional
         boolean attribute (that can be set in the recipe) - perhaps
         "span_multiple" or "individual". See
-        :class:`aspecd.analysis.AnalysisStep` for more details.
+        :class:`aspecd.analysis.SingleAnalysisStep` for more details.
 
     For an example of how such an analysis task may be included into a
     recipe, see the YAML listing below::
 
         kind: analysis
-        type: AnalysisStep
+        type: SingleAnalysisStep
         properties:
           parameters:
             param1: bar

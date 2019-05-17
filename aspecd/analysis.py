@@ -14,7 +14,7 @@ parameters of the analysis step, in the
 :attr:`aspecd.dataset.Dataset.analyses` attribute of the dataset.
 
 Each real analysis step should inherit from
-:class:`aspecd.analysis.AnalysisStep` as documented there. Furthermore,
+:class:`aspecd.analysis.SingleAnalysisStep` as documented there. Furthermore,
 each analysis step should be contained in one module named "analysis".
 This allows for easy automation and replay of analysis steps, particularly
 in context of recipe-driven data analysis (for details, see the
@@ -83,10 +83,11 @@ class AnalysisStep:
     some result is obtained. This result is stored separately,
     together with the parameters of the analysis step, in the
     :attr:`aspecd.dataset.Dataset.analyses` attribute of the dataset and
-    can be found in the :attr:`aspecd.analysis.AnalysisStep.result` attribute.
+    can be found in the :attr:`aspecd.analysis.SingleAnalysisStep.result`
+    attribute.
 
-    In case :attr:`aspecd.analysis.AnalysisStep.result` is a dataset, it is
-    a calculated dataset (:class:`aspecd.dataset.CalculatedDataset`),
+    In case :attr:`aspecd.analysis.SingleAnalysisStep.result` is a dataset,
+    it is a calculated dataset (:class:`aspecd.dataset.CalculatedDataset`),
     and the idea behind storing the result in form of a dataset is to be
     able to plot and further process these results in a fully generic manner.
 
@@ -108,14 +109,10 @@ class AnalysisStep:
 
         In case of a dataset, it is a calculated dataset
         (:class:`aspecd.dataset.CalculatedDataset`)
-    preprocessing : :class:`list`
-        List of necessary preprocessing steps to perform the analysis.
     description : :class:`str`
         Short description, to be set in class definition
     comment : :class:`str`
         User-supplied comment describing intent, purpose, reason, ...
-    dataset : :class:`aspecd.dataset.Dataset`
-        Dataset the analysis step should be performed on
 
     Raises
     ------
@@ -128,25 +125,106 @@ class AnalysisStep:
         self.name = aspecd.utils.full_class_name(self)
         self.parameters = dict()
         self.result = None
-        self.preprocessing = []
         self.description = 'Abstract analysis step'
         self.comment = ''
+
+    def analyse(self):
+        """Perform the actual analysis step on the given dataset.
+
+        The actual analysis step should be implemented within the non-public
+        method :meth:`_perform_task`. Besides that, the applicability of the
+        analysis step to the given dataset will be checked automatically and
+        the parameters will be sanitised by calling the non-public method
+        :meth:`_sanitise_parameters`.
+
+        """
+        pass
+
+    def analyze(self):
+        """Perform the actual analysis step on the given dataset.
+
+        Same method as self.analyse, but for those preferring AE over BE
+
+        """
+        return self.analyse()
+
+    def create_history_record(self):
+        """
+        Create history record to be added to the dataset.
+
+        Usually, this method gets called from within the
+        :meth:`aspecd.dataset.analyse` method of the
+        :class:`aspecd.dataset.Dataset` class and ensures the history of
+        each analysis step to get written properly.
+
+        Returns
+        -------
+        history_record : :class:`aspecd.analysis.AnalysisHistoryRecord`
+            history record for analysis step
+
+        """
+        history_record = AnalysisHistoryRecord(
+            analysis_step=self,
+            package=aspecd.utils.package_name(self))
+        return history_record
+
+
+class SingleAnalysisStep(AnalysisStep):
+    """
+    Base class for analysis steps operating on single datasets.
+
+    Analysis steps, in contrast to processing steps (see
+    :mod:`aspecd.processing` for details), operate on data of a
+    :class:`aspecd.dataset.Dataset`, but don't change its data. Rather,
+    some result is obtained. This result is stored separately,
+    together with the parameters of the analysis step, in the
+    :attr:`aspecd.dataset.Dataset.analyses` attribute of the dataset and
+    can be found in the :attr:`aspecd.analysis.SingleAnalysisStep.result`
+    attribute.
+
+    In case :attr:`aspecd.analysis.SingleAnalysisStep.result` is a dataset,
+    it is a calculated dataset (:class:`aspecd.dataset.CalculatedDataset`),
+    and the idea behind storing the result in form of a dataset is to be
+    able to plot and further process these results in a fully generic manner.
+
+    Attributes
+    ----------
+    preprocessing : :class:`list`
+        List of necessary preprocessing steps to perform the analysis.
+    description : :class:`str`
+        Short description, to be set in class definition
+    dataset : :class:`aspecd.dataset.Dataset`
+        Dataset the analysis step should be performed on
+
+    Raises
+    ------
+    aspecd.analysis.MissingDatasetError
+        Raised when no dataset exists to act on
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        # self.name = aspecd.utils.full_class_name(self)
+        self.preprocessing = []
+        self.description = 'Abstract single analysis step'
         self.dataset = None
 
+    # pylint: disable=arguments-differ
     def analyse(self, dataset=None, from_dataset=False):
         """Perform the actual analysis step on the given dataset.
 
         If no dataset is provided at method call, but is set as property in
-        the AnalysisStep object, the process method of the dataset will be
-        called and thus the history written.
+        the SingleAnalysisStep object, the process method of the dataset
+        will be called and thus the history written.
 
         If no dataset is provided at method call nor as property in the
         object, the method will raise a respective exception.
 
         The :obj:`aspecd.dataset.Dataset` object always call this method with
         the respective dataset as argument. Therefore, in this case setting
-        the dataset property within the :obj:`aspecd.analysis.AnalysisStep`
-        object is not necessary.
+        the dataset property within the
+        :obj:`aspecd.analysis.SingleAnalysisStep` object is not necessary.
 
         The actual analysis step should be implemented within the non-public
         method :meth:`_perform_task`. Besides that, the applicability of the
@@ -188,6 +266,7 @@ class AnalysisStep:
             self._sanitise_parameters()
             self._perform_task()
 
+    # pylint: disable=arguments-differ
     def analyze(self, dataset=None):
         """Perform the actual analysis step on the given dataset.
 
@@ -251,11 +330,30 @@ class AnalysisStep:
         """Perform the actual analysis step on the dataset.
 
         The implementation of the actual analysis step goes in here in all
-        classes inheriting from AnalysisStep. This method is automatically
-        called by :meth:`self.analyse` after some background checks.
+        classes inheriting from SingleAnalysisStep. This method is
+        automatically called by :meth:`self.analyse` after some background
+        checks.
 
         """
         pass
+
+
+class MultiAnalysisStep(AnalysisStep):
+    """
+    Base class for analysis steps operating on single datasets.
+
+    Analysis steps, in contrast to processing steps (see
+    :mod:`aspecd.processing` for details), operate on data of a
+    :class:`aspecd.dataset.Dataset`, but don't change its data. Rather,
+    some result is obtained. This result is stored separately,
+    together with the parameters of the analysis step, in the
+    :attr:`aspecd.dataset.Dataset.analyses` attribute of the dataset and
+    can be found in the :attr:`aspecd.analysis.MultiAnalysisStep.result`
+    attribute.
+
+    """
+
+    pass
 
 
 class AnalysisStepRecord:
@@ -294,7 +392,7 @@ class AnalysisStepRecord:
 
     Parameters
     ----------
-    analysis_step : :class:`aspecd.analysis.AnalysisStep`
+    analysis_step : :class:`aspecd.analysis.SingleAnalysisStep`
         Analysis step the record should be created for.
 
     Raises
@@ -318,7 +416,8 @@ class AnalysisStepRecord:
         self.description = analysis_step.description
         self.parameters = analysis_step.parameters
         self.comment = analysis_step.comment
-        self.preprocessing = analysis_step.preprocessing
+        if hasattr(analysis_step, 'preprocessing'):
+            self.preprocessing = analysis_step.preprocessing
         self.class_name = analysis_step.name
 
     def create_analysis_step(self):
@@ -326,7 +425,7 @@ class AnalysisStepRecord:
 
         Returns
         -------
-        analysis_step : :class:`aspecd.analysis.AnalysisStep`
+        analysis_step : :class:`aspecd.analysis.SingleAnalysisStep`
             actual analysis step object that can be used for analysis
 
         """
@@ -342,7 +441,7 @@ class AnalysisHistoryRecord(aspecd.dataset.HistoryRecord):
 
     Attributes
     ----------
-    analysis : :class:`aspecd.analysis.AnalysisStep`
+    analysis : :class:`aspecd.analysis.SingleAnalysisStep`
         Analysis step the history is saved for
 
     package : :class:`str`
@@ -354,7 +453,7 @@ class AnalysisHistoryRecord(aspecd.dataset.HistoryRecord):
 
     Parameters
     ----------
-    analysis_step : :class:`aspecd.analysis.AnalysisStep`
+    analysis_step : :class:`aspecd.analysis.SingleAnalysisStep`
         Analysis step the history is saved for
 
     package : :class:`str`

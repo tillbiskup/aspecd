@@ -229,7 +229,7 @@ class TestChef(unittest.TestCase):
         self.processing_task = {'kind': 'processing',
                                 'type': 'ProcessingStep'}
         self.analysis_task = {'kind': 'analysis',
-                              'type': 'AnalysisStep'}
+                              'type': 'SingleAnalysisStep'}
         self.annotation_task = {'kind': 'annotation',
                                 'type': 'Comment'}
         self.plotting_task = {'kind': 'singleplot',
@@ -520,7 +520,7 @@ class TestAnalysisTask(unittest.TestCase):
 
     def prepare_recipe(self):
         self.analysis_task = {'kind': 'analysis',
-                              'type': 'AnalysisStep',
+                              'type': 'SingleAnalysisStep',
                               'apply_to': self.dataset}
         dataset_factory = dataset.DatasetFactory()
         dataset_factory.importer_factory = io.DatasetImporterFactory()
