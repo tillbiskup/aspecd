@@ -39,6 +39,12 @@ class TestReporter(unittest.TestCase):
         self.assertTrue(isinstance(self.report.context,
                                    collections.OrderedDict))
 
+    def test_context_has_sysinfo_key(self):
+        self.assertIn('sysinfo', self.report.context)
+
+    def test_context_has_sysinfo_packages_key(self):
+        self.assertIn('packages', self.report.context['sysinfo'])
+
     def test_has_environment_property(self):
         self.assertTrue(hasattr(self.report, 'environment'))
 

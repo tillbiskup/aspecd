@@ -53,6 +53,9 @@ import tempfile
 
 import jinja2
 
+import aspecd.system
+import aspecd.utils
+
 
 class Error(Exception):
     """Base class for exceptions in this module."""
@@ -128,6 +131,10 @@ class Reporter:
     context : :class:`collections.OrderedDict`
         Variables of a template that are replaced with the given content.
 
+        context contains a key "sysinfo" containing system-related
+        information, i.e. the information contained in the
+        :class:`aspecd.system.SystemInfo` class.
+
     environment : :class:`aspecd.report.GenericEnvironment`
         Jinja2 environment used for rendering the template.
 
@@ -161,6 +168,9 @@ class Reporter:
         self.context = collections.OrderedDict()
         self.environment = GenericEnvironment()
         self.report = ''
+        self.context['sysinfo'] = \
+            aspecd.system.SystemInfo(package=aspecd.utils.package_name(
+                self)).to_dict()
 
     def render(self):
         """Render the template.
