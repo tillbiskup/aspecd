@@ -116,7 +116,7 @@ class TestPreprocessing(unittest.TestCase):
 
 class TestAnalysisStepRecord(unittest.TestCase):
     def setUp(self):
-        self.analysis_step = analysis.SingleAnalysisStep()
+        self.analysis_step = analysis.AnalysisStep()
         self.analysis_record = \
             analysis.AnalysisStepRecord(self.analysis_step)
 
@@ -144,7 +144,7 @@ class TestAnalysisStepRecord(unittest.TestCase):
 
     def test_create_analysis_step_returns_analysis_object(self):
         test_object = self.analysis_record.create_analysis_step()
-        self.assertTrue(isinstance(test_object, analysis.SingleAnalysisStep))
+        self.assertTrue(isinstance(test_object, analysis.AnalysisStep))
 
     def test_has_parameters_property(self):
         self.assertTrue(hasattr(self.analysis_record, 'parameters'))
@@ -185,6 +185,16 @@ class TestAnalysisStepRecord(unittest.TestCase):
         self.assertEqual(test_object.comment, test_comment)
 
 
+class TestSingleAnalysisStepRecord(unittest.TestCase):
+    def setUp(self):
+        self.analysis_step = analysis.SingleAnalysisStep()
+        self.analysis_record = \
+            analysis.SingleAnalysisStepRecord(self.analysis_step)
+
+    def test_instantiate_class(self):
+        pass
+
+
 class TestAnalysisHistoryRecord(unittest.TestCase):
     def setUp(self):
         self.analysis_step = analysis.SingleAnalysisStep()
@@ -208,7 +218,7 @@ class TestAnalysisHistoryRecord(unittest.TestCase):
 
     def test_analysis_is_analysissteprecord(self):
         self.assertTrue(isinstance(self.historyrecord.analysis,
-                                   analysis.AnalysisStepRecord))
+                                   analysis.SingleAnalysisStepRecord))
 
     def test_has_replay_method(self):
         self.assertTrue(hasattr(self.historyrecord, 'replay'))
