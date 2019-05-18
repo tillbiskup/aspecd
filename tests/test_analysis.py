@@ -98,6 +98,12 @@ class TestMultiAnalysisStep(unittest.TestCase):
     def test_instantiate_class(self):
         pass
 
+    def test_has_datasets_property(self):
+        self.assertTrue(hasattr(self.analysisstep, 'datasets'))
+
+    def test_datasets_property_is_list(self):
+        self.assertTrue(isinstance(self.analysisstep.datasets, list))
+
 
 class TestPreprocessing(unittest.TestCase):
     def setUp(self):

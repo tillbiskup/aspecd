@@ -320,7 +320,7 @@ class SingleAnalysisStep(AnalysisStep):
 
 class MultiAnalysisStep(AnalysisStep):
     """
-    Base class for analysis steps operating on single datasets.
+    Base class for analysis steps operating on multiple datasets.
 
     Analysis steps, in contrast to processing steps (see
     :mod:`aspecd.processing` for details), operate on data of a
@@ -331,9 +331,17 @@ class MultiAnalysisStep(AnalysisStep):
     can be found in the :attr:`aspecd.analysis.MultiAnalysisStep.result`
     attribute.
 
+    Attributes
+    ----------
+    datasets : :class:`list`
+        List of dataset the analysis step should be performed for
+
     """
 
-    pass
+    def __init__(self):
+        super().__init__()
+        self.datasets = []
+        self.description = 'Abstract analysis step for multiple dataset'
 
 
 class AnalysisStepRecord:
@@ -357,8 +365,6 @@ class AnalysisStepRecord:
         Parameters required for performing the analysis step
 
         All parameters, implicit and explicit.
-    preprocessing : :class:`list`
-        List of necessary preprocessing steps to perform the analysis.
     comment : :class:`str`
         User-supplied comment describing intent, purpose, reason, ...
     class_name : :class:`str`
@@ -380,7 +386,6 @@ class AnalysisStepRecord:
         if not analysis_step:
             raise MissingAnalysisStepError
         self.description = ''
-        self.preprocessing = []
         self.parameters = dict()
         self.comment = ''
         self.class_name = ''
@@ -426,7 +431,25 @@ class SingleAnalysisStepRecord(AnalysisStepRecord):
         :class:`aspecd.analysis.SingleAnalysisStepRecord`, even in applications
         inheriting from the ASpecD framework. Hence, subclassing of this class
         should normally not be necessary.
+
+    Attributes
+    ----------
+    preprocessing : :class:`list`
+        List of processing steps
+
+        The actual processing steps are objects of the class
+        :class:`aspecd.processing.ProcessingStepRecord`.
+
+    Parameters
+    ----------
+    analysis_step : :class:`aspecd.analysis.SingleAnalysisStep`
+        Analysis step the record should be created for.
+
     """
+
+    def __init__(self, analysis_step=None):
+        super().__init__(analysis_step=analysis_step)
+        self.preprocessing = []
 
     def _copy_fields_from_analysis_step(self, analysis_step):
         super()._copy_fields_from_analysis_step(analysis_step)

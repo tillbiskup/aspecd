@@ -175,7 +175,7 @@ class TestMultiPlotter(unittest.TestCase):
     def test_has_datasets_property(self):
         self.assertTrue(hasattr(self.plotter, 'datasets'))
 
-    def test_datasets_property_is_dict(self):
+    def test_datasets_property_is_list(self):
         self.assertTrue(isinstance(self.plotter.datasets, list))
 
     def test_plot_without_datasets_raises(self):
