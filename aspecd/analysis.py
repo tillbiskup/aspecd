@@ -148,26 +148,6 @@ class AnalysisStep:
         """
         return self.analyse()
 
-    def create_history_record(self):
-        """
-        Create history record to be added to the dataset.
-
-        Usually, this method gets called from within the
-        :meth:`aspecd.dataset.analyse` method of the
-        :class:`aspecd.dataset.Dataset` class and ensures the history of
-        each analysis step to get written properly.
-
-        Returns
-        -------
-        history_record : :class:`aspecd.analysis.AnalysisHistoryRecord`
-            history record for analysis step
-
-        """
-        history_record = AnalysisHistoryRecord(
-            analysis_step=self,
-            package=aspecd.utils.package_name(self))
-        return history_record
-
 
 class SingleAnalysisStep(AnalysisStep):
     """

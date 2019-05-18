@@ -48,16 +48,6 @@ class TestAnalysisStep(unittest.TestCase):
         self.assertTrue(hasattr(self.analysisstep, 'analyze'))
         self.assertTrue(callable(self.analysisstep.analyze))
 
-    def test_has_create_history_record_method(self):
-        self.assertTrue(hasattr(self.analysisstep, 'create_history_record'))
-        self.assertTrue(callable(self.analysisstep.create_history_record))
-
-    def test_create_history_record_returns_history_record(self):
-        self.analysisstep.dataset = dataset.Dataset()
-        history_record = self.analysisstep.create_history_record()
-        self.assertTrue(isinstance(history_record,
-                                   analysis.AnalysisHistoryRecord))
-
 
 class TestSingleAnalysisStep(unittest.TestCase):
     def setUp(self):
@@ -89,6 +79,16 @@ class TestSingleAnalysisStep(unittest.TestCase):
     def test_analyse_returns_dataset(self):
         test_dataset = self.analysisstep.analyse(dataset.Dataset())
         self.assertTrue(isinstance(test_dataset, dataset.Dataset))
+
+    def test_has_create_history_record_method(self):
+        self.assertTrue(hasattr(self.analysisstep, 'create_history_record'))
+        self.assertTrue(callable(self.analysisstep.create_history_record))
+
+    def test_create_history_record_returns_history_record(self):
+        self.analysisstep.dataset = dataset.Dataset()
+        history_record = self.analysisstep.create_history_record()
+        self.assertTrue(isinstance(history_record,
+                                   analysis.AnalysisHistoryRecord))
 
 
 class TestMultiAnalysisStep(unittest.TestCase):
