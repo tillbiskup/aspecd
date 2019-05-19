@@ -81,7 +81,11 @@ possible to easily extend the scope of recipe-driven data analysis.
 Currently, the following subclasses are implemented:
 
   * :class:`aspecd.tasks.ProcessingTask`
-  * :class:`aspecd.tasks.SingleanalysisTask`
+  * :class:`aspecd.tasks.AnalysisTask`
+
+     * :class:`aspecd.tasks.SingleanalysisTask`
+     * :class:`aspecd.tasks.MultianalysisTask`
+
   * :class:`aspecd.tasks.AnnotationTask`
   * :class:`aspecd.tasks.PlotTask`
 
@@ -971,6 +975,12 @@ class AnalysisTask(Task):
     Analysis steps can be performed individually for each dataset or the
     results combined, depending on the type of analysis step.
 
+    An AnalysisTask should not be used directly but rather the two
+    classes derived from this class, namely:
+
+      * :class:`aspecd.tasks.SingleanalysisTask` and
+      * :class:`aspecd.tasks.MultianalysisTask`.
+
     For more information on the underlying general class,
     see :class:`aspecd.analysis.AnalysisStep`.
 
@@ -1041,8 +1051,8 @@ class MultianalysisTask(AnalysisTask):
     Analysis step defined as task in recipe-driven data analysis.
 
     Multianalysis steps are performed on a list of datasets and combine
-    them in one single analysis. For plots performed on individual datasets,
-    see :class:`aspecd.tasks.singleanalysisTask`.
+    them in one single analysis. For analyses performed on individual
+    datasets, see :class:`aspecd.tasks.SingleanalysisTask`.
 
     For more information on the underlying general class,
     see :class:`aspecd.analysis.MultiAnalysisStep`.
