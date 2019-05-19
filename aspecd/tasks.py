@@ -81,7 +81,7 @@ possible to easily extend the scope of recipe-driven data analysis.
 Currently, the following subclasses are implemented:
 
   * :class:`aspecd.tasks.ProcessingTask`
-  * :class:`aspecd.tasks.AnalysisTask`
+  * :class:`aspecd.tasks.SingleanalysisTask`
   * :class:`aspecd.tasks.AnnotationTask`
   * :class:`aspecd.tasks.PlotTask`
 
@@ -357,7 +357,9 @@ class Recipe:
         :class:`aspecd.dataset.Dataset` or
         :class:`aspecd.metadata.PhysicalQuantity`.
 
-        The keys are those defined by :attr:`aspecd.tasks.AnalysisTask.result`.
+        The keys are those defined by
+        :attr:`aspecd.tasks.SingleanalysisTask.result` and
+        :attr:`aspecd.tasks.MultianalysisTask.result`, respectively.
     figures : :class:`collections.OrderedDict`
         Ordered dictionary of figures originating from plotting tasks
 
@@ -669,6 +671,10 @@ class Task(aspecd.utils.ToDictMixin):
 
         * :class:`aspecd.tasks.ProcessingTask`
         * :class:`aspecd.tasks.AnalysisTask`
+
+           * :class:`aspecd.tasks.SingleanalysisTask`
+           * :class:`aspecd.tasks.MultianalysisTask`
+
         * :class:`aspecd.tasks.AnnotationTask`
         * :class:`aspecd.tasks.PlotTask`
 
@@ -966,18 +972,40 @@ class AnalysisTask(Task):
     results combined, depending on the type of analysis step.
 
     For more information on the underlying general class,
-    see :class:`aspecd.analysis.SingleAnalysisStep`.
+    see :class:`aspecd.analysis.AnalysisStep`.
 
-    .. todo::
-        Handle analyses spanning multiple datasets. Needs some additional
-        boolean attribute (that can be set in the recipe) - perhaps
-        "span_multiple" or "individual". See
-        :class:`aspecd.analysis.SingleAnalysisStep` for more details.
+
+    Attributes
+    ----------
+    result : :class:`str`
+        Label for the dataset resulting from an analysis step.
+
+        This label will be used to refer to the dataset later on when
+        further processing the recipe.
+
+    """
+
+    def __init__(self, recipe=None):
+        super().__init__(recipe=recipe)
+        self.result = ''
+        self._module = 'analysis'
+
+
+class SingleanalysisTask(AnalysisTask):
+    """
+    Analysis step defined as task in recipe-driven data analysis.
+
+    Singleanalysis steps can only be performed individually for each dataset.
+    For analyses combining multiple datasets,
+    see :class:`aspecd.tasks.MultianalyisTask`.
+
+    For more information on the underlying general class,
+    see :class:`aspecd.analysis.SingleAnalysisStep`.
 
     For an example of how such an analysis task may be included into a
     recipe, see the YAML listing below::
 
-        kind: analysis
+        kind: singleanalysis
         type: SingleAnalysisStep
         properties:
           parameters:
@@ -994,20 +1022,7 @@ class AnalysisTask(Task):
     automatically be replaced by the actual dataset/result prior to
     performing the task.
 
-
-    Attributes
-    ----------
-    result : :class:`str`
-        Label for the dataset resulting from an analysis step.
-
-        This label will be used to refer to the dataset later on when
-        further processing the recipe.
-
     """
-
-    def __init__(self, recipe=None):
-        super().__init__(recipe=recipe)
-        self.result = ''
 
     # noinspection PyUnresolvedReferences
     def _perform(self):
@@ -1019,6 +1034,47 @@ class AnalysisTask(Task):
                 if isinstance(task.result, aspecd.dataset.Dataset):
                     task.result.id = self.result
                 self.recipe.results[self.result] = task.result
+
+
+class MultianalysisTask(AnalysisTask):
+    """
+    Analysis step defined as task in recipe-driven data analysis.
+
+    Multianalysis steps are performed on a list of datasets and combine
+    them in one single analysis. For plots performed on individual datasets,
+    see :class:`aspecd.tasks.singleanalysisTask`.
+
+    For more information on the underlying general class,
+    see :class:`aspecd.analysis.MultiAnalysisStep`.
+
+    For an example of how such an analysis task may be included into a
+    recipe, see the YAML listing below::
+
+        kind: multianalysis
+        type: MultiAnalysisStep
+        properties:
+          parameters:
+            param1: bar
+            param2: foo
+          comment: >
+            Some free text describing in more details the analysis step
+        apply_to:
+          - loi:xxx
+        result:
+          - label1
+          - label2
+
+    Note that you can refer to datasets and results created during cooking
+    of a recipe using their respective labels. Those labels will
+    automatically be replaced by the actual dataset/result prior to
+    performing the task.
+
+    In case such a multianalysis step results in a list of resulting
+    datasets, result should be a list of labels, not a single label.
+
+    """
+
+    pass
 
 
 class AnnotationTask(Task):
@@ -1467,8 +1523,8 @@ class FigureRecord(aspecd.utils.ToDictMixin):
     label : :class:`str`
         Label the figure should be referred to from within the recipe
 
-        Similar to the :attr:`aspecd.tasks.AnalysisTask.result` attribute of
-        the :class:`aspecd.tasks.AnalysisTask` class.
+        Similar to the :attr:`aspecd.tasks.SingleanalysisTask.result`
+        attribute of the :class:`aspecd.tasks.SingleanalysisTask` class.
     filename : :class:`str`
         Name of file to save the plot to
 

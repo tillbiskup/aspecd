@@ -228,7 +228,7 @@ class TestChef(unittest.TestCase):
         self.dataset = 'foo'
         self.processing_task = {'kind': 'processing',
                                 'type': 'ProcessingStep'}
-        self.analysis_task = {'kind': 'analysis',
+        self.analysis_task = {'kind': 'singleanalysis',
                               'type': 'SingleAnalysisStep'}
         self.annotation_task = {'kind': 'annotation',
                                 'type': 'Comment'}
@@ -520,6 +520,30 @@ class TestAnalysisTask(unittest.TestCase):
 
     def prepare_recipe(self):
         self.analysis_task = {'kind': 'analysis',
+                              'type': 'AnalysisStep',
+                              'apply_to': self.dataset}
+        dataset_factory = dataset.DatasetFactory()
+        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        self.recipe.dataset_factory = dataset_factory
+        recipe_dict = {'datasets': self.dataset,
+                       'tasks': [self.analysis_task]}
+        self.recipe.from_dict(recipe_dict)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_result_property(self):
+        self.assertTrue(hasattr(self.task, 'result'))
+
+
+class TestSingleAnalysisTask(unittest.TestCase):
+    def setUp(self):
+        self.task = tasks.SingleanalysisTask()
+        self.recipe = tasks.Recipe()
+        self.dataset = ['foo']
+
+    def prepare_recipe(self):
+        self.analysis_task = {'kind': 'singleanalysis',
                               'type': 'SingleAnalysisStep',
                               'apply_to': self.dataset}
         dataset_factory = dataset.DatasetFactory()
@@ -538,9 +562,6 @@ class TestAnalysisTask(unittest.TestCase):
         self.task.recipe = self.recipe
         self.task.perform()
         self.assertTrue(self.recipe.datasets[self.dataset[0]].analyses)
-
-    def test_has_result_property(self):
-        self.assertTrue(hasattr(self.task, 'result'))
 
     def test_result_attribute_gets_set_from_dict(self):
         self.prepare_recipe()
@@ -567,6 +588,27 @@ class TestAnalysisTask(unittest.TestCase):
         self.task.recipe = self.recipe
         self.task.perform()
         self.assertEqual(self.recipe.results[result].id, result)
+
+
+class TestMultiAnalysisTask(unittest.TestCase):
+    def setUp(self):
+        self.task = tasks.MultianalysisTask()
+        self.recipe = tasks.Recipe()
+        self.dataset = ['foo']
+
+    def prepare_recipe(self):
+        self.analysis_task = {'kind': 'multianalysis',
+                              'type': 'MultiAnalysisStep',
+                              'apply_to': self.dataset}
+        dataset_factory = dataset.DatasetFactory()
+        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        self.recipe.dataset_factory = dataset_factory
+        recipe_dict = {'datasets': self.dataset,
+                       'tasks': [self.analysis_task]}
+        self.recipe.from_dict(recipe_dict)
+
+    def test_instantiate_class(self):
+        pass
 
 
 class TestAnnotationTask(unittest.TestCase):
