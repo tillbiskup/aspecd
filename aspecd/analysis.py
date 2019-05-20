@@ -148,6 +148,28 @@ class AnalysisStep:
         """
         return self.analyse()
 
+    def _sanitise_parameters(self):
+        """Ensure parameters provided for analysis step are correct.
+
+        Needs to be implemented in classes inheriting from AnalyisStep
+        according to their needs. Most probably, you want to check for
+        correct types of all parameters as well as values within sensible
+        borders.
+
+        """
+        pass
+
+    def _perform_task(self):
+        """Perform the actual analysis step on the dataset.
+
+        The implementation of the actual analysis step goes in here in all
+        classes inheriting from SingleAnalysisStep. This method is
+        automatically called by :meth:`self.analyse` after some background
+        checks.
+
+        """
+        pass
+
 
 class SingleAnalysisStep(AnalysisStep):
     """
@@ -295,28 +317,6 @@ class SingleAnalysisStep(AnalysisStep):
             self.dataset.history)
         return history_record
 
-    def _sanitise_parameters(self):
-        """Ensure parameters provided for analysis step are correct.
-
-        Needs to be implemented in classes inheriting from AnalyisStep
-        according to their needs. Most probably, you want to check for
-        correct types of all parameters as well as values within sensible
-        borders.
-
-        """
-        pass
-
-    def _perform_task(self):
-        """Perform the actual analysis step on the dataset.
-
-        The implementation of the actual analysis step goes in here in all
-        classes inheriting from SingleAnalysisStep. This method is
-        automatically called by :meth:`self.analyse` after some background
-        checks.
-
-        """
-        pass
-
 
 class MultiAnalysisStep(AnalysisStep):
     """
@@ -365,28 +365,6 @@ class MultiAnalysisStep(AnalysisStep):
         super().analyse()
         self._sanitise_parameters()
         self._perform_task()
-
-    def _sanitise_parameters(self):
-        """Ensure parameters provided for analysis step are correct.
-
-        Needs to be implemented in classes inheriting from MultiAnalyisStep
-        according to their needs. Most probably, you want to check for
-        correct types of all parameters as well as values within sensible
-        borders.
-
-        """
-        pass
-
-    def _perform_task(self):
-        """Perform the actual analysis step on the datasets.
-
-        The implementation of the actual analysis step goes in here in all
-        classes inheriting from MultiAnalysisStep. This method is
-        automatically called by :meth:`self.analyse` after some background
-        checks.
-
-        """
-        pass
 
 
 class AnalysisStepRecord:

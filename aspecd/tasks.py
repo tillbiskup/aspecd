@@ -1082,6 +1082,11 @@ class MultianalysisTask(AnalysisTask):
     In case such a multianalysis step results in a list of resulting
     datasets, result should be a list of labels, not a single label.
 
+    Raises
+    ------
+    IndexError
+        Raised if list of result labels and results are not of same length
+
     """
 
     # noinspection PyUnresolvedReferences
