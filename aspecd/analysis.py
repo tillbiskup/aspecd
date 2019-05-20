@@ -343,6 +343,51 @@ class MultiAnalysisStep(AnalysisStep):
         self.datasets = []
         self.description = 'Abstract analysis step for multiple dataset'
 
+    def analyse(self):
+        """Perform the actual analysis on the given list of datasets.
+
+        If no dataset is added to the list of datasets of the
+        object, the method will raise a respective exception.
+
+        The actual analysis step should be implemented within the non-public
+        method :meth:`_perform_task`. Besides that, the parameters will be
+        sanitised by calling the non-public method
+        :meth:`_sanitise_parameters`.
+
+        Raises
+        ------
+        aspecd.analysis.MissingDatasetError
+            Raised when no datasets exist to act on
+
+        """
+        if not self.datasets:
+            raise MissingDatasetError
+        super().analyse()
+        self._sanitise_parameters()
+        self._perform_task()
+
+    def _sanitise_parameters(self):
+        """Ensure parameters provided for analysis step are correct.
+
+        Needs to be implemented in classes inheriting from MultiAnalyisStep
+        according to their needs. Most probably, you want to check for
+        correct types of all parameters as well as values within sensible
+        borders.
+
+        """
+        pass
+
+    def _perform_task(self):
+        """Perform the actual analysis step on the datasets.
+
+        The implementation of the actual analysis step goes in here in all
+        classes inheriting from MultiAnalysisStep. This method is
+        automatically called by :meth:`self.analyse` after some background
+        checks.
+
+        """
+        pass
+
 
 class AnalysisStepRecord:
     """Base class for analysis step records.

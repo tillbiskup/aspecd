@@ -1084,7 +1084,27 @@ class MultianalysisTask(AnalysisTask):
 
     """
 
-    pass
+    # noinspection PyUnresolvedReferences
+    def _perform(self):
+        task = self.get_object()
+        task.datasets = self.recipe.get_datasets(self.apply_to)
+        task.analyse()
+        if self.result:
+            # NOTE: This code is currently widely untested due to lack of
+            # ideas of how to test it properly.
+            if isinstance(self.result, list):
+                if len(self.result) != len(task.result):
+                    raise IndexError('List of result labels and results '
+                                     ' must be of same length')
+                for index, label in enumerate(self.result):
+                    self._assign_result(label=label, result=task.result[index])
+            else:
+                self._assign_result(label=self.result, result=task.result)
+
+    def _assign_result(self, label='', result=None):
+        if isinstance(result, aspecd.dataset.Dataset):
+            result.id = label
+        self.recipe.results[label] = result
 
 
 class AnnotationTask(Task):

@@ -610,6 +610,48 @@ class TestMultiAnalysisTask(unittest.TestCase):
     def test_instantiate_class(self):
         pass
 
+    def test_perform_task(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.analysis_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+
+    def test_result_attribute_gets_set_from_dict(self):
+        self.prepare_recipe()
+        result = 'foo'
+        self.analysis_task['result'] = result
+        self.task.from_dict(self.analysis_task)
+        self.assertEqual(result, self.task.result)
+
+    def test_result_attribute_as_list_gets_set_from_dict(self):
+        self.prepare_recipe()
+        result = ['foo', 'bar']
+        self.analysis_task['result'] = result
+        self.task.from_dict(self.analysis_task)
+        self.assertEqual(result, self.task.result)
+
+    def test_perform_task_with_result_adds_result(self):
+        self.prepare_recipe()
+        result = 'foo'
+        self.analysis_task['result'] = result
+        self.task.from_dict(self.analysis_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(len(self.recipe.results))
+
+    @unittest.skip
+    def test_perform_task_with_result_list_adds_result(self):
+        self.dataset = ['foo', 'bar']
+        self.prepare_recipe()
+        results = ['foo', 'bar']
+        self.analysis_task['result'] = results
+        self.task.from_dict(self.analysis_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertEqual(len(self.recipe.results), len(results))
+        for result in results:
+            self.assertEqual(self.recipe.results[result].id, result)
+
 
 class TestAnnotationTask(unittest.TestCase):
     def setUp(self):

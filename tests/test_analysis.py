@@ -104,6 +104,14 @@ class TestMultiAnalysisStep(unittest.TestCase):
     def test_datasets_property_is_list(self):
         self.assertTrue(isinstance(self.analysisstep.datasets, list))
 
+    def test_analyse_without_datasets_raises(self):
+        with self.assertRaises(analysis.MissingDatasetError):
+            self.analysisstep.analyse()
+
+    def test_analyse_with_datasets(self):
+        self.analysisstep.datasets.append(dataset.Dataset())
+        self.analysisstep.analyse()
+
 
 class TestPreprocessing(unittest.TestCase):
     def setUp(self):
