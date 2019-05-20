@@ -310,6 +310,20 @@ class Plotter:
         self.filename = saver.filename
         return saver
 
+    @staticmethod
+    def _create_axis_label_string(axis):
+        """Create axis label conforming to conventions used in science
+
+        This method is called automatically and indirectly by :meth:`plot`.
+
+        If you ever need to change the appearance of your axes labels,
+        override this method in a child class.
+        """
+        label = ''
+        if axis.quantity:
+            label = '$' + axis.quantity + '$' + ' / ' + axis.unit
+        return label
+
 
 class SinglePlotter(Plotter):
     """Base class for plots of single datasets.
@@ -449,20 +463,6 @@ class SinglePlotter(Plotter):
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel(ylabel)
 
-    @staticmethod
-    def _create_axis_label_string(axis):
-        """Create axis label conforming to conventions used in science
-
-        This method is called automatically and indirectly by :meth:`plot`.
-
-        If you ever need to change the appearance of your axes labels,
-        override this method in a child class.
-        """
-        label = ''
-        if axis.quantity:
-            label = '$' + axis.quantity + '$' + ' / ' + axis.unit
-        return label
-
 
 class MultiPlotter(Plotter):
     """Base class for plots of multiple datasets.
@@ -499,6 +499,8 @@ class MultiPlotter(Plotter):
         super().__init__()
         self.datasets = []
         self.description = 'Abstract plotting step for multiple dataset'
+        self.parameters['axes'] = [aspecd.dataset.Axis(),
+                                   aspecd.dataset.Axis()]
 
     def plot(self):
         """Perform the actual plotting on the given list of datasets.
@@ -526,6 +528,42 @@ class MultiPlotter(Plotter):
             raise PlotNotApplicableToDatasetError('Plot not applicable to one '
                                                   'or more datasets')
         super().plot()
+        self._set_axes_labels()
+
+    def _set_axes_labels(self):
+        """Set axes labels from axes.
+
+        This method is called automatically by :meth:`plot`.
+
+        There is two ways of setting axes labels: The user may provide the
+        information required in the "axes" key of the
+        :attr:`aspecd.plotting.Plotter.parameters` property containing a
+        list of :obj:`aspecd.dataset.Axis` objects. Alternatively,
+        if no such information is provided, the axes of each dataset are
+        checked for consistency, and if they are found to be identical,
+        this information is used.
+
+        If you ever need to change the handling of your axes labels,
+        override this method in a child class.
+        """
+        xquantities = [ds.data.axes[0].quantity for ds in self.datasets]
+        xunits = [ds.data.axes[0].unit for ds in self.datasets]
+        yquantities = [ds.data.axes[1].quantity for ds in self.datasets]
+        yunits = [ds.data.axes[1].unit for ds in self.datasets]
+        if all(xquantities) and all(xunits) and \
+                xquantities.count(xquantities[0]) == len(xquantities) \
+                and xunits.count(xunits[0]) == len(xunits):
+            xlabel = self._create_axis_label_string(self.datasets[0].data.axes[0])
+        else:
+            xlabel = self._create_axis_label_string(self.parameters['axes'][0])
+        if all(yquantities) and all(yunits) and \
+                yquantities.count(yquantities[0]) == len(yquantities) \
+                and yunits.count(yunits[0]) == len(yunits):
+            ylabel = self._create_axis_label_string(self.datasets[0].data.axes[1])
+        else:
+            ylabel = self._create_axis_label_string(self.parameters['axes'][1])
+        self.axes.set_xlabel(xlabel)
+        self.axes.set_ylabel(ylabel)
 
 
 class Saver:

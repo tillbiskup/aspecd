@@ -186,6 +186,50 @@ class TestMultiPlotter(unittest.TestCase):
         self.plotter.datasets.append(dataset.Dataset())
         self.plotter.plot()
 
+    def test_parameters_have_axes_key(self):
+        self.assertIn('axes', self.plotter.parameters)
+
+    def test_parameters_axes_is_list_of_axes_objects(self):
+        self.assertTrue(isinstance(self.plotter.parameters['axes'], list))
+        self.assertTrue(self.plotter.parameters['axes'])
+        for axis in self.plotter.parameters['axes']:
+            self.assertTrue(isinstance(axis, dataset.Axis))
+
+    def test_plot_with_axes_in_parameters_sets_axes_labels(self):
+        self.plotter.parameters['axes'][0].quantity = 'foo'
+        self.plotter.parameters['axes'][0].unit = 'bar'
+        self.plotter.parameters['axes'][1].quantity = 'foo'
+        self.plotter.parameters['axes'][1].unit = 'bar'
+        xlabel = '$' + self.plotter.parameters['axes'][0].quantity + \
+                 '$' + ' / ' + self.plotter.parameters['axes'][0].unit
+        ylabel = '$' + self.plotter.parameters['axes'][1].quantity + \
+                 '$' + ' / ' + self.plotter.parameters['axes'][1].unit
+        self.plotter.datasets.append(dataset.Dataset())
+        self.plotter.plot()
+        self.assertEqual(xlabel, self.plotter.axes.get_xlabel())
+        self.assertEqual(ylabel, self.plotter.axes.get_ylabel())
+
+    def test_plot_with_datasets_with_identical_axes_sets_axes_labels(self):
+        test_dataset0 = dataset.Dataset()
+        test_dataset0.data.axes[0].quantity = 'foo'
+        test_dataset0.data.axes[0].unit = 'bar'
+        test_dataset0.data.axes[1].quantity = 'foo'
+        test_dataset0.data.axes[1].unit = 'bar'
+        test_dataset1 = dataset.Dataset()
+        test_dataset1.data.axes[0].quantity = 'foo'
+        test_dataset1.data.axes[0].unit = 'bar'
+        test_dataset1.data.axes[1].quantity = 'foo'
+        test_dataset1.data.axes[1].unit = 'bar'
+        xlabel = '$' + test_dataset0.data.axes[0].quantity + '$' + ' / ' + \
+                 test_dataset0.data.axes[0].unit
+        ylabel = '$' + test_dataset0.data.axes[1].quantity + '$' + ' / ' + \
+                 test_dataset0.data.axes[1].unit
+        self.plotter.datasets.append(test_dataset0)
+        self.plotter.datasets.append(test_dataset1)
+        self.plotter.plot()
+        self.assertEqual(xlabel, self.plotter.axes.get_xlabel())
+        self.assertEqual(ylabel, self.plotter.axes.get_ylabel())
+
 
 class TestSaver(unittest.TestCase):
     def setUp(self):
