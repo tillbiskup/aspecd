@@ -334,3 +334,12 @@ class TestCopyValuesBetweenDicts(unittest.TestCase):
         target = {'kfoo': {'kbar': 'vbar'}}
         target = utils.copy_values_between_dicts(source, target)
         self.assertEqual(source['kbar'], target['kfoo']['kbar'])
+
+
+class TestAllEqual(unittest.TestCase):
+
+    def test_equal_elements_of_list_return_true(self):
+        self.assertTrue(utils.all_equal(['foo', 'foo']))
+
+    def test_different_elements_of_list_return_false(self):
+        self.assertFalse(utils.all_equal(['foo', 'bar']))

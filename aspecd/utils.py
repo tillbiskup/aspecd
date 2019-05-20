@@ -381,3 +381,20 @@ def copy_values_between_dicts(source=None, target=None):
         elif key in source:
             target[key] = source[key]
     return target
+
+
+def all_equal(list_=None):
+    """
+    Check whether all elements of a list are equal.
+
+    Parameters
+    ----------
+    list_ : :class:`list`
+        List whose elements should be checked for being equal
+
+    Returns
+    -------
+    result : :class:`boolean`
+
+    """
+    return list_.count(list_[0]) == len(list_)

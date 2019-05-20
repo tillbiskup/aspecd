@@ -15,7 +15,12 @@ respectively.
 Generally, two types of plotters can be distinguished:
 
 * Plotters for handling single datasets
+
+  Shall be derived from :class:`aspecd.plotting.SinglePlotter`.
+
 * Plotters for handling multiple datasets
+
+  Shall be derived from :class:`aspecd.plotting.MultiPlotter`.
 
 In the first case, the plot is usually handled using the :meth:`plot` method
 of the respective :obj:`aspecd.dataset.Dataset` object. Additionally,
@@ -513,6 +518,15 @@ class MultiPlotter(Plotter):
         plotting to the given list of datasets will be checked automatically.
         These checks should be implemented in the method :meth:`applicable`.
 
+        .. note::
+            There is two ways of setting axes labels: The user may provide the
+            information required in the "axes" key of the
+            :attr:`aspecd.plotting.Plotter.parameters` property containing a
+            list of :obj:`aspecd.dataset.Axis` objects. Alternatively,
+            if no such information is provided, the axes of each dataset are
+            checked for consistency, and if they are found to be identical,
+            this information is used.
+
         Raises
         ------
         aspecd.plotting.PlotNotApplicableToDatasetError
@@ -550,18 +564,26 @@ class MultiPlotter(Plotter):
         xunits = [ds.data.axes[0].unit for ds in self.datasets]
         yquantities = [ds.data.axes[1].quantity for ds in self.datasets]
         yunits = [ds.data.axes[1].unit for ds in self.datasets]
-        if all(xquantities) and all(xunits) and \
-                xquantities.count(xquantities[0]) == len(xquantities) \
-                and xunits.count(xunits[0]) == len(xunits):
-            xlabel = self._create_axis_label_string(self.datasets[0].data.axes[0])
+        if self.parameters['axes'][0].quantity:
+            xlabel = \
+                self._create_axis_label_string(self.parameters['axes'][0])
+        elif all(xquantities) and all(xunits) and \
+                aspecd.utils.all_equal(xquantities) and \
+                aspecd.utils.all_equal(xunits):
+            xlabel = \
+                self._create_axis_label_string(self.datasets[0].data.axes[0])
         else:
-            xlabel = self._create_axis_label_string(self.parameters['axes'][0])
-        if all(yquantities) and all(yunits) and \
-                yquantities.count(yquantities[0]) == len(yquantities) \
-                and yunits.count(yunits[0]) == len(yunits):
-            ylabel = self._create_axis_label_string(self.datasets[0].data.axes[1])
+            xlabel = ''
+        if self.parameters['axes'][1].quantity:
+            ylabel = \
+                self._create_axis_label_string(self.parameters['axes'][1])
+        elif all(yquantities) and all(yunits) and \
+                aspecd.utils.all_equal(yquantities) and \
+                aspecd.utils.all_equal(yunits):
+            ylabel = \
+                self._create_axis_label_string(self.datasets[0].data.axes[1])
         else:
-            ylabel = self._create_axis_label_string(self.parameters['axes'][1])
+            ylabel = ''
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel(ylabel)
 
