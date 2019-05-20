@@ -142,6 +142,18 @@ class TestReporter(unittest.TestCase):
         with self.assertRaises(report.MissingFilenameError):
             self.report.create()
 
+    def test_render_replaces_variable_from_context_dict(self):
+        template_content = '{{bar}}'
+        with open(self.template, 'w+') as f:
+            f.write(template_content)
+        self.report.template = self.template
+        self.report.filename = self.filename
+        self.report.context = {'bar': 'foo'}
+        self.report.create()
+        with open(self.filename) as f:
+            read_content = f.read()
+        self.assertEqual(self.report.context['bar'], read_content)
+
 
 class TestLaTeXEnvironment(unittest.TestCase):
     def setUp(self):
