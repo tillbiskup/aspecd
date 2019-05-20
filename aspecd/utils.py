@@ -201,7 +201,10 @@ def package_version(name=''):
     """
     version = None
     if name:
-        version = pkg_resources.get_distribution(name).version
+        try:
+            version = pkg_resources.get_distribution(name).version
+        except pkg_resources.DistributionNotFound:
+            pass
     return version
 
 
