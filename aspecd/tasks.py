@@ -909,6 +909,27 @@ class Task(aspecd.utils.ToDictMixin):
             Object of a class defined in the :attr:`type` attribute of a task
 
         """
+        properties = self._parse_properties()
+        for key in properties:
+            if hasattr(obj, key):
+                attr = getattr(obj, key)
+                if isinstance(attr, dict) and attr:
+                    prop = aspecd.utils.copy_keys_between_dicts(
+                        source=properties[key], target=attr)
+                    setattr(obj, key, prop)
+                else:
+                    setattr(obj, key, properties[key])
+
+    def _parse_properties(self):
+        """
+        Replace labels for datasets, results, and figures in properties
+
+        Returns
+        -------
+        properties : :class:`dict`
+            properties with labels replaced by actual object references
+
+        """
         if self.recipe:
             properties = aspecd.utils.replace_value_in_dict(
                 self.recipe.datasets, self.properties)
@@ -920,15 +941,7 @@ class Task(aspecd.utils.ToDictMixin):
                     self.recipe.figures, self.properties)
         else:
             properties = self.properties
-        for key in properties:
-            if hasattr(obj, key):
-                attr = getattr(obj, key)
-                if isinstance(attr, dict) and attr:
-                    prop = aspecd.utils.copy_keys_between_dicts(
-                        source=properties[key], target=attr)
-                    setattr(obj, key, prop)
-                else:
-                    setattr(obj, key, properties[key])
+        return properties
 
 
 class ProcessingTask(Task):
@@ -1394,11 +1407,11 @@ class ReportTask(Task):
     def _add_figure_filenames_to_includes(self):
         if 'includes' in self.properties:
             self.properties['includes'].append(
-                self._get_filenames_from_figures())
+                self._get_filenames_of_figures())
         else:
-            self.properties['includes'] = self._get_filenames_from_figures()
+            self.properties['includes'] = self._get_filenames_of_figures()
 
-    def _get_filenames_from_figures(self):
+    def _get_filenames_of_figures(self):
         filenames = []
         for figure in self.recipe.figures:
             filenames.append(self.recipe.figures[figure].filename)
