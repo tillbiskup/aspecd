@@ -371,7 +371,7 @@ def copy_values_between_dicts(source=None, target=None):
 
     Returns
     -------
-    target  : :class:`dict`
+    target : :class:`dict`
         Dictionary the values have been copied to in case of matching keys
 
     """
@@ -384,6 +384,26 @@ def copy_values_between_dicts(source=None, target=None):
 
 
 def copy_keys_between_dicts(source=None, target=None):
+    """
+    Copy keys between two dicts.
+
+    Each key in ``source`` is copied to ``target`` in a recursive manner.
+    If the key in ``source`` is a dict and exists in ``target``, the two
+    dicts will be joined, not loosing keys in ``target``.
+
+    Parameters
+    ----------
+    source : :class:`dict`
+        Dictionary the keys should be copied from
+    target : :class:`dict`
+        Dictionary the keys should be copied to
+
+    Returns
+    -------
+    target : :class:`dict`
+        Dictionary the keys have been copied to
+
+    """
     for key in source:
         if key in target and isinstance(target[key], dict):
             target[key] = copy_keys_between_dicts(source[key], target[key])
