@@ -359,7 +359,7 @@ def copy_values_between_dicts(source=None, target=None):
     Copy values between two dicts in case of identical keys.
 
     Each value in ``source`` is copied to ``target`` in case of matching
-    keys in a recursive manner. Non-matching keys in ```source`` are
+    keys in a recursive manner. Non-matching keys in ``source`` are
     silently ignored.
 
     Parameters
