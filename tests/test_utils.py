@@ -336,6 +336,37 @@ class TestCopyValuesBetweenDicts(unittest.TestCase):
         self.assertEqual(source['kbar'], target['kfoo']['kbar'])
 
 
+class TestCopyKeysBetweenDicts(unittest.TestCase):
+
+    def test_copy_keys_returns_dict(self):
+        target_dict = utils.copy_keys_between_dicts(dict(), dict())
+        self.assertTrue(isinstance(target_dict, dict))
+
+    def test_copy_keys_copies_existing_key(self):
+        source = {'kfoo': 'vbar'}
+        target = {'kfoo': 'vfoo', 'kbar': 'vbar'}
+        target = utils.copy_keys_between_dicts(source, target)
+        self.assertEqual(source['kfoo'], target['kfoo'])
+
+    def test_copy_keys_copies_existing_key_in_cascaded_dicts(self):
+        source = {'kfoo': {'kbar': 'vfoo'}}
+        target = {'kfoo': {'kbar': 'vbar'}}
+        target = utils.copy_keys_between_dicts(source, target)
+        self.assertEqual(source['kfoo']['kbar'], target['kfoo']['kbar'])
+
+    def test_copy_keys_preserves_existing_keys_in_target_dicts(self):
+        source = {'kfoo': {'kbar': 'vfoo'}}
+        target = {'kfoo': {'kbar': 'vbar', 'kfoobar': 'vfoobar'}}
+        target = utils.copy_keys_between_dicts(source, target)
+        self.assertIn('kfoobar', target['kfoo'])
+
+    def test_copy_keys_of_cascaded_dict_with_nonexisting_target_key(self):
+        source = {'kfoo': {'kbar': 'vfoo'}}
+        target = {'kbar': {'kbar': 'vbar', 'kfoobar': 'vfoobar'}}
+        target = utils.copy_keys_between_dicts(source, target)
+        self.assertIn('kfoo', target)
+
+
 class TestAllEqual(unittest.TestCase):
 
     def test_equal_elements_of_list_return_true(self):

@@ -924,8 +924,8 @@ class Task(aspecd.utils.ToDictMixin):
             if hasattr(obj, key):
                 attr = getattr(obj, key)
                 if isinstance(attr, dict) and attr:
-                    prop = aspecd.utils.copy_values_between_dicts(
-                        properties[key], attr)
+                    prop = aspecd.utils.copy_keys_between_dicts(
+                        source=properties[key], target=attr)
                     setattr(obj, key, prop)
                 else:
                     setattr(obj, key, properties[key])
