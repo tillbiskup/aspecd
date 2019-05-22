@@ -156,6 +156,19 @@ class TestInfofileParserParse(unittest.TestCase):
         self.assertEqual(self.ifile.parameters['COMMENT'],
                          ['And here some comment without colon in line\n'])
 
+    def test_parse_file_with_empty_comment_block(self):
+        file_content = [
+            'test Info File - v. 0.1.0 (0000-00-00)\n'
+            '\n'
+            'GENERAL\n'
+            'bla: blub\n'
+            '\n'
+            'COMMENT'
+        ]
+        self.write_list_to_file(file_content, self.ifile.filename)
+        self.ifile.parse()
+        self.assertTrue('COMMENT' in self.ifile.parameters)
+
     def test_parameters_preserve_order_of_blocks_in_file(self):
         file_content = [
             'test Info File - v. 0.1.0 (0000-00-00)\n'

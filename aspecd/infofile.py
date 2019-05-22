@@ -162,8 +162,12 @@ class Infofile:
             tmp_block[key] = value
         # In case last block has not been assigned
         # (file didn't end with COMMENT block or empty line)
-        if blockname and not self._is_comment_block(blockname):
-            self.parameters[blockname] = tmp_block
+        if blockname:
+            if not self._is_comment_block(blockname):
+                self.parameters[blockname] = tmp_block
+            if self._is_comment_block(blockname) and \
+                    self._is_comment_block(line):
+                self.parameters[blockname] = ''
 
     def _is_infofile(self):
         return 'info file' in self._file_contents[0].lower()
