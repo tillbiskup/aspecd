@@ -953,32 +953,118 @@ class AxisProperties(aspecd.utils.Properties):
     """
     Properties of an axis of a plot.
 
+    Basically, the attributes are a subset of what :mod:`matplotlib` defines
+    for :obj:`matplotlib.axes.Axes` objects.
+
     .. todo::
         Need to define axis properties. How to deal with at least two axes
         per figure, i.e. x and y axis, whereas matplotlib will most
         probably handle the overall axes as one object?
 
         How about multiple separate axes within a figure window?
+
+    Attributes
+    ----------
+    aspect: {'auto', 'equal'} or num
+        aspect of the axis scaling, i.e. the ratio of y-unit to x-unit
+
+    facecolor: color
+        facecolor of the Axes
+
+    xlabel: :class:`str`
+        label for the x-axis
+
+    xlim: :class:`list`
+        x-axis view limits, two floats
+
+    xscale: :class:`str`
+        x-axis scale
+
+        possible values: "linear", "log", "symlog", "logit"
+
+    xticklabels: :class:`list`
+        x-tick labels: list of string labels
+
+    xticks:
+        y ticks with list of ticks
+
+    ylabel: :class:`str`
+        label for the y-axis
+
+    ylim: :class:`list`
+        y-axis view limits, two floats
+
+    yscale: :class:`str`
+        y-axis scale
+
+        possible values: "linear", "log", "symlog", "logit"
+
+    yticklabels: :class:`list`
+        y-tick labels: list of string labels
+
+    yticks:
+        y ticks with list of ticks
+
     """
 
     def __init__(self):
         super().__init__()
+        self.aspect = 'auto'
+        self.facecolor = None
+        self.xlabel = ''
+        self.xlim = []
+        self.xscale = 'linear'
+        self.xticklabels = None
+        self.xticks = None
+        self.ylabel = ''
+        self.ylim = []
+        self.yscale = 'linear'
+        self.yticklabels = None
+        self.yticks = None
 
 
 class LineProperties(aspecd.utils.Properties):
     """
     Properties of a line within a plot.
 
-    .. todo::
-        Need to define (more) line properties.
+    Basically, the attributes are a subset of what :mod:`matplotlib` defines
+    for :obj:`matplotlib.lines.Line2D` objects.
 
     Attributes
     ----------
+    color: color
+        color of the line
+
+        For details see :mod:`matplotlib.colors`
+
+    drawstyle: :class:`str`
+        drawing style of the line, default: 'default'
+
+        For details see :meth:`matplotlib.lines.Line2D.set_drawstyle`
+
     label: :class:`str`
-        Label of a line that gets used within a legend
+        label of a line that gets used within a legend, default: ''
+
+    linestyle: :class:`str`
+        style of the line, default: 'solid'
+
+        For details see :meth:`matplotlib.lines.Line2D.set_linestyle`
+
+    linewidth: :class:`float`
+        width of the line, float value in points, default: 1.5
+
+    marker: :class:`str`
+        marker used for the line, default: ''
+
+        For details see :mod:`matplotlib.markers`
 
     """
 
     def __init__(self):
         super().__init__()
+        self.color = None
+        self.drawstyle = 'default'
         self.label = ''
+        self.linestyle = 'solid'
+        self.linewidth = 1.5
+        self.marker = ''

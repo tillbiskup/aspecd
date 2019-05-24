@@ -425,8 +425,10 @@ class TestLineProperties(unittest.TestCase):
         self.assertTrue(hasattr(self.line_properties, 'from_dict'))
         self.assertTrue(callable(self.line_properties.from_dict))
 
-    def test_has_label_property(self):
-        self.assertTrue(hasattr(self.line_properties, 'label'))
+    def test_has_properties(self):
+        for prop in ['color', 'drawstyle', 'label', 'linestyle', 'linewidth',
+                     'marker']:
+            self.assertTrue(hasattr(self.line_properties, prop))
 
 
 class TestPlotProperties(unittest.TestCase):
@@ -484,6 +486,12 @@ class TestAxisProperties(unittest.TestCase):
     def test_has_from_dict_method(self):
         self.assertTrue(hasattr(self.axis_properties, 'from_dict'))
         self.assertTrue(callable(self.axis_properties.from_dict))
+
+    def test_has_properties(self):
+        for prop in ['aspect', 'facecolor', 'xlabel', 'xlim', 'xscale',
+                     'xticklabels', 'xticks', 'ylabel', 'ylim', 'yscale',
+                     'yticklabels', 'yticks']:
+            self.assertTrue(hasattr(self.axis_properties, prop))
 
 
 class TestSinglePlotProperties(unittest.TestCase):
