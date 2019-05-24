@@ -933,20 +933,25 @@ class FigureProperties(aspecd.utils.Properties):
     """
     Properties of a figure of a plot, i.e., the most general aspects.
 
-    .. todo::
-        Need to define figure properties.
+    Basically, the attributes are a subset of what :mod:`matplotlib` defines
+    for :obj:`matplotlib.figure.Figure` objects.
 
     Attributes
     ----------
-    title: :class:`str`
-        Title of the figure.
+    size: :class:`tuple`
+        Figure dimension (width, height) in inches.
 
-        If it is an empty string, no title will be shown.
+        2-tuple of floats
+
+    dpi: :class:`float`
+        Dots per inch.
+
     """
 
     def __init__(self):
         super().__init__()
-        self.title = ''
+        self.size = (6.4, 4.8)
+        self.dpi = 100.0
 
 
 class AxisProperties(aspecd.utils.Properties):

@@ -468,8 +468,9 @@ class TestFigureProperties(unittest.TestCase):
         self.assertTrue(hasattr(self.figure_properties, 'from_dict'))
         self.assertTrue(callable(self.figure_properties.from_dict))
 
-    def test_has_title_property(self):
-        self.assertTrue(hasattr(self.figure_properties, 'title'))
+    def test_has_properties(self):
+        for prop in ['size', 'dpi']:
+            self.assertTrue(hasattr(self.figure_properties, prop))
 
 
 class TestAxisProperties(unittest.TestCase):
