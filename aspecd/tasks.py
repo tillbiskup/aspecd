@@ -181,7 +181,7 @@ class MissingRecipeError(Error):
 
 
 class MissingDictError(Error):
-    """Exception raised when expecting a filename but none is provided
+    """Exception raised when expecting a dict but none is provided
 
     Attributes
     ----------

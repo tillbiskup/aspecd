@@ -36,6 +36,21 @@ class MissingFilenameError(Error):
         self.message = message
 
 
+class MissingDictError(Error):
+    """Exception raised when expecting a dict but none is provided
+
+    Attributes
+    ----------
+    message : :class:`str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
 def full_class_name(object_):
     """
     Return full class name of an object including packages and modules.
@@ -427,3 +442,41 @@ def all_equal(list_=None):
 
     """
     return list_.count(list_[0]) == len(list_)
+
+
+class Properties(ToDictMixin):
+    """
+    General properties class allowing to set properties from dict.
+
+    Properties classes often need to set their properties from dicts,
+    and additionally, they should be able to convert themselves into dicts
+    for persistence.
+    """
+
+    def from_dict(self, dict_=None):
+        """
+        Set attributes from dictionary.
+
+        Parameters
+        ----------
+        dict_ : :class:`dict`
+            Dictionary containing information of a task.
+
+        Raises
+        ------
+        aspecd.plotting.MissingDictError
+            Raised if no dict is provided.
+
+        """
+        if not dict_:
+            raise MissingDictError
+        for key in dict_:
+            if hasattr(self, key):
+                if isinstance(getattr(self, key), list):
+                    if isinstance(dict_[key], list):
+                        for element in dict_[key]:
+                            getattr(self, key).append(element)
+                    else:
+                        getattr(self, key).append(dict_[key])
+                else:
+                    setattr(self, key, dict_[key])

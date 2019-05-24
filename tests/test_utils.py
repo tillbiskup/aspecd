@@ -9,7 +9,7 @@ import unittest
 import oyaml as yaml
 
 import aspecd.utils
-from aspecd import utils, dataset
+from aspecd import utils, dataset, plotting
 
 
 class TestFullClassName(unittest.TestCase):
@@ -374,3 +374,57 @@ class TestAllEqual(unittest.TestCase):
 
     def test_different_elements_of_list_return_false(self):
         self.assertFalse(utils.all_equal(['foo', 'bar']))
+
+
+class TestProperties(unittest.TestCase):
+    def setUp(self):
+        self.properties = aspecd.utils.Properties()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.properties, 'to_dict'))
+        self.assertTrue(callable(self.properties.to_dict))
+
+    def test_has_from_dict_method(self):
+        self.assertTrue(hasattr(self.properties, 'from_dict'))
+        self.assertTrue(callable(self.properties.from_dict))
+
+    def test_from_dict_without_dict_raises(self):
+        with self.assertRaises(aspecd.utils.MissingDictError):
+            self.properties.from_dict()
+
+    def test_from_dict_sets_attribute(self):
+        attribute = 'foo'
+        dict_ = dict()
+        dict_[attribute] = 'foo'
+        setattr(self.properties, attribute, None)
+        self.properties.from_dict(dict_)
+        self.assertEqual(dict_[attribute],
+                         getattr(self.properties, attribute))
+
+    def test_from_dict_with_list_attribute_appends_to_list(self):
+        attribute = 'foo'
+        dict_ = dict()
+        dict_[attribute] = 'foo'
+        setattr(self.properties, attribute, ['bar'])
+        self.properties.from_dict(dict_)
+        self.assertEqual(['bar', dict_[attribute]],
+                         getattr(self.properties, attribute))
+
+    def test_from_dict_with_list_attribute_appends_each_element(self):
+        attribute = 'foo'
+        dict_ = dict()
+        dict_[attribute] = ['foo', 'bar']
+        setattr(self.properties, attribute, ['bar'])
+        self.properties.from_dict(dict_)
+        self.assertEqual(['bar', 'foo', 'bar'],
+                         getattr(self.properties, attribute))
+
+    def test_from_dict_does_not_set_unknown_attribute(self):
+        attribute = 'foo'
+        dict_ = dict()
+        dict_[attribute] = 'foo'
+        self.properties.from_dict(dict_)
+        self.assertFalse(hasattr(self.properties, attribute))
