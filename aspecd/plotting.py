@@ -171,6 +171,8 @@ class Plotter:
         Defaults always to the full class name, don't change!
     parameters : :class:`dict`
         All parameters necessary for the plot, implicit and explicit
+    properties : :class:`aspecd.plotting.PlotProperties`
+        Properties of the plot, defining its appearance
     description : :class:`str`
         Short description, to be set in class definition
     figure : :class:`matplotlib.figure.Figure`
@@ -181,19 +183,8 @@ class Plotter:
         Name of file to save the plot to
 
         Actual saving is done using an :obj:`aspecd.plotting.Saver` object.
-    caption : :class:`dict`
-        User-supplied information for the figure caption.
-
-        Has three fields: "title", "text", and "parameters".
-
-        "title" is usually one sentence describing the intent of the figure
-        and often plotted bold-face in a figure caption.
-
-        "text" is additional text directly following the title,
-        containing more information about the plot.
-
-        "parameters" is a list of parameter names that should be included in
-        the figure caption, usually at the very end.
+    caption : :class:`aspecd.plotting.Caption`
+        User-supplied information for the figure line_properties.
 
     Raises
     ------
@@ -206,15 +197,12 @@ class Plotter:
         # Name defaults always to the full class name, don't change!
         self.name = aspecd.utils.full_class_name(self)
         self.parameters = dict()
+        self.properties = PlotProperties()
         self.description = 'Abstract plotting step'
         self.figure = None
         self.axes = None
         self.filename = ''
-        self.caption = {
-            'title': '',
-            'text': '',
-            'parameters': []
-        }
+        self.caption = Caption()
 
     @property
     def fig(self):
@@ -352,6 +340,8 @@ class SinglePlotter(Plotter):
 
     Attributes
     ----------
+    properties : :class:`aspecd.plotting.SinglePlotProperties`
+        Properties of the plot, defining its appearance
     dataset : :class:`aspecd.dataset.Dataset`
         Dataset the plotting should be done for
 
@@ -366,6 +356,7 @@ class SinglePlotter(Plotter):
 
     def __init__(self):
         super().__init__()
+        self.properties = SinglePlotProperties()
         self.dataset = None
         self.description = 'Abstract plotting step for single dataset'
 
@@ -488,6 +479,8 @@ class MultiPlotter(Plotter):
 
     Attributes
     ----------
+    properties : :class:`aspecd.plotting.MultiPlotProperties`
+        Properties of the plot, defining its appearance
     datasets : :class:`list`
         List of dataset the plotting should be done for
 
@@ -502,6 +495,7 @@ class MultiPlotter(Plotter):
 
     def __init__(self):
         super().__init__()
+        self.properties = MultiPlotProperties()
         self.datasets = []
         self.description = 'Abstract plotting step for multiple dataset'
         self.parameters['axes'] = [aspecd.dataset.Axis(),
@@ -843,3 +837,148 @@ class PlotHistoryRecord(aspecd.dataset.HistoryRecord):
     def __init__(self, package=''):
         super().__init__(package=package)
         self.plot = aspecd.plotting.SinglePlotRecord()
+
+
+class Caption(aspecd.utils.Properties):
+    """
+    Caption for figures.
+
+    Attributes
+    ----------
+    title: :class:`str`
+        usually one sentence describing the intent of the figure
+
+        Often plotted bold-face in a figure caption.
+
+    text: :class:`str`
+        additional text directly following the title
+
+        Contains more information about the plot. Ideally, a figure caption
+        is self-contained such that it explains the figure sufficiently to
+        understand its intent and content without needing to read all the
+        surrounding text.
+
+    parameters: :class:`list`
+        names of parameters that should be included in the figure caption
+
+        Usually, these parameters get included at the very end of a figure
+        line_properties.
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.title = ''
+        self.text = ''
+        self.parameters = []
+
+
+class PlotProperties(aspecd.utils.Properties):
+    """
+    Properties of a plot, defining its appearance.
+
+    Attributes
+    ----------
+    figure : :class:`aspecd.plotting.FigureProperties`
+        Properties of the figure as such
+
+    axes : :class:`list`
+        Properties of the axes.
+
+        List of :obj:`aspecd.plotting.AxisProperties` objects.
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.figure = FigureProperties()
+        self.axes = []
+
+
+class SinglePlotProperties(PlotProperties):
+    """
+    Properties of a single plot, defining its appearance.
+
+    Attributes
+    ----------
+    line : :class:`aspecd.plotting.LineProperties`
+        Properties of the line within a plot
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.line = LineProperties()
+
+
+class MultiPlotProperties(PlotProperties):
+    """
+    Properties of a multiplot, defining its appearance.
+
+    Attributes
+    ----------
+    lines : :class:`list`
+        Properties of the lines within a plot.
+
+        Each element is a :obj:`aspecd.plotting.LineProperties` object
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.lines = []
+
+
+class FigureProperties(aspecd.utils.Properties):
+    """
+    Properties of a figure of a plot, i.e., the most general aspects.
+
+    .. todo::
+        Need to define figure properties.
+
+    Attributes
+    ----------
+    title: :class:`str`
+        Title of the figure.
+
+        If it is an empty string, no title will be shown.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.title = ''
+
+
+class AxisProperties(aspecd.utils.Properties):
+    """
+    Properties of an axis of a plot.
+
+    .. todo::
+        Need to define axis properties. How to deal with at least two axes
+        per figure, i.e. x and y axis, whereas matplotlib will most
+        probably handle the overall axes as one object?
+
+        How about multiple separate axes within a figure window?
+    """
+
+    def __init__(self):
+        super().__init__()
+
+
+class LineProperties(aspecd.utils.Properties):
+    """
+    Properties of a line within a plot.
+
+    .. todo::
+        Need to define (more) line properties.
+
+    Attributes
+    ----------
+    label: :class:`str`
+        Label of a line that gets used within a legend
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.label = ''

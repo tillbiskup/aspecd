@@ -35,6 +35,9 @@ class TestPlotter(unittest.TestCase):
     def test_parameters_property_is_dict(self):
         self.assertTrue(isinstance(self.plotter.parameters, dict))
 
+    def test_has_properties_property(self):
+        self.assertTrue(hasattr(self.plotter, 'properties'))
+
     def test_has_description_property(self):
         self.assertTrue(hasattr(self.plotter, 'description'))
 
@@ -64,11 +67,6 @@ class TestPlotter(unittest.TestCase):
 
     def test_has_caption_property(self):
         self.assertTrue(hasattr(self.plotter, 'caption'))
-
-    def test_caption_dict_has_fields_title_text_parameters(self):
-        fieldnames = ['title', 'text', 'parameters']
-        for fieldname in fieldnames:
-            self.assertTrue(fieldname in self.plotter.caption.keys())
 
     def test_has_save_method(self):
         self.assertTrue(hasattr(self.plotter, 'save'))
@@ -385,3 +383,154 @@ class TestMultiPlotRecord(unittest.TestCase):
 
     def test_has_datasets_property(self):
         self.assertTrue(hasattr(self.plot_record, 'datasets'))
+
+
+class TestCaption(unittest.TestCase):
+    def setUp(self):
+        self.caption = plotting.Caption()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.caption, 'to_dict'))
+        self.assertTrue(callable(self.caption.to_dict))
+
+    def test_has_from_dict_method(self):
+        self.assertTrue(hasattr(self.caption, 'from_dict'))
+        self.assertTrue(callable(self.caption.from_dict))
+
+    def test_has_title_property(self):
+        self.assertTrue(hasattr(self.caption, 'title'))
+
+    def test_has_text_property(self):
+        self.assertTrue(hasattr(self.caption, 'text'))
+
+    def test_has_parameters_property(self):
+        self.assertTrue(hasattr(self.caption, 'parameters'))
+
+
+class TestLineProperties(unittest.TestCase):
+    def setUp(self):
+        self.line_properties = plotting.LineProperties()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.line_properties, 'to_dict'))
+        self.assertTrue(callable(self.line_properties.to_dict))
+
+    def test_has_from_dict_method(self):
+        self.assertTrue(hasattr(self.line_properties, 'from_dict'))
+        self.assertTrue(callable(self.line_properties.from_dict))
+
+    def test_has_label_property(self):
+        self.assertTrue(hasattr(self.line_properties, 'label'))
+
+
+class TestPlotProperties(unittest.TestCase):
+    def setUp(self):
+        self.plot_properties = plotting.PlotProperties()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.plot_properties, 'to_dict'))
+        self.assertTrue(callable(self.plot_properties.to_dict))
+
+    def test_has_from_dict_method(self):
+        self.assertTrue(hasattr(self.plot_properties, 'from_dict'))
+        self.assertTrue(callable(self.plot_properties.from_dict))
+
+    def test_has_figure_property(self):
+        self.assertTrue(hasattr(self.plot_properties, 'figure'))
+
+    def test_has_axes_property(self):
+        self.assertTrue(hasattr(self.plot_properties, 'axes'))
+
+
+class TestFigureProperties(unittest.TestCase):
+    def setUp(self):
+        self.figure_properties = plotting.FigureProperties()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.figure_properties, 'to_dict'))
+        self.assertTrue(callable(self.figure_properties.to_dict))
+
+    def test_has_from_dict_method(self):
+        self.assertTrue(hasattr(self.figure_properties, 'from_dict'))
+        self.assertTrue(callable(self.figure_properties.from_dict))
+
+    def test_has_title_property(self):
+        self.assertTrue(hasattr(self.figure_properties, 'title'))
+
+
+class TestAxisProperties(unittest.TestCase):
+    def setUp(self):
+        self.axis_properties = plotting.AxisProperties()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.axis_properties, 'to_dict'))
+        self.assertTrue(callable(self.axis_properties.to_dict))
+
+    def test_has_from_dict_method(self):
+        self.assertTrue(hasattr(self.axis_properties, 'from_dict'))
+        self.assertTrue(callable(self.axis_properties.from_dict))
+
+
+class TestSinglePlotProperties(unittest.TestCase):
+    def setUp(self):
+        self.plot_properties = plotting.SinglePlotProperties()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.plot_properties, 'to_dict'))
+        self.assertTrue(callable(self.plot_properties.to_dict))
+
+    def test_has_from_dict_method(self):
+        self.assertTrue(hasattr(self.plot_properties, 'from_dict'))
+        self.assertTrue(callable(self.plot_properties.from_dict))
+
+    def test_has_figure_property(self):
+        self.assertTrue(hasattr(self.plot_properties, 'figure'))
+
+    def test_has_axes_property(self):
+        self.assertTrue(hasattr(self.plot_properties, 'axes'))
+
+    def test_has_line_property(self):
+        self.assertTrue(hasattr(self.plot_properties, 'line'))
+
+
+class TestMultiPlotProperties(unittest.TestCase):
+    def setUp(self):
+        self.plot_properties = plotting.MultiPlotProperties()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.plot_properties, 'to_dict'))
+        self.assertTrue(callable(self.plot_properties.to_dict))
+
+    def test_has_from_dict_method(self):
+        self.assertTrue(hasattr(self.plot_properties, 'from_dict'))
+        self.assertTrue(callable(self.plot_properties.from_dict))
+
+    def test_has_figure_property(self):
+        self.assertTrue(hasattr(self.plot_properties, 'figure'))
+
+    def test_has_axes_property(self):
+        self.assertTrue(hasattr(self.plot_properties, 'axes'))
+
+    def test_has_lines_property(self):
+        self.assertTrue(hasattr(self.plot_properties, 'lines'))
