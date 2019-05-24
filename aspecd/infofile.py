@@ -165,6 +165,8 @@ class Infofile:
         if blockname:
             if not self._is_comment_block(blockname):
                 self.parameters[blockname] = tmp_block
+            # noinspection PyUnboundLocalVariable
+            # pylint: disable=undefined-loop-variable
             if self._is_comment_block(blockname) and \
                     self._is_comment_block(line):
                 self.parameters[blockname] = ''
