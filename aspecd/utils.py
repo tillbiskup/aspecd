@@ -480,3 +480,19 @@ class Properties(ToDictMixin):
                         getattr(self, key).append(dict_[key])
                 else:
                     setattr(self, key, dict_[key])
+
+    def get_properties(self):
+        """
+        Return (public) properties, i.e. attributes that are *not* methods.
+
+        Returns
+        -------
+        properties: :class:`list`
+            public properties
+
+        """
+        props = []
+        for prop in list(self.__dict__['__odict__'].keys()):
+            if not str(prop).startswith('_'):
+                props.append(prop)
+        return props

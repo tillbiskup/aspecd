@@ -428,3 +428,22 @@ class TestProperties(unittest.TestCase):
         dict_[attribute] = 'foo'
         self.properties.from_dict(dict_)
         self.assertFalse(hasattr(self.properties, attribute))
+
+    def test_has_get_properties_method(self):
+        self.assertTrue(hasattr(self.properties, 'get_properties'))
+        self.assertTrue(callable(self.properties.get_properties))
+
+    def test_get_properties_without_properties_returns_empty_list(self):
+        self.assertEqual([], self.properties.get_properties())
+
+    def test_get_properties_returns_list_of_properties(self):
+        props = ['foo', 'bar']
+        for prop in props:
+            setattr(self.properties, prop, None)
+        self.assertEqual(props, self.properties.get_properties())
+
+    def test_get_properties_does_not_return_nonpublic_properties(self):
+        props = ['_foo', 'bar']
+        for prop in props:
+            setattr(self.properties, prop, None)
+        self.assertEqual(['bar'], self.properties.get_properties())
