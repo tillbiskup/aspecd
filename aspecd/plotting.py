@@ -149,6 +149,51 @@ class MissingPlotterError(Error):
         self.message = message
 
 
+class MissingFigureError(Error):
+    """Exception raised when no figure is provided.
+
+    Attributes
+    ----------
+    message : :class:`str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
+class MissingAxisError(Error):
+    """Exception raised when no axis is provided.
+
+    Attributes
+    ----------
+    message : :class:`str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
+class MissingLineError(Error):
+    """Exception raised when no line is provided.
+
+    Attributes
+    ----------
+    message : :class:`str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
 class Plotter:
     """Base class for plots.
 
@@ -223,6 +268,7 @@ class Plotter:
         """
         self._create_figure_and_axes()
         self._create_plot()
+        self.properties.apply(plotter=self)
 
     # noinspection PyUnusedLocal
     @staticmethod
@@ -342,13 +388,18 @@ class SinglePlotter(Plotter):
     ----------
     properties : :class:`aspecd.plotting.SinglePlotProperties`
         Properties of the plot, defining its appearance
+
     dataset : :class:`aspecd.dataset.Dataset`
         Dataset the plotting should be done for
+
+    drawing : :class:`matplotlib.artist.Artist`
+        Actual graphical representation of the data
 
     Raises
     ------
     aspecd.plotting.MissingDatasetError
         Raised when no dataset exists to act on
+
     aspecd.plotting.PlotNotApplicableToDatasetError
         Raised when processing step is not applicable to dataset
 
@@ -358,6 +409,7 @@ class SinglePlotter(Plotter):
         super().__init__()
         self.properties = SinglePlotProperties()
         self.dataset = None
+        self.drawing = None
         self.description = 'Abstract plotting step for single dataset'
 
     # pylint: disable=arguments-differ
@@ -458,6 +510,97 @@ class SinglePlotter(Plotter):
         ylabel = self._create_axis_label_string(self.dataset.data.axes[1])
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel(ylabel)
+
+
+class SinglePlotter1D(SinglePlotter):
+    """1D plots of single datasets.
+
+    Convenience class taking care of 1D plots of single datasets. The type
+    of plot can be set in its :attr:`aspecd.plotting.SinglePlotter1D.type`
+    attribute.
+
+    Quite a number of properties for figure, axes, and line can be set
+    using the :attr:`aspecd.plotting.SinglePlotter.properties` attribute.
+    For details, see the documentation of its respective class,
+    :class:`aspecd.plotting.SinglePlotProperties`.
+
+    To perform the plot, call the :meth:`plot` method of the dataset the plot
+    should be performed for, and provide a reference to the actual plotter
+    object to it.
+
+    Raises
+    ------
+    TypeError
+        Raised when wrong plot type is set
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = '1D Plotting step for single dataset'
+        self._type = 'plot'
+        self._allowed_types = ['plot', 'scatter', 'step', 'loglog',
+                               'semilogx', 'semilogy', 'stemplot']
+
+    @property
+    def type(self):
+        """
+        Get or set the plot type.
+
+        Types need to be methods of the :class:`matplotlib.axes.Axes` class.
+
+        Allowed plot types are stored in the
+        :attr:`aspecd.plotting.SinglePlotter1D.allowed_types` attribute.
+
+        Default: 'plot'
+
+        Raises
+        ------
+        aspecd.plotting.TypeError
+            Raised in case of wrong type
+
+        """
+        return self._type
+
+    @property
+    def allowed_types(self):
+        """
+        Return the allowed plot types.
+
+        Returns
+        -------
+        allowed_types: :class:`list`
+            List of strings
+
+        """
+        return self._allowed_types
+
+    @type.setter
+    def type(self, plot_type=None):
+        if plot_type not in self.allowed_types:
+            raise TypeError
+        self._type = plot_type
+
+    def _create_plot(self):
+        plot_function = getattr(self.axes, self.type)
+        self.drawing, = plot_function(self.dataset.data.axes[0].values,
+                                      self.dataset.data.data)
+
+    @staticmethod
+    def applicable(dataset):
+        """Check whether plot is applicable to the given dataset.
+
+        Checks for the dimension of the data of the dataset, i.e. the
+        :attr:`aspecd.dataset.Data.data` attribute. Returns `True` if data
+        are one-dimensional, and `False` otherwise.
+
+        Returns
+        -------
+        applicable : :class:`bool`
+            `True` if successful, `False` otherwise.
+
+        """
+        return dataset.data.data.ndim == 1
 
 
 class MultiPlotter(Plotter):
@@ -882,17 +1025,40 @@ class PlotProperties(aspecd.utils.Properties):
     figure : :class:`aspecd.plotting.FigureProperties`
         Properties of the figure as such
 
-    axes : :class:`list`
-        Properties of the axes.
-
-        List of :obj:`aspecd.plotting.AxisProperties` objects.
+    Raises
+    ------
+    aspecd.plotting.MissingPlotterError
+        Raised if no plotter is provided.
 
     """
 
     def __init__(self):
         super().__init__()
         self.figure = FigureProperties()
-        self.axes = []
+
+    def apply(self, plotter=None):
+        """
+        Apply properties to plot.
+
+        In this generic class having only figure properties, only these
+        properties are set. Classes derived from
+        :class:`aspecd.plotting.PlotProperties` need to take care of
+        setting all available properties.
+
+        Parameters
+        ----------
+        plotter: :class:`aspecd.plotting.Plotter`
+            Plotter the properties should be applied to.
+
+        Raises
+        ------
+        aspecd.plotting.MissingPlotterError
+            Raised if no plotter is provided.
+
+        """
+        if not plotter:
+            raise MissingPlotterError
+        self.figure.apply(figure=plotter.figure)
 
 
 class SinglePlotProperties(PlotProperties):
@@ -901,14 +1067,43 @@ class SinglePlotProperties(PlotProperties):
 
     Attributes
     ----------
+    axes : :class:`aspecd.plotting.AxisProperties`
+        Properties of the axes.
+
     line : :class:`aspecd.plotting.LineProperties`
         Properties of the line within a plot
+
+    Raises
+    ------
+    aspecd.plotting.MissingPlotterError
+        Raised if no plotter is provided.
 
     """
 
     def __init__(self):
         super().__init__()
+        self.axes = AxisProperties()
         self.line = LineProperties()
+
+    def apply(self, plotter=None):
+        """
+        Apply properties to plot.
+
+        Parameters
+        ----------
+        plotter: :class:`aspecd.plotting.SinglePlotter`
+            Plotter the properties should be applied to.
+
+        Raises
+        ------
+        aspecd.plotting.MissingPlotterError
+            Raised if no plotter is provided.
+
+        """
+        super().apply(plotter=plotter)
+        self.axes.apply(axis=plotter.axes)
+        if plotter.drawing:
+            self.line.apply(line=plotter.drawing)
 
 
 class MultiPlotProperties(PlotProperties):
@@ -917,16 +1112,43 @@ class MultiPlotProperties(PlotProperties):
 
     Attributes
     ----------
+    axes : :class:`aspecd.plotting.AxisProperties`
+        Properties of the axes.
+
     lines : :class:`list`
         Properties of the lines within a plot.
 
         Each element is a :obj:`aspecd.plotting.LineProperties` object
 
+    Raises
+    ------
+    aspecd.plotting.MissingPlotterError
+        Raised if no plotter is provided.
+
     """
 
     def __init__(self):
         super().__init__()
+        self.axes = AxisProperties()
         self.lines = []
+
+    def apply(self, plotter=None):
+        """
+        Apply properties to plot.
+
+        Parameters
+        ----------
+        plotter: :class:`aspecd.plotting.MultiPlotter`
+            Plotter the properties should be applied to.
+
+        Raises
+        ------
+        aspecd.plotting.MissingPlotterError
+            Raised if no plotter is provided.
+
+        """
+        super().apply(plotter=plotter)
+        self.axes.apply(axis=plotter.axes)
 
 
 class FigureProperties(aspecd.utils.Properties):
@@ -938,7 +1160,7 @@ class FigureProperties(aspecd.utils.Properties):
 
     Attributes
     ----------
-    size: :class:`tuple`
+    figsize: :class:`tuple`
         Figure dimension (width, height) in inches.
 
         2-tuple of floats
@@ -946,12 +1168,37 @@ class FigureProperties(aspecd.utils.Properties):
     dpi: :class:`float`
         Dots per inch.
 
+    Raises
+    ------
+    aspecd.plotting.MissingFigureError
+        Raised if no figure is provided.
+
     """
 
     def __init__(self):
         super().__init__()
-        self.size = (6.4, 4.8)
+        self.figsize = (6.4, 4.8)
         self.dpi = 100.0
+
+    def apply(self, figure=None):
+        """
+        Apply properties to figure.
+
+        Parameters
+        ----------
+        figure: :class:`matplotlib.figure.Figure`
+            Plotter the properties should be applied to.
+
+        Raises
+        ------
+        aspecd.plotting.MissingFigureError
+            Raised if no figure is provided.
+
+        """
+        if not figure:
+            raise MissingFigureError
+        for prop in self.get_properties():
+            setattr(figure, prop, getattr(self, prop))
 
 
 class AxisProperties(aspecd.utils.Properties):
@@ -962,9 +1209,8 @@ class AxisProperties(aspecd.utils.Properties):
     for :obj:`matplotlib.axes.Axes` objects.
 
     .. todo::
-        Need to define axis properties. How to deal with at least two axes
-        per figure, i.e. x and y axis, whereas matplotlib will most
-        probably handle the overall axes as one object?
+        How to deal with at least two axes per figure, i.e. x and y axis,
+        whereas matplotlib handles the overall axes as one object?
 
         How about multiple separate axes within a figure window?
 
@@ -1010,6 +1256,11 @@ class AxisProperties(aspecd.utils.Properties):
     yticks:
         y ticks with list of ticks
 
+    Raises
+    ------
+    aspecd.plotting.MissingAxisError
+        Raised if no axis is provided.
+
     """
 
     def __init__(self):
@@ -1026,6 +1277,51 @@ class AxisProperties(aspecd.utils.Properties):
         self.yscale = 'linear'
         self.yticklabels = None
         self.yticks = None
+
+    def apply(self, axis=None):
+        """
+        Apply settable properties to axis.
+
+        Only properties that are not None or empty will be set, in order to
+        prevent problems. The underlying method used to set the axis
+        properties is :meth:`matplotlib.axes.Axes.update`.
+
+        Parameters
+        ----------
+        axis: :class:`matplotlib.axes.Axes`
+            axis to set properties for
+
+        Raises
+        ------
+        aspecd.plotting.MissingAxisError
+            Raised if no axis is provided.
+
+        """
+        if not axis:
+            raise MissingAxisError
+        axis.update(self._get_settable_properties())
+
+    def _get_settable_properties(self):
+        """
+        Return properties that can be applied to an axis.
+
+        Properties that are either None or empty often cause problems.
+        Therefore, the properties of
+        :class:`aspecd.plotting.AxisProperties` are reduced accordingly to
+        those properties that are neither None nor empty.
+
+        Returns
+        -------
+        properties: :class:`dict`
+            Properties that are neither None nor empty
+
+        """
+        all_properties = self.to_dict()
+        properties = dict()
+        for prop in all_properties:
+            if all_properties[prop]:
+                properties[prop] = all_properties[prop]
+        return properties
 
 
 class LineProperties(aspecd.utils.Properties):
@@ -1063,6 +1359,11 @@ class LineProperties(aspecd.utils.Properties):
 
         For details see :mod:`matplotlib.markers`
 
+    Raises
+    ------
+    aspecd.plotting.MissingLineError
+        Raised if no line is provided.
+
     """
 
     def __init__(self):
@@ -1073,3 +1374,26 @@ class LineProperties(aspecd.utils.Properties):
         self.linestyle = 'solid'
         self.linewidth = 1.5
         self.marker = ''
+
+    def apply(self, line=None):
+        """
+        Apply properties to line.
+
+        For each property, the corresponding "set_<property>" method of the
+        line will be called.
+
+        Parameters
+        ----------
+        line: :class:`matplotlib.axes.Axes`
+            axis to set properties for
+
+        Raises
+        ------
+        aspecd.plotting.MissingLineError
+            Raised if no line is provided.
+
+        """
+        if not line:
+            raise MissingLineError
+        for prop in self.get_properties():
+            getattr(line, ''.join(['set_', prop]))(getattr(self, prop))
