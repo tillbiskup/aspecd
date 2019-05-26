@@ -179,8 +179,8 @@ class MissingAxisError(Error):
         self.message = message
 
 
-class MissingLineError(Error):
-    """Exception raised when no line is provided.
+class MissingDrawingError(Error):
+    """Exception raised when no drawing (line, ...) is provided.
 
     Attributes
     ----------
@@ -372,6 +372,17 @@ class SinglePlotter(Plotter):
     perform the plot, should eventually be stored in the property
     :attr:`parameters` (currently a dictionary).
 
+    There are two concrete classes available for conveniently performing
+    plots of single datasets:
+
+    * :class:`aspecd.plotting.SinglePlotter1D`
+
+      1D plots, such as line, scatter, log, semilog
+
+    * :class:`aspecd.plotting.SinglePlotter2D`
+
+      2D plots, such as contour, image
+
     To perform the plot, call the :meth:`plot` method of the dataset the plot
     should be performed for, and provide a reference to the actual plotter
     object to it.
@@ -517,16 +528,22 @@ class SinglePlotter1D(SinglePlotter):
 
     Convenience class taking care of 1D plots of single datasets. The type
     of plot can be set in its :attr:`aspecd.plotting.SinglePlotter1D.type`
-    attribute.
+    attribute. Allowed types are stored in the
+    :attr:`aspecd.plotting.SinglePlotter1D.allowed_types` attribute.
 
     Quite a number of properties for figure, axes, and line can be set
-    using the :attr:`aspecd.plotting.SinglePlotter.properties` attribute.
+    using the :attr:`aspecd.plotting.SinglePlotter1D.properties` attribute.
     For details, see the documentation of its respective class,
-    :class:`aspecd.plotting.SinglePlotProperties`.
+    :class:`aspecd.plotting.SinglePlot1DProperties`.
 
     To perform the plot, call the :meth:`plot` method of the dataset the plot
     should be performed for, and provide a reference to the actual plotter
     object to it.
+
+    Attributes
+    ----------
+    properties : :class:`aspecd.plotting.SinglePlot1DProperties`
+        Properties of the plot, defining its appearance
 
     Raises
     ------
@@ -537,7 +554,8 @@ class SinglePlotter1D(SinglePlotter):
 
     def __init__(self):
         super().__init__()
-        self.description = '1D Plotting step for single dataset'
+        self.description = '1D plotting step for single dataset'
+        self.properties = SinglePlot1DProperties()
         self._type = 'plot'
         self._allowed_types = ['plot', 'scatter', 'step', 'loglog',
                                'semilogx', 'semilogy', 'stemplot']
@@ -601,6 +619,88 @@ class SinglePlotter1D(SinglePlotter):
 
         """
         return dataset.data.data.ndim == 1
+
+
+class SinglePlotter2D(SinglePlotter):
+    """2D plots of single datasets.
+
+    Convenience class taking care of 2D plots of single datasets. The type
+    of plot can be set in its :attr:`aspecd.plotting.SinglePlotter2D.type`
+    attribute. Allowed types are stored in the
+    :attr:`aspecd.plotting.SinglePlotter2D.allowed_types` attribute.
+
+    Quite a number of properties for figure, axes, and line can be set
+    using the :attr:`aspecd.plotting.SinglePlotter.properties` attribute.
+    For details, see the documentation of its respective class,
+    :class:`aspecd.plotting.SinglePlotProperties`.
+
+    To perform the plot, call the :meth:`plot` method of the dataset the plot
+    should be performed for, and provide a reference to the actual plotter
+    object to it.
+
+    Raises
+    ------
+    TypeError
+        Raised when wrong plot type is set
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = '2D plotting step for single dataset'
+        self._type = 'imshow'
+        self._allowed_types = ['contour', 'contourf', 'imshow', 'pcolor',
+                               'pcolormesh']
+
+    @property
+    def type(self):
+        """
+        Get or set the plot type.
+
+        Types need to be methods of the :class:`matplotlib.axes.Axes` class.
+
+        Allowed plot types are stored in the
+        :attr:`aspecd.plotting.SinglePlotter2D.allowed_types` attribute.
+
+        Default: 'plot'
+
+        Raises
+        ------
+        aspecd.plotting.TypeError
+            Raised in case of wrong type
+
+        """
+        return self._type
+
+    @property
+    def allowed_types(self):
+        """
+        Return the allowed plot types.
+
+        Returns
+        -------
+        allowed_types: :class:`list`
+            List of strings
+
+        """
+        return self._allowed_types
+
+    @type.setter
+    def type(self, plot_type=None):
+        if plot_type not in self.allowed_types:
+            raise TypeError
+        self._type = plot_type
+
+    def _create_plot(self):
+        """
+        Create actual plot
+
+        .. todo::
+            Handle axes appropriately, depending on plot type.
+
+        """
+        plot_function = getattr(self.axes, self.type)
+        self.drawing = plot_function(self.dataset.data.data)
 
 
 class MultiPlotter(Plotter):
@@ -1070,7 +1170,7 @@ class SinglePlotProperties(PlotProperties):
     axes : :class:`aspecd.plotting.AxisProperties`
         Properties of the axes.
 
-    line : :class:`aspecd.plotting.LineProperties`
+    drawing : :class:`aspecd.plotting.DrawingProperties`
         Properties of the line within a plot
 
     Raises
@@ -1083,7 +1183,7 @@ class SinglePlotProperties(PlotProperties):
     def __init__(self):
         super().__init__()
         self.axes = AxisProperties()
-        self.line = LineProperties()
+        self.drawing = DrawingProperties()
 
     def apply(self, plotter=None):
         """
@@ -1103,7 +1203,28 @@ class SinglePlotProperties(PlotProperties):
         super().apply(plotter=plotter)
         self.axes.apply(axis=plotter.axes)
         if plotter.drawing:
-            self.line.apply(line=plotter.drawing)
+            self.drawing.apply(drawing=plotter.drawing)
+
+
+class SinglePlot1DProperties(SinglePlotProperties):
+    """
+    Properties of a 1D single plot, defining its appearance.
+
+    Attributes
+    ----------
+    drawing : :class:`aspecd.plotting.LineProperties`
+        Properties of the line within a plot
+
+    Raises
+    ------
+    aspecd.plotting.MissingPlotterError
+        Raised if no plotter is provided.
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.drawing = LineProperties()
 
 
 class MultiPlotProperties(PlotProperties):
@@ -1115,7 +1236,7 @@ class MultiPlotProperties(PlotProperties):
     axes : :class:`aspecd.plotting.AxisProperties`
         Properties of the axes.
 
-    lines : :class:`list`
+    drawings : :class:`list`
         Properties of the lines within a plot.
 
         Each element is a :obj:`aspecd.plotting.LineProperties` object
@@ -1130,7 +1251,7 @@ class MultiPlotProperties(PlotProperties):
     def __init__(self):
         super().__init__()
         self.axes = AxisProperties()
-        self.lines = []
+        self.drawings = []
 
     def apply(self, plotter=None):
         """
@@ -1324,7 +1445,54 @@ class AxisProperties(aspecd.utils.Properties):
         return properties
 
 
-class LineProperties(aspecd.utils.Properties):
+class DrawingProperties(aspecd.utils.Properties):
+    """
+    Properties of a drawing within a plot.
+
+    A drawing is the most abstract object representing data within axes,
+    such as a line, contour, etcetera.
+
+    Attributes
+    ----------
+    label: :class:`str`
+        label of a line that gets used within a legend, default: ''
+
+    Raises
+    ------
+    aspecd.plotting.MissingDrawingError
+        Raised if no drawing is provided.
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.label = ''
+
+    def apply(self, drawing=None):
+        """
+        Apply properties to drawing.
+
+        For each property, the corresponding "set_<property>" method of the
+        line will be called.
+
+        Parameters
+        ----------
+        drawing: :class:`matplotlib.axes.Axes`
+            axis to set properties for
+
+        Raises
+        ------
+        aspecd.plotting.MissingDrawingError
+            Raised if no line is provided.
+
+        """
+        if not drawing:
+            raise MissingDrawingError
+        for prop in self.get_properties():
+            getattr(drawing, ''.join(['set_', prop]))(getattr(self, prop))
+
+
+class LineProperties(DrawingProperties):
     """
     Properties of a line within a plot.
 
@@ -1343,9 +1511,6 @@ class LineProperties(aspecd.utils.Properties):
 
         For details see :meth:`matplotlib.lines.Line2D.set_drawstyle`
 
-    label: :class:`str`
-        label of a line that gets used within a legend, default: ''
-
     linestyle: :class:`str`
         style of the line, default: 'solid'
 
@@ -1361,7 +1526,7 @@ class LineProperties(aspecd.utils.Properties):
 
     Raises
     ------
-    aspecd.plotting.MissingLineError
+    aspecd.plotting.MissingDrawingError
         Raised if no line is provided.
 
     """
@@ -1370,30 +1535,6 @@ class LineProperties(aspecd.utils.Properties):
         super().__init__()
         self.color = None
         self.drawstyle = 'default'
-        self.label = ''
         self.linestyle = 'solid'
         self.linewidth = 1.5
         self.marker = ''
-
-    def apply(self, line=None):
-        """
-        Apply properties to line.
-
-        For each property, the corresponding "set_<property>" method of the
-        line will be called.
-
-        Parameters
-        ----------
-        line: :class:`matplotlib.axes.Axes`
-            axis to set properties for
-
-        Raises
-        ------
-        aspecd.plotting.MissingLineError
-            Raised if no line is provided.
-
-        """
-        if not line:
-            raise MissingLineError
-        for prop in self.get_properties():
-            getattr(line, ''.join(['set_', prop]))(getattr(self, prop))

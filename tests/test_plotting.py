@@ -203,6 +203,32 @@ class TestSinglePlotter1D(unittest.TestCase):
             self.plotter.plot(dataset_)
 
 
+class TestSinglePlotter2D(unittest.TestCase):
+    def setUp(self):
+        self.plotter = plotting.SinglePlotter2D()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_type_property(self):
+        self.assertTrue(hasattr(self.plotter, 'type'))
+
+    def test_set_type(self):
+        plot_type = 'contour'
+        self.plotter.type = plot_type
+        self.assertEqual(self.plotter.type, plot_type)
+
+    def test_setting_wrong_type_raises(self):
+        with self.assertRaises(TypeError):
+            self.plotter.type = 'foo'
+
+    def test_plot_sets_drawing(self):
+        dataset_ = dataset.Dataset()
+        dataset_.data.data = np.random.rand(3, 2)
+        self.plotter.plot(dataset=dataset_)
+        self.assertTrue(self.plotter.drawing)
+
+
 class TestMultiPlotter(unittest.TestCase):
     def setUp(self):
         self.plotter = plotting.MultiPlotter()
@@ -450,6 +476,41 @@ class TestCaption(unittest.TestCase):
         self.assertTrue(hasattr(self.caption, 'parameters'))
 
 
+class TestDrawingProperties(unittest.TestCase):
+    def setUp(self):
+        self.drawing_properties = plotting.DrawingProperties()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.drawing_properties, 'to_dict'))
+        self.assertTrue(callable(self.drawing_properties.to_dict))
+
+    def test_has_from_dict_method(self):
+        self.assertTrue(hasattr(self.drawing_properties, 'from_dict'))
+        self.assertTrue(callable(self.drawing_properties.from_dict))
+
+    def test_has_properties(self):
+        for prop in ['label']:
+            self.assertTrue(hasattr(self.drawing_properties, prop))
+
+    def test_has_apply_method(self):
+        self.assertTrue(hasattr(self.drawing_properties, 'apply'))
+        self.assertTrue(callable(self.drawing_properties.apply))
+
+    def test_apply_without_argument_raises(self):
+        with self.assertRaises(plotting.MissingDrawingError):
+            self.drawing_properties.apply()
+
+    def test_apply_sets_properties(self):
+        self.drawing_properties.label = 'foo'
+        # noinspection PyUnresolvedReferences
+        line = matplotlib.lines.Line2D([0, 1], [0, 0])
+        self.drawing_properties.apply(drawing=line)
+        self.assertEqual(self.drawing_properties.label, line.get_label())
+
+
 class TestLineProperties(unittest.TestCase):
     def setUp(self):
         self.line_properties = plotting.LineProperties()
@@ -475,13 +536,14 @@ class TestLineProperties(unittest.TestCase):
         self.assertTrue(callable(self.line_properties.apply))
 
     def test_apply_without_argument_raises(self):
-        with self.assertRaises(plotting.MissingLineError):
+        with self.assertRaises(plotting.MissingDrawingError):
             self.line_properties.apply()
 
     def test_apply_sets_properties(self):
         self.line_properties.label = 'foo'
+        # noinspection PyUnresolvedReferences
         line = matplotlib.lines.Line2D([0, 1], [0, 0])
-        self.line_properties.apply(line=line)
+        self.line_properties.apply(drawing=line)
         self.assertEqual(self.line_properties.label, line.get_label())
 
 
@@ -605,8 +667,8 @@ class TestSinglePlotProperties(unittest.TestCase):
     def test_has_axes_property(self):
         self.assertTrue(hasattr(self.plot_properties, 'axes'))
 
-    def test_has_line_property(self):
-        self.assertTrue(hasattr(self.plot_properties, 'line'))
+    def test_has_drawing_property(self):
+        self.assertTrue(hasattr(self.plot_properties, 'drawing'))
 
     def test_has_to_dict_method(self):
         self.assertTrue(hasattr(self.plot_properties, 'to_dict'))
@@ -624,13 +686,29 @@ class TestSinglePlotProperties(unittest.TestCase):
         self.assertEqual(self.plot_properties.axes.xlabel,
                          plot.axes.get_xlabel())
 
-    def test_apply_sets_line_properties(self):
-        self.plot_properties.line.label = 'foo'
+    def test_apply_sets_drawing_properties(self):
+        self.plot_properties.drawing.label = 'foo'
         plot = plotting.SinglePlotter1D()
         plot.plot(dataset=dataset.Dataset())
         self.plot_properties.apply(plotter=plot)
-        self.assertEqual(self.plot_properties.line.label,
+        self.assertEqual(self.plot_properties.drawing.label,
                          plot.drawing.get_label())
+
+
+class TestSinglePlot1DProperties(unittest.TestCase):
+    def setUp(self):
+        self.plot_properties = plotting.SinglePlot1DProperties()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_apply_sets_drawing_properties(self):
+        self.plot_properties.drawing.linewidth = 2.0
+        plot = plotting.SinglePlotter1D()
+        plot.plot(dataset=dataset.Dataset())
+        self.plot_properties.apply(plotter=plot)
+        self.assertEqual(self.plot_properties.drawing.linewidth,
+                         plot.drawing.get_linewidth())
 
 
 class TestMultiPlotProperties(unittest.TestCase):
@@ -640,8 +718,14 @@ class TestMultiPlotProperties(unittest.TestCase):
     def test_instantiate_class(self):
         pass
 
+    def test_has_figure_property(self):
+        self.assertTrue(hasattr(self.plot_properties, 'figure'))
+
     def test_has_axes_property(self):
         self.assertTrue(hasattr(self.plot_properties, 'axes'))
+
+    def test_has_drawings_property(self):
+        self.assertTrue(hasattr(self.plot_properties, 'drawings'))
 
     def test_has_to_dict_method(self):
         self.assertTrue(hasattr(self.plot_properties, 'to_dict'))
@@ -651,18 +735,10 @@ class TestMultiPlotProperties(unittest.TestCase):
         self.assertTrue(hasattr(self.plot_properties, 'from_dict'))
         self.assertTrue(callable(self.plot_properties.from_dict))
 
-    def test_has_figure_property(self):
-        self.assertTrue(hasattr(self.plot_properties, 'figure'))
-
-    def test_has_axes_property(self):
-        self.assertTrue(hasattr(self.plot_properties, 'axes'))
-
-    def test_has_lines_property(self):
-        self.assertTrue(hasattr(self.plot_properties, 'lines'))
-
     def test_apply_sets_axis_properties(self):
         self.plot_properties.axes.xlabel = 'foo'
-        plot = plotting.Plotter()
+        plot = plotting.MultiPlotter()
+        plot.datasets = [dataset.Dataset()]
         plot.plot()
         self.plot_properties.apply(plotter=plot)
         self.assertEqual(self.plot_properties.axes.xlabel,
