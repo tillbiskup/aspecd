@@ -179,6 +179,21 @@ class MissingAxisError(Error):
         self.message = message
 
 
+class MissingLegendError(Error):
+    """Exception raised when no legend is provided.
+
+    Attributes
+    ----------
+    message : :class:`str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
 class MissingDrawingError(Error):
     """Exception raised when no drawing (line, ...) is provided.
 
@@ -1236,6 +1251,9 @@ class MultiPlotProperties(PlotProperties):
     axes : :class:`aspecd.plotting.AxisProperties`
         Properties of the axes.
 
+    legend : :class:`aspecd.plotting.LegendProperties`
+        Properties of the legend.
+
     drawings : :class:`list`
         Properties of the lines within a plot.
 
@@ -1251,6 +1269,7 @@ class MultiPlotProperties(PlotProperties):
     def __init__(self):
         super().__init__()
         self.axes = AxisProperties()
+        self.legend = LegendProperties()
         self.drawings = []
 
     def apply(self, plotter=None):
@@ -1270,6 +1289,8 @@ class MultiPlotProperties(PlotProperties):
         """
         super().apply(plotter=plotter)
         self.axes.apply(axis=plotter.axes)
+        if hasattr(plotter, 'legend'):
+            self.legend.apply(legend=plotter.legend)
 
 
 class FigureProperties(aspecd.utils.Properties):
@@ -1443,6 +1464,52 @@ class AxisProperties(aspecd.utils.Properties):
             if all_properties[prop]:
                 properties[prop] = all_properties[prop]
         return properties
+
+
+class LegendProperties(aspecd.utils.Properties):
+    """
+    Properties of a legend of a plot, i.e., the most general aspects.
+
+    Basically, the attributes are a subset of what :mod:`matplotlib` defines
+    for :obj:`matplotlib.legend.Legend` objects.
+
+    Attributes
+    ----------
+    loc: :class:`str`
+        Location of the legend
+
+        For possible values, see :class:`matplotlib.legend.Legend`
+
+    Raises
+    ------
+    aspecd.plotting.MissingLegendError
+        Raised if no legend is provided.
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.loc = 'best'
+
+    def apply(self, legend=None):
+        """
+        Apply properties to legend.
+
+        Parameters
+        ----------
+        legend: :class:`matplotlib.legend.Legend`
+            Plotter the properties should be applied to.
+
+        Raises
+        ------
+        aspecd.plotting.MissingFigureError
+            Raised if no figure is provided.
+
+        """
+        if not legend:
+            raise MissingLegendError
+        for prop in self.get_properties():
+            setattr(legend, prop, getattr(self, prop))
 
 
 class DrawingProperties(aspecd.utils.Properties):

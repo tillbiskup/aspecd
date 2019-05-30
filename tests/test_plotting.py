@@ -654,6 +654,42 @@ class TestAxisProperties(unittest.TestCase):
         self.assertEqual(self.axis_properties.xlabel, plot.axes.get_xlabel())
 
 
+class TestLegendProperties(unittest.TestCase):
+    def setUp(self):
+        self.legend_properties = plotting.LegendProperties()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.legend_properties, 'to_dict'))
+        self.assertTrue(callable(self.legend_properties.to_dict))
+
+    def test_has_from_dict_method(self):
+        self.assertTrue(hasattr(self.legend_properties, 'from_dict'))
+        self.assertTrue(callable(self.legend_properties.from_dict))
+
+    def test_has_properties(self):
+        for prop in ['loc']:
+            self.assertTrue(hasattr(self.legend_properties, prop))
+
+    def test_has_apply_method(self):
+        self.assertTrue(hasattr(self.legend_properties, 'apply'))
+        self.assertTrue(callable(self.legend_properties.apply))
+
+    def test_apply_without_argument_raises(self):
+        with self.assertRaises(plotting.MissingLegendError):
+            self.legend_properties.apply()
+
+    def test_apply_properties_sets_legend_properties(self):
+        self.legend_properties.loc = 'center'
+        plot = plotting.Plotter()
+        plot.plot()
+        legend = plot.axes.legend()
+        self.legend_properties.apply(legend=legend)
+        self.assertEqual(self.legend_properties.loc, legend.loc)
+
+
 class TestSinglePlotProperties(unittest.TestCase):
     def setUp(self):
         self.plot_properties = plotting.SinglePlotProperties()
@@ -727,6 +763,9 @@ class TestMultiPlotProperties(unittest.TestCase):
     def test_has_drawings_property(self):
         self.assertTrue(hasattr(self.plot_properties, 'drawings'))
 
+    def test_has_legend_property(self):
+        self.assertTrue(hasattr(self.plot_properties, 'legend'))
+
     def test_has_to_dict_method(self):
         self.assertTrue(hasattr(self.plot_properties, 'to_dict'))
         self.assertTrue(callable(self.plot_properties.to_dict))
@@ -743,3 +782,13 @@ class TestMultiPlotProperties(unittest.TestCase):
         self.plot_properties.apply(plotter=plot)
         self.assertEqual(self.plot_properties.axes.xlabel,
                          plot.axes.get_xlabel())
+
+    def test_apply_sets_legend_properties(self):
+        self.plot_properties.legend.loc = 'center'
+        plot = plotting.MultiPlotter()
+        plot.datasets = [dataset.Dataset()]
+        plot.plot()
+        plot.legend = plot.axes.legend()
+        self.plot_properties.apply(plotter=plot)
+        self.assertEqual(self.plot_properties.legend.loc,
+                         plot.legend.loc)
