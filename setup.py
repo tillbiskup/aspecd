@@ -9,25 +9,24 @@ def read(fname):
 
 
 setuptools.setup(
-    name='aspecd',
+    name="aspecd",
     version=read('VERSION').strip(),
-    description='Framework for handling spectroscopic data.',
+    description="Framework for handling spectroscopic data.",
     long_description=read('README.rst'),
-    long_description_content_type='text/x-rst',
-    author='Till Biskup',
-    author_email='till@till-biskup.de',
-    url='https://www.aspecd.de/',
+    long_description_content_type="text/x-rst",
+    author="Till Biskup",
+    author_email="till@till-biskup.de",
+    url="https://www.aspecd.de",
     project_urls={
-        'Documentation': 'https://docs.aspecd.de/',
-        'Source': 'https://github.com/tillbiskup/aspecd-python',
+        "Documentation": "https://docs.aspecd.de/",
+        "Source": "https://github.com/tillbiskup/aspecd-python",
     },
-    license=read('LICENSE'),
     packages=setuptools.find_packages(exclude=('tests', 'docs')),
     keywords=[
-        'spectroscopy',
-        'data processing and analysis',
-        'reproducible science',
-        'good scientific practice',
+        "spectroscopy",
+        "data processing and analysis",
+        "reproducible science",
+        "good scientific practice",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
