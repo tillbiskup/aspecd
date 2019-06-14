@@ -19,7 +19,7 @@ setuptools.setup(
     url="https://www.aspecd.de",
     project_urls={
         "Documentation": "https://docs.aspecd.de/",
-        "Source": "https://github.com/tillbiskup/aspecd-python",
+        "Source": "https://github.com/tillbiskup/aspecd",
     },
     packages=setuptools.find_packages(exclude=('tests', 'docs')),
     keywords=[
