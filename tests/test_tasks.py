@@ -441,13 +441,24 @@ class TestTask(unittest.TestCase):
         self.task._set_object_attributes(processing_step)
         self.assertTrue('bar' in processing_step.parameters)
 
-    def test_set_object_attributes_replaces_results_from_recipe(self):
+    def test_set_object_attributes_replaces_results_dataset_from_recipe(self):
         processing_step = processing.ProcessingStep()
         processing_step.parameters = {'foo': '', 'bar': ''}
         metadata = {'parameters': {'foo': 'bar'}}
         self.task.properties = metadata
         self.task.recipe = tasks.Recipe()
         self.task.recipe.results['bar'] = dataset.Dataset()
+        self.task._set_object_attributes(processing_step)
+        self.assertEqual(self.task.recipe.results['bar'],
+                         processing_step.parameters['foo'])
+
+    def test_set_object_attributes_replaces_results_from_recipe(self):
+        processing_step = processing.ProcessingStep()
+        processing_step.parameters = {'foo': '', 'bar': ''}
+        metadata = {'parameters': {'foo': 'bar'}}
+        self.task.properties = metadata
+        self.task.recipe = tasks.Recipe()
+        self.task.recipe.results['bar'] = [0., 1.72, 3.14]
         self.task._set_object_attributes(processing_step)
         self.assertEqual(self.task.recipe.results['bar'],
                          processing_step.parameters['foo'])
