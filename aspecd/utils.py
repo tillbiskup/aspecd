@@ -307,7 +307,7 @@ class Yaml:
         if not filename:
             raise MissingFilenameError
         with open(filename, 'r') as file:
-            self.dict = yaml.load(file)
+            self.dict = yaml.safe_load(file)
 
     def write_to(self, filename=''):
         """
