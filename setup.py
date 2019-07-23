@@ -22,6 +22,7 @@ setuptools.setup(
         "Source": "https://github.com/tillbiskup/aspecd",
     },
     packages=setuptools.find_packages(exclude=('tests', 'docs')),
+    license='BSD',
     keywords=[
         "spectroscopy",
         "data processing and analysis",

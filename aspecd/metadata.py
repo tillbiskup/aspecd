@@ -219,7 +219,7 @@ class PhysicalQuantity(aspecd.utils.ToDictMixin):
             If an empty string is provided, value and unit are cleared.
 
         """
-        if string:
+        if string and not string.lower() == "n/a":
             self._set_value_unit_from_string(string)
         else:
             self.value = 0.

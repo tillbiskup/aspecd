@@ -110,6 +110,16 @@ class TestPhysicalQuantity(unittest.TestCase):
         self.assertFalse(self.physical_quantity.value)
         self.assertFalse(self.physical_quantity.unit)
 
+    def test_set_value_and_unit_from_na_string(self):
+        self.physical_quantity.from_string('N/A')
+        self.assertFalse(self.physical_quantity.value)
+        self.assertFalse(self.physical_quantity.unit)
+
+    def test_set_value_and_unit_from_na_string_case_insensitive(self):
+        self.physical_quantity.from_string('n/a')
+        self.assertFalse(self.physical_quantity.value)
+        self.assertFalse(self.physical_quantity.unit)
+
     def test_empty_string_clears_value_and_unit(self):
         self.physical_quantity.from_string('5 m')
         self.physical_quantity.from_string('')
