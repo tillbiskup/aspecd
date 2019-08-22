@@ -193,10 +193,25 @@ class TestAnalysisStepRecord(unittest.TestCase):
     def test_analysis_object_gets_correct_comment_value(self):
         test_comment = 'Frobnicate the bizbaz'
         self.analysis_step.comment = test_comment
-        self.analysis_record= \
+        self.analysis_record = \
             analysis.AnalysisStepRecord(self.analysis_step)
         test_object = self.analysis_record.create_analysis_step()
         self.assertEqual(test_object.comment, test_comment)
+
+    def test_analysissteprecord_gets_result_from_analysisstep(self):
+        test_result = ['foo']
+        self.analysis_step.result = test_result
+        self.analysis_record = \
+            analysis.AnalysisStepRecord(self.analysis_step)
+        self.assertEqual(self.analysis_record.result, test_result)
+
+    def test_analysisstep_from_record_has_no_result_value(self):
+        test_result = ['foo']
+        self.analysis_step.result = test_result
+        self.analysis_record = \
+            analysis.AnalysisStepRecord(self.analysis_step)
+        test_object = self.analysis_record.create_analysis_step()
+        self.assertEqual(test_object.result, None)
 
 
 class TestSingleAnalysisStepRecord(unittest.TestCase):

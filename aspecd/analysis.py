@@ -412,12 +412,14 @@ class AnalysisStepRecord:
         self.parameters = dict()
         self.comment = ''
         self.class_name = ''
+        self.result = None
         self._copy_fields_from_analysis_step(analysis_step)
 
     def _copy_fields_from_analysis_step(self, analysis_step):
         self.description = analysis_step.description
         self.parameters = analysis_step.parameters
         self.comment = analysis_step.comment
+        self.result = analysis_step.result
         self.class_name = analysis_step.name
 
     def create_analysis_step(self):
