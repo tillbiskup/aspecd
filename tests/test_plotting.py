@@ -413,11 +413,14 @@ class TestPlotRecord(unittest.TestCase):
     def test_from_plotter_sets_attributes(self):
         plotter = plotting.Plotter()
         plotter.filename = 'test'
+        plotter.caption = 'Figure caption'
         self.plot_record.from_plotter(plotter)
         self.assertEqual(plotter.name, self.plot_record.name)
         self.assertEqual(plotter.filename, self.plot_record.filename)
         self.assertEqual(plotter.parameters, self.plot_record.parameters)
+        self.assertEqual(plotter.properties, self.plot_record.properties)
         self.assertEqual(plotter.description, self.plot_record.description)
+        self.assertEqual(plotter.caption, self.plot_record.caption)
 
     def test_instantiate_with_plotter_sets_attributes_from_plotter(self):
         plotter = plotting.Plotter()

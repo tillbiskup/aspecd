@@ -244,7 +244,7 @@ class Plotter:
 
         Actual saving is done using an :obj:`aspecd.plotting.Saver` object.
     caption : :class:`aspecd.plotting.Caption`
-        User-supplied information for the figure line_properties.
+        User-supplied information for the figure.
 
     Raises
     ------
@@ -978,6 +978,10 @@ class PlotRecord:
         Short description of the plot
     parameters : :class:`dict`
         All parameters necessary for the plot, implicit and explicit
+    properties : :class:`aspecd.plotting.PlotProperties`
+        Properties of the plot, defining its appearance
+    caption : :class:`aspecd.plotting.Caption`
+        User-supplied information for the figure.
     filename : :class:`str`
         Name of the file the plot has been/should be saved to
 
@@ -998,6 +1002,8 @@ class PlotRecord:
         self.name = ''
         self.description = ''
         self.parameters = dict()
+        self.properties = PlotProperties()
+        self.caption = ''
         self.filename = ''
         if plotter:
             self.from_plotter(plotter=plotter)
@@ -1021,6 +1027,8 @@ class PlotRecord:
         self.name = plotter.name
         self.description = plotter.description
         self.parameters = plotter.parameters
+        self.properties = plotter.properties
+        self.caption = plotter.caption
         self.filename = plotter.filename
 
 
