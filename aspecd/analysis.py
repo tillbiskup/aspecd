@@ -388,6 +388,14 @@ class AnalysisStepRecord:
         Parameters required for performing the analysis step
 
         All parameters, implicit and explicit.
+    result
+        Results of the analysis step
+
+        Can be either a :class:`aspecd.dataset.Dataset` or some other
+        class, *e.g.*, :class:`aspecd.metadata.PhysicalQuantity`.
+
+        In case of a dataset, it is a calculated dataset
+        (:class:`aspecd.dataset.CalculatedDataset`)
     comment : :class:`str`
         User-supplied comment describing intent, purpose, reason, ...
     class_name : :class:`str`
