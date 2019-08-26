@@ -1003,7 +1003,7 @@ class PlotRecord:
         self.description = ''
         self.parameters = dict()
         self.properties = PlotProperties()
-        self.caption = ''
+        self.caption = Caption()
         self.filename = ''
         if plotter:
             self.from_plotter(plotter=plotter)
