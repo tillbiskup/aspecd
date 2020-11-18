@@ -677,7 +677,7 @@ class SinglePlotter2D(SinglePlotter):
         Allowed plot types are stored in the
         :attr:`aspecd.plotting.SinglePlotter2D.allowed_types` attribute.
 
-        Default: 'plot'
+        Default: 'imshow'
 
         Raises
         ------
@@ -1608,7 +1608,7 @@ class LineProperties(DrawingProperties):
 
     def __init__(self):
         super().__init__()
-        self.color = None
+        self.color = '#000000'
         self.drawstyle = 'default'
         self.linestyle = 'solid'
         self.linewidth = 1.5
