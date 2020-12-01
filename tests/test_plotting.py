@@ -378,6 +378,30 @@ class TestSaver(unittest.TestCase):
         self.saver.save(plotter)
         self.assertTrue(os.path.isfile(self.filename))
 
+    def test_save_with_singleplotter1d(self):
+        test_dataset = dataset.Dataset()
+        plotter = plotting.SinglePlotter1D()
+        plotter = test_dataset.plot(plotter)
+        plotter.plot()
+        self.saver.filename = self.filename
+        self.saver.save(plotter)
+
+    def test_save_with_singleplotter2d(self):
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.rand(3, 2)
+        plotter = plotting.SinglePlotter2D()
+        plotter = test_dataset.plot(plotter)
+        plotter.plot()
+        self.saver.filename = self.filename
+        self.saver.save(plotter)
+
+    def test_save_with_multiplotter(self):
+        plotter = plotting.MultiPlotter()
+        plotter.datasets.append(dataset.Dataset())
+        plotter.plot()
+        self.saver.filename = self.filename
+        self.saver.save(plotter)
+
 
 class TestPlotRecord(unittest.TestCase):
     def setUp(self):
