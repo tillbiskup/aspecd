@@ -961,7 +961,7 @@ class TestAxis(unittest.TestCase):
         self.assertEqual(self.axis.equidistant, None)
 
     def test_equidistant_is_true_for_equidistant_axes(self):
-        self.axis.values = np.arange(0, 5, 1)
+        self.axis.values = np.linspace(330, 340, num=1024, endpoint=True)
         self.assertTrue(self.axis.equidistant)
 
     def test_equidistant_is_false_for_nonequidistant_axes(self):

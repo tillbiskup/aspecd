@@ -1291,7 +1291,7 @@ class Axis:
         if not self.values.size:
             return
         differences = self.values[1:] - self.values[0:-1]
-        self._equidistant = (differences == differences[0]).all()
+        self._equidistant = np.isclose(differences.max(), differences.min())
 
 
 class HistoryRecord(aspecd.utils.ToDictMixin):
