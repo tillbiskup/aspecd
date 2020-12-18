@@ -94,6 +94,19 @@ class TestPlotter(unittest.TestCase):
         self.assertTrue(isinstance(self.plotter.ax, matplotlib.axes.Axes))
         plt.close(self.plotter.figure)
 
+    def test_plot_sets_no_new_figure_property_if_existing(self):
+        fig, ax = plt.subplots()
+        self.plotter.figure = fig
+        self.plotter.plot()
+        self.assertIs(fig, self.plotter.figure)
+
+    def test_plot_sets_no_new_axes_property_if_existing(self):
+        fig, ax = plt.subplots()
+        self.plotter.figure = fig
+        self.plotter.axes = ax
+        self.plotter.plot()
+        self.assertIs(ax, self.plotter.axes)
+
     def test_save_without_saver_raises(self):
         with self.assertRaises(plotting.MissingSaverError):
             self.plotter.save()

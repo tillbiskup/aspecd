@@ -10,7 +10,7 @@ by a call similar to::
 
 For convenience, short hands for the :attr:`figure` and :attr:`axes`
 properties of a plotter are available, named :attr:`fig` and :attr:`ax`,
-respectively.
+respectively. For details on handling (own) figure and axes objects, see below.
 
 Generally, two types of plotters can be distinguished:
 
@@ -40,6 +40,43 @@ Regardless of the type of plotter, saving plots is always done using
 objects of the :class:`aspecd.plotting.Saver` class. The actual task of
 saving a plot is as easy as calling the :meth:`save` method of a plotter
 with a saver object as its argument.
+
+
+Plotting to existing axes
+=========================
+
+Figure and axes properties of a plotter object will only be populated upon
+calling the method :meth:`aspecd.plotting.Plotter.plot`, therefore by using
+the :meth:`plot` method of the respective plotter class.
+
+Furthermore, figure and axes properties will only be populated if both are not
+existing already. Therefore, if you like to use a plotter to plot to an
+existing axis, set its figure and axes properties before calling  the
+:meth:`aspecd.plotting.Plotter.plot` method.
+
+.. important::
+    If you do so, make sure to set *both*, figure and axes properties,
+    as failing to set a valid figure property will cause matplotlib to throw
+    exceptions.
+
+
+A simple example may look like this::
+
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots()
+    plotter = aspecd.plotting.SinglePloter1D()
+    plotter.figure = fig
+    plotter.axes = ax
+    plotter.plot()
+
+In this case, the plotter will plot to the axis specified before calling its
+:meth:`plot` method. Thus, it should be straight-forward to write plotter
+classes that create complex plots consisting of several subplots by reusing
+available plotter classes.
+
+
+Module API documentation
+========================
 
 """
 
@@ -311,11 +348,23 @@ class Plotter:
         :meth:`plot`. If you need to change the way figure and axes are
         created, override this method.
 
+        .. note::
+            Figure and axes will only be created if both are not existing
+            already. Therefore, if you like to use a plotter to plot to an
+            existing axis, set its figure and axes properties before calling
+            the :meth:`plot` method.
+
+            If you do so, make sure to set *both*, figure and axes
+            properties, as failing to set a valid figure property will cause
+            matplotlib to throw exceptions.
+
+
         In any case, figure and axes need to be assigned to the
         :attr:`figure` and :attr:`axes` properties of the plotter class.
         """
-        mpl.interactive(False)  # Mac OS X: prevent a plot window from opening
-        self.figure, self.axes = plt.subplots()
+        if not self.figure and not self.axes:
+            mpl.interactive(False)  # Mac OS X: prevent plot window from opening
+            self.figure, self.axes = plt.subplots()
 
     def _create_plot(self):
         """Perform the actual plotting of the data of the dataset(s).
