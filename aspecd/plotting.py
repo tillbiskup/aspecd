@@ -64,7 +64,7 @@ A simple example may look like this::
 
     import matplotlib.pyplot as plt
     fig, ax = plt.subplots()
-    plotter = aspecd.plotting.SinglePloter1D()
+    plotter = aspecd.plotting.SinglePlotter1D()
     plotter.figure = fig
     plotter.axes = ax
     plotter.plot()
@@ -417,6 +417,21 @@ class Plotter:
     def _create_axis_label_string(axis):
         """Create axis label conforming to conventions used in science
 
+        Here, the quantity is set in italics, and the unit in upright font,
+        with a slash separating both, quantity and unit. In case the
+        quantity contains spaces, these will be escaped thus that they are
+        contained in the final string (using the math mode of matplotlib).
+
+        .. note::
+            It might be worth discussing whether a proper axis label
+            conforming to scientific conventions sets the symbol in italics,
+            but not the quantity (name) as such. Therefore, a full label might
+            look like this: "magnetic field, B_0 / mT" with the term
+            "magnetic field" set in upright font, and only the symbol,
+            here $B_0$, in italics. This would, however, make it necessary
+            to add a property for the symbol to the axis class.
+
+
         This method is called automatically and indirectly by :meth:`plot`.
 
         If you ever need to change the appearance of your axes labels,
@@ -424,7 +439,8 @@ class Plotter:
         """
         label = ''
         if axis.quantity:
-            label = '$' + axis.quantity + '$' + ' / ' + axis.unit
+            label = '$' + axis.quantity.replace(' ', '\\ ') + '$' + ' / ' + \
+                    axis.unit
         return label
 
 
