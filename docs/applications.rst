@@ -10,7 +10,7 @@ Writing applications based on the ASpecD framework should be fairly straight-for
 Before you start
 ================
 
-ASpecD is all about reproducible data analysis, hence more reproducible and reliable science. Therefore, before you start writing your own applications based on the ASpecD framework, make sure to have a minimal infrastructure available and use it for your developments. Without a version control system (VCS) and a scheme for version numbers that you follow thoroughly, fundamental aspects of the ASpecD framework simply won't work. Additionally, do choose an appropriate license for your program. After all, the time frame of reproducibility is not the typical length of a PhD thesis, but rather decades.
+ASpecD is all about reproducible data analysis, hence more `reproducible and reliable science <https://www.reproducible-research.de/>`_. Therefore, before you start writing your own applications based on the ASpecD framework, make sure to have a minimal infrastructure available and use it for your developments. Without a version control system (VCS) and a scheme for version numbers that you follow thoroughly, fundamental aspects of the ASpecD framework simply won't work. Additionally, do choose an appropriate license for your program. After all, the time frame of reproducibility is not the typical length of a PhD thesis, but rather decades.
 
 
 How to start
@@ -18,7 +18,11 @@ How to start
 
 Applications based on the ASpecD framework should be Python packages following the standards laid out by the `Python Packaging Authority (PyPA) <https://www.pypa.io/>`_ in their `Python Packaging User Guide <https://python-packaging-user-guide.readthedocs.io/>`_.
 
-Generally, you will probably start off with deciding about a name for your application, creating a basic directory structure and a Python virtual environment for your package, and installing the ASpecD framework [#aspecd_availability]_ (and your package) within this virtual environment.
+Generally, you will probably start off with deciding about a name for your application, creating a basic directory structure and a Python virtual environment for your package, and installing the ASpecD framework [#aspecd_availability]_ (and your package) within this virtual environment. In a terminal, you may type something like the following commands::
+
+  python3 -m venv my_package_venv
+  source my_package_venv/bin/activate
+  pip install aspecd
 
 Make sure to install your package in an editable fashion, using the ``-e`` switch of the ``pip`` command::
 
@@ -196,7 +200,7 @@ Make sure to understand the :doc:`underlying concepts of the ASpecD framework <c
 
 .. rubric:: Footnotes
 
-.. [#aspecd_availability] Currently, the ASpecD framework is not available via the `Python Package Index (PyPI) <https://pypi.org/>`_, but only via checkout from a local gitlab instance. Ask its author for details.
+.. [#aspecd_availability] The ASpecD framework is `available <https://pypi.org/project/aspecd/>`_ via the `Python Package Index (PyPI) <https://pypi.org/>`_: `<https://pypi.org/project/aspecd/>`_. For the latest version, check it out from its `GitHub repository <https://github.com/tillbiskup/aspecd/>`_.
 
 .. [#metadata_names] Note that at least for older metadata files in the author's lab, the block named "General" needs to be renamed into "measurement" in the dictionary containing the metadata to correspond to the :class:`aspecd.metadata.Measurement` class.
 

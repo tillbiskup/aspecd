@@ -786,7 +786,7 @@ class SinglePlotter2D(SinglePlotter):
 class MultiPlotter(Plotter):
     """Base class for plots of multiple datasets.
 
-    Each class actually plotting data of multiple dataset should inherit from
+    Each class actually plotting data of multiple datasets should inherit from
     this class. Furthermore, all parameters, implicit and explicit,
     necessary to perform the plot, should eventually be stored in the property
     :attr:`parameters` (currently a dictionary).

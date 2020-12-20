@@ -43,7 +43,7 @@ And to make it even more convenient for users and future-proof:
 
 
 .. warning::
-  The ASpecD framework is currently under active development and still considered in Alpha development state. Therefore, expect frequent changes in features and public APIs that may break your own code. Nevertheless, feedback as well as feature requests are highly welcome.
+  The ASpecD framework is currently under active development and still considered in Beta development state. Therefore, expect frequent changes in features and public APIs that may break your own code. Nevertheless, feedback as well as feature requests are highly welcome.
 
 
 Where to start
@@ -54,9 +54,27 @@ Users new to ASpecD should probably start :doc:`at the beginning <audience>`, th
 The :doc:`API documentation <api/index>` is the definite source of information for developers, besides having a look at the source code.
 
 
+Related projects
+----------------
+
+There is a number of related packages that are based on the ASpecD framework and each focus on one particular type of spectroscopy. The most mature packages available to date are:
+
+ * `trepr <https://docs.trepr.de/>`_
+
+   Package for processing and analysing time-resolved electron paramagnetic resonance (TREPR) data, developed by J. Popp and maintained by T. Biskup.
+
+ * `cwepr <https://docs.cwepr.de/>`_
+
+   Package for processing and analysing continuous-wave electron paramagnetic resonance (cw-EPR) data, originally developed by P. Kirchner, currently developed and maintained by M. Schröder and T. Biskup.
+
+You may as well be interested in the `LabInform project <https://www.labinform.de/>`_ focussing on the necessary more global infrastructure in a laboratory/scientific workgroup interested in more `reproducible research <https://www.reproducible-research.de/>`_. In short, LabInform is "The Open-Source Laboratory Information System".
+
+Finally, don't forget to check out the website on `reproducible research <https://www.reproducible-research.de/>`_ covering in more general terms aspects of reproducible research and good scientific practice.
+
+
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: User Manual:
 
    audience
    introduction
@@ -65,6 +83,12 @@ The :doc:`API documentation <api/index>` is the definite source of information f
    applications
    usecases
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Developers:
+
+   people
+   developers
    api/index
 
 
@@ -75,6 +99,11 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
+
+License
+-------
+
+This program is free software: you can redistribute it and/or modify it under the terms of the **BSD License**.
 
 
 A note on the logo
