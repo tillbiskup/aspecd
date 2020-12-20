@@ -942,6 +942,12 @@ class TestAxis(unittest.TestCase):
     def test_quantity_is_string(self):
         self.assertTrue(isinstance(self.axis.quantity, str))
 
+    def test_has_symbol_property(self):
+        self.assertTrue(hasattr(self.axis, 'symbol'))
+
+    def test_symbol_is_string(self):
+        self.assertTrue(isinstance(self.axis.symbol, str))
+
     def test_has_unit_property(self):
         self.assertTrue(hasattr(self.axis, 'unit'))
 
