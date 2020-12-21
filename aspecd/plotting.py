@@ -428,8 +428,8 @@ class Plotter:
             but not the quantity (name) as such. Therefore, a full label might
             look like this: "magnetic field, B_0 / mT" with the term
             "magnetic field" set in upright font, and only the symbol,
-            here $B_0$, in italics. This would, however, make it necessary
-            to add a property for the symbol to the axis class.
+            here $B_0$, in italics. For this, a property for the symbol has
+            been added to the axis class.
 
 
         This method is called automatically and indirectly by :meth:`plot`.

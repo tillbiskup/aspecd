@@ -1220,9 +1220,21 @@ class Axis:
     unit : `string`
         unit of the numerical data, usually used as second part of an
         automatically generated axis label
+    symbol : `string`
+        symbol for the quantity of the numerical data, usually used as first
+        part of an automatically generated axis label
     label : `string`
         manual label for the axis, particularly useful in cases where no
         quantity and unit are provided or should be overwritten.
+
+    .. note::
+        There are three alternative ways of writing axis labels, one with
+        using the quantity name and the unit, one with using the quantity
+        symbol and the unit, and one using both, quantity name and symbol,
+        usually separated by comma. Quantity and unit shall always be
+        separated by a slash. Which way you prefer is a matter of personal
+        taste and given context.
+
 
     Raises
     ------
@@ -1238,6 +1250,7 @@ class Axis:
         self._values = np.zeros(0)
         self._equidistant = None
         self.quantity = ''
+        self.symbol = ''
         self.unit = ''
         self.label = ''
 
