@@ -312,6 +312,9 @@ class TestTask(unittest.TestCase):
     def test_has_type_property(self):
         self.assertTrue(hasattr(self.task, 'type'))
 
+    def test_has_package_property(self):
+        self.assertTrue(hasattr(self.task, 'package'))
+
     def test_has_properties_property(self):
         self.assertTrue(hasattr(self.task, 'properties'))
 
@@ -982,6 +985,15 @@ class TestTaskFactory(unittest.TestCase):
     def test_get_task_returns_task(self):
         task = self.task_factory.get_task(kind='processing')
         self.assertTrue(isinstance(task, tasks.Task))
+
+    def test_get_task_with_package_prefix_returns_task(self):
+        task = self.task_factory.get_task(kind='aspecd.processing')
+        self.assertTrue(isinstance(task, tasks.Task))
+
+    def test_get_task_with_package_prefix_sets_task_package(self):
+        kind = 'mypackage.processing'
+        task = self.task_factory.get_task(kind=kind)
+        self.assertEqual(task.package, 'mypackage')
 
     def test_has_get_task_from_dict_method(self):
         self.assertTrue(hasattr(self.task_factory, 'get_task_from_dict'))

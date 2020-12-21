@@ -708,6 +708,9 @@ class Task(aspecd.utils.ToDictMixin):
 
         Corresponds to the class name eventually responsible for performing
         the task.
+    package : :class:`str`
+        Name of the package the class eventually responsible for performing the
+        task belongs to.
     properties : :class:`dict`
         Properties necessary to perform the task.
 
@@ -759,6 +762,7 @@ class Task(aspecd.utils.ToDictMixin):
         super().__init__()
         self.kind = ''
         self.type = ''
+        self.package = ''
         self.properties = dict()
         self.apply_to = []
         self.recipe = recipe
@@ -874,7 +878,10 @@ class Task(aspecd.utils.ToDictMixin):
         try:
             obj = aspecd.utils.object_from_class_name(class_name)
         except ImportError:
-            package_name = aspecd.utils.package_name(self)
+            if self.package:
+                package_name = self.package
+            else:
+                package_name = aspecd.utils.package_name(self)
             class_name = '.'.join([package_name, class_name])
             obj = aspecd.utils.object_from_class_name(class_name)
         return obj
@@ -1523,6 +1530,10 @@ class TaskFactory:
             Reflects the name of the module the actual object required for
             performing the task resides in.
 
+            You can, however, prefix the module with the package. In such
+            case, only the module name (the last element after splitting on
+            the ".") is used.
+
         Returns
         -------
         task : :class:`aspecd.tasks.Task`
@@ -1536,10 +1547,11 @@ class TaskFactory:
             classes from different packages (if that is sensible to do).
 
         """
-        class_name = ''.join([kind.capitalize(), 'Task'])
+        class_name = ''.join([kind.split('.')[-1].capitalize(), 'Task'])
         package_name = aspecd.utils.package_name(self)
         full_class_name = '.'.join([package_name, 'tasks', class_name])
         task = aspecd.utils.object_from_class_name(full_class_name)
+        task.package = '.'.join(kind.split('.')[:-1])
         return task
 
 
