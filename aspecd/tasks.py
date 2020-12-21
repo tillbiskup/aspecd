@@ -25,23 +25,23 @@ combined. The latter is particularly interesting for representations (e.g.,
 plots) consisting of multiple datasets, or analysis steps spanning multiple
 datasets.
 
-To give a first impression of how such a recipe may look like::
+To give a first impression of how such a recipe may look like:
+
+.. code-block:: yaml
 
     datasets:
       - loi:xxx
       - loi:yyy
 
     tasks:
-      -
-        kind: processing
+      - kind: processing
         type: ProcessingStep
         properties:
           parameters:
             param1: bar
             param2: foo
           prop2: blub
-      -
-        kind: analysis
+      - kind: analysis
         type: SingleAnalysisStep
         properties:
           parameters:
@@ -69,6 +69,54 @@ task.
     The use of ``loi:`` markers in the example above points to a situation
     in which every dataset can be accessed by a unique identifier. For
     details, see the `LabInform documentation <https://www.labinform.de/>`_.
+
+
+Usually, you will use classes to perform the individual tasks that come
+from your own package. There is a a simple way of doing that, not having to
+prefix the kind property of every single task: define the default package
+name like so:
+
+.. code-block:: yaml
+
+    default_package: my_package
+
+    datasets:
+      - loi:xxx
+      - loi:yyy
+
+    tasks:
+      - kind: processing
+        type: ProcessingStep
+
+
+If you would like to use a class from a different package for only one task,
+feel free to prefix the "kind" attribute of the respective task, as shown:
+
+.. code-block:: yaml
+
+    tasks:
+      - kind: some_other_package.processing
+        type: ProcessingStep
+
+
+Of course, in order to work, this package termed here "some_other_package"
+needs to follow the same basic rules and layout as the ASpecD framework and
+packages derived from it.
+
+To state the obvious: You can, of course, combine both strategies, defining
+a default package and overriding this for a particular task:
+
+.. code-block:: yaml
+
+    default_package: my_package
+
+    datasets:
+      - loi:xxx
+      - loi:yyy
+
+    tasks:
+      - kind: some_other_package.processing
+        type: ProcessingStep
 
 
 Types of tasks
@@ -150,6 +198,10 @@ proxy within a derived package to prevent the user from having to call out to
 functionality provided directly by the ASpecD framework (what might be
 confusing for those unfamiliar with the underlying details, *i.e.*,
 most common users).
+
+
+Module documentation
+====================
 
 """
 
@@ -380,6 +432,10 @@ class Recipe:
 
         If no factory is set, but a recipe imported from a file or set from
         a dictionary, an exception will be raised.
+    default_package: :class:`str`
+        Name of the package the task objects are obtained from
+
+        If no name for a default package is supplied, "aspecd" is used.
 
     Raises
     ------
@@ -404,6 +460,7 @@ class Recipe:
         self.tasks = list()
         self.dataset_factory = None
         self.task_factory = TaskFactory()
+        self.default_package = ''
 
     def from_dict(self, dict_=None):
         """
@@ -433,6 +490,8 @@ class Recipe:
             raise MissingDatasetFactoryError
         if not self.task_factory:
             raise MissingTaskFactoryError
+        if 'default_package' in dict_:
+            self.default_package = dict_["default_package"]
         if 'datasets' in dict_:
             for key in dict_['datasets']:
                 self._append_dataset(key)
@@ -448,6 +507,8 @@ class Recipe:
         task = self.task_factory.get_task_from_dict(key)
         task.from_dict(key)
         task.recipe = self
+        if self.default_package and not task.package:
+            task.package = self.default_package
         self.tasks.append(task)
 
     def to_dict(self):
@@ -961,7 +1022,9 @@ class ProcessingTask(Task):
     see :class:`aspecd.processing.ProcessingStep`.
 
     For an example of how such a processing task may be included into a
-    recipe, see the YAML listing below::
+    recipe, see the YAML listing below:
+
+    .. code-block:: yaml
 
         kind: processing
         type: ProcessingStep
@@ -1033,7 +1096,9 @@ class SingleanalysisTask(AnalysisTask):
     see :class:`aspecd.analysis.SingleAnalysisStep`.
 
     For an example of how such an analysis task may be included into a
-    recipe, see the YAML listing below::
+    recipe, see the YAML listing below:
+
+    .. code-block:: yaml
 
         kind: singleanalysis
         type: SingleAnalysisStep
@@ -1078,7 +1143,9 @@ class MultianalysisTask(AnalysisTask):
     see :class:`aspecd.analysis.MultiAnalysisStep`.
 
     For an example of how such an analysis task may be included into a
-    recipe, see the YAML listing below::
+    recipe, see the YAML listing below:
+
+    .. code-block:: yaml
 
         kind: multianalysis
         type: MultiAnalysisStep
@@ -1232,7 +1299,9 @@ class SingleplotTask(PlotTask):
     see :class:`aspecd.plotting.SinglePlotter`.
 
     For an example of how such a analysis task may be included into a
-    recipe, see the YAML listing below::
+    recipe, see the YAML listing below:
+
+    .. code-block:: yaml
 
         kind: singleplot
         type: SinglePlotter
@@ -1289,7 +1358,9 @@ class MultiplotTask(PlotTask):
     see :class:`aspecd.plotting.MultiPlotter`.
 
     For an example of how such a analysis task may be included into a
-    recipe, see the YAML listing below::
+    recipe, see the YAML listing below:
+
+    .. code-block:: yaml
 
         kind: multiplot
         type: MultiPlotter
@@ -1343,7 +1414,9 @@ class ReportTask(Task):
     see :class:`aspecd.report.Reporter`.
 
     For an example of how such an analysis task may be included into a
-    recipe, see the YAML listing below::
+    recipe, see the YAML listing below:
+
+    .. code-block:: yaml
 
         kind: report
         type: LaTeXReporter
@@ -1546,6 +1619,11 @@ class TaskFactory:
             to automatically be prefixed, as this would allow to use
             classes from different packages (if that is sensible to do).
 
+
+        In case the kind string consists of several strings joined by ".",
+        only the last part will be used as class name for obtaining the type
+        of task, and the other parts stored in the ``package`` property of
+        the task.
         """
         class_name = ''.join([kind.split('.')[-1].capitalize(), 'Task'])
         package_name = aspecd.utils.package_name(self)

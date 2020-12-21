@@ -41,6 +41,9 @@ class TestRecipe(unittest.TestCase):
     def test_has_figures_property(self):
         self.assertTrue(hasattr(self.recipe, 'figures'))
 
+    def test_has_default_package_property(self):
+        self.assertTrue(hasattr(self.recipe, 'default_package'))
+
     def test_import_from_without_importer_raises(self):
         with self.assertRaises(tasks.MissingImporterError):
             self.recipe.import_from()
@@ -132,6 +135,25 @@ class TestRecipe(unittest.TestCase):
         self.recipe.from_dict(dict_)
         self.assertTrue(isinstance(self.recipe.tasks[0],
                                    tasks.ProcessingTask))
+
+    def test_from_dict_with_default_package_sets_package(self):
+        dict_ = {'default_package': 'foo'}
+        self.recipe.dataset_factory = self.dataset_factory
+        self.recipe.from_dict(dict_)
+        self.assertEqual('foo', self.recipe.default_package)
+
+    def test_from_dict_with_default_package_adds_package_to_task(self):
+        dict_ = {'default_package': 'foo', 'tasks': [self.task]}
+        self.recipe.dataset_factory = self.dataset_factory
+        self.recipe.from_dict(dict_)
+        self.assertEqual('foo', self.recipe.tasks[0].package)
+
+    def test_from_dict_with_default_pkg_and_task_pkg_sets_correct_pkg(self):
+        dict_ = {'default_package': 'foo', 'tasks': [self.task]}
+        dict_["tasks"][0]["kind"] = 'bar' + '.' + dict_["tasks"][0]["kind"]
+        self.recipe.dataset_factory = self.dataset_factory
+        self.recipe.from_dict(dict_)
+        self.assertEqual('bar', self.recipe.tasks[0].package)
 
     def test_has_to_dict_method(self):
         self.assertTrue(hasattr(self.recipe, 'to_dict'))
