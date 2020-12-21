@@ -41,7 +41,7 @@ To give a first impression of how such a recipe may look like:
             param1: bar
             param2: foo
           prop2: blub
-      - kind: analysis
+      - kind: singleanalysis
         type: SingleAnalysisStep
         properties:
           parameters:
@@ -153,6 +153,16 @@ packages derived from ASpecD.
 Furthermore, depending on the type of task, you may be able to set
 additional parameters controlling in more detail how the particular task is
 performed. For details, see the documentation of the respective task subclass.
+
+.. important::
+    As long as there is no automatic syntax checking of recipes before they
+    get executed, you are entirely responsible on your own to provide
+    correct syntax. From own experience, there are a few problems frequently
+    arising: Don't use **analysis**, but either **singleanalysis** or
+    **multianalysis** as kind in an analysis step. The same applies to
+    plots. Don't use **plotting**, but either **singleplot** or
+    **multiplot** as kind.
+
 
 .. todo::
     There is a number of things that are not yet implemented, but required
@@ -1071,9 +1081,12 @@ class AnalysisTask(Task):
     Attributes
     ----------
     result : :class:`str`
-        Label for the dataset resulting from an analysis step.
+        Label for the result of an analysis step.
 
-        This label will be used to refer to the dataset later on when
+        The result of an analysis step can be everything from a scalar to an
+        entire (new) dataset.
+
+        This label will be used to refer to the result later on when
         further processing the recipe.
 
     """
@@ -1282,8 +1295,13 @@ class PlotTask(Task):
             Plot whose figure should be saved
 
         """
-        if 'filename' in self.properties and self.properties['filename']:
-            saver = aspecd.plotting.Saver(filename=self.properties['filename'])
+        filename = None
+        if plot.filename:
+            filename = plot.filename
+        elif 'filename' in self.properties and self.properties['filename']:
+            filename = plot.save(saver)
+        if filename:
+            saver = aspecd.plotting.Saver(filename=filename)
             plot.save(saver)
 
 
@@ -1335,15 +1353,47 @@ class SingleplotTask(PlotTask):
         details of how the format is inferred see the documentation for the
         :meth:`matplotlib.figure.Figure.savefig` method.
 
+    In case you apply the single plotter to more than one dataset and would
+    like to save individual plots, you can do that by supplying a list of
+    filenames instead of only a single filename. In this case, the plots get
+    saved to the filenames in the list. A minmal example may look like this:
+
+    .. code-block:: yaml
+
+        kind: singleplot
+        type: SinglePlotter
+        properties:
+          filename:
+            - fancyfigure1.pdf
+            - fancyfigure2.pdf
+        apply_to:
+          - loi:xxx
+          - loi:yyy
+
+    .. important::
+        Make sure to provide the same number of file names in your recipe as
+        the number of datasets you apply the plotter to. Otherwise you may
+        run into trouble.
+
     """
 
     def _perform(self):
-        for dataset_id in self.apply_to:
-            dataset = self.recipe.get_dataset(dataset_id)
-            task = self.get_object()
-            dataset.plot(plotter=task)
-            # noinspection PyTypeChecker
-            self.save_plot(plot=task)
+        if "filename" in self.properties \
+                and type(self.properties["filename"]) == list:
+            for nr, dataset_id in enumerate(self.apply_to):
+                dataset = self.recipe.get_dataset(dataset_id)
+                task = self.get_object()
+                task.filename = self.properties["filename"][nr]
+                dataset.plot(plotter=task)
+                # noinspection PyTypeChecker
+                self.save_plot(plot=task)
+        else:
+            for dataset_id in self.apply_to:
+                dataset = self.recipe.get_dataset(dataset_id)
+                task = self.get_object()
+                dataset.plot(plotter=task)
+                # noinspection PyTypeChecker
+                self.save_plot(plot=task)
 
 
 class MultiplotTask(PlotTask):

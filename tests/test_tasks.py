@@ -803,10 +803,15 @@ class TestSinglePlotTask(unittest.TestCase):
         self.recipe = tasks.Recipe()
         self.dataset = ['foo']
         self.figure_filename = 'foo.pdf'
+        self.datasets = ['foo', 'bar']
+        self.figure_filenames = ['foo.pdf', 'bar.pdf']
 
     def tearDown(self):
         if os.path.exists(self.figure_filename):
             os.remove(self.figure_filename)
+        for file in self.figure_filenames:
+            if os.path.exists(file):
+                os.remove(file)
 
     def prepare_recipe(self):
         self.plotting_task = {'kind': 'singleplot',
@@ -837,6 +842,25 @@ class TestSinglePlotTask(unittest.TestCase):
         self.task.recipe = self.recipe
         self.task.perform()
         self.assertTrue(os.path.exists(self.figure_filename))
+
+    def test_perform_task_with_list_of_filenames_saves_plots(self):
+        self.plotting_task = {'kind': 'singleplot',
+                              'type': 'SinglePlotter',
+                              'apply_to': self.datasets}
+        dataset_factory = dataset.DatasetFactory()
+        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        self.recipe.dataset_factory = dataset_factory
+        recipe_dict = {'datasets': self.datasets,
+                       'tasks': [self.plotting_task]}
+        self.recipe.from_dict(recipe_dict)
+        # noinspection PyTypeChecker
+        self.plotting_task['properties'] = {'filename': self.figure_filenames}
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        for file in self.figure_filenames:
+            print(file)
+            self.assertTrue(os.path.exists(file))
 
 
 class TestMultiPlotTask(unittest.TestCase):
