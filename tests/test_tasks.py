@@ -547,6 +547,38 @@ class TestProcessingTask(unittest.TestCase):
         for dataset_ in self.recipe.datasets:
             self.assertTrue(self.recipe.datasets[dataset_].history)
 
+    def test_has_result_property(self):
+        self.assertTrue(hasattr(self.task, 'result'))
+
+    def test_result_attribute_gets_set_from_dict(self):
+        self.prepare_recipe()
+        result = 'foo'
+        self.processing_task['result'] = result
+        self.task.from_dict(self.processing_task)
+        self.assertEqual(result, self.task.result)
+
+    def test_perform_task_with_result_adds_result(self):
+        self.prepare_recipe()
+        result = 'foo'
+        self.processing_task['result'] = result
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(len(self.recipe.results))
+
+    def test_perform_task_with_result_and_multiple_datasets_adds_results(self):
+        self.prepare_recipe()
+        result = ['foo', 'bar']
+        recipe_dict = {'datasets': result,
+                       'tasks': [self.processing_task]}
+        self.recipe.from_dict(recipe_dict)
+        self.processing_task['result'] = result
+        self.processing_task['apply_to'] = result
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertEqual(len(result), len(self.recipe.results))
+
 
 class TestAnalysisTask(unittest.TestCase):
     def setUp(self):

@@ -216,6 +216,7 @@ Module documentation
 """
 
 import collections
+import copy
 
 import aspecd.io
 import aspecd.utils
@@ -1052,22 +1053,81 @@ class ProcessingTask(Task):
     automatically be replaced by the actual dataset/result prior to
     performing the task.
 
-    .. todo::
-        ProcessingTask should get a ``result`` property, allowing to store
-        results of a processing step in a *new* dataset that gets
-        automatically added to the list of datasets in the recipe.
+    Sometimes it can come in quite handy to compare different processing
+    steps on the same original dataset, *e.g.* a series of different
+    parameters. Think of a polynomial baseline correction where you would
+    like to compare the effect of polynomials of different order. Here,
+    what you are interested in is to work on *copies* of the original
+    dataset and get the results stored additionally. Here you go:
 
-        Furthermore, processing several datasets, users should be able to
-        provide a *list of result labels* of the same length as the datasets
-        processed, in order to store each result in a new dataset.
+    .. code-block:: yaml
+
+        kind: processing
+        type: ProcessingStep
+        result: label
+
+
+    And if you now want to do that for multiple datasets, you can do that as
+    well. However, make sure to provide as many result labels as you have
+    datasets to perform the processing step on, as otherwise no result will
+    be stored and the processing step will operate on the original datasets:
+
+    .. code-block:: yaml
+
+        kind: processing
+        type: ProcessingStep
+        apply_to:
+          - loi:xxx
+          - loi:yyy
+        result:
+          - label1
+          - label2
+
+
+    Attributes
+    ----------
+    result : :class:`str`
+        Label for the result of a processing step.
+
+        Processing steps always operate on datasets. However, sometimes it
+        is useful to have a processing task return a copy of the processed
+        dataset, in order to compare different processings afterwards.
+        Therefore, you can specify a ``results`` label. In this case,
+        the dataset will be copied first, the processing step performed on
+        it, and afterwards the result returned as a *new* dataset that is
+        accessible throughout the rest of the recipe with the label provided.
+
+        In case you perform the processing on several datasets, you may want
+        to provide as many result labels as there are datasets. Otherwise,
+        no result will be assigned.
 
     """
 
+    def __init__(self, recipe=None):
+        super().__init__(recipe=recipe)
+        self.result = ''
+
     def _perform(self):
-        for dataset_id in self.apply_to:
+        result_labels = None
+        if self.result and type(self.result) == list:
+            if len(self.result) == len(self.apply_to):
+                result_labels = self.result
+            else:
+                self.result = None
+        for no, dataset_id in enumerate(self.apply_to):
             dataset = self.recipe.get_dataset(dataset_id)
             task = self.get_object()
-            dataset.process(processing_step=task)
+            if self.result:
+                dataset_copy = copy.deepcopy(dataset)
+                dataset_copy.process(processing_step=task)
+                if result_labels:
+                    dataset_copy.id = self.result[no]
+                    self.recipe.results[self.result[no]] = dataset_copy
+                else:
+                    dataset_copy.id = self.result
+                    self.recipe.results[self.result] = dataset_copy
+            else:
+                dataset.process(processing_step=task)
 
 
 class AnalysisTask(Task):
@@ -1387,22 +1447,19 @@ class SingleplotTask(PlotTask):
     """
 
     def _perform(self):
+        filenames = []
         if "filename" in self.properties \
-                and type(self.properties["filename"]) == list:
-            for nr, dataset_id in enumerate(self.apply_to):
-                dataset = self.recipe.get_dataset(dataset_id)
-                task = self.get_object()
-                task.filename = self.properties["filename"][nr]
-                dataset.plot(plotter=task)
-                # noinspection PyTypeChecker
-                self.save_plot(plot=task)
-        else:
-            for dataset_id in self.apply_to:
-                dataset = self.recipe.get_dataset(dataset_id)
-                task = self.get_object()
-                dataset.plot(plotter=task)
-                # noinspection PyTypeChecker
-                self.save_plot(plot=task)
+                and type(self.properties["filename"]) == list \
+                and len(self.apply_to) == len(self.properties["filename"]):
+            filenames = self.properties["filename"]
+        for nr, dataset_id in enumerate(self.apply_to):
+            dataset = self.recipe.get_dataset(dataset_id)
+            task = self.get_object()
+            if filenames:
+                task.filename = filenames[nr]
+            dataset.plot(plotter=task)
+            # noinspection PyTypeChecker
+            self.save_plot(plot=task)
 
 
 class MultiplotTask(PlotTask):
