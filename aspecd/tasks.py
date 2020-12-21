@@ -1052,6 +1052,15 @@ class ProcessingTask(Task):
     automatically be replaced by the actual dataset/result prior to
     performing the task.
 
+    .. todo::
+        ProcessingTask should get a ``result`` property, allowing to store
+        results of a processing step in a *new* dataset that gets
+        automatically added to the list of datasets in the recipe.
+
+        Furthermore, processing several datasets, users should be able to
+        provide a *list of result labels* of the same length as the datasets
+        processed, in order to store each result in a new dataset.
+
     """
 
     def _perform(self):
@@ -1299,7 +1308,7 @@ class PlotTask(Task):
         if plot.filename:
             filename = plot.filename
         elif 'filename' in self.properties and self.properties['filename']:
-            filename = plot.save(saver)
+            filename = self.properties['filename']
         if filename:
             saver = aspecd.plotting.Saver(filename=filename)
             plot.save(saver)
