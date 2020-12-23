@@ -1822,3 +1822,110 @@ class FigureRecord(aspecd.utils.ToDictMixin):
             raise MissingPlotterError
         for attribute in ['caption', 'parameters', 'filename']:
             setattr(self, attribute, getattr(plotter, attribute))
+
+
+class ChefDeService:
+    """
+    Wrapper for serving the results of recipes given a recipe file name.
+
+    In recipe-driven data analysis, a recipe of class
+    :class:`aspecd.tasks.Recipe` get cooked by a chef of class
+    :class:`aspecd.tasks.Chef`. However, this requires to get the
+    appropriate dataset factory of class
+    :class:`aspecd.dataset.DatasetFactory` or a class inheriting from this one,
+    depending on the package actually used.
+
+    However, the (end) user would rather like to not care about those
+    details and simply provide a recipe filename (of a YAML file) to an
+    instance of a class and get the results back. This is where the
+    ``ChefDeService`` comes in.
+
+    Obtaining the results of a recipe will become as simple as::
+
+        chef_de_service = ChefDeService()
+        chef_de_service.serve(filename='my_recipe.yaml')
+
+
+    Attributes
+    ----------
+    recipe_filename : :class:`str`
+        Name of the recipe file to serve the cooked results for
+
+    Raises
+    ------
+    MissingRecipeError
+        Raised if no recipe filename is provided upon trying to serve
+
+    """
+
+    def __init__(self):
+        self.recipe_filename = ''
+        self._recipe = aspecd.tasks.Recipe()
+        self._recipe_dict = None
+        self._dataset_factory = aspecd.dataset.DatasetFactory()
+
+    def serve(self, recipe_filename=''):
+        """
+        Serve the results of cooking a recipe
+
+        All you need to do is to provide the filename of a recipe YAML file.
+
+        Parameters
+        ----------
+        recipe_filename : :class:`str`
+            Name of the recipe YAML file to cook
+
+        Raises
+        ------
+        MissingRecipeError
+            Raised if no recipe filename is provided upon trying to serve
+
+        """
+        if recipe_filename:
+            self.recipe_filename = recipe_filename
+        if not self.recipe_filename:
+            message = "You need to provide a recipe filename."
+            raise MissingRecipeError(message=message)
+        self._create_recipe()
+        chef = aspecd.tasks.Chef(self._recipe)
+        chef.cook()
+
+    def _create_recipe(self):
+        """
+        Create recipe from imported YAML file with correct DatasetFactory.
+
+        Simply loading the recipe using the
+        :class:`aspecd.io.RecipeYamlImporter` class does *not* work,
+        as we first need to obtain the recipe dict and parse for the
+        ``default_package`` key to get the correct DatasetFactory class.
+        """
+        self._load_recipe_yaml()
+        self._get_dataset_factory()
+        self._recipe.dataset_factory = self._dataset_factory
+        self._recipe.from_dict(self._recipe_dict)
+
+    def _load_recipe_yaml(self):
+        """
+        Obtain dict from recipe YAML file.
+        """
+        yaml_importer = aspecd.utils.Yaml()
+        yaml_importer.read_from(self.recipe_filename)
+        self._recipe_dict = yaml_importer.dict
+
+    def _get_dataset_factory(self):
+        """
+        Obtain correct DatasetFactory instance depending on default package.
+
+        The default package can be set as key in the recipe. If no such key
+        is found, the default :class:`aspecd.dataset.DatasetFactory` class
+        is used. Otherwise, an instance of a class with the same name and
+        location, but in the package specified in the recipe, is created.
+        """
+        if "default_package" in self._recipe_dict.keys():
+            class_name = self._recipe_dict["default_package"] + \
+                         '.dataset.DatasetFactory'
+            self._dataset_factory = aspecd.utils.object_from_class_name(
+                class_name)
+        else:
+            self._dataset_factory.importer_factory = \
+                aspecd.io.DatasetImporterFactory()

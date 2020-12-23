@@ -1161,3 +1161,50 @@ class TestFigureRecord(unittest.TestCase):
         self.plotter.filename = filename
         self.figure_record.from_plotter(self.plotter)
         self.assertEqual(filename, self.figure_record.filename)
+
+
+class TestChefDeService(unittest.TestCase):
+
+    def setUp(self):
+        self.chef_de_service = tasks.ChefDeService()
+        self.recipe_filename = 'foo'
+        self.figure_filename = 'foo.pdf'
+
+    def tearDown(self):
+        if os.path.exists(self.recipe_filename):
+            os.remove(self.recipe_filename)
+        if os.path.exists(self.figure_filename):
+            os.remove(self.figure_filename)
+
+    def create_recipe(self):
+        recipe_dict = {
+            'datasets': ['foo'],
+            'tasks': [{'kind': 'singleplot', 'type': 'SinglePlotter',
+                       'properties': {'filename': self.figure_filename}}],
+        }
+        yaml = utils.Yaml()
+        yaml.dict = recipe_dict
+        yaml.write_to(self.recipe_filename)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_serve_method(self):
+        self.assertTrue(hasattr(self.chef_de_service, 'serve'))
+        self.assertTrue(callable(self.chef_de_service.serve))
+
+    def test_serve_without_recipe_raises(self):
+        with self.assertRaises(tasks.MissingRecipeError):
+            self.chef_de_service.serve()
+
+    def test_serve_with_preset_recipe(self):
+        self.create_recipe()
+        self.chef_de_service.recipe_filename = self.recipe_filename
+        self.chef_de_service.serve()
+
+    def test_serve_with_recipe_cooks_recipe(self):
+        # NOTE: Should be changed to "cooks recipe", with a recipe that saves
+        # a plot that can be checked for
+        self.create_recipe()
+        self.chef_de_service.serve(recipe_filename=self.recipe_filename)
+        self.assertTrue(os.path.exists(self.figure_filename))
