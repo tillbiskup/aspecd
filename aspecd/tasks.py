@@ -217,6 +217,7 @@ Module documentation
 
 import collections
 import copy
+import sys
 
 import aspecd.io
 import aspecd.utils
@@ -1843,7 +1844,7 @@ class ChefDeService:
     Obtaining the results of a recipe will become as simple as::
 
         chef_de_service = ChefDeService()
-        chef_de_service.serve(filename='my_recipe.yaml')
+        chef_de_service.serve(recipe_filename='my_recipe.yaml')
 
 
     Attributes
@@ -1929,3 +1930,33 @@ class ChefDeService:
         else:
             self._dataset_factory.importer_factory = \
                 aspecd.io.DatasetImporterFactory()
+
+
+def serve(recipe_filename=''):
+    """
+    Serve the results of cooking a recipe
+
+    All you need to do is to provide the filename of a recipe YAML file.
+
+    The ASpecD framework creates a console script entry point named "serve"
+    that will allow you to even type ``serve <recipe_name.yaml>`` on the
+    command line after installing the ASpecD framework.
+
+    Thanks to the modular nature of the ASpecD framework, if your recipe
+    contains the ``default_package`` key followed by the name of a package
+    based on the ASpecD framework, the correct instance of the
+    :class:`aspecd.dataset.DatasetFactory` class will be created
+    and added to the recipe automatically, thus allowing you to serve
+    recipes that rely on functionality of ASpecD-derived packages for their
+    being cooked and served.
+
+    Parameters
+    ----------
+    recipe_filename : :class:`str`
+        Name of the recipe YAML file to cook
+
+    """
+    if not recipe_filename:
+        recipe_filename = sys.argv[1]
+    chef_de_service = ChefDeService()
+    chef_de_service.serve(recipe_filename=recipe_filename)

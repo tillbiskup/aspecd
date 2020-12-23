@@ -1,6 +1,7 @@
 """Tests for tasks."""
 
 import os
+import subprocess
 import unittest
 
 from aspecd import dataset, io, plotting, processing, report, tasks, utils
@@ -1203,8 +1204,11 @@ class TestChefDeService(unittest.TestCase):
         self.chef_de_service.serve()
 
     def test_serve_with_recipe_cooks_recipe(self):
-        # NOTE: Should be changed to "cooks recipe", with a recipe that saves
-        # a plot that can be checked for
         self.create_recipe()
         self.chef_de_service.serve(recipe_filename=self.recipe_filename)
+        self.assertTrue(os.path.exists(self.figure_filename))
+
+    def test_serve_console_entry_point_cooks_recipe(self):
+        self.create_recipe()
+        subprocess.run(["serve", self.recipe_filename])
         self.assertTrue(os.path.exists(self.figure_filename))

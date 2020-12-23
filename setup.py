@@ -53,4 +53,9 @@ setuptools.setup(
         'docs': ['sphinx', 'sphinx-rtd-theme'],
     },
     python_requires='>=3.5',
+    entry_points={
+        'console_scripts': [
+            'serve = aspecd.tasks:serve',
+        ],
+    },
 )
