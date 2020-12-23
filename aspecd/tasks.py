@@ -1,11 +1,23 @@
 """
 Constituents of a recipe-driven data analysis.
 
+.. sidebar:: Topics
+
+    .. contents::
+        :local:
+
+
 One main aspect of tasks is to provide the constituents of a
 :ref:`recipe-driven data analysis <recipes>`, i.e.
 :class:`aspecd.tasks.Recipe` and :class:`aspecd.tasks.Chef`. In its
 simplest form, a recipe gets cooked by a chef, resulting in a series of
 tasks being performed on a list of datasets.
+
+The idea of recipes here is to provide all necessary information for data
+processing and analysis in a simple, human-readable and human-writable form.
+This allows users not familiar with programming to perform even complex
+tasks. In addition, recipes can even be "executed" using the command line,
+not needing to start a Python interpreter.
 
 From a user's perspective, a recipe is usually stored in a `YAML
 <https://yaml.org/>`_ file. This allows to easily create and modify recipes
@@ -101,7 +113,9 @@ feel free to prefix the "kind" attribute of the respective task, as shown:
 
 Of course, in order to work, this package termed here "some_other_package"
 needs to follow the same basic rules and layout as the ASpecD framework and
-packages derived from it.
+packages derived from it. In particular, if you use the "default_package"
+directive in your recipe, the given package needs to implement a child of
+the :class:`aspecd.dataset.DatasetFactory` class.
 
 To state the obvious: You can, of course, combine both strategies, defining
 a default package and overriding this for a particular task:
@@ -117,6 +131,40 @@ a default package and overriding this for a particular task:
     tasks:
       - kind: some_other_package.processing
         type: ProcessingStep
+
+
+Executing recipes: serving the cooked results
+=============================================
+
+As stated above, a recipe gets cooked by a chef, resulting in a series of
+tasks being performed on a list of datasets. However, as an (end) user you
+usually don't care about chefs and recipes besides the human-readable and
+writable representation of a recipe in YAML format. Therefore, there is a
+fairly simple way to get a recipe executed, or, in terms of the metaphor of
+recipe and cook, to get the meal served:
+
+.. code-block:: bash
+
+    serve <my-recipe>.yaml
+
+No need of running a Python terminal, no need of instantiating any class.
+Simply executing a command from a terminal, that's all that is to it. In
+this particular example, ``<my-recipe>`` is a placeholder for your recipe
+file name.
+
+Of course, you can do the same from within Python::
+
+    serve(recipe_filename='<my-recipe>.yaml')
+
+And if you insist, of course there is an object-oriented way to do it::
+
+    chef_de_service = ChefDeService()
+    chef_de_service.serve(recipe_filename='<my-recipe>.yaml')
+
+The good news with all this: It should work for every package derived from
+the ASpecD framework, as long as you specify the ``default_package``
+directive within the recipe. And of course, calling the recipe from the
+command-line will only help you if it creates some kind of output.
 
 
 Types of tasks
