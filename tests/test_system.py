@@ -23,7 +23,7 @@ class TestSystemInfo(unittest.TestCase):
         self.assertEqual(self.sysinfo.python["version"], python_version)
 
     def test_platform_property(self):
-        platform_ = platform.platform
+        platform_ = platform.platform()
         self.assertEqual(self.sysinfo.platform, platform_)
 
     def test_user_property_login_key(self):

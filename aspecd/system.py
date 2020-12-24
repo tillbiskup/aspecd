@@ -51,7 +51,7 @@ class SystemInfo(aspecd.utils.ToDictMixin):
         super().__init__()
         self.python = dict()
         self.packages = dict()
-        self.platform = platform.platform
+        self.platform = platform.platform()
         self.user = dict()
         # Set some properties of dicts
         self.python["version"] = sys.version

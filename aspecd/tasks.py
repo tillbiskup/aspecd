@@ -1,7 +1,7 @@
 """
 Constituents of a recipe-driven data analysis.
 
-.. sidebar:: Topics
+.. sidebar:: Contents
 
     .. contents::
         :local:
