@@ -115,6 +115,13 @@ class TestRecipeImporter(unittest.TestCase):
         self.importer.import_into(recipe=recipe)
         self.assertIs(self.importer.recipe, recipe)
 
+    def test_import_into_with_source_sets_filename_in_recipe(self):
+        recipe = tasks.Recipe()
+        importer = io.RecipeImporter(source=self.source)
+        importer.recipe = recipe
+        importer.import_into()
+        self.assertEqual(importer.recipe.filename, self.source)
+
 
 class TestRecipeExporter(unittest.TestCase):
     def setUp(self):

@@ -492,6 +492,7 @@ class RecipeImporter:
                 raise MissingRecipeError("No recipe provided")
         else:
             self.recipe = recipe
+        self.recipe.filename = self.source
         self._import()
 
     def _import(self):

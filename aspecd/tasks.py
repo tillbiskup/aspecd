@@ -167,6 +167,32 @@ directive within the recipe. And of course, calling the recipe from the
 command-line will only help you if it creates some kind of output.
 
 
+History of a recipe
+===================
+
+The :class:`aspecd.tasks.Chef` class takes care of automatically creating a
+history of the recipe cooked, with a full list of parameters for each task.
+This history is a dict that follows the same structure as the original
+recipe. Therefore, you can save this history to a YAML file and use it as a
+recipe again, perhaps after some modifications.
+
+If you use the :class:`aspecd.tasks.ChefDeService` class, you need not care
+about actually writing the history to a YAML file. Therefore, using this
+class or even the command-line call to ``serve`` as described above,
+is highly recommended. In this case, you will have a full history of all
+your tasks contained in a human-readable YAML file, together with some
+additional information on the system and package versions used to cook the
+recipe, as well as the time for start and end of cooking.
+
+To make it short: The history of the recipe allows you to perform a fully
+reproducible data analysis even of multiple datasets and arbitrarily
+complex tasks without having to care about the details. You get it all for
+free. That's what the ASpecD framework is all about. Care about the results
+of your data analysis and what this means in terms of answering the
+scientific questions that originally triggered obtaining and analysing the
+data. Reproducibility is been taken care of for you.
+
+
 Types of tasks
 ==============
 
@@ -217,8 +243,6 @@ performed. For details, see the documentation of the respective task subclass.
     for a working recipe-driven data analysis that follows good practice
     for reproducible research. This includes (but may not be limited to):
 
-      * Store history of each task (in a way the result can be used as a
-        recipe again).
       * Parser for recipes performing a static analysis of their syntax.
         Useful particulary for larger datasets and/or longer lists of tasks.
 
@@ -265,6 +289,8 @@ Module documentation
 
 import collections
 import copy
+import datetime
+import os
 import sys
 
 import aspecd.io
@@ -463,10 +489,12 @@ class Recipe:
         Each dataset is an object of class :class:`aspecd.dataset.Dataset`.
 
         The keys are the dataset ids.
+
     tasks : :class:`list`
         List of tasks to be performed on the datasets
 
         Each task is an object of class :class:`aspecd.tasks.Task`.
+
     results : :class:`collections.OrderedDict`
         Ordered dictionary of results originating from analysis tasks
 
@@ -477,10 +505,12 @@ class Recipe:
         The keys are those defined by
         :attr:`aspecd.tasks.SingleanalysisTask.result` and
         :attr:`aspecd.tasks.MultianalysisTask.result`, respectively.
+
     figures : :class:`collections.OrderedDict`
         Ordered dictionary of figures originating from plotting tasks
 
         Each entry is an object of class :class:`aspecd.tasks.FigureRecord`.
+
     dataset_factory : :class:`aspecd.dataset.DatasetFactory`
         Factory for datasets used to retrieve datasets
 
@@ -497,6 +527,16 @@ class Recipe:
         Name of the package the task objects are obtained from
 
         If no name for a default package is supplied, "aspecd" is used.
+
+    filename : :class:`str`
+        Name of the (YAML) file the recipe was loaded from.
+
+        Empty string if recipe was loaded from a dictionary instead.
+
+        The filename can be used to persist the history of a cooked recipe
+        in form of a YAML file for full reproducibility. This will be done
+        when using the :class:`aspecd.tasks.ChefDeService` class and its
+        :meth:`aspecd.tasks.ChefDeService.serve` method.
 
     Raises
     ------
@@ -522,6 +562,7 @@ class Recipe:
         self.dataset_factory = None
         self.task_factory = TaskFactory()
         self.default_package = ''
+        self.filename = ''
 
     def from_dict(self, dict_=None):
         """
@@ -721,22 +762,48 @@ class Chef:
     """
     Chefs cook recipes in recipe-driven data analysis.
 
-    As a result, they create some kind of history of the tasks performed.
-    In this respect, they make the history independent of a singe dataset
-    and allow to trace processing and analysis of multiple datasets. One
-    necessary prerequisite is therefore the LOI as a persistent and
-    unique identifier for each dataset.
+    As a result, they create a full history of the tasks performed,
+    including all parameters, implicit and explicit. In this respect,
+    they make the history independent of a singe dataset and allow to trace
+    processing and analysis of multiple datasets.
 
-    .. todo::
-        Decide about the way this kind of history gets stored and
-        persisted. One reasonable idea might be to persist it in a form
-        that can be used as a recipe again. The file format for persistence
-        will most probably be YAML for the time being.
+    .. note::
 
-    Parameters
-    ----------
-    recipe : :class:`aspecd.tasks.Recipe`
-        Recipe to cook, i.e. to carry out
+        One necessary prerequisite for full reproducibility is therefore
+        some kind of persistent and unique identifier for each dataset. The
+        "Lab Object Identifier" (LOI) as used within the `LabInform
+        <https://www.labinform.de/>`_ framework, is one solution of such
+        identifier.
+
+
+    For persisting the history of cooking a recipe, the contents of the
+    ``history`` attribute should be saved as a YAML file. There are two ways
+    how to do that: manually and fully automated. If you manually
+    instantiate an object of the :class:`aspecd.tasks.Chef` class, you would
+    need to do that on your own, as follows::
+
+        chef = aspecd.tasks.Chef()
+        # ... obtaining recipe from file
+        chef.cook(recipe)
+
+        yaml = aspecd.utils.Yaml()
+        yaml.dict = chef.history
+        yaml.write_to(filename='<my-recipe-history>.yaml')
+
+    The other way is to use an instance of the
+    :class:`aspecd.tasks.ChefDeService` class and its
+    :meth:`aspecd.tasks.ChefDeService.serve` method::
+
+        chef_de_service = ChefDeService()
+        chef_de_service.serve(recipe_filename='my_recipe.yaml')
+
+    This will automatically save the recipe history for you as a YAML file
+    with its filename derived from the original recipe name. For details,
+    see the documentation of the :class:`aspecd.tasks.ChefDeService` class.
+
+    The YAML files generated from saving the history should work as recipes
+    themselves, therefore allowing a full turnover, as well as easy
+    modification of a recipe.
 
     Attributes
     ----------
@@ -753,6 +820,11 @@ class Chef:
 
         Can be exported to a YAML file that works as a recipe.
 
+    Parameters
+    ----------
+    recipe : :class:`aspecd.tasks.Recipe`
+        Recipe to cook, i.e. to carry out
+
     Raises
     ------
     aspecd.tasks.MissingRecipeError
@@ -763,6 +835,7 @@ class Chef:
     def __init__(self, recipe=None):
         self.history = collections.OrderedDict()
         self.recipe = recipe
+        self._timespec = 'seconds'  # Format used for time stamps
 
     def cook(self, recipe=None):
         """
@@ -788,6 +861,8 @@ class Chef:
         for task in self.recipe.tasks:
             task.perform()
             self.history["tasks"].append(task.to_dict())
+        self.history["info"]["end"] = \
+            datetime.datetime.now().isoformat(timespec=self._timespec)
 
     def _assign_recipe(self, recipe):
         if not recipe:
@@ -797,6 +872,8 @@ class Chef:
             self.recipe = recipe
 
     def _prepare_history(self):
+        timestamp = datetime.datetime.now().isoformat(timespec=self._timespec)
+        self.history["info"] = {'start': timestamp, 'end': ''}
         system_info = aspecd.system.SystemInfo(self.recipe.default_package)
         self.history["system_info"] = system_info.to_dict()
         self.history["datasets"] = list(self.recipe.datasets.keys())
@@ -1915,6 +1992,12 @@ class ChefDeService:
         chef_de_service = ChefDeService()
         chef_de_service.serve(recipe_filename='my_recipe.yaml')
 
+    Furthermore, the ``ChefDeService`` takes care of persisting the history
+    of the cooked recipe in form of a YAML file. Therefore, an additional
+    file gets created consisting of the filename of the recipe provided,
+    extended by the timestamp of serving the results. These history files
+    can be used as recipe again, allowing for full turnover.
+
 
     Attributes
     ----------
@@ -1930,7 +2013,9 @@ class ChefDeService:
 
     def __init__(self):
         self.recipe_filename = ''
+        self._history_filename = ''
         self._recipe = aspecd.tasks.Recipe()
+        self._chef = aspecd.tasks.Chef()
         self._recipe_dict = None
         self._dataset_factory = aspecd.dataset.DatasetFactory()
 
@@ -1939,6 +2024,9 @@ class ChefDeService:
         Serve the results of cooking a recipe
 
         All you need to do is to provide the filename of a recipe YAML file.
+        Additionally, the history will be served in a YAML file consisting
+        of the name of the filename provided as recipe, with the timestamp
+        of serving added to it.
 
         Parameters
         ----------
@@ -1957,8 +2045,13 @@ class ChefDeService:
             message = "You need to provide a recipe filename."
             raise MissingRecipeError(message=message)
         self._create_recipe()
-        chef = aspecd.tasks.Chef(self._recipe)
-        chef.cook()
+        self._cook_recipe()
+        self._write_history()
+        return self._history_filename
+
+    def _cook_recipe(self):
+        self._chef.recipe = self._recipe
+        self._chef.cook()
 
     def _create_recipe(self):
         """
@@ -1999,6 +2092,17 @@ class ChefDeService:
         else:
             self._dataset_factory.importer_factory = \
                 aspecd.io.DatasetImporterFactory()
+
+    def _write_history(self):
+        self._create_history_filename()
+        yaml = aspecd.utils.Yaml()
+        yaml.dict = self._chef.history
+        yaml.write_to(self._history_filename)
+
+    def _create_history_filename(self):
+        timestamp = datetime.datetime.now().strftime('%Y%m%dT%H%M%S')
+        basename, extension = os.path.splitext(self.recipe_filename)
+        self._history_filename = basename + '-' + timestamp + extension
 
 
 def serve(recipe_filename=''):

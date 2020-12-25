@@ -3,6 +3,7 @@ import collections
 import os
 import subprocess
 import unittest
+import datetime
 
 from aspecd import dataset, io, plotting, processing, report, tasks, utils
 
@@ -59,6 +60,15 @@ class TestRecipe(unittest.TestCase):
         for key in self.task:
             self.assertEqual(getattr(self.recipe.tasks[0], key),
                              self.task[key])
+
+    def test_import_from_yaml_importer_sets_filename(self):
+        yaml_contents = {'tasks': [self.task]}
+        with open(self.filename, 'w') as file:
+            utils.yaml.dump(yaml_contents, file)
+        importer = io.RecipeYamlImporter(source=self.filename)
+        self.recipe.dataset_factory = self.dataset_factory
+        self.recipe.import_from(importer=importer)
+        self.assertEqual(self.filename, self.recipe.filename)
 
     def test_import_from_yaml_importer_with_datasets_sets_datasets(self):
         yaml_contents = {'datasets': self.datasets}
@@ -367,6 +377,31 @@ class TestChef(unittest.TestCase):
         self.chef.cook(recipe)
         for key in self.processing_task.keys():
             self.assertIn(key, self.chef.history["tasks"][0])
+
+    def test_cook_adds_info_key_to_history(self):
+        recipe = self.recipe
+        self.chef.cook(recipe)
+        self.assertIn('info', self.chef.history)
+
+    def test_info_key_in_history_contains_correct_fields(self):
+        recipe = self.recipe
+        self.chef.cook(recipe)
+        for key in ['start', 'end']:
+            self.assertIn(key, self.chef.history["info"])
+
+    def test_info_key_in_history_contains_correct_start_timestamp(self):
+        recipe = self.recipe
+        self.chef.cook(recipe)
+        timestamp = datetime.datetime.now().isoformat(timespec='minutes')
+        self.assertTrue(self.chef.history["info"]["start"].startswith(
+            timestamp))
+
+    def test_info_key_in_history_contains_correct_end_timestamp(self):
+        recipe = self.recipe
+        self.chef.cook(recipe)
+        timestamp = datetime.datetime.now().isoformat(timespec='minutes')
+        self.assertTrue(self.chef.history["info"]["end"].startswith(
+            timestamp))
 
 
 class TestTask(unittest.TestCase):
@@ -1225,14 +1260,17 @@ class TestChefDeService(unittest.TestCase):
 
     def setUp(self):
         self.chef_de_service = tasks.ChefDeService()
-        self.recipe_filename = 'foo'
+        self.recipe_filename = 'foo.yaml'
         self.figure_filename = 'foo.pdf'
+        self.history_filename = ''
 
     def tearDown(self):
         if os.path.exists(self.recipe_filename):
             os.remove(self.recipe_filename)
         if os.path.exists(self.figure_filename):
             os.remove(self.figure_filename)
+        if self.history_filename and os.path.exists(self.history_filename):
+            os.remove(self.history_filename)
 
     def create_recipe(self):
         recipe_dict = {
@@ -1264,6 +1302,33 @@ class TestChefDeService(unittest.TestCase):
         self.create_recipe()
         self.chef_de_service.serve(recipe_filename=self.recipe_filename)
         self.assertTrue(os.path.exists(self.figure_filename))
+
+    def test_serve_returns_history_filename(self):
+        self.create_recipe()
+        self.history_filename = \
+            self.chef_de_service.serve(recipe_filename=self.recipe_filename)
+        self.assertTrue(self.history_filename)
+
+    def test_serve_returns_history_filename_starting_with_recipe_name(self):
+        self.create_recipe()
+        self.history_filename = \
+            self.chef_de_service.serve(recipe_filename=self.recipe_filename)
+        recipe_filename, _ = os.path.splitext(self.recipe_filename)
+        self.assertTrue(self.history_filename.startswith(recipe_filename))
+
+    def test_serve_writes_history_to_file(self):
+        self.create_recipe()
+        self.history_filename = \
+            self.chef_de_service.serve(recipe_filename=self.recipe_filename)
+        self.assertTrue(os.path.exists(self.history_filename))
+
+    def test_written_history_can_be_used_as_recipe(self):
+        self.create_recipe()
+        self.history_filename = \
+            self.chef_de_service.serve(recipe_filename=self.recipe_filename)
+        history_filename = \
+            self.chef_de_service.serve(recipe_filename=self.history_filename)
+        os.remove(history_filename)
 
     def test_serve_console_entry_point_cooks_recipe(self):
         self.create_recipe()
