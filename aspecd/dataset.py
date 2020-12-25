@@ -1312,11 +1312,11 @@ class HistoryRecord(aspecd.utils.ToDictMixin):
 
     For all classes operating on datasets, such as
     :class:`aspecd.processing.ProcessingStep`,
-    :class:`aspecd.analysis.SingleAnalysisStep` and others, there exist at least two
-    "representations": (i) the generic one not (necessarily) tied to any
-    concrete dataset, thus portable, and (ii) a concrete one having operated on
-    a dataset and thus being accompanied with information about who has done
-    what when how to what dataset.
+    :class:`aspecd.analysis.SingleAnalysisStep` and others, there exist at
+    least two "representations": (i) the generic one not (necessarily) tied
+    to any concrete dataset, thus portable, and (ii) a concrete one having
+    operated on a dataset and thus being accompanied with information about
+    who has done what when how to what dataset.
 
     For this second type, a history class derived from
     :class:`aspecd.dataset.HistoryRecord` gets used, and it is this second type
@@ -1333,7 +1333,7 @@ class HistoryRecord(aspecd.utils.ToDictMixin):
     Parameters
     ----------
     package : :class:`str`
-        Name of package the hstory record gets recorded for
+        Name of package the history record gets recorded for
 
         Prerequisite for reproducibility, gets stored in the
         :attr:`sysinfo` attribute. Will usually be provided automatically by
