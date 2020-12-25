@@ -1,5 +1,5 @@
 """Tests for tasks."""
-
+import collections
 import os
 import subprocess
 import unittest
@@ -321,6 +321,39 @@ class TestChef(unittest.TestCase):
         self.assertTrue(self.chef.recipe.datasets[
                             self.dataset].representations)
 
+    def test_has_history_property(self):
+        self.assertTrue(hasattr(self.chef, 'history'))
+
+    def test_history_property_is_ordered_dict(self):
+        self.assertEqual(collections.OrderedDict, type(self.chef.history))
+
+    def test_cook_adds_system_info_key_to_history(self):
+        recipe = self.recipe
+        self.chef.cook(recipe)
+        self.assertIn('system_info', self.chef.history)
+
+    def test_cook_adds_datasets_key_to_history(self):
+        recipe = self.recipe
+        recipe_dict = {'datasets': [self.dataset],
+                       'tasks': [self.processing_task]}
+        recipe.from_dict(recipe_dict)
+        self.chef.cook(recipe)
+        self.assertIn('datasets', self.chef.history)
+
+    def test_cook_adds_tasks_key_to_history(self):
+        recipe = self.recipe
+        self.chef.cook(recipe)
+        self.assertIn('tasks', self.chef.history)
+
+    def test_cook_adds_task_history_to_history(self):
+        recipe = self.recipe
+        recipe_dict = {'datasets': [self.dataset],
+                       'tasks': [self.processing_task]}
+        recipe.from_dict(recipe_dict)
+        self.chef.cook(recipe)
+        for key in self.processing_task.keys():
+            self.assertIn(key, self.chef.history["tasks"][0])
+
 
 class TestTask(unittest.TestCase):
     def setUp(self):
@@ -510,6 +543,16 @@ class TestTask(unittest.TestCase):
         self.task._set_object_attributes(report_step)
         self.assertEqual(self.task.recipe.figures['bar'],
                          report_step.context['foo'])
+
+    # The following tests do *not* access non-public methods
+    def test_to_dict_with_processing_step(self):
+        kind = 'processing'
+        type_ = 'ProcessingStep'
+        self.task.kind = kind
+        self.task.type = type_
+        self.task.recipe = tasks.Recipe()
+        self.task.perform()
+        self.task.to_dict()
 
 
 class TestProcessingTask(unittest.TestCase):

@@ -268,6 +268,7 @@ import copy
 import sys
 
 import aspecd.io
+import aspecd.system
 import aspecd.utils
 
 
@@ -742,6 +743,16 @@ class Chef:
     recipe : :class:`aspecd.tasks.Recipe`
         Recipe to cook, i.e. to carry out
 
+    history : :class:`collections.OrderedDict`
+        History of cooking the recipe
+
+        Contains a complete record of each task performed, including all
+        parameters, implicit and explicit. Additionally, contains system
+        information as collected by the :class:`aspecd.system.SystemInfo`
+        class.
+
+        Can be exported to a YAML file that works as a recipe.
+
     Raises
     ------
     aspecd.tasks.MissingRecipeError
@@ -750,6 +761,7 @@ class Chef:
     """
 
     def __init__(self, recipe=None):
+        self.history = collections.OrderedDict()
         self.recipe = recipe
 
     def cook(self, recipe=None):
@@ -772,8 +784,10 @@ class Chef:
 
         """
         self._assign_recipe(recipe)
+        self._prepare_history()
         for task in self.recipe.tasks:
             task.perform()
+            self.history["tasks"].append(task.to_dict())
 
     def _assign_recipe(self, recipe):
         if not recipe:
@@ -781,6 +795,12 @@ class Chef:
                 raise MissingRecipeError
         else:
             self.recipe = recipe
+
+    def _prepare_history(self):
+        system_info = aspecd.system.SystemInfo(self.recipe.default_package)
+        self.history["system_info"] = system_info
+        self.history["datasets"] = self.recipe.datasets.keys()
+        self.history["tasks"] = []
 
 
 class Task(aspecd.utils.ToDictMixin):
@@ -888,6 +908,7 @@ class Task(aspecd.utils.ToDictMixin):
         self.apply_to = []
         self.recipe = recipe
         self._module = ''
+        self._exclude_from_to_dict = ['recipe']
 
     def from_dict(self, dict_=None):
         """

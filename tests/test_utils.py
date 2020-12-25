@@ -170,7 +170,31 @@ class TestToDictMixin(unittest.TestCase):
                 self.labbook = ''
 
         obj = Test()
-        self.assertEqual(arguments, list(obj.__odict__.keys()))
+        self.assertEqual(arguments, list(obj.to_dict().keys()))
+
+    def test_with_properties_to_exclude(self):
+
+        class Test(utils.ToDictMixin):
+            def __init__(self):
+                super().__init__()
+                self.purpose = ''
+                self.operator = ''
+                self._exclude_from_to_dict = ['operator']
+
+        obj = Test()
+        self.assertEqual(['purpose'], list(obj.to_dict().keys()))
+
+    def test_with_properties_to_include(self):
+
+        class Test(utils.ToDictMixin):
+            def __init__(self):
+                super().__init__()
+                self.purpose = ''
+                self._foo = None
+                self._include_in_to_dict = ['_foo']
+
+        obj = Test()
+        self.assertEqual(['purpose', '_foo'], list(obj.to_dict().keys()))
 
 
 class TestGetAspecdVersion(unittest.TestCase):

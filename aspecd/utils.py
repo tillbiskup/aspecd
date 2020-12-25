@@ -110,6 +110,8 @@ class ToDictMixin:
     def __init__(self):
         if '__odict__' not in self.__dict__:
             self.__odict__ = collections.OrderedDict()
+        self._exclude_from_to_dict = []
+        self._include_in_to_dict = []
 
     def __setattr__(self, attribute, value):
         """
@@ -149,10 +151,13 @@ class ToDictMixin:
     def _traverse_dict(self, instance_dict):
         output = collections.OrderedDict()
         for key, value in instance_dict.items():
-            if str(key).startswith('_'):
+            if str(key).startswith('_') \
+                    or str(key) in self._exclude_from_to_dict:
                 pass
             else:
                 output[key] = self._traverse(key, value)
+        for key in self._include_in_to_dict:
+            output[key] = self._traverse(key, getattr(self, key))
         return output
 
     def _traverse(self, key, value):
