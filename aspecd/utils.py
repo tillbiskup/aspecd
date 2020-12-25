@@ -100,11 +100,37 @@ def object_from_class_name(full_class_name_string):
 class ToDictMixin:
     """Mixin class for returning all public attributes as dict.
 
+    Sometimes there is the need to either exclude public attributes (in case
+    of infinite loops created by trying to apply ``to_dict`` in this case)
+    or to add (public) attributes, particularly those used by getters and
+    setters that are otherwise not included.
+
+    To do so, there are two non_public attributes of this class each class
+    inheriting from it will be able to set as well:
+
+    * ``_exclude_from_to_dict``
+    * ``_include_in_to_dict``
+
+    The names should be rather telling. For details, see below.
+
     Attributes
     ----------
-    __odict__ : `collections.OrderedDict`
+    __odict__ : :class:`collections.OrderedDict`
         Dictionary of attributes preserving the order of their definition
 
+    _exclude_from_to_dict : :class:`list`
+        Names of (public) attributes to exclude from dictionary
+
+        Usually, the reason to exclude public attributes from being added to
+        the dictionary is to avoid infinite loops, as sometimes an object
+        may contain a reference to another object that in turn references back.
+
+    _include_in_to_dict : :class:`list`
+        Names of (public) attributes to include into dictionary
+
+        Usual reasons for actively including (public) attributes into the
+        dictionary are those attributes accessed by getters and setters and
+        hence not automatically included in the list otherwise.
     """
 
     def __init__(self):
@@ -136,7 +162,7 @@ class ToDictMixin:
 
         Returns
         -------
-        public_attributes : `collections.OrderedDict`
+        public_attributes : :class:`collections.OrderedDict`
             Ordered dictionary containing the public attributes of the object
 
             The order of attribute definition is preserved
@@ -234,7 +260,7 @@ def package_name(obj=None):
 
     Parameters
     ----------
-    obj : `object`
+    obj : :class:`object`
         Object the package it resides in should be returned.
 
         If no object is given, the name of the package this function is
@@ -443,7 +469,7 @@ def all_equal(list_=None):
 
     Returns
     -------
-    result : :class:`boolean`
+    result : :class:`bool`
 
     """
     return list_.count(list_[0]) == len(list_)
@@ -492,7 +518,7 @@ class Properties(ToDictMixin):
 
         Returns
         -------
-        properties: :class:`list`
+        properties : :class:`list`
             public properties
 
         """
