@@ -798,8 +798,8 @@ class Chef:
 
     def _prepare_history(self):
         system_info = aspecd.system.SystemInfo(self.recipe.default_package)
-        self.history["system_info"] = system_info
-        self.history["datasets"] = self.recipe.datasets.keys()
+        self.history["system_info"] = system_info.to_dict()
+        self.history["datasets"] = list(self.recipe.datasets.keys())
         self.history["tasks"] = []
 
 

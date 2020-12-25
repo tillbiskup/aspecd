@@ -332,6 +332,12 @@ class TestChef(unittest.TestCase):
         self.chef.cook(recipe)
         self.assertIn('system_info', self.chef.history)
 
+    def test_system_info_value_in_history_is_ordered_dict(self):
+        recipe = self.recipe
+        self.chef.cook(recipe)
+        self.assertIs(collections.OrderedDict,
+                      type(self.chef.history["system_info"]))
+
     def test_cook_adds_datasets_key_to_history(self):
         recipe = self.recipe
         recipe_dict = {'datasets': [self.dataset],
@@ -339,6 +345,14 @@ class TestChef(unittest.TestCase):
         recipe.from_dict(recipe_dict)
         self.chef.cook(recipe)
         self.assertIn('datasets', self.chef.history)
+
+    def test_datasets_value_in_history_is_list(self):
+        recipe = self.recipe
+        recipe_dict = {'datasets': [self.dataset],
+                       'tasks': [self.processing_task]}
+        recipe.from_dict(recipe_dict)
+        self.chef.cook(recipe)
+        self.assertIs(list, type(self.chef.history["datasets"]))
 
     def test_cook_adds_tasks_key_to_history(self):
         recipe = self.recipe
