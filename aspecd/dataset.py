@@ -61,11 +61,11 @@ series of classes for storing history records:
 
     For all classes operating on datasets, such as
     :class:`aspecd.processing.ProcessingStep`,
-    :class:`aspecd.analysis.SingleAnalysisStep` and others, there exist at least two
-    "representations": (i) the generic one not (necessarily) tied to any
-    concrete dataset, thus portable, and (ii) a concrete one having operated on
-    a dataset and thus being accompanied with information about who has done
-    what when how to what dataset.
+    :class:`aspecd.analysis.SingleAnalysisStep` and others, there exist at
+    least two "representations": (i) the generic one not (necessarily) tied
+    to any concrete dataset, thus portable, and (ii) a concrete one having
+    operated on a dataset and thus being accompanied with information about
+    who has done what when how to what dataset.
 
     For this second type, a history class derived from
     :class:`aspecd.dataset.HistoryRecord` gets used, and it is this second type
