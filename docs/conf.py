@@ -81,6 +81,7 @@ pygments_style = 'sphinx'
 
 # Show or hide todo and todolist directives in output
 todo_include_todos = True
+todo_link_only = True
 
 # Autodoc configuration
 autodoc_default_options = {

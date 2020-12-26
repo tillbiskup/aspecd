@@ -43,7 +43,7 @@ And to make it even more convenient for users and future-proof:
 
 
 .. warning::
-  The ASpecD framework is currently under active development and still considered in Beta development state. Therefore, expect frequent changes in features and public APIs that may break your own code. Nevertheless, feedback as well as feature requests are highly welcome.
+  The ASpecD framework is currently under active development and still considered in Beta development state. Therefore, expect changes in features and public APIs that may break your own code. Nevertheless, feedback as well as feature requests are highly welcome.
 
 
 Where to start
@@ -89,6 +89,7 @@ Finally, don't forget to check out the website on `reproducible research <https:
 
    people
    developers
+   roadmap
    api/index
 
 
