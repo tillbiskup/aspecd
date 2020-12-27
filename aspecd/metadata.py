@@ -136,6 +136,7 @@ class PhysicalQuantity(aspecd.utils.ToDictMixin):
             self.value = value
         if unit:
             self.unit = unit
+        self._include_in_to_dict = ['value']
 
     def __str__(self):
         """String representation of object."""
@@ -224,21 +225,6 @@ class PhysicalQuantity(aspecd.utils.ToDictMixin):
         else:
             self.value = 0.
             self.unit = ''
-
-    def to_dict(self):
-        """
-        Create dictionary containing public attributes of an object.
-
-        Returns
-        -------
-        public_attributes : :class:`dict`
-            Dictionary containing the public attributes of the object
-
-        """
-        output = super().to_dict()
-        # Add "value" attribute only accessible via getter/setter
-        output["value"] = self.value
-        return output
 
 
 class Metadata(aspecd.utils.ToDictMixin):
