@@ -184,7 +184,7 @@ class TestToDictMixin(unittest.TestCase):
         obj = Test()
         self.assertEqual(['purpose'], list(obj.to_dict().keys()))
 
-    def test_with_properties_to_include(self):
+    def test_with_property_to_include(self):
 
         class Test(utils.ToDictMixin):
             def __init__(self):
@@ -195,6 +195,20 @@ class TestToDictMixin(unittest.TestCase):
 
         obj = Test()
         self.assertEqual(['purpose', '_foo'], list(obj.to_dict().keys()))
+
+    def test_with_properties_to_include(self):
+
+        class Test(utils.ToDictMixin):
+            def __init__(self):
+                super().__init__()
+                self.purpose = ''
+                self._foo = None
+                self._bar = None
+                self._include_in_to_dict = ['_foo', '_bar']
+
+        obj = Test()
+        self.assertEqual(['purpose', '_foo', '_bar'],
+                         list(obj.to_dict().keys()))
 
 
 class TestGetAspecdVersion(unittest.TestCase):

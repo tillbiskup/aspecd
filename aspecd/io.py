@@ -138,6 +138,21 @@ class MissingSourceError(Error):
         self.message = message
 
 
+class MissingTargetError(Error):
+    """Exception raised when expecting a filename but none is provided
+
+    Attributes
+    ----------
+    message : :class:`str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
 class MissingRecipeError(Error):
     """Exception raised when no recipe exists to act on.
 
@@ -647,3 +662,31 @@ class RecipeYamlExporter(RecipeExporter):
         yaml = aspecd.utils.Yaml()
         yaml.dict = self.recipe.to_dict()
         yaml.write_to(filename=self.target)
+
+
+class AdsExporter(DatasetExporter):
+
+    def __init__(self):
+        super().__init__()
+        self.extension = '.ads'
+
+    def _export(self):
+        if not self.target:
+            raise MissingTargetError
+        yaml = aspecd.utils.Yaml()
+        yaml.dict = self.dataset.to_dict()
+        yaml.write_to(filename=self.target + self.extension)
+
+
+class AdsImporter(DatasetImporter):
+
+    def __init__(self):
+        super().__init__()
+        self.extension = '.ads'
+
+    def _import(self):
+        yaml = aspecd.utils.Yaml()
+        yaml.read_from(filename=self.source + self.extension)
+        print(yaml.dict)
+        self.dataset.data = yaml.dict["data"]
+        # self.dataset.metadata.from_dict(yaml.dict["metadata"])

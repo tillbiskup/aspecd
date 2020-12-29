@@ -1087,7 +1087,7 @@ class DatasetFactory:
         return ExperimentalDataset()
 
 
-class Data:
+class Data(aspecd.utils.ToDictMixin):
     """
     Unit containing both, numeric data and corresponding axes.
 
@@ -1125,6 +1125,7 @@ class Data:
     """
 
     def __init__(self, data=np.zeros(0), axes=None, calculated=False):
+        super().__init__()
         self._data = data
         self._axes = []
         if axes is None:
@@ -1132,6 +1133,7 @@ class Data:
         else:
             self.axes = axes
         self.calculated = calculated
+        self._include_in_to_dict = ['data', 'axes']
 
     @property
     def data(self):
@@ -1205,7 +1207,7 @@ class Data:
                 raise AxesValuesInconsistentWithDataError
 
 
-class Axis:
+class Axis(aspecd.utils.ToDictMixin):
     """Axis for data in a dataset.
 
     An axis contains always both, numerical values as well as the metadata
@@ -1247,12 +1249,14 @@ class Axis:
     """
 
     def __init__(self):
+        super().__init__()
         self._values = np.zeros(0)
         self._equidistant = None
         self.quantity = ''
         self.symbol = ''
         self.unit = ''
         self.label = ''
+        self._include_in_to_dict = ['values']
 
     @property
     def values(self):

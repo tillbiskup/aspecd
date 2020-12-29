@@ -1,6 +1,8 @@
 """Tests for input and output (IO)."""
-
+import os
 import unittest
+
+import numpy as np
 
 from aspecd import io, dataset, tasks
 
@@ -171,3 +173,54 @@ class TestRecipeYamlExporter(unittest.TestCase):
 
     def test_is_recipe_exporter(self):
         self.assertTrue(isinstance(self.exporter, io.RecipeExporter))
+
+
+class TestAdsExporter(unittest.TestCase):
+    def setUp(self):
+        self.exporter = io.AdsExporter()
+        self.dataset = dataset.Dataset()
+        self.target = 'target'
+        self.extension = '.ads'
+
+    def tearDown(self):
+        if os.path.exists(self.target + self.extension):
+            os.remove(self.target + self.extension)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_export_from_without_target_raises(self):
+        with self.assertRaises(io.MissingTargetError):
+            self.exporter.export_from(dataset=self.dataset)
+
+    def test_export_with_target_creates_file(self):
+        self.exporter.target = self.target
+        self.exporter.export_from(self.dataset)
+        self.assertTrue(os.path.exists(self.target + self.extension))
+
+
+class TestAdsImporter(unittest.TestCase):
+    def setUp(self):
+        self.importer = io.AdsImporter()
+        self.dataset = dataset.Dataset()
+        self.source = 'target'
+        self.extension = '.ads'
+
+    def tearDown(self):
+        if os.path.exists(self.source + self.extension):
+            os.remove(self.source + self.extension)
+
+    def test_instantiate_class(self):
+        pass
+
+    @unittest.skip
+    def test_import_sets_data(self):
+        exporter = io.AdsExporter()
+        exporter.target = self.source
+        dataset_ = dataset.Dataset()
+        dataset_.data.data = np.asarray([1])
+        dataset_.export_to(exporter)
+
+        self.importer.source = self.source
+        self.dataset.import_from(self.importer)
+        self.assertEqual(dataset_.data.data, self.dataset.data.data)

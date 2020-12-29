@@ -831,6 +831,18 @@ class TestData(unittest.TestCase):
         self.data.data = new_data
         self.assertEqual(new_data.size, self.data.axes[0].values.size)
 
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.data, 'to_dict'))
+        self.assertTrue(callable(self.data.to_dict))
+
+    def test_to_dict_includes_data(self):
+        dict_ = self.data.to_dict()
+        self.assertIn('data', dict_)
+
+    def test_to_dict_includes_axes(self):
+        dict_ = self.data.to_dict()
+        self.assertIn('axes', dict_)
+
 
 class TestAxisSetupInConstructor(unittest.TestCase):
 
@@ -973,6 +985,14 @@ class TestAxis(unittest.TestCase):
     def test_equidistant_is_false_for_nonequidistant_axes(self):
         self.axis.values = np.asarray([0, 1, 2, 4, 8])
         self.assertFalse(self.axis.equidistant)
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.axis, 'to_dict'))
+        self.assertTrue(callable(self.axis.to_dict))
+
+    def test_to_dict_includes_values(self):
+        dict_ = self.axis.to_dict()
+        self.assertIn('values', dict_)
 
 
 class TestAxisSettings(unittest.TestCase):

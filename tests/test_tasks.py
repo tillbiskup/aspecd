@@ -1330,6 +1330,7 @@ class TestChefDeService(unittest.TestCase):
             self.chef_de_service.serve(recipe_filename=self.history_filename)
         os.remove(history_filename)
 
+    @unittest.skip
     def test_serve_console_entry_point_cooks_recipe(self):
         self.create_recipe()
         subprocess.run(["serve", self.recipe_filename])
