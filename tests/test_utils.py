@@ -6,6 +6,7 @@ import datetime
 import os
 import unittest
 
+import numpy as np
 import oyaml as yaml
 
 import aspecd.utils
@@ -292,8 +293,42 @@ class TestYaml(unittest.TestCase):
         self.yaml.dict = self.dict
         self.yaml.write_to(self.filename)
         with open(self.filename, 'r') as file:
-            contents = yaml.load(file)
+            contents = yaml.load(file, Loader=yaml.SafeLoader)
         self.assertEqual(contents, self.yaml.dict)
+
+    def test_has_serialise_numpy_array_method(self):
+        self.assertTrue(hasattr(self.yaml, 'serialise_numpy_arrays'))
+        self.assertTrue(callable(self.yaml.serialise_numpy_arrays))
+
+    def test_has_serialize_numpy_array_method(self):
+        self.assertTrue(hasattr(self.yaml, 'serialize_numpy_arrays'))
+        self.assertTrue(callable(self.yaml.serialize_numpy_arrays))
+
+    def test_serialise_numpy_array_creates_dict(self):
+        array = np.asarray([[0., 1., 2.], [1., 2., 3.]])
+        resulting_dict = {'foo': {'type': 'numpy.ndarray',
+                                  'dtype': str(array.dtype),
+                                  'array': array.tolist()}}
+        self.yaml.dict = {'foo': array}
+        self.yaml.serialise_numpy_arrays()
+        self.assertDictEqual(resulting_dict, self.yaml.dict)
+
+    def test_has_deserialise_numpy_array_method(self):
+        self.assertTrue(hasattr(self.yaml, 'deserialise_numpy_arrays'))
+        self.assertTrue(callable(self.yaml.deserialise_numpy_arrays))
+
+    def test_has_deserialize_numpy_array_method(self):
+        self.assertTrue(hasattr(self.yaml, 'deserialize_numpy_arrays'))
+        self.assertTrue(callable(self.yaml.deserialize_numpy_arrays))
+
+    def test_deserialise_numpy_array_creates_numpy_array(self):
+        array = np.asarray([[0., 1., 2.], [1., 2., 3.]])
+        resulting_dict = {'foo': array}
+        self.yaml.dict = {'foo': {'type': 'numpy.ndarray',
+                                  'dtype': str(array.dtype),
+                                  'array': array.tolist()}}
+        self.yaml.deserialise_numpy_arrays()
+        np.testing.assert_allclose(resulting_dict["foo"], self.yaml.dict["foo"])
 
 
 class TestReplaceValueInDict(unittest.TestCase):

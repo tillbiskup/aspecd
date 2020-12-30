@@ -11,6 +11,7 @@ import importlib
 import inspect
 import os
 
+import numpy as np
 import oyaml as yaml
 import pkg_resources
 
@@ -359,6 +360,45 @@ class Yaml:
             raise MissingFilenameError
         with open(filename, 'w') as file:
             yaml.dump(self.dict, file)
+
+    def serialise_numpy_arrays(self):
+        """
+        Serialise numpy arrays in a simple form, using a dict.
+
+        .. todo::
+            Needs to walk recursively through the dict.
+
+        .. todo::
+            Large(r) numpy arrays should be saved as binary data to external
+            files.
+        """
+        for key in self.dict.keys():
+            if type(self.dict[key]) is np.ndarray:
+                self.dict[key] = {'type': 'numpy.ndarray',
+                                  'dtype': str(self.dict[key].dtype),
+                                  'array': self.dict[key].tolist()}
+
+    def serialize_numpy_arrays(self):
+        """
+        Serialise numpy arrays for our AE speaking friends.
+        """
+        self.serialise_numpy_arrays()
+
+    def deserialise_numpy_arrays(self):
+        """
+        Deserialise specially crafted dicts into  numpy arrays.
+
+        """
+        for key in self.dict.keys():
+            if 'type' in self.dict[key].keys() \
+                    and self.dict[key]["type"] == 'numpy.ndarray':
+                self.dict[key] = np.asarray(self.dict[key]["array"])
+
+    def deserialize_numpy_arrays(self):
+        """
+        Deserialise numpy arrays for our AE speaking friends.
+        """
+        self.deserialise_numpy_arrays()
 
 
 def replace_value_in_dict(replacement=None, target=None):
