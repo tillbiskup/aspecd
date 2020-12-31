@@ -365,6 +365,13 @@ class Yaml:
         """
         Serialise numpy arrays in a simple form, using a dict.
 
+        Background: The PyYAML package cannot easily handle NumPy arrays out
+        of the box. However, datasets and alike should sometimes be
+        serialised in form of YAML files. Hence the need for a simple method of
+        serialising NumPy arrays. Furthermore, larger NumPy arrays should
+        not be serialised in text form in YAML directly, but rather be
+        stored in binary form, probably in a separate file.
+
         .. todo::
             Needs to walk recursively through the dict.
 

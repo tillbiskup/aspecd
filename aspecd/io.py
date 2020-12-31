@@ -665,6 +665,22 @@ class RecipeYamlExporter(RecipeExporter):
 
 
 class AdsExporter(DatasetExporter):
+    """
+    Dataset exporter for exporting to ASpecD dataset format.
+
+    The ASpecD dataset format is vaguely reminiscent of the Open Document
+    Format, *i.e.* a zipped directory containing structured data (in this
+    case in form of a YAML file) and binary data in a corresponding
+    subdirectory.
+
+    The data format tries to be as self-contained as possible,
+    using standard file formats and a brief description of its layout
+    contained within the archive. Collecting the contents in a single ZIP
+    archive allows the user to deal with a single file for a dataset,
+    while more advanced users can easily dig into the details and write
+    importers for other platforms and programming languages, making the
+    format rather platform-independent and future-safe.
+    """
 
     def __init__(self):
         super().__init__()
