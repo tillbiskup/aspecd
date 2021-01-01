@@ -311,6 +311,13 @@ class Yaml:
     dict : :class:`collections.OrderedDict`
         Contents read from/written to a YAML file
 
+    numpy_array_size_threshold : :class:`int`
+        Maximum size of NumPy array that is converted into a list using
+        :meth:`aspecd.utils.Yaml.serialise_numpy_arrays`.
+
+        Larger NumPy arrays are saved to a file in NumPy format using
+        :func:`numpy.save`.
+
     Raises
     ------
     aspecd.utils.MissingFilenameError
@@ -320,6 +327,7 @@ class Yaml:
 
     def __init__(self):
         self.dict = collections.OrderedDict()
+        self.numpy_array_size_threshold = 100
 
     def read_from(self, filename=''):
         """
@@ -372,38 +380,69 @@ class Yaml:
         not be serialised in text form in YAML directly, but rather be
         stored in binary form, probably in a separate file.
 
+        The reason for saving (larger) NumPy arrays in binary rather than
+        text form is twofold: The size of a binary file is much smaller,
+        and the original precision is retained. Those interested in the
+        representation of floating-point values in computers should consult:
+
+        * David Goldberg. What every computer scientist should know about
+          floating-point arithmetic. *ACM Comput. Surv.* **23** (1991):5--48.
+          DOI:`10.1145/103162.103163 <https://doi.org/10.1145/103162.103163>`_
+
+        As binary format, the NumPy format (see :mod:`numpy.lib.format`)
+        gets used.
+
         .. todo::
             Needs to walk recursively through the dict.
 
-        .. todo::
-            Large(r) numpy arrays should be saved as binary data to external
-            files.
         """
         for key in self.dict.keys():
             if type(self.dict[key]) is np.ndarray:
-                self.dict[key] = {'type': 'numpy.ndarray',
-                                  'dtype': str(self.dict[key].dtype),
-                                  'array': self.dict[key].tolist()}
+                if self.dict[key].size > self.numpy_array_size_threshold:
+                    np.save(key, self.dict[key], allow_pickle=False)
+                    self.dict[key] = {'type': 'numpy.ndarray',
+                                      'dtype': str(self.dict[key].dtype),
+                                      'file': key}
+                else:
+                    self.dict[key] = {'type': 'numpy.ndarray',
+                                      'dtype': str(self.dict[key].dtype),
+                                      'array': self.dict[key].tolist()}
 
     def serialize_numpy_arrays(self):
         """
         Serialise numpy arrays for our AE speaking friends.
+
+        See :meth:`aspecd.utils.Yaml.serialise_numpy_arrays` for details.
         """
         self.serialise_numpy_arrays()
 
     def deserialise_numpy_arrays(self):
         """
-        Deserialise specially crafted dicts into  numpy arrays.
+        Deserialise specially crafted dicts into NumPy arrays.
+
+        For reasons given in the documentation of
+        :meth:`aspecd.utils.Yaml.serialise_numpy_arrays`, NumPy arrays are
+        handled separately and converted into dicts with some special
+        fields. This method deserialises them back into NumPy arrays,
+        as they were originally.
+
+        .. todo::
+            Needs to walk recursively through the dict.
 
         """
         for key in self.dict.keys():
             if 'type' in self.dict[key].keys() \
                     and self.dict[key]["type"] == 'numpy.ndarray':
-                self.dict[key] = np.asarray(self.dict[key]["array"])
+                if 'file' in self.dict[key].keys():
+                    self.dict[key] = np.load(self.dict[key]['file'] + '.npy')
+                else:
+                    self.dict[key] = np.asarray(self.dict[key]["array"])
 
     def deserialize_numpy_arrays(self):
         """
         Deserialise numpy arrays for our AE speaking friends.
+
+        See :meth:`aspecd.utils.Yaml.deserialise_numpy_arrays` for details.
         """
         self.deserialise_numpy_arrays()
 

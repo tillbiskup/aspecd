@@ -313,6 +313,17 @@ class TestYaml(unittest.TestCase):
         self.yaml.serialise_numpy_arrays()
         self.assertDictEqual(resulting_dict, self.yaml.dict)
 
+    def test_serialise_large_numpy_array_creates_dict_and_file(self):
+        array = np.random.rand(self.yaml.numpy_array_size_threshold + 1)
+        resulting_dict = {'foo': {'type': 'numpy.ndarray',
+                                  'dtype': str(array.dtype),
+                                  'file': 'foo'}}
+        self.yaml.dict = {'foo': array}
+        self.yaml.serialise_numpy_arrays()
+        self.assertDictEqual(resulting_dict, self.yaml.dict)
+        self.assertTrue(os.path.exists('foo.npy'))
+        os.remove('foo.npy')
+
     def test_has_deserialise_numpy_array_method(self):
         self.assertTrue(hasattr(self.yaml, 'deserialise_numpy_arrays'))
         self.assertTrue(callable(self.yaml.deserialise_numpy_arrays))
@@ -329,6 +340,17 @@ class TestYaml(unittest.TestCase):
                                   'array': array.tolist()}}
         self.yaml.deserialise_numpy_arrays()
         np.testing.assert_allclose(resulting_dict["foo"], self.yaml.dict["foo"])
+
+    def test_deserialise_large_numpy_array_creates_numpy_array(self):
+        array = np.random.rand(self.yaml.numpy_array_size_threshold + 1)
+        resulting_dict = {'foo': array}
+        self.yaml.dict = {'foo': {'type': 'numpy.ndarray',
+                                  'dtype': str(array.dtype),
+                                  'file': 'foo'}}
+        np.save('foo', array, allow_pickle=False)
+        self.yaml.deserialise_numpy_arrays()
+        np.testing.assert_allclose(resulting_dict["foo"], self.yaml.dict["foo"])
+        os.remove('foo.npy')
 
 
 class TestReplaceValueInDict(unittest.TestCase):
