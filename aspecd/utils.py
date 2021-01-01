@@ -7,6 +7,7 @@ modules of the ASpecD package, but it can be imported into every other module.
 
 import collections
 import datetime
+import hashlib
 import importlib
 import inspect
 import os
@@ -306,6 +307,18 @@ class Yaml:
     YAML file contents are read into an ordered dict, making use of the
     oyaml package. This preserves the order of the entries of any dict.
 
+    .. note::
+        The PyYAML package cannot handle NumPy arrays by default. Hence,
+        there are two methods in this class for serialising and
+        deserialising NumPy arrays:
+
+        * :meth:`aspecd.utils.Yaml.serialise_numpy_arrays` and
+        * :meth:`aspecd.utils.Yaml.deserialise_numpy_arrays`.
+
+        Have a look at their documentation for details of the implementation
+        and how to use them. In particular, larger NumPy arrays are saved to
+        files using the NumPy binary format.
+
     Attributes
     ----------
     dict : :class:`collections.OrderedDict`
@@ -392,8 +405,13 @@ class Yaml:
         As binary format, the NumPy format (see :mod:`numpy.lib.format`)
         gets used.
 
-        .. todo::
-            Need to handle filenames correctly. Currently they are not unique.
+        As filename, the SHA256 hash of the array will be used. Thus,
+        the names are unique with respect to the content. In the event of
+        having several identical arrays within one dict that gets
+        serialised, this should not be a problem, as the hashes should be
+        reasonably unique. *I.e.*, identical files should have identical
+        content. Thus, having several identical arrays will lead to less
+        files written, eventually saving space and overall file size.
 
         """
         for key in self.dict.keys():
@@ -402,10 +420,11 @@ class Yaml:
     def _traverse_serialise_numpy_arrays(self, dict_=None, key=None):
         if type(dict_[key]) is np.ndarray:
             if dict_[key].size > self.numpy_array_size_threshold:
-                np.save(key, dict_[key], allow_pickle=False)
+                filename = hashlib.sha256(dict_[key]).hexdigest() + '.npy'
+                np.save(filename, dict_[key], allow_pickle=False)
                 dict_[key] = {'type': 'numpy.ndarray',
                               'dtype': str(dict_[key].dtype),
-                              'file': key}
+                              'file': filename}
             else:
                 dict_[key] = {'type': 'numpy.ndarray',
                               'dtype': str(dict_[key].dtype),

@@ -320,9 +320,12 @@ class TestYaml(unittest.TestCase):
                                   'file': 'foo'}}
         self.yaml.dict = {'foo': array}
         self.yaml.serialise_numpy_arrays()
+        # Necessary as the true filename will be generated
+        filename = self.yaml.dict["foo"]["file"]
+        resulting_dict["foo"]["file"] = filename
         self.assertDictEqual(resulting_dict, self.yaml.dict)
-        self.assertTrue(os.path.exists('foo.npy'))
-        os.remove('foo.npy')
+        self.assertTrue(os.path.exists(filename))
+        os.remove(filename)
 
     def test_serialise_numpy_array_in_hierarchical_dict_creates_dict(self):
         array = np.asarray([[0., 1., 2.], [1., 2., 3.]])
