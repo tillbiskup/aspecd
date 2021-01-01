@@ -414,25 +414,27 @@ class Yaml:
         files written, eventually saving space and overall file size.
 
         """
-        for key in self.dict.keys():
-            self._traverse_serialise_numpy_arrays(dict_=self.dict, key=key)
+        self._traverse_serialise_numpy_arrays(dict_=self.dict)
 
-    def _traverse_serialise_numpy_arrays(self, dict_=None, key=None):
-        if type(dict_[key]) is np.ndarray:
-            if dict_[key].size > self.numpy_array_size_threshold:
-                filename = hashlib.sha256(dict_[key]).hexdigest() + '.npy'
-                np.save(filename, dict_[key], allow_pickle=False)
-                dict_[key] = {'type': 'numpy.ndarray',
-                              'dtype': str(dict_[key].dtype),
-                              'file': filename}
-            else:
-                dict_[key] = {'type': 'numpy.ndarray',
-                              'dtype': str(dict_[key].dtype),
-                              'array': dict_[key].tolist()}
-        elif type(dict_[key]) is dict:
-            for subkey in dict_[key].keys():
-                self._traverse_serialise_numpy_arrays(dict_=dict_[key],
-                                                      key=subkey)
+    def _traverse_serialise_numpy_arrays(self, dict_=None):
+        for key in dict_.keys():
+            if type(dict_[key]) is list:
+                for element in dict_[key]:
+                    if type(element) in [dict, collections.OrderedDict]:
+                        self._traverse_serialise_numpy_arrays(dict_=element)
+            elif type(dict_[key]) is np.ndarray:
+                if dict_[key].size > self.numpy_array_size_threshold:
+                    filename = hashlib.sha256(dict_[key]).hexdigest() + '.npy'
+                    np.save(filename, dict_[key], allow_pickle=False)
+                    dict_[key] = {'type': 'numpy.ndarray',
+                                  'dtype': str(dict_[key].dtype),
+                                  'file': filename}
+                else:
+                    dict_[key] = {'type': 'numpy.ndarray',
+                                  'dtype': str(dict_[key].dtype),
+                                  'array': dict_[key].tolist()}
+            elif type(dict_[key]) in [dict, collections.OrderedDict]:
+                self._traverse_serialise_numpy_arrays(dict_=dict_[key])
 
     def serialize_numpy_arrays(self):
         """
@@ -453,20 +455,23 @@ class Yaml:
         as they were originally.
 
         """
-        for key in self.dict.keys():
-            self._traverse_deserialise_numpy_arrays(dict_=self.dict, key=key)
+        self._traverse_deserialise_numpy_arrays(dict_=self.dict)
 
-    def _traverse_deserialise_numpy_arrays(self, dict_=None, key=None):
-        if 'type' in dict_[key].keys() \
-                and dict_[key]["type"] == 'numpy.ndarray':
-            if 'file' in dict_[key].keys():
-                dict_[key] = np.load(dict_[key]['file'] + '.npy')
-            else:
-                dict_[key] = np.asarray(dict_[key]["array"])
-        elif type(dict_[key]) is dict:
-            for subkey in dict_[key].keys():
-                self._traverse_deserialise_numpy_arrays(dict_=dict_[key],
-                                                        key=subkey)
+    def _traverse_deserialise_numpy_arrays(self, dict_=None):
+        for key in dict_.keys():
+            if type(dict_[key]) is list:
+                for element in dict_[key]:
+                    if type(element) in [dict, collections.OrderedDict]:
+                        self._traverse_deserialise_numpy_arrays(dict_=element)
+            elif type(dict_[key]) in [dict, collections.OrderedDict]:
+                if 'type' in dict_[key].keys() \
+                        and dict_[key]["type"] == 'numpy.ndarray':
+                    if 'file' in dict_[key].keys():
+                        dict_[key] = np.load(dict_[key]['file'] + '.npy')
+                    else:
+                        dict_[key] = np.asarray(dict_[key]["array"])
+                else:
+                    self._traverse_deserialise_numpy_arrays(dict_=dict_[key])
 
     def deserialize_numpy_arrays(self):
         """

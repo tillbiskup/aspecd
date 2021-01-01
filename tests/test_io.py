@@ -213,7 +213,6 @@ class TestAdsImporter(unittest.TestCase):
     def test_instantiate_class(self):
         pass
 
-    @unittest.skip
     def test_import_sets_data(self):
         exporter = io.AdsExporter()
         exporter.target = self.source

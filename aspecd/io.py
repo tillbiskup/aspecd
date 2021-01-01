@@ -691,6 +691,7 @@ class AdsExporter(DatasetExporter):
             raise MissingTargetError
         yaml = aspecd.utils.Yaml()
         yaml.dict = self.dataset.to_dict()
+        yaml.serialise_numpy_arrays()
         yaml.write_to(filename=self.target + self.extension)
 
 
@@ -703,6 +704,6 @@ class AdsImporter(DatasetImporter):
     def _import(self):
         yaml = aspecd.utils.Yaml()
         yaml.read_from(filename=self.source + self.extension)
-        print(yaml.dict)
-        self.dataset.data = yaml.dict["data"]
+        yaml.deserialise_numpy_arrays()
+        self.dataset.data.data = yaml.dict["data"]["data"]
         # self.dataset.metadata.from_dict(yaml.dict["metadata"])
