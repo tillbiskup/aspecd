@@ -18,6 +18,8 @@ class TestPlotter(unittest.TestCase):
     def tearDown(self):
         if os.path.isfile(self.filename):
             os.remove(self.filename)
+        if self.plotter.fig:
+            plt.close(self.plotter.fig)
 
     def test_instantiate_class(self):
         pass
@@ -143,6 +145,10 @@ class TestSinglePlotter(unittest.TestCase):
     def setUp(self):
         self.plotter = plotting.SinglePlotter()
 
+    def tearDown(self):
+        if self.plotter.fig:
+            plt.close(self.plotter.fig)
+
     def test_instantiate_class(self):
         pass
 
@@ -190,6 +196,10 @@ class TestSinglePlotter1D(unittest.TestCase):
     def setUp(self):
         self.plotter = plotting.SinglePlotter1D()
 
+    def tearDown(self):
+        if self.plotter.fig:
+            plt.close(self.plotter.fig)
+
     def test_instantiate_class(self):
         pass
 
@@ -220,6 +230,10 @@ class TestSinglePlotter2D(unittest.TestCase):
     def setUp(self):
         self.plotter = plotting.SinglePlotter2D()
 
+    def tearDown(self):
+        if self.plotter.fig:
+            plt.close(self.plotter.fig)
+
     def test_instantiate_class(self):
         pass
 
@@ -245,6 +259,10 @@ class TestSinglePlotter2D(unittest.TestCase):
 class TestMultiPlotter(unittest.TestCase):
     def setUp(self):
         self.plotter = plotting.MultiPlotter()
+
+    def tearDown(self):
+        if self.plotter.fig:
+            plt.close(self.plotter.fig)
 
     def test_instantiate_class(self):
         pass
@@ -316,6 +334,8 @@ class TestSaver(unittest.TestCase):
     def tearDown(self):
         if os.path.isfile(self.filename):
             os.remove(self.filename)
+        if self.saver.plotter and self.saver.plotter.fig:
+            plt.close(self.saver.plotter.fig)
 
     def test_instantiate_class(self):
         pass
@@ -628,6 +648,7 @@ class TestPlotProperties(unittest.TestCase):
         self.plot_properties.apply(plotter=plot)
         self.assertEqual(self.plot_properties.figure.dpi,
                          plot.figure.get_dpi())
+        plt.close(plot.figure)
 
 
 class TestFigureProperties(unittest.TestCase):
@@ -663,6 +684,7 @@ class TestFigureProperties(unittest.TestCase):
         plot.plot()
         self.figure_properties.apply(figure=plot.figure)
         self.assertEqual(self.figure_properties.dpi, plot.figure.get_dpi())
+        plt.close(plot.figure)
 
 
 class TestAxisProperties(unittest.TestCase):
@@ -700,6 +722,7 @@ class TestAxisProperties(unittest.TestCase):
         plot.plot()
         self.axis_properties.apply(axis=plot.axes)
         self.assertEqual(self.axis_properties.xlabel, plot.axes.get_xlabel())
+        plt.close(plot.figure)
 
 
 class TestLegendProperties(unittest.TestCase):
@@ -736,6 +759,7 @@ class TestLegendProperties(unittest.TestCase):
         legend = plot.axes.legend()
         self.legend_properties.apply(legend=legend)
         self.assertEqual(self.legend_properties.loc, legend.loc)
+        plt.close(plot.figure)
 
 
 class TestSinglePlotProperties(unittest.TestCase):
@@ -769,6 +793,7 @@ class TestSinglePlotProperties(unittest.TestCase):
         self.plot_properties.apply(plotter=plot)
         self.assertEqual(self.plot_properties.axes.xlabel,
                          plot.axes.get_xlabel())
+        plt.close(plot.figure)
 
     def test_apply_sets_drawing_properties(self):
         self.plot_properties.drawing.label = 'foo'
@@ -777,6 +802,7 @@ class TestSinglePlotProperties(unittest.TestCase):
         self.plot_properties.apply(plotter=plot)
         self.assertEqual(self.plot_properties.drawing.label,
                          plot.drawing.get_label())
+        plt.close(plot.figure)
 
 
 class TestSinglePlot1DProperties(unittest.TestCase):
@@ -793,6 +819,7 @@ class TestSinglePlot1DProperties(unittest.TestCase):
         self.plot_properties.apply(plotter=plot)
         self.assertEqual(self.plot_properties.drawing.linewidth,
                          plot.drawing.get_linewidth())
+        plt.close(plot.figure)
 
 
 class TestMultiPlotProperties(unittest.TestCase):
@@ -830,6 +857,7 @@ class TestMultiPlotProperties(unittest.TestCase):
         self.plot_properties.apply(plotter=plot)
         self.assertEqual(self.plot_properties.axes.xlabel,
                          plot.axes.get_xlabel())
+        plt.close(plot.figure)
 
     def test_apply_sets_legend_properties(self):
         self.plot_properties.legend.loc = 'center'
@@ -840,3 +868,4 @@ class TestMultiPlotProperties(unittest.TestCase):
         self.plot_properties.apply(plotter=plot)
         self.assertEqual(self.plot_properties.legend.loc,
                          plot.legend.loc)
+        plt.close(plot.figure)

@@ -392,6 +392,9 @@ class Yaml:
         As binary format, the NumPy format (see :mod:`numpy.lib.format`)
         gets used.
 
+        .. todo::
+            Need to handle filenames correctly. Currently they are not unique.
+
         """
         for key in self.dict.keys():
             self._traverse_serialise_numpy_arrays(dict_=self.dict, key=key)
