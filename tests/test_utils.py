@@ -324,6 +324,16 @@ class TestYaml(unittest.TestCase):
         self.assertTrue(os.path.exists('foo.npy'))
         os.remove('foo.npy')
 
+    def test_serialise_numpy_array_in_hierarchical_dict_creates_dict(self):
+        array = np.asarray([[0., 1., 2.], [1., 2., 3.]])
+        array_dict = {'foo': {'type': 'numpy.ndarray',
+                              'dtype': str(array.dtype),
+                              'array': array.tolist()}}
+        resulting_dict = {'bar': array_dict}
+        self.yaml.dict = {'bar': {'foo': array}}
+        self.yaml.serialise_numpy_arrays()
+        self.assertDictEqual(resulting_dict, self.yaml.dict)
+
     def test_has_deserialise_numpy_array_method(self):
         self.assertTrue(hasattr(self.yaml, 'deserialise_numpy_arrays'))
         self.assertTrue(callable(self.yaml.deserialise_numpy_arrays))
@@ -351,6 +361,17 @@ class TestYaml(unittest.TestCase):
         self.yaml.deserialise_numpy_arrays()
         np.testing.assert_allclose(resulting_dict["foo"], self.yaml.dict["foo"])
         os.remove('foo.npy')
+
+    def test_deserialise_numpy_array_in_hierarchical_dict_creates_numpy_array(
+            self):
+        array = np.asarray([[0., 1., 2.], [1., 2., 3.]])
+        resulting_dict = {'bar': {'foo': array}}
+        self.yaml.dict = {'bar': {'foo': {'type': 'numpy.ndarray',
+                                          'dtype': str(array.dtype),
+                                          'array': array.tolist()}}}
+        self.yaml.deserialise_numpy_arrays()
+        np.testing.assert_allclose(resulting_dict["bar"]["foo"],
+                                   self.yaml.dict["bar"]["foo"])
 
 
 class TestReplaceValueInDict(unittest.TestCase):

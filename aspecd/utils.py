@@ -392,21 +392,25 @@ class Yaml:
         As binary format, the NumPy format (see :mod:`numpy.lib.format`)
         gets used.
 
-        .. todo::
-            Needs to walk recursively through the dict.
-
         """
         for key in self.dict.keys():
-            if type(self.dict[key]) is np.ndarray:
-                if self.dict[key].size > self.numpy_array_size_threshold:
-                    np.save(key, self.dict[key], allow_pickle=False)
-                    self.dict[key] = {'type': 'numpy.ndarray',
-                                      'dtype': str(self.dict[key].dtype),
-                                      'file': key}
-                else:
-                    self.dict[key] = {'type': 'numpy.ndarray',
-                                      'dtype': str(self.dict[key].dtype),
-                                      'array': self.dict[key].tolist()}
+            self._traverse_serialise_numpy_arrays(dict_=self.dict, key=key)
+
+    def _traverse_serialise_numpy_arrays(self, dict_=None, key=None):
+        if type(dict_[key]) is np.ndarray:
+            if dict_[key].size > self.numpy_array_size_threshold:
+                np.save(key, dict_[key], allow_pickle=False)
+                dict_[key] = {'type': 'numpy.ndarray',
+                              'dtype': str(dict_[key].dtype),
+                              'file': key}
+            else:
+                dict_[key] = {'type': 'numpy.ndarray',
+                              'dtype': str(dict_[key].dtype),
+                              'array': dict_[key].tolist()}
+        elif type(dict_[key]) is dict:
+            for subkey in dict_[key].keys():
+                self._traverse_serialise_numpy_arrays(dict_=dict_[key],
+                                                      key=subkey)
 
     def serialize_numpy_arrays(self):
         """
@@ -426,17 +430,21 @@ class Yaml:
         fields. This method deserialises them back into NumPy arrays,
         as they were originally.
 
-        .. todo::
-            Needs to walk recursively through the dict.
-
         """
         for key in self.dict.keys():
-            if 'type' in self.dict[key].keys() \
-                    and self.dict[key]["type"] == 'numpy.ndarray':
-                if 'file' in self.dict[key].keys():
-                    self.dict[key] = np.load(self.dict[key]['file'] + '.npy')
-                else:
-                    self.dict[key] = np.asarray(self.dict[key]["array"])
+            self._traverse_deserialise_numpy_arrays(dict_=self.dict, key=key)
+
+    def _traverse_deserialise_numpy_arrays(self, dict_=None, key=None):
+        if 'type' in dict_[key].keys() \
+                and dict_[key]["type"] == 'numpy.ndarray':
+            if 'file' in dict_[key].keys():
+                dict_[key] = np.load(dict_[key]['file'] + '.npy')
+            else:
+                dict_[key] = np.asarray(dict_[key]["array"])
+        elif type(dict_[key]) is dict:
+            for subkey in dict_[key].keys():
+                self._traverse_deserialise_numpy_arrays(dict_=dict_[key],
+                                                        key=subkey)
 
     def deserialize_numpy_arrays(self):
         """
