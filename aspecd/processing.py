@@ -22,7 +22,6 @@ in context of recipe-driven data analysis (for details, see the
 """
 
 import aspecd.utils
-import aspecd.dataset
 
 
 class Error(Exception):
@@ -312,13 +311,13 @@ class ProcessingStepRecord:
         self.parameters = dict()
         self.comment = ''
         self.class_name = ''
+        self._attributes_to_copy = ['description', 'parameters', 'undoable',
+                                    'comment']
         self._copy_fields_from_processing_step(processing_step)
 
     def _copy_fields_from_processing_step(self, processing_step):
-        self.description = processing_step.description
-        self.parameters = processing_step.parameters
-        self.undoable = processing_step.undoable
-        self.comment = processing_step.comment
+        for attribute in self._attributes_to_copy:
+            setattr(self, attribute, getattr(processing_step, attribute))
         self.class_name = processing_step.name
 
     def create_processing_step(self):
@@ -332,10 +331,8 @@ class ProcessingStepRecord:
 
         """
         processing_step = aspecd.utils.object_from_class_name(self.class_name)
-        processing_step.undoable = self.undoable
-        processing_step.parameters = self.parameters
-        processing_step.description = self.description
-        processing_step.comment = self.comment
+        for attribute in self._attributes_to_copy:
+            setattr(processing_step, attribute, getattr(self, attribute))
         return processing_step
 
 

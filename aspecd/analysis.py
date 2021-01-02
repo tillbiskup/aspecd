@@ -25,7 +25,6 @@ in context of recipe-driven data analysis (for details, see the
 
 import copy
 
-import aspecd.dataset
 import aspecd.utils
 
 

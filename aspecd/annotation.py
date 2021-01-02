@@ -19,7 +19,7 @@ simply subclass the :class:`aspecd.annotations.Annotation` base class.
 
 """
 
-import aspecd.dataset
+import aspecd
 
 
 class Error(Exception):
