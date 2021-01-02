@@ -54,8 +54,32 @@ class SystemInfo(aspecd.utils.ToDictMixin):
         self.platform = platform.platform()
         self.user = dict()
         # Set some properties of dicts
+        self._set_values(package)
+
+    def _set_values(self, package):
         self.python["version"] = sys.version
         self.packages["aspecd"] = aspecd.utils.get_aspecd_version()
         if package and package != "aspecd":
             self.packages[package] = aspecd.utils.package_version(package)
         self.user["login"] = getpass.getuser()
+
+    def from_dict(self, dict_=None):
+        """
+        Set properties from dictionary.
+
+        Only parameters in the dictionary that are valid properties of the
+        class are set accordingly.
+
+        Parameters
+        ----------
+        dict_ : :class:`dict`
+            Dictionary containing properties to set
+
+        """
+        for key, value in dict_.items():
+            if hasattr(self, key):
+                if isinstance(value, dict):
+                    for sub_key, sub_value in value.items():
+                        getattr(self, key)[sub_key] = sub_value
+                else:
+                    setattr(self, key, value)

@@ -49,3 +49,10 @@ class TestSystemInfo(unittest.TestCase):
 
     def test_to_dict(self):
         self.assertTrue(isinstance(self.sysinfo.to_dict(), dict))
+
+    def test_from_dict(self):
+        orig_dict = self.sysinfo.to_dict()
+        orig_dict["user"]["login"] = "foo"
+        system_info = system.SystemInfo()
+        system_info.from_dict(orig_dict)
+        self.assertDictEqual(orig_dict, system_info.to_dict())
