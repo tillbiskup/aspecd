@@ -331,6 +331,8 @@ class Yaml:
         Larger NumPy arrays are saved to a file in NumPy format using
         :func:`numpy.save`.
 
+        Default: 100 -- *i.e.*, arrays with >100 elements are stored in files.
+
     Raises
     ------
     aspecd.utils.MissingFilenameError
@@ -418,11 +420,11 @@ class Yaml:
 
     def _traverse_serialise_numpy_arrays(self, dict_=None):
         for key in dict_.keys():
-            if type(dict_[key]) is list:
+            if isinstance(dict_[key], list):
                 for element in dict_[key]:
-                    if type(element) in [dict, collections.OrderedDict]:
+                    if isinstance(element, (dict, collections.OrderedDict)):
                         self._traverse_serialise_numpy_arrays(dict_=element)
-            elif type(dict_[key]) is np.ndarray:
+            elif isinstance(dict_[key], np.ndarray):
                 if dict_[key].size > self.numpy_array_size_threshold:
                     filename = hashlib.sha256(dict_[key]).hexdigest() + '.npy'
                     np.save(filename, dict_[key], allow_pickle=False)
@@ -433,7 +435,7 @@ class Yaml:
                     dict_[key] = {'type': 'numpy.ndarray',
                                   'dtype': str(dict_[key].dtype),
                                   'array': dict_[key].tolist()}
-            elif type(dict_[key]) in [dict, collections.OrderedDict]:
+            elif isinstance(dict_[key], (dict, collections.OrderedDict)):
                 self._traverse_serialise_numpy_arrays(dict_=dict_[key])
 
     def serialize_numpy_arrays(self):
@@ -459,11 +461,11 @@ class Yaml:
 
     def _traverse_deserialise_numpy_arrays(self, dict_=None):
         for key in dict_.keys():
-            if type(dict_[key]) is list:
+            if isinstance(dict_[key], list):
                 for element in dict_[key]:
                     if type(element) in [dict, collections.OrderedDict]:
                         self._traverse_deserialise_numpy_arrays(dict_=element)
-            elif type(dict_[key]) in [dict, collections.OrderedDict]:
+            elif isinstance(dict_[key], (dict, collections.OrderedDict)):
                 if 'type' in dict_[key].keys() \
                         and dict_[key]["type"] == 'numpy.ndarray':
                     if 'file' in dict_[key].keys():
