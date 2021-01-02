@@ -90,10 +90,10 @@ series of classes for storing history records:
 """
 
 import copy
-from datetime import datetime
 
 import numpy as np
 
+import aspecd.history
 import aspecd.metadata
 import aspecd.system
 import aspecd.utils
@@ -424,6 +424,7 @@ class Dataset(aspecd.utils.ToDictMixin):
     """
 
     def __init__(self):
+        super().__init__()
         self.data = Data()
         self._origdata = Data()
         self.metadata = aspecd.metadata.DatasetMetadata()
@@ -437,7 +438,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         self.tasks = []
         # Package name is used to store the package version in history records
         self._package_name = aspecd.utils.package_name(self)
-        super().__init__()
+        self._include_in_to_dict = ['_origdata']
 
     @property
     def package_name(self):
@@ -847,6 +848,21 @@ class Dataset(aspecd.utils.ToDictMixin):
                 del self.references[index]
                 break
 
+    def from_dict(self, dict_=None):
+        for key in dict_:
+            if hasattr(self, key):
+                attribute = getattr(self, key)
+                if key is "history":
+                    for element in dict_[key]:
+                        history_record = \
+                            aspecd.history.ProcessingHistoryRecord()
+                        history_record.from_dict(element)
+                        self.history.append(history_record)
+                elif hasattr(attribute, 'from_dict'):
+                    attribute.from_dict(dict_[key])
+                else:
+                    setattr(self, key, dict_[key])
+
 
 class ExperimentalDataset(Dataset):
     """Base class for experimental datasets.
@@ -1214,6 +1230,11 @@ class Data(aspecd.utils.ToDictMixin):
 
         The list of axes is handled appropriately.
 
+        .. todo::
+            Need to implement missing functionality for history and other
+            lists, such as representations, analyses, tasks, ...
+
+
         Parameters
         ----------
         dict_ : :class:`dict`
@@ -1221,10 +1242,10 @@ class Data(aspecd.utils.ToDictMixin):
 
         """
         for key in dict_.keys():
-            if key is "data":
-                self.data = dict_['data']
-            elif key is "axes":
-                for nr, axis in enumerate(dict_["axes"]):
+            if key == "data":
+                self.data = dict_[key]
+            elif key == "axes":
+                for nr, axis in enumerate(dict_[key]):
                     self.axes[nr].from_dict(axis)
 
 
@@ -1347,43 +1368,3 @@ class Axis(aspecd.utils.ToDictMixin):
         for key in dict_:
             if hasattr(self, key):
                 setattr(self, key, dict_[key])
-
-
-class HistoryRecord(aspecd.utils.ToDictMixin):
-    """Generic base class for all kinds of history records.
-
-    For all classes operating on datasets, such as
-    :class:`aspecd.processing.ProcessingStep`,
-    :class:`aspecd.analysis.SingleAnalysisStep` and others, there exist at
-    least two "representations": (i) the generic one not (necessarily) tied
-    to any concrete dataset, thus portable, and (ii) a concrete one having
-    operated on a dataset and thus being accompanied with information about
-    who has done what when how to what dataset.
-
-    For this second type, a history class derived from
-    :class:`aspecd.dataset.HistoryRecord` gets used, and it is this second type
-    that is stored inside the Dataset object.
-
-    Attributes
-    ----------
-    date : :obj:`datetime.datetime`
-        datetime object with date current at HistoryRecord instantiation
-    sysinfo : :obj:`aspecd.system.SystemInfo`
-        key--value store with crucial system parameters, including user
-        login name
-
-    Parameters
-    ----------
-    package : :class:`str`
-        Name of package the history record gets recorded for
-
-        Prerequisite for reproducibility, gets stored in the
-        :attr:`sysinfo` attribute. Will usually be provided automatically by
-        the dataset.
-
-    """
-
-    def __init__(self, package=''):
-        self.date = datetime.today()
-        self.sysinfo = aspecd.system.SystemInfo(package=package)
-        super().__init__()

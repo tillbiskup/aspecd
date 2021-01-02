@@ -86,6 +86,7 @@ import os
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
+import aspecd.history
 import aspecd.utils
 
 
@@ -1147,7 +1148,7 @@ class MultiPlotRecord(PlotRecord):
         super().__init__(plotter=plotter)
 
 
-class PlotHistoryRecord(aspecd.dataset.HistoryRecord):
+class PlotHistoryRecord(aspecd.history.HistoryRecord):
     """History record for plots of datasets.
 
     Attributes

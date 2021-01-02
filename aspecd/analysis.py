@@ -25,6 +25,7 @@ in context of recipe-driven data analysis (for details, see the
 
 import copy
 
+import aspecd.history
 import aspecd.utils
 
 
@@ -480,7 +481,7 @@ class SingleAnalysisStepRecord(AnalysisStepRecord):
         self.preprocessing = analysis_step.preprocessing
 
 
-class AnalysisHistoryRecord(aspecd.dataset.HistoryRecord):
+class AnalysisHistoryRecord(aspecd.history.HistoryRecord):
     """History record for analysis steps on datasets.
 
     Attributes

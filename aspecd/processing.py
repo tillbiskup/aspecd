@@ -20,8 +20,9 @@ in context of recipe-driven data analysis (for details, see the
 :mod:`aspecd.tasks` module).
 
 """
-
+import aspecd.history
 import aspecd.utils
+from aspecd.history import ProcessingHistoryRecord
 
 
 class Error(Exception):
@@ -194,7 +195,7 @@ class ProcessingStep:
 
         Returns
         -------
-        history_record : :class:`aspecd.processing.ProcessingHistoryRecord`
+        history_record : :class:`aspecd.history.ProcessingHistoryRecord`
             history record for processing step
 
         """
@@ -257,129 +258,3 @@ class ProcessingStep:
 
         """
         pass
-
-
-class ProcessingStepRecord(aspecd.utils.ToDictMixin):
-    """Base class for processing step records stored in the dataset history.
-
-    The history of a :class:`aspecd.dataset.Dataset` should *not* contain
-    references to :class:`aspecd.processing.ProcessingStep` objects, but rather
-    records that contain all necessary information to create the respective
-    objects inherited from :class:`aspecd.processing.ProcessingStep`. One
-    reason for this is simply that we want to import datasets containing
-    processing steps in their history for which no corresponding processing
-    class exists in the current installation of the application.
-
-    .. note::
-        Each history entry in a dataset stores the processing as a
-        :class:`aspecd.processing.ProcessingStepRecord`, even in applications
-        inheriting from the ASpecD framework. Hence, subclassing of this class
-        should normally not be necessary.
-
-    Attributes
-    ----------
-    undoable : :class:`bool`
-        Can this processing step be reverted?
-    description : :class:`str`
-        Short description, to be set in class definition
-    parameters : :class:`dict`
-        Parameters required for performing the processing step
-
-        All parameters, implicit and explicit.
-    comment : :class:`str`
-        User-supplied comment describing intent, purpose, reason, ...
-    class_name : :class:`str`
-        Fully qualified name of the class of the corresponding processing step
-
-    Parameters
-    ----------
-    processing_step : :class:`aspecd.processing.ProcessingStep`
-        Processing step the record should be created for.
-
-    Raises
-    ------
-    aspecd.processing.MissingProcessingStepError
-        Raised when no processing step exists to act on
-
-    """
-
-    def __init__(self, processing_step=None):
-        super().__init__()
-        self.undoable = False
-        self.description = ''
-        self.parameters = dict()
-        self.comment = ''
-        self.class_name = ''
-        self._attributes_to_copy = ['description', 'parameters', 'undoable',
-                                    'comment']
-        if processing_step:
-            self.from_processing_step(processing_step)
-
-    def from_processing_step(self, processing_step):
-        for attribute in self._attributes_to_copy:
-            setattr(self, attribute, getattr(processing_step, attribute))
-        self.class_name = processing_step.name
-
-    def create_processing_step(self):
-        """Create a processing step object from the parameters stored.
-
-        Returns
-        -------
-        processing_step : :class:`aspecd.processing.ProcessingStep`
-            actual processing step object that can be used for processing,
-            e.g., in context of undo/redo
-
-        """
-        processing_step = aspecd.utils.object_from_class_name(self.class_name)
-        for attribute in self._attributes_to_copy:
-            setattr(processing_step, attribute, getattr(self, attribute))
-        return processing_step
-
-    def from_dict(self, dict_=None):
-        for key, value in dict_.items():
-            if hasattr(self, key):
-                setattr(self, key, value)
-
-
-class ProcessingHistoryRecord(aspecd.dataset.HistoryRecord):
-    """History record for processing steps on datasets.
-
-    Attributes
-    ----------
-    processing : `aspecd.processing.ProcessingStepRecord`
-        record of the processing step
-
-    Parameters
-    ----------
-    processing_step : :class:`aspecd.processing.ProcessingStep`
-        processing step the history is saved for
-
-    package : :class:`str`
-        Name of package the hstory record gets recorded for
-
-        Prerequisite for reproducibility, gets stored in the
-        :attr:`aspecd.dataset.HistoryRecord.sysinfo` attribute.
-        Will usually be provided automatically by the dataset.
-
-    """
-
-    def __init__(self, processing_step=None, package=''):
-        super().__init__(package=package)
-        self.processing = ProcessingStepRecord(processing_step)
-
-    @property
-    def undoable(self):
-        """Can this processing step be reverted?"""
-        return self.processing.undoable
-
-    def replay(self, dataset):
-        """Replay the processing step saved in the history record.
-
-        Parameters
-        ----------
-        dataset : :class:`aspecd.dataset.Dataset`
-            dataset the processing step should be replayed to
-
-        """
-        processing_step = self.processing.create_processing_step()
-        processing_step.process(dataset=dataset)

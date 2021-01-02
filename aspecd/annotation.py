@@ -20,6 +20,7 @@ simply subclass the :class:`aspecd.annotations.Annotation` base class.
 """
 
 import aspecd
+import aspecd.history
 
 
 class Error(Exception):
@@ -349,7 +350,7 @@ class AnnotationRecord:
         return annotation
 
 
-class AnnotationHistoryRecord(aspecd.dataset.HistoryRecord):
+class AnnotationHistoryRecord(aspecd.history.HistoryRecord):
     """History record for annotations of datasets.
 
     Attributes

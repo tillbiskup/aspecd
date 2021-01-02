@@ -2,16 +2,16 @@
 
 import unittest
 import os
-from datetime import datetime, timedelta
 
 import numpy as np
 
 import aspecd.analysis
 import aspecd.annotation
+import aspecd.history
 import aspecd.plotting
 import aspecd.processing
 from aspecd import annotation, analysis, dataset, io, plotting, \
-    processing, system
+    processing
 import aspecd.metadata
 
 
@@ -93,7 +93,7 @@ class TestDatasetProcessing(unittest.TestCase):
     def test_added_history_record_is_historyrecord(self):
         self.dataset.process(self.processing_step)
         self.assertTrue(isinstance(self.dataset.history[-1],
-                                   aspecd.processing.ProcessingHistoryRecord))
+                                   aspecd.history.ProcessingHistoryRecord))
 
     def test_process_increments_history_pointer(self):
         historypointer = self.dataset._history_pointer
@@ -109,7 +109,7 @@ class TestDatasetProcessing(unittest.TestCase):
     def test_process_history_record_process_is_processing_step_record(self):
         self.dataset.process(self.processing_step)
         self.assertTrue(isinstance(self.dataset.history[-1].processing,
-                                   processing.ProcessingStepRecord))
+                                   aspecd.history.ProcessingStepRecord))
 
     def test_process_copies_processingstep_object(self):
         self.dataset.process(self.processing_step)
@@ -159,7 +159,7 @@ class TestDatasetProcessing(unittest.TestCase):
     def test_added_task_has_processing_history_record(self):
         self.dataset.process(self.processing_step)
         self.assertIsInstance(self.dataset.tasks[0]['task'],
-                              aspecd.processing.ProcessingHistoryRecord)
+                              aspecd.history.ProcessingHistoryRecord)
 
 
 class TestDatasetUndo(unittest.TestCase):
@@ -582,6 +582,61 @@ class TestDatasetToDict(unittest.TestCase):
         plot = self.dataset.plot(plotter)
         plot.save(saver)
         self.dataset.to_dict()
+
+    def test_to_dict_includes_origdata(self):
+        self.assertIn("_origdata", self.dataset.to_dict())
+
+
+class TestDatasetFromDict(unittest.TestCase):
+    def setUp(self):
+        self.dataset = dataset.ExperimentalDataset()
+
+    def test_has_from_dict_method(self):
+        self.assertTrue(hasattr(self.dataset, 'from_dict'))
+        self.assertTrue(callable(self.dataset.from_dict))
+
+    def test_from_dict_sets_id(self):
+        dataset_dict = self.dataset.to_dict()
+        dataset_dict["id"] = 'foo'
+        self.dataset.from_dict(dataset_dict)
+        self.assertEqual(dataset_dict["id"], self.dataset.id)
+
+    def test_from_dict_sets_data(self):
+        dataset_dict = self.dataset.to_dict()
+        dataset_dict["data"]["data"] = np.random.rand(10)
+        self.dataset.from_dict(dataset_dict)
+        np.testing.assert_allclose(dataset_dict["data"]["data"],
+                                   self.dataset.data.data)
+
+    def test_from_dict_sets_origdata(self):
+        dataset_dict = self.dataset.to_dict()
+        dataset_dict["_origdata"]["data"] = np.random.rand(10)
+        self.dataset.from_dict(dataset_dict)
+        np.testing.assert_allclose(dataset_dict["_origdata"]["data"],
+                                   self.dataset._origdata.data)
+
+    def test_from_dict_sets_axes_in_data(self):
+        dataset_dict = self.dataset.to_dict()
+        dataset_dict["data"]["axes"][0]["label"] = 'foo'
+        self.dataset.from_dict(dataset_dict)
+        self.assertEqual(dataset_dict["data"]["axes"][0]["label"],
+                         self.dataset.data.axes[0].label)
+
+    def test_from_dict_sets_metadata(self):
+        dataset_dict = self.dataset.to_dict()
+        dataset_dict["metadata"]["sample"]["name"] = 'foo'
+        self.dataset.from_dict(dataset_dict)
+        self.assertEqual(dataset_dict["metadata"]["sample"]["name"],
+                         self.dataset.metadata.sample.name)
+
+    def test_from_dict_sets_history(self):
+        processing_step = processing.ProcessingStep()
+        self.dataset.process(processing_step)
+        dataset_dict = self.dataset.to_dict()
+        new_dataset = dataset.Dataset()
+        new_dataset.from_dict(dataset_dict)
+        self.assertDictEqual(self.dataset.history[0].to_dict(),
+                             new_dataset.history[0].to_dict())
 
 
 class TestDatasetReferences(unittest.TestCase):
@@ -1052,41 +1107,3 @@ class TestAxisSettings(unittest.TestCase):
     def test_set_multidimensional_values_fails(self):
         with self.assertRaises(dataset.AxisValuesDimensionError):
             self.axis.values = np.zeros([0, 0])
-
-
-class TestHistoryRecord(unittest.TestCase):
-    def setUp(self):
-        self.historyrecord = dataset.HistoryRecord()
-
-    def test_instantiate_class(self):
-        pass
-
-    def test_instantiate_class_with_package_name(self):
-        dataset.HistoryRecord(package="aspecd")
-
-    def test_instantiate_class_with_package_name_sets_sysinfo(self):
-        history = dataset.HistoryRecord(package="numpy")
-        self.assertTrue("numpy" in history.sysinfo.packages.keys())
-
-    def test_has_date_property(self):
-        self.assertTrue(hasattr(self.historyrecord, 'date'))
-
-    def test_date_is_datetime(self):
-        self.assertTrue(isinstance(self.historyrecord.date, datetime))
-
-    def test_date_is_current_date(self):
-        now = datetime.today()
-        # noinspection PyTypeChecker
-        self.assertAlmostEqual(now, self.historyrecord.date,
-                               delta=timedelta(seconds=1))
-
-    def test_has_sysinfo_property(self):
-        self.assertTrue(hasattr(self.historyrecord, 'sysinfo'))
-
-    def test_sysinfo_is_systeminfo(self):
-        self.assertTrue(
-            isinstance(self.historyrecord.sysinfo, system.SystemInfo))
-
-    def test_has_to_dict_method(self):
-        self.assertTrue(hasattr(self.historyrecord, 'to_dict'))
-        self.assertTrue(callable(self.historyrecord.to_dict))
