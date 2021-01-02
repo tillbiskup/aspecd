@@ -228,11 +228,7 @@ class TestAnalysisStepRecord(unittest.TestCase):
             aspecd.history.AnalysisStepRecord(self.analysis_step)
 
     def test_instantiate_class(self):
-        pass
-
-    def test_instantiate_without_analysis_step_raises(self):
-        with self.assertRaises(aspecd.history.MissingAnalysisStepError):
-            aspecd.history.AnalysisStepRecord()
+        aspecd.history.AnalysisStepRecord()
 
     def test_instantiate_class_with_analysis_step(self):
         aspecd.history.AnalysisStepRecord(self.analysis_step)
@@ -248,6 +244,10 @@ class TestAnalysisStepRecord(unittest.TestCase):
                                 'create_analysis_step'))
         self.assertTrue(
             callable(self.analysis_record.create_analysis_step))
+
+    def test_has_from_processing_step_method(self):
+        self.assertTrue(hasattr(self.analysis_record, 'from_analysis_step'))
+        self.assertTrue(callable(self.analysis_record.from_analysis_step))
 
     def test_create_analysis_step_returns_analysis_object(self):
         test_object = self.analysis_record.create_analysis_step()
@@ -305,6 +305,18 @@ class TestAnalysisStepRecord(unittest.TestCase):
             aspecd.history.AnalysisStepRecord(self.analysis_step)
         test_object = self.analysis_record.create_analysis_step()
         self.assertEqual(test_object.result, None)
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.analysis_record, 'to_dict'))
+        self.assertTrue(callable(self.analysis_record.to_dict))
+
+    def test_from_dict(self):
+        orig_dict = self.analysis_record.to_dict()
+        orig_dict["comment"] = 'foo'
+        new_processing_record = \
+            aspecd.history.AnalysisStepRecord(self.analysis_step)
+        new_processing_record.from_dict(orig_dict)
+        self.assertDictEqual(orig_dict, new_processing_record.to_dict())
 
 
 class TestSingleAnalysisStepRecord(unittest.TestCase):

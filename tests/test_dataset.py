@@ -638,6 +638,15 @@ class TestDatasetFromDict(unittest.TestCase):
         self.assertDictEqual(self.dataset.history[0].to_dict(),
                              new_dataset.history[0].to_dict())
 
+    def test_from_dict_sets_analyses(self):
+        analysis_step = aspecd.analysis.SingleAnalysisStep()
+        self.dataset.analyse(analysis_step)
+        dataset_dict = self.dataset.to_dict()
+        new_dataset = dataset.Dataset()
+        new_dataset.from_dict(dataset_dict)
+        self.assertDictEqual(self.dataset.analyses[0].to_dict(),
+                             new_dataset.analyses[0].to_dict())
+
 
 class TestDatasetReferences(unittest.TestCase):
     def setUp(self):

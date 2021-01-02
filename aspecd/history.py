@@ -17,27 +17,6 @@ import aspecd.system
 import aspecd.utils
 
 
-class Error(Exception):
-    """Base class for exceptions in this module."""
-
-    pass
-
-
-class MissingAnalysisStepError(Error):
-    """Exception raised when no analysis step exists to act on
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
 class HistoryRecord(aspecd.utils.ToDictMixin):
     """Generic base class for all kinds of history records.
 
@@ -233,7 +212,7 @@ class ProcessingHistoryRecord(HistoryRecord):
         processing_step.process(dataset=dataset)
 
 
-class AnalysisStepRecord:
+class AnalysisStepRecord(aspecd.utils.ToDictMixin):
     """Base class for analysis step records.
 
     The analysis of a :class:`aspecd.dataset.Dataset` should *not* contain
@@ -280,20 +259,20 @@ class AnalysisStepRecord:
     """
 
     def __init__(self, analysis_step=None):
-        if not analysis_step:
-            raise MissingAnalysisStepError
+        super().__init__()
         self.description = ''
         self.parameters = dict()
         self.comment = ''
         self.class_name = ''
         self.result = None
-        self._copy_fields_from_analysis_step(analysis_step)
+        self._attributes_to_copy = ['description', 'parameters', 'comment',
+                                    'result']
+        if analysis_step:
+            self.from_analysis_step(analysis_step)
 
-    def _copy_fields_from_analysis_step(self, analysis_step):
-        self.description = analysis_step.description
-        self.parameters = analysis_step.parameters
-        self.comment = analysis_step.comment
-        self.result = analysis_step.result
+    def from_analysis_step(self, analysis_step):
+        for attribute in self._attributes_to_copy:
+            setattr(self, attribute, getattr(analysis_step, attribute))
         self.class_name = analysis_step.name
 
     def create_analysis_step(self):
@@ -310,6 +289,11 @@ class AnalysisStepRecord:
         analysis_step.parameters = self.parameters
         analysis_step.description = self.description
         return analysis_step
+
+    def from_dict(self, dict_=None):
+        for key, value in dict_.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
 
 
 class SingleAnalysisStepRecord(AnalysisStepRecord):
@@ -350,8 +334,8 @@ class SingleAnalysisStepRecord(AnalysisStepRecord):
         super().__init__(analysis_step=analysis_step)
         self.preprocessing = []
 
-    def _copy_fields_from_analysis_step(self, analysis_step):
-        super()._copy_fields_from_analysis_step(analysis_step)
+    def from_analysis_step(self, analysis_step):
+        super().from_analysis_step(analysis_step)
         self.preprocessing = analysis_step.preprocessing
 
 
