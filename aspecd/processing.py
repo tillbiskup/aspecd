@@ -61,21 +61,6 @@ class MissingDatasetError(Error):
         self.message = message
 
 
-class MissingProcessingStepError(Error):
-    """Exception raised when no processing step exists to act on
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
 class ProcessingStep:
     """Base class for processing steps.
 

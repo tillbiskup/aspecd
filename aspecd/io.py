@@ -696,7 +696,18 @@ class AdsExporter(DatasetExporter):
 
 
 class AdsImporter(DatasetImporter):
+    """
+    Dataset importer for importing from ASpecD dataset format.
 
+    For more details of the ASpecD dataset format, see the
+    :class:`aspecd.io.AdsExporter` class.
+
+    .. todo::
+        Probably, :class:`aspecd.dataset.Dataset` needs a :meth:`from_dict`
+        method to load the contents from a dictionary. This would
+        dramatically simplify things.
+
+    """
     def __init__(self):
         super().__init__()
         self.extension = '.ads'

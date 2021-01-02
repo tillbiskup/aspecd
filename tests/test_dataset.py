@@ -302,7 +302,7 @@ class TestDatasetAnalysis(unittest.TestCase):
     def test_added_analysis_record_is_analysishistoryrecord(self):
         self.dataset.analyse(self.analysis_step)
         self.assertTrue(isinstance(self.dataset.analyses[-1],
-                                   aspecd.analysis.AnalysisHistoryRecord))
+                                   aspecd.history.AnalysisHistoryRecord))
 
     def test_added_analysis_record_contains_history(self):
         processing_step = processing.ProcessingStep()
@@ -364,7 +364,7 @@ class TestDatasetAnalysis(unittest.TestCase):
     def test_added_task_has_analysis_history_record(self):
         self.dataset.analyse(self.analysis_step)
         self.assertIsInstance(self.dataset.tasks[0]['task'],
-                              aspecd.analysis.AnalysisHistoryRecord)
+                              aspecd.history.AnalysisHistoryRecord)
 
 
 class TestDatasetAnnotation(unittest.TestCase):

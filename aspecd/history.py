@@ -4,6 +4,27 @@ import aspecd.system
 import aspecd.utils
 
 
+class Error(Exception):
+    """Base class for exceptions in this module."""
+
+    pass
+
+
+class MissingAnalysisStepError(Error):
+    """Exception raised when no analysis step exists to act on
+
+    Attributes
+    ----------
+    message : :class:`str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
 class HistoryRecord(aspecd.utils.ToDictMixin):
     """Generic base class for all kinds of history records.
 
@@ -197,3 +218,167 @@ class ProcessingHistoryRecord(HistoryRecord):
         """
         processing_step = self.processing.create_processing_step()
         processing_step.process(dataset=dataset)
+
+
+class AnalysisStepRecord:
+    """Base class for analysis step records.
+
+    The analysis of a :class:`aspecd.dataset.Dataset` should *not* contain
+    references to :class:`aspecd.analysis.AnalysisStep` objects, but rather
+    records that contain all necessary information to create the respective
+    objects inherited from :class:`aspecd.analysis.AnalysisStep`. One
+    reason for this is simply that we want to import datasets containing
+    analysis steps in their analyses for which no corresponding analysis
+    class exists in the current installation of the application. Another is
+    to not have an infinite recursion of datasets, as the dataset is stored
+    in an :obj:`aspecd.analysis.AnalysisStep` object.
+
+    Attributes
+    ----------
+    description : :class:`str`
+        Short description, to be set in class definition
+    parameters : :class:`dict`
+        Parameters required for performing the analysis step
+
+        All parameters, implicit and explicit.
+    result
+        Results of the analysis step
+
+        Can be either a :class:`aspecd.dataset.Dataset` or some other
+        class, *e.g.*, :class:`aspecd.metadata.PhysicalQuantity`.
+
+        In case of a dataset, it is a calculated dataset
+        (:class:`aspecd.dataset.CalculatedDataset`)
+    comment : :class:`str`
+        User-supplied comment describing intent, purpose, reason, ...
+    class_name : :class:`str`
+        Fully qualified name of the class of the corresponding analysis step
+
+    Parameters
+    ----------
+    analysis_step : :class:`aspecd.analysis.SingleAnalysisStep`
+        Analysis step the record should be created for.
+
+    Raises
+    ------
+    aspecd.analysis.MissingAnalysisStepError
+        Raised when no analysis step exists to act on
+
+    """
+
+    def __init__(self, analysis_step=None):
+        if not analysis_step:
+            raise MissingAnalysisStepError
+        self.description = ''
+        self.parameters = dict()
+        self.comment = ''
+        self.class_name = ''
+        self.result = None
+        self._copy_fields_from_analysis_step(analysis_step)
+
+    def _copy_fields_from_analysis_step(self, analysis_step):
+        self.description = analysis_step.description
+        self.parameters = analysis_step.parameters
+        self.comment = analysis_step.comment
+        self.result = analysis_step.result
+        self.class_name = analysis_step.name
+
+    def create_analysis_step(self):
+        """Create an analysis step object from the parameters stored.
+
+        Returns
+        -------
+        analysis_step : :class:`aspecd.analysis.SingleAnalysisStep`
+            actual analysis step object that can be used for analysis
+
+        """
+        analysis_step = aspecd.utils.object_from_class_name(self.class_name)
+        analysis_step.comment = self.comment
+        analysis_step.parameters = self.parameters
+        analysis_step.description = self.description
+        return analysis_step
+
+
+class SingleAnalysisStepRecord(AnalysisStepRecord):
+    """Base class for analysis step records stored in the dataset analyses.
+
+    The analysis of a :class:`aspecd.dataset.Dataset` should *not* contain
+    references to :class:`aspecd.analysis.AnalysisStep` objects, but rather
+    records that contain all necessary information to create the respective
+    objects inherited from :class:`aspecd.analysis.AnalysisStep`. One
+    reason for this is simply that we want to import datasets containing
+    analysis steps in their analyses for which no corresponding analysis
+    class exists in the current installation of the application. Another is
+    to not have an infinite recursion of datasets, as the dataset is stored
+    in an :obj:`aspecd.analysis.AnalysisStep` object.
+
+    .. note::
+        Each analyses entry in a dataset stores the analysis step as a
+        :class:`aspecd.analysis.SingleAnalysisStepRecord`, even in applications
+        inheriting from the ASpecD framework. Hence, subclassing of this class
+        should normally not be necessary.
+
+    Attributes
+    ----------
+    preprocessing : :class:`list`
+        List of processing steps
+
+        The actual processing steps are objects of the class
+        :class:`aspecd.processing.ProcessingStepRecord`.
+
+    Parameters
+    ----------
+    analysis_step : :class:`aspecd.analysis.SingleAnalysisStep`
+        Analysis step the record should be created for.
+
+    """
+
+    def __init__(self, analysis_step=None):
+        super().__init__(analysis_step=analysis_step)
+        self.preprocessing = []
+
+    def _copy_fields_from_analysis_step(self, analysis_step):
+        super()._copy_fields_from_analysis_step(analysis_step)
+        self.preprocessing = analysis_step.preprocessing
+
+
+class AnalysisHistoryRecord(HistoryRecord):
+    """History record for analysis steps on datasets.
+
+    Attributes
+    ----------
+    analysis : :class:`aspecd.analysis.SingleAnalysisStep`
+        Analysis step the history is saved for
+
+    package : :class:`str`
+        Name of package the history record gets recorded for
+
+        Prerequisite for reproducibility, gets stored in the
+        :attr:`aspecd.dataset.HistoryRecord.sysinfo` attribute.
+        Will usually be provided automatically by the dataset.
+
+    Parameters
+    ----------
+    analysis_step : :class:`aspecd.analysis.SingleAnalysisStep`
+        Analysis step the history is saved for
+
+    package : :class:`str`
+        Name of package the history record gets recorded for
+
+    """
+
+    def __init__(self, analysis_step=None, package=''):
+        super().__init__(package=package)
+        self.analysis = SingleAnalysisStepRecord(analysis_step)
+
+    def replay(self, dataset):
+        """Replay the analysis step saved in the history record.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset the analysis step should be replayed to
+
+        """
+        analysis_step = self.analysis.create_analysis_step()
+        dataset.analyse(analysis_step=analysis_step)
