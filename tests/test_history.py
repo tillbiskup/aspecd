@@ -1,15 +1,4 @@
-"""Tests for history.
-
-.. todo::
-    The Analysis/.../Record classes (not those with HistoryRecord in their
-    name) need to be converted thus that they can be instantiated without
-    parameter. Thus, one probably gets rid of a few exceptions as well.
-
-    It turned out that first changing this and then moving the classes to
-    the history module is the preferred approach, as otherwise cyclic
-    imports may result that need to get fixed first.
-
-"""
+"""Tests for history."""
 
 import unittest
 from datetime import datetime, timedelta
