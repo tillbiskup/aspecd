@@ -91,7 +91,7 @@ class TestRecipe(unittest.TestCase):
         self.recipe.export_to(exporter)
         to_dict_contents = self.recipe.to_dict()
         with open(self.filename, 'r') as file:
-            contents = utils.yaml.load(file)
+            contents = utils.yaml.safe_load(file)
         self.assertEqual(to_dict_contents, contents)
 
     def test_from_dict_without_dict_raises(self):

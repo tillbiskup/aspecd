@@ -749,7 +749,7 @@ class MetadataMapper:
         self.metadata = self._traverse_keys_to_variable_names(self.metadata)
 
     def _traverse_keys_to_variable_names(self, dict_=None):
-        for key, value in dict_.items():
+        for key, value in dict_.copy().items():
             if isinstance(value, dict):
                 dict_[key] = \
                     self._traverse_keys_to_variable_names(value)

@@ -852,7 +852,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         for key in dict_:
             if hasattr(self, key):
                 attribute = getattr(self, key)
-                if key is "history":
+                if key == "history":
                     for element in dict_[key]:
                         history_record = \
                             aspecd.history.ProcessingHistoryRecord()
