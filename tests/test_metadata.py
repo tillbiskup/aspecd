@@ -132,6 +132,12 @@ class TestPhysicalQuantity(unittest.TestCase):
         to_dict = self.physical_quantity.to_dict()
         self.assertDictEqual(test_dict, to_dict)
 
+    def test_from_dict(self):
+        dict_ = self.physical_quantity.to_dict()
+        dict_["name"] = "foo"
+        self.physical_quantity.from_dict(dict_)
+        self.assertEqual(dict_["name"], self.physical_quantity.name)
+
 
 class TestMetadata(unittest.TestCase):
     def setUp(self):

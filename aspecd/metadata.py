@@ -226,6 +226,11 @@ class PhysicalQuantity(aspecd.utils.ToDictMixin):
             self.value = 0.
             self.unit = ''
 
+    def from_dict(self, dict_=None):
+        for key in dict_:
+            if hasattr(self, key):
+                setattr(self, key, dict_[key])
+
 
 class Metadata(aspecd.utils.ToDictMixin):
     """
@@ -272,13 +277,16 @@ class Metadata(aspecd.utils.ToDictMixin):
 
         """
         for key in dict_:
-            attr = key.replace(' ', '_').lower()
-            if hasattr(self, attr):
-                if isinstance(getattr(self, attr),
+            attribute_name = key.replace(' ', '_').lower()
+            if hasattr(self, attribute_name):
+                if isinstance(getattr(self, attribute_name),
                               type(PhysicalQuantity())):
-                    getattr(self, attr).from_string(dict_[key])
+                    if isinstance(dict_[key], dict):
+                        getattr(self, attribute_name).from_dict(dict_[key])
+                    else:
+                        getattr(self, attribute_name).from_string(dict_[key])
                 else:
-                    setattr(self, attr, dict_[key])
+                    setattr(self, attribute_name, dict_[key])
 
 
 class TemperatureControl(Metadata):
@@ -465,8 +473,9 @@ class Measurement(Metadata):
             String containing date and time in format described above
 
         """
-        fmt = "%Y-%m-%d %H:%M:%S"
-        setattr(self, key, datetime.datetime.strptime(string, fmt))
+        if string:
+            fmt = "%Y-%m-%d %H:%M:%S"
+            setattr(self, key, datetime.datetime.strptime(string, fmt))
 
 
 class Sample(Metadata):
@@ -780,8 +789,8 @@ class MetadataMapper:
             If the target dictionary does not exist, usually the method
             will *not* create it and raise an appropriate exception.
             However, if explicitly told to create the target dictionary,
-            it will do so. This is to prevent accidential typos from
-            messing up with the dictionary and result in hard to track bugs.
+            it will do so. This is to prevent accidental typos from
+            messing up with the dictionary and resulting in hard to track bugs.
 
         Parameters
         ----------
