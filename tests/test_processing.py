@@ -96,11 +96,7 @@ class TestProcessingStepRecord(unittest.TestCase):
             processing.ProcessingStepRecord(self.processing_step)
 
     def test_instantiate_class(self):
-        pass
-
-    def test_instantiate_without_processing_step_raises(self):
-        with self.assertRaises(processing.MissingProcessingStepError):
-            processing.ProcessingStepRecord()
+        processing.ProcessingStepRecord()
 
     def test_instantiate_class_with_processing_step(self):
         processing.ProcessingStepRecord(self.processing_step)
@@ -110,6 +106,10 @@ class TestProcessingStepRecord(unittest.TestCase):
         processing_record = \
             processing.ProcessingStepRecord(self.processing_step)
         self.assertEqual(processing_record.description, 'Test')
+
+    def test_has_from_processing_step_method(self):
+        self.assertTrue(hasattr(self.processing_record, 'from_processing_step'))
+        self.assertTrue(callable(self.processing_record.from_processing_step))
 
     def test_has_create_processing_step_method(self):
         self.assertTrue(hasattr(self.processing_record,
@@ -168,6 +168,18 @@ class TestProcessingStepRecord(unittest.TestCase):
             processing.ProcessingStepRecord(self.processing_step)
         test_object = self.processing_record.create_processing_step()
         self.assertEqual(test_object.comment, test_comment)
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.processing_record, 'to_dict'))
+        self.assertTrue(callable(self.processing_record.to_dict))
+
+    def test_from_dict(self):
+        orig_dict = self.processing_record.to_dict()
+        orig_dict["comment"] = 'foo'
+        new_processing_record = \
+            processing.ProcessingStepRecord(self.processing_step)
+        new_processing_record.from_dict(orig_dict)
+        self.assertDictEqual(orig_dict, new_processing_record.to_dict())
 
 
 class TestProcessingHistoryRecord(unittest.TestCase):

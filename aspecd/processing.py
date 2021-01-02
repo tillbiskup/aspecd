@@ -259,7 +259,7 @@ class ProcessingStep:
         pass
 
 
-class ProcessingStepRecord:
+class ProcessingStepRecord(aspecd.utils.ToDictMixin):
     """Base class for processing step records stored in the dataset history.
 
     The history of a :class:`aspecd.dataset.Dataset` should *not* contain
@@ -304,8 +304,7 @@ class ProcessingStepRecord:
     """
 
     def __init__(self, processing_step=None):
-        if not processing_step:
-            raise MissingProcessingStepError
+        super().__init__()
         self.undoable = False
         self.description = ''
         self.parameters = dict()
@@ -313,9 +312,10 @@ class ProcessingStepRecord:
         self.class_name = ''
         self._attributes_to_copy = ['description', 'parameters', 'undoable',
                                     'comment']
-        self._copy_fields_from_processing_step(processing_step)
+        if processing_step:
+            self.from_processing_step(processing_step)
 
-    def _copy_fields_from_processing_step(self, processing_step):
+    def from_processing_step(self, processing_step):
         for attribute in self._attributes_to_copy:
             setattr(self, attribute, getattr(processing_step, attribute))
         self.class_name = processing_step.name
@@ -334,6 +334,11 @@ class ProcessingStepRecord:
         for attribute in self._attributes_to_copy:
             setattr(processing_step, attribute, getattr(self, attribute))
         return processing_step
+
+    def from_dict(self, dict_=None):
+        for key, value in dict_.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
 
 
 class ProcessingHistoryRecord(aspecd.dataset.HistoryRecord):
