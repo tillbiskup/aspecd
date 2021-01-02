@@ -1158,8 +1158,7 @@ class Data(aspecd.utils.ToDictMixin):
         if old_shape != data.shape:
             if self.axes[0].values.size == 0:
                 self._create_axes()
-            else:
-                self._update_axes()
+            self._update_axes()
 
     @property
     def axes(self):
@@ -1205,6 +1204,28 @@ class Data(aspecd.utils.ToDictMixin):
         for index in range(self.data.ndim):
             if len(self.axes[index].values) != data_shape[index]:
                 raise AxesValuesInconsistentWithDataError
+
+    def from_dict(self, dict_=None):
+        """
+        Set properties from dictionary, e.g., from serialised dataset.
+
+        Only parameters in the dictionary that are valid properties of the
+        class are set accordingly.
+
+        The list of axes is handled appropriately.
+
+        Parameters
+        ----------
+        dict_ : :class:`dict`
+            Dictionary containing properties to set
+
+        """
+        for key in dict_.keys():
+            if key is "data":
+                self.data = dict_['data']
+            elif key is "axes":
+                for nr, axis in enumerate(dict_["axes"]):
+                    self.axes[nr].from_dict(axis)
 
 
 class Axis(aspecd.utils.ToDictMixin):
@@ -1309,6 +1330,23 @@ class Axis(aspecd.utils.ToDictMixin):
             return
         differences = self.values[1:] - self.values[0:-1]
         self._equidistant = np.isclose(differences.max(), differences.min())
+
+    def from_dict(self, dict_=None):
+        """
+        Set properties from dictionary, e.g., from serialised dataset.
+
+        Only parameters in the dictionary that are valid properties of the
+        class are set accordingly.
+
+        Parameters
+        ----------
+        dict_ : :class:`dict`
+            Dictionary containing properties to set
+
+        """
+        for key in dict_:
+            if hasattr(self, key):
+                setattr(self, key, dict_[key])
 
 
 class HistoryRecord(aspecd.utils.ToDictMixin):

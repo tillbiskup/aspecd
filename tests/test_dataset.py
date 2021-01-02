@@ -831,6 +831,11 @@ class TestData(unittest.TestCase):
         self.data.data = new_data
         self.assertEqual(new_data.size, self.data.axes[0].values.size)
 
+    def test_setting_data_adjusts_axes_values(self):
+        new_data = np.zeros([6, 1])
+        self.data.data = new_data
+        self.assertEqual(new_data.size, self.data.axes[0].values.size)
+
     def test_has_to_dict_method(self):
         self.assertTrue(hasattr(self.data, 'to_dict'))
         self.assertTrue(callable(self.data.to_dict))
@@ -842,6 +847,26 @@ class TestData(unittest.TestCase):
     def test_to_dict_includes_axes(self):
         dict_ = self.data.to_dict()
         self.assertIn('axes', dict_)
+
+    def test_has_from_dict_method(self):
+        self.assertTrue(hasattr(self.data, 'from_dict'))
+        self.assertTrue(callable(self.data.from_dict))
+
+    def test_from_dict_sets_data(self):
+        orig_dict = self.data.to_dict()
+        orig_dict['data'] = np.random.rand(10)
+        self.data.from_dict(orig_dict)
+        np.testing.assert_allclose(orig_dict["data"], self.data.data)
+
+    def test_from_dict_sets_axes(self):
+        orig_dict = self.data.to_dict()
+        orig_dict['data'] = np.random.rand(10)
+        orig_dict['axes'][0]['values'] = np.arange(10)
+        orig_dict['axes'][0]['label'] = 'foo'
+        orig_dict['axes'][1]['label'] = 'bar'
+        self.data.from_dict(orig_dict)
+        self.assertDictEqual(orig_dict, self.data.to_dict())
+        # np.testing.assert_allclose(orig_dict["data"], self.data.data)
 
 
 class TestAxisSetupInConstructor(unittest.TestCase):
@@ -876,7 +901,6 @@ class TestAxisSetupInConstructor(unittest.TestCase):
     def test_axes_values_dimensions_are_consistent_with_empty_2D_data(self):
         tmp_data = np.zeros([0, 0])
         data_obj = dataset.Data(tmp_data)
-        print(data_obj.axes[0].values)
         self.assertEqual(len(data_obj.axes[0].values), 0)
         self.assertEqual(len(data_obj.axes[1].values), 0)
 
@@ -993,6 +1017,24 @@ class TestAxis(unittest.TestCase):
     def test_to_dict_includes_values(self):
         dict_ = self.axis.to_dict()
         self.assertIn('values', dict_)
+
+    def test_has_from_dict_method(self):
+        self.assertTrue(hasattr(self.axis, 'from_dict'))
+        self.assertTrue(callable(self.axis.from_dict))
+
+    def test_from_dict_sets_string_values(self):
+        orig_dict = self.axis.to_dict()
+        orig_dict['label'] = "foo"
+        self.axis.from_dict(orig_dict)
+        new_dict = self.axis.to_dict()
+        self.assertDictEqual(orig_dict, new_dict)
+
+    def test_from_dict_sets_numeric_values(self):
+        orig_dict = self.axis.to_dict()
+        orig_dict['values'] = np.arange(10)
+        self.axis.from_dict(orig_dict)
+        new_dict = self.axis.to_dict()
+        self.assertDictEqual(orig_dict, new_dict)
 
 
 class TestAxisSettings(unittest.TestCase):
