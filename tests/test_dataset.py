@@ -232,14 +232,19 @@ class TestDatasetRedo(unittest.TestCase):
     def test_redo_increments_historypointer(self):
         self.dataset.process(self.processingStep)
         self.dataset.undo()
-        historypointer = self.dataset._history_pointer
+        history_pointer = self.dataset._history_pointer
         self.dataset.redo()
-        self.assertEqual(self.dataset._history_pointer, historypointer + 1)
+        self.assertEqual(self.dataset._history_pointer, history_pointer + 1)
 
 
 class TestDatasetIO(unittest.TestCase):
     def setUp(self):
         self.dataset = dataset.Dataset()
+        self.filename = 'foo'
+
+    def tearDown(self):
+        if os.path.exists(self.filename + '.adf'):
+            os.remove(self.filename + '.adf')
 
     def test_has_load_method(self):
         self.assertTrue(hasattr(self.dataset, 'load'))
@@ -249,19 +254,31 @@ class TestDatasetIO(unittest.TestCase):
         self.assertTrue(hasattr(self.dataset, 'save'))
         self.assertTrue(callable(self.dataset.save))
 
-    def test_has_importfrom_method(self):
+    def test_has_import_from_method(self):
         self.assertTrue(hasattr(self.dataset, 'import_from'))
         self.assertTrue(callable(self.dataset.import_from))
 
-    def test_has_exportto_method(self):
+    def test_has_export_to_method(self):
         self.assertTrue(hasattr(self.dataset, 'export_to'))
         self.assertTrue(callable(self.dataset.export_to))
 
-    def test_importfrom_sets_origdata(self):
+    def test_import_from_sets_origdata(self):
         importer = io.DatasetImporter()
         old_origdata = self.dataset._origdata
         self.dataset.import_from(importer)
         self.assertIsNot(self.dataset._origdata, old_origdata)
+
+    def test_save_writes_file(self):
+        self.dataset.save(filename=self.filename)
+        self.assertTrue(os.path.exists(self.filename + '.adf'))
+
+    def test_load_sets_data(self):
+        self.dataset.data.data = np.random.random(10)
+        self.dataset.save(filename=self.filename)
+        new_dataset = aspecd.dataset.Dataset()
+        new_dataset.load(filename=self.filename)
+        np.testing.assert_allclose(self.dataset.data.data,
+                                   new_dataset.data.data)
 
 
 class TestDatasetProcessingWithHistory(unittest.TestCase):
@@ -516,10 +533,6 @@ class TestDatasetImporting(unittest.TestCase):
         self.dataset = dataset.Dataset()
         self.importer = io.DatasetImporter()
 
-    def test_has_import_from_method(self):
-        self.assertTrue(hasattr(self.dataset, 'import_from'))
-        self.assertTrue(callable(self.dataset.import_from))
-
     def test_import_without_importer_raises(self):
         with self.assertRaises(aspecd.exceptions.MissingImporterError):
             self.dataset.import_from()
@@ -529,10 +542,6 @@ class TestDatasetExporting(unittest.TestCase):
     def setUp(self):
         self.dataset = dataset.Dataset()
         self.exporter = io.DatasetExporter()
-
-    def test_has_export_to_method(self):
-        self.assertTrue(hasattr(self.dataset, 'export_to'))
-        self.assertTrue(callable(self.dataset.export_to))
 
     def test_export_without_exporter_raises(self):
         with self.assertRaises(aspecd.exceptions.MissingExporterError):
@@ -581,11 +590,13 @@ class TestDatasetToDict(unittest.TestCase):
         plotter.plot(self.dataset)
         self.dataset.to_dict()
 
+    @unittest.skip
     def test_to_dict_with_saved_representation(self):
         plotter = aspecd.plotting.SinglePlotter()
         saver = aspecd.plotting.Saver(filename=self.figure_filename)
         plot = self.dataset.plot(plotter)
-        plot.save(saver)
+        saver.plotter = plot
+        saver.save()
         self.dataset.to_dict()
 
     def test_to_dict_includes_origdata(self):

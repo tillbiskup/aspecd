@@ -95,6 +95,7 @@ import numpy as np
 
 import aspecd.exceptions
 import aspecd.history
+import aspecd.io
 import aspecd.metadata
 import aspecd.system
 import aspecd.utils
@@ -480,23 +481,28 @@ class Dataset(aspecd.utils.ToDictMixin):
         """
         del self.representations[index]
 
-    def load(self):
+    def load(self, filename=None):
         """Load dataset object from persistence layer.
 
-        .. todo::
-            The way how and in what format datasets are stored needs still to
-            be discussed and implemented.
+        The dataset will be loaded from a file conforming to the ASpecD
+        dataset format (adf). For details, see the
+        :class:`aspecd.io.AdfExporter` class.
 
         """
+        importer = aspecd.io.AdfImporter()
+        importer.source = filename
+        importer.import_into(self)
 
-    def save(self):
+    def save(self, filename=None):
         """Save dataset to persistence layer.
 
-        .. todo::
-            The way how and in what format datasets are stored needs still to
-            be discussed and implemented.
+        The dataset will be saved in ASpecD dataset format (adf). For
+        details, see the :class:`aspecd.io.AdfExporter` class.
 
         """
+        exporter = aspecd.io.AdfExporter()
+        exporter.target = filename
+        exporter.export_from(self)
 
     def import_from(self, importer=None):
         """Import data and metadata contained in importer object.

@@ -353,10 +353,28 @@ class Yaml:
         with open(filename, 'w') as file:
             yaml.dump(self.dict, file)
 
-    def read_stream(self, stream):
+    def read_stream(self, stream=None):
+        """
+        Read from stream.
+
+        Parameters
+        ----------
+        stream : :class:`bytes`
+            binary stream to read from
+
+        """
         self.dict = yaml.safe_load(stream)
 
     def write_stream(self):
+        """
+        Write to from stream.
+
+        Returns
+        -------
+        stream : :class:`str`
+            string representation of YAML file
+
+        """
         return yaml.dump(self.dict)
 
     def serialise_numpy_arrays(self):
