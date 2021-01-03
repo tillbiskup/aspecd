@@ -850,6 +850,24 @@ class Dataset(aspecd.utils.ToDictMixin):
                 break
 
     def from_dict(self, dict_=None):
+        """
+        Set properties from dictionary.
+
+        Only parameters in the dictionary that are valid properties of the
+        class are set accordingly.
+
+        .. note::
+            In conjunction with the :meth:`aspecd.dataset.to_dict` method,
+            this method allows to serialise and deserialise dataset objects,
+            *i.e.* all kinds of storage to the persistence layer.
+
+
+        Parameters
+        ----------
+        dict_ : :class:`dict`
+            Dictionary containing properties to set
+
+        """
         for key in dict_:
             if hasattr(self, key):
                 attribute = getattr(self, key)

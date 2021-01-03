@@ -2006,7 +2006,7 @@ class ChefDeService:
 
     Raises
     ------
-    MissingRecipeError
+    aspecd.tasks.MissingRecipeError
         Raised if no recipe filename is provided upon trying to serve
 
     """
@@ -2035,7 +2035,7 @@ class ChefDeService:
 
         Raises
         ------
-        MissingRecipeError
+        aspecd.tasks.MissingRecipeError
             Raised if no recipe filename is provided upon trying to serve
 
         """

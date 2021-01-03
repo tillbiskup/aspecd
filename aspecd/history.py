@@ -145,6 +145,14 @@ class ProcessingStepRecord(aspecd.utils.ToDictMixin):
             self.from_processing_step(processing_step)
 
     def from_processing_step(self, processing_step):
+        """Obtain information from processing step.
+
+        Parameters
+        ----------
+        processing_step : :obj:`aspecd.processing.ProcessingStep`
+            Object to obtain information from
+
+        """
         for attribute in self._attributes_to_copy:
             setattr(self, attribute, getattr(processing_step, attribute))
         self.class_name = processing_step.name
@@ -165,6 +173,18 @@ class ProcessingStepRecord(aspecd.utils.ToDictMixin):
         return processing_step
 
     def from_dict(self, dict_=None):
+        """
+        Set properties from dictionary.
+
+        Only parameters in the dictionary that are valid properties of the
+        class are set accordingly.
+
+        Parameters
+        ----------
+        dict_ : :class:`dict`
+            Dictionary containing properties to set
+
+        """
         for key, value in dict_.items():
             if hasattr(self, key):
                 setattr(self, key, value)
@@ -273,6 +293,14 @@ class AnalysisStepRecord(aspecd.utils.ToDictMixin):
             self.from_analysis_step(analysis_step)
 
     def from_analysis_step(self, analysis_step):
+        """Obtain information from analysis step.
+
+        Parameters
+        ----------
+        analysis_step : :obj:`aspecd.analysis.AnalysisStep`
+            Object to obtain information from
+
+        """
         for attribute in self._attributes_to_copy:
             setattr(self, attribute, getattr(analysis_step, attribute))
         self.class_name = analysis_step.name
@@ -293,6 +321,18 @@ class AnalysisStepRecord(aspecd.utils.ToDictMixin):
         return analysis_step
 
     def from_dict(self, dict_=None):
+        """
+        Set properties from dictionary.
+
+        Only parameters in the dictionary that are valid properties of the
+        class are set accordingly.
+
+        Parameters
+        ----------
+        dict_ : :class:`dict`
+            Dictionary containing properties to set
+
+        """
         for key, value in dict_.items():
             if hasattr(self, key):
                 setattr(self, key, value)
@@ -432,6 +472,14 @@ class AnnotationRecord(aspecd.utils.ToDictMixin):
             self.from_annotation(annotation)
 
     def from_annotation(self, annotation):
+        """Obtain information from annotation.
+
+        Parameters
+        ----------
+        annotation : :obj:`aspecd.annotation.Annotation`
+            Object to obtain information from
+
+        """
         for attribute in self._attributes_to_copy:
             setattr(self, attribute, getattr(annotation, attribute))
         self.class_name = aspecd.utils.full_class_name(annotation)
@@ -450,6 +498,18 @@ class AnnotationRecord(aspecd.utils.ToDictMixin):
         return annotation
 
     def from_dict(self, dict_=None):
+        """
+        Set properties from dictionary.
+
+        Only parameters in the dictionary that are valid properties of the
+        class are set accordingly.
+
+        Parameters
+        ----------
+        dict_ : :class:`dict`
+            Dictionary containing properties to set
+
+        """
         for key, value in dict_.items():
             if hasattr(self, key):
                 setattr(self, key, value)
@@ -550,7 +610,7 @@ class PlotRecord(aspecd.utils.ToDictMixin):
         Parameters
         ----------
         plotter : :obj:`aspecd.plotting.Plotter`
-        Plotter object to obtain information from
+            Plotter object to obtain information from
 
         Raises
         ------
@@ -565,6 +625,18 @@ class PlotRecord(aspecd.utils.ToDictMixin):
         self.class_name = plotter.name
 
     def from_dict(self, dict_=None):
+        """
+        Set properties from dictionary.
+
+        Only parameters in the dictionary that are valid properties of the
+        class are set accordingly.
+
+        Parameters
+        ----------
+        dict_ : :class:`dict`
+            Dictionary containing properties to set
+
+        """
         for key, value in dict_.items():
             if hasattr(self, key):
                 setattr(self, key, value)
