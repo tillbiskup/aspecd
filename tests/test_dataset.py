@@ -663,10 +663,18 @@ class TestDatasetFromDict(unittest.TestCase):
         dataset_dict = self.dataset.to_dict()
         new_dataset = dataset.Dataset()
         new_dataset.from_dict(dataset_dict)
-        print(self.dataset.representations[0].to_dict())
-        print(new_dataset.representations[0].to_dict())
         self.assertDictEqual(self.dataset.representations[0].to_dict(),
                              new_dataset.representations[0].to_dict())
+
+    def test_from_dict_sets_references(self):
+        reference_dataset = aspecd.dataset.Dataset()
+        reference_dataset.id = 'foo'
+        self.dataset.add_reference(reference_dataset)
+        dataset_dict = self.dataset.to_dict()
+        new_dataset = dataset.Dataset()
+        new_dataset.from_dict(dataset_dict)
+        self.assertDictEqual(self.dataset.references[0].to_dict(),
+                             new_dataset.references[0].to_dict())
 
 
 class TestDatasetReferences(unittest.TestCase):
@@ -824,6 +832,17 @@ class TestDatasetReference(unittest.TestCase):
         self.reference.from_dataset(self.dataset)
         dataset_ = self.reference.to_dataset()
         self.assertTrue(dataset_.history)
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.reference, 'to_dict'))
+        self.assertTrue(callable(self.reference.to_dict))
+
+    def test_from_dict(self):
+        orig_dict = self.reference.to_dict()
+        orig_dict["id"] = 'foo'
+        new_dataset_record = aspecd.dataset.DatasetReference()
+        new_dataset_record.from_dict(orig_dict)
+        self.assertDictEqual(orig_dict, new_dataset_record.to_dict())
 
 
 class TestDatasetFactory(unittest.TestCase):

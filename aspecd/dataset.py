@@ -854,26 +854,31 @@ class Dataset(aspecd.utils.ToDictMixin):
                 attribute = getattr(self, key)
                 if key == "history":
                     for element in dict_[key]:
-                        history_record = \
+                        record = \
                             aspecd.history.ProcessingHistoryRecord()
-                        history_record.from_dict(element)
-                        self.history.append(history_record)
+                        record.from_dict(element)
+                        self.history.append(record)
                 elif key == "analyses":
                     for element in dict_[key]:
-                        history_record = aspecd.history.AnalysisHistoryRecord()
-                        history_record.from_dict(element)
-                        self.analyses.append(history_record)
+                        record = aspecd.history.AnalysisHistoryRecord()
+                        record.from_dict(element)
+                        self.analyses.append(record)
                 elif key == "annotations":
                     for element in dict_[key]:
-                        history_record = \
+                        record = \
                             aspecd.history.AnnotationHistoryRecord()
-                        history_record.from_dict(element)
-                        self.annotations.append(history_record)
+                        record.from_dict(element)
+                        self.annotations.append(record)
                 elif key == "representations":
                     for element in dict_[key]:
-                        history_record = aspecd.history.PlotHistoryRecord()
-                        history_record.from_dict(element)
-                        self.representations.append(history_record)
+                        record = aspecd.history.PlotHistoryRecord()
+                        record.from_dict(element)
+                        self.representations.append(record)
+                elif key == "references":
+                    for element in dict_[key]:
+                        record = DatasetReference()
+                        record.from_dict(element)
+                        self.references.append(record)
                 elif hasattr(attribute, 'from_dict'):
                     attribute.from_dict(dict_[key])
                 else:
@@ -926,7 +931,7 @@ class CalculatedDataset(Dataset):
         self.metadata = aspecd.metadata.CalculatedDatasetMetadata()
 
 
-class DatasetReference:
+class DatasetReference(aspecd.utils.ToDictMixin):
     """
     Reference to a given dataset.
 
@@ -964,6 +969,7 @@ class DatasetReference:
     """
 
     def __init__(self):
+        super().__init__()
         self.type = ''
         self.id = ''  # pylint: disable=invalid-name
         self.history = list()
@@ -1012,6 +1018,11 @@ class DatasetReference:
         for history_record in self.history:
             history_record.replay(dataset)
         return dataset
+
+    def from_dict(self, dict_=None):
+        for key, value in dict_.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
 
 
 class DatasetFactory:
