@@ -1191,7 +1191,7 @@ class TestAxisSettings(unittest.TestCase):
 
     def test_set_wrong_type_for_values_fails(self):
         with self.assertRaises(aspecd.exceptions.AxisValuesTypeError):
-            self.axis.values = 0
+            self.axis.values = 'foo'
 
     def test_set_multidimensional_values_fails(self):
         with self.assertRaises(aspecd.exceptions.AxisValuesDimensionError):

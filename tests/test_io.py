@@ -6,6 +6,7 @@ import unittest
 import numpy as np
 
 import aspecd.exceptions
+import aspecd.processing
 from aspecd import io, dataset, tasks
 
 
@@ -204,9 +205,11 @@ class TestAdsExporter(unittest.TestCase):
 class TestAdsImporter(unittest.TestCase):
     def setUp(self):
         self.importer = io.AdsImporter()
-        self.dataset = dataset.Dataset()
+        self.dataset = dataset.ExperimentalDataset()
         self.source = 'target'
         self.extension = '.ads'
+        self.exporter = io.AdsExporter()
+        self.exporter.target = self.source
 
     def tearDown(self):
         if os.path.exists(self.source + self.extension):
@@ -215,13 +218,105 @@ class TestAdsImporter(unittest.TestCase):
     def test_instantiate_class(self):
         pass
 
-    def test_import_sets_data(self):
-        exporter = io.AdsExporter()
-        exporter.target = self.source
+    def test_import_sets_data_and_origdata(self):
         dataset_ = dataset.Dataset()
-        dataset_.data.data = np.asarray([1])
-        dataset_.export_to(exporter)
+        dataset_.data.data = np.asarray([1.])
+        dataset_._origdata.data = np.asarray([1.])
+        dataset_.export_to(self.exporter)
 
         self.importer.source = self.source
         self.dataset.import_from(self.importer)
         self.assertEqual(dataset_.data.data, self.dataset.data.data)
+        self.assertEqual(dataset_._origdata.data, self.dataset._origdata.data)
+
+    def test_import_sets_metadata(self):
+        dataset_ = dataset.ExperimentalDataset()
+        dataset_.metadata.sample.name = 'foo'
+        dataset_.export_to(self.exporter)
+        self.importer.source = self.source
+        self.dataset.import_from(self.importer)
+        self.assertEqual(dataset_.metadata.sample.name,
+                         self.dataset.metadata.sample.name)
+
+    def test_import_sets_history(self):
+        dataset_ = dataset.ExperimentalDataset()
+        processing_step = aspecd.processing.ProcessingStep()
+        processing_step.comment = 'foo'
+        dataset_.process(processing_step)
+        dataset_.export_to(self.exporter)
+        self.importer.source = self.source
+        self.dataset.import_from(self.importer)
+        self.assertDictEqual(dataset_.history[0].to_dict(),
+                             self.dataset.history[0].to_dict())
+
+
+class TestAsdfExporter(unittest.TestCase):
+    def setUp(self):
+        self.exporter = io.AsdfExporter()
+        self.dataset = dataset.Dataset()
+        self.target = 'target'
+        self.extension = '.asdf'
+
+    def tearDown(self):
+        if os.path.exists(self.target + self.extension):
+            os.remove(self.target + self.extension)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_export_from_without_target_raises(self):
+        with self.assertRaises(aspecd.exceptions.MissingTargetError):
+            self.exporter.export_from(dataset=self.dataset)
+
+    def test_export_with_target_creates_file(self):
+        self.exporter.target = self.target
+        self.exporter.export_from(self.dataset)
+        self.assertTrue(os.path.exists(self.target + self.extension))
+
+
+class TestAsdfImporter(unittest.TestCase):
+    def setUp(self):
+        self.importer = io.AsdfImporter()
+        self.dataset = dataset.ExperimentalDataset()
+        self.source = 'target'
+        self.extension = '.asdf'
+        self.exporter = io.AsdfExporter()
+        self.exporter.target = self.source
+
+    def tearDown(self):
+        if os.path.exists(self.source + self.extension):
+            os.remove(self.source + self.extension)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_import_sets_data_and_origdata(self):
+        dataset_ = dataset.Dataset()
+        dataset_.data.data = np.asarray([1.])
+        dataset_._origdata.data = np.asarray([1.])
+        dataset_.export_to(self.exporter)
+
+        self.importer.source = self.source
+        self.dataset.import_from(self.importer)
+        self.assertEqual(dataset_.data.data, self.dataset.data.data)
+        self.assertEqual(dataset_._origdata.data, self.dataset._origdata.data)
+
+    def test_import_sets_metadata(self):
+        dataset_ = dataset.ExperimentalDataset()
+        dataset_.metadata.sample.name = 'foo'
+        dataset_.export_to(self.exporter)
+        self.importer.source = self.source
+        self.dataset.import_from(self.importer)
+        self.assertEqual(dataset_.metadata.sample.name,
+                         self.dataset.metadata.sample.name)
+
+    def test_import_sets_history(self):
+        dataset_ = dataset.ExperimentalDataset()
+        processing_step = aspecd.processing.ProcessingStep()
+        processing_step.comment = 'foo'
+        dataset_.process(processing_step)
+        dataset_.export_to(self.exporter)
+        self.importer.source = self.source
+        self.dataset.import_from(self.importer)
+        self.assertDictEqual(dataset_.history[0].to_dict(),
+                             self.dataset.history[0].to_dict())

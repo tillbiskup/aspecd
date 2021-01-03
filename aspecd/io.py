@@ -99,6 +99,8 @@ structure, see the :class:`aspecd.tasks.Recipe` class and its attributes.
 
 """
 
+import asdf
+
 import aspecd.exceptions
 import aspecd.utils
 
@@ -645,5 +647,50 @@ class AdsImporter(DatasetImporter):
         yaml = aspecd.utils.Yaml()
         yaml.read_from(filename=self.source + self.extension)
         yaml.deserialise_numpy_arrays()
-        self.dataset.data.data = yaml.dict["data"]["data"]
-        # self.dataset.metadata.from_dict(yaml.dict["metadata"])
+        self.dataset.from_dict(yaml.dict)
+
+
+class AsdfExporter(DatasetExporter):
+    """
+    Dataset exporter for exporting to Advanced Scientific Data Format (ASDF).
+
+    For more information on ASDF, see the
+    `homepage of the asdf package <https://asdf.readthedocs.io/en/stable/>`_,
+    and its `format specification <https://asdf-standard.readthedocs.io/en/>`_.
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.extension = '.asdf'
+
+    def _export(self):
+        if not self.target:
+            raise aspecd.exceptions.MissingTargetError
+
+        dataset_dict = self.dataset.to_dict()
+        dataset_dict["dataset_history"] = dataset_dict.pop("history")
+        asdf_file = asdf.AsdfFile(dataset_dict)
+        asdf_file.write_to(self.target + self.extension)
+
+
+class AsdfImporter(DatasetImporter):
+    """
+    Dataset importer for importing from Advanced Scientific Data Format (ASDF).
+
+    For more information on ASDF, see the
+    `homepage of the asdf package <https://asdf.readthedocs.io/en/stable/>`_,
+    and its `format specification <https://asdf-standard.readthedocs.io/en/>`_.
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.extension = '.asdf'
+
+    def _import(self):
+        with asdf.open(self.source + self.extension, lazy_load=False,
+                       copy_arrays=True) as asdf_file:
+            dataset_dict = asdf_file.tree
+            dataset_dict["history"] = dataset_dict.pop("dataset_history")
+            self.dataset.from_dict(dataset_dict)

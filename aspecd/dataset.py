@@ -1126,8 +1126,9 @@ class Axis(aspecd.utils.ToDictMixin):
         Get or set the numerical axis values.
 
         Values require to be a one-dimensional numpy array. Trying to set
-        values to either a different type or a numpy array with more than one
-        dimension will raise a corresponding error.
+        values to either a different type that cannot be converted to a
+        numpy array or a numpy array with more than one dimension will raise
+        a corresponding error.
 
         Raises
         ------
@@ -1142,7 +1143,10 @@ class Axis(aspecd.utils.ToDictMixin):
     @values.setter
     def values(self, values):
         if not isinstance(values, type(self._values)):
-            raise aspecd.exceptions.AxisValuesTypeError
+            values = np.asarray(values)
+            if not isinstance(values, type(self._values)) or \
+                    values.dtype != self._values.dtype:
+                raise aspecd.exceptions.AxisValuesTypeError
         if values.ndim > 1:
             raise aspecd.exceptions.AxisValuesDimensionError
         self._values = values

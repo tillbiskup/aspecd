@@ -48,6 +48,7 @@ setuptools.setup(
         'matplotlib',
         'numpy',
         'oyaml',
+        'asdf',
     ],
     extras_require={
         'dev': ['prospector'],
