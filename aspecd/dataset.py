@@ -860,8 +860,7 @@ class Dataset(aspecd.utils.ToDictMixin):
                         self.history.append(history_record)
                 elif key == "analyses":
                     for element in dict_[key]:
-                        history_record = \
-                            aspecd.history.AnalysisHistoryRecord()
+                        history_record = aspecd.history.AnalysisHistoryRecord()
                         history_record.from_dict(element)
                         self.analyses.append(history_record)
                 elif key == "annotations":
@@ -870,6 +869,11 @@ class Dataset(aspecd.utils.ToDictMixin):
                             aspecd.history.AnnotationHistoryRecord()
                         history_record.from_dict(element)
                         self.annotations.append(history_record)
+                elif key == "representations":
+                    for element in dict_[key]:
+                        history_record = aspecd.history.PlotHistoryRecord()
+                        history_record.from_dict(element)
+                        self.representations.append(history_record)
                 elif hasattr(attribute, 'from_dict'):
                     attribute.from_dict(dict_[key])
                 else:

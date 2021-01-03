@@ -7,7 +7,7 @@ import aspecd.annotation
 import aspecd.history
 import aspecd.system
 import aspecd.utils
-from aspecd import processing, dataset, analysis
+from aspecd import processing, dataset, analysis, plotting
 
 
 class TestHistoryRecord(unittest.TestCase):
@@ -444,3 +444,97 @@ class TestAnnotationHistoryRecord(unittest.TestCase):
     def test_annotation_is_annotation_record(self):
         self.assertTrue(isinstance(self.annotation_record.annotation,
                                    aspecd.history.AnnotationRecord))
+
+
+class TestPlotRecord(unittest.TestCase):
+    def setUp(self):
+        self.plot_record = aspecd.history.PlotRecord()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_name_property(self):
+        self.assertTrue(hasattr(self.plot_record, 'class_name'))
+
+    def test_has_parameters_property(self):
+        self.assertTrue(hasattr(self.plot_record, 'parameters'))
+
+    def test_has_description_property(self):
+        self.assertTrue(hasattr(self.plot_record, 'description'))
+
+    def test_has_filename_property(self):
+        self.assertTrue(hasattr(self.plot_record, 'filename'))
+
+    def test_has_from_plotter_method(self):
+        self.assertTrue(hasattr(self.plot_record, 'from_plotter'))
+        self.assertTrue(callable(self.plot_record.from_plotter))
+
+    def test_instantiate_with_plotter(self):
+        plotter = plotting.Plotter()
+        aspecd.history.PlotRecord(plotter=plotter)
+
+    def test_from_plotter_without_plotter_raises(self):
+        with self.assertRaises(plotting.MissingPlotterError):
+            self.plot_record.from_plotter()
+
+    def test_from_plotter_sets_attributes(self):
+        plotter = plotting.Plotter()
+        plotter.filename = 'test'
+        caption = plotting.Caption()
+        caption.title = 'My fancy figure'
+        caption.text = 'Some more description'
+        plotter.caption = caption
+        self.plot_record.from_plotter(plotter)
+        self.assertEqual(plotter.name, self.plot_record.class_name)
+        self.assertEqual(plotter.filename, self.plot_record.filename)
+        self.assertEqual(plotter.parameters, self.plot_record.parameters)
+        self.assertEqual(plotter.properties, self.plot_record.properties)
+        self.assertEqual(plotter.description, self.plot_record.description)
+        self.assertEqual(plotter.caption.title, self.plot_record.caption.title)
+
+    def test_instantiate_with_plotter_sets_attributes_from_plotter(self):
+        plotter = plotting.Plotter()
+        plotter.filename = 'test'
+        caption = plotting.Caption()
+        caption.title = 'My fancy figure'
+        caption.text = 'Some more description'
+        plotter.caption = caption
+        plot_record = aspecd.history.PlotRecord(plotter=plotter)
+        self.assertEqual(plotter.name, plot_record.class_name)
+        self.assertEqual(plotter.filename, plot_record.filename)
+        self.assertEqual(plotter.parameters, plot_record.parameters)
+        self.assertEqual(plotter.description, plot_record.description)
+        self.assertEqual(plotter.caption.title, plot_record.caption.title)
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.plot_record, 'to_dict'))
+        self.assertTrue(callable(self.plot_record.to_dict))
+
+    def test_from_dict(self):
+        orig_dict = self.plot_record.to_dict()
+        orig_dict["description"] = 'foo'
+        new_plot_record = aspecd.history.PlotRecord()
+        new_plot_record.from_dict(orig_dict)
+        self.assertDictEqual(orig_dict, new_plot_record.to_dict())
+
+
+class TestSinglePlotRecord(unittest.TestCase):
+    def setUp(self):
+        self.plot_record = aspecd.history.SinglePlotRecord()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_preprocessing_property(self):
+        self.assertTrue(hasattr(self.plot_record, 'preprocessing'))
+
+
+class TestMultiPlotRecord(unittest.TestCase):
+    def setUp(self):
+        self.plot_record = aspecd.history.MultiPlotRecord()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_datasets_property(self):
+        self.assertTrue(hasattr(self.plot_record, 'datasets'))

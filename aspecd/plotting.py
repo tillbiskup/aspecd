@@ -560,12 +560,13 @@ class SinglePlotter(Plotter):
 
         Returns
         -------
-        history_record : :class:`aspecd.plotting.PlotHistoryRecord`
+        history_record : :class:`aspecd.history.PlotHistoryRecord`
             history record for plotting step
 
         """
-        history_record = PlotHistoryRecord(package=self.dataset.package_name)
-        history_record.plot = SinglePlotRecord(plotter=self)
+        history_record = \
+            aspecd.history.PlotHistoryRecord(package=self.dataset.package_name)
+        history_record.plot = aspecd.history.SinglePlotRecord(plotter=self)
         history_record.plot.preprocessing = copy.deepcopy(
             self.dataset.history)
         return history_record
@@ -1015,159 +1016,6 @@ class Saver:
             elif not file_extension:
                 self.filename = '.'.join([self.filename,
                                           self.parameters["format"]])
-
-
-class PlotRecord:
-    """Base class for records storing information about a plot.
-
-    For reproducibility of plots performed on either a single dataset or
-    multiple datasets, information for each plot needs to be collected that
-    suffices to reproduce the plot. This is what a PlotRecord is good for.
-
-    All information will usually be obtained from a plotter object, either
-    by instantiating a PlotRecord object providing a plotter object,
-    or by calling :meth:`from_plotter` on a PlotRecord object.
-
-    Subclasses for :obj:`aspecd.plotting.SinglePlotter` and
-    :obj:`aspecd.plotting.MultiPlotter` objects are available, namely
-    :class:`aspecd.plotting.SinglePlotRecord` and
-    :class:`aspecd.plotting.MultiPlotRecord`.
-
-    Attributes
-    ----------
-    name : :class:`str`
-        Name of the plotter.
-
-        Defaults to the plotter class name and shall never be set manually.
-    description : :class:`str`
-        Short description of the plot
-    parameters : :class:`dict`
-        All parameters necessary for the plot, implicit and explicit
-    properties : :class:`aspecd.plotting.PlotProperties`
-        Properties of the plot, defining its appearance
-    caption : :class:`aspecd.plotting.Caption`
-        User-supplied information for the figure.
-    filename : :class:`str`
-        Name of the file the plot has been/should be saved to
-
-
-    Parameters
-    ----------
-    plotter : :obj:`aspecd.plotting.Plotter`
-        Plotter object to obtain information from
-
-    Raises
-    ------
-    aspecd.plotting.MissingPlotterError
-        Raised if no plotter is provided.
-
-    """
-
-    def __init__(self, plotter=None):
-        self.name = ''
-        self.description = ''
-        self.parameters = dict()
-        self.properties = PlotProperties()
-        self.caption = Caption()
-        self.filename = ''
-        if plotter:
-            self.from_plotter(plotter=plotter)
-
-    def from_plotter(self, plotter=None):
-        """Obtain information from plotter.
-
-        Parameters
-        ----------
-        plotter : :obj:`aspecd.plotting.Plotter`
-        Plotter object to obtain information from
-
-        Raises
-        ------
-        aspecd.plotting.MissingPlotterError
-            Raised if no plotter is provided.
-
-        """
-        if not plotter:
-            raise MissingPlotterError
-        self.name = plotter.name
-        self.description = plotter.description
-        self.parameters = plotter.parameters
-        self.properties = plotter.properties
-        self.caption = plotter.caption
-        self.filename = plotter.filename
-
-
-class SinglePlotRecord(PlotRecord):
-    """Record for SinglePlotter objects.
-
-    When plotting data of a single dataset, classes derived from
-    :class:`aspecd.plotting.SinglePlotter` will be used. The information
-    obtained from these plotters will be stored in a SinglePlotRecord object.
-
-    Attributes
-    ----------
-    preprocessing : :class:`list`
-        List of processing steps
-
-        The actual processing steps are objects of the class
-        :class:`aspecd.processing.ProcessingStepRecord`.
-
-    Parameters
-    ----------
-    plotter : :obj:`aspecd.plotting.Plotter`
-        Plotter object to obtain information from
-
-    """
-
-    def __init__(self, plotter=None):
-        self.preprocessing = list()
-        super().__init__(plotter=plotter)
-
-
-class MultiPlotRecord(PlotRecord):
-    """Record for MultiPlotter objects.
-
-    When plotting data of multiple datasets, classes derived from
-    :class:`aspecd.plotting.MultiPlotter` will be used. The information
-    obtained from these plotters will be stored in a MultiPlotRecord object.
-
-    Attributes
-    ----------
-    datasets : :class:`list`
-        List of datasets whose data appear in the plot.
-
-    Parameters
-    ----------
-    plotter : :obj:`aspecd.plotting.Plotter`
-        Plotter object to obtain information from
-
-    """
-
-    def __init__(self, plotter=None):
-        self.datasets = list()
-        super().__init__(plotter=plotter)
-
-
-class PlotHistoryRecord(aspecd.history.HistoryRecord):
-    """History record for plots of datasets.
-
-    Attributes
-    ----------
-    plot : :class:`aspecd.plotting.SinglePlotRecord`
-        Plot the history is saved for
-
-    package : :class:`str`
-        Name of package the hstory record gets recorded for
-
-        Prerequisite for reproducibility, gets stored in the
-        :attr:`aspecd.dataset.HistoryRecord.sysinfo` attribute.
-        Will usually be provided automatically by the dataset.
-
-    """
-
-    def __init__(self, package=''):
-        super().__init__(package=package)
-        self.plot = aspecd.plotting.SinglePlotRecord()
 
 
 class Caption(aspecd.utils.Properties):

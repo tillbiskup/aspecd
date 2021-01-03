@@ -454,7 +454,7 @@ class TestDatasetPlotting(unittest.TestCase):
     def test_added_task_has_plot_history_record(self):
         self.dataset.plot(self.plotter)
         self.assertIsInstance(self.dataset.tasks[0]['task'],
-                              aspecd.plotting.PlotHistoryRecord)
+                              aspecd.history.PlotHistoryRecord)
 
 
 class TestDatasetRepresentations(unittest.TestCase):
@@ -469,7 +469,7 @@ class TestDatasetRepresentations(unittest.TestCase):
     def test_added_plot_record_is_plotrecord(self):
         self.dataset.plot(self.plotter)
         self.assertTrue(isinstance(self.dataset.representations[-1],
-                                   aspecd.plotting.PlotHistoryRecord))
+                                   aspecd.history.PlotHistoryRecord))
 
     def test_added_plot_record_contains_history(self):
         processing_step = processing.ProcessingStep()
@@ -656,6 +656,17 @@ class TestDatasetFromDict(unittest.TestCase):
         new_dataset.from_dict(dataset_dict)
         self.assertDictEqual(self.dataset.annotations[0].to_dict(),
                              new_dataset.annotations[0].to_dict())
+
+    def test_from_dict_sets_representations(self):
+        representation = aspecd.plotting.SinglePlotter1D()
+        plot = self.dataset.plot(representation)
+        dataset_dict = self.dataset.to_dict()
+        new_dataset = dataset.Dataset()
+        new_dataset.from_dict(dataset_dict)
+        print(self.dataset.representations[0].to_dict())
+        print(new_dataset.representations[0].to_dict())
+        self.assertDictEqual(self.dataset.representations[0].to_dict(),
+                             new_dataset.representations[0].to_dict())
 
 
 class TestDatasetReferences(unittest.TestCase):
