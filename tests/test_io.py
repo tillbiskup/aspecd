@@ -2,6 +2,7 @@
 
 import os
 import unittest
+import zipfile
 
 import numpy as np
 
@@ -178,12 +179,12 @@ class TestRecipeYamlExporter(unittest.TestCase):
         self.assertTrue(isinstance(self.exporter, io.RecipeExporter))
 
 
-class TestAdsExporter(unittest.TestCase):
+class TestAdfExporter(unittest.TestCase):
     def setUp(self):
-        self.exporter = io.AdsExporter()
+        self.exporter = io.AdfExporter()
         self.dataset = dataset.Dataset()
         self.target = 'target'
-        self.extension = '.ads'
+        self.extension = '.adf'
 
     def tearDown(self):
         if os.path.exists(self.target + self.extension):
@@ -201,14 +202,53 @@ class TestAdsExporter(unittest.TestCase):
         self.exporter.export_from(self.dataset)
         self.assertTrue(os.path.exists(self.target + self.extension))
 
+    def test_export_creates_zip_file(self):
+        self.exporter.target = self.target
+        self.exporter.export_from(self.dataset)
+        self.assertTrue(zipfile.is_zipfile(self.target + self.extension))
 
-class TestAdsImporter(unittest.TestCase):
+    def test_created_zipfile_contains_correct_files(self):
+        self.exporter.target = self.target
+        self.exporter.export_from(self.dataset)
+        expected_list_of_files = ['dataset.yaml', 'VERSION', 'README',
+                                  'Manifest.yaml', 'binaryData/']
+        expected_list_of_files.sort()
+        with zipfile.ZipFile(self.target + self.extension, 'r') as zipped_file:
+            actual_list_of_files = zipped_file.namelist()
+        actual_list_of_files.sort()
+        self.assertListEqual(expected_list_of_files, actual_list_of_files)
+
+    def test_export_with_large_array_adds_binary_files(self):
+        self.exporter.target = self.target
+        self.dataset.data.data = np.random.random(1001)
+        self.exporter.export_from(self.dataset)
+        with zipfile.ZipFile(self.target + self.extension, 'r') as zipped_file:
+            list_of_files = zipped_file.namelist()
+        binary_files = [x for x in list_of_files if x.startswith('binaryData')]
+        self.assertEqual(len(binary_files), 2)
+
+    def test_export_sets_version(self):
+        self.exporter.target = self.target
+        self.exporter.export_from(self.dataset)
+        with zipfile.ZipFile(self.target + self.extension, 'r') as zipped_file:
+            version = zipped_file.read('VERSION')
+        self.assertEqual(self.exporter._version, version.decode('ascii'))
+
+    def test_export_writes_readme(self):
+        self.exporter.target = self.target
+        self.exporter.export_from(self.dataset)
+        with zipfile.ZipFile(self.target + self.extension, 'r') as zipped_file:
+            readme = zipped_file.read('README')
+        self.assertTrue(readme)
+
+
+class TestAdfImporter(unittest.TestCase):
     def setUp(self):
-        self.importer = io.AdsImporter()
+        self.importer = io.AdfImporter()
         self.dataset = dataset.ExperimentalDataset()
         self.source = 'target'
-        self.extension = '.ads'
-        self.exporter = io.AdsExporter()
+        self.extension = '.adf'
+        self.exporter = io.AdfExporter()
         self.exporter.target = self.source
 
     def tearDown(self):
@@ -248,6 +288,15 @@ class TestAdsImporter(unittest.TestCase):
         self.dataset.import_from(self.importer)
         self.assertDictEqual(dataset_.history[0].to_dict(),
                              self.dataset.history[0].to_dict())
+
+    def test_import_with_large_array(self):
+        dataset_ = dataset.Dataset()
+        dataset_.data.data = np.random.random(1001)
+        dataset_.export_to(self.exporter)
+
+        self.importer.source = self.source
+        self.dataset.import_from(self.importer)
+        np.testing.assert_allclose(dataset_.data.data, self.dataset.data.data)
 
 
 class TestAsdfExporter(unittest.TestCase):

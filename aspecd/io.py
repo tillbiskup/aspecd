@@ -98,6 +98,9 @@ information for recipe-driven data analysis. For details of the YAML file
 structure, see the :class:`aspecd.tasks.Recipe` class and its attributes.
 
 """
+import os
+import tempfile
+import zipfile
 
 import asdf
 
@@ -599,7 +602,7 @@ class RecipeYamlExporter(RecipeExporter):
         yaml.write_to(filename=self.target)
 
 
-class AdsExporter(DatasetExporter):
+class AdfExporter(DatasetExporter):
     """
     Dataset exporter for exporting to ASpecD dataset format.
 
@@ -608,45 +611,119 @@ class AdsExporter(DatasetExporter):
     case in form of a YAML file) and binary data in a corresponding
     subdirectory.
 
+    As PyYAML is not capable of dealing with NumPy arrays out of the box,
+    those are dealt with separately. Small arrays are stored inline as
+    lists, larger arrays in separate files. For details, see the
+    :class:`aspecd.utils.Yaml` class.
+
     The data format tries to be as self-contained as possible,
     using standard file formats and a brief description of its layout
     contained within the archive. Collecting the contents in a single ZIP
     archive allows the user to deal with a single file for a dataset,
     while more advanced users can easily dig into the details and write
     importers for other platforms and programming languages, making the
-    format rather platform-independent and future-safe.
+    format rather platform-independent and future-safe. Due to using binary
+    representation for larger numerical arrays, the format should be more
+    memory-efficient than other formats.
+
+    .. todo::
+        Add contents to README and Manifest.yaml.
+
     """
 
     def __init__(self):
         super().__init__()
-        self.extension = '.ads'
+        self.extension = '.adf'
+        self._filenames = {
+            'dataset': 'dataset.yaml',
+            'version': 'VERSION',
+            'readme': 'README',
+            'manifest': 'Manifest.yaml',
+        }
+        self._bin_dir = 'binaryData'
+        self._tempdir_name = ''
+        self._version = '1.0.0'
 
     def _export(self):
         if not self.target:
             raise aspecd.exceptions.MissingTargetError
+        with tempfile.TemporaryDirectory() as tempdir:
+            self._tempdir_name = tempdir
+            self._create_files()
+            self._create_zip_archive()
+
+    def _create_zip_archive(self):
+        with zipfile.ZipFile(self.target + self.extension, 'w') as zipped_file:
+            for filename in self._filenames.values():
+                zipped_file.write(
+                    filename=os.path.join(self._tempdir_name, filename),
+                    arcname=filename)
+            bin_dir_path = os.path.join(self._tempdir_name, self._bin_dir)
+            zipped_file.write(
+                filename=os.path.join(bin_dir_path),
+                arcname=self._bin_dir)
+            for filename in os.listdir(bin_dir_path):
+                zipped_file.write(
+                    filename=os.path.join(bin_dir_path, filename),
+                    arcname=os.path.join(self._bin_dir, filename))
+
+    def _create_files(self):
+        self._create_dataset_yaml()
+        self._create_version_file()
+        self._create_readme_file()
+        self._create_manifest_file()
+
+    def _create_dataset_yaml(self):
+        bin_dir_path = os.path.join(self._tempdir_name, self._bin_dir)
+        os.mkdir(bin_dir_path)
         yaml = aspecd.utils.Yaml()
+        yaml.binary_directory = bin_dir_path
         yaml.dict = self.dataset.to_dict()
         yaml.serialise_numpy_arrays()
-        yaml.write_to(filename=self.target + self.extension)
+        yaml.write_to(filename=os.path.join(self._tempdir_name,
+                                            self._filenames["dataset"]))
+
+    def _create_version_file(self):
+        with open(os.path.join(self._tempdir_name,
+                               self._filenames["version"]), 'w+') as file:
+            file.write(self._version)
+
+    def _create_readme_file(self):
+        readme_contents = """This directory contains an ASpecD dataset stored 
+        in the ASpecD dataset format (adf)."""
+        with open(os.path.join(self._tempdir_name,
+                               self._filenames["readme"]), 'w+') as file:
+            file.write(readme_contents)
+
+    def _create_manifest_file(self):
+        os.mknod(os.path.join(self._tempdir_name, self._filenames["manifest"]))
 
 
-class AdsImporter(DatasetImporter):
+class AdfImporter(DatasetImporter):
     """
     Dataset importer for importing from ASpecD dataset format.
 
     For more details of the ASpecD dataset format, see the
-    :class:`aspecd.io.AdsExporter` class.
+    :class:`aspecd.io.AdfExporter` class.
 
     """
 
     def __init__(self):
         super().__init__()
-        self.extension = '.ads'
+        self.extension = '.adf'
+        self._dataset_yaml_filename = 'dataset.yaml'
+        self._bin_dir = 'binaryData'
 
     def _import(self):
-        yaml = aspecd.utils.Yaml()
-        yaml.read_from(filename=self.source + self.extension)
-        yaml.deserialise_numpy_arrays()
+        with tempfile.TemporaryDirectory() as tempdir:
+            with zipfile.ZipFile(self.source + self.extension, 'r') as \
+                    zipped_file:
+                zipped_file.extractall(path=tempdir)
+                yaml = aspecd.utils.Yaml()
+                yaml.binary_directory = os.path.join(tempdir, self._bin_dir)
+                yaml.read_from(os.path.join(tempdir,
+                                            self._dataset_yaml_filename))
+                yaml.deserialise_numpy_arrays()
         self.dataset.from_dict(yaml.dict)
 
 
@@ -656,7 +733,7 @@ class AsdfExporter(DatasetExporter):
 
     For more information on ASDF, see the
     `homepage of the asdf package <https://asdf.readthedocs.io/en/stable/>`_,
-    and its `format specification <https://asdf-standard.readthedocs.io/en/>`_.
+    and its `format specification <https://asdf-standard.readthedocs.io/>`_.
 
     """
 
@@ -680,7 +757,7 @@ class AsdfImporter(DatasetImporter):
 
     For more information on ASDF, see the
     `homepage of the asdf package <https://asdf.readthedocs.io/en/stable/>`_,
-    and its `format specification <https://asdf-standard.readthedocs.io/en/>`_.
+    and its `format specification <https://asdf-standard.readthedocs.io/>`_.
 
     """
 
