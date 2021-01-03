@@ -696,7 +696,9 @@ class AdfExporter(DatasetExporter):
             file.write(readme_contents)
 
     def _create_manifest_file(self):
-        os.mknod(os.path.join(self._tempdir_name, self._filenames["manifest"]))
+        with open(os.path.join(self._tempdir_name,
+                               self._filenames["manifest"]), 'w+') as file:
+            file.write('')
 
 
 class AdfImporter(DatasetImporter):
