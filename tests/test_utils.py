@@ -333,6 +333,33 @@ class TestYaml(unittest.TestCase):
         self.assertTrue(os.path.exists(filename))
         os.remove(filename)
 
+    def test_serialise_large_numpy_array_sets_filenames(self):
+        array = np.random.rand(self.yaml.numpy_array_size_threshold + 1)
+        resulting_dict = {'foo': {'type': 'numpy.ndarray',
+                                  'dtype': str(array.dtype),
+                                  'file': 'foo'}}
+        self.yaml.dict = {'foo': array}
+        self.yaml.serialise_numpy_arrays()
+        # Necessary as the true filename will be generated
+        filename = self.yaml.dict["foo"]["file"]
+        self.assertTrue(self.yaml.binary_files)
+        os.remove(filename)
+
+    def test_serialise_large_numpy_array_with_bindir(self):
+        array = np.random.rand(self.yaml.numpy_array_size_threshold + 1)
+        resulting_dict = {'foo': {'type': 'numpy.ndarray',
+                                  'dtype': str(array.dtype),
+                                  'file': 'foo'}}
+        self.yaml.dict = {'foo': array}
+        self.yaml.binary_directory = 'bar'
+        self.yaml.serialise_numpy_arrays()
+        # Necessary as the true filename will be generated
+        filename = self.yaml.dict["foo"]["file"]
+        resulting_dict["foo"]["file"] = filename
+        self.assertDictEqual(resulting_dict, self.yaml.dict)
+        self.assertTrue(os.path.exists(os.path.join('bar', filename)))
+        os.remove(os.path.join('bar', filename))
+
     def test_serialise_numpy_array_in_hierarchical_dict_creates_dict(self):
         array = np.asarray([[0., 1., 2.], [1., 2., 3.]])
         array_dict = {'foo': {'type': 'numpy.ndarray',
@@ -429,6 +456,18 @@ class TestYaml(unittest.TestCase):
         self.yaml.deserialise_numpy_arrays()
         np.testing.assert_allclose(resulting_dict["foobar"]["bar"]["foo"],
                                    self.yaml.dict["foobar"]["bar"]["foo"])
+
+    def test_write_stream(self):
+        self.yaml.dict = self.dict
+        dump = yaml.dump(self.dict)
+        self.assertEqual(dump, self.yaml.write_stream())
+
+    def test_read_stream(self):
+        self.yaml.dict = self.dict
+        dump = yaml.dump(self.dict)
+        yaml_object = aspecd.utils.Yaml()
+        yaml_object.read_stream(dump)
+        self.assertEqual(self.dict, yaml_object.dict)
 
 
 class TestReplaceValueInDict(unittest.TestCase):

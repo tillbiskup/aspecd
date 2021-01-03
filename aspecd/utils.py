@@ -308,6 +308,8 @@ class Yaml:
     """
 
     def __init__(self):
+        self.binary_files = []
+        self.binary_directory = ''
         self.dict = collections.OrderedDict()
         self.numpy_array_size_threshold = 100
 
@@ -351,6 +353,12 @@ class Yaml:
         with open(filename, 'w') as file:
             yaml.dump(self.dict, file)
 
+    def read_stream(self, stream):
+        self.dict = yaml.safe_load(stream)
+
+    def write_stream(self):
+        return yaml.dump(self.dict)
+
     def serialise_numpy_arrays(self):
         """
         Serialise numpy arrays in a simple form, using a dict.
@@ -393,17 +401,22 @@ class Yaml:
                         self._traverse_serialise_numpy_arrays(dict_=element)
             elif isinstance(dict_[key], np.ndarray):
                 if dict_[key].size > self.numpy_array_size_threshold:
+                    self._create_binary_directory()
                     filename = hashlib.sha256(dict_[key]).hexdigest() + '.npy'
-                    np.save(filename, dict_[key], allow_pickle=False)
+                    np.save(os.path.join(self.binary_directory, filename),
+                            dict_[key], allow_pickle=False)
                     dict_[key] = {'type': 'numpy.ndarray',
                                   'dtype': str(dict_[key].dtype),
                                   'file': filename}
+                    self.binary_files.append(filename)
                 else:
                     dict_[key] = {'type': 'numpy.ndarray',
                                   'dtype': str(dict_[key].dtype),
                                   'array': dict_[key].tolist()}
             elif isinstance(dict_[key], (dict, collections.OrderedDict)):
                 self._traverse_serialise_numpy_arrays(dict_=dict_[key])
+            # make list of binary_files unique
+            self.binary_files = list(set(self.binary_files))
 
     def serialize_numpy_arrays(self):
         """
@@ -449,6 +462,10 @@ class Yaml:
         See :meth:`aspecd.utils.Yaml.deserialise_numpy_arrays` for details.
         """
         self.deserialise_numpy_arrays()
+
+    def _create_binary_directory(self):
+        if self.binary_directory and not os.path.exists(self.binary_directory):
+            os.mkdir(self.binary_directory)
 
 
 def replace_value_in_dict(replacement=None, target=None):
