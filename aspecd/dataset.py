@@ -438,7 +438,8 @@ class Dataset(aspecd.utils.ToDictMixin):
         self.tasks = []
         # Package name is used to store the package version in history records
         self._package_name = aspecd.utils.package_name(self)
-        self._include_in_to_dict = ['_origdata']
+        self._include_in_to_dict = ['_origdata', '_package_name',
+                                    '_history_pointer']
 
     @property
     def package_name(self):
@@ -879,6 +880,19 @@ class Dataset(aspecd.utils.ToDictMixin):
                         record = DatasetReference()
                         record.from_dict(element)
                         self.references.append(record)
+                elif key == "tasks":
+                    for element in dict_[key]:
+                        if element["kind"] == "representation":
+                            record_class_name = \
+                                'aspecd.history.PlotHistoryRecord'
+                        else:
+                            record_class_name = 'aspecd.history.' \
+                                + element["kind"].capitalize() + 'HistoryRecord'
+                        record = aspecd.utils.object_from_class_name(
+                            record_class_name)
+                        record.from_dict(element["task"])
+                        self.tasks.append({'kind': element["kind"],
+                                           'task': record})
                 elif hasattr(attribute, 'from_dict'):
                     attribute.from_dict(dict_[key])
                 else:

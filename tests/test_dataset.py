@@ -586,6 +586,12 @@ class TestDatasetToDict(unittest.TestCase):
     def test_to_dict_includes_origdata(self):
         self.assertIn("_origdata", self.dataset.to_dict())
 
+    def test_to_dict_includes_package_name(self):
+        self.assertIn("_package_name", self.dataset.to_dict())
+
+    def test_to_dict_includes_history_pointer(self):
+        self.assertIn("_history_pointer", self.dataset.to_dict())
+
 
 class TestDatasetFromDict(unittest.TestCase):
     def setUp(self):
@@ -675,6 +681,31 @@ class TestDatasetFromDict(unittest.TestCase):
         new_dataset.from_dict(dataset_dict)
         self.assertDictEqual(self.dataset.references[0].to_dict(),
                              new_dataset.references[0].to_dict())
+
+    def test_from_dict_sets_tasks(self):
+        processing_step = processing.ProcessingStep()
+        self.dataset.process(processing_step)
+        dataset_dict = self.dataset.to_dict()
+        new_dataset = dataset.Dataset()
+        new_dataset.from_dict(dataset_dict)
+        self.assertDictEqual(self.dataset.tasks[0]["task"].to_dict(),
+                             new_dataset.tasks[0]["task"].to_dict())
+
+    def test_from_dict_sets_package_name(self):
+        dataset_dict = self.dataset.to_dict()
+        dataset_dict["_package_name"] = "foo"
+        new_dataset = dataset.Dataset()
+        new_dataset.from_dict(dataset_dict)
+        self.assertEqual(dataset_dict["_package_name"],
+                         new_dataset.package_name)
+
+    def test_from_dict_sets_history_pointer(self):
+        dataset_dict = self.dataset.to_dict()
+        dataset_dict["_history_pointer"] = 42
+        new_dataset = dataset.Dataset()
+        new_dataset.from_dict(dataset_dict)
+        self.assertEqual(dataset_dict["_history_pointer"],
+                         new_dataset._history_pointer)
 
 
 class TestDatasetReferences(unittest.TestCase):
