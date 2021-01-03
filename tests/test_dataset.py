@@ -590,7 +590,6 @@ class TestDatasetToDict(unittest.TestCase):
         plotter.plot(self.dataset)
         self.dataset.to_dict()
 
-    @unittest.skip
     def test_to_dict_with_saved_representation(self):
         plotter = aspecd.plotting.SinglePlotter()
         saver = aspecd.plotting.Saver(filename=self.figure_filename)

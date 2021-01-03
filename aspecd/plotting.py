@@ -254,7 +254,7 @@ class Plotter:
         """
         if not saver:
             raise aspecd.exceptions.MissingSaverError
-        saver.save()
+        saver.save(self)
         self.filename = saver.filename
         return saver
 
@@ -814,7 +814,7 @@ class Saver:
             raise aspecd.exceptions.MissingFilenameError
         if not plotter:
             if self.plotter:
-                self.plotter.save()
+                self.plotter.save(self)
             else:
                 raise aspecd.exceptions.MissingPlotError
         else:
