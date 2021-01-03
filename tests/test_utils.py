@@ -345,7 +345,7 @@ class TestYaml(unittest.TestCase):
         self.assertTrue(self.yaml.binary_files)
         os.remove(filename)
 
-    def test_serialise_large_numpy_array_with_bindir(self):
+    def test_serialise_large_numpy_array_with_binary_directory(self):
         array = np.random.rand(self.yaml.numpy_array_size_threshold + 1)
         resulting_dict = {'foo': {'type': 'numpy.ndarray',
                                   'dtype': str(array.dtype),
@@ -359,6 +359,7 @@ class TestYaml(unittest.TestCase):
         self.assertDictEqual(resulting_dict, self.yaml.dict)
         self.assertTrue(os.path.exists(os.path.join('bar', filename)))
         os.remove(os.path.join('bar', filename))
+        os.rmdir('bar')
 
     def test_serialise_numpy_array_in_hierarchical_dict_creates_dict(self):
         array = np.asarray([[0., 1., 2.], [1., 2., 3.]])
@@ -414,11 +415,25 @@ class TestYaml(unittest.TestCase):
         resulting_dict = {'foo': array}
         self.yaml.dict = {'foo': {'type': 'numpy.ndarray',
                                   'dtype': str(array.dtype),
-                                  'file': 'foo'}}
+                                  'file': 'foo.npy'}}
         np.save('foo', array, allow_pickle=False)
         self.yaml.deserialise_numpy_arrays()
         np.testing.assert_allclose(resulting_dict["foo"], self.yaml.dict["foo"])
         os.remove('foo.npy')
+
+    def test_deserialise_large_numpy_array_with_binary_directory(self):
+        array = np.random.rand(self.yaml.numpy_array_size_threshold + 1)
+        resulting_dict = {'foo': array}
+        self.yaml.dict = {'foo': {'type': 'numpy.ndarray',
+                                  'dtype': str(array.dtype),
+                                  'file': 'foo.npy'}}
+        self.yaml.binary_directory = 'bar'
+        os.mkdir('bar')
+        np.save('bar/foo.npy', array, allow_pickle=False)
+        self.yaml.deserialise_numpy_arrays()
+        np.testing.assert_allclose(resulting_dict["foo"], self.yaml.dict["foo"])
+        os.remove('bar/foo.npy')
+        os.rmdir('bar')
 
     def test_deserialise_numpy_array_in_hierarchical_dict_creates_numpy_array(
             self):

@@ -449,7 +449,9 @@ class Yaml:
                 if 'type' in dict_[key].keys() \
                         and dict_[key]["type"] == 'numpy.ndarray':
                     if 'file' in dict_[key].keys():
-                        dict_[key] = np.load(dict_[key]['file'] + '.npy')
+                        self._create_binary_directory()
+                        dict_[key] = np.load(os.path.join(
+                            self.binary_directory, dict_[key]['file']))
                     else:
                         dict_[key] = np.asarray(dict_[key]["array"])
                 else:
