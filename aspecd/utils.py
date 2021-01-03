@@ -20,8 +20,6 @@ import pkg_resources
 class Error(Exception):
     """Base class for exceptions in this module."""
 
-    pass
-
 
 class MissingFilenameError(Error):
     """Exception raised when expecting a filename but none is provided
@@ -133,6 +131,7 @@ class ToDictMixin:
         Usual reasons for actively including (public) attributes into the
         dictionary are those attributes accessed by getters and setters and
         hence not automatically included in the list otherwise.
+
     """
 
     def __init__(self):

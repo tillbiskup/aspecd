@@ -25,8 +25,6 @@ import aspecd.history
 class Error(Exception):
     """Base class for exceptions in this module."""
 
-    pass
-
 
 class MissingDatasetError(Error):
     """Exception raised when no dataset exists to act on
@@ -280,5 +278,3 @@ class Artefact(Annotation):
 
 class Characteristic(Annotation):
     """Base class for characteristics."""
-
-    pass

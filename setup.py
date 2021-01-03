@@ -27,6 +27,7 @@ setuptools.setup(
         "spectroscopy",
         "data processing and analysis",
         "reproducible science",
+        "reproducible research",
         "good scientific practice",
     ],
     classifiers=[

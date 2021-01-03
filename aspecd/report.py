@@ -60,8 +60,6 @@ import aspecd.utils
 class Error(Exception):
     """Base class for exceptions in this module."""
 
-    pass
-
 
 class MissingFilenameError(Error):
     """Exception raised when no filename is provided
@@ -400,7 +398,7 @@ class LaTeXReporter(Reporter):
         subprocess.run([self.latex_executable,
                         '-output-directory', self._temp_dir,
                         '-interaction=nonstopmode',
-                        filename_wo_path])
+                        filename_wo_path], check=False)
         os.chdir(self._pwd)
 
     def _copy_files_from_temp_dir(self):

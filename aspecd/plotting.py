@@ -93,8 +93,6 @@ import aspecd.utils
 class Error(Exception):
     """Base class for exceptions in this module."""
 
-    pass
-
 
 class MissingDatasetError(Error):
     """Exception raised when no dataset exists to act on
@@ -383,7 +381,6 @@ class Plotter:
         attribute of the plotter.
 
         """
-        pass
 
     def save(self, saver=None):
         """Save the plot to a file.

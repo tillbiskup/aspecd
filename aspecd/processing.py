@@ -28,8 +28,6 @@ from aspecd.history import ProcessingHistoryRecord
 class Error(Exception):
     """Base class for exceptions in this module."""
 
-    pass
-
 
 class ProcessingNotApplicableToDatasetError(Error):
     """Exception raised when processing step is not applicable to dataset
@@ -232,7 +230,6 @@ class ProcessingStep:
         borders.
 
         """
-        pass
 
     def _perform_task(self):
         """Perform the actual processing step on the dataset.
@@ -242,4 +239,3 @@ class ProcessingStep:
         called by :meth:`self.processing` after some background checks.
 
         """
-        pass

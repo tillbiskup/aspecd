@@ -102,8 +102,6 @@ import aspecd.utils
 class Error(Exception):
     """Base class for exceptions in this module."""
 
-    pass
-
 
 class MissingProcessingStepError(Error):
     """Exception raised trying to process without processing_step
@@ -578,8 +576,8 @@ class Dataset(aspecd.utils.ToDictMixin):
 
     def _replay_history(self):
         self.data = self._origdata
-        for historyentry in self.history[:self._history_pointer]:
-            historyentry.replay(self)
+        for history_entry in self.history[:self._history_pointer]:
+            history_entry.replay(self)
 
     def strip_history(self):
         """Remove leading history, if any.
@@ -733,7 +731,6 @@ class Dataset(aspecd.utils.ToDictMixin):
             be discussed and implemented.
 
         """
-        pass
 
     def save(self):
         """Save dataset to persistence layer.
@@ -743,7 +740,6 @@ class Dataset(aspecd.utils.ToDictMixin):
             be discussed and implemented.
 
         """
-        pass
 
     def import_from(self, importer=None):
         """Import data and metadata contained in importer object.
@@ -1052,6 +1048,18 @@ class DatasetReference(aspecd.utils.ToDictMixin):
         return dataset
 
     def from_dict(self, dict_=None):
+        """
+        Set properties from dictionary.
+
+        Only parameters in the dictionary that are valid properties of the
+        class are set accordingly.
+
+        Parameters
+        ----------
+        dict_ : :class:`dict`
+            Dictionary containing properties to set
+
+        """
         for key, value in dict_.items():
             if hasattr(self, key):
                 setattr(self, key, value)
@@ -1289,11 +1297,6 @@ class Data(aspecd.utils.ToDictMixin):
 
         The list of axes is handled appropriately.
 
-        .. todo::
-            Need to implement missing functionality for history and other
-            lists, such as representations, analyses, tasks, ...
-
-
         Parameters
         ----------
         dict_ : :class:`dict`
@@ -1304,8 +1307,8 @@ class Data(aspecd.utils.ToDictMixin):
             if key == "data":
                 self.data = dict_[key]
             elif key == "axes":
-                for nr, axis in enumerate(dict_[key]):
-                    self.axes[nr].from_dict(axis)
+                for number, axis in enumerate(dict_[key]):
+                    self.axes[number].from_dict(axis)
 
 
 class Axis(aspecd.utils.ToDictMixin):

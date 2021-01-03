@@ -227,6 +227,18 @@ class PhysicalQuantity(aspecd.utils.ToDictMixin):
             self.unit = ''
 
     def from_dict(self, dict_=None):
+        """
+        Set properties from dictionary.
+
+        Only parameters in the dictionary that are valid properties of the
+        class are set accordingly.
+
+        Parameters
+        ----------
+        dict_ : :class:`dict`
+            Dictionary containing properties to set
+
+        """
         for key in dict_:
             if hasattr(self, key):
                 setattr(self, key, dict_[key])

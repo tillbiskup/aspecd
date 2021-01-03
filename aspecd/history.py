@@ -1,13 +1,17 @@
-"""History
+"""History: Classes collecting information on what has been done to a dataset.
 
-.. todo::
-    The Analysis/.../Record classes (not those with HistoryRecord in their
-    name) need to be converted thus that they can be instantiated without
-    parameter. Thus, one probably gets rid of a few exceptions as well.
+Reproducibility is an essential aspect of good scientific practice. In the
+context of data processing and analysis, this means that each processing
+step performed on data (of a dataset) should be stored in an reproducible
+way and preferably in a consistent format.
 
-    It turned out that first changing this and then moving the classes to
-    the history module is the preferred approach, as otherwise cyclic
-    imports may result that need to get fixed first.
+To be of actual use, an entry of the history needs to contain all
+information necessary to reproduce the processing step in its original form.
+This includes as a minimum the name of the processing routine used,
+the complete list of necessary parameters for that routine, and a unique
+version information of the routine. Additional useful aspects contain
+information about the operating system used, the name of the operator,
+and the date the processing step has been performed.
 
 """
 
@@ -204,7 +208,7 @@ class ProcessingHistoryRecord(HistoryRecord):
         processing step the history is saved for
 
     package : :class:`str`
-        Name of package the hstory record gets recorded for
+        Name of package the history record gets recorded for
 
         Prerequisite for reproducibility, gets stored in the
         :attr:`aspecd.dataset.HistoryRecord.sysinfo` attribute.
@@ -377,6 +381,14 @@ class SingleAnalysisStepRecord(AnalysisStepRecord):
         self.preprocessing = []
 
     def from_analysis_step(self, analysis_step):
+        """Obtain information from analysis step.
+
+        Parameters
+        ----------
+        analysis_step : :obj:`aspecd.analysis.AnalysisStep`
+            Object to obtain information from
+
+        """
         super().from_analysis_step(analysis_step)
         self.preprocessing = analysis_step.preprocessing
 
@@ -702,7 +714,7 @@ class PlotHistoryRecord(HistoryRecord):
         Plot the history is saved for
 
     package : :class:`str`
-        Name of package the hstory record gets recorded for
+        Name of package the history record gets recorded for
 
         Prerequisite for reproducibility, gets stored in the
         :attr:`aspecd.dataset.HistoryRecord.sysinfo` attribute.

@@ -26,13 +26,12 @@ items of a dictionary.
 """
 
 import collections
+import os
 import string
 
 
 class Error(Exception):
     """Base class for exceptions in this module."""
-
-    pass
 
 
 class InfofileTypeError(Error):
@@ -175,7 +174,6 @@ class Infofile:
         return 'info file' in self._file_contents[0].lower()
 
     def _read(self):
-        import os
         if not self.filename:
             raise FileExistsError
         if not os.path.exists(self.filename):

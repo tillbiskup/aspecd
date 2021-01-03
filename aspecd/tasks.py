@@ -301,8 +301,6 @@ import aspecd.utils
 class Error(Exception):
     """Base class for exceptions in this module."""
 
-    pass
-
 
 class MissingRecipeError(Error):
     """Exception raised trying to cook without recipe
@@ -1058,7 +1056,6 @@ class Task(aspecd.utils.ToDictMixin):
         this method and provide the actual implementation.
 
         """
-        pass
 
     def get_object(self):
         """
@@ -1256,20 +1253,20 @@ class ProcessingTask(Task):
 
     def _perform(self):
         result_labels = None
-        if self.result and type(self.result) == list:
+        if self.result and isinstance(self.result, list):
             if len(self.result) == len(self.apply_to):
                 result_labels = self.result
             else:
                 self.result = None
-        for no, dataset_id in enumerate(self.apply_to):
+        for number, dataset_id in enumerate(self.apply_to):
             dataset = self.recipe.get_dataset(dataset_id)
             task = self.get_object()
             if self.result:
                 dataset_copy = copy.deepcopy(dataset)
                 dataset_copy.process(processing_step=task)
                 if result_labels:
-                    dataset_copy.id = self.result[no]
-                    self.recipe.results[self.result[no]] = dataset_copy
+                    dataset_copy.id = self.result[number]
+                    self.recipe.results[self.result[number]] = dataset_copy
                 else:
                     dataset_copy.id = self.result
                     self.recipe.results[self.result] = dataset_copy
@@ -1596,14 +1593,14 @@ class SingleplotTask(PlotTask):
     def _perform(self):
         filenames = []
         if "filename" in self.properties \
-                and type(self.properties["filename"]) == list \
+                and isinstance(self.properties["filename"], list) \
                 and len(self.apply_to) == len(self.properties["filename"]):
             filenames = self.properties["filename"]
-        for nr, dataset_id in enumerate(self.apply_to):
+        for number, dataset_id in enumerate(self.apply_to):
             dataset = self.recipe.get_dataset(dataset_id)
             task = self.get_object()
             if filenames:
-                task.filename = filenames[nr]
+                task.filename = filenames[number]
             dataset.plot(plotter=task)
             # noinspection PyTypeChecker
             self.save_plot(plot=task)
@@ -1887,6 +1884,7 @@ class TaskFactory:
         only the last part will be used as class name for obtaining the type
         of task, and the other parts stored in the ``package`` property of
         the task.
+
         """
         class_name = ''.join([kind.split('.')[-1].capitalize(), 'Task'])
         package_name = aspecd.utils.package_name(self)
@@ -2068,9 +2066,7 @@ class ChefDeService:
         self._recipe.from_dict(self._recipe_dict)
 
     def _load_recipe_yaml(self):
-        """
-        Obtain dict from recipe YAML file.
-        """
+        """Obtain dict from recipe YAML file."""
         yaml_importer = aspecd.utils.Yaml()
         yaml_importer.read_from(self.recipe_filename)
         self._recipe_dict = yaml_importer.dict
@@ -2086,7 +2082,7 @@ class ChefDeService:
         """
         if "default_package" in self._recipe_dict.keys():
             class_name = self._recipe_dict["default_package"] + \
-                         '.dataset.DatasetFactory'
+                '.dataset.DatasetFactory'
             self._dataset_factory = aspecd.utils.object_from_class_name(
                 class_name)
         else:

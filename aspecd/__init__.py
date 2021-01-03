@@ -33,8 +33,3 @@ Utilities
     Basic functionality used by several modules.
 
 """
-
-from . import infofile  # noqa: F401
-from . import dataset   # noqa: F401
-from . import plotting  # noqa: F401
-from . import utils     # noqa: F401

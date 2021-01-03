@@ -105,8 +105,6 @@ import aspecd.utils
 class Error(Exception):
     """Base class for exceptions in this module."""
 
-    pass
-
 
 class MissingDatasetError(Error):
     """Exception raised when no dataset exists to act on.
@@ -266,7 +264,6 @@ class DatasetImporter:
         specific for each data source.
 
         """
-        pass
 
 
 class DatasetImporterFactory:
@@ -424,7 +421,6 @@ class DatasetExporter:
         specific for each target format.
 
         """
-        pass
 
 
 class RecipeImporter:
@@ -524,7 +520,6 @@ class RecipeImporter:
         to :meth:`aspecd.tasks.Recipe.from_dict`.
 
         """
-        pass
 
 
 class RecipeExporter:
@@ -611,7 +606,6 @@ class RecipeExporter:
         file.
 
         """
-        pass
 
 
 class RecipeYamlImporter(RecipeImporter):
@@ -708,6 +702,7 @@ class AdsImporter(DatasetImporter):
         dramatically simplify things.
 
     """
+
     def __init__(self):
         super().__init__()
         self.extension = '.ads'

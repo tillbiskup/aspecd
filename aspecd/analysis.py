@@ -33,8 +33,6 @@ from aspecd.history import AnalysisHistoryRecord
 class Error(Exception):
     """Base class for exceptions in this module."""
 
-    pass
-
 
 class MissingDatasetError(Error):
     """Exception raised when no dataset exists to act on
@@ -116,7 +114,6 @@ class AnalysisStep:
         :meth:`_sanitise_parameters`.
 
         """
-        pass
 
     def analyze(self):
         """Perform the actual analysis step on the given dataset.
@@ -135,7 +132,6 @@ class AnalysisStep:
         borders.
 
         """
-        pass
 
     def _perform_task(self):
         """Perform the actual analysis step on the dataset.
@@ -146,7 +142,6 @@ class AnalysisStep:
         checks.
 
         """
-        pass
 
 
 class SingleAnalysisStep(AnalysisStep):

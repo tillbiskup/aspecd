@@ -97,7 +97,6 @@ Static code analysis with Prospector
 
 Static code analysis can be performed using `Prospector <http://prospector.landscape.io/en/master/>`_. First, install the necessary tools into the virtual environment created for the ASpecD framework::
 
-    pip install prospector[all]
     pip install prospector[with_pyroma]
 
 The optional arguments ensure that all necessary dependencies are installed as well.
