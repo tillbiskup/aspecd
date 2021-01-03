@@ -18,7 +18,7 @@ and the date the processing step has been performed.
 from datetime import datetime
 
 import aspecd
-import aspecd.plotting
+import aspecd.exceptions
 import aspecd.system
 import aspecd.utils
 
@@ -608,8 +608,8 @@ class PlotRecord(aspecd.utils.ToDictMixin):
         self.class_name = ''
         self.description = ''
         self.parameters = dict()
-        self.properties = aspecd.plotting.PlotProperties()
-        self.caption = aspecd.plotting.Caption()
+        self.properties = None
+        self.caption = None
         self.filename = ''
         self._attributes_to_copy = ['description', 'parameters',
                                     'properties', 'caption', 'filename']
@@ -631,7 +631,7 @@ class PlotRecord(aspecd.utils.ToDictMixin):
 
         """
         if not plotter:
-            raise aspecd.plotting.MissingPlotterError
+            raise aspecd.exceptions.MissingPlotterError
         for attribute in self._attributes_to_copy:
             setattr(self, attribute, getattr(plotter, attribute))
         self.class_name = plotter.name

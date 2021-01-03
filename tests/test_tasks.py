@@ -5,6 +5,7 @@ import subprocess
 import unittest
 import datetime
 
+import aspecd.exceptions
 from aspecd import dataset, io, plotting, processing, report, tasks, utils
 
 
@@ -47,7 +48,7 @@ class TestRecipe(unittest.TestCase):
         self.assertTrue(hasattr(self.recipe, 'default_package'))
 
     def test_import_from_without_importer_raises(self):
-        with self.assertRaises(tasks.MissingImporterError):
+        with self.assertRaises(aspecd.exceptions.MissingImporterError):
             self.recipe.import_from()
 
     def test_import_from_yaml_importer_with_task_sets_task(self):
@@ -83,7 +84,7 @@ class TestRecipe(unittest.TestCase):
                                        dataset.Dataset))
 
     def test_export_to_without_exporter_raises(self):
-        with self.assertRaises(tasks.MissingExporterError):
+        with self.assertRaises(aspecd.exceptions.MissingExporterError):
             self.recipe.export_to()
 
     def test_export_to_yaml_exporter_writes_yaml_file(self):
@@ -95,12 +96,12 @@ class TestRecipe(unittest.TestCase):
         self.assertEqual(to_dict_contents, contents)
 
     def test_from_dict_without_dict_raises(self):
-        with self.assertRaises(tasks.MissingDictError):
+        with self.assertRaises(aspecd.exceptions.MissingDictError):
             self.recipe.from_dict()
 
     def test_from_dict_with_dataset_without_importer_factory_raises(self):
         dict_ = {'datasets': [self.dataset]}
-        with self.assertRaises(tasks.MissingDatasetFactoryError):
+        with self.assertRaises(aspecd.exceptions.MissingDatasetFactoryError):
             self.recipe.from_dict(dict_)
 
     def test_from_dict_with_dataset_sets_dataset(self):
@@ -128,7 +129,7 @@ class TestRecipe(unittest.TestCase):
         dict_ = {'tasks': [self.task]}
         self.recipe.dataset_factory = self.dataset_factory
         self.recipe.task_factory = None
-        with self.assertRaises(tasks.MissingTaskFactoryError):
+        with self.assertRaises(aspecd.exceptions.MissingTaskFactoryError):
             self.recipe.from_dict(dict_)
 
     def test_from_dict_with_task_adds_task(self):
@@ -190,7 +191,7 @@ class TestRecipe(unittest.TestCase):
         self.assertTrue(callable(self.recipe.get_dataset))
 
     def test_get_dataset_without_identifier_raises(self):
-        with self.assertRaises(tasks.MissingDatasetIdentifierError):
+        with self.assertRaises(aspecd.exceptions.MissingDatasetIdentifierError):
             self.recipe.get_dataset()
 
     def test_get_dataset_with_valid_identifier_returns_dataset(self):
@@ -219,7 +220,7 @@ class TestRecipe(unittest.TestCase):
         self.assertTrue(callable(self.recipe.get_datasets))
 
     def test_get_datasets_without_identifier_raises(self):
-        with self.assertRaises(tasks.MissingDatasetIdentifierError):
+        with self.assertRaises(aspecd.exceptions.MissingDatasetIdentifierError):
             self.recipe.get_datasets()
 
     def test_get_datasets_with_valid_identifier_returns_dataset(self):
@@ -289,7 +290,7 @@ class TestChef(unittest.TestCase):
         self.assertEqual(chef.recipe, recipe)
 
     def test_cook_without_recipe_raises(self):
-        with self.assertRaises(tasks.MissingRecipeError):
+        with self.assertRaises(aspecd.exceptions.MissingRecipeError):
             self.chef.cook()
 
     def test_cook_with_preset_recipe(self):
@@ -446,7 +447,7 @@ class TestTask(unittest.TestCase):
         self.assertTrue(callable(self.task.from_dict))
 
     def test_from_dict_without_dict_raises(self):
-        with self.assertRaises(tasks.MissingDictError):
+        with self.assertRaises(aspecd.exceptions.MissingDictError):
             self.task.from_dict()
 
     def test_from_dict_sets_kind(self):
@@ -480,7 +481,7 @@ class TestTask(unittest.TestCase):
         self.assertTrue(callable(self.task.perform))
 
     def test_perform_without_recipe_raises(self):
-        with self.assertRaises(tasks.MissingRecipeError):
+        with self.assertRaises(aspecd.exceptions.MissingRecipeError):
             self.task.perform()
 
     def test_get_object_with_full_class_name_returns_correct_object(self):
@@ -1150,7 +1151,7 @@ class TestTaskFactory(unittest.TestCase):
         self.assertTrue(callable(self.task_factory.get_task))
 
     def test_get_task_without_kind_raises(self):
-        with self.assertRaises(tasks.MissingTaskDescriptionError):
+        with self.assertRaises(aspecd.exceptions.MissingTaskDescriptionError):
             self.task_factory.get_task()
 
     def test_get_task_returns_task(self):
@@ -1171,7 +1172,7 @@ class TestTaskFactory(unittest.TestCase):
         self.assertTrue(callable(self.task_factory.get_task_from_dict))
 
     def test_get_task_from_dict_without_dict_raises(self):
-        with self.assertRaises(tasks.MissingTaskDescriptionError):
+        with self.assertRaises(aspecd.exceptions.MissingTaskDescriptionError):
             self.task_factory.get_task_from_dict()
 
     def test_get_task_from_dict_without_kind_key_raises(self):
@@ -1230,7 +1231,7 @@ class TestFigureRecord(unittest.TestCase):
         self.assertTrue(callable(self.figure_record.from_plotter))
 
     def test_from_plotter_without_plotter_raises(self):
-        with self.assertRaises(tasks.MissingPlotterError):
+        with self.assertRaises(aspecd.exceptions.MissingPlotterError):
             self.figure_record.from_plotter()
 
     def test_from_plotter_sets_caption(self):
@@ -1290,7 +1291,7 @@ class TestChefDeService(unittest.TestCase):
         self.assertTrue(callable(self.chef_de_service.serve))
 
     def test_serve_without_recipe_raises(self):
-        with self.assertRaises(tasks.MissingRecipeError):
+        with self.assertRaises(aspecd.exceptions.MissingRecipeError):
             self.chef_de_service.serve()
 
     def test_serve_with_preset_recipe(self):

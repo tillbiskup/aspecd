@@ -93,254 +93,11 @@ import copy
 
 import numpy as np
 
+import aspecd.exceptions
 import aspecd.history
 import aspecd.metadata
 import aspecd.system
 import aspecd.utils
-
-
-class Error(Exception):
-    """Base class for exceptions in this module."""
-
-
-class MissingProcessingStepError(Error):
-    """Exception raised trying to process without processing_step
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class UndoWithEmptyHistoryError(Error):
-    """Exception raised trying to undo with empty history
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class UndoAtBeginningOfHistoryError(Error):
-    """Exception raised trying to undo with history pointer at zero
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class UndoStepUndoableError(Error):
-    """Exception raised trying to undo an undoable step of history
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class RedoAlreadyAtLatestChangeError(Error):
-    """Exception raised trying to redo with empty history
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class ProcessingWithLeadingHistoryError(Error):
-    """Exception raised trying to process with leading history
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class MissingPlotterError(Error):
-    """Exception raised trying to plot without :class:`aspecd.plotting.Plotter`
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class MissingImporterError(Error):
-    """Exception raised importing without :class:`aspecd.io.DatasetImporter`
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class MissingExporterError(Error):
-    """Exception raised importing without :class:`aspecd.io.DatasetExporter`
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class MissingDatasetError(Error):
-    """Exception raised when trying to create a reference without a dataset.
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class MissingSourceError(Error):
-    """Exception raised when expecting a filename but none is provided
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class MissingImporterFactoryError(Error):
-    """Exception raised when no ImporterFactory instance is provided
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class AxesCountError(Error):
-    """Exception raised for wrong number of axes
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class AxesValuesInconsistentWithDataError(Error):
-    """Exception raised for axes values inconsistent with data
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class AxisValuesDimensionError(Error):
-    """Exception raised for wrong dimension of values
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class AxisValuesTypeError(Error):
-    """Exception raised for wrong type of values
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
 
 
 class Dataset(aspecd.utils.ToDictMixin):
@@ -496,9 +253,9 @@ class Dataset(aspecd.utils.ToDictMixin):
 
     def _check_processing_prerequisites(self, processing_step=None):
         if self._has_leading_history():
-            raise ProcessingWithLeadingHistoryError
+            raise aspecd.exceptions.ProcessingWithLeadingHistoryError
         if not processing_step:
-            raise MissingProcessingStepError
+            raise aspecd.exceptions.MissingProcessingStepError
 
     def _handle_not_undoable(self, processing_step=None):
         if not processing_step.undoable:
@@ -528,11 +285,11 @@ class Dataset(aspecd.utils.ToDictMixin):
 
     def _check_undo_prerequisites(self):
         if not self.history:
-            raise UndoWithEmptyHistoryError
+            raise aspecd.exceptions.UndoWithEmptyHistoryError
         if self._history_pointer == -1:
-            raise UndoAtBeginningOfHistoryError
+            raise aspecd.exceptions.UndoAtBeginningOfHistoryError
         if self.history[self._history_pointer].undoable:
-            raise UndoStepUndoableError
+            raise aspecd.exceptions.UndoStepUndoableError
 
     def redo(self):
         """Reapply previously undone processing step.
@@ -544,7 +301,7 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         """
         if self._at_tip_of_history():
-            raise RedoAlreadyAtLatestChangeError
+            raise aspecd.exceptions.RedoAlreadyAtLatestChangeError
         processing_step_record = \
             self.history[self._history_pointer + 1].processing
         processing_step = processing_step_record.create_processing_step()
@@ -705,7 +462,7 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         """
         if not plotter:
-            raise MissingPlotterError
+            raise aspecd.exceptions.MissingPlotterError
         plotter.plot(dataset=self, from_dataset=True)
         plot_record = plotter.create_history_record()
         self.representations.append(plot_record)
@@ -764,7 +521,7 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         """
         if not importer:
-            raise MissingImporterError("No importer provided")
+            raise aspecd.exceptions.MissingImporterError("No importer provided")
         importer.import_into(self)
         self._origdata = copy.deepcopy(self.data)
 
@@ -791,7 +548,7 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         """
         if not exporter:
-            raise MissingExporterError("No exporter provided")
+            raise aspecd.exceptions.MissingExporterError("No exporter provided")
         exporter.export_from(self)
 
     def add_reference(self, dataset=None):
@@ -814,7 +571,7 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         """
         if not dataset:
-            raise aspecd.dataset.MissingDatasetError
+            raise aspecd.exceptions.MissingDatasetError
         dataset_reference = aspecd.dataset.DatasetReference()
         dataset_reference.from_dataset(dataset=dataset)
         self.references.append(dataset_reference)
@@ -839,7 +596,7 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         """
         if not dataset_id:
-            raise aspecd.dataset.MissingDatasetError
+            raise aspecd.exceptions.MissingDatasetError
         for index, reference in enumerate(self.references):
             if dataset_id == reference.id:
                 del self.references[index]
@@ -1018,7 +775,7 @@ class DatasetReference(aspecd.utils.ToDictMixin):
 
         """
         if not dataset:
-            raise MissingDatasetError
+            raise aspecd.exceptions.MissingDatasetError
         self.type = aspecd.utils.full_class_name(dataset)
         self.id = dataset.id
         self.history = copy.deepcopy(dataset.history)
@@ -1040,7 +797,7 @@ class DatasetReference(aspecd.utils.ToDictMixin):
 
         """
         if not self.type:
-            raise aspecd.dataset.MissingDatasetError
+            raise aspecd.exceptions.MissingDatasetError
         dataset = aspecd.utils.object_from_class_name(self.type)
         dataset.id = self.id
         for history_record in self.history:
@@ -1129,10 +886,10 @@ class DatasetFactory:
 
         """
         if not source:
-            raise MissingSourceError(
+            raise aspecd.exceptions.MissingSourceError(
                 'A source is required to return a dataset')
         if not self.importer_factory:
-            raise MissingImporterFactoryError(
+            raise aspecd.exceptions.MissingImporterFactoryError(
                 'An ImporterFactory is required to return a dataset')
         dataset_ = self._create_dataset(source=source)
         importer = self.importer_factory.get_importer(source=source)
@@ -1282,11 +1039,11 @@ class Data(aspecd.utils.ToDictMixin):
 
     def _check_axes(self):
         if len(self._axes) > self.data.ndim + 1:
-            raise AxesCountError
+            raise aspecd.exceptions.AxesCountError
         data_shape = self.data.shape
         for index in range(self.data.ndim):
             if len(self.axes[index].values) != data_shape[index]:
-                raise AxesValuesInconsistentWithDataError
+                raise aspecd.exceptions.AxesValuesInconsistentWithDataError
 
     def from_dict(self, dict_=None):
         """
@@ -1385,9 +1142,9 @@ class Axis(aspecd.utils.ToDictMixin):
     @values.setter
     def values(self, values):
         if not isinstance(values, type(self._values)):
-            raise AxisValuesTypeError
+            raise aspecd.exceptions.AxisValuesTypeError
         if values.ndim > 1:
-            raise AxisValuesDimensionError
+            raise aspecd.exceptions.AxisValuesDimensionError
         self._values = values
         self._set_equidistant_property()
 

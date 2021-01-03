@@ -3,6 +3,7 @@
 import os
 import unittest
 
+import aspecd.exceptions
 from aspecd import infofile
 
 
@@ -55,12 +56,12 @@ class TestInfofileParserParse(unittest.TestCase):
 
     def test_parse_fails_with_empty_file(self):
         self.write_list_to_file([], self.ifile.filename)
-        with self.assertRaises(infofile.InfofileEmptyError):
+        with self.assertRaises(aspecd.exceptions.InfofileEmptyError):
             self.ifile.parse()
 
     def test_parse_fails_if_not_infofile(self):
         self.write_list_to_file([' '], self.ifile.filename)
-        with self.assertRaises(infofile.InfofileTypeError):
+        with self.assertRaises(aspecd.exceptions.InfofileTypeError):
             self.ifile.parse()
 
     def test_parse_minimal_file(self):
@@ -221,12 +222,12 @@ class TestInfofileParserNonOOP(unittest.TestCase):
 
     def test_parse_fails_with_empty_file(self):
         self.write_list_to_file([], 'test.info')
-        with self.assertRaises(infofile.InfofileEmptyError):
+        with self.assertRaises(aspecd.exceptions.InfofileEmptyError):
             infofile.parse('test.info')
 
     def test_parse_fails_if_not_infofile(self):
         self.write_list_to_file([' '], 'test.info')
-        with self.assertRaises(infofile.InfofileTypeError):
+        with self.assertRaises(aspecd.exceptions.InfofileTypeError):
             infofile.parse('test.info')
 
     def test_parse_minimal_file(self):

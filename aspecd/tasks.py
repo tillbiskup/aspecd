@@ -293,148 +293,12 @@ import datetime
 import os
 import sys
 
+import aspecd.dataset
+import aspecd.exceptions
 import aspecd.io
+import aspecd.plotting
 import aspecd.system
 import aspecd.utils
-
-
-class Error(Exception):
-    """Base class for exceptions in this module."""
-
-
-class MissingRecipeError(Error):
-    """Exception raised trying to cook without recipe
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class MissingDictError(Error):
-    """Exception raised when expecting a dict but none is provided
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class MissingImporterError(Error):
-    """Exception raised when no Importer instance is provided
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class MissingExporterError(Error):
-    """Exception raised when no Importer instance is provided
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class MissingDatasetFactoryError(Error):
-    """Exception raised when no ImporterFactory instance is provided
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class MissingTaskFactoryError(Error):
-    """Exception raised when no TaskFactory instance is provided
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class MissingTaskDescriptionError(Error):
-    """Exception raised when no description for creating a task is provided
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class MissingDatasetIdentifierError(Error):
-    """Exception raised when no dataset id is provided
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class MissingPlotterError(Error):
-    """Exception raised when no Plotter instance is provided
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
 
 
 class Recipe:
@@ -585,11 +449,11 @@ class Recipe:
 
         """
         if not dict_:
-            raise MissingDictError
+            raise aspecd.exceptions.MissingDictError
         if not self.dataset_factory:
-            raise MissingDatasetFactoryError
+            raise aspecd.exceptions.MissingDatasetFactoryError
         if not self.task_factory:
-            raise MissingTaskFactoryError
+            raise aspecd.exceptions.MissingTaskFactoryError
         if 'default_package' in dict_:
             self.default_package = dict_["default_package"]
         if 'datasets' in dict_:
@@ -648,8 +512,8 @@ class Recipe:
 
         """
         if not importer:
-            raise MissingImporterError('An importer instance is needed to '
-                                       'import a recipe.')
+            raise aspecd.exceptions.MissingImporterError(
+                'An importer instance is needed to import a recipe.')
         importer.import_into(self)
 
     def export_to(self, exporter=None):
@@ -672,8 +536,8 @@ class Recipe:
 
         """
         if not exporter:
-            raise MissingExporterError('An exporter instance is needed to '
-                                       'export a recipe.')
+            raise aspecd.exceptions.MissingExporterError(
+                'An exporter instance is needed to export a recipe.')
         exporter.export_from(self)
 
     def get_dataset(self, identifier=''):
@@ -704,7 +568,7 @@ class Recipe:
 
         """
         if not identifier:
-            raise MissingDatasetIdentifierError
+            raise aspecd.exceptions.MissingDatasetIdentifierError
         matching_dataset = None
         if identifier in self.datasets:
             matching_dataset = self.datasets[identifier]
@@ -743,7 +607,7 @@ class Recipe:
 
         """
         if not identifiers:
-            raise MissingDatasetIdentifierError
+            raise aspecd.exceptions.MissingDatasetIdentifierError
         matching_datasets = [self.datasets[key] for key in identifiers if
                              key in self.datasets]
         for identifier in identifiers:
@@ -865,7 +729,7 @@ class Chef:
     def _assign_recipe(self, recipe):
         if not recipe:
             if not self.recipe:
-                raise MissingRecipeError
+                raise aspecd.exceptions.MissingRecipeError
         else:
             self.recipe = recipe
 
@@ -1001,7 +865,7 @@ class Task(aspecd.utils.ToDictMixin):
 
         """
         if not dict_:
-            raise MissingDictError
+            raise aspecd.exceptions.MissingDictError
         for key in dict_:
             if hasattr(self, key):
                 if isinstance(getattr(self, key), list):
@@ -1042,7 +906,7 @@ class Task(aspecd.utils.ToDictMixin):
 
         """
         if not self.recipe:
-            raise MissingRecipeError
+            raise aspecd.exceptions.MissingRecipeError
         if not self.apply_to:
             for dataset in self.recipe.datasets:
                 self.apply_to.append(self.recipe.datasets[dataset].id)
@@ -1809,7 +1673,7 @@ class TaskFactory:
 
         """
         if not kind:
-            raise MissingTaskDescriptionError
+            raise aspecd.exceptions.MissingTaskDescriptionError
         task = self._create_task_object(kind=kind)
         return task
 
@@ -1841,7 +1705,7 @@ class TaskFactory:
 
         """
         if not dict_:
-            raise MissingTaskDescriptionError
+            raise aspecd.exceptions.MissingTaskDescriptionError
         if 'kind' not in dict_:
             raise KeyError
         task = self._create_task_object(kind=dict_['kind'])
@@ -1964,7 +1828,7 @@ class FigureRecord(aspecd.utils.ToDictMixin):
 
         """
         if not plotter:
-            raise MissingPlotterError
+            raise aspecd.exceptions.MissingPlotterError
         for attribute in ['caption', 'parameters', 'filename']:
             setattr(self, attribute, getattr(plotter, attribute))
 
@@ -2041,7 +1905,7 @@ class ChefDeService:
             self.recipe_filename = recipe_filename
         if not self.recipe_filename:
             message = "You need to provide a recipe filename."
-            raise MissingRecipeError(message=message)
+            raise aspecd.exceptions.MissingRecipeError(message=message)
         self._create_recipe()
         self._cook_recipe()
         self._write_history()

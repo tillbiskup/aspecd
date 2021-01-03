@@ -19,71 +19,8 @@ simply subclass the :class:`aspecd.annotations.Annotation` base class.
 
 """
 
+import aspecd.exceptions
 import aspecd.history
-
-
-class Error(Exception):
-    """Base class for exceptions in this module."""
-
-
-class MissingDatasetError(Error):
-    """Exception raised when no dataset exists to act on
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class NoContentError(Error):
-    """Exception raised when no content was provided
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class UnknownScopeError(Error):
-    """Exception raised when unknown scope was tried to set
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class MissingAnnotationError(Error):
-    """Exception raised when no annotation exists to act on
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
 
 
 class Annotation:
@@ -158,8 +95,8 @@ class Annotation:
     @scope.setter
     def scope(self, scope):
         if scope not in self._allowed_scopes:
-            raise UnknownScopeError("Allowed scopes are: " +
-                                    ' '.join(self._allowed_scopes))
+            raise aspecd.exceptions.UnknownScopeError(
+                "Allowed scopes are: " + ' '.join(self._allowed_scopes))
         self._scope = scope
 
     def annotate(self, dataset=None, from_dataset=False):
@@ -225,7 +162,7 @@ class Annotation:
 
     def _check_prerequisites(self):
         if not self.content:
-            raise NoContentError
+            raise aspecd.exceptions.NoContentError
 
     def _set_scope(self):
         if not self.scope:
@@ -234,7 +171,7 @@ class Annotation:
     def _assign_dataset(self, dataset):
         if not dataset:
             if not self.dataset:
-                raise MissingDatasetError
+                raise aspecd.exceptions.MissingDatasetError
         else:
             self.dataset = dataset
 

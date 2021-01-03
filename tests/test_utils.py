@@ -9,14 +9,15 @@ import unittest
 import numpy as np
 import oyaml as yaml
 
+import aspecd.exceptions
 import aspecd.utils
-from aspecd import utils, dataset, plotting
+from aspecd import utils, dataset
 
 
 class TestFullClassName(unittest.TestCase):
 
     def test_full_class_name(self):
-        dataset_ = dataset.Dataset()
+        dataset_ = aspecd.dataset.Dataset()
         class_name = utils.full_class_name(dataset_)
         self.assertEqual(class_name, 'aspecd.dataset.Dataset')
 
@@ -130,7 +131,9 @@ class TestToDictMixin(unittest.TestCase):
         self.set_properties_from_dict(obj=obj2, dict_=toobj_dict)
         orig_dict = {"foo": [{"foo": toobj_dict}, {"bar": toobj_dict}]}
         self.set_properties_from_dict(obj=self.mixed_in, dict_=orig_dict)
+        # noinspection PyUnresolvedReferences
         self.mixed_in.foo[0]["foo"] = obj1
+        # noinspection PyUnresolvedReferences
         self.mixed_in.foo[1]["bar"] = obj2
         obj_dict = self.mixed_in.to_dict()
         self.assertEqual(orig_dict["foo"], obj_dict["foo"])
@@ -275,7 +278,7 @@ class TestYaml(unittest.TestCase):
         self.assertTrue(callable(self.yaml.read_from))
 
     def test_read_from_without_filename_raises(self):
-        with self.assertRaises(utils.MissingFilenameError):
+        with self.assertRaises(aspecd.exceptions.MissingFilenameError):
             self.yaml.read_from()
 
     def test_has_write_to_method(self):
@@ -283,7 +286,7 @@ class TestYaml(unittest.TestCase):
         self.assertTrue(callable(self.yaml.write_to))
 
     def test_write_to_without_filename_raises(self):
-        with self.assertRaises(utils.MissingFilenameError):
+        with self.assertRaises(aspecd.exceptions.MissingFilenameError):
             self.yaml.write_to()
 
     def test_read_from_reads_file(self):
@@ -416,14 +419,13 @@ class TestYaml(unittest.TestCase):
             self):
         array = np.asarray([[0., 1., 2.], [1., 2., 3.]])
         resulting_dict = {'foobar':
-                              collections.OrderedDict({'bar': {'foo': array}})}
+                          collections.OrderedDict({'bar': {'foo': array}})}
         self.yaml.dict = {'foobar':
-                              collections.OrderedDict({'bar':
-                                                           {'foo': {
-                                                               'type': 'numpy.ndarray',
-                                                               'dtype': str(
-                                                                   array.dtype),
-                                                               'array': array.tolist()}}})}
+                          collections.OrderedDict({'bar':
+                                                  {'foo': {
+                                                   'type': 'numpy.ndarray',
+                                                   'dtype': str(array.dtype),
+                                                   'array': array.tolist()}}})}
         self.yaml.deserialise_numpy_arrays()
         np.testing.assert_allclose(resulting_dict["foobar"]["bar"]["foo"],
                                    self.yaml.dict["foobar"]["bar"]["foo"])
@@ -563,7 +565,7 @@ class TestProperties(unittest.TestCase):
         self.assertTrue(callable(self.properties.from_dict))
 
     def test_from_dict_without_dict_raises(self):
-        with self.assertRaises(aspecd.utils.MissingDictError):
+        with self.assertRaises(aspecd.exceptions.MissingDictError):
             self.properties.from_dict()
 
     def test_from_dict_sets_attribute(self):

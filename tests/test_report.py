@@ -5,6 +5,7 @@ import os
 import shutil
 import unittest
 
+import aspecd.exceptions
 from aspecd import report
 
 
@@ -99,7 +100,7 @@ class TestReporter(unittest.TestCase):
         self.assertTrue(callable(self.report.save))
 
     def test_save_without_filename_raises(self):
-        with self.assertRaises(report.MissingFilenameError):
+        with self.assertRaises(aspecd.exceptions.MissingFilenameError):
             self.report.save()
 
     def test_save_with_filename(self):
@@ -139,7 +140,7 @@ class TestReporter(unittest.TestCase):
         with open(self.template, 'w+') as f:
             f.write('')
         self.report.template = self.template
-        with self.assertRaises(report.MissingFilenameError):
+        with self.assertRaises(aspecd.exceptions.MissingFilenameError):
             self.report.create()
 
     def test_render_replaces_variable_from_context_dict(self):
@@ -222,7 +223,7 @@ class TestLaTeXReporter(unittest.TestCase):
 
     def test_compile_with_inexisting_latex_executable_raises(self):
         self.report.latex_executable = 'foo'
-        with self.assertRaises(report.LaTeXExecutableNotFoundError):
+        with self.assertRaises(aspecd.exceptions.LaTeXExecutableNotFoundError):
             self.report.compile()
 
     def test_compile_creates_output(self):

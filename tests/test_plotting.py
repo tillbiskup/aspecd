@@ -7,6 +7,7 @@ import numpy as np
 import os
 import unittest
 
+import aspecd.exceptions
 from aspecd import plotting, utils, dataset
 
 
@@ -110,7 +111,7 @@ class TestPlotter(unittest.TestCase):
         self.assertIs(ax, self.plotter.axes)
 
     def test_save_without_saver_raises(self):
-        with self.assertRaises(plotting.MissingSaverError):
+        with self.assertRaises(aspecd.exceptions.MissingSaverError):
             self.plotter.save()
 
     def test_save_returns_saver(self):
@@ -156,7 +157,7 @@ class TestSinglePlotter(unittest.TestCase):
         self.assertTrue(hasattr(self.plotter, 'drawing'))
 
     def test_plot_without_dataset_raises(self):
-        with self.assertRaises(plotting.MissingDatasetError):
+        with self.assertRaises(aspecd.exceptions.MissingDatasetError):
             self.plotter.plot()
 
     def test_plot_with_preset_dataset(self):
@@ -222,7 +223,8 @@ class TestSinglePlotter1D(unittest.TestCase):
     def test_plot_with_2D_data_raises(self):
         dataset_ = dataset.Dataset()
         dataset_.data.data = np.random.rand(3, 2)
-        with self.assertRaises(plotting.PlotNotApplicableToDatasetError):
+        with self.assertRaises(
+                aspecd.exceptions.PlotNotApplicableToDatasetError):
             self.plotter.plot(dataset_)
 
 
@@ -274,7 +276,7 @@ class TestMultiPlotter(unittest.TestCase):
         self.assertTrue(isinstance(self.plotter.datasets, list))
 
     def test_plot_without_datasets_raises(self):
-        with self.assertRaises(plotting.MissingDatasetError):
+        with self.assertRaises(aspecd.exceptions.MissingDatasetError):
             self.plotter.plot()
 
     def test_plot_with_datasets(self):
@@ -345,7 +347,7 @@ class TestSaver(unittest.TestCase):
         self.assertTrue(callable(self.saver.save))
 
     def test_save_without_filename_raises(self):
-        with self.assertRaises(plotting.MissingFilenameError):
+        with self.assertRaises(aspecd.exceptions.MissingFilenameError):
             self.saver.save(plotting.Plotter())
 
     def test_with_filename_set_previously(self):
@@ -360,7 +362,7 @@ class TestSaver(unittest.TestCase):
 
     def test_save_without_plotter_raises(self):
         self.saver.filename = self.filename
-        with self.assertRaises(plotting.MissingPlotError):
+        with self.assertRaises(aspecd.exceptions.MissingPlotError):
             self.saver.save()
 
     def test_save_with_plotter_sets_plotter(self):
@@ -485,7 +487,7 @@ class TestDrawingProperties(unittest.TestCase):
         self.assertTrue(callable(self.drawing_properties.apply))
 
     def test_apply_without_argument_raises(self):
-        with self.assertRaises(plotting.MissingDrawingError):
+        with self.assertRaises(aspecd.exceptions.MissingDrawingError):
             self.drawing_properties.apply()
 
     def test_apply_sets_properties(self):
@@ -521,7 +523,7 @@ class TestLineProperties(unittest.TestCase):
         self.assertTrue(callable(self.line_properties.apply))
 
     def test_apply_without_argument_raises(self):
-        with self.assertRaises(plotting.MissingDrawingError):
+        with self.assertRaises(aspecd.exceptions.MissingDrawingError):
             self.line_properties.apply()
 
     def test_apply_sets_properties(self):
@@ -555,7 +557,7 @@ class TestPlotProperties(unittest.TestCase):
         self.assertTrue(callable(self.plot_properties.apply))
 
     def test_apply_without_argument_raises(self):
-        with self.assertRaises(plotting.MissingPlotterError):
+        with self.assertRaises(aspecd.exceptions.MissingPlotterError):
             self.plot_properties.apply()
 
     def test_apply_sets_properties(self):
@@ -592,7 +594,7 @@ class TestFigureProperties(unittest.TestCase):
         self.assertTrue(callable(self.figure_properties.apply))
 
     def test_apply_without_argument_raises(self):
-        with self.assertRaises(plotting.MissingFigureError):
+        with self.assertRaises(aspecd.exceptions.MissingFigureError):
             self.figure_properties.apply()
 
     def test_apply_sets_figure_properties(self):
@@ -630,7 +632,7 @@ class TestAxisProperties(unittest.TestCase):
         self.assertTrue(callable(self.axis_properties.apply))
 
     def test_apply_properties_without_argument_raises(self):
-        with self.assertRaises(plotting.MissingAxisError):
+        with self.assertRaises(aspecd.exceptions.MissingAxisError):
             self.axis_properties.apply()
 
     def test_apply_properties_sets_axis_properties(self):
@@ -666,7 +668,7 @@ class TestLegendProperties(unittest.TestCase):
         self.assertTrue(callable(self.legend_properties.apply))
 
     def test_apply_without_argument_raises(self):
-        with self.assertRaises(plotting.MissingLegendError):
+        with self.assertRaises(aspecd.exceptions.MissingLegendError):
             self.legend_properties.apply()
 
     def test_apply_properties_sets_legend_properties(self):

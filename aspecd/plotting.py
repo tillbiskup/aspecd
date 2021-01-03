@@ -86,162 +86,10 @@ import os
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
+import aspecd.dataset
+import aspecd.exceptions
 import aspecd.history
 import aspecd.utils
-
-
-class Error(Exception):
-    """Base class for exceptions in this module."""
-
-
-class MissingDatasetError(Error):
-    """Exception raised when no dataset exists to act on
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class PlotNotApplicableToDatasetError(Error):
-    """Exception raised when processing step is not applicable to dataset
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class MissingSaverError(Error):
-    """Exception raised when no saver is provided.
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class MissingFilenameError(Error):
-    """Exception raised when no filename was provided
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class MissingPlotError(Error):
-    """Exception raised when no plot exists to save.
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class MissingPlotterError(Error):
-    """Exception raised when no plotter is provided.
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class MissingFigureError(Error):
-    """Exception raised when no figure is provided.
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class MissingAxisError(Error):
-    """Exception raised when no axis is provided.
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class MissingLegendError(Error):
-    """Exception raised when no legend is provided.
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class MissingDrawingError(Error):
-    """Exception raised when no drawing (line, ...) is provided.
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
 
 
 class Plotter:
@@ -405,7 +253,7 @@ class Plotter:
 
         """
         if not saver:
-            raise MissingSaverError
+            raise aspecd.exceptions.MissingSaverError
         saver.save(self)
         self.filename = saver.filename
         return saver
@@ -571,7 +419,7 @@ class SinglePlotter(Plotter):
     def _assign_dataset(self, dataset):
         if not dataset:
             if not self.dataset:
-                raise MissingDatasetError
+                raise aspecd.exceptions.MissingDatasetError
         else:
             self.dataset = dataset
 
@@ -585,7 +433,7 @@ class SinglePlotter(Plotter):
 
     def _check_applicability(self):
         if not self.applicable(self.dataset):
-            raise PlotNotApplicableToDatasetError
+            raise aspecd.exceptions.PlotNotApplicableToDatasetError
 
     def _set_axes_labels(self):
         """Set axes labels from axes in dataset.
@@ -852,10 +700,10 @@ class MultiPlotter(Plotter):
 
         """
         if not self.datasets:
-            raise MissingDatasetError
+            raise aspecd.exceptions.MissingDatasetError
         if not all([self.applicable(dataset) for dataset in self.datasets]):
-            raise PlotNotApplicableToDatasetError('Plot not applicable to one '
-                                                  'or more datasets')
+            raise aspecd.exceptions.PlotNotApplicableToDatasetError(
+                'Plot not applicable to one or more datasets')
         super().plot()
         self._set_axes_labels()
 
@@ -963,12 +811,12 @@ class Saver:
 
         """
         if not self.filename:
-            raise MissingFilenameError
+            raise aspecd.exceptions.MissingFilenameError
         if not plotter:
             if self.plotter:
                 self.plotter.save(self)
             else:
-                raise MissingPlotError
+                raise aspecd.exceptions.MissingPlotError
         else:
             self.plotter = plotter
         self._save_plot()
@@ -1090,7 +938,7 @@ class PlotProperties(aspecd.utils.Properties):
 
         """
         if not plotter:
-            raise MissingPlotterError
+            raise aspecd.exceptions.MissingPlotterError
         self.figure.apply(figure=plotter.figure)
 
 
@@ -1256,7 +1104,7 @@ class FigureProperties(aspecd.utils.Properties):
 
         """
         if not figure:
-            raise MissingFigureError
+            raise aspecd.exceptions.MissingFigureError
         for prop in self.get_properties():
             setattr(figure, prop, getattr(self, prop))
 
@@ -1358,7 +1206,7 @@ class AxisProperties(aspecd.utils.Properties):
 
         """
         if not axis:
-            raise MissingAxisError
+            raise aspecd.exceptions.MissingAxisError
         axis.update(self._get_settable_properties())
 
     def _get_settable_properties(self):
@@ -1425,7 +1273,7 @@ class LegendProperties(aspecd.utils.Properties):
 
         """
         if not legend:
-            raise MissingLegendError
+            raise aspecd.exceptions.MissingLegendError
         for prop in self.get_properties():
             setattr(legend, prop, getattr(self, prop))
 
@@ -1472,7 +1320,7 @@ class DrawingProperties(aspecd.utils.Properties):
 
         """
         if not drawing:
-            raise MissingDrawingError
+            raise aspecd.exceptions.MissingDrawingError
         for prop in self.get_properties():
             getattr(drawing, ''.join(['set_', prop]))(getattr(self, prop))
 

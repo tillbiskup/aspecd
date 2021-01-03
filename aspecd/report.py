@@ -53,42 +53,9 @@ import tempfile
 
 import jinja2
 
+import aspecd.exceptions
 import aspecd.system
 import aspecd.utils
-
-
-class Error(Exception):
-    """Base class for exceptions in this module."""
-
-
-class MissingFilenameError(Error):
-    """Exception raised when no filename is provided
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class LaTeXExecutableNotFoundError(Error):
-    """Exception raised when the LaTeX executable could not be found
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
 
 
 class Reporter:
@@ -222,7 +189,8 @@ class Reporter:
 
         """
         if not self.filename:
-            raise MissingFilenameError('No output file for report')
+            raise aspecd.exceptions.MissingFilenameError(
+                'No output file for report')
         with open(self.filename, mode='w+') as output_file:
             output_file.write(self.report)
 
@@ -360,7 +328,7 @@ class LaTeXReporter(Reporter):
 
         """
         if not shutil.which(self.latex_executable):
-            raise LaTeXExecutableNotFoundError
+            raise aspecd.exceptions.LaTeXExecutableNotFoundError
         self._copy_files_to_temp_dir()
         self._compile()
         # Note: In order to resolve references in LaTeX, compile twice.

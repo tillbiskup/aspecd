@@ -16,39 +16,7 @@ import numpy as np
 import oyaml as yaml
 import pkg_resources
 
-
-class Error(Exception):
-    """Base class for exceptions in this module."""
-
-
-class MissingFilenameError(Error):
-    """Exception raised when expecting a filename but none is provided
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class MissingDictError(Error):
-    """Exception raised when expecting a dict but none is provided
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
+import aspecd.exceptions
 
 
 def full_class_name(object_):
@@ -359,7 +327,7 @@ class Yaml:
 
         """
         if not filename:
-            raise MissingFilenameError
+            raise aspecd.exceptions.MissingFilenameError
         with open(filename, 'r') as file:
             self.dict = yaml.safe_load(file)
 
@@ -379,7 +347,7 @@ class Yaml:
 
         """
         if not filename:
-            raise MissingFilenameError
+            raise aspecd.exceptions.MissingFilenameError
         with open(filename, 'w') as file:
             yaml.dump(self.dict, file)
 
@@ -622,7 +590,7 @@ class Properties(ToDictMixin):
 
         """
         if not dict_:
-            raise MissingDictError
+            raise aspecd.exceptions.MissingDictError
         for key in dict_:
             if hasattr(self, key):
                 if isinstance(getattr(self, key), list):

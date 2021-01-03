@@ -29,39 +29,7 @@ import collections
 import os
 import string
 
-
-class Error(Exception):
-    """Base class for exceptions in this module."""
-
-
-class InfofileTypeError(Error):
-    """Exception raised for wrong file format.
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class InfofileEmptyError(Error):
-    """Exception raised for empty file.
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
+import aspecd.exceptions
 
 
 class Infofile:
@@ -119,10 +87,10 @@ class Infofile:
         self._file_contents = self._read()
 
         if not self._file_contents:
-            raise InfofileEmptyError
+            raise aspecd.exceptions.InfofileEmptyError
 
         if not self._is_infofile():
-            raise InfofileTypeError
+            raise aspecd.exceptions.InfofileTypeError
 
         self._parse_infofile_info()
         self._parse_infofile_body()

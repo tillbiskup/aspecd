@@ -2,6 +2,7 @@
 
 import unittest
 
+import aspecd.exceptions
 import aspecd.history
 from aspecd import analysis, processing, dataset
 
@@ -74,7 +75,7 @@ class TestSingleAnalysisStep(unittest.TestCase):
         self.assertGreater(len(self.analysisstep.dataset.analyses), 0)
 
     def test_analyse_without_analysisstep_nor_dataset_raises(self):
-        with self.assertRaises(analysis.MissingDatasetError):
+        with self.assertRaises(aspecd.exceptions.MissingDatasetError):
             self.analysisstep.analyse()
 
     def test_analyse_returns_dataset(self):
@@ -106,7 +107,7 @@ class TestMultiAnalysisStep(unittest.TestCase):
         self.assertTrue(isinstance(self.analysisstep.datasets, list))
 
     def test_analyse_without_datasets_raises(self):
-        with self.assertRaises(analysis.MissingDatasetError):
+        with self.assertRaises(aspecd.exceptions.MissingDatasetError):
             self.analysisstep.analyse()
 
     def test_analyse_with_datasets(self):

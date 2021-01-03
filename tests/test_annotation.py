@@ -4,6 +4,7 @@ import unittest
 
 import aspecd.annotation
 import aspecd.dataset
+import aspecd.exceptions
 import aspecd.history
 
 
@@ -60,13 +61,13 @@ class TestAnnotation(unittest.TestCase):
         self.assertGreater(len(test_dataset.annotations), 0)
 
     def test_annotate_without_argument_nor_dataset_raises(self):
-        with self.assertRaises(aspecd.annotation.MissingDatasetError):
+        with self.assertRaises(aspecd.exceptions.MissingDatasetError):
             self.annotation.annotate()
 
     def test_annotate_with_empty_content_raises(self):
         self.annotation.dataset = aspecd.dataset.Dataset()
         self.annotation.content.clear()
-        with self.assertRaises(aspecd.annotation.NoContentError):
+        with self.assertRaises(aspecd.exceptions.NoContentError):
             self.annotation.annotate()
 
     def test_annotate_with_empty_scope_sets_default_scope(self):
@@ -75,7 +76,7 @@ class TestAnnotation(unittest.TestCase):
         self.assertEqual(self.annotation.scope, 'dataset')
 
     def test_setting_unknown_scope_raises(self):
-        with self.assertRaises(aspecd.annotation.UnknownScopeError):
+        with self.assertRaises(aspecd.exceptions.UnknownScopeError):
             self.annotation.scope = 'foo'
 
     def test_annotate_returns_dataset(self):

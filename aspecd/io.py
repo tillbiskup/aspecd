@@ -99,71 +99,8 @@ structure, see the :class:`aspecd.tasks.Recipe` class and its attributes.
 
 """
 
+import aspecd.exceptions
 import aspecd.utils
-
-
-class Error(Exception):
-    """Base class for exceptions in this module."""
-
-
-class MissingDatasetError(Error):
-    """Exception raised when no dataset exists to act on.
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class MissingSourceError(Error):
-    """Exception raised when expecting a filename but none is provided
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class MissingTargetError(Error):
-    """Exception raised when expecting a filename but none is provided
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
-class MissingRecipeError(Error):
-    """Exception raised when no recipe exists to act on.
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
 
 
 class DatasetImporter:
@@ -242,7 +179,8 @@ class DatasetImporter:
             if self.dataset:
                 self.dataset.import_from(self)
             else:
-                raise MissingDatasetError("No dataset provided")
+                raise aspecd.exceptions.MissingDatasetError(
+                    "No dataset provided")
         else:
             self.dataset = dataset
         self._import()
@@ -328,8 +266,8 @@ class DatasetImporterFactory:
 
         """
         if not source:
-            raise MissingSourceError('A source is required to return an '
-                                     'appropriate importer')
+            raise aspecd.exceptions.MissingSourceError(
+                'A source is required to return an appropriate importer')
         return self._get_importer(source)
 
     # noinspection PyMethodMayBeStatic
@@ -404,7 +342,8 @@ class DatasetExporter:
             if self.dataset:
                 self.dataset.export_to(self)
             else:
-                raise MissingDatasetError("No dataset provided")
+                raise aspecd.exceptions.MissingDatasetError(
+                    "No dataset provided")
         else:
             self.dataset = dataset
         self._export()
@@ -500,7 +439,7 @@ class RecipeImporter:
             if self.recipe:
                 self.recipe.import_from(self)
             else:
-                raise MissingRecipeError("No recipe provided")
+                raise aspecd.exceptions.MissingRecipeError("No recipe provided")
         else:
             self.recipe = recipe
         self.recipe.filename = self.source
@@ -588,7 +527,7 @@ class RecipeExporter:
             if self.recipe:
                 self.recipe.export_to(self)
             else:
-                raise MissingRecipeError("No recipe provided")
+                raise aspecd.exceptions.MissingRecipeError("No recipe provided")
         else:
             self.recipe = recipe
         self._export()
@@ -682,7 +621,7 @@ class AdsExporter(DatasetExporter):
 
     def _export(self):
         if not self.target:
-            raise MissingTargetError
+            raise aspecd.exceptions.MissingTargetError
         yaml = aspecd.utils.Yaml()
         yaml.dict = self.dataset.to_dict()
         yaml.serialise_numpy_arrays()
@@ -695,11 +634,6 @@ class AdsImporter(DatasetImporter):
 
     For more details of the ASpecD dataset format, see the
     :class:`aspecd.io.AdsExporter` class.
-
-    .. todo::
-        Probably, :class:`aspecd.dataset.Dataset` needs a :meth:`from_dict`
-        method to load the contents from a dictionary. This would
-        dramatically simplify things.
 
     """
 

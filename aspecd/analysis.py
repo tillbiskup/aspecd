@@ -25,28 +25,10 @@ in context of recipe-driven data analysis (for details, see the
 
 import copy
 
+import aspecd.exceptions
 import aspecd.history
 import aspecd.utils
 from aspecd.history import AnalysisHistoryRecord
-
-
-class Error(Exception):
-    """Base class for exceptions in this module."""
-
-
-class MissingDatasetError(Error):
-    """Exception raised when no dataset exists to act on
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
 
 
 class AnalysisStep:
@@ -230,7 +212,7 @@ class SingleAnalysisStep(AnalysisStep):
     def _assign_dataset(self, dataset=None):
         if not dataset:
             if not self.dataset:
-                raise MissingDatasetError
+                raise aspecd.exceptions.MissingDatasetError
         else:
             self.dataset = dataset
 
@@ -334,7 +316,7 @@ class MultiAnalysisStep(AnalysisStep):
 
         """
         if not self.datasets:
-            raise MissingDatasetError
+            raise aspecd.exceptions.MissingDatasetError
         super().analyse()
         self._sanitise_parameters()
         self._perform_task()

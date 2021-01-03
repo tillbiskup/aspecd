@@ -7,9 +7,11 @@ import numpy as np
 
 import aspecd.analysis
 import aspecd.annotation
+import aspecd.exceptions
 import aspecd.history
 import aspecd.plotting
 import aspecd.processing
+import aspecd.utils
 from aspecd import annotation, analysis, dataset, io, plotting, \
     processing
 import aspecd.metadata
@@ -83,7 +85,7 @@ class TestDatasetProcessing(unittest.TestCase):
         self.assertTrue(callable(self.dataset.process))
 
     def test_process_without_processing_step_raises(self):
-        with self.assertRaises(dataset.MissingProcessingStepError):
+        with self.assertRaises(aspecd.exceptions.MissingProcessingStepError):
             self.dataset.process()
 
     def test_process_adds_history_record(self):
@@ -173,7 +175,7 @@ class TestDatasetUndo(unittest.TestCase):
 
     def test_undo_with_empty_history_raises(self):
         self.dataset.history.clear()
-        with self.assertRaises(dataset.UndoWithEmptyHistoryError):
+        with self.assertRaises(aspecd.exceptions.UndoWithEmptyHistoryError):
             self.dataset.undo()
 
     def test_undo_decrements_historypointer(self):
@@ -185,14 +187,14 @@ class TestDatasetUndo(unittest.TestCase):
     def test_undo_with_historypointer_zero_raises(self):
         self.dataset.process(self.processingStep)
         self.dataset.undo()
-        with self.assertRaises(dataset.UndoAtBeginningOfHistoryError):
+        with self.assertRaises(aspecd.exceptions.UndoAtBeginningOfHistoryError):
             self.dataset.undo()
 
     def test_undo_with_undoable_processing_step_raises(self):
         processingstep = self.processingStep
         processingstep.undoable = True
         self.dataset.process(processingstep)
-        with self.assertRaises(dataset.UndoStepUndoableError):
+        with self.assertRaises(aspecd.exceptions.UndoStepUndoableError):
             self.dataset.undo()
 
     def test_multiple_undo_with_undoable_processing_step_raises(self):
@@ -202,7 +204,7 @@ class TestDatasetUndo(unittest.TestCase):
         processingstep.undoable = False
         self.dataset.process(processingstep)
         self.dataset.undo()
-        with self.assertRaises(dataset.UndoStepUndoableError):
+        with self.assertRaises(aspecd.exceptions.UndoStepUndoableError):
             self.dataset.undo()
 
 
@@ -217,12 +219,14 @@ class TestDatasetRedo(unittest.TestCase):
 
     def test_redo_with_empty_history_raises(self):
         self.dataset.history.clear()
-        with self.assertRaises(dataset.RedoAlreadyAtLatestChangeError):
+        with self.assertRaises(
+                aspecd.exceptions.RedoAlreadyAtLatestChangeError):
             self.dataset.redo()
 
     def test_redo_at_latest_change_raises(self):
         self.dataset.process(self.processingStep)
-        with self.assertRaises(dataset.RedoAlreadyAtLatestChangeError):
+        with self.assertRaises(
+                aspecd.exceptions.RedoAlreadyAtLatestChangeError):
             self.dataset.redo()
 
     def test_redo_increments_historypointer(self):
@@ -274,7 +278,8 @@ class TestDatasetProcessingWithHistory(unittest.TestCase):
         self.assertGreater(orig_len_history, new_len_history)
 
     def test_process_with_leading_history_raises(self):
-        with self.assertRaises(dataset.ProcessingWithLeadingHistoryError):
+        with self.assertRaises(
+                aspecd.exceptions.ProcessingWithLeadingHistoryError):
             self.dataset.process(self.processingStep)
 
     def test_stripping_leading_history_allows_processing(self):
@@ -440,7 +445,7 @@ class TestDatasetPlotting(unittest.TestCase):
         self.assertTrue(isinstance(plot, plotting.Plotter))
 
     def test_plot_without_plotter_raises(self):
-        with self.assertRaises(dataset.MissingPlotterError):
+        with self.assertRaises(aspecd.exceptions.MissingPlotterError):
             self.dataset.plot()
 
     def test_plot_adds_task(self):
@@ -516,7 +521,7 @@ class TestDatasetImporting(unittest.TestCase):
         self.assertTrue(callable(self.dataset.import_from))
 
     def test_import_without_importer_raises(self):
-        with self.assertRaises(dataset.MissingImporterError):
+        with self.assertRaises(aspecd.exceptions.MissingImporterError):
             self.dataset.import_from()
 
 
@@ -530,7 +535,7 @@ class TestDatasetExporting(unittest.TestCase):
         self.assertTrue(callable(self.dataset.export_to))
 
     def test_export_without_exporter_raises(self):
-        with self.assertRaises(dataset.MissingExporterError):
+        with self.assertRaises(aspecd.exceptions.MissingExporterError):
             self.dataset.export_to()
 
 
@@ -665,7 +670,7 @@ class TestDatasetFromDict(unittest.TestCase):
 
     def test_from_dict_sets_representations(self):
         representation = aspecd.plotting.SinglePlotter1D()
-        plot = self.dataset.plot(representation)
+        self.dataset.plot(representation)
         dataset_dict = self.dataset.to_dict()
         new_dataset = dataset.Dataset()
         new_dataset.from_dict(dataset_dict)
@@ -717,7 +722,7 @@ class TestDatasetReferences(unittest.TestCase):
         self.assertTrue(callable(self.dataset.add_reference))
 
     def test_add_reference_without_dataset_raises(self):
-        with self.assertRaises(aspecd.dataset.MissingDatasetError):
+        with self.assertRaises(aspecd.exceptions.MissingDatasetError):
             self.dataset.add_reference()
 
     def test_add_reference_adds_dataset_to_references(self):
@@ -736,7 +741,7 @@ class TestDatasetReferences(unittest.TestCase):
         self.assertTrue(callable(self.dataset.remove_reference))
 
     def test_remove_reference_without_id_raises(self):
-        with self.assertRaises(aspecd.dataset.MissingDatasetError):
+        with self.assertRaises(aspecd.exceptions.MissingDatasetError):
             self.dataset.remove_reference()
 
     def test_remove_reference_removes_dataset_from_references(self):
@@ -806,7 +811,7 @@ class TestDatasetReference(unittest.TestCase):
         self.assertTrue(callable(self.reference.from_dataset))
 
     def test_from_dataset_without_dataset_raises(self):
-        with self.assertRaises(aspecd.dataset.MissingDatasetError):
+        with self.assertRaises(aspecd.exceptions.MissingDatasetError):
             self.reference.from_dataset()
 
     def test_from_dataset_sets_type(self):
@@ -836,7 +841,7 @@ class TestDatasetReference(unittest.TestCase):
         self.assertTrue(callable(self.reference.to_dataset))
 
     def test_to_dataset_without_type_raises(self):
-        with self.assertRaises(aspecd.dataset.MissingDatasetError):
+        with self.assertRaises(aspecd.exceptions.MissingDatasetError):
             self.reference.to_dataset()
 
     def test_to_dataset_returns_dataset(self):
@@ -893,11 +898,11 @@ class TestDatasetFactory(unittest.TestCase):
         self.assertTrue(isinstance(dataset_, dataset.Dataset))
 
     def test_get_dataset_without_source_raises(self):
-        with self.assertRaises(dataset.MissingSourceError):
+        with self.assertRaises(aspecd.exceptions.MissingSourceError):
             self.factory.get_dataset()
 
     def test_get_dataset_without_importer_factory_raises(self):
-        with self.assertRaises(dataset.MissingImporterFactoryError):
+        with self.assertRaises(aspecd.exceptions.MissingImporterFactoryError):
             self.factory.get_dataset(source=self.source)
 
     def test_get_dataset_sets_id_from_source_in_dataset(self):
@@ -1026,7 +1031,7 @@ class TestAxisSetupInConstructor(unittest.TestCase):
     def test_setting_too_many_axes_raises(self):
         axes = self.axes
         axes.append(dataset.Axis())
-        with self.assertRaises(dataset.AxesCountError):
+        with self.assertRaises(aspecd.exceptions.AxesCountError):
             dataset.Data(self.data, axes)
 
     def test_axes_values_dimensions_are_consistent_with_empty_1D_data(self):
@@ -1060,13 +1065,15 @@ class TestAxisSetupInConstructor(unittest.TestCase):
     def test_wrong_axes_values_dimensions_with_nonempty_1D_data_raises(self):
         len_data = 5
         tmp_data = np.zeros(len_data)
-        with self.assertRaises(dataset.AxesValuesInconsistentWithDataError):
+        with self.assertRaises(
+                aspecd.exceptions.AxesValuesInconsistentWithDataError):
             dataset.Data(tmp_data, self.axes)
 
     def test_wrong_axes_values_dimensions_with_nonempty_2D_data_raises(self):
         len_data = [5, 3]
         tmp_data = np.zeros(len_data)
-        with self.assertRaises(dataset.AxesValuesInconsistentWithDataError):
+        with self.assertRaises(
+                aspecd.exceptions.AxesValuesInconsistentWithDataError):
             dataset.Data(tmp_data, self.axes)
 
     def test_set_wrong_axes_dimensions_with_nonempty_1D_data_raises(self):
@@ -1075,7 +1082,8 @@ class TestAxisSetupInConstructor(unittest.TestCase):
         tmp_axis = dataset.Axis()
         tmp_axis.values = np.zeros(2*len_data)
         tmp_axes = [tmp_axis, dataset.Axis()]
-        with self.assertRaises(dataset.AxesValuesInconsistentWithDataError):
+        with self.assertRaises(
+                aspecd.exceptions.AxesValuesInconsistentWithDataError):
             dataset.Data(tmp_data, tmp_axes)
 
     def test_set_wrong_axes_dimensions_with_nonempty_2D_data_raises(self):
@@ -1086,7 +1094,8 @@ class TestAxisSetupInConstructor(unittest.TestCase):
         tmp_axis2 = dataset.Axis()
         tmp_axis2.values = np.zeros(2*len_data[1])
         tmp_axes = [tmp_axis1, tmp_axis2, dataset.Axis()]
-        with self.assertRaises(dataset.AxesValuesInconsistentWithDataError):
+        with self.assertRaises(
+                aspecd.exceptions.AxesValuesInconsistentWithDataError):
             dataset.Data(tmp_data, tmp_axes)
 
 
@@ -1181,9 +1190,9 @@ class TestAxisSettings(unittest.TestCase):
         self.axis.values = np.zeros(0)
 
     def test_set_wrong_type_for_values_fails(self):
-        with self.assertRaises(dataset.AxisValuesTypeError):
+        with self.assertRaises(aspecd.exceptions.AxisValuesTypeError):
             self.axis.values = 0
 
     def test_set_multidimensional_values_fails(self):
-        with self.assertRaises(dataset.AxisValuesDimensionError):
+        with self.assertRaises(aspecd.exceptions.AxisValuesDimensionError):
             self.axis.values = np.zeros([0, 0])

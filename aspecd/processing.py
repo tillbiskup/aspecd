@@ -20,28 +20,13 @@ in context of recipe-driven data analysis (for details, see the
 :mod:`aspecd.tasks` module).
 
 """
+import aspecd.exceptions
 import aspecd.history
 import aspecd.utils
-from aspecd.history import ProcessingHistoryRecord
 
 
 class Error(Exception):
     """Base class for exceptions in this module."""
-
-
-class ProcessingNotApplicableToDatasetError(Error):
-    """Exception raised when processing step is not applicable to dataset
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
 
 
 class MissingDatasetError(Error):
@@ -182,7 +167,7 @@ class ProcessingStep:
             history record for processing step
 
         """
-        history_record = ProcessingHistoryRecord(
+        history_record = aspecd.history.ProcessingHistoryRecord(
             package=self.dataset.package_name, processing_step=self)
         return history_record
 
@@ -203,7 +188,7 @@ class ProcessingStep:
 
     def _check_applicability(self):
         if not self.applicable(self.dataset):
-            raise ProcessingNotApplicableToDatasetError
+            raise aspecd.history.ProcessingNotApplicableToDatasetError
 
     # noinspection PyUnusedLocal
     @staticmethod

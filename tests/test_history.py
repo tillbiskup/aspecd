@@ -4,6 +4,7 @@ import unittest
 from datetime import datetime, timedelta
 
 import aspecd.annotation
+import aspecd.exceptions
 import aspecd.history
 import aspecd.system
 import aspecd.utils
@@ -474,7 +475,7 @@ class TestPlotRecord(unittest.TestCase):
         aspecd.history.PlotRecord(plotter=plotter)
 
     def test_from_plotter_without_plotter_raises(self):
-        with self.assertRaises(plotting.MissingPlotterError):
+        with self.assertRaises(aspecd.exceptions.MissingPlotterError):
             self.plot_record.from_plotter()
 
     def test_from_plotter_sets_attributes(self):

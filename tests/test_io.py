@@ -1,9 +1,11 @@
 """Tests for input and output (IO)."""
+
 import os
 import unittest
 
 import numpy as np
 
+import aspecd.exceptions
 from aspecd import io, dataset, tasks
 
 
@@ -24,7 +26,7 @@ class TestDatasetImporter(unittest.TestCase):
         self.assertTrue(callable(self.importer.import_into))
 
     def test_import_into_without_dataset_raises(self):
-        with self.assertRaises(io.MissingDatasetError):
+        with self.assertRaises(aspecd.exceptions.MissingDatasetError):
             self.importer.import_into()
 
     def test_import_into_with_dataset_sets_dataset(self):
@@ -56,7 +58,7 @@ class TestDatasetExporter(unittest.TestCase):
         self.assertTrue(callable(self.exporter.export_from))
 
     def test_export_from_without_dataset_raises(self):
-        with self.assertRaises(io.MissingDatasetError):
+        with self.assertRaises(aspecd.exceptions.MissingDatasetError):
             self.exporter.export_from()
 
     def test_export_from_with_dataset_sets_dataset(self):
@@ -82,7 +84,7 @@ class TestDatasetImporterFactory(unittest.TestCase):
         self.assertEqual(self.source, importer.source)
 
     def test_get_importer_without_source_raises(self):
-        with self.assertRaises(io.MissingSourceError):
+        with self.assertRaises(aspecd.exceptions.MissingSourceError):
             self.factory.get_importer()
 
 
@@ -103,7 +105,7 @@ class TestRecipeImporter(unittest.TestCase):
         self.assertTrue(callable(self.importer.import_into))
 
     def test_import_into_without_recipe_raises(self):
-        with self.assertRaises(io.MissingRecipeError):
+        with self.assertRaises(aspecd.exceptions.MissingRecipeError):
             self.importer.import_into()
 
     def test_import_into_without_parameter_but_recipe_preset(self):
@@ -142,7 +144,7 @@ class TestRecipeExporter(unittest.TestCase):
         self.assertTrue(callable(self.exporter.export_from))
 
     def test_export_from_without_recipe_raises(self):
-        with self.assertRaises(io.MissingRecipeError):
+        with self.assertRaises(aspecd.exceptions.MissingRecipeError):
             self.exporter.export_from()
 
     def test_export_from_with_recipe_sets_recipe(self):
@@ -190,7 +192,7 @@ class TestAdsExporter(unittest.TestCase):
         pass
 
     def test_export_from_without_target_raises(self):
-        with self.assertRaises(io.MissingTargetError):
+        with self.assertRaises(aspecd.exceptions.MissingTargetError):
             self.exporter.export_from(dataset=self.dataset)
 
     def test_export_with_target_creates_file(self):
