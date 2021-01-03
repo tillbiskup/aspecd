@@ -3,8 +3,10 @@
 import unittest
 from datetime import datetime, timedelta
 
+import aspecd.annotation
 import aspecd.history
 import aspecd.system
+import aspecd.utils
 from aspecd import processing, dataset, analysis
 
 
@@ -360,3 +362,85 @@ class TestAnalysisHistoryRecord(unittest.TestCase):
 
     def test_replay(self):
         self.historyrecord.replay(dataset.Dataset())
+
+
+class TestAnnotationRecord(unittest.TestCase):
+    def setUp(self):
+        self.annotation = aspecd.annotation.Annotation()
+        self.annotation_record = \
+            aspecd.history.AnnotationRecord(self.annotation)
+
+    def test_instantiate_class(self):
+        aspecd.annotation.Annotation()
+
+    def test_instantiate_class_with_annotation(self):
+        aspecd.history.AnnotationRecord(self.annotation)
+
+    def test_instantiate_content_from_annotation(self):
+        self.annotation.content = {'foo': 'bar'}
+        annotation_record = \
+            aspecd.history.AnnotationRecord(self.annotation)
+        self.assertEqual(annotation_record.content, self.annotation.content)
+
+    def test_instantiate_class_name_from_annotation(self):
+        annotation_record = \
+            aspecd.history.AnnotationRecord(self.annotation)
+        self.assertEqual(annotation_record.class_name,
+                         aspecd.utils.full_class_name(self.annotation))
+
+    def test_has_from_annotation_method(self):
+        self.assertTrue(hasattr(self.annotation_record, 'from_annotation'))
+        self.assertTrue(callable(self.annotation_record.from_annotation))
+
+    def test_has_create_annotation_method(self):
+        self.assertTrue(hasattr(self.annotation_record,
+                                'create_annotation'))
+        self.assertTrue(
+            callable(self.annotation_record.create_annotation))
+
+    def test_create_annotation_returns_annotation_object(self):
+        test_object = self.annotation_record.create_annotation()
+        self.assertTrue(isinstance(test_object, aspecd.annotation.Annotation))
+
+    def test_annotation_object_has_correct_contents_value(self):
+        self.annotation_record.content = {'foo': 'bar'}
+        test_object = self.annotation_record.create_annotation()
+        self.assertEqual(self.annotation_record.content, test_object.content)
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.annotation_record, 'to_dict'))
+        self.assertTrue(callable(self.annotation_record.to_dict))
+
+    def test_from_dict(self):
+        orig_dict = self.annotation_record.to_dict()
+        orig_dict["content"]["comment"] = 'foo'
+        new_annotation_record = aspecd.history.AnnotationRecord()
+        new_annotation_record.from_dict(orig_dict)
+        self.assertDictEqual(orig_dict["content"],
+                             new_annotation_record.to_dict()["content"])
+
+
+class TestAnnotationHistoryRecord(unittest.TestCase):
+    def setUp(self):
+        self.annotation = aspecd.annotation.Annotation()
+        self.annotation_record = aspecd.history.AnnotationHistoryRecord(
+            annotation=self.annotation)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_instantiate_class_with_package_name(self):
+        aspecd.history.AnnotationHistoryRecord(
+            annotation=self.annotation, package="numpy")
+
+    def test_instantiate_class_with_package_name_sets_sysinfo(self):
+        annotation_step = aspecd.history.AnnotationHistoryRecord(
+            annotation=self.annotation, package="numpy")
+        self.assertTrue("numpy" in annotation_step.sysinfo.packages.keys())
+
+    def test_has_annotation_property(self):
+        self.assertTrue(hasattr(self.annotation_record, 'annotation'))
+
+    def test_annotation_is_annotation_record(self):
+        self.assertTrue(isinstance(self.annotation_record.annotation,
+                                   aspecd.history.AnnotationRecord))

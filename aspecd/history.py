@@ -13,6 +13,7 @@
 
 from datetime import datetime
 
+import aspecd
 import aspecd.system
 import aspecd.utils
 
@@ -379,3 +380,105 @@ class AnalysisHistoryRecord(HistoryRecord):
         """
         analysis_step = self.analysis.create_analysis_step()
         dataset.analyse(analysis_step=analysis_step)
+
+
+class AnnotationRecord(aspecd.utils.ToDictMixin):
+    """Base class for annotation records stored in the dataset annotations.
+
+    The annotation of a :class:`aspecd.dataset.Dataset` should *not* contain
+    references to :class:`aspecd.annotation.Annotation` objects, but rather
+    records that contain all necessary information to create the respective
+    objects inherited from :class:`aspecd.annotation.Annotation`. One
+    reason for this is simply that we want to import datasets containing
+    annotations in their analyses for which no corresponding annotation
+    class exists in the current installation of the application. Another is
+    to not have an infinite recursion of datasets, as the dataset is stored
+    in an :obj:`aspecd.analysis.SingleAnalysisStep` object.
+
+    .. note::
+        Each annotation entry in a dataset stores the annotation as a
+        :class:`aspecd.annotation.AnnotationRecord`, even in applications
+        inheriting from the ASpecD framework. Hence, subclassing of this class
+        should normally not be necessary.
+
+    Attributes
+    ----------
+    content : :class:`dict`
+        Actual content of the annotation
+
+        Generic place for more information
+    class_name : :class:`str`
+        Fully qualified name of the class of the corresponding annotation
+
+    Parameters
+    ----------
+    annotation : :class:`aspecd.annotation.Annotation`
+        Annotation the record should be created for.
+
+    Raises
+    ------
+    aspecd.annotation.MissingAnnotationError
+        Raised when no annotation exists to act on
+
+    """
+
+    def __init__(self, annotation=None):
+        super().__init__()
+        self.content = dict()
+        self.class_name = ''
+        self._attributes_to_copy = ['content']
+        if annotation:
+            self.from_annotation(annotation)
+
+    def from_annotation(self, annotation):
+        for attribute in self._attributes_to_copy:
+            setattr(self, attribute, getattr(annotation, attribute))
+        self.class_name = aspecd.utils.full_class_name(annotation)
+
+    def create_annotation(self):
+        """Create an analysis step object from the parameters stored.
+
+        Returns
+        -------
+        analysis_step : :class:`aspecd.analysis.SingleAnalysisStep`
+            actual analysis step object that can be used for analysis
+
+        """
+        annotation = aspecd.utils.object_from_class_name(self.class_name)
+        annotation.content = self.content
+        return annotation
+
+    def from_dict(self, dict_=None):
+        for key, value in dict_.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+
+
+class AnnotationHistoryRecord(HistoryRecord):
+    """History record for annotations of datasets.
+
+    Attributes
+    ----------
+    annotation : :class:`aspecd.analysis.Annotation`
+        Annotation the history is saved for
+
+    package : :class:`str`
+        Name of package the history record gets recorded for
+
+        Prerequisite for reproducibility, gets stored in the
+        :attr:`aspecd.dataset.HistoryRecord.sysinfo` attribute.
+        Will usually be provided automatically by the dataset.
+
+    Parameters
+    ----------
+    annotation : :class:`aspecd.annotation.AnnotationRecord`
+        Annotation the history is saved for
+
+    package : :class:`str`
+        Name of package the history record gets recorded for
+
+    """
+
+    def __init__(self, annotation=None, package=''):
+        super().__init__(package=package)
+        self.annotation = AnnotationRecord(annotation)

@@ -71,6 +71,12 @@ class TestToDictMixin(unittest.TestCase):
         obj_dict = self.mixed_in.to_dict()
         self.assertDictEqual(orig_dict, obj_dict)
 
+    def test_ordered_dict_property(self):
+        orig_dict = {"foo": collections.OrderedDict({"bar": "baz"})}
+        self.set_properties_from_dict(obj=self.mixed_in, dict_=orig_dict)
+        obj_dict = self.mixed_in.to_dict()
+        self.assertDictEqual(orig_dict, obj_dict)
+
     def test_mixed_in_object_property(self):
         orig_dict = {"foo": "bar"}
         mixed_in = utils.ToDictMixin()

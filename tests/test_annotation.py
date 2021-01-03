@@ -3,12 +3,13 @@
 import unittest
 
 import aspecd.annotation
-from aspecd import annotation, dataset
+import aspecd.dataset
+import aspecd.history
 
 
 class TestAnnotation(unittest.TestCase):
     def setUp(self):
-        self.annotation = annotation.Annotation()
+        self.annotation = aspecd.annotation.Annotation()
         self.annotation.content['foo'] = 'bar'
 
     def test_instantiate_class(self):
@@ -44,57 +45,57 @@ class TestAnnotation(unittest.TestCase):
         self.assertTrue(callable(self.annotation.annotate))
 
     def test_annotate_without_argument_and_with_dataset(self):
-        self.annotation.dataset = dataset.Dataset()
+        self.annotation.dataset = aspecd.dataset.Dataset()
         self.annotation.annotate()
         self.assertGreater(len(self.annotation.dataset.annotations), 0)
 
     def test_annotate_via_dataset_annotate(self):
-        test_dataset = dataset.Dataset()
+        test_dataset = aspecd.dataset.Dataset()
         test_dataset.annotate(self.annotation)
         self.assertGreater(len(test_dataset.annotations), 0)
 
     def test_annotate_with_dataset(self):
-        test_dataset = dataset.Dataset()
+        test_dataset = aspecd.dataset.Dataset()
         self.annotation.annotate(test_dataset)
         self.assertGreater(len(test_dataset.annotations), 0)
 
     def test_annotate_without_argument_nor_dataset_raises(self):
-        with self.assertRaises(annotation.MissingDatasetError):
+        with self.assertRaises(aspecd.annotation.MissingDatasetError):
             self.annotation.annotate()
 
     def test_annotate_with_empty_content_raises(self):
-        self.annotation.dataset = dataset.Dataset()
+        self.annotation.dataset = aspecd.dataset.Dataset()
         self.annotation.content.clear()
-        with self.assertRaises(annotation.NoContentError):
+        with self.assertRaises(aspecd.annotation.NoContentError):
             self.annotation.annotate()
 
     def test_annotate_with_empty_scope_sets_default_scope(self):
-        self.annotation.dataset = dataset.Dataset()
+        self.annotation.dataset = aspecd.dataset.Dataset()
         self.annotation.annotate()
         self.assertEqual(self.annotation.scope, 'dataset')
 
     def test_setting_unknown_scope_raises(self):
-        with self.assertRaises(annotation.UnknownScopeError):
+        with self.assertRaises(aspecd.annotation.UnknownScopeError):
             self.annotation.scope = 'foo'
 
     def test_annotate_returns_dataset(self):
-        test_dataset = self.annotation.annotate(dataset.Dataset())
-        self.assertTrue(isinstance(test_dataset, dataset.Dataset))
+        test_dataset = self.annotation.annotate(aspecd.dataset.Dataset())
+        self.assertTrue(isinstance(test_dataset, aspecd.dataset.Dataset))
 
     def test_has_create_history_record_method(self):
         self.assertTrue(hasattr(self.annotation, 'create_history_record'))
         self.assertTrue(callable(self.annotation.create_history_record))
 
     def test_create_history_record_returns_history_record(self):
-        self.annotation.dataset = dataset.Dataset()
+        self.annotation.dataset = aspecd.dataset.Dataset()
         history_record = self.annotation.create_history_record()
         self.assertTrue(isinstance(history_record,
-                                   annotation.AnnotationHistoryRecord))
+                                   aspecd.history.AnnotationHistoryRecord))
 
 
 class TestComment(unittest.TestCase):
     def setUp(self):
-        self.comment = annotation.Comment()
+        self.comment = aspecd.annotation.Comment()
 
     def test_instantiate_class(self):
         pass
@@ -122,7 +123,7 @@ class TestComment(unittest.TestCase):
 
 class TestArtefact(unittest.TestCase):
     def setUp(self):
-        self.artefact = annotation.Artefact()
+        self.artefact = aspecd.annotation.Artefact()
 
     def test_instantiate_class(self):
         pass
@@ -133,77 +134,7 @@ class TestArtefact(unittest.TestCase):
 
 class TestCharacteristic(unittest.TestCase):
     def setUp(self):
-        self.characteristic = annotation.Characteristic()
+        self.characteristic = aspecd.annotation.Characteristic()
 
     def test_instantiate_class(self):
         pass
-
-
-class TestAnnotationRecord(unittest.TestCase):
-    def setUp(self):
-        self.annotation = aspecd.annotation.Annotation()
-        self.annotation_record = \
-            aspecd.annotation.AnnotationRecord(self.annotation)
-
-    def test_instantiate_class(self):
-        pass
-
-    def test_instantiate_without_annotation_raises(self):
-        with self.assertRaises(aspecd.annotation.MissingAnnotationError):
-            aspecd.annotation.AnnotationRecord()
-
-    def test_instantiate_class_with_annotation(self):
-        aspecd.annotation.AnnotationRecord(self.annotation)
-
-    def test_instantiate_content_from_annotation(self):
-        self.annotation.content = {'foo': 'bar'}
-        annotation_record = \
-            aspecd.annotation.AnnotationRecord(self.annotation)
-        self.assertEqual(annotation_record.content, self.annotation.content)
-
-    def test_instantiate_class_name_from_annotation(self):
-        annotation_record = \
-            aspecd.annotation.AnnotationRecord(self.annotation)
-        self.assertEqual(annotation_record.class_name,
-                         aspecd.utils.full_class_name(self.annotation))
-
-    def test_has_create_annotation_method(self):
-        self.assertTrue(hasattr(self.annotation_record,
-                                'create_annotation'))
-        self.assertTrue(
-            callable(self.annotation_record.create_annotation))
-
-    def test_create_annotation_returns_annotation_object(self):
-        test_object = self.annotation_record.create_annotation()
-        self.assertTrue(isinstance(test_object, aspecd.annotation.Annotation))
-
-    def test_annotation_object_has_correct_contents_value(self):
-        self.annotation_record.content = {'foo': 'bar'}
-        test_object = self.annotation_record.create_annotation()
-        self.assertEqual(self.annotation_record.content, test_object.content)
-
-
-class TestAnnotationHistoryRecord(unittest.TestCase):
-    def setUp(self):
-        self.annotation = aspecd.annotation.Annotation()
-        self.annotationrecord = aspecd.annotation.AnnotationHistoryRecord(
-            annotation=self.annotation)
-
-    def test_instantiate_class(self):
-        pass
-
-    def test_instantiate_class_with_package_name(self):
-        aspecd.annotation.AnnotationHistoryRecord(
-            annotation=self.annotation, package="numpy")
-
-    def test_instantiate_class_with_package_name_sets_sysinfo(self):
-        annotation_step = aspecd.annotation.AnnotationHistoryRecord(
-            annotation=self.annotation, package="numpy")
-        self.assertTrue("numpy" in annotation_step.sysinfo.packages.keys())
-
-    def test_has_annotation_property(self):
-        self.assertTrue(hasattr(self.annotationrecord, 'annotation'))
-
-    def test_annotation_is_annotation_record(self):
-        self.assertTrue(isinstance(self.annotationrecord.annotation,
-                                   annotation.AnnotationRecord))

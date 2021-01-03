@@ -191,14 +191,14 @@ class ToDictMixin:
     def _traverse(self, key, value):
         if isinstance(value, ToDictMixin):
             result = value.to_dict()
+        elif isinstance(value, (dict, collections.OrderedDict)):
+            result = self._traverse_dict(value)
         elif hasattr(value, '__odict__'):
             result = self._traverse_dict(value.__odict__)
         elif hasattr(value, '__dict__'):
             result = self._traverse_dict(value.__dict__)
         elif isinstance(value, list):
             result = [self._traverse(key, i) for i in value]
-        elif isinstance(value, dict):
-            result = self._traverse_dict(value)
         elif isinstance(value, (datetime.datetime, datetime.date,
                                 datetime.time)):
             result = str(value)

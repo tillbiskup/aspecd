@@ -864,7 +864,12 @@ class Dataset(aspecd.utils.ToDictMixin):
                             aspecd.history.AnalysisHistoryRecord()
                         history_record.from_dict(element)
                         self.analyses.append(history_record)
-
+                elif key == "annotations":
+                    for element in dict_[key]:
+                        history_record = \
+                            aspecd.history.AnnotationHistoryRecord()
+                        history_record.from_dict(element)
+                        self.annotations.append(history_record)
                 elif hasattr(attribute, 'from_dict'):
                     attribute.from_dict(dict_[key])
                 else:
@@ -1277,6 +1282,7 @@ class Axis(aspecd.utils.ToDictMixin):
     label : `string`
         manual label for the axis, particularly useful in cases where no
         quantity and unit are provided or should be overwritten.
+
 
     .. note::
         There are three alternative ways of writing axis labels, one with
