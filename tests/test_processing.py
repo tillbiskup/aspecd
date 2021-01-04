@@ -2,6 +2,8 @@
 
 import unittest
 
+import aspecd.dataset
+import aspecd.exceptions
 import aspecd.history
 import aspecd.processing
 import aspecd.utils
@@ -58,7 +60,7 @@ class TestProcessingStep(unittest.TestCase):
         self.assertGreater(len(self.processing.dataset.history), 0)
 
     def test_process_without_processingstep_nor_dataset_raises(self):
-        with self.assertRaises(aspecd.processing.MissingDatasetError):
+        with self.assertRaises(aspecd.exceptions.MissingDatasetError):
             self.processing.process()
 
     def test_process_with_dataset_sets_dataset(self):

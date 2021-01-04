@@ -25,25 +25,6 @@ import aspecd.history
 import aspecd.utils
 
 
-class Error(Exception):
-    """Base class for exceptions in this module."""
-
-
-class MissingDatasetError(Error):
-    """Exception raised when no dataset exists to act on
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__()
-        self.message = message
-
-
 class ProcessingStep:
     """Base class for processing steps.
 
@@ -174,7 +155,7 @@ class ProcessingStep:
     def _assign_dataset(self, dataset=None):
         if not dataset:
             if not self.dataset:
-                raise MissingDatasetError
+                raise aspecd.exceptions.MissingDatasetError
         else:
             self.dataset = dataset
 
@@ -188,7 +169,7 @@ class ProcessingStep:
 
     def _check_applicability(self):
         if not self.applicable(self.dataset):
-            raise aspecd.history.ProcessingNotApplicableToDatasetError
+            raise aspecd.exceptions.ProcessingNotApplicableToDatasetError
 
     # noinspection PyUnusedLocal
     @staticmethod
