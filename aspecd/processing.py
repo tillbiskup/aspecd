@@ -187,7 +187,7 @@ class ProcessingStep:
 
             @staticmethod
             def applicable(dataset):
-                return len(dataset.data.axes) == 2
+                return len(dataset.data.axes) == 3
 
 
         Parameters
