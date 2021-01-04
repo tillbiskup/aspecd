@@ -8,9 +8,11 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.1
 ===============
 
-* Metadata mapper
+* Metadata mapper via yaml file
 
 * Documentation: Use cases
+
+* Plotter: Handle multiple axes (cwepr:GoniometerPlotter)
 
 
 For later versions
