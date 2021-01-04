@@ -626,9 +626,6 @@ class AdfExporter(DatasetExporter):
     representation for larger numerical arrays, the format should be more
     memory-efficient than other formats.
 
-    .. todo::
-        Add contents to README and Manifest.yaml.
-
     """
 
     def __init__(self):
@@ -638,7 +635,6 @@ class AdfExporter(DatasetExporter):
             'dataset': 'dataset.yaml',
             'version': 'VERSION',
             'readme': 'README',
-            'manifest': 'Manifest.yaml',
         }
         self._bin_dir = 'binaryData'
         self._tempdir_name = ''
@@ -671,7 +667,6 @@ class AdfExporter(DatasetExporter):
         self._create_dataset_yaml()
         self._create_version_file()
         self._create_readme_file()
-        self._create_manifest_file()
 
     def _create_dataset_yaml(self):
         bin_dir_path = os.path.join(self._tempdir_name, self._bin_dir)
@@ -689,16 +684,40 @@ class AdfExporter(DatasetExporter):
             file.write(self._version)
 
     def _create_readme_file(self):
-        readme_contents = """This directory contains an ASpecD dataset stored 
-        in the ASpecD dataset format (adf)."""
+        readme_contents = (
+            "Readme\n"
+            "======\n\n"
+            "This directory contains an ASpecD dataset stored in the\n"
+            "ASpecD dataset format (adf).\n\n"
+            "What follows is a bit of information on the meaning of\n"
+            "each of the files in the directory.\n"
+            "Sources of further information on the file format\n"
+            "are provided at the end of the file.\n\n"
+            "Copyright (c) 2021, Till Biskup\n"
+            "2021-01-04\n\n"
+            "Files and their meaning\n"
+            "-----------------------\n\n"
+            "* dataset.yaml - text/YAML\n"
+            "  hierarchical metadata store\n\n"
+            "* binaryData/<filename>.npy - NumPy binary\n"
+            "  numerical data of the dataset stored in NumPy format\n\n"
+            "  Only arrays exceeding a certain threshold are stored\n"
+            "  in binary format, mainly to save space and preserve\n"
+            "  numerical accuracy.\n\n"
+            "* VERSION - text\n"
+            "  version number of the dataset format\n\n"
+            "  The version number follows the semantic versioning scheme.\n\n"
+            "* README - text\n"
+            "  This file\n\n"
+            "Further information\n"
+            "-------------------\n\n"
+            "More information can be found on the web in the\n"
+            "ASpecD package documentation:\n\n"
+            "https://docs.aspecd.de/adf.html\n"
+        )
         with open(os.path.join(self._tempdir_name,
                                self._filenames["readme"]), 'w+') as file:
             file.write(readme_contents)
-
-    def _create_manifest_file(self):
-        with open(os.path.join(self._tempdir_name,
-                               self._filenames["manifest"]), 'w+') as file:
-            file.write('')
 
 
 class AdfImporter(DatasetImporter):

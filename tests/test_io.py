@@ -211,7 +211,7 @@ class TestAdfExporter(unittest.TestCase):
         self.exporter.target = self.target
         self.exporter.export_from(self.dataset)
         expected_list_of_files = ['dataset.yaml', 'VERSION', 'README',
-                                  'Manifest.yaml', 'binaryData/']
+                                  'binaryData/']
         expected_list_of_files.sort()
         with zipfile.ZipFile(self.target + self.extension, 'r') as zipped_file:
             actual_list_of_files = zipped_file.namelist()

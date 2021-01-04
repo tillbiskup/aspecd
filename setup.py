@@ -16,7 +16,7 @@ setuptools.setup(
     long_description_content_type="text/x-rst",
     author="Till Biskup",
     author_email="till@till-biskup.de",
-    url="https://www.aspecd.de",
+    url="https://www.aspecd.de/",
     project_urls={
         "Documentation": "https://docs.aspecd.de/",
         "Source": "https://github.com/tillbiskup/aspecd",
@@ -36,6 +36,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
         "Intended Audience :: Science/Research",

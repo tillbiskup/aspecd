@@ -65,7 +65,7 @@ class ProcessingStep:
     comment : :class:`str`
         User-supplied comment describing intent, purpose, reason, ...
     dataset : :class:`aspecd.dataset.Dataset`
-        Dataset the analysis step should be performed on
+        Dataset the processing step should be performed on
 
     Raises
     ------
@@ -178,6 +178,22 @@ class ProcessingStep:
 
         Returns `True` by default and needs to be implemented in classes
         inheriting from ProcessingStep according to their needs.
+
+        This is a static method that gets called automatically by each class
+        inheriting from :class:`aspecd.processing.ProcessingStep`. Hence,
+        if you need to override it in your own class, make the method static
+        as well. An example of an implementation testing for two-dimensional
+        data is given below::
+
+            @staticmethod
+            def applicable(dataset):
+                return len(dataset.data.axes) == 2
+
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset to check
 
         Returns
         -------
