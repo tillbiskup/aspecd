@@ -239,9 +239,10 @@ performed. For details, see the documentation of the respective task subclass.
 
 
 .. todo::
-    There is a number of things that are not yet implemented, but required
-    for a working recipe-driven data analysis that follows good practice
-    for reproducible research. This includes (but may not be limited to):
+    There is a number of things that are not yet implemented, but highly
+    recommended for a working recipe-driven data analysis that follows good
+    practice for reproducible research. This includes (but may not be
+    limited to):
 
       * Parser for recipes performing a static analysis of their syntax.
         Useful particulary for larger datasets and/or longer lists of tasks.

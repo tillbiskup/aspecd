@@ -20,6 +20,8 @@ Available modules
     Annotate datasets
 :mod:`aspecd.plotting`
     Plot data in datasets
+:mod:`aspecd.history`
+    Classes collecting information on what has been done to a dataset
 :mod:`aspecd.report`
     General facilities for generating reports
 :mod:`aspecd.tasks`
@@ -31,5 +33,7 @@ Utilities
     Information about the system used
 :mod:`aspecd.utils`
     Basic functionality used by several modules.
+:mod:`aspecd.exceptions`
+    Exceptions for the ASpecD package
 
 """
