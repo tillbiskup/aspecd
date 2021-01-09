@@ -343,6 +343,15 @@ class TestChef(unittest.TestCase):
         self.chef.cook(recipe)
         self.assertIn('system_info', self.chef.history)
 
+    def test_cook_adds_default_package_key_to_history(self):
+        recipe = self.recipe
+        recipe_dict = {'datasets': [self.dataset],
+                       'tasks': [self.analysis_task],
+                       'default_package': 'aspecd'}
+        recipe.from_dict(recipe_dict)
+        self.chef.cook(recipe=recipe)
+        self.assertIn('default_package', self.chef.history)
+
     def test_system_info_value_in_history_is_ordered_dict(self):
         recipe = self.recipe
         self.chef.cook(recipe)
