@@ -617,8 +617,6 @@ class Recipe:
                 if isinstance(self.results[identifier],
                               aspecd.dataset.Dataset):
                     matching_datasets.append(self.results[identifier])
-                    identifiers.remove(identifier)
-                    break
         return matching_datasets
 
 
@@ -912,8 +910,7 @@ class Task(aspecd.utils.ToDictMixin):
         if not self.recipe:
             raise aspecd.exceptions.MissingRecipeError
         if not self.apply_to:
-            for dataset in self.recipe.datasets:
-                self.apply_to.append(self.recipe.datasets[dataset].id)
+            self.apply_to = list(self.recipe.datasets.keys())
         self._perform()
 
     def _perform(self):
@@ -1026,10 +1023,10 @@ class Task(aspecd.utils.ToDictMixin):
                 self.recipe.datasets, self.properties)
             if self.recipe.results:
                 properties = aspecd.utils.replace_value_in_dict(
-                    self.recipe.results, self.properties)
+                    self.recipe.results, properties)
             if self.recipe.figures:
                 properties = aspecd.utils.replace_value_in_dict(
-                    self.recipe.figures, self.properties)
+                    self.recipe.figures, properties)
         else:
             properties = self.properties
         return properties
@@ -1937,6 +1934,7 @@ class ChefDeService:
         """Obtain dict from recipe YAML file."""
         yaml_importer = aspecd.utils.Yaml()
         yaml_importer.read_from(self.recipe_filename)
+        yaml_importer.deserialise_numpy_arrays()
         self._recipe_dict = yaml_importer.dict
 
     def _get_dataset_factory(self):
@@ -1961,6 +1959,7 @@ class ChefDeService:
         self._create_history_filename()
         yaml = aspecd.utils.Yaml()
         yaml.dict = self._chef.history
+        yaml.serialize_numpy_arrays()
         yaml.write_to(self._history_filename)
 
     def _create_history_filename(self):

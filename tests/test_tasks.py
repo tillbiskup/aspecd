@@ -5,6 +5,8 @@ import subprocess
 import unittest
 import datetime
 
+import numpy as np
+
 import aspecd.exceptions
 from aspecd import dataset, io, plotting, processing, report, tasks, utils
 
@@ -509,7 +511,6 @@ class TestTask(unittest.TestCase):
     def test_from_dict_with_apply_to_is_none_does_not_append(self):
         dict_ = {'apply_to': None}
         self.task.from_dict(dict_)
-        print(self.task.apply_to)
         self.assertTrue(isinstance(self.task.apply_to, list))
         self.assertEqual([], self.task.apply_to)
 
@@ -1029,7 +1030,6 @@ class TestSinglePlotTask(unittest.TestCase):
         self.task.recipe = self.recipe
         self.task.perform()
         for file in self.figure_filenames:
-            print(file)
             self.assertTrue(os.path.exists(file))
 
 
@@ -1327,6 +1327,18 @@ class TestChefDeService(unittest.TestCase):
         yaml.dict = recipe_dict
         yaml.write_to(self.recipe_filename)
 
+    def create_recipe_with_numpy_array(self):
+        recipe_dict = {
+            'datasets': ['foo'],
+            'tasks': [{'kind': 'singleplot', 'type': 'SinglePlotter',
+                       'properties': {'filename': self.figure_filename,
+                                      'foo': np.random.random(1)}}],
+        }
+        yaml = utils.Yaml()
+        yaml.dict = recipe_dict
+        yaml.serialize_numpy_arrays()
+        yaml.write_to(self.recipe_filename)
+
     def test_instantiate_class(self):
         pass
 
@@ -1369,6 +1381,14 @@ class TestChefDeService(unittest.TestCase):
 
     def test_written_history_can_be_used_as_recipe(self):
         self.create_recipe()
+        self.history_filename = \
+            self.chef_de_service.serve(recipe_filename=self.recipe_filename)
+        history_filename = \
+            self.chef_de_service.serve(recipe_filename=self.history_filename)
+        os.remove(history_filename)
+
+    def test_written_history_with_numpy_array_can_be_used_as_recipe(self):
+        self.create_recipe_with_numpy_array()
         self.history_filename = \
             self.chef_de_service.serve(recipe_filename=self.recipe_filename)
         history_filename = \

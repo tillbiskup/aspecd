@@ -513,6 +513,8 @@ def replace_value_in_dict(replacement=None, target=None):
 
     """
     for key, value in target.items():
+        if isinstance(value, np.ndarray):
+            continue
         if isinstance(target[key], dict):
             target[key] = replace_value_in_dict(replacement, target[key])
         elif isinstance(target[key], list):
