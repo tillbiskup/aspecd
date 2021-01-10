@@ -85,7 +85,11 @@ class HistoryRecord(aspecd.utils.ToDictMixin):
             if hasattr(self, key):
                 attribute = getattr(self, key)
                 if key == "date":
-                    self.date = datetime.fromisoformat(value)
+                    if hasattr(datetime, 'fromisoformat'):
+                        self.date = datetime.fromisoformat(value)
+                    else:
+                        self.date = datetime.strptime(value,
+                                                      '%Y-%m-%dT%H:%M:%S.%f')
                 elif hasattr(attribute, 'from_dict'):
                     attribute.from_dict(value)
                 else:
