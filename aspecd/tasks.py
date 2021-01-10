@@ -391,6 +391,13 @@ class Recipe:
 
         If no name for a default package is supplied, "aspecd" is used.
 
+    datasets_source_directory: :class:`str`
+        Root directory for the datasets.
+
+        Needs to be an absolute path, starting with the system-specific file
+        separator. If provided, datasets will be imported relative to this
+        path.
+
     filename : :class:`str`
         Name of the (YAML) file the recipe was loaded from.
 
