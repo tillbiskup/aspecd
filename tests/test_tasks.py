@@ -432,14 +432,20 @@ class TestChef(unittest.TestCase):
     def test_info_key_in_history_contains_correct_start_timestamp(self):
         recipe = self.recipe
         self.chef.cook(recipe)
-        timestamp = datetime.datetime.now().isoformat(timespec='minutes')
+        try:
+            timestamp = datetime.datetime.now().isoformat(timespec='minutes')
+        except TypeError:
+            timestamp = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M')
         self.assertTrue(self.chef.history["info"]["start"].startswith(
             timestamp))
 
     def test_info_key_in_history_contains_correct_end_timestamp(self):
         recipe = self.recipe
         self.chef.cook(recipe)
-        timestamp = datetime.datetime.now().isoformat(timespec='minutes')
+        try:
+            timestamp = datetime.datetime.now().isoformat(timespec='minutes')
+        except TypeError:
+            timestamp = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M')
         self.assertTrue(self.chef.history["info"]["end"].startswith(
             timestamp))
 
