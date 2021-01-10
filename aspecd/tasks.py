@@ -244,6 +244,7 @@ performed. For details, see the documentation of the respective task subclass.
     practice for reproducible research. This includes (but may not be
     limited to):
 
+      * Handling relative paths for datasets in recipes
       * Parser for recipes performing a static analysis of their syntax.
         Useful particulary for larger datasets and/or longer lists of tasks.
 
@@ -869,16 +870,16 @@ class Task(aspecd.utils.ToDictMixin):
         """
         if not dict_:
             raise aspecd.exceptions.MissingDictError
-        for key in dict_:
-            if hasattr(self, key):
+        for key, value in dict_.items():
+            if hasattr(self, key) and value:
                 if isinstance(getattr(self, key), list):
-                    if isinstance(dict_[key], list):
-                        for element in dict_[key]:
+                    if isinstance(value, list):
+                        for element in value:
                             getattr(self, key).append(element)
                     else:
-                        getattr(self, key).append(dict_[key])
+                        getattr(self, key).append(value)
                 else:
-                    setattr(self, key, dict_[key])
+                    setattr(self, key, value)
 
     def perform(self):
         """
