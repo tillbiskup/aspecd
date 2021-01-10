@@ -72,7 +72,7 @@ class TestDatasetExporter(unittest.TestCase):
 class TestDatasetImporterFactory(unittest.TestCase):
     def setUp(self):
         self.factory = io.DatasetImporterFactory()
-        self.source = 'foo'
+        self.source = '/foo'
 
     def test_instantiate_class(self):
         pass
@@ -84,6 +84,12 @@ class TestDatasetImporterFactory(unittest.TestCase):
     def test_get_importer_sets_source_in_importer(self):
         importer = self.factory.get_importer(source=self.source)
         self.assertEqual(self.source, importer.source)
+
+    def test_get_importer_with_relative_source_sets_absolute_path(self):
+        source = 'foo'
+        root_path = os.path.split(os.path.abspath(__file__))[0]
+        importer = self.factory.get_importer(source=source)
+        self.assertEqual(os.path.join(root_path, source), importer.source)
 
     def test_get_importer_without_source_raises(self):
         with self.assertRaises(aspecd.exceptions.MissingSourceError):

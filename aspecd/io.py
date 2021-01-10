@@ -252,6 +252,12 @@ class DatasetImporterFactory:
         case should be implemented in the non-public method
         :meth:`_get_importer` in any package based on the ASpecD framework.
 
+        .. note::
+            Currently, only filenames/paths are supported, and if ``source``
+            does not start with the file separator, the absolute path to the
+            current directory is prepended.
+
+
         Parameters
         ----------
         source : :class:`str`
@@ -278,6 +284,8 @@ class DatasetImporterFactory:
     # noinspection PyMethodMayBeStatic
     # pylint: disable=no-self-use
     def _get_importer(self, source):
+        if not source.startswith(os.pathsep):
+            source = os.path.join(os.path.abspath(os.curdir), source)
         return DatasetImporter(source=source)
 
 
