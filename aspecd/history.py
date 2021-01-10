@@ -89,7 +89,7 @@ class HistoryRecord(aspecd.utils.ToDictMixin):
                         self.date = datetime.fromisoformat(value)
                     else:
                         self.date = datetime.strptime(value,
-                                                      '%Y-%m-%dT%H:%M:%S.%f')
+                                                      '%Y-%m-%d %H:%M:%S.%f')
                 elif hasattr(attribute, 'from_dict'):
                     attribute.from_dict(value)
                 else:
