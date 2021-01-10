@@ -894,7 +894,7 @@ class TestDatasetReference(unittest.TestCase):
 class TestDatasetFactory(unittest.TestCase):
     def setUp(self):
         self.factory = dataset.DatasetFactory()
-        self.source = 'foo'
+        self.source = '/foo'
 
     def test_instantiate_class(self):
         pass

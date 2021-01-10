@@ -15,8 +15,8 @@ class TestRecipe(unittest.TestCase):
     def setUp(self):
         self.recipe = tasks.Recipe()
         self.filename = 'test.yaml'
-        self.dataset = 'foo'
-        self.datasets = ['foo', 'bar']
+        self.dataset = '/foo'
+        self.datasets = ['/foo', '/bar']
         self.task = {'kind': 'processing', 'type': 'ProcessingStep'}
         self.dataset_factory = dataset.DatasetFactory()
         self.dataset_factory.importer_factory = io.DatasetImporterFactory()
@@ -1078,7 +1078,7 @@ class TestReportTask(unittest.TestCase):
     def setUp(self):
         self.task = tasks.ReportTask()
         self.recipe = tasks.Recipe()
-        self.dataset = ['foo']
+        self.dataset = ['/foo']
         self.template = 'test_template.tex'
         self.filename = 'test_report.tex'
         self.result = 'test_report.pdf'
@@ -1130,7 +1130,7 @@ class TestReportTask(unittest.TestCase):
         self.task.perform()
         with open(self.filename) as f:
             read_content = f.read()
-        self.assertEqual(read_content, 'foo')
+        self.assertEqual(read_content, '/foo')
 
     def test_perform_task_compiles_template(self):
         self.prepare_recipe()
