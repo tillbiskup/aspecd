@@ -6,9 +6,13 @@
 ASpecD documentation
 ====================
 
-Welcome! This is the documentation for ASpecD. For general information see its `Homepage <https://www.aspecd.de/>`_.
+Welcome! This is the documentation for ASpecD -- a **framework** for handling **spectroscopic data** focussing on **reproducibility**.
 
-ASpecD is a **framework** for handling **spectroscopic data** focussing on **reproducibility**. In short: Each and every processing step applied to your data will be recorded and can be traced back. Additionally, for each representation of your data (*e.g.*, figures, tables) you can easily follow how the data shown have been processed and where they originate from.
+In short: Each and every processing step applied to your data will be recorded and can be traced back. Additionally, for each representation of your data (*e.g.*, figures, tables) you can easily follow how the data shown have been processed and where they originate from.
+
+What is even better: Actual data processing and analysis no longer requires programming skills, but is as simple as writing a text file summarising all the steps you want to have been performed on your dataset(s) in an organised way. Curious? Have a look at :doc:`recipe-driven data analysis <recipes>`.
+
+For more general information on the ASpecD framework see its `Homepage <https://www.aspecd.de/>`_, and for how to use it, carry on reading.
 
 
 Features
@@ -30,7 +34,7 @@ A list of features, not all implemented yet but aimed at for the first public re
 
 * Report generation using pre-defined templates
 
-* Recipe-driven data analysis, allowing tasks to be performed fully unattended in the background
+* Recipe-driven data analysis, allowing tasks to be performed fully unattended in the background and without programming skills
 
 
 And to make it even more convenient for users and future-proof:

@@ -244,9 +244,8 @@ performed. For details, see the documentation of the respective task subclass.
     practice for reproducible research. This includes (but may not be
     limited to):
 
-      * Handling relative paths for datasets in recipes
       * Parser for recipes performing a static analysis of their syntax.
-        Useful particulary for larger datasets and/or longer lists of tasks.
+        Useful particularly for larger datasets and/or longer lists of tasks.
 
 
 Prerequisites for recipe-driven data analysis
@@ -734,7 +733,11 @@ class Chef:
             self.recipe = recipe
 
     def _prepare_history(self):
-        timestamp = datetime.datetime.now().isoformat(timespec=self._timespec)
+        try:
+            timestamp = datetime.datetime.now().isoformat(
+                timespec=self._timespec)
+        except TypeError:
+            timestamp = datetime.datetime.now().isoformat(sep='T')
         self.history["info"] = {'start': timestamp, 'end': ''}
         system_info = aspecd.system.SystemInfo(self.recipe.default_package)
         self.history["system_info"] = system_info.to_dict()
