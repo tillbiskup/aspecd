@@ -87,7 +87,7 @@ class TestDatasetImporterFactory(unittest.TestCase):
 
     def test_get_importer_with_relative_source_sets_absolute_path(self):
         source = 'foo'
-        root_path = os.path.split(os.path.abspath(__file__))[0]
+        root_path = os.path.abspath(os.curdir)
         importer = self.factory.get_importer(source=source)
         self.assertEqual(os.path.join(root_path, source), importer.source)
 
