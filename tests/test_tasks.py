@@ -307,6 +307,34 @@ class TestChef(unittest.TestCase):
         self.chef.cook(recipe=recipe)
         self.assertTrue(self.chef.recipe.datasets[self.dataset].history)
 
+    def test_cook_recipe_with_multiple_datasets_performs_task(self):
+        recipe = self.recipe
+        recipe_dict = {'datasets': [self.dataset, 'bar'],
+                       'tasks': [self.processing_task]}
+        recipe.from_dict(recipe_dict)
+        self.chef.cook(recipe=recipe)
+        self.assertTrue(self.chef.recipe.datasets[self.dataset].history)
+        self.assertTrue(self.chef.recipe.datasets['bar'].history)
+
+    def test_cook_recipe_with_multiple_datasets_and_empty_apply_to(self):
+        recipe = self.recipe
+        self.processing_task['apply_to'] = []
+        recipe_dict = {'datasets': [self.dataset, 'bar'],
+                       'tasks': [self.processing_task]}
+        recipe.from_dict(recipe_dict)
+        self.chef.cook(recipe=recipe)
+        self.assertTrue(self.chef.recipe.datasets[self.dataset].history)
+        self.assertTrue(self.chef.recipe.datasets['bar'].history)
+
+    def test_cook_recipe_with_processing_task_with_apply_to_performs_task(self):
+        recipe = self.recipe
+        self.processing_task['apply_to'] = self.dataset
+        recipe_dict = {'datasets': [self.dataset],
+                       'tasks': [self.processing_task]}
+        recipe.from_dict(recipe_dict)
+        self.chef.cook(recipe=recipe)
+        self.assertTrue(self.chef.recipe.datasets[self.dataset].history)
+
     def test_cook_recipe_with_analysis_task_performs_task(self):
         recipe = self.recipe
         recipe_dict = {'datasets': [self.dataset],
@@ -471,7 +499,7 @@ class TestTask(unittest.TestCase):
         self.task.from_dict(dict_)
         self.assertEqual(type_, self.task.type)
 
-    def test_from_dict_with_append_to_appends_to_list(self):
+    def test_from_dict_with_apply_to_appends_to_list(self):
         dataset_id = 'foo'
         dict_ = {'apply_to': dataset_id}
         self.task.from_dict(dict_)
