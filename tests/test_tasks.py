@@ -119,6 +119,12 @@ class TestRecipe(unittest.TestCase):
         self.recipe.from_dict(dict_)
         self.assertEqual(self.dataset, self.recipe.datasets[self.dataset].id)
 
+    def test_from_dict_with_dataset_and_source_dir_sets_dataset_id(self):
+        dict_ = {'datasets': ['foo'], 'datasets_source_directory': '/bla/'}
+        self.recipe.dataset_factory = self.dataset_factory
+        self.recipe.from_dict(dict_)
+        self.assertEqual('/bla/foo', self.recipe.datasets['foo'].id)
+
     def test_from_dict_with_multiple_datasets_sets_datasets(self):
         dict_ = {'datasets': self.datasets}
         self.recipe.dataset_factory = self.dataset_factory

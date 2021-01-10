@@ -425,6 +425,7 @@ class Recipe:
         self.dataset_factory = None
         self.task_factory = TaskFactory()
         self.default_package = ''
+        self.datasets_source_directory = ''
         self.filename = ''
 
     def from_dict(self, dict_=None):
@@ -457,6 +458,8 @@ class Recipe:
             raise aspecd.exceptions.MissingTaskFactoryError
         if 'default_package' in dict_:
             self.default_package = dict_["default_package"]
+        if 'datasets_source_directory' in dict_:
+            self.datasets_source_directory = dict_['datasets_source_directory']
         if 'datasets' in dict_:
             for key in dict_['datasets']:
                 self._append_dataset(key)
@@ -465,7 +468,11 @@ class Recipe:
                 self._append_task(key)
 
     def _append_dataset(self, key):
-        dataset = self.dataset_factory.get_dataset(source=key)
+        if self.datasets_source_directory:
+            source = os.path.join(self.datasets_source_directory, key)
+        else:
+            source = key
+        dataset = self.dataset_factory.get_dataset(source=source)
         self.datasets[key] = dataset
 
     def _append_task(self, key):
