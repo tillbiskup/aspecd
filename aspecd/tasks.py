@@ -722,8 +722,12 @@ class Chef:
         for task in self.recipe.tasks:
             task.perform()
             self.history["tasks"].append(task.to_dict())
-        self.history["info"]["end"] = \
-            datetime.datetime.now().isoformat(timespec=self._timespec)
+        try:
+            self.history["info"]["end"] = \
+                datetime.datetime.now().isoformat(timespec=self._timespec)
+        except TypeError:
+            self.history["info"]["end"] = \
+                datetime.datetime.now().isoformat(sep='T')
 
     def _assign_recipe(self, recipe):
         if not recipe:
