@@ -2,6 +2,8 @@
 
 import unittest
 
+import numpy as np
+
 import aspecd.dataset
 import aspecd.exceptions
 import aspecd.history
@@ -91,3 +93,44 @@ class TestProcessingStep(unittest.TestCase):
         history_record = self.processing.create_history_record()
         self.assertTrue(isinstance(history_record,
                                    aspecd.history.ProcessingHistoryRecord))
+
+
+class TestNormalisation(unittest.TestCase):
+    def setUp(self):
+        self.processing = aspecd.processing.Normalisation()
+        self.dataset = aspecd.dataset.Dataset()
+        self.dataset.data.data = np.sin(np.linspace(0, 3*np.pi))*2
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('normalise', self.processing.description.lower())
+
+    def test_is_undoable(self):
+        self.assertTrue(self.processing.undoable)
+
+    def test_normalise_to_maximum(self):
+        self.processing.parameters["kind"] = 'maximum'
+        self.dataset.process(self.processing)
+        np.testing.assert_almost_equal(self.dataset.data.data.max(), 1,
+                                       decimal=2)
+
+    def test_normalise_to_minimum(self):
+        self.processing.parameters["kind"] = 'minimum'
+        self.dataset.process(self.processing)
+        np.testing.assert_almost_equal(self.dataset.data.data.min(), -1,
+                                       decimal=2)
+
+    def test_normalise_to_amplitude(self):
+        self.processing.parameters["kind"] = 'amplitude'
+        self.dataset.process(self.processing)
+        np.testing.assert_almost_equal(self.dataset.data.data.max()
+                                       - self.dataset.data.data.min(), 1,
+                                       decimal=2)
+
+    def test_normalise_to_area(self):
+        self.processing.parameters["kind"] = 'area'
+        self.dataset.process(self.processing)
+        np.testing.assert_almost_equal(np.sum(self.dataset.data.data), 1,
+                                       decimal=2)

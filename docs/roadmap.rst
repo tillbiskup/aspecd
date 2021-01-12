@@ -18,9 +18,15 @@ For version 0.1
 For later versions
 ==================
 
+* Basic processing and analysis steps, such as baseline correction, normalisation, integration, algebra, slice extraction and projection for N-D datasets, peak finding, SNR determination, denoising
+
 * Templates for creating derived packages
 
 * Default report templates for each type of processing/analysis task
+
+* Logging
+
+* Tabular representations of characteristics extracted from datasets
 
 
 Todos

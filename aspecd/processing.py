@@ -20,6 +20,8 @@ in context of recipe-driven data analysis (for details, see the
 :mod:`aspecd.tasks` module).
 
 """
+import numpy as np
+
 import aspecd.exceptions
 import aspecd.history
 import aspecd.utils
@@ -40,6 +42,20 @@ class ProcessingStep:
     Further things that need to be changed upon inheriting from this class
     are the string stored in ``description``, being basically a one-liner,
     and the flag ``undoable`` if necessary.
+
+    .. admonition:: When is a processing step undoable?
+
+        Sometimes, the question arises what distinguishes an undoable
+        processing step from one that isn't, particularly in light of having
+        the original data stored in the dataset.
+
+        One simple case of a processing step that cannot easily be undone and
+        *redone* afterwards (undo needs always to be thought in light of an
+        inverting redo) is adding data of two datasets together. From the
+        point of view of the single dataset, the other dataset is not
+        accessible. Therefore, such a step is undoable (subtracting two
+        datasets as well, of course).
+
 
     The actual implementation of the processing step is done in the private
     method :meth:`_perform_task` that in turn gets called by :meth:`process`
@@ -221,3 +237,52 @@ class ProcessingStep:
         called by :meth:`self.processing` after some background checks.
 
         """
+
+
+class Normalisation(ProcessingStep):
+    """
+    Normalise data.
+
+    There are different kinds of normalising data:
+
+    * maximum
+    * minimum
+    * amplitude
+    * area
+
+    You can set these kinds using the attribute :attr:`parameters["kind"]`.
+
+    .. todo::
+        Handle noisy data, at least for normalising to maximum, minimum,
+        and amplitude.
+
+    Attributes
+    ----------
+    parameters["kind"] : :class:`str`
+        Kind of normalisation to use
+
+        Valid values: "maximum", "minimum", "amplitude", "area"
+
+        Note that the first three can be abbreviated, everything containing
+        "max", "min", "amp" will be understood respectively.
+
+        Defaults to "maximum"
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.undoable = True
+        self.description = 'Normalise data'
+        self.parameters["kind"] = 'maximum'
+
+    def _perform_task(self):
+        if "max" in self.parameters["kind"].lower():
+            self.dataset.data.data /= self.dataset.data.data.max()
+        elif "min" in self.parameters["kind"].lower():
+            self.dataset.data.data /= self.dataset.data.data.min()
+        elif "amp" in self.parameters["kind"].lower():
+            self.dataset.data.data /= (self.dataset.data.data.max() -
+                                       self.dataset.data.data.min())
+        elif "area" in self.parameters["kind"].lower():
+            self.dataset.data.data /= np.sum(self.dataset.data.data)
