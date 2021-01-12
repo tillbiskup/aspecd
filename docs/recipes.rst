@@ -8,9 +8,39 @@ Recipe-driven data analysis
 
 Recipes have been briefly introduced already with the concept of :ref:`tasks <tasks>`. However, the idea of recipe-driven data analysis is a bit more complex, and this page will provide more details, although still on a rather abstract level. Those readers interested in actually implementing recipe-driven data analysis are referred to the documentation of the :mod:`aspecd.tasks` module.
 
+
+Data analysis without programming
+=================================
+
 Basically, recipe-driven data analysis can be thought of a special type of user interface to the ASpecD framework and derived packages. The normal user of such package has a clear idea how to process and analyse data, but is not necessarily interested in actually programming a lot. Furthermore, reproducible science requires the history of each and every processing and analysis step to be recorded and stored in a way that can be used and understood long after the steps have been carried out (think of decades rather than weeks or months).
 
 From the user's perspective, all that is required is a human-writable file format and a list of datasets followed by a list of tasks to be performed on these datasets. For each task, the user will want to provide all necessary parameters. Eventually, the user is providing the metadata of the data analysis. Introducing the metaphor of recipe and cook prevents multiple meanings of the term "metadata" and the confusion this might cause. A recipe is a list of datasets and tasks to perform on them. Such recipe is processed by a cook. This is the origin of the term "recipe-driven data analysis".
+
+So, how does it look like? Consider the following example:
+
+
+.. code-block:: yaml
+
+    datasets:
+      - /path/to/first/dataset
+      - /path/to/second/dataset
+
+    tasks:
+      - kind: processing
+        type: SubtractBaseline
+        properties:
+          parameters:
+            kind: polynomial
+            order: 0
+      - kind: singleplot
+        type: SinglePlotter
+        properties:
+          filename:
+            - first-dataset.pdf
+            - second-dataset.pdf
+
+
+Admittedly, that's a rather primitive recipe, only loading two datasets, performing a zeroth-order polynomial baseline correction, and afterwards plotting each of them separately. However, it should suffice to have you get the gist.
 
 
 Reproducible and automated
@@ -35,6 +65,8 @@ Fully unattended
 Recipe-driven data analysis is carried out fully unattended (*i.e.*, non-interactive). This allows to use it in context of separate hardware and a scheduling system. Situations particularly benefiting from this approach are either many datasets that need to be processed all in the same way, or few datasets requiring expensive processing such as simulation and fitting. The latter is even more true in context of global fitting and/or sampling of different starting parameters, such as Monte-Carlo or Latin-Hypercube sampling approaches.
 
 Furthermore, this approach allows to decouple the place the actual data processing will take place from the input. Think of containerisation (*e.g.*, `docker <https://www.docker.com/>`_) where the actual packages derived from ASpecD are located in a container that is self-contained and could basically even be shared with others [#fn1]_. Particularly in case of the above-mentioned long-running fitting tasks, having the data analysis run not on the personal computer, but on some server somewhere.
+
+Of course, there are many aspects of data processing and analysis that eventually do need some interaction. Nevertheless, recipe-driven data analysis can be used here as well, as this simply means that you create a recipe resulting in (graphically) representing the data for visual inspection. Furthermore, you can make recipes systematically vary parameters and represent the results as well. While truly interactively varying parameters and judging the result in real time may be tempting, a more systematic and uniform approach encouraged by using recipes often turns out to be the better choice, notwithstanding the fact that you get a full reproducibility for free this way.
 
 
 History

@@ -12,21 +12,72 @@ Before you start
 
 ASpecD is all about reproducible data analysis, hence more `reproducible and reliable science <https://www.reproducible-research.de/>`_. Therefore, before you start writing your own applications based on the ASpecD framework, make sure to have a minimal infrastructure available and use it for your developments. Without a version control system (VCS) and a scheme for version numbers that you follow thoroughly, fundamental aspects of the ASpecD framework simply won't work. Additionally, do choose an appropriate license for your program. After all, the time frame of reproducibility is not the typical length of a PhD thesis, but rather decades.
 
+If you have experience already with version control systems and version numbering schemes, go ahead with what you are familiar with. However, if you fancy some hints what to use, here are our suggestions:
+
+  * Version control system: `git <https://git-scm.com/>`_
+  * Version numbering scheme: `SemVer <https://semver.org/>`_
+
+This is what ASpecD is developed with and what it uses -- for good reasons.
+
 
 How to start
 ============
 
 Applications based on the ASpecD framework should be Python packages following the standards laid out by the `Python Packaging Authority (PyPA) <https://www.pypa.io/>`_ in their `Python Packaging User Guide <https://python-packaging-user-guide.readthedocs.io/>`_.
 
-Generally, you will probably start off with deciding about a name for your application, creating a basic directory structure and a Python virtual environment for your package, and installing the ASpecD framework [#aspecd_availability]_ (and your package) within this virtual environment. In a terminal, you may type something like the following commands::
+Generally, you will probably start off with deciding about a name for your application. Names, particularly for programs and packages, need care in choosing. It is a good idea to check the `Python Package Index <https://pypi.org/>`_ for similar packages and possible name clashes, in case you plan to eventually publish your package there (always a good idea to keep in mind).
 
-  python3 -m venv my_package_venv
-  source my_package_venv/bin/activate
-  pip install aspecd
 
-Make sure to install your package in an editable fashion, using the ``-e`` switch of the ``pip`` command::
+.. hint::
 
-  pip install -e my_package
+    For the sake of argument, we will choose the name "**spectro**" for the hypothetic new package here. Of course, you will never choose this name for an actual package, as it is pretty meaningless. Hence, a good choice here...
+
+
+Having decided upon a name for your new package, continue by creating a basic directory structure and a Python virtual environment for your package, and installing the ASpecD framework [#aspecd_availability]_ (and your package) within this virtual environment. The basic directory structure of your new package may look like follows:
+
+.. code-block::
+
+    spectro
+    ├── docs
+    ├── spectro
+    │   ├── __init__.py
+    │   ├── analysis.py
+    │   ├── dataset.py
+    │   ├── io.py
+    │   ├── metadata.py
+    │   ├── plotting.py
+    │   └── processing.py
+    ├── tests
+    │   ├── test_analysis.py
+    │   ├── test_dataset.py
+    │   ├── test_io.py
+    │   ├── test_metadata.py
+    │   ├── test_plotting.py
+    │   └── test_processing.py
+    ├── LICENSE
+    ├── README.rst
+    ├── Requirements.txt
+    ├── setup.py
+    └── VERSION
+
+
+Directories and files should be pretty self-explaining. If in doubt, consult the `Python Packaging Authority (PyPA) <https://www.pypa.io/>`_ and their `Python Packaging User Guide <https://python-packaging-user-guide.readthedocs.io/>`_ or have a look at the `ASpecD source code <https://github.com/tillbiskup/aspecd/>`_.
+
+To create the virtual environment and install ASpecD and your package, open a terminal and type something like the following commands:
+
+.. code-block:: bash
+
+    python3 -m venv spectro_venv
+    source spectro_venv/bin/activate
+    pip install aspecd
+
+
+Make sure to install your package in an editable fashion, using the ``-e`` switch of the ``pip`` command:
+
+.. code-block:: bash
+
+    pip install -e spectro
+
 
 With this, you should be ready to start developing your application.
 
@@ -121,9 +172,6 @@ All your metadata classes share this very same method, as long as they are based
 
 .. note::
   The ``from_dict()`` method is rather forgiving, only copying those values of the dict to the corresponding metadata object that are attributes of the object, and neither caring about additional keys in the dictionary nor additional attributes in the object. Therefore, it is your sole responsibility to check that the metadata contained in the dictionary and your metadata classes have corresponding keys/attributes.
-
-.. todo::
-  Should the metadata classes go into the dataset module (in the ASpecD framework as well), or should this be a separate module? At least in applications based on the ASpecD framework, having it in the dataset module seems more sensible, as there is otherwise not much content.
 
 
 Comments
