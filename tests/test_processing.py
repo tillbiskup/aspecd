@@ -99,7 +99,7 @@ class TestNormalisation(unittest.TestCase):
     def setUp(self):
         self.processing = aspecd.processing.Normalisation()
         self.dataset = aspecd.dataset.Dataset()
-        self.dataset.data.data = np.sin(np.linspace(0, 3*np.pi))*2
+        self.dataset.data.data = np.sin(np.linspace(0, 3*np.pi, num=500))*2
 
     def test_instantiate_class(self):
         pass
@@ -113,24 +113,50 @@ class TestNormalisation(unittest.TestCase):
     def test_normalise_to_maximum(self):
         self.processing.parameters["kind"] = 'maximum'
         self.dataset.process(self.processing)
-        np.testing.assert_almost_equal(self.dataset.data.data.max(), 1,
-                                       decimal=2)
+        self.assertEqual(1, self.dataset.data.data.max())
 
     def test_normalise_to_minimum(self):
         self.processing.parameters["kind"] = 'minimum'
         self.dataset.process(self.processing)
         np.testing.assert_almost_equal(self.dataset.data.data.min(), -1,
-                                       decimal=2)
+                                       decimal=4)
 
     def test_normalise_to_amplitude(self):
         self.processing.parameters["kind"] = 'amplitude'
         self.dataset.process(self.processing)
         np.testing.assert_almost_equal(self.dataset.data.data.max()
                                        - self.dataset.data.data.min(), 1,
-                                       decimal=2)
+                                       decimal=4)
 
     def test_normalise_to_area(self):
         self.processing.parameters["kind"] = 'area'
         self.dataset.process(self.processing)
-        np.testing.assert_almost_equal(np.sum(self.dataset.data.data), 1,
-                                       decimal=2)
+        np.testing.assert_almost_equal(np.sum(np.abs(
+            self.dataset.data.data)), 1, decimal=4)
+
+    def test_normalise_to_maximum_2d(self):
+        self.processing.parameters["kind"] = 'maximum'
+        self.dataset.data.data = np.random.random([10, 10])
+        self.dataset.process(self.processing)
+        self.assertEqual(1, self.dataset.data.data.max())
+
+    def test_normalise_to_minimum_2d(self):
+        self.processing.parameters["kind"] = 'minimum'
+        self.dataset.data.data = np.random.random([10, 10])
+        self.dataset.process(self.processing)
+        self.assertEqual(1, self.dataset.data.data.min())
+
+    def test_normalise_to_amplitude_2d(self):
+        self.processing.parameters["kind"] = 'amplitude'
+        self.dataset.data.data = np.random.random([10, 10])
+        self.dataset.process(self.processing)
+        np.testing.assert_almost_equal(self.dataset.data.data.max()
+                                       - self.dataset.data.data.min(), 1,
+                                       decimal=4)
+
+    def test_normalise_to_area_2d(self):
+        self.processing.parameters["kind"] = 'area'
+        self.dataset.data.data = np.random.random([10, 10])
+        self.dataset.process(self.processing)
+        np.testing.assert_almost_equal(np.sum(np.abs(
+            self.dataset.data.data)), 1, decimal=4)

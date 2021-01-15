@@ -18,7 +18,7 @@ For version 0.1
 For later versions
 ==================
 
-* Basic processing and analysis steps, such as baseline correction, normalisation, integration, algebra, slice extraction and projection for N-D datasets, peak finding, SNR determination, denoising
+* Basic processing and analysis steps, such as baseline correction, normalisation, integration, differentiation, algebra (both scalar and with datasets), slice extraction and projection for N-D datasets, peak finding, SNR determination, denoising, filtering, noise
 
 * Templates for creating derived packages
 

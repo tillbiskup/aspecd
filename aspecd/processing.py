@@ -246,15 +246,35 @@ class Normalisation(ProcessingStep):
     There are different kinds of normalising data:
 
     * maximum
+
+      Data are divided by their maximum value
+
     * minimum
+
+      Data are divided by their minimum value
+
     * amplitude
+
+      Data are divided by the difference between their maximum and minimum
+
     * area
 
+      Data are divided by the sum of their *absolute* values
+
     You can set these kinds using the attribute :attr:`parameters["kind"]`.
+
+    .. important::
+        Before normalising your data, make sure they have a proper baseline,
+        as otherwise, your normalisation will lead to strange results.
+
 
     .. todo::
         Handle noisy data, at least for normalising to maximum, minimum,
         and amplitude.
+
+    .. todo::
+        How to handle noisy data in case of area normalisation, as this would
+        probably account for double the noise if simply taking the absolute?
 
     Attributes
     ----------
@@ -285,4 +305,4 @@ class Normalisation(ProcessingStep):
             self.dataset.data.data /= (self.dataset.data.data.max() -
                                        self.dataset.data.data.min())
         elif "area" in self.parameters["kind"].lower():
-            self.dataset.data.data /= np.sum(self.dataset.data.data)
+            self.dataset.data.data /= np.sum(np.abs(self.dataset.data.data))
