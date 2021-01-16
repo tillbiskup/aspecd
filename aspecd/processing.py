@@ -20,6 +20,8 @@ in context of recipe-driven data analysis (for details, see the
 :mod:`aspecd.tasks` module).
 
 """
+import operator
+
 import numpy as np
 
 import aspecd.exceptions
@@ -371,3 +373,123 @@ class Differentiation(ProcessingStep):
             self.dataset.data.data = \
                 np.concatenate((self.dataset.data.data,
                                 self.dataset.data.data[:, [-1]]), axis=1)
+
+
+class ScalarAlgebra(ProcessingStep):
+    """Perform scalar algebraic operation on one dataset.
+
+    To compare datasets (by eye), it might be useful to adapt its intensity
+    by algebraic operations. Adding, subtracting, multiplying and dividing
+    are implemented here.
+
+    Attributes
+    ----------
+    parameters["kind"] : :class:`str`
+        Kind of scalar algebra to use
+
+        Valid values: "plus", "minus", "times", "by", "add", "subtract",
+        "multiply", "divide", "+", "-", "*", "/"
+
+    parameters["value"] : :class:`float`
+        Parameter of the scalar algebraic operation
+
+        Default value: 1
+
+    Raises
+    ------
+    ValueError
+        Raised if no or wrong kind is provided
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.undoable = True
+        self.description = 'Perform scalar algebra on one dataset.'
+        self.parameters['kind'] = None
+        self.parameters['value'] = 1
+        self._kinds = {
+            'plus': operator.add,
+            'add': operator.add,
+            '+': operator.add,
+            'minus': operator.sub,
+            'subtract': operator.sub,
+            '-': operator.sub,
+            'times': operator.mul,
+            'multiply': operator.mul,
+            '*': operator.mul,
+            'by': operator.truediv,
+            'divide': operator.truediv,
+            '/': operator.truediv
+        }
+
+    def _perform_task(self):
+        if not self.parameters['kind']:
+            raise ValueError('No kind of scalar operation given')
+        if self.parameters['kind'].lower() not in self._kinds:
+            raise ValueError('Scalar operation "%s" not understood'
+                             % self.parameters['kind'])
+        operator_ = self._kinds[self.parameters['kind'].lower()]
+        self.dataset.data.data = operator_(self.dataset.data.data,
+                                           self.parameters['value'])
+
+
+class Projection(ProcessingStep):
+    """
+    Project data, i.e. reduce dimensions along one axis.
+
+    There is many reasons to project along one axis, if nothing else
+    increasing signal-to-noise ratio if multiple scans have been recorded as
+    2D dataset.
+
+    Attributes
+    ----------
+    parameters["axis"] : :class:`str`
+        Axis to average along
+
+        Default value: 0
+
+    Raises
+    ------
+    aspecd.exceptions.ProcessingNotApplicableToDatasetError
+        Raised if dataset has not enough dimensions
+
+    IndexError
+        Raised if axis is out of bounds for given dataset
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.undoable = True
+        self.description = \
+            'Project data, i.e. reduce dimensions along one axis.'
+        self.parameters['axis'] = 0
+
+    @staticmethod
+    def applicable(dataset):
+        """
+        Check whether processing step is applicable to the given dataset.
+
+        Projection is only applicable to datasets with data of at least two
+        dimensions.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset to check
+
+        Returns
+        -------
+        applicable : :class:`bool`
+            `True` if successful, `False` otherwise.
+
+        """
+        return len(dataset.data.axes) > 2
+
+    def _perform_task(self):
+        if self.parameters['axis'] > self.dataset.data.data.ndim-1:
+            raise IndexError("Axis %i out of bounds" % self.parameters['axis'])
+        self.dataset.data.data = np.average(self.dataset.data.data,
+                                            axis=self.parameters['axis'])
+        del self.dataset.data.axes[self.parameters['axis']+1]
