@@ -13,6 +13,23 @@ class Error(Exception):
     """Base class for exceptions in this module."""
 
 
+class MissingParameterError(Error):
+    """Exception raised when a necessary parameter is missing.
+
+    Specify the parameter in the message, to give users a hint what went wrong.
+
+    Attributes
+    ----------
+    message : :class:`str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
 class MissingPlotterError(Error):
     """Exception raised when no plotter is provided.
 

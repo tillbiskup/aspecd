@@ -20,6 +20,7 @@ An alphabetic list of the submodules available within the ASpecD framework. The 
    aspecd.infofile
    aspecd.io
    aspecd.metadata
+   aspecd.model
    aspecd.plotting
    aspecd.processing
    aspecd.report
