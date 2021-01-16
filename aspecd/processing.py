@@ -1,6 +1,14 @@
 """
 Data processing functionality.
 
+.. sidebar:: Processing vs. analysis steps
+
+    The key difference between processing and analysis steps: While a
+    processing step *modifies* the data of the dataset it operates on,
+    an analysis step returns a result based on data of a dataset, but leaves
+    the original dataset unchanged.
+
+
 Key to reproducible science is automatic documentation of each processing
 step applied to the data of a dataset. Such a processing step each is
 self-contained, meaning it contains every necessary information to perform
@@ -12,12 +20,97 @@ but change its data. The information necessary to reproduce each processing
 step gets added to the :attr:`aspecd.dataset.Dataset.history` attribute of a
 dataset.
 
+The module contains both, a base class for processing steps (
+:class:`aspecd.processing.ProcessingStep`) as well as a series of generally
+applicable processing steps for all kinds of spectroscopic data. The latter
+are an attempt to relieve the developers of packages derived from the ASpecD
+framework from the task to reinvent the wheel over and over again.
+
+
+Base class for processing steps
+===============================
+
 Each real processing step should inherit from
 :class:`aspecd.processing.ProcessingStep` as documented there. Furthermore,
-each processing step should be contained in one module named "processing".
+all processing steps should be contained in one module named "processing".
 This allows for easy automation and replay of processing steps, particularly
 in context of recipe-driven data analysis (for details, see the
 :mod:`aspecd.tasks` module).
+
+A few hints on writing own processing step classes:
+
+* Always inherit from :class:`aspecd.processing.ProcessingStep`.
+
+* Store all parameters, implicit and explicit, in the dict ``parameters`` of
+  the :class:`aspecd.processing.ProcessingStep` class, *not* in separate
+  properties of the class. Only this way, you can ensure full
+  reproducibility and compatibility of recipe-driven data analysis (for
+  details, see the :mod:`aspecd.tasks` module).
+
+* Always set the ``description`` property to a sensible value.
+
+* Always set the ``undoable`` property appropriately. In most cases,
+  processing steps can be undone.
+
+* Implement the actual processing in the ``_perform_task`` method of the
+  processing step.
+
+* Make sure to implement the
+  :meth:`aspecd.processing.ProcessingStep.applicable` method according to your
+  needs. Typical cases would be to check for the dimensionality of the
+  underlying data, as some processing steps may work only for 1D data (or
+  vice versa). Don't forget to declare this as a static method, using the
+  ``@staticmethod`` decorator.
+
+For further advice, consult the source code of this module, and have a look
+at the concrete processing steps whose purpose is described below in more
+detail.
+
+
+Concrete processing steps
+=========================
+
+Besides providing the basis for processing steps for the ASpecD framework,
+ensuring full reproducibility and traceability, hence reproducible science
+and good scientific practice, this module comes with a (growing) number of
+general-purpose processing steps useful for basically all kinds of
+spectroscopic data.
+
+Here is a list as a first overview. For details, see the detailed
+documentation of each of the classes, readily accessible by the link.
+
+* :class:`aspecd.processing.Normalisation`
+
+  Normalise data.
+
+  There are different kinds of normalising data: maximum, minimum,
+  amplitude, area
+
+* :class:`aspecd.processing.Integration`
+
+  Integrate data
+
+* :class:`aspecd.processing.Differentiation`
+
+  Differentiate data, *i.e.*, return discrete first derivative
+
+* :class:`aspecd.processing.ScalarAlgebra`
+
+  Perform scalar algebraic operation on one dataset.
+
+  Operations available: add, subtract, multiply, divide (by given scalar)
+
+* :class:`aspecd.processing.Projection`
+
+  Project data, *i.e.* reduce dimensions along one axis.
+
+* :class:`aspecd.processing.SliceExtraction`
+
+  Extract slice along one dimension from dataset.
+
+
+Module documentation
+====================
 
 """
 import operator
@@ -340,7 +433,7 @@ class Integration(ProcessingStep):
 
 class Differentiation(ProcessingStep):
     """
-    Differentiate data, i.e., return discrete first derivative
+    Differentiate data, *i.e.*, return discrete first derivative
 
     Currently, the data are differentiated using the :func:`numpy.diff`
     function. This may change in the future, and you may be able to choose
@@ -436,7 +529,7 @@ class ScalarAlgebra(ProcessingStep):
 
 class Projection(ProcessingStep):
     """
-    Project data, i.e. reduce dimensions along one axis.
+    Project data, *i.e.* reduce dimensions along one axis.
 
     There is many reasons to project along one axis, if nothing else
     increasing signal-to-noise ratio if multiple scans have been recorded as
