@@ -118,21 +118,19 @@ class TestNormalisation(unittest.TestCase):
     def test_normalise_to_minimum(self):
         self.processing.parameters["kind"] = 'minimum'
         self.dataset.process(self.processing)
-        np.testing.assert_almost_equal(self.dataset.data.data.min(), -1,
-                                       decimal=4)
+        self.assertAlmostEqual(-1, self.dataset.data.data.min(), 4)
 
     def test_normalise_to_amplitude(self):
         self.processing.parameters["kind"] = 'amplitude'
         self.dataset.process(self.processing)
-        np.testing.assert_almost_equal(self.dataset.data.data.max()
-                                       - self.dataset.data.data.min(), 1,
-                                       decimal=4)
+        self.assertAlmostEqual(1, self.dataset.data.data.max() -
+                               self.dataset.data.data.min(), 4)
 
     def test_normalise_to_area(self):
         self.processing.parameters["kind"] = 'area'
         self.dataset.process(self.processing)
-        np.testing.assert_almost_equal(np.sum(np.abs(
-            self.dataset.data.data)), 1, decimal=4)
+        # noinspection PyTypeChecker
+        self.assertAlmostEqual(1, np.sum(np.abs(self.dataset.data.data)), 4)
 
     def test_normalise_to_maximum_2d(self):
         self.processing.parameters["kind"] = 'maximum'
@@ -150,13 +148,77 @@ class TestNormalisation(unittest.TestCase):
         self.processing.parameters["kind"] = 'amplitude'
         self.dataset.data.data = np.random.random([10, 10])
         self.dataset.process(self.processing)
-        np.testing.assert_almost_equal(self.dataset.data.data.max()
-                                       - self.dataset.data.data.min(), 1,
-                                       decimal=4)
+        self.assertAlmostEqual(1, self.dataset.data.data.max() -
+                               self.dataset.data.data.min(), 4)
 
     def test_normalise_to_area_2d(self):
         self.processing.parameters["kind"] = 'area'
         self.dataset.data.data = np.random.random([10, 10])
         self.dataset.process(self.processing)
-        np.testing.assert_almost_equal(np.sum(np.abs(
-            self.dataset.data.data)), 1, decimal=4)
+        # noinspection PyTypeChecker
+        self.assertAlmostEqual(1, np.sum(np.abs(self.dataset.data.data)), 4)
+
+
+class TestIntegration(unittest.TestCase):
+    def setUp(self):
+        self.processing = aspecd.processing.Integration()
+        self.dataset = aspecd.dataset.Dataset()
+        self.dataset.data.data = np.sin(np.linspace(0, 2*np.pi, num=500))
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('integrate', self.processing.description.lower())
+
+    def test_is_undoable(self):
+        self.assertTrue(self.processing.undoable)
+
+    def test_integrate_returns_only_positive_values(self):
+        self.dataset.process(self.processing)
+        self.assertAlmostEqual(0, np.min(self.dataset.data.data))
+
+    def test_integrate_2D_dataset(self):
+        self.dataset.data.data = np.tile(self.dataset.data.data, (5, 1))
+        self.dataset.process(self.processing)
+        self.assertAlmostEqual(0, np.min(self.dataset.data.data))
+
+
+class TestDifferentiation(unittest.TestCase):
+    def setUp(self):
+        self.processing = aspecd.processing.Differentiation()
+        self.dataset = aspecd.dataset.Dataset()
+        xdata = np.linspace(0, 2*np.pi, num=500)
+        self.dataset.data.data = np.sin(xdata)*np.sin(xdata)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('differentiate', self.processing.description.lower())
+
+    def test_is_undoable(self):
+        self.assertTrue(self.processing.undoable)
+
+    def test_differentiate_returns_symmetric_spectrum(self):
+        self.dataset.process(self.processing)
+        self.assertAlmostEqual(-np.min(self.dataset.data.data),
+                               np.max(self.dataset.data.data))
+
+    def test_differentiate_returns_spectrum_of_same_length_as_original(self):
+        original_data = self.dataset.data.data
+        self.dataset.process(self.processing)
+        self.assertEqual(len(original_data), len(self.dataset.data.data))
+
+    def test_integrate_2D_dataset(self):
+        self.dataset.data.data = np.tile(self.dataset.data.data, (5, 1))
+        self.dataset.process(self.processing)
+        self.assertAlmostEqual(-np.min(self.dataset.data.data),
+                               np.max(self.dataset.data.data))
+
+    def test_differentiate_2D_dataset_retains_shape(self):
+        self.dataset.data.data = np.tile(self.dataset.data.data, (5, 1))
+        original_data = self.dataset.data.data
+        self.dataset.process(self.processing)
+        self.assertEqual(np.shape(original_data),
+                         np.shape(self.dataset.data.data))

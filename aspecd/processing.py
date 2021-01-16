@@ -267,6 +267,9 @@ class Normalisation(ProcessingStep):
         Before normalising your data, make sure they have a proper baseline,
         as otherwise, your normalisation will lead to strange results.
 
+    .. note::
+        Normalisation can be used for N-D data as well. In this case,
+        the data as a whole are normalised accordingly.
 
     .. todo::
         Handle noisy data, at least for normalising to maximum, minimum,
@@ -306,3 +309,65 @@ class Normalisation(ProcessingStep):
                                        self.dataset.data.data.min())
         elif "area" in self.parameters["kind"].lower():
             self.dataset.data.data /= np.sum(np.abs(self.dataset.data.data))
+
+
+class Integration(ProcessingStep):
+    """
+    Integrate data
+
+    Currently, the data are integrated using the :func:`numpy.cumsum`
+    function. This may change in the future, and you may be able to choose
+    between different algorithms. A potential candidate would be using FFT/IFFT
+    and performing the operation in Fourier space.
+
+    .. note::
+        N-D arrays can be integrated as well. In this case,
+        :func:`np.cumsum` will operate on the last axis.
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.undoable = True
+        self.description = 'Integrate data'
+
+    def _perform_task(self):
+        dim = np.ndim(self.dataset.data.data)
+        self.dataset.data.data = np.cumsum(self.dataset.data.data, axis=dim-1)
+
+
+class Differentiation(ProcessingStep):
+    """
+    Differentiate data, i.e., return discrete first derivative
+
+    Currently, the data are differentiated using the :func:`numpy.diff`
+    function. This may change in the future, and you may be able to choose
+    between different algorithms. A potential candidate would be using FFT/IFFT
+    and performing the operation in Fourier space.
+
+    .. important::
+        As using :func:`numpy.diff` results in a vector being one element
+        shorter than the original vector, here, the last element of the
+        resulting vector is appended to the result, thus being doubled.
+
+    .. note::
+        N-D arrays can be integrated as well. In this case,
+        :func:`np.diff` will operate on the last axis.
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.undoable = True
+        self.description = 'Differentiate data'
+
+    def _perform_task(self):
+        self.dataset.data.data = np.diff(self.dataset.data.data)
+        if self.dataset.data.data.ndim == 1:
+            self.dataset.data.data = \
+                np.concatenate((self.dataset.data.data,
+                                self.dataset.data.data[-1]), axis=None)
+        else:
+            self.dataset.data.data = \
+                np.concatenate((self.dataset.data.data,
+                                self.dataset.data.data[:, [-1]]), axis=1)
