@@ -14,11 +14,17 @@ For version 0.1
 
 * Plotter: Handle multiple axes (cwepr:GoniometerPlotter)
 
+* Plotter: Handle (cascaded) properties for all parts of a plot
+
+* Models as classes returning calculated datasets for given coefficients and variables
+
+  Come in quite handy if one wants to obtain, say, the values of a polynomial for given coefficients, to plot it together with other data. Can (and will) be generalised to many more models, eventually probably becoming a base for simulations of all kinds. Will be quite useful for testing purposes as well.
+
 
 For later versions
 ==================
 
-* Basic processing and analysis steps, such as baseline correction, normalisation, integration, differentiation, algebra (both scalar and with datasets), slice extraction and projection for N-D datasets, peak finding, SNR determination, denoising, filtering, noise
+* Remaining basic processing and analysis steps, such as baseline correction, algebra with datasets, slice extraction for >2D datasets, averaging (over parts of axis) for N-D datasets, peak finding, SNR determination, denoising, filtering, noise
 
 * Templates for creating derived packages
 

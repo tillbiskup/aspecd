@@ -444,7 +444,7 @@ class Projection(ProcessingStep):
 
     Attributes
     ----------
-    parameters["axis"] : :class:`str`
+    parameters["axis"] : :class:`int`
         Axis to average along
 
         Default value: 0
@@ -492,4 +492,87 @@ class Projection(ProcessingStep):
             raise IndexError("Axis %i out of bounds" % self.parameters['axis'])
         self.dataset.data.data = np.average(self.dataset.data.data,
                                             axis=self.parameters['axis'])
+        del self.dataset.data.axes[self.parameters['axis']+1]
+
+
+class SliceExtraction(ProcessingStep):
+    """
+    Extract slice along one dimension from dataset.
+
+    With multidimensional datasets, there are use cases where you would like
+    to operate only on a slice along a particular axis. One example may be
+    to compare first and last trace of a 2D dataset.
+
+    .. important::
+        Currently, slice extraction works *only* for **2D** datasets,
+        not for higher-dimensional datasets. This may, however, change in
+        the future.
+
+    Attributes
+    ----------
+    parameters["index"] : :class:`int`
+        Index of the slice to extract
+
+        If no index is provided or the given index is out of bounds for the
+        given axis, an IndexError is raised.
+
+    parameters["axis"] : :class:`int`
+        Axis to average along
+
+        Default value: 0
+
+    Raises
+    ------
+    aspecd.exceptions.ProcessingNotApplicableToDatasetError
+        Raised if dataset has not enough dimensions
+
+    IndexError
+        Raised if index is out of bounds for given axis
+
+        Raised if axis is out of bounds for given dataset
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.undoable = True
+        self.description = 'Extract slice from dataset'
+        self.parameters['index'] = None
+        self.parameters['axis'] = 0
+
+    @staticmethod
+    def applicable(dataset):
+        """
+        Check whether processing step is applicable to the given dataset.
+
+        Projection is only applicable to datasets with two-dimensional data.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset to check
+
+        Returns
+        -------
+        applicable : :class:`bool`
+            `True` if successful, `False` otherwise.
+
+        """
+        return len(dataset.data.axes) == 3
+
+    def _perform_task(self):
+        if not self.parameters['index']:
+            raise IndexError('No index provided for slice extraction')
+        if self.parameters['index'] > self.dataset.data.data.shape[0]:
+            raise IndexError('Index %i out of bounds' % self.parameters[
+                'index'])
+        if self.parameters['axis'] > self.dataset.data.data.ndim-1:
+            raise IndexError("Axis %i out of bounds" % self.parameters['axis'])
+
+        if self.parameters['axis'] == 0:
+            self.dataset.data.data = \
+                self.dataset.data.data[self.parameters['index'], :]
+        else:
+            self.dataset.data.data = \
+                self.dataset.data.data[:, self.parameters['index']]
         del self.dataset.data.axes[self.parameters['axis']+1]

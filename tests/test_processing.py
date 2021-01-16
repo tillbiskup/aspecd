@@ -385,3 +385,75 @@ class TestProjection(unittest.TestCase):
         with self.assertRaisesRegex(IndexError, "Axis [0-9]+ out of bounds"):
             self.processing.parameters['axis'] = 2
             self.dataset.process(self.processing)
+
+
+class TestSliceExtraction(unittest.TestCase):
+    def setUp(self):
+        self.processing = aspecd.processing.SliceExtraction()
+        self.dataset = aspecd.dataset.Dataset()
+        self.dataset.data.data = np.sin(np.linspace(0, 2*np.pi, num=500))
+        self.dataset.data.data = np.tile(self.dataset.data.data, (5, 1)) \
+            * np.tile(np.linspace(1, 2, num=5), (500, 1)).T
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('extract slice', self.processing.description.lower())
+
+    def test_is_undoable(self):
+        self.assertTrue(self.processing.undoable)
+
+    def test_with_1D_dataset_raises(self):
+        dataset = aspecd.dataset.Dataset()
+        dataset.data.data = np.sin(np.linspace(0, 2*np.pi, num=500))
+        with self.assertRaises(
+                aspecd.exceptions.ProcessingNotApplicableToDatasetError):
+            dataset.process(self.processing)
+
+    def test_without_index_raises(self):
+        with self.assertRaisesRegex(IndexError, "for slice extraction"):
+            self.dataset.process(self.processing)
+
+    def test_with_index_exceeding_dimension_raises(self):
+        self.processing.parameters['index'] = 10
+        with self.assertRaisesRegex(IndexError, "Index [0-9]+ out of bounds"):
+            self.dataset.process(self.processing)
+
+    def test_extract_slice(self):
+        origdata = self.dataset.data.data
+        self.processing.parameters['index'] = 3
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(origdata[3, :], self.dataset.data.data)
+
+    def test_extract_slice_removes_axis(self):
+        self.processing.parameters['index'] = 3
+        self.dataset.process(self.processing)
+        self.assertEqual(2, len(self.dataset.data.axes))
+
+    def test_extract_slice_removes_correct_axis(self):
+        self.processing.parameters['index'] = 3
+        self.dataset.data.axes[1].quantity = 'foo'
+        self.dataset.data.axes[2].quantity = 'intensity'
+        self.dataset.process(self.processing)
+        self.assertNotEqual('foo', self.dataset.data.axes[1])
+        self.assertNotEqual('intensity', self.dataset.data.axes[-1])
+
+    def test_extract_slice_operates_along_first_axis_by_default(self):
+        origdata = self.dataset.data.data
+        self.processing.parameters['index'] = 3
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(origdata[3, :], self.dataset.data.data)
+
+    def test_extract_slice_along_second_axis(self):
+        origdata = self.dataset.data.data
+        self.processing.parameters['index'] = 3
+        self.processing.parameters['axis'] = 1
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(origdata[:, 3], self.dataset.data.data)
+
+    def test_extract_slice_along_non_existing_axis_raises(self):
+        with self.assertRaisesRegex(IndexError, "Axis [0-9]+ out of bounds"):
+            self.processing.parameters['index'] = 3
+            self.processing.parameters['axis'] = 2
+            self.dataset.process(self.processing)
