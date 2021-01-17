@@ -18,8 +18,6 @@ For version 0.1
 
 * Plotter: Handle (cascaded) properties for all parts of a plot
 
-* Tasks for models
-
 
 For later versions
 ==================

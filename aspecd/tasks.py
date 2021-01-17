@@ -215,6 +215,7 @@ Currently, the following subclasses are implemented:
      * :class:`aspecd.tasks.MultiplotTask`
 
   * :class:`aspecd.tasks.ReportTask`
+  * :class:`aspecd.tasks.ModelTask`
 
 For each task, you can set all attributes of the underlying class using the
 ``properties`` dictionary in the recipe. Therefore, to know which
@@ -1648,6 +1649,36 @@ class ModelTask(Task):
     """
     Building a model defined as task in recipe-driven data analysis.
 
+    For more information on the underlying general class,
+    see :class:`aspecd.model.Model`.
+
+    For an example of how such a model task may be included into a recipe,
+    see the YAML listing below:
+
+    .. code-block:: yaml
+
+        kind: model
+        type: Model
+        properties:
+          parameters:
+            foo: 42
+            bar: 21
+        from_dataset: dataset_label
+        result: foo
+
+    Note that you can refer to datasets and results created during cooking
+    of a recipe using their respective labels. Those labels will
+    automatically be replaced by the actual dataset/result prior to
+    performing the task.
+
+    Here, we have used this for the parameter ``from_dataset`` in the above
+    recipe excerpt. For an :obj:`aspecd.model.Model` object, you can set the
+    variables explicitly. However, in context of a recipe, this is rarely
+    useful. Therefore, the ``from_dataset`` parameter lets you refer to a
+    dataset (by its label used within the recipe) that is used to call the
+    :meth:`aspecd.model.Model.from_dataset` method with to obtain the
+    variables from this dataset.
+
     Attributes
     ----------
     result : :class:`str`
@@ -1659,15 +1690,26 @@ class ModelTask(Task):
         This label will be used to refer to the result later on when
         further processing the recipe.
 
+    from_dataset : :class:`str`
+        Label of a dataset to obtain variables from
+
+        The label needs to be a valid label to a dataset within the given
+        recipe. The underlying dataset is obtained from the recipe and used
+        to call the :meth:`aspecd.model.Model.from_dataset` method with to
+        obtain the variables from this dataset.
+
     """
 
     def __init__(self, recipe=None):
         super().__init__(recipe=recipe)
         self.result = ''
+        self.from_dataset = ''
 
     # noinspection PyUnresolvedReferences
     def _perform(self):
         task = self.get_object()
+        if self.from_dataset:
+            task.from_dataset(self.recipe.get_dataset(self.from_dataset))
         result = task.create()
         if self.result:
             self.recipe.results[self.result] = result

@@ -1199,6 +1199,7 @@ class TestModelTask(unittest.TestCase):
     def setUp(self):
         self.task = tasks.ModelTask()
         self.recipe = tasks.Recipe()
+        self.dataset = 'foo'
         self.model_task = {'kind': 'model',
                            'type': 'Model',
                            'properties': {'parameters': [42], 'variables': [
@@ -1209,7 +1210,8 @@ class TestModelTask(unittest.TestCase):
         dataset_factory = dataset.DatasetFactory()
         dataset_factory.importer_factory = io.DatasetImporterFactory()
         self.recipe.dataset_factory = dataset_factory
-        recipe_dict = {'tasks': [self.model_task]}
+        recipe_dict = {'datasets': [self.dataset],
+                       'tasks': [self.model_task]}
         self.recipe.from_dict(recipe_dict)
 
     def test_instantiate_class(self):
@@ -1239,6 +1241,30 @@ class TestModelTask(unittest.TestCase):
         self.task.recipe = self.recipe
         self.task.perform()
         self.assertTrue(len(self.recipe.results))
+
+    def test_added_result_is_calculated_dataset(self):
+        self.prepare_recipe()
+        result = 'foo'
+        self.model_task['result'] = result
+        self.task.from_dict(self.model_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertEqual(aspecd.dataset.CalculatedDataset,
+                         type(self.recipe.results[result]))
+
+    def test_from_dataset_obtains_variables_from_dataset(self):
+        self.prepare_recipe()
+        self.recipe.datasets[self.dataset].data.data = np.linspace(0, 1)
+        del self.model_task["properties"]["variables"]
+        self.model_task["from_dataset"] = self.dataset
+        result = 'foo'
+        self.model_task['result'] = result
+        self.task.from_dict(self.model_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        np.testing.assert_allclose(
+            self.recipe.datasets[self.dataset].data.axes[0].values,
+            self.recipe.results[result].data.axes[0].values)
 
 
 class TestTaskFactory(unittest.TestCase):
