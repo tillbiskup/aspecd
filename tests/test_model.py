@@ -110,3 +110,26 @@ class TestModel(unittest.TestCase):
         for index in range(len(dataset.data.axes)):
             self.assertEqual(dataset.data.axes[index].quantity,
                              calculated_dataset.data.axes[index].quantity)
+
+    def test_has_from_dict_method(self):
+        self.assertTrue(hasattr(self.model, 'from_dict'))
+        self.assertTrue(callable(self.model.from_dict))
+
+    def test_from_dict_without_dict_raises(self):
+        with self.assertRaises(aspecd.exceptions.MissingDictError):
+            self.model.from_dict()
+
+    def test_from_dict_sets_parameters(self):
+        dict_ = {'parameters': {'foo': 42}, 'variables': [np.linspace(0, 1)]}
+        self.model.from_dict(dict_)
+        self.assertDictEqual(dict_["parameters"], self.model.parameters)
+
+    def test_from_dict_sets_variables(self):
+        dict_ = {'parameters': {'foo': 42}, 'variables': [np.linspace(0, 1)]}
+        self.model.from_dict(dict_)
+        self.assertEqual(dict_["variables"], self.model.variables)
+
+    def test_from_dict_sets_only_valid_properties(self):
+        dict_ = {'foo': 42}
+        self.model.from_dict(dict_)
+        self.assertFalse(hasattr(self.model, 'foo'))

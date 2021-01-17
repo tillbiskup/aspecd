@@ -1038,6 +1038,16 @@ class Data(aspecd.utils.ToDictMixin):
             self._axes.append(Axis())
 
     def _update_axes(self):
+        """
+        Update axes according to data
+
+        .. note::
+            It turned out to be a bad idea to automatically *remove* an
+            axis, as you usually do not know which axis to remove. Hence,
+            if some task reduces the dimensionality of the data, this task
+            is responsible to adjust the axes as well (*i.e.*, remove the
+            *correct* axis object from the list).
+        """
         data_shape = self.data.shape
         for index in range(self.data.ndim):
             if len(self.axes[index].values) != data_shape[index]:

@@ -522,8 +522,10 @@ def replace_value_in_dict(replacement=None, target=None):
                 if isinstance(list_element, dict):
                     target[key][list_index] = \
                         replace_value_in_dict(replacement, list_element)
-                elif list_element in replacement:
+                elif list_element.__hash__ and list_element in replacement:
                     target[key][list_index] = replacement[list_element]
+                else:
+                    target[key][list_index] = list_element
         elif value in replacement:
             target[key] = replacement[value]
     return target

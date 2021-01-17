@@ -1644,6 +1644,35 @@ class ReportTask(Task):
         return filenames
 
 
+class ModelTask(Task):
+    """
+    Building a model defined as task in recipe-driven data analysis.
+
+    Attributes
+    ----------
+    result : :class:`str`
+        Label for the dataset resulting from the model creation
+
+        The result will always be an :obj:`aspecd.dataset.CalculatedDataset`
+        object.
+
+        This label will be used to refer to the result later on when
+        further processing the recipe.
+
+    """
+
+    def __init__(self, recipe=None):
+        super().__init__(recipe=recipe)
+        self.result = ''
+
+    # noinspection PyUnresolvedReferences
+    def _perform(self):
+        task = self.get_object()
+        result = task.create()
+        if self.result:
+            self.recipe.results[self.result] = result
+
+
 class TaskFactory:
     """
     Factory for creating task objects based on the kind provided.

@@ -225,6 +225,14 @@ class Model:
             self.variables.append(dataset.data.axes[index].values)
         self._axes_from_dataset = dataset.data.axes
 
+    def from_dict(self, dict_=None):
+        if not dict_:
+            raise aspecd.exceptions.MissingDictError(
+                'Need a dict to read from, but none given')
+        for key, value in dict_.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+
     def _check_prerequisites(self):
         if not self.parameters:
             raise aspecd.exceptions.MissingParameterError(
