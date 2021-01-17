@@ -1039,7 +1039,7 @@ class Data(aspecd.utils.ToDictMixin):
 
     def _update_axes(self):
         data_shape = self.data.shape
-        for index in range(self.data.ndim - 1):
+        for index in range(self.data.ndim):
             if len(self.axes[index].values) != data_shape[index]:
                 self.axes[index].values = np.arange(data_shape[index])
 

@@ -986,6 +986,12 @@ class TestData(unittest.TestCase):
         self.data.data = new_data
         self.assertEqual(new_data.size, self.data.axes[0].values.size)
 
+    def test_setting_data_adjusts_axes_values_for_2D_dataset(self):
+        self.data.data = np.zeros([6, 3])
+        shape = self.data.data.shape
+        self.assertEqual(shape[0], len(self.data.axes[0].values))
+        self.assertEqual(shape[1], len(self.data.axes[1].values))
+
     def test_has_to_dict_method(self):
         self.assertTrue(hasattr(self.data, 'to_dict'))
         self.assertTrue(callable(self.data.to_dict))
