@@ -12,13 +12,13 @@ For version 0.1
 
 * Documentation: Use cases
 
+* Documentation: YAML representation of dataset structure(s)
+
 * Plotter: Handle multiple axes (cwepr:GoniometerPlotter)
 
 * Plotter: Handle (cascaded) properties for all parts of a plot
 
-* Models as classes returning calculated datasets for given coefficients and variables
-
-  Come in quite handy if one wants to obtain, say, the values of a polynomial for given coefficients, to plot it together with other data. Can (and will) be generalised to many more models, eventually probably becoming a base for simulations of all kinds. Will be quite useful for testing purposes as well.
+* Tasks for models
 
 
 For later versions
@@ -26,9 +26,13 @@ For later versions
 
 * Remaining basic processing and analysis steps, such as baseline correction, algebra with datasets, slice extraction for >2D datasets, averaging (over parts of axis) for N-D datasets, peak finding, SNR determination, denoising, filtering, noise
 
+* Reporter: Method for adding dict representations of datasets to context
+
 * Templates for creating derived packages
 
 * Default report templates for each type of processing/analysis task
+
+  Includes deciding where to store these templates, whether to have them stored in different directories for different languages, and alike. Ideally, templates should be copied to a user-accessible directory for modifying there.
 
 * Logging
 
