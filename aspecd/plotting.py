@@ -699,13 +699,23 @@ class MultiPlotter(Plotter):
             Raised when no datasets exist to act on
 
         """
+        self._check_for_applicability()
+        self._set_line_properties()
+        super().plot()
+        self._set_axes_labels()
+
+    def _check_for_applicability(self):
         if not self.datasets:
             raise aspecd.exceptions.MissingDatasetError
         if not all([self.applicable(dataset) for dataset in self.datasets]):
             raise aspecd.exceptions.PlotNotApplicableToDatasetError(
                 'Plot not applicable to one or more datasets')
-        super().plot()
-        self._set_axes_labels()
+
+    def _set_line_properties(self):
+        if len(self.properties.drawings) < len(self.datasets):
+            for index in range(len(self.properties.drawings),
+                               len(self.datasets)):
+                self.properties.drawings.append(LineProperties())
 
     def _set_axes_labels(self):
         """Set axes labels from axes.
@@ -749,6 +759,30 @@ class MultiPlotter(Plotter):
             ylabel = ''
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel(ylabel)
+
+
+class MultiPlotter1D(MultiPlotter):
+    """
+    1D plots of multiple datasets.
+
+    Convenience class taking care of 1D plots of multiple datasets. The type
+    of plot can be set in its :attr:`aspecd.plotting.MultiPlotter1D.type`
+    attribute. Allowed types are stored in the
+    :attr:`aspecd.plotting.MultiPlotter1D.allowed_types` attribute.
+
+    Quite a number of properties for figure, axes, and line can be set
+    using the :attr:`aspecd.plotting.MultiPlotter1D.properties` attribute.
+    For details, see the documentation of its respective class,
+    :class:`aspecd.plotting.MultiPlot1DProperties`.
+
+    To perform the plot, call the :meth:`plot` method of the plotter directly.
+
+    .. todo::
+        Implement this plotter, as it currently has no specific
+        functionality besides that inherited from MultiPlotter.
+
+    """
+    pass
 
 
 class Saver:
@@ -1068,13 +1102,20 @@ class FigureProperties(aspecd.utils.Properties):
 
     Attributes
     ----------
-    figsize: :class:`tuple`
+    size: :class:`tuple`
         Figure dimension (width, height) in inches.
 
         2-tuple of floats
 
+        Default: 6.4, 4.8
+
     dpi: :class:`float`
-        Dots per inch.
+        Figure resolution in dots per inch.
+
+        Default: 100
+
+    title: :class:`str`
+        Title for the figure as a whole
 
     Raises
     ------
@@ -1085,8 +1126,9 @@ class FigureProperties(aspecd.utils.Properties):
 
     def __init__(self):
         super().__init__()
-        self.figsize = (6.4, 4.8)
+        self.size = (6.4, 4.8)
         self.dpi = 100.0
+        self.title = ''
 
     def apply(self, figure=None):
         """
@@ -1107,6 +1149,9 @@ class FigureProperties(aspecd.utils.Properties):
             raise aspecd.exceptions.MissingFigureError
         for prop in self.get_properties():
             setattr(figure, prop, getattr(self, prop))
+        # Need to set size and title manually
+        figure.set_size_inches(self.size)
+        figure.suptitle(self.title)
 
 
 class AxisProperties(aspecd.utils.Properties):
@@ -1116,12 +1161,6 @@ class AxisProperties(aspecd.utils.Properties):
     Basically, the attributes are a subset of what :mod:`matplotlib` defines
     for :obj:`matplotlib.axes.Axes` objects.
 
-    .. todo::
-        How to deal with at least two axes per figure, i.e. x and y axis,
-        whereas matplotlib handles the overall axes as one object?
-
-        How about multiple separate axes within a figure window?
-
     Attributes
     ----------
     aspect: {'auto', 'equal'} or num
@@ -1129,6 +1168,12 @@ class AxisProperties(aspecd.utils.Properties):
 
     facecolor: color
         facecolor of the Axes
+
+    title: :class:`str`
+        title for the axis
+
+        Note that this is a per-axis title, unlike the figure title set for
+        the whole figure.
 
     xlabel: :class:`str`
         label for the x-axis
@@ -1175,6 +1220,7 @@ class AxisProperties(aspecd.utils.Properties):
         super().__init__()
         self.aspect = 'auto'
         self.facecolor = None
+        self.title = ''
         self.xlabel = ''
         self.xlim = []
         self.xscale = 'linear'

@@ -327,6 +327,24 @@ class TestMultiPlotter(unittest.TestCase):
         self.assertEqual(xlabel, self.plotter.axes.get_xlabel())
         self.assertEqual(ylabel, self.plotter.axes.get_ylabel())
 
+    def test_plot_with_datasets_adds_line_properties(self):
+        self.plotter.datasets.append(dataset.Dataset())
+        self.plotter.plot()
+        self.assertEqual(len(self.plotter.datasets),
+                         len(self.plotter.properties.drawings))
+
+
+class TestMultiPlotter1D(unittest.TestCase):
+    def setUp(self):
+        self.plotter = plotting.MultiPlotter1D()
+
+    def tearDown(self):
+        if self.plotter.fig:
+            plt.close(self.plotter.fig)
+
+    def test_instantiate_class(self):
+        pass
+
 
 class TestSaver(unittest.TestCase):
     def setUp(self):
@@ -586,7 +604,7 @@ class TestFigureProperties(unittest.TestCase):
         self.assertTrue(callable(self.figure_properties.from_dict))
 
     def test_has_properties(self):
-        for prop in ['figsize', 'dpi']:
+        for prop in ['size', 'dpi', 'title']:
             self.assertTrue(hasattr(self.figure_properties, prop))
 
     def test_has_apply_method(self):
@@ -597,12 +615,30 @@ class TestFigureProperties(unittest.TestCase):
         with self.assertRaises(aspecd.exceptions.MissingFigureError):
             self.figure_properties.apply()
 
-    def test_apply_sets_figure_properties(self):
+    def test_apply_sets_figure_dpi(self):
         self.figure_properties.dpi = 300.0
         plot = plotting.Plotter()
         plot.plot()
         self.figure_properties.apply(figure=plot.figure)
         self.assertEqual(self.figure_properties.dpi, plot.figure.get_dpi())
+        plt.close(plot.figure)
+
+    def test_apply_sets_figure_size(self):
+        self.figure_properties.size = (10, 5)
+        plot = plotting.Plotter()
+        plot.plot()
+        self.figure_properties.apply(figure=plot.figure)
+        self.assertListEqual(list(self.figure_properties.size),
+                             list(plot.figure.get_size_inches()))
+        plt.close(plot.figure)
+
+    def test_apply_sets_figure_title(self):
+        self.figure_properties.title = 'foo'
+        plot = plotting.Plotter()
+        plot.plot()
+        self.figure_properties.apply(figure=plot.figure)
+        self.assertEqual(self.figure_properties.title,
+                         plot.figure._suptitle.get_text())
         plt.close(plot.figure)
 
 
@@ -622,9 +658,9 @@ class TestAxisProperties(unittest.TestCase):
         self.assertTrue(callable(self.axis_properties.from_dict))
 
     def test_has_properties(self):
-        for prop in ['aspect', 'facecolor', 'xlabel', 'xlim', 'xscale',
-                     'xticklabels', 'xticks', 'ylabel', 'ylim', 'yscale',
-                     'yticklabels', 'yticks']:
+        for prop in ['aspect', 'facecolor', 'title', 'xlabel', 'xlim',
+                     'xscale', 'xticklabels', 'xticks', 'ylabel', 'ylim',
+                     'yscale', 'yticklabels', 'yticks']:
             self.assertTrue(hasattr(self.axis_properties, prop))
 
     def test_has_apply_properties_method(self):

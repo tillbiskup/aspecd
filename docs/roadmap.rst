@@ -8,15 +8,17 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.1
 ===============
 
+* Plotter: Implement MultiPlotter1D
+
+* Plotter: Handle multiple axes (cwepr:GoniometerPlotter) - via SingleCompositePlotter
+
+* Plotter: Handle (cascaded) properties for all parts of a plot
+
 * Metadata mapper via yaml file
 
 * Documentation: Use cases
 
 * Documentation: YAML representation of dataset structure(s)
-
-* Plotter: Handle multiple axes (cwepr:GoniometerPlotter)
-
-* Plotter: Handle (cascaded) properties for all parts of a plot
 
 
 For later versions
@@ -25,6 +27,10 @@ For later versions
 * Remaining basic processing and analysis steps, such as baseline correction, algebra with datasets, slice extraction for >2D datasets, averaging (over parts of axis) for N-D datasets, peak finding, SNR determination, denoising, filtering, noise
 
 * Reporter: Method for adding dict representations of datasets to context
+
+* Reporter task: Operating on recipes, *i.e.* report on all tasks in a recipe
+
+* Reporter task: Adding arbitrary dict representations of properties of datasets/results to context
 
 * Templates for creating derived packages
 
