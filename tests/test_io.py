@@ -231,7 +231,7 @@ class TestAdfExporter(unittest.TestCase):
         with zipfile.ZipFile(self.target + self.extension, 'r') as zipped_file:
             list_of_files = zipped_file.namelist()
         binary_files = [x for x in list_of_files if x.startswith('binaryData')]
-        self.assertEqual(len(binary_files), 2)
+        self.assertEqual(3, len(binary_files))
 
     def test_export_sets_version(self):
         self.exporter.target = self.target

@@ -1177,7 +1177,7 @@ class Axis(aspecd.utils.ToDictMixin):
         return self._equidistant
 
     def _set_equidistant_property(self):
-        if not self.values.size:
+        if not self.values.size or not self.values.all():
             return
         differences = self.values[1:] - self.values[0:-1]
         self._equidistant = np.isclose(differences.max(), differences.min())

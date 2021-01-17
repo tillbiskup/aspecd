@@ -338,8 +338,8 @@ class TestProjection(unittest.TestCase):
     def setUp(self):
         self.processing = aspecd.processing.Projection()
         self.dataset = aspecd.dataset.Dataset()
-        self.dataset.data.data = np.sin(np.linspace(0, 2*np.pi, num=500))
-        self.dataset.data.data = np.tile(self.dataset.data.data, (5, 1))
+        data = np.sin(np.linspace(0, 2*np.pi, num=500))
+        self.dataset.data.data = np.tile(data, (5, 1))
 
     def test_instantiate_class(self):
         pass
@@ -391,8 +391,8 @@ class TestSliceExtraction(unittest.TestCase):
     def setUp(self):
         self.processing = aspecd.processing.SliceExtraction()
         self.dataset = aspecd.dataset.Dataset()
-        self.dataset.data.data = np.sin(np.linspace(0, 2*np.pi, num=500))
-        self.dataset.data.data = np.tile(self.dataset.data.data, (5, 1)) \
+        data = np.sin(np.linspace(0, 2*np.pi, num=500))
+        self.dataset.data.data = np.tile(data, (5, 1)) \
             * np.tile(np.linspace(1, 2, num=5), (500, 1)).T
 
     def test_instantiate_class(self):
