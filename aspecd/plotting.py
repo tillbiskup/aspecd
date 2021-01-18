@@ -782,7 +782,83 @@ class MultiPlotter1D(MultiPlotter):
         functionality besides that inherited from MultiPlotter.
 
     """
-    pass
+    def __init__(self):
+        super().__init__()
+        self.description = '1D plotting step for multiple datasets'
+        self.drawings = []
+        self._type = 'plot'
+        self._allowed_types = ['plot', 'step', 'loglog', 'semilogx',
+                               'semilogy', ]
+
+    @property
+    def type(self):
+        """
+        Get or set the plot type.
+
+        Types need to be methods of the :class:`matplotlib.axes.Axes` class.
+
+        Allowed plot types are stored in the
+        :attr:`aspecd.plotting.SinglePlotter1D.allowed_types` attribute.
+
+        Default: 'plot'
+
+        Raises
+        ------
+        aspecd.plotting.TypeError
+            Raised in case of wrong type
+
+        """
+        return self._type
+
+    @property
+    def allowed_types(self):
+        """
+        Return the allowed plot types.
+
+        Returns
+        -------
+        allowed_types: :class:`list`
+            List of strings
+
+        """
+        return self._allowed_types
+
+    @type.setter
+    def type(self, plot_type=None):
+        if plot_type not in self.allowed_types:
+            raise TypeError
+        self._type = plot_type
+
+    @staticmethod
+    def applicable(dataset):
+        """Check whether plot is applicable to the given dataset.
+
+        Checks for the dimension of the data of the dataset, i.e. the
+        :attr:`aspecd.dataset.Data.data` attribute. Returns `True` if data
+        are one-dimensional, and `False` otherwise.
+
+        Returns
+        -------
+        applicable : :class:`bool`
+            `True` if successful, `False` otherwise.
+
+        """
+        return dataset.data.data.ndim == 1
+
+    def _create_plot(self):
+        """
+        Actual drawing of datasets
+
+        .. todo::
+            Implement basic colour sequence in some way or other.
+
+            Implement adding line properties objects to metadata
+        """
+        plot_function = getattr(self.axes, self.type)
+        for index, dataset in enumerate(self.datasets):
+            drawing, = plot_function(dataset.data.axes[0].values,
+                                     dataset.data.data)
+            self.drawings.append(drawing)
 
 
 class Saver:

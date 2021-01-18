@@ -345,6 +345,33 @@ class TestMultiPlotter1D(unittest.TestCase):
     def test_instantiate_class(self):
         pass
 
+    def test_description_is_sensible(self):
+        self.assertNotIn('Abstract', self.plotter.description)
+
+    def test_has_type_property(self):
+        self.assertTrue(hasattr(self.plotter, 'type'))
+
+    def test_set_type(self):
+        plot_type = 'loglog'
+        self.plotter.type = plot_type
+        self.assertEqual(self.plotter.type, plot_type)
+
+    def test_setting_wrong_type_raises(self):
+        with self.assertRaises(TypeError):
+            self.plotter.type = 'foo'
+
+    def test_plot_with_2D_data_raises(self):
+        dataset_ = dataset.Dataset()
+        dataset_.data.data = np.random.rand(3, 2)
+        self.plotter.datasets.append(dataset_)
+        with self.assertRaises(
+                aspecd.exceptions.PlotNotApplicableToDatasetError):
+            self.plotter.plot()
+
+    def test_plot_with_datasets(self):
+        self.plotter.datasets.append(dataset.Dataset())
+        self.plotter.plot()
+
 
 class TestSaver(unittest.TestCase):
     def setUp(self):
