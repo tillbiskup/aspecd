@@ -1090,7 +1090,7 @@ class TestReportTask(unittest.TestCase):
     def setUp(self):
         self.task = tasks.ReportTask()
         self.recipe = tasks.Recipe()
-        self.dataset = ['/foo']
+        self.dataset = '/foo'
         self.template = 'test_template.tex'
         self.filename = 'test_report.tex'
         self.result = 'test_report.pdf'
@@ -1113,7 +1113,7 @@ class TestReportTask(unittest.TestCase):
         dataset_factory = dataset.DatasetFactory()
         dataset_factory.importer_factory = io.DatasetImporterFactory()
         self.recipe.dataset_factory = dataset_factory
-        recipe_dict = {'datasets': self.dataset,
+        recipe_dict = {'datasets': [self.dataset],
                        'tasks': [self.report_task]}
         self.recipe.from_dict(recipe_dict)
 
@@ -1193,6 +1193,35 @@ class TestReportTask(unittest.TestCase):
         with open(self.filename) as f:
             read_content = f.read()
         self.assertEqual(read_content, 'bar')
+
+    def test_perform_task_applies_to_dict_to_datasets_in_context(self):
+        self.prepare_recipe()
+        self.recipe.datasets[self.dataset].id = 'bar'
+        self.recipe.tasks[0].properties['context'] = \
+            {'dataset2': self.dataset}
+        template_content = "{@dataset2['id']}"
+        self.prepare_template(template_content)
+        self.task.from_dict(self.report_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        with open(self.filename) as f:
+            read_content = f.read()
+        self.assertEqual(read_content, 'bar')
+
+    def test_perform_task_applies_to_dict_to_datasets_in_deep_context(self):
+        self.prepare_recipe()
+        self.recipe.datasets[self.dataset].id = 'blub'
+        self.recipe.tasks[0].properties['context'] = \
+            {'foo': {'bar': {'dataset2': self.dataset}}}
+        template_content = "{@foo['bar']['dataset2']['id']}"
+        self.prepare_template(template_content)
+        self.task.from_dict(self.report_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        with open(self.filename) as f:
+            read_content = f.read()
+        self.assertEqual(read_content, 'blub')
+
 
 
 class TestModelTask(unittest.TestCase):

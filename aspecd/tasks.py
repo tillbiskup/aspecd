@@ -1599,7 +1599,7 @@ class ReportTask(Task):
     a certain structure of your template containing user-supplied free text
     for the introduction to several sections.
 
-    Additionally, the task will provide the key ``dataset`` containing the
+    Additionally, the context will contain the key ``dataset`` containing the
     result of the :meth:`aspecd.dataset.Dataset.to_dict` method, thus the full
     information contained in the dataset.
 
