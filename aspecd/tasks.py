@@ -5,6 +5,7 @@ Constituents of a recipe-driven data analysis.
 
     .. contents::
         :local:
+        :depth: 1
 
 
 One main aspect of tasks is to provide the constituents of a
@@ -36,6 +37,10 @@ possible, whether it should be performed on each dataset separately or
 combined. The latter is particularly interesting for representations (e.g.,
 plots) consisting of multiple datasets, or analysis steps spanning multiple
 datasets.
+
+
+A first recipe
+--------------
 
 To give a first impression of how such a recipe may look like:
 
@@ -82,6 +87,41 @@ task.
     in which every dataset can be accessed by a unique identifier. For
     details, see the `LabInform documentation <https://www.labinform.de/>`_.
 
+
+Base directory for dataset import
+---------------------------------
+
+There are different ways to refer to datasets, but the most common (for now)
+is to specify the (relative or absolute) path to the datasets within the
+local file system.
+
+At the same time, the "paths" listed in the ``datasets`` list are used as
+internal references within the recipe. Therefore, short names are preferrable.
+
+To make things a bit easier, there is a way to define the source directory
+for datasets:
+
+.. code-block:: yaml
+
+    datasets_source_directory: /path/to/my/datasets/
+
+    datasets:
+        - dataset1
+        - dataset2
+
+    tasks:
+      - kind: processing
+        type: ProcessingStep
+
+
+In this case, all dataset names will be treated relative to the source
+directory. Note that if you provide the option
+``datasets_source_directory``, this needs to be an absolute path, as shown
+here for unixoid file systems.
+
+
+Tasks from other packages
+-------------------------
 
 Usually, you will use classes to perform the individual tasks that come
 from your own package. There is a a simple way of doing that, not having to
@@ -193,13 +233,26 @@ scientific questions that originally triggered obtaining and analysing the
 data. Reproducibility is been taken care of for you.
 
 
-Types of tasks
+Kinds of tasks
 ==============
 
-Each task is internally represented by an :obj:`aspecd.tasks.Task` object,
-more precisely an object instantiated from a subclass of
+.. sidebar:: Kind and type
+
+    The "kind" of a task usually refers to the module the class belongs to,
+    the "type" is the actual class name.
+
+
+Tasks can be grouped similarly to the way classes of the ASpecD framework
+are grouped into different modules. Hence, there are different *kinds* of
+tasks. Each task is internally represented by an :obj:`aspecd.tasks.Task`
+object, more precisely an object instantiated from a subclass of
 :class:`aspecd.tasks.Task`. This polymorphism of task classes makes it
 possible to easily extend the scope of recipe-driven data analysis.
+Therefore, to allow ASpecD to know how to handle your task (*i.e.*,
+what task object to create), you need to specify the *kind* of your task
+within the recipe, besides the *type* that is the class name of the actual
+class performing the respective task.
+
 Currently, the following subclasses are implemented:
 
   * :class:`aspecd.tasks.ProcessingTask`
@@ -217,17 +270,27 @@ Currently, the following subclasses are implemented:
   * :class:`aspecd.tasks.ReportTask`
   * :class:`aspecd.tasks.ModelTask`
 
-For each task, you can set all attributes of the underlying class using the
-``properties`` dictionary in the recipe. Therefore, to know which
-parameters can be set for what type of task means simply to check the
-documentation for the respective classes. I.e., for a task represented by
-an :obj:`aspecd.tasks.ProcessingTask` object, check out the appropriate
-class from the :mod:`aspecd.processing` module. The same is true for
-packages derived from ASpecD.
+As you can see from the above list, there are (currently) two special cases
+of kinds of tasks: analysis and plot tasks. Usually, you will set the
+``kind`` of a task in a recipe to the module the class eventually performing
+the task resides in. As both, analyses and plots can either span one or
+several datasets, here we have to discriminate. Therefore, it is *essential*
+that you take care to set the ``kind`` value in your recipe for these kinds
+of tasks to ``singleanalysis`` or ``multianalysis``, respectively. the same
+is true for plots. To make this a bit easier to follow, see the example below.
 
-Furthermore, depending on the type of task, you may be able to set
-additional parameters controlling in more detail how the particular task is
-performed. For details, see the documentation of the respective task subclass.
+.. code-block:: yaml
+
+    tasks:
+      - kind: processing
+        type: ProcessingStep
+
+      - kind: singleanalysis
+        type: AnalysisStep
+
+      - kind: multiplot
+        type: MultiPlotter1D
+
 
 .. important::
     As long as there is no automatic syntax checking of recipes before they
@@ -239,18 +302,71 @@ performed. For details, see the documentation of the respective task subclass.
     **multiplot** as kind.
 
 
-.. todo::
-    There is a number of things that are not yet implemented, but highly
-    recommended for a working recipe-driven data analysis that follows good
-    practice for reproducible research. This includes (but may not be
-    limited to):
+Properties of tasks
+===================
 
-      * Parser for recipes performing a static analysis of their syntax.
-        Useful particularly for larger datasets and/or longer lists of tasks.
+For each task, you can set all attributes of the underlying class using the
+``properties`` dictionary in the recipe. Therefore, to know which
+parameters can be set for what kind of task means simply to check the
+documentation for the respective classes. I.e., for a task represented by
+an :obj:`aspecd.tasks.ProcessingTask` object, check out the appropriate
+class from the :mod:`aspecd.processing` module. The same is true for
+packages derived from ASpecD.
+
+A simple example is the normalisation processing step using the
+:class:`aspecd.processing.Normalisation` class:
+
+.. code-block:: yaml
+
+    tasks:
+      - kind: processing
+        type: Normalisation
+        properties:
+          parameters:
+            kind: amplitude
+
+How to know what properties can be set? Have a look at the
+:class:`aspecd.processing.Normalisation` documentation. Note that all
+properties that are documented there can be set using a recipe. As
+processing steps always have a property ``parameters`` that is a
+:class:`dict`, you need to set the individual keys of this dictionary.
+
+Additionally, for each task, you can explicitly state to which of the
+datasets it should be applied to. Note that not only the datasets initially
+loaded can be used here, but all labels referring to datasets that originate
+from other tasks.
+
+Furthermore, depending on the kind of task, you may be able to set
+additional parameters controlling in more detail how the particular task is
+performed. For details, see the documentation of the respective task
+subclass in this module below.
+
+
+Labels within recipes
+=====================
+
+Some tasks yield results you usually would want to use later on in the
+recipe. Prime examples are analysis steps and plots. While analysis steps
+have a property ``result`` that can refer to either a dataset or something
+else, depending on the actual type of analysis step, plots have a ``label``
+that can be used to refer to them.
+
+While analysis steps always yield results, processing steps usually operate
+on a dataset that gets modified in turn. However, sometimes it is desired to
+return the modified dataset as a *new dataset*, independent of the original
+one. In this case, specify a ``result`` here, too. For details, see the
+:class:`aspecd.tasks.ProcessingTask` documentation below.
 
 
 Prerequisites for recipe-driven data analysis
 =============================================
+
+.. note::
+
+    This section is mostly relevant for those developing packages based on
+    the ASpecD framework. Users of recipe-driven data analysis usually need
+    not bother about these details (as others did for them already).
+
 
 To be able to use recipe-driven data analysis in packages derived from the
 ASpecD framework, a series of prerequisites needs to be met, *i.e.*, classes
@@ -286,6 +402,16 @@ most common users).
 
 Module documentation
 ====================
+
+
+.. todo::
+    There is a number of things that are not yet implemented, but highly
+    recommended for a working recipe-driven data analysis that follows good
+    practice for reproducible research. This includes (but may not be
+    limited to):
+
+      * Parser for recipes performing a static analysis of their syntax.
+        Useful particularly for larger datasets and/or longer lists of tasks.
 
 """
 
@@ -1168,11 +1294,14 @@ class AnalysisTask(Task):
     Analysis steps can be performed individually for each dataset or the
     results combined, depending on the type of analysis step.
 
-    An AnalysisTask should not be used directly but rather the two
-    classes derived from this class, namely:
+    .. important::
 
-      * :class:`aspecd.tasks.SingleanalysisTask` and
-      * :class:`aspecd.tasks.MultianalysisTask`.
+        An AnalysisTask should not be used directly but rather the two
+        classes derived from this class, namely:
+
+          * :class:`aspecd.tasks.SingleanalysisTask` and
+          * :class:`aspecd.tasks.MultianalysisTask`.
+
 
     For more information on the underlying general class,
     see :class:`aspecd.analysis.AnalysisStep`.
@@ -1334,11 +1463,14 @@ class PlotTask(Task):
     """
     Plot step defined as task in recipe-driven data analysis.
 
-    A PlotTask should not be used directly but rather the two classes
-    derived from this class, namely:
+    .. important::
 
-      * :class:`aspecd.tasks.SingleplotTask` and
-      * :class:`aspecd.tasks.MultiplotTask`.
+        A PlotTask should not be used directly but rather the two classes
+        derived from this class, namely:
+
+          * :class:`aspecd.tasks.SingleplotTask` and
+          * :class:`aspecd.tasks.MultiplotTask`.
+
 
     For more information on the underlying general class,
     see :class:`aspecd.plotting.Plotter`.
