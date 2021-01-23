@@ -632,16 +632,18 @@ class Properties(ToDictMixin):
         """
         if not dict_:
             raise aspecd.exceptions.MissingDictError
-        for key in dict_:
+        for key, value in dict_.items():
             if hasattr(self, key):
-                if isinstance(getattr(self, key), list):
-                    if isinstance(dict_[key], list):
-                        for element in dict_[key]:
+                if hasattr(getattr(self, key), 'from_dict'):
+                    getattr(self, key).from_dict(value)
+                elif isinstance(getattr(self, key), list):
+                    if isinstance(value, list):
+                        for element in value:
                             getattr(self, key).append(element)
                     else:
-                        getattr(self, key).append(dict_[key])
+                        getattr(self, key).append(value)
                 else:
-                    setattr(self, key, dict_[key])
+                    setattr(self, key, value)
 
     def get_properties(self):
         """

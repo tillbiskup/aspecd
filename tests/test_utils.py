@@ -335,9 +335,6 @@ class TestYaml(unittest.TestCase):
 
     def test_serialise_large_numpy_array_sets_filenames(self):
         array = np.random.rand(self.yaml.numpy_array_size_threshold + 1)
-        resulting_dict = {'foo': {'type': 'numpy.ndarray',
-                                  'dtype': str(array.dtype),
-                                  'file': 'foo'}}
         self.yaml.dict = {'foo': array}
         self.yaml.serialise_numpy_arrays()
         # Necessary as the true filename will be generated
@@ -655,6 +652,15 @@ class TestProperties(unittest.TestCase):
         dict_[attribute] = 'foo'
         self.properties.from_dict(dict_)
         self.assertFalse(hasattr(self.properties, attribute))
+
+    def test_from_dict_with_property_object_as_property(self):
+        dict_ = {'prop1': {'prop2': 'foo'}}
+        prop1 = aspecd.utils.Properties()
+        setattr(prop1, 'prop2', '')
+        setattr(self.properties, 'prop1', prop1)
+        self.properties.from_dict(dict_)
+        # noinspection PyUnresolvedReferences
+        self.assertEqual('foo', self.properties.prop1.prop2)
 
     def test_has_get_properties_method(self):
         self.assertTrue(hasattr(self.properties, 'get_properties'))
