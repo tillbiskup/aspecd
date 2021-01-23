@@ -977,7 +977,7 @@ class TestPlotTask(unittest.TestCase):
         self.task.perform()
         # noinspection PyTypeChecker
         self.assertEqual(self.plotting_task['properties']['caption']['title'],
-                         self.recipe.figures[label].caption['title'])
+                         self.recipe.figures[label].caption.title)
 
 
 class TestSinglePlotTask(unittest.TestCase):
@@ -988,6 +988,9 @@ class TestSinglePlotTask(unittest.TestCase):
         self.figure_filename = 'foo.pdf'
         self.datasets = ['foo', 'bar']
         self.figure_filenames = ['foo.pdf', 'bar.pdf']
+        self.plotting_task = {'kind': 'singleplot',
+                              'type': 'SinglePlotter',
+                              'apply_to': self.dataset}
 
     def tearDown(self):
         if os.path.exists(self.figure_filename):
@@ -997,9 +1000,6 @@ class TestSinglePlotTask(unittest.TestCase):
                 os.remove(file)
 
     def prepare_recipe(self):
-        self.plotting_task = {'kind': 'singleplot',
-                              'type': 'SinglePlotter',
-                              'apply_to': self.dataset}
         dataset_factory = dataset.DatasetFactory()
         dataset_factory.importer_factory = io.DatasetImporterFactory()
         self.recipe.dataset_factory = dataset_factory
@@ -1043,6 +1043,14 @@ class TestSinglePlotTask(unittest.TestCase):
         self.task.perform()
         for file in self.figure_filenames:
             self.assertTrue(os.path.exists(file))
+
+    def test_set_line_colour_from_properties(self):
+        self.plotting_task["properties"] = \
+            {'properties': {'drawing': {'color': '#cccccc'}}}
+        self.prepare_recipe()
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
 
 
 class TestMultiPlotTask(unittest.TestCase):

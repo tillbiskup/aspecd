@@ -227,6 +227,12 @@ class TestSinglePlotter1D(unittest.TestCase):
                 aspecd.exceptions.PlotNotApplicableToDatasetError):
             self.plotter.plot(dataset_)
 
+    def test_set_line_colour_from_dict(self):
+        line_colour = '#cccccc'
+        properties = {'drawing': {'color': line_colour}}
+        self.plotter.properties.from_dict(properties)
+        self.assertEqual(line_colour, self.plotter.properties.drawing.color)
+
 
 class TestSinglePlotter2D(unittest.TestCase):
     def setUp(self):
