@@ -796,9 +796,26 @@ class TestLegendProperties(unittest.TestCase):
         plt.close(plot.figure)
 
     def test_location_sets_legend_loc(self):
-        location = 'center'
+        location = 5
         self.legend_properties.location = location
-        self.assertEqual(location, self.legend_properties.loc)
+        plot = plotting.Plotter()
+        plot.properties.legend = self.legend_properties
+        plot.show_legend = True
+        plot.plot()
+        legend = plot.legend
+        self.assertEqual(location, legend._loc)
+        plt.close(plot.figure)
+
+    def test_location_from_dict_sets_legend_loc(self):
+        location = 5
+        properties = {'legend': {'location': location}}
+        plot = plotting.Plotter()
+        plot.properties.from_dict(properties)
+        plot.show_legend = True
+        plot.plot()
+        legend = plot.legend
+        self.assertEqual(location, legend._loc)
+        plt.close(plot.figure)
 
     def test_frameon_sets_legend_frameon(self):
         frameon = False

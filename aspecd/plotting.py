@@ -1013,7 +1013,7 @@ class Caption(aspecd.utils.Properties):
         names of parameters that should be included in the figure caption
 
         Usually, these parameters get included at the very end of a figure
-        line_properties.
+        caption.
 
     """
 
