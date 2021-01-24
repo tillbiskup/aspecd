@@ -233,6 +233,13 @@ class TestSinglePlotter1D(unittest.TestCase):
         self.plotter.properties.from_dict(properties)
         self.assertEqual(line_colour, self.plotter.properties.drawing.color)
 
+    def test_plot_sets_correct_line_color(self):
+        color = '#cccccc'
+        dict_ = {'drawing': {'color': color}}
+        self.plotter.properties.from_dict(dict_)
+        self.plotter.plot(dataset=dataset.Dataset())
+        self.assertEqual(color, self.plotter.drawing.get_color())
+
 
 class TestSinglePlotter2D(unittest.TestCase):
     def setUp(self):
@@ -392,6 +399,14 @@ class TestMultiPlotter1D(unittest.TestCase):
         self.plotter.plot()
         self.assertIs(type(self.plotter.properties.drawings[0]),
                       aspecd.plotting.LineProperties)
+
+    def test_plot_sets_correct_line_color(self):
+        color = '#000000'
+        dict_ = {'drawings': [{'color': color}]}
+        self.plotter.properties.from_dict(dict_)
+        self.plotter.datasets.append(dataset.Dataset())
+        self.plotter.plot()
+        self.assertEqual(color, self.plotter.drawings[0].get_color())
 
 
 class TestSaver(unittest.TestCase):

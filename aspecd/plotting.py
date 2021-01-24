@@ -1217,6 +1217,10 @@ class MultiPlotProperties(PlotProperties):
         self.axes.apply(axis=plotter.axes)
         if hasattr(plotter, 'legend'):
             self.legend.apply(legend=plotter.legend)
+        if hasattr(plotter, 'drawings'):
+            for idx, drawing in enumerate(plotter.drawings):
+                self.drawings[idx].apply(drawing=drawing)
+
 
 
 class MultiPlot1DProperties(MultiPlotProperties):
