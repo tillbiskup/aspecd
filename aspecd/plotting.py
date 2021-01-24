@@ -713,8 +713,8 @@ class MultiPlotter(Plotter):
 
     def _set_line_properties(self):
         if len(self.properties.drawings) < len(self.datasets):
-            for index in range(len(self.properties.drawings),
-                               len(self.datasets)):
+            for _ in range(len(self.properties.drawings),
+                           len(self.datasets)):
                 self.properties.add_drawing()
 
     def _set_axes_labels(self):
@@ -778,6 +778,7 @@ class MultiPlotter1D(MultiPlotter):
     To perform the plot, call the :meth:`plot` method of the plotter directly.
 
     """
+
     def __init__(self):
         super().__init__()
         self.description = '1D plotting step for multiple datasets'
@@ -843,9 +844,9 @@ class MultiPlotter1D(MultiPlotter):
         return dataset.data.data.ndim == 1
 
     def _create_plot(self):
-        """Actual drawing of datasets """
+        """Actual drawing of datasets"""
         plot_function = getattr(self.axes, self.type)
-        for index, dataset in enumerate(self.datasets):
+        for dataset in self.datasets:
             drawing, = plot_function(dataset.data.axes[0].values,
                                      dataset.data.data)
             self.drawings.append(drawing)

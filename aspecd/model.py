@@ -226,6 +226,20 @@ class Model:
         self._axes_from_dataset = dataset.data.axes
 
     def from_dict(self, dict_=None):
+        """
+        Set attributes from dictionary.
+
+        Parameters
+        ----------
+        dict_ : :class:`dict`
+            Dictionary containing information of a task.
+
+        Raises
+        ------
+        aspecd.plotting.MissingDictError
+            Raised if no dict is provided.
+
+        """
         if not dict_:
             raise aspecd.exceptions.MissingDictError(
                 'Need a dict to read from, but none given')

@@ -428,7 +428,8 @@ class Integration(ProcessingStep):
 
     def _perform_task(self):
         dim = np.ndim(self.dataset.data.data)
-        self.dataset.data.data = np.cumsum(self.dataset.data.data, axis=dim-1)
+        self.dataset.data.data = \
+            np.cumsum(self.dataset.data.data, axis=dim - 1)
 
 
 class Differentiation(ProcessingStep):
@@ -581,11 +582,11 @@ class Projection(ProcessingStep):
         return len(dataset.data.axes) > 2
 
     def _perform_task(self):
-        if self.parameters['axis'] > self.dataset.data.data.ndim-1:
+        if self.parameters['axis'] > self.dataset.data.data.ndim - 1:
             raise IndexError("Axis %i out of bounds" % self.parameters['axis'])
         self.dataset.data.data = np.average(self.dataset.data.data,
                                             axis=self.parameters['axis'])
-        del self.dataset.data.axes[self.parameters['axis']+1]
+        del self.dataset.data.axes[self.parameters['axis'] + 1]
 
 
 class SliceExtraction(ProcessingStep):
@@ -659,7 +660,7 @@ class SliceExtraction(ProcessingStep):
         if self.parameters['index'] > self.dataset.data.data.shape[0]:
             raise IndexError('Index %i out of bounds' % self.parameters[
                 'index'])
-        if self.parameters['axis'] > self.dataset.data.data.ndim-1:
+        if self.parameters['axis'] > self.dataset.data.data.ndim - 1:
             raise IndexError("Axis %i out of bounds" % self.parameters['axis'])
 
         if self.parameters['axis'] == 0:
@@ -668,4 +669,4 @@ class SliceExtraction(ProcessingStep):
         else:
             self.dataset.data.data = \
                 self.dataset.data.data[:, self.parameters['index']]
-        del self.dataset.data.axes[self.parameters['axis']+1]
+        del self.dataset.data.axes[self.parameters['axis'] + 1]

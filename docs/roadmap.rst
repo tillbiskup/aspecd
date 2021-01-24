@@ -8,11 +8,7 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.1
 ===============
 
-* Plotter: Implement MultiPlotter1D
-
 * Plotter: Handle multiple axes (cwepr:GoniometerPlotter) - via SingleCompositePlotter
-
-* Plotter: Handle (cascaded) properties for all parts of a plot
 
 * Metadata mapper via yaml file
 
