@@ -333,7 +333,7 @@ class TestMultiPlotter(unittest.TestCase):
         self.assertEqual(xlabel, self.plotter.axes.get_xlabel())
         self.assertEqual(ylabel, self.plotter.axes.get_ylabel())
 
-    def test_plot_with_datasets_adds_line_properties(self):
+    def test_plot_with_datasets_adds_drawing_properties(self):
         self.plotter.datasets.append(dataset.Dataset())
         self.plotter.plot()
         self.assertEqual(len(self.plotter.datasets),
@@ -353,6 +353,10 @@ class TestMultiPlotter1D(unittest.TestCase):
 
     def test_description_is_sensible(self):
         self.assertNotIn('Abstract', self.plotter.description)
+
+    def test_properties_are_of_correct_type(self):
+        self.assertIs(type(self.plotter.properties),
+                      aspecd.plotting.MultiPlot1DProperties)
 
     def test_has_type_property(self):
         self.assertTrue(hasattr(self.plotter, 'type'))
@@ -377,6 +381,17 @@ class TestMultiPlotter1D(unittest.TestCase):
     def test_plot_with_datasets(self):
         self.plotter.datasets.append(dataset.Dataset())
         self.plotter.plot()
+
+    def test_plot_with_datasets_adds_drawing_to_properties(self):
+        self.plotter.datasets.append(dataset.Dataset())
+        self.plotter.plot()
+        self.assertEqual(1, len(self.plotter.properties.drawings))
+
+    def test_added_drawing_is_correct_type(self):
+        self.plotter.datasets.append(dataset.Dataset())
+        self.plotter.plot()
+        self.assertIs(type(self.plotter.properties.drawings[0]),
+                      aspecd.plotting.LineProperties)
 
 
 class TestSaver(unittest.TestCase):
@@ -857,3 +872,77 @@ class TestMultiPlotProperties(unittest.TestCase):
         self.assertEqual(self.plot_properties.legend.loc,
                          plot.legend.loc)
         plt.close(plot.figure)
+
+    def test_from_dict_sets_drawings(self):
+        dict_ = {'drawings': [{'label': 'foo'}]}
+        self.plot_properties.from_dict(dict_)
+        self.assertEqual('foo', self.plot_properties.drawings[0].label)
+
+    def test_from_dict_sets_multiple_drawings(self):
+        dict_ = {'drawings': [{'label': 'foo'}, {'label': 'bar'}]}
+        self.plot_properties.from_dict(dict_)
+        self.assertEqual('foo', self.plot_properties.drawings[0].label)
+        self.assertEqual('bar', self.plot_properties.drawings[1].label)
+
+    def test_from_dict_does_not_add_drawing_if_it_exists(self):
+        self.plot_properties.drawings.append(
+            aspecd.plotting.DrawingProperties())
+        dict_ = {'drawings': [{'label': 'foo'}]}
+        self.plot_properties.from_dict(dict_)
+        self.assertEqual(1, len(self.plot_properties.drawings))
+
+    def test_from_dict_adds_missing_drawing(self):
+        dict_ = {'drawings': [{'label': 'foo'}]}
+        self.plot_properties.from_dict(dict_)
+        self.assertEqual(1, len(self.plot_properties.drawings))
+
+    def test_from_dict_adds_missing_drawings(self):
+        dict_ = {'drawings': [{'label': 'foo'}, {'label': 'bar'}]}
+        self.plot_properties.from_dict(dict_)
+        self.assertEqual(2, len(self.plot_properties.drawings))
+
+    def test_from_dict_sets_legend(self):
+        dict_ = {'legend': {'loc': 'center'}, 'drawings': [{'label': 'foo'}]}
+        self.plot_properties.from_dict(dict_)
+        self.assertEqual('center', self.plot_properties.legend.loc)
+
+
+class TestMultiPlot1DProperties(unittest.TestCase):
+    def setUp(self):
+        self.plot_properties = plotting.MultiPlot1DProperties()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_added_drawing_is_line_properties_object(self):
+        self.plot_properties.add_drawing()
+        self.assertIs(type(self.plot_properties.drawings[0]),
+                      aspecd.plotting.LineProperties)
+
+    def test_added_drawing_has_correct_default_colour(self):
+        property_cycle = plt.rcParams['axes.prop_cycle'].by_key()
+        colour = property_cycle["color"][0]
+        self.plot_properties.add_drawing()
+        self.assertEqual(colour, self.plot_properties.drawings[0].color)
+
+    def test_drawing_has_correct_color_if_more_drawings_than_colors(self):
+        property_cycle = plt.rcParams['axes.prop_cycle'].by_key()
+        colour = property_cycle["color"][0]
+        for idx in range(0,len(property_cycle["color"])+1):
+            self.plot_properties.add_drawing()
+        self.assertEqual(colour, self.plot_properties.drawings[0].color)
+
+    def test_added_drawing_has_correct_default_linewidth(self):
+        linewidth = plt.rcParams['lines.linewidth']
+        self.plot_properties.add_drawing()
+        self.assertEqual(linewidth, self.plot_properties.drawings[0].linewidth)
+
+    def test_added_drawing_has_correct_default_linestyle(self):
+        linewidth = plt.rcParams['lines.linestyle']
+        self.plot_properties.add_drawing()
+        self.assertEqual(linewidth, self.plot_properties.drawings[0].linestyle)
+
+    def test_added_drawing_has_correct_default_marker(self):
+        linewidth = plt.rcParams['lines.marker']
+        self.plot_properties.add_drawing()
+        self.assertEqual(linewidth, self.plot_properties.drawings[0].marker)

@@ -715,7 +715,7 @@ class MultiPlotter(Plotter):
         if len(self.properties.drawings) < len(self.datasets):
             for index in range(len(self.properties.drawings),
                                len(self.datasets)):
-                self.properties.drawings.append(LineProperties())
+                self.properties.add_drawing()
 
     def _set_axes_labels(self):
         """Set axes labels from axes.
@@ -777,15 +777,12 @@ class MultiPlotter1D(MultiPlotter):
 
     To perform the plot, call the :meth:`plot` method of the plotter directly.
 
-    .. todo::
-        Implement this plotter, as it currently has no specific
-        functionality besides that inherited from MultiPlotter.
-
     """
     def __init__(self):
         super().__init__()
         self.description = '1D plotting step for multiple datasets'
         self.drawings = []
+        self.properties = MultiPlot1DProperties()
         self._type = 'plot'
         self._allowed_types = ['plot', 'step', 'loglog', 'semilogx',
                                'semilogy', ]
@@ -846,14 +843,7 @@ class MultiPlotter1D(MultiPlotter):
         return dataset.data.data.ndim == 1
 
     def _create_plot(self):
-        """
-        Actual drawing of datasets
-
-        .. todo::
-            Implement basic colour sequence in some way or other.
-
-            Implement adding line properties objects to metadata
-        """
+        """Actual drawing of datasets """
         plot_function = getattr(self.axes, self.type)
         for index, dataset in enumerate(self.datasets):
             drawing, = plot_function(dataset.data.axes[0].values,
@@ -1133,7 +1123,7 @@ class MultiPlotProperties(PlotProperties):
     drawings : :class:`list`
         Properties of the lines within a plot.
 
-        Each element is a :obj:`aspecd.plotting.LineProperties` object
+        Each element is a :obj:`aspecd.plotting.DrawingProperties` object
 
     Raises
     ------
@@ -1147,6 +1137,65 @@ class MultiPlotProperties(PlotProperties):
         self.axes = AxisProperties()
         self.legend = LegendProperties()
         self.drawings = []
+
+    def from_dict(self, dict_=None):
+        """
+        Set attributes from dictionary.
+
+        The key ``drawings`` is handled in a special way: First of all,
+        :attr:`aspecd.plotting.MultiPlotProperties.drawings` is a list,
+        hence we need to iterate over the entries of the list. Furthermore,
+        a new element of the list is appended only if it does not exist
+        already.
+
+        As different MultiPlotter objects will use different properties
+        classes for their drawings, adding a new drawing is handled by a
+        separate method,
+        :meth:`aspecd.plotting.MultiPlotProperties.add_drawing`.
+        Additionally, each MultiPlotter class can use this method as well,
+        to add drawings properties for each plotted item.
+
+        Parameters
+        ----------
+        dict_ : :class:`dict`
+            Dictionary containing information of a task.
+
+        Raises
+        ------
+        aspecd.plotting.MissingDictError
+            Raised if no dict is provided.
+
+        """
+        if 'drawings' in dict_:
+            for idx in range(len(self.drawings), len(dict_['drawings'])):
+                self.add_drawing()
+            for idx, drawing in enumerate(dict_['drawings']):
+                self.drawings[idx].from_dict(drawing)
+            dict_.pop('drawings')
+        if dict_:
+            super().from_dict(dict_)
+
+    def add_drawing(self):
+        """
+        Add a :obj:`aspecd.plotting.DrawingProperties` object to the list.
+
+        As different MultiPlotter objects will use different properties
+        classes for their drawings, adding a new drawing is handled by this
+        method. Additionally, each MultiPlotter class can use this method as
+        well, to add drawings properties for each plotted item.
+
+        .. note::
+            A note for developers: Concrete MultiPlotter classes will use
+            classes derived from :class:`aspecd.plotting.MultiPlotProperties`
+            for their ``properties`` property. These properties classes
+            should override this method to ensure the correct type of
+            :class:`aspecd.plotting.DrawingProperties` is instantiated.
+            Furthermore, make sure to set default values according to the
+            current cycler.
+
+        """
+        drawing_properties = DrawingProperties()
+        self.drawings.append(drawing_properties)
 
     def apply(self, plotter=None):
         """
@@ -1167,6 +1216,41 @@ class MultiPlotProperties(PlotProperties):
         self.axes.apply(axis=plotter.axes)
         if hasattr(plotter, 'legend'):
             self.legend.apply(legend=plotter.legend)
+
+
+class MultiPlot1DProperties(MultiPlotProperties):
+    """
+    Properties of a 1D multiplot, defining its appearance.
+
+    Raises
+    ------
+    aspecd.plotting.MissingPlotterError
+        Raised if no plotter is provided.
+
+    """
+
+    def add_drawing(self):
+        """
+        Add a :obj:`aspecd.plotting.LineProperties` object to the list.
+
+        The default properties are set as well, as obtained from
+        :obj:`matplotlib.pyplot.rcParams`. These contain at least colour,
+        width, marker, and style of a line.
+        """
+        drawing_properties = LineProperties()
+        self._set_default_properties(drawing_properties)
+        self.drawings.append(drawing_properties)
+
+    def _set_default_properties(self, drawing_properties):
+        property_cycle = plt.rcParams['axes.prop_cycle'].by_key()
+        length_properties = len(property_cycle["color"])
+        idx = len(self.drawings)
+        for key, value in property_cycle.items():
+            setattr(drawing_properties, key, value[idx % length_properties])
+        for key in ['linewidth', 'linestyle', 'marker']:
+            rc_property = 'lines.' + key
+            if rc_property in plt.rcParams.keys():
+                setattr(drawing_properties, key, plt.rcParams[rc_property])
 
 
 class FigureProperties(aspecd.utils.Properties):
@@ -1491,5 +1575,5 @@ class LineProperties(DrawingProperties):
         self.color = '#000000'
         self.drawstyle = 'default'
         self.linestyle = 'solid'
-        self.linewidth = 1.5
+        self.linewidth = 1.0
         self.marker = ''
