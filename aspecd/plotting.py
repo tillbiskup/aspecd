@@ -84,7 +84,7 @@ import copy
 import os
 
 import matplotlib as mpl
-import matplotlib.pyplot as plt
+from matplotlib import pyplot as plt
 
 import aspecd.dataset
 import aspecd.exceptions
@@ -128,6 +128,10 @@ class Plotter:
         Actual saving is done using an :obj:`aspecd.plotting.Saver` object.
     caption : :class:`aspecd.plotting.Caption`
         User-supplied information for the figure.
+    legend : :class:`matplotlib.legend.Legend`
+        Legend object
+    show_legend : :class:`bool`
+        Whether to display a legend
 
     Raises
     ------
@@ -146,6 +150,8 @@ class Plotter:
         self.axes = None
         self.filename = ''
         self.caption = Caption()
+        self.show_legend = False
+        self.legend = None
 
     @property
     def fig(self):
@@ -167,6 +173,7 @@ class Plotter:
         self._create_figure_and_axes()
         self._create_plot()
         self.properties.apply(plotter=self)
+        self._set_legend()
 
     # noinspection PyUnusedLocal
     @staticmethod
@@ -287,6 +294,10 @@ class Plotter:
             label = '$' + axis.quantity.replace(' ', '\\ ') + '$' + ' / ' + \
                     axis.unit
         return label
+
+    def _set_legend(self):
+        if self.show_legend:
+            self.legend = plt.legend(**self.properties.legend.to_dict())
 
 
 class SinglePlotter(Plotter):
@@ -655,10 +666,6 @@ class MultiPlotter(Plotter):
         Properties of the plot, defining its appearance
     datasets : :class:`list`
         List of dataset the plotting should be done for
-    legend : :class:`matplotlib.legend.Legend`
-        Legend object
-    show_legend : :class:`bool`
-        Whether to display a legend
 
     Raises
     ------
@@ -676,8 +683,6 @@ class MultiPlotter(Plotter):
         self.description = 'Abstract plotting step for multiple dataset'
         self.parameters['axes'] = [aspecd.dataset.Axis(),
                                    aspecd.dataset.Axis()]
-        self.legend = None
-        self.show_legend = False
 
     def plot(self):
         """Perform the actual plotting on the given list of datasets.
@@ -712,7 +717,6 @@ class MultiPlotter(Plotter):
         self._set_drawing_properties()
         super().plot()
         self._set_axes_labels()
-        self._set_legend()
 
     def _check_for_applicability(self):
         if not self.datasets:
@@ -769,10 +773,6 @@ class MultiPlotter(Plotter):
             ylabel = ''
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel(ylabel)
-
-    def _set_legend(self):
-        if self.show_legend:
-            self.legend = plt.legend()
 
 
 class MultiPlotter1D(MultiPlotter):
@@ -1036,6 +1036,12 @@ class PlotProperties(aspecd.utils.Properties):
         For the properties that can be set this way, see the documentation
         of the :class:`aspecd.plotting.FigureProperties` class.
 
+    legend : :class:`aspecd.plotting.LegendProperties`
+        Properties of the legend.
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.LegendProperties` class.
+
     Raises
     ------
     aspecd.plotting.MissingPlotterError
@@ -1046,6 +1052,7 @@ class PlotProperties(aspecd.utils.Properties):
     def __init__(self):
         super().__init__()
         self.figure = FigureProperties()
+        self.legend = LegendProperties()
 
     def apply(self, plotter=None):
         """
@@ -1159,12 +1166,6 @@ class MultiPlotProperties(PlotProperties):
         For the properties that can be set this way, see the documentation
         of the :class:`aspecd.plotting.AxisProperties` class.
 
-    legend : :class:`aspecd.plotting.LegendProperties`
-        Properties of the legend.
-
-        For the properties that can be set this way, see the documentation
-        of the :class:`aspecd.plotting.LegendProperties` class.
-
     drawings : :class:`list`
         Properties of the lines within a plot.
 
@@ -1183,7 +1184,6 @@ class MultiPlotProperties(PlotProperties):
     def __init__(self):
         super().__init__()
         self.axes = AxisProperties()
-        self.legend = LegendProperties()
         self.drawings = []
 
     def from_dict(self, dict_=None):

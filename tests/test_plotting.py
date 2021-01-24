@@ -804,10 +804,11 @@ class TestLegendProperties(unittest.TestCase):
         frameon = False
         self.legend_properties.frameon = frameon
         plot = plotting.Plotter()
+        plot.properties.legend = self.legend_properties
+        plot.show_legend = True
         plot.plot()
-        legend = plot.axes.legend()
-        self.legend_properties.apply(legend=legend)
-        self.assertEqual(frameon, self.legend_properties.frameon)
+        legend = plot.legend
+        self.assertEqual(frameon, legend.get_frame_on())
         plt.close(plot.figure)
 
 
