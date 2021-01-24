@@ -680,3 +680,10 @@ class TestProperties(unittest.TestCase):
         for prop in props:
             setattr(self.properties, prop, None)
         self.assertEqual(['bar'], self.properties.get_properties())
+
+    def test_get_properties_does_not_return_excluded_properties(self):
+        props = ['foo', 'bar']
+        for prop in props:
+            setattr(self.properties, prop, None)
+        self.properties._exclude = ['foo']
+        self.assertEqual(['bar'], self.properties.get_properties())

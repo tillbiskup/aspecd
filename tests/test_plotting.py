@@ -2,6 +2,7 @@
 
 import matplotlib.figure
 import matplotlib.axes
+import matplotlib.legend
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -346,6 +347,12 @@ class TestMultiPlotter(unittest.TestCase):
         self.assertEqual(len(self.plotter.datasets),
                          len(self.plotter.properties.drawings))
 
+    def test_plot_with_show_legend_set_to_true_adds_legend(self):
+        self.plotter.datasets.append(dataset.Dataset())
+        self.plotter.show_legend = True
+        self.plotter.plot()
+        self.assertIs(type(self.plotter.legend), matplotlib.legend.Legend)
+
 
 class TestMultiPlotter1D(unittest.TestCase):
     def setUp(self):
@@ -407,6 +414,15 @@ class TestMultiPlotter1D(unittest.TestCase):
         self.plotter.datasets.append(dataset.Dataset())
         self.plotter.plot()
         self.assertEqual(color, self.plotter.drawings[0].get_color())
+
+    def test_plot_with_show_legend_sets_legend_label(self):
+        dataset_ = dataset.Dataset()
+        dataset_.id = 'foo'
+        self.plotter.datasets.append(dataset_)
+        self.plotter.show_legend = True
+        self.plotter.plot()
+        self.assertEqual(dataset_.id,
+                         self.plotter.legend.get_texts()[0].get_text())
 
 
 class TestSaver(unittest.TestCase):
@@ -759,7 +775,7 @@ class TestLegendProperties(unittest.TestCase):
         self.assertTrue(callable(self.legend_properties.from_dict))
 
     def test_has_properties(self):
-        for prop in ['loc']:
+        for prop in ['loc', 'frameon']:
             self.assertTrue(hasattr(self.legend_properties, prop))
 
     def test_has_apply_method(self):
@@ -777,6 +793,21 @@ class TestLegendProperties(unittest.TestCase):
         legend = plot.axes.legend()
         self.legend_properties.apply(legend=legend)
         self.assertEqual(self.legend_properties.loc, legend.loc)
+        plt.close(plot.figure)
+
+    def test_location_sets_legend_loc(self):
+        location = 'center'
+        self.legend_properties.location = location
+        self.assertEqual(location, self.legend_properties.loc)
+
+    def test_frameon_sets_legend_frameon(self):
+        frameon = False
+        self.legend_properties.frameon = frameon
+        plot = plotting.Plotter()
+        plot.plot()
+        legend = plot.axes.legend()
+        self.legend_properties.apply(legend=legend)
+        self.assertEqual(frameon, self.legend_properties.frameon)
         plt.close(plot.figure)
 
 
@@ -943,7 +974,7 @@ class TestMultiPlot1DProperties(unittest.TestCase):
     def test_drawing_has_correct_color_if_more_drawings_than_colors(self):
         property_cycle = plt.rcParams['axes.prop_cycle'].by_key()
         colour = property_cycle["color"][0]
-        for idx in range(0,len(property_cycle["color"])+1):
+        for idx in range(0, len(property_cycle["color"])+1):
             self.plot_properties.add_drawing()
         self.assertEqual(colour, self.plot_properties.drawings[0].color)
 

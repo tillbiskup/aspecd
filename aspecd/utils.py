@@ -615,6 +615,10 @@ class Properties(ToDictMixin):
     for persistence.
     """
 
+    def __init__(self):
+        super().__init__()
+        self._exclude = []
+
     def from_dict(self, dict_=None):
         """
         Set attributes from dictionary.
@@ -657,6 +661,6 @@ class Properties(ToDictMixin):
         """
         props = []
         for prop in list(self.__dict__['__odict__'].keys()):
-            if not str(prop).startswith('_'):
+            if not str(prop).startswith('_') and not prop in self._exclude:
                 props.append(prop)
         return props

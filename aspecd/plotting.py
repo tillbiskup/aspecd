@@ -471,6 +471,9 @@ class SinglePlotter1D(SinglePlotter):
     properties : :class:`aspecd.plotting.SinglePlot1DProperties`
         Properties of the plot, defining its appearance
 
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.SinglePlot1DProperties` class.
+
     Raises
     ------
     TypeError
@@ -652,6 +655,10 @@ class MultiPlotter(Plotter):
         Properties of the plot, defining its appearance
     datasets : :class:`list`
         List of dataset the plotting should be done for
+    legend : :class:`matplotlib.legend.Legend`
+        Legend object
+    show_legend : :class:`bool`
+        Whether to display a legend
 
     Raises
     ------
@@ -669,6 +676,8 @@ class MultiPlotter(Plotter):
         self.description = 'Abstract plotting step for multiple dataset'
         self.parameters['axes'] = [aspecd.dataset.Axis(),
                                    aspecd.dataset.Axis()]
+        self.legend = None
+        self.show_legend = False
 
     def plot(self):
         """Perform the actual plotting on the given list of datasets.
@@ -700,9 +709,10 @@ class MultiPlotter(Plotter):
 
         """
         self._check_for_applicability()
-        self._set_line_properties()
+        self._set_drawing_properties()
         super().plot()
         self._set_axes_labels()
+        self._set_legend()
 
     def _check_for_applicability(self):
         if not self.datasets:
@@ -711,7 +721,7 @@ class MultiPlotter(Plotter):
             raise aspecd.exceptions.PlotNotApplicableToDatasetError(
                 'Plot not applicable to one or more datasets')
 
-    def _set_line_properties(self):
+    def _set_drawing_properties(self):
         if len(self.properties.drawings) < len(self.datasets):
             for _ in range(len(self.properties.drawings),
                            len(self.datasets)):
@@ -760,6 +770,10 @@ class MultiPlotter(Plotter):
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel(ylabel)
 
+    def _set_legend(self):
+        if self.show_legend:
+            self.legend = plt.legend()
+
 
 class MultiPlotter1D(MultiPlotter):
     """
@@ -776,6 +790,15 @@ class MultiPlotter1D(MultiPlotter):
     :class:`aspecd.plotting.MultiPlot1DProperties`.
 
     To perform the plot, call the :meth:`plot` method of the plotter directly.
+
+    drawings : :class:`list`
+        Actual graphical representations of the data of the datasets
+
+    properties : :class:`aspecd.plotting.MultiPlot1DProperties`
+        Properties of the plot, defining its appearance
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.MultiPlotProperties` class.
 
     """
 
@@ -846,9 +869,12 @@ class MultiPlotter1D(MultiPlotter):
     def _create_plot(self):
         """Actual drawing of datasets"""
         plot_function = getattr(self.axes, self.type)
-        for dataset in self.datasets:
+        for idx, dataset in enumerate(self.datasets):
+            if not self.properties.drawings[idx].label:
+                self.properties.drawings[idx].label = dataset.id
             drawing, = plot_function(dataset.data.axes[0].values,
-                                     dataset.data.data)
+                                     dataset.data.data,
+                                     label=self.properties.drawings[idx].label)
             self.drawings.append(drawing)
 
 
@@ -1007,6 +1033,9 @@ class PlotProperties(aspecd.utils.Properties):
     figure : :class:`aspecd.plotting.FigureProperties`
         Properties of the figure as such
 
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.FigureProperties` class.
+
     Raises
     ------
     aspecd.plotting.MissingPlotterError
@@ -1052,8 +1081,14 @@ class SinglePlotProperties(PlotProperties):
     axes : :class:`aspecd.plotting.AxisProperties`
         Properties of the axes.
 
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.AxisProperties` class.
+
     drawing : :class:`aspecd.plotting.DrawingProperties`
         Properties of the line within a plot
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.DrawingProperties` class.
 
     Raises
     ------
@@ -1097,6 +1132,9 @@ class SinglePlot1DProperties(SinglePlotProperties):
     drawing : :class:`aspecd.plotting.LineProperties`
         Properties of the line within a plot
 
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.LineProperties` class.
+
     Raises
     ------
     aspecd.plotting.MissingPlotterError
@@ -1118,13 +1156,22 @@ class MultiPlotProperties(PlotProperties):
     axes : :class:`aspecd.plotting.AxisProperties`
         Properties of the axes.
 
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.AxisProperties` class.
+
     legend : :class:`aspecd.plotting.LegendProperties`
         Properties of the legend.
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.LegendProperties` class.
 
     drawings : :class:`list`
         Properties of the lines within a plot.
 
         Each element is a :obj:`aspecd.plotting.DrawingProperties` object
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.DrawingProperties` class.
 
     Raises
     ------
@@ -1215,17 +1262,24 @@ class MultiPlotProperties(PlotProperties):
         """
         super().apply(plotter=plotter)
         self.axes.apply(axis=plotter.axes)
-        if hasattr(plotter, 'legend'):
+        if hasattr(plotter, 'legend') and plotter.legend:
             self.legend.apply(legend=plotter.legend)
         if hasattr(plotter, 'drawings'):
             for idx, drawing in enumerate(plotter.drawings):
                 self.drawings[idx].apply(drawing=drawing)
 
 
-
 class MultiPlot1DProperties(MultiPlotProperties):
     """
     Properties of a 1D multiplot, defining its appearance.
+
+    drawings : :class:`list`
+        Properties of the lines within a plot.
+
+        Each element is a :obj:`aspecd.plotting.LineProperties` object
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.LineProperties` class.
 
     Raises
     ------
@@ -1452,10 +1506,14 @@ class LegendProperties(aspecd.utils.Properties):
 
     Attributes
     ----------
-    loc: :class:`str`
+    loc : :class:`str`
         Location of the legend
 
         For possible values, see :class:`matplotlib.legend.Legend`
+    frameon : :class:`bool`
+        Whether to plot a box around the legend
+
+        Default: True
 
     Raises
     ------
@@ -1467,6 +1525,17 @@ class LegendProperties(aspecd.utils.Properties):
     def __init__(self):
         super().__init__()
         self.loc = 'best'
+        self.frameon = True
+        self._exclude = ['location']
+
+    @property
+    def location(self):
+        """Alias for :attr:`aspecd.plotting.LegendProperties.loc`"""
+        return self.loc
+
+    @location.setter
+    def location(self, value=''):
+        self.loc = value
 
     def apply(self, legend=None):
         """
