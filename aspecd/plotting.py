@@ -772,7 +772,7 @@ class MultiPlotter(Plotter):
             ylabel = \
                 self._create_axis_label_string(self.datasets[0].data.axes[1])
         elif self.properties.axes.ylabel:
-            xlabel = self.properties.axes.ylabel
+            ylabel = self.properties.axes.ylabel
         else:
             ylabel = ''
         self.axes.set_xlabel(xlabel)
