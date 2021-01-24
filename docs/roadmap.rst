@@ -8,6 +8,8 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.1
 ===============
 
+* Recipe: labels for datasets (in datasets list)
+
 * Plotter: Handle multiple axes (cwepr:GoniometerPlotter) - via SingleCompositePlotter
 
 * Metadata mapper via yaml file

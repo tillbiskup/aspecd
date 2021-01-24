@@ -811,6 +811,9 @@ class TestLegendProperties(unittest.TestCase):
         self.assertEqual(frameon, legend.get_frame_on())
         plt.close(plot.figure)
 
+    def test_location_not_included_in_to_dict(self):
+        self.assertNotIn('location', self.legend_properties.to_dict())
+
 
 class TestSinglePlotProperties(unittest.TestCase):
     def setUp(self):

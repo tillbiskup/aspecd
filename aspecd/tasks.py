@@ -1558,9 +1558,17 @@ class SingleplotTask(PlotTask):
         kind: singleplot
         type: SinglePlotter
         properties:
-          parameters:
-            param1: bar
-            param2: foo
+          properties:
+            figure:
+              title: My fancy figure title
+            drawing:
+              color: darkorange
+              label: my data
+              linewidth: 4
+              linestyle: dashed
+            legend:
+              location: northeast
+          show_legend: True
           caption:
             title: >
               Ideally a single sentence summarising the intend of the figure

@@ -1527,6 +1527,7 @@ class LegendProperties(aspecd.utils.Properties):
         self.loc = 'best'
         self.frameon = True
         self._exclude = ['location']
+        self._exclude_from_to_dict = ['location']
 
     @property
     def location(self):
