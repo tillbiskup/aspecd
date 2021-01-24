@@ -10,6 +10,8 @@ For version 0.1
 
 * Recipe: labels for datasets (in datasets list)
 
+* Report task: Add figure captions to context if available
+
 * Plotter: Handle multiple axes (cwepr:GoniometerPlotter) - via SingleCompositePlotter
 
 * Metadata mapper via yaml file

@@ -759,6 +759,8 @@ class MultiPlotter(Plotter):
                 aspecd.utils.all_equal(xunits):
             xlabel = \
                 self._create_axis_label_string(self.datasets[0].data.axes[0])
+        elif self.properties.axes.xlabel:
+            xlabel = self.properties.axes.xlabel
         else:
             xlabel = ''
         if self.parameters['axes'][1].quantity:
@@ -769,6 +771,8 @@ class MultiPlotter(Plotter):
                 aspecd.utils.all_equal(yunits):
             ylabel = \
                 self._create_axis_label_string(self.datasets[0].data.axes[1])
+        elif self.properties.axes.ylabel:
+            xlabel = self.properties.axes.ylabel
         else:
             ylabel = ''
         self.axes.set_xlabel(xlabel)
@@ -1125,7 +1129,7 @@ class SinglePlotProperties(PlotProperties):
 
         """
         super().apply(plotter=plotter)
-        self.axes.apply(axis=plotter.axes)
+        self.axes.apply(axes=plotter.axes)
         if plotter.drawing:
             self.drawing.apply(drawing=plotter.drawing)
 
@@ -1261,7 +1265,7 @@ class MultiPlotProperties(PlotProperties):
 
         """
         super().apply(plotter=plotter)
-        self.axes.apply(axis=plotter.axes)
+        self.axes.apply(axes=plotter.axes)
         if hasattr(plotter, 'legend') and plotter.legend:
             self.legend.apply(legend=plotter.legend)
         if hasattr(plotter, 'drawings'):
@@ -1451,7 +1455,7 @@ class AxisProperties(aspecd.utils.Properties):
         self.yticklabels = None
         self.yticks = None
 
-    def apply(self, axis=None):
+    def apply(self, axes=None):
         """
         Apply settable properties to axis.
 
@@ -1470,9 +1474,12 @@ class AxisProperties(aspecd.utils.Properties):
             Raised if no axis is provided.
 
         """
-        if not axis:
+        if not axes:
             raise aspecd.exceptions.MissingAxisError
-        axis.update(self._get_settable_properties())
+        axes.update(self._get_settable_properties())
+        for property_, value in self._get_settable_properties().items():
+            if hasattr(axes, 'set_' + property_):
+                getattr(axes, 'set_' + property_)(value)
 
     def _get_settable_properties(self):
         """

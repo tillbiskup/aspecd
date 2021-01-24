@@ -754,8 +754,18 @@ class TestAxisProperties(unittest.TestCase):
         self.axis_properties.xlabel = 'foo'
         plot = plotting.Plotter()
         plot.plot()
-        self.axis_properties.apply(axis=plot.axes)
+        self.axis_properties.apply(axes=plot.axes)
         self.assertEqual(self.axis_properties.xlabel, plot.axes.get_xlabel())
+        plt.close(plot.figure)
+
+    def test_apply_properties_from_dict_sets_axis_properties(self):
+        label = 'foo'
+        properties = {'axes': {'xlabel': label}}
+        plot = plotting.MultiPlotter1D()
+        plot.datasets.append(aspecd.dataset.Dataset())
+        plot.properties.from_dict(properties)
+        plot.plot()
+        self.assertEqual(label, plot.axes.get_xlabel())
         plt.close(plot.figure)
 
 

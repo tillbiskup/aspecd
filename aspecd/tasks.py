@@ -2253,6 +2253,11 @@ def serve(recipe_filename=''):
     recipe_filename : :class:`str`
         Name of the recipe YAML file to cook
 
+    Raises
+    ------
+    aspecd.exceptions.MissingRecipeError
+        Raised if no recipe filename is provided upon trying to serve
+
     """
     if not recipe_filename:
         if len(sys.argv) < 2:
