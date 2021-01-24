@@ -1,5 +1,6 @@
 """Tests for tasks."""
 import collections
+import glob
 import os
 import subprocess
 import unittest
@@ -1533,8 +1534,42 @@ class TestChefDeService(unittest.TestCase):
             self.chef_de_service.serve(recipe_filename=self.history_filename)
         os.remove(history_filename)
 
-    @unittest.skip
+
+@unittest.skip
+class TestServe(unittest.TestCase):
+
+    def setUp(self):
+        self.chef_de_service = tasks.ChefDeService()
+        self.recipe_filename = 'foo.yaml'
+        self.figure_filename = 'foo.pdf'
+        self.history_filename = ''
+
+    def tearDown(self):
+        if os.path.exists(self.recipe_filename):
+            os.remove(self.recipe_filename)
+        if os.path.exists(self.figure_filename):
+            os.remove(self.figure_filename)
+        if self.history_filename and os.path.exists(self.history_filename):
+            os.remove(self.history_filename)
+        for file in glob.glob('*.yaml'):
+            os.remove(file)
+
+    def create_recipe(self):
+        recipe_dict = {
+            'datasets': ['foo'],
+            'tasks': [{'kind': 'singleplot', 'type': 'SinglePlotter',
+                       'properties': {'filename': self.figure_filename}}],
+        }
+        yaml = utils.Yaml()
+        yaml.dict = recipe_dict
+        yaml.write_to(self.recipe_filename)
+
     def test_serve_console_entry_point_cooks_recipe(self):
         self.create_recipe()
         subprocess.run(["serve", self.recipe_filename])
         self.assertTrue(os.path.exists(self.figure_filename))
+
+    def test_serve_console_entry_point_without_recipe_raises(self):
+        self.create_recipe()
+        with self.assertRaises(subprocess.CalledProcessError):
+            subprocess.run(["serve"], check=True)

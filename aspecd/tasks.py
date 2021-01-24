@@ -2255,6 +2255,9 @@ def serve(recipe_filename=''):
 
     """
     if not recipe_filename:
+        if len(sys.argv) < 2:
+            message = "You need to specify a recipe to serve."
+            raise aspecd.exceptions.MissingRecipeError(message=message)
         recipe_filename = sys.argv[1]
     chef_de_service = ChefDeService()
     chef_de_service.serve(recipe_filename=recipe_filename)
