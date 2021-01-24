@@ -1059,15 +1059,15 @@ class TestMultiPlotTask(unittest.TestCase):
         self.recipe = tasks.Recipe()
         self.dataset = ['foo']
         self.figure_filename = 'foo.pdf'
+        self.plotting_task = {'kind': 'multiplot',
+                              'type': 'MultiPlotter',
+                              'apply_to': self.dataset}
 
     def tearDown(self):
         if os.path.exists(self.figure_filename):
             os.remove(self.figure_filename)
 
     def prepare_recipe(self):
-        self.plotting_task = {'kind': 'multiplot',
-                              'type': 'MultiPlotter',
-                              'apply_to': self.dataset}
         dataset_factory = dataset.DatasetFactory()
         dataset_factory.importer_factory = io.DatasetImporterFactory()
         self.recipe.dataset_factory = dataset_factory
@@ -1102,6 +1102,12 @@ class TestReportTask(unittest.TestCase):
         self.template = 'test_template.tex'
         self.filename = 'test_report.tex'
         self.result = 'test_report.pdf'
+        self.report_task = {'kind': 'report',
+                            'type': 'LaTeXReporter',
+                            'properties': {'template': self.template,
+                                           'filename': self.filename,
+                                           },
+                            'apply_to': self.dataset}
 
     def tearDown(self):
         if os.path.exists(self.template):
@@ -1112,12 +1118,6 @@ class TestReportTask(unittest.TestCase):
             os.remove(self.result)
 
     def prepare_recipe(self):
-        self.report_task = {'kind': 'report',
-                            'type': 'LaTeXReporter',
-                            'properties': {'template': self.template,
-                                           'filename': self.filename,
-                                           },
-                            'apply_to': self.dataset}
         dataset_factory = dataset.DatasetFactory()
         dataset_factory.importer_factory = io.DatasetImporterFactory()
         self.recipe.dataset_factory = dataset_factory
@@ -1230,6 +1230,23 @@ class TestReportTask(unittest.TestCase):
             read_content = f.read()
         self.assertEqual(read_content, 'blub')
 
+    def test_perform_task_with_multiple_datasets_and_filenames(self):
+        self.report_task["properties"]["filename"] = \
+            ['test-report1.tex', 'test-report2.tex']
+        self.report_task.pop("apply_to")
+        self.prepare_recipe()
+        self.recipe.datasets["bar"] = aspecd.dataset.Dataset()
+        template_content = " "
+        self.prepare_template(template_content)
+        self.task.from_dict(self.report_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        for filename in self.report_task["properties"]["filename"]:
+            self.assertTrue(os.path.exists(filename))
+        # Manual teardown in this case
+        for filename in self.report_task["properties"]["filename"]:
+            if os.path.exists(filename):
+                os.remove(filename)
 
 
 class TestModelTask(unittest.TestCase):

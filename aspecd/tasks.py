@@ -1737,6 +1737,32 @@ class ReportTask(Task):
     result of the :meth:`aspecd.dataset.Dataset.to_dict` method, thus the full
     information contained in the dataset.
 
+    You can, of course, apply the report task to multiple datasets
+    individually. In this case, you most probably would like to have your
+    reports saved to individual files. This means that the property
+    ``filename`` needs to become a list:
+
+    .. code-block:: yaml
+
+        datasets:
+          - foo
+          - bar
+
+        tasks:
+          - kind: report
+            type: LaTeXReporter
+            properties:
+              template: my-fancy-latex-template.tex
+              filename:
+                - report1.tex
+                - report2.tex
+
+
+    .. important::
+        Make sure to provide the same number of file names in your recipe as
+        the number of datasets you apply the report to. Otherwise you may
+        run into trouble.
+
 
     Attributes
     ----------
@@ -1757,10 +1783,12 @@ class ReportTask(Task):
     # noinspection PyUnresolvedReferences
     def _perform(self):
         self._add_figure_filenames_to_includes()
-        for dataset_id in self.apply_to:
+        for idx, dataset_id in enumerate(self.apply_to):
             dataset = self.recipe.get_dataset(dataset_id)
             task = self.get_object()
             task.context['dataset'] = dataset.to_dict()
+            if isinstance(self.properties["filename"], list):
+                task.filename = self.properties["filename"][idx]
             task.create()
             if self.compile and hasattr(task, 'compile'):
                 task.compile()
