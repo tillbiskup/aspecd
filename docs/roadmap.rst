@@ -8,7 +8,7 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.1
 ===============
 
-* Recipe: labels for datasets (in datasets list)
+* AnalysisSteps: ``applicable`` method to check datasets with
 
 * Report task: Add figure captions to context if available
 
@@ -18,7 +18,7 @@ For version 0.1
 
 * Documentation: Use cases
 
-* Documentation: YAML representation of dataset structure(s)
+* Documentation: YAML representation of dataset structure(s) (automatically generated together with the documentation and using the ``literalinclude`` directive)
 
 
 For later versions

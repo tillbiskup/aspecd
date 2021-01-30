@@ -797,7 +797,6 @@ class MultiPlotter1D(MultiPlotter):
 
     Attributes
     ----------
-
     drawings : :class:`list`
         Actual graphical representations of the data of the datasets
 
@@ -890,7 +889,6 @@ class CompositePlotter(Plotter):
 
     Attributes
     ----------
-
     axes : :class:`list`
         List of axes
 
@@ -933,7 +931,6 @@ class CompositePlotter(Plotter):
     .. todo::
         There is a number of things left to do with CompositePlotter:
 
-        * PlotProperties
         * Handle how the individual plotters get access to their datasets
 
     """
@@ -945,6 +942,7 @@ class CompositePlotter(Plotter):
         self.grid_dimensions = [1, 1]
         self.subplot_locations = [[0, 0, 1, 1]]
         self.plotter = []
+        self.properties = CompositePlotProperties()
 
     def _create_figure_and_axes(self):
         self.figure = plt.figure()
@@ -962,6 +960,10 @@ class CompositePlotter(Plotter):
             self.plotter[idx].figure = self.figure
             self.plotter[idx].axes = axes
             self.plotter[idx].plot()
+        if len(self.properties.axes) < len(self.axes):
+            for _ in range(len(self.properties.axes),
+                           len(self.axes)):
+                self.properties.add_axes()
 
 
 class Saver:
@@ -1171,7 +1173,7 @@ class SinglePlotProperties(PlotProperties):
 
     Attributes
     ----------
-    axes : :class:`aspecd.plotting.AxisProperties`
+    axes : :class:`aspecd.plotting.AxesProperties`
         Properties of the axes.
 
         For the properties that can be set this way, see the documentation
@@ -1192,7 +1194,7 @@ class SinglePlotProperties(PlotProperties):
 
     def __init__(self):
         super().__init__()
-        self.axes = AxisProperties()
+        self.axes = AxesProperties()
         self.drawing = DrawingProperties()
 
     def apply(self, plotter=None):
@@ -1246,7 +1248,7 @@ class MultiPlotProperties(PlotProperties):
 
     Attributes
     ----------
-    axes : :class:`aspecd.plotting.AxisProperties`
+    axes : :class:`aspecd.plotting.AxesProperties`
         Properties of the axes.
 
         For the properties that can be set this way, see the documentation
@@ -1269,7 +1271,7 @@ class MultiPlotProperties(PlotProperties):
 
     def __init__(self):
         super().__init__()
-        self.axes = AxisProperties()
+        self.axes = AxesProperties()
         self.drawings = []
 
     def from_dict(self, dict_=None):
@@ -1398,6 +1400,85 @@ class MultiPlot1DProperties(MultiPlotProperties):
                 setattr(drawing_properties, key, plt.rcParams[rc_property])
 
 
+class CompositePlotProperties(PlotProperties):
+    """
+    Properties of a composite plot, defining its appearance.
+
+    Attributes
+    ----------
+    axes : :class:`aspecd.plotting.AxesProperties`
+        Properties of the axes.
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.AxisProperties` class.
+
+    Raises
+    ------
+    aspecd.plotting.MissingPlotterError
+        Raised if no plotter is provided.
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.axes = []
+
+    def from_dict(self, dict_=None):
+        """
+        Set attributes from dictionary.
+
+        The key ``axes`` is handled in a special way: First of all,
+        :attr:`aspecd.plotting.CompositePlotProperties.axes` is a list,
+        hence we need to iterate over the entries of the list. Furthermore,
+        a new element of the list is appended only if it does not exist
+        already.
+
+        Parameters
+        ----------
+        dict_ : :class:`dict`
+            Dictionary containing information of a task.
+
+        Raises
+        ------
+        aspecd.plotting.MissingDictError
+            Raised if no dict is provided.
+
+        """
+        if 'axes' in dict_:
+            for idx in range(len(self.axes), len(dict_['axes'])):
+                self.add_axes()
+            for idx, axes in enumerate(dict_['axes']):
+                self.axes[idx].from_dict(axes)
+            dict_.pop('axes')
+        if dict_:
+            super().from_dict(dict_)
+
+    def add_axes(self):
+        """Add a :obj:`aspecd.plotting.AxesProperties` object to the list."""
+        axes_properties = AxesProperties()
+        self.axes.append(axes_properties)
+
+    def apply(self, plotter=None):
+        """
+        Apply properties to plot.
+
+        Parameters
+        ----------
+        plotter: :class:`aspecd.plotting.CompositePlotter`
+            Plotter the properties should be applied to.
+
+        Raises
+        ------
+        aspecd.plotting.MissingPlotterError
+            Raised if no plotter is provided.
+
+        """
+        super().apply(plotter=plotter)
+        if hasattr(plotter, 'axes'):
+            for idx, axes in enumerate(plotter.axes):
+                self.axes[idx].apply(axes=axes)
+
+
 class FigureProperties(aspecd.utils.Properties):
     """
     Properties of a figure of a plot, i.e., the most general aspects.
@@ -1459,7 +1540,7 @@ class FigureProperties(aspecd.utils.Properties):
         figure.suptitle(self.title)
 
 
-class AxisProperties(aspecd.utils.Properties):
+class AxesProperties(aspecd.utils.Properties):
     """
     Properties of an axis of a plot.
 
@@ -1569,7 +1650,7 @@ class AxisProperties(aspecd.utils.Properties):
 
         Properties that are either None or empty often cause problems.
         Therefore, the properties of
-        :class:`aspecd.plotting.AxisProperties` are reduced accordingly to
+        :class:`aspecd.plotting.AxesProperties` are reduced accordingly to
         those properties that are neither None nor empty.
 
         Returns
