@@ -795,6 +795,9 @@ class MultiPlotter1D(MultiPlotter):
 
     To perform the plot, call the :meth:`plot` method of the plotter directly.
 
+    Attributes
+    ----------
+
     drawings : :class:`list`
         Actual graphical representations of the data of the datasets
 
@@ -880,6 +883,85 @@ class MultiPlotter1D(MultiPlotter):
                                      dataset.data.data,
                                      label=self.properties.drawings[idx].label)
             self.drawings.append(drawing)
+
+
+class CompositePlotter(Plotter):
+    """Base class for plots consisting of multiple axes.
+
+    Attributes
+    ----------
+
+    axes : :class:`list`
+        List of axes
+
+        Will eventually be objects of subtypes of
+        :class:`matplotlib.axes.Axes` and populated upon calling
+        :meth:`aspecd.plotting.Plotter.plot`.
+
+    grid_dimensions : :class:`list`
+        Dimensions of the grid used to layout the figure
+
+        two elements: number of rows, number of columns
+
+        Default: [1, 1]
+
+    subplot_locations : :class:`list`
+        List of subplot locations
+
+        Each subplot location is a list with four numeric elements:
+        [start_row, start_column, row_span, column_span]
+
+        Default: [[0, 0, 1, 1]]
+
+    plotter : :class:`list`
+        List of plotters
+
+        Plotters are objects of type :class:`aspecd.plotting.Plotter`.
+
+        Upon calling :meth:`aspecd.plotting.Plotter.plot`, for each axes in
+        the list of axes, the corresponding plotter will be accessed and its
+        :meth:`aspecd.plotting.Plotter.plot` method called.
+
+    Raises
+    ------
+    aspecd.exceptions.MissingPlotterError
+        Raised if the number of plotters does not match the number of axes
+
+        Note that for each axes you need a corresponding plotter.
+
+
+    .. todo::
+        There is a number of things left to do with CompositePlotter:
+
+        * PlotProperties
+        * Handle how the individual plotters get access to their datasets
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = 'Composite plotter displaying several axes'
+        self.axes = []
+        self.grid_dimensions = [1, 1]
+        self.subplot_locations = [[0, 0, 1, 1]]
+        self.plotter = []
+
+    def _create_figure_and_axes(self):
+        self.figure = plt.figure()
+        grid_spec = self.figure.add_gridspec(self.grid_dimensions[0],
+                                             self.grid_dimensions[1])
+        for subplot in self.subplot_locations:
+            self.axes.append(self.figure.add_subplot(
+                grid_spec[subplot[0]:subplot[0] + subplot[2],
+                          subplot[1]:subplot[1] + subplot[3]]))
+
+    def _create_plot(self):
+        if not self.plotter or len(self.plotter) < len(self.axes):
+            raise aspecd.exceptions.MissingPlotterError
+        for idx, axes in enumerate(self.axes):
+            self.plotter[idx].figure = self.figure
+            self.plotter[idx].axes = axes
+            self.plotter[idx].plot()
 
 
 class Saver:

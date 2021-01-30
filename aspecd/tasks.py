@@ -685,9 +685,9 @@ class Recipe:
         if self.datasets_source_directory:
             source = os.path.join(self.datasets_source_directory, source)
         dataset = self.dataset_factory.get_dataset(source=source)
-        for key, value in properties.items():
-            if hasattr(dataset, key):
-                setattr(dataset, key, value)
+        for property_key, value in properties.items():
+            if hasattr(dataset, property_key):
+                setattr(dataset, property_key, value)
         self.datasets[label] = dataset
 
     def _append_task(self, key):
@@ -1247,7 +1247,7 @@ class Task(aspecd.utils.ToDictMixin):
                         source[key], target[key])
                 elif isinstance(target[key], list):
                     for idx, element in enumerate(target[key]):
-                        if len(source[key]) >= idx+1:
+                        if len(source[key]) >= idx + 1:
                             if hasattr(element, 'from_dict'):
                                 element.from_dict(source[key][idx])
                             elif isinstance(element, dict):

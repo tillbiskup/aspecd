@@ -309,8 +309,8 @@ class TestMultiPlotter(unittest.TestCase):
     def test_plot_with_axes_in_parameters_sets_axes_labels(self):
         self.plotter.parameters['axes'][0].quantity = 'foo'
         self.plotter.parameters['axes'][0].unit = 'bar'
-        self.plotter.parameters['axes'][1].quantity = 'foo'
-        self.plotter.parameters['axes'][1].unit = 'bar'
+        self.plotter.parameters['axes'][1].quantity = 'foo2'
+        self.plotter.parameters['axes'][1].unit = 'bar2'
         xlabel = '$' + self.plotter.parameters['axes'][0].quantity + \
                  '$' + ' / ' + self.plotter.parameters['axes'][0].unit
         ylabel = '$' + self.plotter.parameters['axes'][1].quantity + \
@@ -423,6 +423,82 @@ class TestMultiPlotter1D(unittest.TestCase):
         self.plotter.plot()
         self.assertEqual(dataset_.id,
                          self.plotter.legend.get_texts()[0].get_text())
+
+
+class TestCompositePlotter(unittest.TestCase):
+    def setUp(self):
+        self.plotter = plotting.CompositePlotter()
+        self.dataset = aspecd.dataset.CalculatedDataset()
+        self.dataset.data.data = np.sin(np.linspace(0, 2*np.pi, 101))
+
+    def tearDown(self):
+        if self.plotter.fig:
+            plt.close(self.plotter.fig)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_description_is_sensible(self):
+        self.assertIn('Composite', self.plotter.description)
+
+    def test_has_grid_dimensions_property(self):
+        self.assertTrue(hasattr(self.plotter, 'grid_dimensions'))
+
+    def test_has_subplot_locations_property(self):
+        self.assertTrue(hasattr(self.plotter, 'subplot_locations'))
+
+    def test_has_plotter_property(self):
+        self.assertTrue(hasattr(self.plotter, 'plotter'))
+
+    def test_plot_with_single_subplot_adds_axis_to_axes(self):
+        self.plotter.grid_dimensions = [1, 1]
+        self.plotter.subplot_locations = [[0, 0, 1, 1]]
+        single_plotter = plotting.SinglePlotter1D()
+        single_plotter.dataset = self.dataset
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plot()
+        self.assertEqual(1, len(self.plotter.axes))
+
+    def test_plot_with_multiple_subplots_adds_axes_to_axes(self):
+        self.plotter.grid_dimensions = [2, 2]
+        self.plotter.subplot_locations = [[0, 0, 1, 1],
+                                          [1, 0, 1, 1],
+                                          [0, 1, 2, 1]]
+        single_plotter = plotting.SinglePlotter1D()
+        single_plotter.dataset = self.dataset
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plot()
+        self.assertEqual(len(self.plotter.subplot_locations),
+                         len(self.plotter.axes))
+
+    def test_plot_with_single_subplot_and_plotter_plots_line(self):
+        self.plotter.grid_dimensions = [1, 1]
+        self.plotter.subplot_locations = [[0, 0, 1, 1]]
+        single_plotter = plotting.SinglePlotter1D()
+        single_plotter.dataset = self.dataset
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plot()
+        self.assertTrue(self.plotter.axes[0].has_data())
+
+    def test_plot_without_plotter_raises(self):
+        self.plotter.grid_dimensions = [1, 1]
+        self.plotter.subplot_locations = [[0, 0, 1, 1]]
+        with self.assertRaises(aspecd.exceptions.MissingPlotterError):
+            self.plotter.plot()
+
+    def test_plot_with_not_enough_plotters_raises(self):
+        self.plotter.grid_dimensions = [2, 2]
+        self.plotter.subplot_locations = [[0, 0, 1, 1],
+                                          [1, 0, 1, 1],
+                                          [0, 1, 2, 1]]
+        single_plotter = plotting.SinglePlotter1D()
+        single_plotter.dataset = self.dataset
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        with self.assertRaises(aspecd.exceptions.MissingPlotterError):
+            self.plotter.plot()
 
 
 class TestSaver(unittest.TestCase):

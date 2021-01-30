@@ -661,6 +661,6 @@ class Properties(ToDictMixin):
         """
         props = []
         for prop in list(self.__dict__['__odict__'].keys()):
-            if not str(prop).startswith('_') and not prop in self._exclude:
+            if not str(prop).startswith('_') and prop not in self._exclude:
                 props.append(prop)
         return props
