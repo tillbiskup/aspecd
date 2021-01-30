@@ -590,6 +590,12 @@ class TestCopyKeysBetweenDicts(unittest.TestCase):
         target = utils.copy_keys_between_dicts(source, target)
         self.assertIn('kfoo', target)
 
+    def test_copy_keys_if_dict_in_list(self):
+        source = {'kfoo': [{'kbar': 'vfoo'}]}
+        target = {'kfoo': [{'kbar': 'vbar', 'kfoobar': 'vfoobar'}]}
+        target = utils.copy_keys_between_dicts(source, target)
+        self.assertEqual('vfoo', target["kfoo"][0]["kbar"])
+
 
 class TestAllEqual(unittest.TestCase):
 

@@ -1465,7 +1465,7 @@ class AxisProperties(aspecd.utils.Properties):
 
         Parameters
         ----------
-        axis: :class:`matplotlib.axes.Axes`
+        axes: :class:`matplotlib.axes.Axes`
             axis to set properties for
 
         Raises

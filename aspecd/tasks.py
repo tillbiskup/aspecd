@@ -1152,11 +1152,33 @@ class Task(aspecd.utils.ToDictMixin):
                 if hasattr(attr, 'from_dict'):
                     attr.from_dict(properties[key])
                 elif isinstance(attr, dict) and attr:
-                    prop = aspecd.utils.copy_keys_between_dicts(
+                    prop = self._set_attributes_in_dict(
                         source=properties[key], target=attr)
                     setattr(obj, key, prop)
                 else:
                     setattr(obj, key, properties[key])
+
+    def _set_attributes_in_dict(self, source=None, target=None):
+        for key in source:
+            if key in target:
+                if isinstance(target[key], dict):
+                    target[key] = self._set_attributes_in_dict(
+                        source[key], target[key])
+                elif isinstance(target[key], list):
+                    for idx, element in enumerate(target[key]):
+                        if len(source[key]) >= idx+1:
+                            if hasattr(element, 'from_dict'):
+                                element.from_dict(source[key][idx])
+                            elif isinstance(element, dict):
+                                target[key][idx] = self._set_attributes_in_dict(
+                                    source=source[key][idx], target=element)
+                            else:
+                                target[key][idx] = source[key][idx]
+                else:
+                    target[key] = source[key]
+            else:
+                target[key] = source[key]
+        return target
 
     def _parse_properties(self):
         """
@@ -1481,7 +1503,7 @@ class PlotTask(Task):
     Attributes
     ----------
     label : :class:`str`
-        Label for the fighure resulting from a plotting step.
+        Label for the figure resulting from a plotting step.
 
         This label will be used to refer to the plot later on when
         further processing the recipe. Actually, in the recipe's

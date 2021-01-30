@@ -600,6 +600,15 @@ class TestTask(unittest.TestCase):
         self.assertEqual(metadata['parameters']['bar'],
                          processing_step.parameters['bar'])
 
+    def test_set_object_attributes_sets_fields_in_object_in_list(self):
+        processing_step = processing.ProcessingStep()
+        processing_step.parameters = {'foo': [aspecd.dataset.Axis()]}
+        metadata = {'parameters': {'foo': [{'unit': 'foo'}]}}
+        self.task.properties = metadata
+        self.task._set_object_attributes(processing_step)
+        self.assertEqual(metadata['parameters']['foo'][0]['unit'],
+                         processing_step.parameters['foo'][0].unit)
+
     def test_set_object_attributes_does_not_override_dict(self):
         processing_step = processing.ProcessingStep()
         processing_step.parameters = {'foo': 'a', 'bar': 'b'}
