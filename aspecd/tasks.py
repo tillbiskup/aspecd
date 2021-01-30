@@ -173,6 +173,73 @@ a default package and overriding this for a particular task:
         type: ProcessingStep
 
 
+Setting own labels (and properties) for datasets
+------------------------------------------------
+
+Usually, you specify the path (or any other unique and supported identifier) to
+your dataset(s) in the list of datasets at the beginning of a recipe, like this:
+
+.. code-block:: yaml
+
+    datasets:
+      - /lengthly/path/to/dataset1
+      - /lengthly/path/to/dataset2
+
+
+In this case, you will have to refer to the datasets by their path (or
+whatever other identifier you used). Usually, these identifiers are quite
+lengthly, hence not necessarily convenient for use as labels within a
+recipe. However, you can set your own labels for datasets:
+
+.. code-block:: yaml
+
+    datasets:
+      - source: /lengthly/path/to/dataset1
+        label: dataset1
+      - source: /lengthly/path/to/dataset2
+        label: dataset2
+
+
+Make sure to set the ``source`` value to the identifier of your dataset. For
+your label, you are free to choose, as long as it is a valid key for a
+:class:`dict`. From now on, refer to the datasets by their respective labels
+throughout the recipe.
+
+.. note::
+
+    If you use the ``source`` key but don't specify a ``label`` key as well,
+    the source will be used as label, as before.
+
+
+However, you can even drive the whole thing one step further: Suppose you
+are bored from having always the dataset id appearing in a figure legend,
+as it simply does not fit to what you need. How about that:
+
+.. code-block:: yaml
+
+    datasets:
+      - source: /lengthly/path/to/dataset1
+        label: dataset1
+        id: low concentration
+      - source: /lengthly/path/to/dataset2
+        label: dataset2
+        id: high concentration
+
+
+In this case, you assign the ``id`` field of your datasets upon loading
+them. The idea behind: When specifying which dataset to load, you usually
+know best about such things, and you don't want to need to deal with this
+later on when plotting.
+
+.. important::
+
+    Generally, each property of a dataset can be set this way. However,
+    be careful not to override properties that are not scalar and cannot
+    easily be represented in YAML in the recipe, as you will most certainly
+    break things otherwise. A good example of how to definitely break
+    things would be to override the ``data`` property of a dataset.
+
+
 Executing recipes: serving the cooked results
 =============================================
 
@@ -602,12 +669,26 @@ class Recipe:
                 self._append_task(key)
 
     def _append_dataset(self, key):
-        if self.datasets_source_directory:
-            source = os.path.join(self.datasets_source_directory, key)
+        properties = dict()
+        if isinstance(key, dict):
+            properties = copy.copy(key)
+            source = key['source']
+            properties.pop('source')
+            if 'label' in key:
+                label = key['label']
+                properties.pop('label')
+            else:
+                label = key['source']
         else:
             source = key
+            label = key
+        if self.datasets_source_directory:
+            source = os.path.join(self.datasets_source_directory, source)
         dataset = self.dataset_factory.get_dataset(source=source)
-        self.datasets[key] = dataset
+        for key, value in properties.items():
+            if hasattr(dataset, key):
+                setattr(dataset, key, value)
+        self.datasets[label] = dataset
 
     def _append_task(self, key):
         task = self.task_factory.get_task_from_dict(key)
@@ -1668,7 +1749,7 @@ class MultiplotTask(PlotTask):
     For more information on the underlying general class,
     see :class:`aspecd.plotting.MultiPlotter`.
 
-    For an example of how such a analysis task may be included into a
+    For an example of how such a multiplot task may be included into a
     recipe, see the YAML listing below:
 
     .. code-block:: yaml
@@ -1677,8 +1758,11 @@ class MultiplotTask(PlotTask):
         type: MultiPlotter
         properties:
           parameters:
-            param1: bar
-            param2: foo
+            axes:
+              - quantity: wavelength
+                unit: nm
+              - quantity: intensity
+                unit:
           caption:
             title: >
               Ideally a single sentence summarising the intend of the figure
@@ -1698,6 +1782,12 @@ class MultiplotTask(PlotTask):
     of a recipe using their respective labels. Those labels will
     automatically be replaced by the actual dataset/result prior to
     performing the task.
+
+    A specialty of plots of multiple dataseets is that you cannot
+    necessarily infer the axis labels from the datasets, hence may be
+    interested to set them directly. This is done using the ``axes`` key of
+    the ``parameters`` property of the :class:`aspecd.plotting.MultiPlotter`
+    class, as shown in the recipe example above.
 
     .. note::
         As soon as you provide a filename in the properties of your recipe,
