@@ -128,7 +128,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         Short description of the dataset
 
         Can be set by the user, defaults to the value set as
-        :prop:`aspecd.dataset.id` by the importer.
+        :attr:`aspecd.dataset.id` by the importer.
 
     data : :obj:`aspecd.dataset.Data`
         numeric data and axes

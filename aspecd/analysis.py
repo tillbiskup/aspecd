@@ -134,7 +134,7 @@ class AnalysisStep:
         inheriting from SingleAnalysisStep according to their needs.
 
         This is a static method that gets called automatically by each class
-        inheriting from :class:`aspecd.processing.ProcessingStep`. Hence,
+        inheriting from :class:`aspecd.analysis.AnalysisStep`. Hence,
         if you need to override it in your own class, make the method static
         as well. An example of an implementation testing for two-dimensional
         data is given below::
@@ -244,7 +244,7 @@ class SingleAnalysisStep(AnalysisStep):
         Raises
         ------
         aspecd.processing.ProcessingNotApplicableToDatasetError
-            Raised when processing step is not applicable to dataset
+            Raised when analysis step is not applicable to dataset
 
         aspecd.processing.MissingDatasetError
             Raised when no dataset exists to act on
@@ -369,7 +369,7 @@ class MultiAnalysisStep(AnalysisStep):
             Raised when no datasets exist to act on
 
         aspecd.processing.ProcessingNotApplicableToDatasetError
-            Raised when processing step is not applicable to dataset
+            Raised when analysis step is not applicable to dataset
 
         """
         if not self.datasets:
