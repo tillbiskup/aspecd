@@ -495,8 +495,23 @@ class InfofileEmptyError(Error):
         self.message = message
 
 
-class ProcessingNotApplicableToDatasetError(Error):
-    """Exception raised when processing step is not applicable to dataset
+class NotApplicableToDatasetError(Error):
+    """Exception raised when task is not applicable to dataset.
+
+    Attributes
+    ----------
+    message : :class:`str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__()
+        self.message = message
+
+
+class StyleNotFoundError(Error):
+    """Exception raised when the requested style could not be found
 
     Attributes
     ----------

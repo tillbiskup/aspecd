@@ -167,26 +167,41 @@ class Plotter:
         Name of the plotter.
 
         Defaults always to the full class name, don't change!
+
     parameters : :class:`dict`
         All parameters necessary for the plot, implicit and explicit
+
     properties : :class:`aspecd.plotting.PlotProperties`
         Properties of the plot, defining its appearance
+
     description : :class:`str`
         Short description, to be set in class definition
+
     figure : :class:`matplotlib.figure.Figure`
         Reference to figure object
+
     axes : :class:`matplotlib.axes.Axes`
         Reference to axes object used for actual plotting
+
     filename : :class:`str`
         Name of file to save the plot to
 
         Actual saving is done using an :obj:`aspecd.plotting.Saver` object.
+
     caption : :class:`aspecd.plotting.Caption`
         User-supplied information for the figure.
+
     legend : :class:`matplotlib.legend.Legend`
         Legend object
+
     show_legend : :class:`bool`
         Whether to display a legend
+
+    style : :class:`str`
+        plotting style to use
+
+        You can use all plotting styles understood by matplotlib. See
+        :mod:`matplotlib.style` for details.
 
     Raises
     ------
@@ -207,6 +222,7 @@ class Plotter:
         self.caption = Caption()
         self.show_legend = False
         self.legend = None
+        self.style = ''
 
     @property
     def fig(self):
@@ -225,6 +241,7 @@ class Plotter:
         method :meth:`_create_plot`.
 
         """
+        self._set_style()
         self._create_figure_and_axes()
         self._create_plot()
         self.properties.apply(plotter=self)
@@ -248,6 +265,17 @@ class Plotter:
 
         """
         return True
+
+    def _set_style(self):
+        if self.style:
+            if self.style not in plt.style.available + ['default', 'xkcd']:
+                message = 'Cannot find matplotlib style "{style}".'.format(
+                    style=self.style)
+                raise aspecd.exceptions.StyleNotFoundError(message=message)
+            if self.style == 'xkcd':
+                plt.xkcd()
+            else:
+                plt.style.use(self.style)
 
     def _create_figure_and_axes(self):
         """Create figure and axes and assign to attributes.

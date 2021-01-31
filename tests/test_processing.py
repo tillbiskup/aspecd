@@ -354,7 +354,7 @@ class TestProjection(unittest.TestCase):
         dataset = aspecd.dataset.Dataset()
         dataset.data.data = np.sin(np.linspace(0, 2*np.pi, num=500))
         with self.assertRaises(
-                aspecd.exceptions.ProcessingNotApplicableToDatasetError):
+                aspecd.exceptions.NotApplicableToDatasetError):
             dataset.process(self.processing)
 
     def test_project_reduces_data_dimensionality(self):
@@ -408,7 +408,7 @@ class TestSliceExtraction(unittest.TestCase):
         dataset = aspecd.dataset.Dataset()
         dataset.data.data = np.sin(np.linspace(0, 2*np.pi, num=500))
         with self.assertRaises(
-                aspecd.exceptions.ProcessingNotApplicableToDatasetError):
+                aspecd.exceptions.NotApplicableToDatasetError):
             dataset.process(self.processing)
 
     def test_without_index_raises(self):

@@ -8,7 +8,9 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.1
 ===============
 
-* Plotter: Handle multiple axes (cwepr:GoniometerPlotter) - via SingleCompositePlotter
+* Plotter: Stackplot for SinglePlot2D and MultiPlot
+
+* Plotter: adding zero line(s)
 
 * Report task: Add figure captions to context if available
 

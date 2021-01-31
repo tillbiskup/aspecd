@@ -180,7 +180,7 @@ class ProcessingStep:
 
     Raises
     ------
-    aspecd.processing.ProcessingNotApplicableToDatasetError
+    aspecd.processing.NotApplicableToDatasetError
         Raised when processing step is not applicable to dataset
     aspecd.processing.MissingDatasetError
         Raised when no dataset exists to act on
@@ -234,7 +234,7 @@ class ProcessingStep:
 
         Raises
         ------
-        aspecd.processing.ProcessingNotApplicableToDatasetError
+        aspecd.processing.NotApplicableToDatasetError
             Raised when processing step is not applicable to dataset
         aspecd.processing.MissingDatasetError
             Raised when no dataset exists to act on
@@ -280,7 +280,7 @@ class ProcessingStep:
 
     def _check_applicability(self):
         if not self.applicable(self.dataset):
-            raise aspecd.exceptions.ProcessingNotApplicableToDatasetError
+            raise aspecd.exceptions.NotApplicableToDatasetError
 
     # noinspection PyUnusedLocal
     @staticmethod
@@ -545,7 +545,7 @@ class Projection(ProcessingStep):
 
     Raises
     ------
-    aspecd.exceptions.ProcessingNotApplicableToDatasetError
+    aspecd.exceptions.NotApplicableToDatasetError
         Raised if dataset has not enough dimensions
 
     IndexError
@@ -617,7 +617,7 @@ class SliceExtraction(ProcessingStep):
 
     Raises
     ------
-    aspecd.exceptions.ProcessingNotApplicableToDatasetError
+    aspecd.exceptions.NotApplicableToDatasetError
         Raised if dataset has not enough dimensions
 
     IndexError

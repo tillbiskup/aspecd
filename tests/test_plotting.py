@@ -73,6 +73,9 @@ class TestPlotter(unittest.TestCase):
     def test_has_caption_property(self):
         self.assertTrue(hasattr(self.plotter, 'caption'))
 
+    def test_has_style_property(self):
+        self.assertTrue(hasattr(self.plotter, 'style'))
+
     def test_has_save_method(self):
         self.assertTrue(hasattr(self.plotter, 'save'))
         self.assertTrue(callable(self.plotter.save))
@@ -141,6 +144,11 @@ class TestPlotter(unittest.TestCase):
         self.plotter.plot()
         self.assertEqual(self.plotter.properties.figure.dpi,
                          self.plotter.figure.dpi)
+
+    def test_plot_with_unknown_style_raises(self):
+        self.plotter.style = 'foo'
+        with self.assertRaises(aspecd.exceptions.StyleNotFoundError):
+            self.plotter.plot()
 
 
 class TestSinglePlotter(unittest.TestCase):
