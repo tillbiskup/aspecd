@@ -201,8 +201,8 @@ recipe. However, you can set your own ids for datasets:
 
 
 Make sure to set the ``source`` value to the identifier of your dataset. For
-your label, you are free to choose, as long as it is a valid key for a
-:class:`dict`. From now on, refer to the datasets by their respective labels
+your id, you are free to choose, as long as it is a valid key for a
+:class:`dict`. From now on, refer to the datasets by their respective ids
 throughout the recipe.
 
 .. note::
@@ -213,8 +213,8 @@ throughout the recipe.
 
 However, you can even drive the whole thing one step further: Suppose you
 are bored from having always the dataset label (that is by default identical
-to its id) appearing in a figure legend, as it simply does not fit to what
-you need. How about that:
+to the source it is imported from) appearing in a figure legend, as it simply
+does not fit to what you need. How about that:
 
 .. code-block:: yaml
 

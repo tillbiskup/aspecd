@@ -520,6 +520,51 @@ class TestCompositePlotter(unittest.TestCase):
                       aspecd.plotting.AxesProperties)
 
 
+class TestSingleCompositePlotter(unittest.TestCase):
+    def setUp(self):
+        self.plotter = plotting.SingleCompositePlotter()
+
+    def tearDown(self):
+        if self.plotter.fig:
+            plt.close(self.plotter.fig)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_description_is_sensible(self):
+        self.assertIn('single dataset', self.plotter.description)
+
+    def test_plot_without_dataset_raises(self):
+        with self.assertRaises(aspecd.exceptions.MissingDatasetError):
+            self.plotter.plot()
+
+    def test_plot_with_preset_dataset(self):
+        self.plotter.dataset = dataset.Dataset()
+        self.plotter.grid_dimensions = [1, 1]
+        self.plotter.subplot_locations = [[0, 0, 1, 1]]
+        single_plotter = plotting.SinglePlotter1D()
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plot()
+
+    def test_plot_from_dataset_sets_dataset(self):
+        self.plotter.grid_dimensions = [1, 1]
+        self.plotter.subplot_locations = [[0, 0, 1, 1]]
+        single_plotter = plotting.SinglePlotter1D()
+        self.plotter.plotter.append(single_plotter)
+        test_dataset = dataset.Dataset()
+        plotter = test_dataset.plot(self.plotter)
+        self.assertTrue(isinstance(plotter.dataset, dataset.Dataset))
+
+    def test_plot_with_dataset(self):
+        self.plotter.grid_dimensions = [1, 1]
+        self.plotter.subplot_locations = [[0, 0, 1, 1]]
+        single_plotter = plotting.SinglePlotter1D()
+        self.plotter.plotter.append(single_plotter)
+        test_dataset = dataset.Dataset()
+        self.plotter.plot(dataset=test_dataset)
+        self.assertGreater(len(test_dataset.representations), 0)
+
+
 class TestSaver(unittest.TestCase):
     def setUp(self):
         self.saver = plotting.Saver()

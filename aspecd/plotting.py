@@ -36,10 +36,65 @@ connection between a single dataset and such a plot in sense of
 representations stored in datasets. Plotters handling multiple datasets should
 always inherit from the :class:`aspecd.plotting.MultiPlotter` class.
 
-Regardless of the type of plotter, saving plots is always done using
+In a certain sense, there is a third type of plotters:
+
+* Plotters consisting of more than one axes
+
+  Shall be derived from :class:`aspecd.plotting.CompositePlotter`.
+
+However, practically mostly these composite plotters will behave like
+plotters handling either single or multiple datasets. Generally,
+these composite plotters will use other types of plotters to perform the
+actual plot tasks. This modular approach allows for great flexibility.
+
+Regardless of the type of plotter, **saving plots** is always done using
 objects of the :class:`aspecd.plotting.Saver` class. The actual task of
 saving a plot is as easy as calling the :meth:`save` method of a plotter
 with a saver object as its argument.
+
+
+Types of concrete plotters
+==========================
+
+The ASpecD framework comes with a series of concrete plotters included ready
+to be used. As stated above, plotters can generally be divided into two
+types: plotters operating on single datasets and plotters combining the data
+of multiple datasets into a single figure.
+
+Additionally, plotters can be categorised with regard to creating figures
+consisting of a single or multiple axes. The latter are plotters inheriting
+from the :class:`aspecd.plotting.CompositePlotter` class. The latter can be
+thought of as templates for the other plotters to operate on, *i.e.* they
+provide the axes for other plotters to display their results.
+
+
+Concrete plotters for single datasets
+-------------------------------------
+
+* :class:`aspecd.plotting.SinglePlotter1D`
+
+  Basic line plots for single datasets, allowing to plot a series of
+  line-type plots, including (semi)log plots
+
+* :class:`aspecd.plotting.SinglePlotter2D`
+
+  Basic 2D plots for single datasets, allowing to plot a series of 2D plots,
+  including contour plots and image-type display
+
+* :class:`aspecd.plotting.SingleCompositePlotter`
+
+  Composite plotter for single datasets, allowing to plot different views of
+  one and the same datasets by using existing plotters for single datasets.
+
+
+Concrete plotters for multiple datasets
+---------------------------------------
+
+* :class:`aspecd.plotting.MultiPlotter1D`
+
+  Basic line plots for multiple datasets, allowing to plot a series of
+  line-type plots, including (semi)log plots
+
 
 
 Plotting to existing axes
@@ -927,12 +982,6 @@ class CompositePlotter(Plotter):
 
         Note that for each axes you need a corresponding plotter.
 
-
-    .. todo::
-        There is a number of things left to do with CompositePlotter:
-
-        * Handle how the individual plotters get access to their datasets
-
     """
 
     def __init__(self):
@@ -964,6 +1013,113 @@ class CompositePlotter(Plotter):
             for _ in range(len(self.properties.axes),
                            len(self.axes)):
                 self.properties.add_axes()
+
+
+class SingleCompositePlotter(CompositePlotter):
+    """Composite plotter for single datasets
+
+    Attributes
+    ----------
+    dataset : :class:`aspecd.dataset.Dataset`
+        Dataset the plotting should be done for
+
+    Raises
+    ------
+    aspecd.plotting.MissingDatasetError
+        Raised when no dataset exists to act on
+
+    aspecd.plotting.PlotNotApplicableToDatasetError
+        Raised when processing step is not applicable to dataset
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.dataset = None
+        self.description = 'Composite plotter for single dataset'
+
+    # pylint: disable=arguments-differ
+    def plot(self, dataset=None, from_dataset=False):
+        """Perform the actual plotting on the given dataset.
+
+        If no dataset is set as property in the object, the method will
+        raise a respective exception. The dataset object :meth:`plot` method
+        always assigns its dataset as the respective dataset attribute of
+        the plotter class.
+
+        The actual plotting should be implemented within the non-public
+        method :meth:`_create_plot`. Besides that, the applicability of the
+        plotting to the given dataset will be checked automatically. These
+        checks should be implemented in the method :meth:`applicable`.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset to perform plot for
+
+        from_dataset : `boolean`
+            whether we are called from within a dataset
+
+            Defaults to "False" and shall never be set manually.
+
+        Returns
+        -------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset plot has been performed for
+
+        Raises
+        ------
+        aspecd.plotting.PlotNotApplicableToDatasetError
+            Raised when plotting is not applicable to dataset
+        aspecd.plotting.MissingDatasetError
+            Raised when no dataset exists to act on
+
+        """
+        self._assign_dataset(dataset)
+        self._call_from_dataset(from_dataset)
+        return self.dataset
+
+    def create_history_record(self):
+        """
+        Create history record to be added to the dataset.
+
+        Usually, this method gets called from within the
+        :meth:`aspecd.dataset.plot` method of the
+        :class:`aspecd.dataset.Dataset` class and ensures the history of
+        each plotting step to get written properly.
+
+        Returns
+        -------
+        history_record : :class:`aspecd.history.PlotHistoryRecord`
+            history record for plotting step
+
+        """
+        history_record = \
+            aspecd.history.PlotHistoryRecord(package=self.dataset.package_name)
+        history_record.plot = aspecd.history.SinglePlotRecord(plotter=self)
+        history_record.plot.preprocessing = copy.deepcopy(
+            self.dataset.history)
+        return history_record
+
+    def _assign_dataset(self, dataset):
+        if not dataset:
+            if not self.dataset:
+                raise aspecd.exceptions.MissingDatasetError
+        else:
+            self.dataset = dataset
+        for plotter in self.plotter:
+            plotter.dataset = self.dataset
+
+    def _call_from_dataset(self, from_dataset):
+        if not from_dataset:
+            self.dataset.plot(self)
+        else:
+            self._check_applicability()
+            super().plot()
+
+    def _check_applicability(self):
+        if not self.applicable(self.dataset):
+            raise aspecd.exceptions.PlotNotApplicableToDatasetError
 
 
 class Saver:
