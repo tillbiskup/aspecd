@@ -8,11 +8,9 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.1
 ===============
 
-* AnalysisSteps: ``applicable`` method to check datasets with
+* Plotter: Handle multiple axes (cwepr:GoniometerPlotter) - via SingleCompositePlotter
 
 * Report task: Add figure captions to context if available
-
-* Plotter: Handle multiple axes (cwepr:GoniometerPlotter) - via SingleCompositePlotter
 
 * Metadata mapper via yaml file
 

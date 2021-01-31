@@ -189,15 +189,15 @@ your dataset(s) in the list of datasets at the beginning of a recipe, like this:
 In this case, you will have to refer to the datasets by their path (or
 whatever other identifier you used). Usually, these identifiers are quite
 lengthly, hence not necessarily convenient for use as labels within a
-recipe. However, you can set your own labels for datasets:
+recipe. However, you can set your own ids for datasets:
 
 .. code-block:: yaml
 
     datasets:
       - source: /lengthly/path/to/dataset1
-        label: dataset1
+        id: dataset1
       - source: /lengthly/path/to/dataset2
-        label: dataset2
+        id: dataset2
 
 
 Make sure to set the ``source`` value to the identifier of your dataset. For
@@ -207,26 +207,27 @@ throughout the recipe.
 
 .. note::
 
-    If you use the ``source`` key but don't specify a ``label`` key as well,
-    the source will be used as label, as before.
+    If you use the ``source`` key but don't specify a ``id`` key as well,
+    the source will be used as id, as before.
 
 
 However, you can even drive the whole thing one step further: Suppose you
-are bored from having always the dataset id appearing in a figure legend,
-as it simply does not fit to what you need. How about that:
+are bored from having always the dataset label (that is by default identical
+to its id) appearing in a figure legend, as it simply does not fit to what
+you need. How about that:
 
 .. code-block:: yaml
 
     datasets:
       - source: /lengthly/path/to/dataset1
-        label: dataset1
-        id: low concentration
+        id: dataset1
+        label: low concentration
       - source: /lengthly/path/to/dataset2
-        label: dataset2
-        id: high concentration
+        id: dataset2
+        label: high concentration
 
 
-In this case, you assign the ``id`` field of your datasets upon loading
+In this case, you assign the ``label`` field of your datasets upon loading
 them. The idea behind: When specifying which dataset to load, you usually
 know best about such things, and you don't want to need to deal with this
 later on when plotting.
@@ -674,9 +675,9 @@ class Recipe:
             properties = copy.copy(key)
             source = key['source']
             properties.pop('source')
-            if 'label' in key:
-                label = key['label']
-                properties.pop('label')
+            if 'id' in key:
+                label = key['id']
+                properties.pop('id')
             else:
                 label = key['source']
         else:

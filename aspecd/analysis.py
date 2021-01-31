@@ -125,6 +125,38 @@ class AnalysisStep:
 
         """
 
+    # noinspection PyUnusedLocal
+    @staticmethod
+    def applicable(dataset):  # pylint: disable=unused-argument
+        """Check whether analysis step is applicable to the given dataset.
+
+        Returns `True` by default and needs to be implemented in classes
+        inheriting from SingleAnalysisStep according to their needs.
+
+        This is a static method that gets called automatically by each class
+        inheriting from :class:`aspecd.processing.ProcessingStep`. Hence,
+        if you need to override it in your own class, make the method static
+        as well. An example of an implementation testing for two-dimensional
+        data is given below::
+
+            @staticmethod
+            def applicable(dataset):
+                return len(dataset.data.axes) == 3
+
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset to check
+
+        Returns
+        -------
+        applicable : :class:`bool`
+            `True` if successful, `False` otherwise.
+
+        """
+        return True
+
 
 class SingleAnalysisStep(AnalysisStep):
     """
@@ -189,6 +221,11 @@ class SingleAnalysisStep(AnalysisStep):
         the parameters will be sanitised by calling the non-public method
         :meth:`_sanitise_parameters`.
 
+        Additionally, each dataset will be automatically checked for
+        applicability, using the
+        :meth:`aspecd.analysis.AnalysisStep.applicable` method. Make sure to
+        override this method according to your needs.
+
         Parameters
         ----------
         dataset : :class:`aspecd.dataset.Dataset`
@@ -203,6 +240,14 @@ class SingleAnalysisStep(AnalysisStep):
         -------
         dataset : :class:`aspecd.dataset.Dataset`
             dataset analysis has been performed for
+
+        Raises
+        ------
+        aspecd.processing.ProcessingNotApplicableToDatasetError
+            Raised when processing step is not applicable to dataset
+
+        aspecd.processing.MissingDatasetError
+            Raised when no dataset exists to act on
 
         """
         self._assign_dataset(dataset=dataset)
@@ -220,17 +265,21 @@ class SingleAnalysisStep(AnalysisStep):
         if not from_dataset:
             self.dataset.analyse(self)
         else:
+            self._check_applicability()
             self._sanitise_parameters()
             self._perform_task()
 
-    # pylint: disable=arguments-differ
-    def analyze(self, dataset=None):
+    def _check_applicability(self):
+        if not self.applicable(self.dataset):
+            raise aspecd.exceptions.ProcessingNotApplicableToDatasetError
+
+    def analyze(self, dataset=None, from_dataset=False):
         """Perform the actual analysis step on the given dataset.
 
         Same method as self.analyse, but for those preferring AE over BE
 
         """
-        return self.analyse(dataset)
+        return self.analyse(dataset, from_dataset)
 
     def add_preprocessing_step(self, processingstep=None):
         """
@@ -309,14 +358,28 @@ class MultiAnalysisStep(AnalysisStep):
         sanitised by calling the non-public method
         :meth:`_sanitise_parameters`.
 
+        Additionally, each dataset will be automatically checked for
+        applicability, using the
+        :meth:`aspecd.analysis.AnalysisStep.applicable` method. Make sure to
+        override this method according to your needs.
+
         Raises
         ------
         aspecd.analysis.MissingDatasetError
             Raised when no datasets exist to act on
 
+        aspecd.processing.ProcessingNotApplicableToDatasetError
+            Raised when processing step is not applicable to dataset
+
         """
         if not self.datasets:
             raise aspecd.exceptions.MissingDatasetError
         super().analyse()
+        self._check_applicability()
         self._sanitise_parameters()
         self._perform_task()
+
+    def _check_applicability(self):
+        for dataset in self.datasets:
+            if not self.applicable(dataset):
+                raise aspecd.exceptions.ProcessingNotApplicableToDatasetError

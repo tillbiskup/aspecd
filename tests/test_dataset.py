@@ -60,6 +60,9 @@ class TestDataset(unittest.TestCase):
     def test_has_id_property(self):
         self.assertTrue(hasattr(self.dataset, 'id'))
 
+    def test_has_label_property(self):
+        self.assertTrue(hasattr(self.dataset, 'label'))
+
     def test_has_references_property(self):
         self.assertTrue(hasattr(self.dataset, 'references'))
 

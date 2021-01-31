@@ -190,6 +190,7 @@ class DatasetImporter:
             self.dataset = dataset
         self._import()
         self.dataset.id = self.source
+        self.dataset.label = self.source
 
     def _import(self):
         """Perform the actual import of data and metadata into the dataset.

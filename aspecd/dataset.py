@@ -123,35 +123,49 @@ class Dataset(aspecd.utils.ToDictMixin):
     ----------
     id : :class:`str`
         (unique) identifier of the dataset (i.e., path, LOI, or else)
+
+    label : :class:`str`
+        Short description of the dataset
+
+        Can be set by the user, defaults to the value set as
+        :prop:`aspecd.dataset.id` by the importer.
+
     data : :obj:`aspecd.dataset.Data`
         numeric data and axes
+
     metadata : :obj:`aspecd.metadata.DatasetMetadata`
         hierarchical key-value store of metadata
+
     history : :class:`list`
         processing steps performed on the numeric data
 
         For a full list of tasks performed on a dataset in *chronological*
         order see the :attr:`aspecd.dataset.Dataset.tasks` attribute.
+
     analyses : :class:`list`
         analysis steps performed on the dataset
 
         For a full list of tasks performed on a dataset in *chronological*
         order see the :attr:`aspecd.dataset.Dataset.tasks` attribute.
+
     annotations : :class:`list`
         annotations of the dataset
 
         For a full list of tasks performed on a dataset in *chronological*
         order see the :attr:`aspecd.dataset.Dataset.tasks` attribute.
+
     representations : :class:`list`
         representations of the dataset, e.g., plots
 
         For a full list of tasks performed on a dataset in *chronological*
         order see the :attr:`aspecd.dataset.Dataset.tasks` attribute.
+
     references : :class:`list`
         references to other datasets
 
         Each reference is an object of type
         :class:`aspecd.dataset.DatasetReference`.
+
     tasks : :class:`list`
         tasks performed on the dataset in *chronological* order
 
@@ -190,6 +204,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         self.annotations = []
         self.representations = []
         self.id = ''  # pylint: disable=invalid-name
+        self.label = ''
         self.references = []
         self.tasks = []
         # Package name is used to store the package version in history records

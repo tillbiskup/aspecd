@@ -877,7 +877,7 @@ class MultiPlotter1D(MultiPlotter):
         plot_function = getattr(self.axes, self.type)
         for idx, dataset in enumerate(self.datasets):
             if not self.properties.drawings[idx].label:
-                self.properties.drawings[idx].label = dataset.id
+                self.properties.drawings[idx].label = dataset.label
             drawing, = plot_function(dataset.data.axes[0].values,
                                      dataset.data.data,
                                      label=self.properties.drawings[idx].label)

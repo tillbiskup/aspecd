@@ -50,6 +50,10 @@ class TestAnalysisStep(unittest.TestCase):
         self.assertTrue(hasattr(self.analysisstep, 'analyze'))
         self.assertTrue(callable(self.analysisstep.analyze))
 
+    def test_has_applicable_method(self):
+        self.assertTrue(hasattr(self.analysisstep, 'applicable'))
+        self.assertTrue(callable(self.analysisstep.applicable))
+
 
 class TestSingleAnalysisStep(unittest.TestCase):
     def setUp(self):

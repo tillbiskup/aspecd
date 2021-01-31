@@ -417,11 +417,11 @@ class TestMultiPlotter1D(unittest.TestCase):
 
     def test_plot_with_show_legend_sets_legend_label(self):
         dataset_ = dataset.Dataset()
-        dataset_.id = 'foo'
+        dataset_.label = 'foo'
         self.plotter.datasets.append(dataset_)
         self.plotter.show_legend = True
         self.plotter.plot()
-        self.assertEqual(dataset_.id,
+        self.assertEqual(dataset_.label,
                          self.plotter.legend.get_texts()[0].get_text())
 
 
