@@ -98,6 +98,7 @@ information for recipe-driven data analysis. For details of the YAML file
 structure, see the :class:`aspecd.tasks.Recipe` class and its attributes.
 
 """
+import copy
 import os
 import tempfile
 import zipfile
@@ -169,6 +170,14 @@ class DatasetImporter:
         The actual import should be implemented within the non-public method
         :meth:`_import`.
 
+        .. note::
+            A number of parameters of the dataset are automatically assigned
+            *after* calling out to the non-public method
+            :meth:`aspecd.io.DatasetImporter._import`, namely the
+            non-public property ``_origdata`` of the dataset is populated
+            with a copy of :attr:`aspecd.dataset.Dataset.data`, and id and
+            label are set to :attr:`aspecd.io.DatasetImporter.source`.
+
         Parameters
         ----------
         dataset : :class:`aspecd.dataset.Dataset`
@@ -189,6 +198,8 @@ class DatasetImporter:
         else:
             self.dataset = dataset
         self._import()
+        # Untested due to lack of ideas how to test
+        self.dataset._origdata = copy.deepcopy(self.dataset.data)
         self.dataset.id = self.source
         self.dataset.label = self.source
 
