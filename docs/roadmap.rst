@@ -12,8 +12,6 @@ For version 0.1
 
 * Plotter: adding zero line(s)
 
-* Recipes: loading datasets using different ASpecD-derived packages (comparing different spectroscopic methods)
-
 * Report task: Add figure captions to context if available
 
 * Metadata mapper via yaml file

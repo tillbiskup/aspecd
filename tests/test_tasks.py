@@ -156,6 +156,13 @@ class TestRecipe(unittest.TestCase):
         self.recipe.from_dict(dict_)
         self.assertEqual(label, self.recipe.datasets[self.dataset].label)
 
+    def test_from_dict_with_dataset_as_dict_and_package_sets_dataset(self):
+        dict_ = {'datasets': [{'source': self.dataset, 'package': 'aspecd'}]}
+        self.recipe.dataset_factory = 'foo'
+        self.recipe.from_dict(dict_)
+        self.assertTrue(isinstance(self.recipe.datasets[self.dataset],
+                                   dataset.Dataset))
+
     def test_from_dict_with_tasks_without_task_factory_raises(self):
         dict_ = {'tasks': [self.task]}
         self.recipe.dataset_factory = self.dataset_factory

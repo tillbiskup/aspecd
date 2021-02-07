@@ -241,6 +241,37 @@ later on when plotting.
     things would be to override the ``data`` property of a dataset.
 
 
+Import datasets from other packages
+-----------------------------------
+
+Sounds strange in the first place, but appears to be more common than you
+may imagine: Sometimes, you need to compare datasets recorded using
+different methods that are in turn handled by different ASpecD-derived
+packages.
+
+So how to import a dataset using the importer of a different package than
+the current one? The syntax for the recipe is much the same as the one
+described above for setting other properties of a dataset:
+
+.. code-block:: yaml
+
+    datasets:
+      - source: /lengthly/path/to/dataset1
+      - source: /lengthly/path/to/dataset2
+        package: other_package
+
+
+In this example, the first dataset will be imported using the default
+package set for the recipe, but the second dataset will be loaded using the
+:class:`aspecd.dataset.DatasetFactory` and
+:class:`aspecd.io.DatasetImporterFactory` classes from ``other_package``. Of
+course, you need to make sure that ``other_package`` exists and contains
+both, a dataset factory and dataset importer factory. Furthermore, these two
+classes need to reside in the same modules as in the ASpecD framework,
+*i.e.*, the dataset factory needs to reside in the "dataset" module and the
+dataset importer factory in the "io" module.
+
+
 Executing recipes: serving the cooked results
 =============================================
 
@@ -685,11 +716,28 @@ class Recipe:
             label = key
         if self.datasets_source_directory:
             source = os.path.join(self.datasets_source_directory, source)
-        dataset = self.dataset_factory.get_dataset(source=source)
+        if 'package' in properties:
+            dataset_factory = \
+                self._get_dataset_factory(package=properties['package'])
+            dataset = dataset_factory.get_dataset(source=source)
+        else:
+            dataset = self.dataset_factory.get_dataset(source=source)
         for property_key, value in properties.items():
             if hasattr(dataset, property_key):
                 setattr(dataset, property_key, value)
         self.datasets[label] = dataset
+
+    @staticmethod
+    def _get_dataset_factory(package=''):
+        dataset_factory_name = '.'.join([package, 'dataset', 'DatasetFactory'])
+        dataset_factory = \
+            aspecd.utils.object_from_class_name(dataset_factory_name)
+        importer_factory_name = '.'.join([package, 'io',
+                                          'DatasetImporterFactory'])
+        importer_factory = \
+            aspecd.utils.object_from_class_name(importer_factory_name)
+        dataset_factory.importer_factory = importer_factory
+        return dataset_factory
 
     def _append_task(self, key):
         task = self.task_factory.get_task_from_dict(key)
