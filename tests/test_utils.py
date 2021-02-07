@@ -481,6 +481,20 @@ class TestYaml(unittest.TestCase):
         yaml_object.read_stream(dump)
         self.assertEqual(self.dict, yaml_object.dict)
 
+    def test_read_from_converts_floats_with_exponent_to_float(self):
+        yaml_dict = {'foo': '1e3'}
+        with open(self.filename, 'w') as file:
+            yaml.dump(yaml_dict, file)
+        self.yaml.read_from(self.filename)
+        self.assertEqual(1e3, self.yaml.dict['foo'])
+
+    def test_read_stream_converts_floats_with_exponent_to_float(self):
+        yaml_dict = {'foo': '1e3'}
+        dump = yaml.dump(yaml_dict)
+        yaml_object = aspecd.utils.Yaml()
+        yaml_object.read_stream(dump)
+        self.assertEqual(1e3, yaml_object.dict['foo'])
+
 
 class TestReplaceValueInDict(unittest.TestCase):
 

@@ -11,6 +11,7 @@ import hashlib
 import importlib
 import inspect
 import os
+import re
 
 import numpy as np
 import oyaml as yaml
@@ -312,6 +313,17 @@ class Yaml:
         self.binary_directory = ''
         self.dict = collections.OrderedDict()
         self.numpy_array_size_threshold = 100
+        self.loader = yaml.SafeLoader
+        self.loader.add_implicit_resolver(
+            u'tag:yaml.org,2002:float',
+            re.compile(u'''^(?:
+             [-+]?(?:[0-9][0-9_]*)\\.[0-9_]*(?:[eE][-+]?[0-9]+)?
+            |[-+]?(?:[0-9][0-9_]*)(?:[eE][-+]?[0-9]+)
+            |\\.[0-9_]+(?:[eE][-+][0-9]+)?
+            |[-+]?[0-9][0-9_]*(?::[0-5]?[0-9])+\\.[0-9_]*
+            |[-+]?\\.(?:inf|Inf|INF)
+            |\\.(?:nan|NaN|NAN))$''', re.X),
+            list(u'-+0123456789.'))
 
     def read_from(self, filename=''):
         """
@@ -331,7 +343,7 @@ class Yaml:
         if not filename:
             raise aspecd.exceptions.MissingFilenameError
         with open(filename, 'r') as file:
-            self.dict = yaml.safe_load(file)
+            self.dict = yaml.load(file, Loader=self.loader)
 
     def write_to(self, filename=''):
         """
@@ -363,7 +375,7 @@ class Yaml:
             binary stream to read from
 
         """
-        self.dict = yaml.safe_load(stream)
+        self.dict = yaml.load(stream, Loader=self.loader)
 
     def write_stream(self):
         """
