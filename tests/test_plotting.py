@@ -267,6 +267,13 @@ class TestSinglePlotter1D(unittest.TestCase):
         self.plotter.plot(dataset=dataset.Dataset())
         self.assertEqual(color, self.plotter.drawing.get_color())
 
+    def test_plot_sets_axes_xlabel(self):
+        label = 'foo bar'
+        dict_ = {'axes': {'xlabel': label}}
+        self.plotter.properties.from_dict(dict_)
+        self.plotter.plot(dataset=dataset.Dataset())
+        self.assertEqual(label, self.plotter.axes.get_xlabel())
+
     def test_plot_adds_no_x_zero_line_if_out_of_range(self):
         self.plotter.parameters['show_zero_lines'] = True
         dataset_ = aspecd.dataset.CalculatedDataset()
@@ -280,7 +287,6 @@ class TestSinglePlotter1D(unittest.TestCase):
         dataset_.data.data = np.random.random([10])-0.5
         dataset_.data.axes[0].values = np.linspace(4, 5, 10)
         plotter = dataset_.plot(self.plotter)
-        print(plotter.ax.get_lines())
         self.assertEqual([0., 0.], plotter.ax.get_lines()[1].get_ydata())
 
 
@@ -347,12 +353,15 @@ class TestSinglePlotter2DStacked(unittest.TestCase):
     def test_instantiate_class(self):
         pass
 
+    def test_class_has_sensible_description(self):
+        self.assertIn('stack', self.plotter.description)
+
     def test_plot_with_1D_dataset_raises(self):
         dataset_ = aspecd.dataset.CalculatedDataset()
         dataset_.data.data = np.random.random([5])
         with self.assertRaises(
                 aspecd.exceptions.PlotNotApplicableToDatasetError):
-            plotter = dataset_.plot(self.plotter)
+            dataset_.plot(self.plotter)
 
     def test_parameters_have_stacking_dimension_key(self):
         self.assertIn('stacking_dimension', self.plotter.parameters)
@@ -392,6 +401,22 @@ class TestSinglePlotter2DStacked(unittest.TestCase):
         plotter = dataset_.plot(self.plotter)
         self.assertGreater(max(plotter.axes.get_lines()[5].get_ydata()),
                            max(plotter.axes.get_lines()[0].get_ydata())*10)
+
+    def test_plot_sets_drawings(self):
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.random.random([5, 10]) - 0.5
+        dataset_.plot(self.plotter)
+        self.assertEqual(10, len(self.plotter.drawing))
+
+    def test_plot_applies_drawing_properties_to_all_drawings(self):
+        self.plotter.properties.drawing.color = '#ace'
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.random.random([5, 10]) - 0.5
+        plotter = dataset_.plot(self.plotter)
+        self.assertEqual(self.plotter.properties.drawing.color,
+                         plotter.axes.get_lines()[0]._color)
+        self.assertEqual(self.plotter.properties.drawing.color,
+                         plotter.axes.get_lines()[4]._color)
 
 
 class TestMultiPlotter(unittest.TestCase):
@@ -467,7 +492,7 @@ class TestMultiPlotter(unittest.TestCase):
         self.plotter.datasets.append(dataset.Dataset())
         self.plotter.plot()
         self.assertEqual(len(self.plotter.datasets),
-                         len(self.plotter.properties.drawings))
+                         len(self.plotter.properties.drawing))
 
     def test_plot_with_show_legend_set_to_true_adds_legend(self):
         self.plotter.datasets.append(dataset.Dataset())
@@ -521,17 +546,17 @@ class TestMultiPlotter1D(unittest.TestCase):
     def test_plot_with_datasets_adds_drawing_to_properties(self):
         self.plotter.datasets.append(dataset.Dataset())
         self.plotter.plot()
-        self.assertEqual(1, len(self.plotter.properties.drawings))
+        self.assertEqual(1, len(self.plotter.properties.drawing))
 
     def test_added_drawing_is_correct_type(self):
         self.plotter.datasets.append(dataset.Dataset())
         self.plotter.plot()
-        self.assertIs(type(self.plotter.properties.drawings[0]),
+        self.assertIs(type(self.plotter.properties.drawing[0]),
                       aspecd.plotting.LineProperties)
 
     def test_plot_sets_correct_line_color(self):
         color = '#000000'
-        dict_ = {'drawings': [{'color': color}]}
+        dict_ = {'drawing': [{'color': color}]}
         self.plotter.properties.from_dict(dict_)
         self.plotter.datasets.append(dataset.Dataset())
         self.plotter.plot()
@@ -1178,7 +1203,7 @@ class TestMultiPlotProperties(unittest.TestCase):
         self.assertTrue(hasattr(self.plot_properties, 'axes'))
 
     def test_has_drawings_property(self):
-        self.assertTrue(hasattr(self.plot_properties, 'drawings'))
+        self.assertTrue(hasattr(self.plot_properties, 'drawing'))
 
     def test_has_legend_property(self):
         self.assertTrue(hasattr(self.plot_properties, 'legend'))
@@ -1213,12 +1238,12 @@ class TestMultiPlotProperties(unittest.TestCase):
         plt.close(plot.figure)
 
     def test_from_dict_sets_drawings(self):
-        dict_ = {'drawings': [{'label': 'foo'}]}
+        dict_ = {'drawing': [{'label': 'foo'}]}
         self.plot_properties.from_dict(dict_)
         self.assertEqual('foo', self.plot_properties.drawings[0].label)
 
     def test_from_dict_sets_multiple_drawings(self):
-        dict_ = {'drawings': [{'label': 'foo'}, {'label': 'bar'}]}
+        dict_ = {'drawing': [{'label': 'foo'}, {'label': 'bar'}]}
         self.plot_properties.from_dict(dict_)
         self.assertEqual('foo', self.plot_properties.drawings[0].label)
         self.assertEqual('bar', self.plot_properties.drawings[1].label)
@@ -1226,22 +1251,22 @@ class TestMultiPlotProperties(unittest.TestCase):
     def test_from_dict_does_not_add_drawing_if_it_exists(self):
         self.plot_properties.drawings.append(
             aspecd.plotting.DrawingProperties())
-        dict_ = {'drawings': [{'label': 'foo'}]}
+        dict_ = {'drawing': [{'label': 'foo'}]}
         self.plot_properties.from_dict(dict_)
         self.assertEqual(1, len(self.plot_properties.drawings))
 
     def test_from_dict_adds_missing_drawing(self):
-        dict_ = {'drawings': [{'label': 'foo'}]}
+        dict_ = {'drawing': [{'label': 'foo'}]}
         self.plot_properties.from_dict(dict_)
         self.assertEqual(1, len(self.plot_properties.drawings))
 
     def test_from_dict_adds_missing_drawings(self):
-        dict_ = {'drawings': [{'label': 'foo'}, {'label': 'bar'}]}
+        dict_ = {'drawing': [{'label': 'foo'}, {'label': 'bar'}]}
         self.plot_properties.from_dict(dict_)
         self.assertEqual(2, len(self.plot_properties.drawings))
 
     def test_from_dict_sets_legend(self):
-        dict_ = {'legend': {'loc': 'center'}, 'drawings': [{'label': 'foo'}]}
+        dict_ = {'legend': {'loc': 'center'}, 'drawing': [{'label': 'foo'}]}
         self.plot_properties.from_dict(dict_)
         self.assertEqual('center', self.plot_properties.legend.loc)
 

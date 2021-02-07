@@ -603,6 +603,7 @@ class SinglePlotter(Plotter):
             self._check_applicability()
             super().plot()
             self._set_axes_labels()
+            self.properties.apply(plotter=self)
 
     def _check_applicability(self):
         if not self.applicable(self.dataset):
@@ -864,6 +865,13 @@ class SinglePlotter2DStacked(SinglePlotter):
 
     Attributes
     ----------
+    dataset : :class:`aspecd.dataset.Dataset`
+        Dataset the plotting should be done for
+
+    drawing : :class:`list`
+        list of :obj:`matplotlib.artist.Artist` objects, one for each of the
+        actual lines of the plot
+
     parameters : :class:`dict`
         All parameters necessary for the plot, implicit and explicit
 
@@ -883,13 +891,16 @@ class SinglePlotter2DStacked(SinglePlotter):
 
             Default: 0
 
-        """
+    """
 
     # noinspection PyTypeChecker
     def __init__(self):
         super().__init__()
+        self.description = '2D stackplot for a single dataset'
+        self.dataset = None
         self.parameters['stacking_dimension'] = 1
         self.parameters['offset'] = 0
+        self.drawing = []
 
     @staticmethod
     def applicable(dataset):
@@ -912,12 +923,14 @@ class SinglePlotter2DStacked(SinglePlotter):
             self.parameters['offset'] = self.dataset.data.data.max() * 1.05
         if self.parameters['stacking_dimension'] == 0:
             for idx in range(self.dataset.data.data.shape[0]):
-                self.axes.plot(self.dataset.data.data[idx, :]
-                               + idx * self.parameters['offset'])
+                handle = self.axes.plot(self.dataset.data.data[idx, :]
+                                        + idx * self.parameters['offset'])
+                self.drawing.append(handle[0])
         elif self.parameters['stacking_dimension'] == 1:
             for idx in range(self.dataset.data.data.shape[1]):
-                self.axes.plot(self.dataset.data.data[:, idx]
-                               + idx * self.parameters['offset'])
+                handle = self.axes.plot(self.dataset.data.data[:, idx]
+                                        + idx * self.parameters['offset'])
+                self.drawing.append(handle[0])
 
 
 class MultiPlotter(Plotter):
@@ -1672,18 +1685,18 @@ class MultiPlotProperties(PlotProperties):
         """
         Set attributes from dictionary.
 
-        The key ``drawings`` is handled in a special way: First of all,
-        :attr:`aspecd.plotting.MultiPlotProperties.drawings` is a list,
+        The key ``drawing`` is handled in a special way: First of all,
+        :attr:`aspecd.plotting.MultiPlotProperties.drawing` is a list,
         hence we need to iterate over the entries of the list. Furthermore,
         a new element of the list is appended only if it does not exist
         already.
 
         As different MultiPlotter objects will use different properties
-        classes for their drawings, adding a new drawing is handled by a
+        classes for their drawing, adding a new drawing is handled by a
         separate method,
         :meth:`aspecd.plotting.MultiPlotProperties.add_drawing`.
         Additionally, each MultiPlotter class can use this method as well,
-        to add drawings properties for each plotted item.
+        to add drawing properties for each plotted item.
 
         Parameters
         ----------
@@ -1696,12 +1709,12 @@ class MultiPlotProperties(PlotProperties):
             Raised if no dict is provided.
 
         """
-        if 'drawings' in dict_:
-            for idx in range(len(self.drawings), len(dict_['drawings'])):
+        if 'drawing' in dict_:
+            for idx in range(len(self.drawings), len(dict_['drawing'])):
                 self.add_drawing()
-            for idx, drawing in enumerate(dict_['drawings']):
+            for idx, drawing in enumerate(dict_['drawing']):
                 self.drawings[idx].from_dict(drawing)
-            dict_.pop('drawings')
+            dict_.pop('drawing')
         if dict_:
             super().from_dict(dict_)
 
@@ -1710,9 +1723,9 @@ class MultiPlotProperties(PlotProperties):
         Add a :obj:`aspecd.plotting.DrawingProperties` object to the list.
 
         As different MultiPlotter objects will use different properties
-        classes for their drawings, adding a new drawing is handled by this
+        classes for their drawing, adding a new drawing is handled by this
         method. Additionally, each MultiPlotter class can use this method as
-        well, to add drawings properties for each plotted item.
+        well, to add drawing properties for each plotted item.
 
         .. note::
             A note for developers: Concrete MultiPlotter classes will use
@@ -1746,8 +1759,8 @@ class MultiPlotProperties(PlotProperties):
         self.axes.apply(axes=plotter.axes)
         if hasattr(plotter, 'legend') and plotter.legend:
             self.legend.apply(legend=plotter.legend)
-        if hasattr(plotter, 'drawings'):
-            for idx, drawing in enumerate(plotter.drawings):
+        if hasattr(plotter, 'drawing'):
+            for idx, drawing in enumerate(plotter.drawing):
                 self.drawings[idx].apply(drawing=drawing)
 
 
@@ -1755,7 +1768,7 @@ class MultiPlot1DProperties(MultiPlotProperties):
     """
     Properties of a 1D multiplot, defining its appearance.
 
-    drawings : :class:`list`
+    drawing : :class:`list`
         Properties of the lines within a plot.
 
         Each element is a :obj:`aspecd.plotting.LineProperties` object
@@ -2167,7 +2180,12 @@ class DrawingProperties(aspecd.utils.Properties):
         if not drawing:
             raise aspecd.exceptions.MissingDrawingError
         for prop in self.get_properties():
-            getattr(drawing, ''.join(['set_', prop]))(getattr(self, prop))
+            if isinstance(drawing, list):
+                for element in drawing:
+                    getattr(element, ''.join(['set_', prop]))(
+                        getattr(self, prop))
+            else:
+                getattr(drawing, ''.join(['set_', prop]))(getattr(self, prop))
 
 
 class LineProperties(DrawingProperties):
