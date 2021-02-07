@@ -53,6 +53,33 @@ saving a plot is as easy as calling the :meth:`save` method of a plotter
 with a saver object as its argument.
 
 
+A note on array dimensions and axes
+===================================
+
+Something often quite confusing is the apparent inconsistency between the
+order of array dimensions and the order of axes. While we are used to assign
+axes in the order *x*, *y*, *z*, and assuming *x* to be horizontal,
+*y* vertical (and *z* sticking out of the paper plane), arrays are usually
+indexed row-first, column-second. That means, however, that if you simply
+plot a 2D array in axes, your *first* dimension is along the *y* axis,
+the *second* dimension along the *x* axis.
+
+Therefore, as the axes of your datasets will always correspond to the array
+dimensions of your data, in case of 2D plots you will need to *either* use
+the information contained in the second axis object for your *x* axis label,
+and the information from the first axis object for your *y* axis label,
+*or* to transpose the data array.
+
+Another aspect to have in mind is the position of the origin. Usually,
+in a Cartesian coordinate system, convention is to have the origin (0,
+0) in the *lower left* of the axes (for the positive quadrant). However,
+for images, convention is to have the corresponding (0, 0) pixel located in
+the *upper left* edge of your image. Therefore, those plotting methods
+dealing with images will usually *revert* the direction of your *y* axis.
+Most probably, eventually you will have to check with real data and ensure
+the plotters to plot data and axes in a consistent fashion.
+
+
 Types of concrete plotters
 ==========================
 
@@ -675,6 +702,19 @@ class SinglePlotter2D(SinglePlotter):
     should be performed for, and provide a reference to the actual plotter
     object to it.
 
+    .. important::
+        Due to the difference between axes conventions in plots,
+        with axes being labelled *x*, *y*, *z* accordingly, and the
+        convention of indexing arrays (first index refers to the row,
+        converting to the *y* axis, the second index to the column,
+        *i.e*. the *x* axis), the *x* axis in the plot will be the second
+        axis, the *y* axis the first axis of your dataset.
+
+        While ususally, it is only a matter of convention how to display
+        your 2D data, it is often confusing, as we intuitively think in *x*,
+        *y*, *z* axes, not in row-column indices.
+
+
     Raises
     ------
     TypeError
@@ -738,6 +778,27 @@ class SinglePlotter2D(SinglePlotter):
         """
         plot_function = getattr(self.axes, self.type)
         self.drawing = plot_function(self.dataset.data.data)
+
+    def _set_axes_labels(self):
+        """Set axes labels from axes in dataset.
+
+        This method is called automatically by :meth:`plot`.
+
+        .. note::
+            Due to the difference between axes conventions in plots,
+            with axes being labelled *x*, *y*, *z* accordingly, and the
+            convention of indexing arrays (first index refers to the row,
+            converting to the *y* axis, the second index to the column,
+            *i.e*. the *x* axis), labels have to be reverted for *x* and *y*
+            axis with respect to the situation with 1D data.
+
+        If you ever need to change the handling of your axes labels,
+        override this method in a child class.
+        """
+        xlabel = self._create_axis_label_string(self.dataset.data.axes[1])
+        ylabel = self._create_axis_label_string(self.dataset.data.axes[0])
+        self.axes.set_xlabel(xlabel)
+        self.axes.set_ylabel(ylabel)
 
 
 class MultiPlotter(Plotter):

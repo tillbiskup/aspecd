@@ -279,6 +279,21 @@ class TestSinglePlotter2D(unittest.TestCase):
         self.plotter.plot(dataset=dataset_)
         self.assertTrue(self.plotter.drawing)
 
+    def test_plot_with_dataset_sets_axes_labels(self):
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        test_dataset.data.axes[0].quantity = 'zero'
+        test_dataset.data.axes[0].unit = 'foo'
+        test_dataset.data.axes[1].quantity = 'one'
+        test_dataset.data.axes[1].unit = 'bar'
+        xlabel = '$' + test_dataset.data.axes[1].quantity + '$' + ' / ' + \
+                 test_dataset.data.axes[1].unit
+        ylabel = '$' + test_dataset.data.axes[0].quantity + '$' + ' / ' + \
+                 test_dataset.data.axes[0].unit
+        plotter = test_dataset.plot(self.plotter)
+        self.assertEqual(xlabel, plotter.axes.get_xlabel())
+        self.assertEqual(ylabel, plotter.axes.get_ylabel())
+
 
 class TestMultiPlotter(unittest.TestCase):
     def setUp(self):

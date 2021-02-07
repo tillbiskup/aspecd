@@ -27,8 +27,8 @@ are an attempt to relieve the developers of packages derived from the ASpecD
 framework from the task to reinvent the wheel over and over again.
 
 
-Base class for processing steps
-===============================
+Writing own processing steps
+============================
 
 Each real processing step should inherit from
 :class:`aspecd.processing.ProcessingStep` as documented there. Furthermore,
@@ -36,6 +36,10 @@ all processing steps should be contained in one module named "processing".
 This allows for easy automation and replay of processing steps, particularly
 in context of recipe-driven data analysis (for details, see the
 :mod:`aspecd.tasks` module).
+
+
+General advice
+--------------
 
 A few hints on writing own processing step classes:
 
@@ -62,9 +66,32 @@ A few hints on writing own processing step classes:
   vice versa). Don't forget to declare this as a static method, using the
   ``@staticmethod`` decorator.
 
-For further advice, consult the source code of this module, and have a look
-at the concrete processing steps whose purpose is described below in more
-detail.
+Some more special cases are detailed below. For further advice, consult the
+source code of this module, and have a look at the concrete processing steps
+whose purpose is described below in more detail.
+
+
+Changing the dimensions of your data
+------------------------------------
+
+If your processing step changes the dimensions of your data, it is your
+responsibility to ensure the axes values to be consistent with the data.
+Note that upon changing the dimension of your data, the axes *values* will
+be reset to indices along the data dimensions. Hence, you need to *first*
+make a (deep) copy of your axes, then change the dimension of your data,
+and afterwards restore the remaining values from the temporarily stored axes.
+
+
+Adding parameters upon processing
+---------------------------------
+
+Sometimes there is the need to persist values that are only obtained during
+processing the data. A typical example may be averaging 2D data along one
+dimension and wanting to store both, range of indices and actual axis units.
+While in this case, typically the axis value of the centre of the averaging
+window will be stored as new axis value, the other parameters should end up
+in the :attr:`aspecd.processing.ProcessingStep.parameters` dictionary. Thus,
+they are added to the dataset history and available for reports and alike.
 
 
 Concrete processing steps

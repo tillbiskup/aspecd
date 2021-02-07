@@ -34,6 +34,64 @@ Similarly, you would handle the export of your data (and metadata)
 contained in a dataset object using an exporter object, respectively.
 
 
+Writing importers for data
+--------------------------
+
+When writing importer classes for your own data, there is a number of
+pitfalls, some of which shall be described here together with solutions and
+"best practices".
+
+Dimensions of data
+~~~~~~~~~~~~~~~~~~
+
+Usually, we assign axes in the order *x*, *y*, *z*, and assume the *x* axis
+to be the horizontal axis in a plot. However, numpy (as well as other
+software), follows a different convention, with the first index referring to
+the *row* of your matrix, the second index to the *column*. That boils down
+to having the first index correspond to the *y* axis, and the second index
+referring to the *x* axis.
+
+As long as your data are one-dimensional, resulting in two axes objects in
+your dataset, everything is fine, and the second axis will have no values.
+
+However, if your data to be imported are two-dimensional, your first
+dimension will be the index of rows (along a column), hence the *y* axis,
+and the second dimension the index of your columns (along a row), *i.e.* the
+*x* axis. This is perfectly fine, and it is equally fine to revert this
+order, as long as you ensure your axis objects to be consistent with the
+dimensions of your data.
+
+If you assign numeric data to the :attr:`aspecd.dataset.Data.data` property,
+the corresponding axes values will initially be set to the indices of the
+data points along the corresponding dimension, with the first axis (index 0)
+corresponding to the first dimension (row indices along a column) and
+similar for each of the following dimensions of your data. Note that there
+will always be one axis more than dimensions of your data. This last axis
+will not have values, and usually its quantity is something like "intensity".
+
+
+Backup of the data
+~~~~~~~~~~~~~~~~~~
+
+One essential concept of the ASpecD dataset is to store the original data
+together with their axes in a separate, non-public property. This is done
+automatically by the importer after calling out to its non-public method
+:meth:`aspecd.io.DatasetImporter._import`. Hence, usually you need not take
+care of this at all.
+
+
+Handling of metadata
+~~~~~~~~~~~~~~~~~~~~
+
+Data without information about these data are usually pretty useless. Hence,
+an ASpecD dataset is always a unit of numerical data and corresponding
+metadata. While you will need to come up with your own structure for
+metadata of your datasets and create a hierarchy of classes derived from
+:class:`aspecd.metadata.DatasetMetadata`, your importers need to ensure that
+these metadata are populated respectively. Of course, which metadata can be
+populated depends strongly on the file format you are about to import.
+
+
 Handling different file formats for importing data
 --------------------------------------------------
 
@@ -55,6 +113,12 @@ class may look like the following::
 
 Here, as in the example above, "source" refers to a (unique) identifier of
 your dataset, be it a filename, path, URL/URI, LOI, or alike.
+
+.. important::
+    For recipe-driven data analysis to work with an ASpecD-derived package,
+    you need to implement a :class:`aspecd.io.DatasetImporterFactory` class
+    there as well that can be obtained by instantiating
+    ``<your_package>.io.DatasetImporterFactory()``.
 
 
 Recipes
@@ -96,6 +160,10 @@ handling the import and export from and to YAML files are provided as well:
 These classes can directly be used to work with YAML files containing
 information for recipe-driven data analysis. For details of the YAML file
 structure, see the :class:`aspecd.tasks.Recipe` class and its attributes.
+
+
+Module documentation
+====================
 
 """
 import copy
