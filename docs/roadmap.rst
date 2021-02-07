@@ -10,8 +10,6 @@ For version 0.1
 
 * Plotter: stackplot for SinglePlot2D and MultiPlot
 
-* Plotter: adding zero line(s)
-
 * Report task: Add figure captions to context if available
 
 * Metadata mapper via yaml file

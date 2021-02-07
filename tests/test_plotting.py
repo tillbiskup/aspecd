@@ -104,6 +104,7 @@ class TestPlotter(unittest.TestCase):
     def test_plot_sets_no_new_figure_property_if_existing(self):
         fig, ax = plt.subplots()
         self.plotter.figure = fig
+        self.plotter.axes = ax
         self.plotter.plot()
         self.assertIs(fig, self.plotter.figure)
 
@@ -149,6 +150,23 @@ class TestPlotter(unittest.TestCase):
         self.plotter.style = 'foo'
         with self.assertRaises(aspecd.exceptions.StyleNotFoundError):
             self.plotter.plot()
+
+    def test_plot_adds_zero_lines(self):
+        self.plotter.parameters['show_zero_lines'] = True
+        self.plotter.plot()
+        self.assertEqual(2, len(self.plotter.ax.get_lines()))
+
+    def test_plot_without_zero_lines_does_not_add_zero_lines(self):
+        self.plotter.parameters['show_zero_lines'] = False
+        self.plotter.plot()
+        self.assertEqual(0, len(self.plotter.ax.get_lines()))
+
+    def test_plot_applies_properties_to_zero_lines(self):
+        self.plotter.parameters['show_zero_lines'] = True
+        self.plotter.properties.zero_lines.color = '#999'
+        self.plotter.plot()
+        self.assertEqual(self.plotter.properties.zero_lines.color,
+                         self.plotter.ax.get_lines()[0]._color)
 
 
 class TestSinglePlotter(unittest.TestCase):
@@ -248,6 +266,22 @@ class TestSinglePlotter1D(unittest.TestCase):
         self.plotter.properties.from_dict(dict_)
         self.plotter.plot(dataset=dataset.Dataset())
         self.assertEqual(color, self.plotter.drawing.get_color())
+
+    def test_plot_adds_no_x_zero_line_if_out_of_range(self):
+        self.plotter.parameters['show_zero_lines'] = True
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.random.random([10])+5
+        plotter = dataset_.plot(self.plotter)
+        self.assertEqual([0., 0.], plotter.ax.get_lines()[1].get_xdata())
+
+    def test_plot_adds_no_y_zero_line_if_out_of_range(self):
+        self.plotter.parameters['show_zero_lines'] = True
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.random.random([10])-0.5
+        dataset_.data.axes[0].values = np.linspace(4, 5, 10)
+        plotter = dataset_.plot(self.plotter)
+        print(plotter.ax.get_lines())
+        self.assertEqual([0., 0.], plotter.ax.get_lines()[1].get_ydata())
 
 
 class TestSinglePlotter2D(unittest.TestCase):
@@ -372,7 +406,7 @@ class TestMultiPlotter(unittest.TestCase):
 
     def test_plot_with_show_legend_set_to_true_adds_legend(self):
         self.plotter.datasets.append(dataset.Dataset())
-        self.plotter.show_legend = True
+        self.plotter.parameters['show_legend'] = True
         self.plotter.plot()
         self.assertIs(type(self.plotter.legend), matplotlib.legend.Legend)
 
@@ -442,7 +476,7 @@ class TestMultiPlotter1D(unittest.TestCase):
         dataset_ = dataset.Dataset()
         dataset_.label = 'foo'
         self.plotter.datasets.append(dataset_)
-        self.plotter.show_legend = True
+        self.plotter.parameters['show_legend'] = True
         self.plotter.plot()
         self.assertEqual(dataset_.label,
                          self.plotter.legend.get_texts()[0].get_text())
@@ -973,7 +1007,7 @@ class TestLegendProperties(unittest.TestCase):
         self.legend_properties.location = location
         plot = plotting.Plotter()
         plot.properties.legend = self.legend_properties
-        plot.show_legend = True
+        plot.parameters['show_legend'] = True
         plot.plot()
         legend = plot.legend
         self.assertEqual(location, legend._loc)
@@ -984,7 +1018,7 @@ class TestLegendProperties(unittest.TestCase):
         properties = {'legend': {'location': location}}
         plot = plotting.Plotter()
         plot.properties.from_dict(properties)
-        plot.show_legend = True
+        plot.parameters['show_legend'] = True
         plot.plot()
         legend = plot.legend
         self.assertEqual(location, legend._loc)
@@ -995,7 +1029,7 @@ class TestLegendProperties(unittest.TestCase):
         self.legend_properties.frameon = frameon
         plot = plotting.Plotter()
         plot.properties.legend = self.legend_properties
-        plot.show_legend = True
+        plot.parameters['show_legend'] = True
         plot.plot()
         legend = plot.legend
         self.assertEqual(frameon, legend.get_frame_on())

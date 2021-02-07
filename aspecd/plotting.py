@@ -200,6 +200,23 @@ class Plotter:
     parameters : :class:`dict`
         All parameters necessary for the plot, implicit and explicit
 
+    parameters['show_legend'] : :class:`bool`
+        Whether to show a legend in the plot
+
+        Default: False
+
+    parameters['show_zero_lines'] : :class:`bool`
+        Whether to show zero lines in the plot
+
+        Regardless of whether you set this to true, zero lines will only be
+        added to the final plot if the zero value is within the current axes
+        limits.
+
+        Zero line properties can be set via the
+        :attr:`aspecd.plotting.Plotter.properties` attribute.
+
+        Default: True
+
     properties : :class:`aspecd.plotting.PlotProperties`
         Properties of the plot, defining its appearance
 
@@ -222,9 +239,6 @@ class Plotter:
 
     legend : :class:`matplotlib.legend.Legend`
         Legend object
-
-    show_legend : :class:`bool`
-        Whether to display a legend
 
     style : :class:`str`
         plotting style to use
@@ -254,14 +268,16 @@ class Plotter:
     def __init__(self):
         # Name defaults always to the full class name, don't change!
         self.name = aspecd.utils.full_class_name(self)
-        self.parameters = dict()
+        self.parameters = {
+            'show_legend': False,
+            'show_zero_lines': True
+        }
         self.properties = PlotProperties()
         self.description = 'Abstract plotting step'
         self.figure = None
         self.axes = None
         self.filename = ''
         self.caption = Caption()
-        self.show_legend = False
         self.legend = None
         self.style = ''
 
@@ -287,6 +303,7 @@ class Plotter:
         self._create_plot()
         self.properties.apply(plotter=self)
         self._set_legend()
+        self._add_zero_lines()
 
     # noinspection PyUnusedLocal
     @staticmethod
@@ -420,8 +437,22 @@ class Plotter:
         return label
 
     def _set_legend(self):
-        if self.show_legend:
+        if self.parameters['show_legend']:
             self.legend = plt.legend(**self.properties.legend.to_dict())
+
+    def _add_zero_lines(self):
+        if self.parameters['show_zero_lines']:
+            if isinstance(self.axes, list):
+                for axes in self.axes:
+                    if axes.get_ylim()[0] <= 0 <= axes.get_ylim()[1]:
+                        axes.axhline(**self.properties.zero_lines.to_dict())
+                    if axes.get_xlim()[0] <= 0 <= axes.get_xlim()[1]:
+                        axes.axvline(**self.properties.zero_lines.to_dict())
+            else:
+                if self.axes.get_ylim()[0] <= 0 <= self.axes.get_ylim()[1]:
+                    self.axes.axhline(**self.properties.zero_lines.to_dict())
+                if self.axes.get_xlim()[0] <= 0 <= self.axes.get_xlim()[1]:
+                    self.axes.axvline(**self.properties.zero_lines.to_dict())
 
 
 class SinglePlotter(Plotter):
@@ -1389,6 +1420,17 @@ class PlotProperties(aspecd.utils.Properties):
         For the properties that can be set this way, see the documentation
         of the :class:`aspecd.plotting.LegendProperties` class.
 
+    zero_lines : :class:`aspecd.plotting.LineProperties`
+        Properties of the zero lines.
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.LineProperties` class.
+
+        Default values for the zero lines are:
+
+        * color: #ccc
+
+
     Raises
     ------
     aspecd.plotting.MissingPlotterError
@@ -1400,6 +1442,9 @@ class PlotProperties(aspecd.utils.Properties):
         super().__init__()
         self.figure = FigureProperties()
         self.legend = LegendProperties()
+        self.zero_lines = LineProperties()
+        # Set default properties
+        self.zero_lines.color = '#ccc'
 
     def apply(self, plotter=None):
         """
