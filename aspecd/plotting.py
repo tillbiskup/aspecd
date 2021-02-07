@@ -127,7 +127,9 @@ A simple example may look like this::
 In this case, the plotter will plot to the axis specified before calling its
 :meth:`plot` method. Thus, it should be straight-forward to write plotter
 classes that create complex plots consisting of several subplots by reusing
-available plotter classes.
+available plotter classes. This is what the
+:class:`aspecd.plotting.CompositePlotter` class is for, and how it basically
+works.
 
 
 Module API documentation
@@ -202,6 +204,18 @@ class Plotter:
 
         You can use all plotting styles understood by matplotlib. See
         :mod:`matplotlib.style` for details.
+
+
+    .. note::
+        If you set the style via :attr:`aspecd.plotting.Plotter.style`,
+        all following figures will use this style, until you set another style.
+
+        As it seems, there is no way in matplotlib to find out the current
+        style, and hence reset to it. One way to fix this problem would be
+        to revert to the default style by issuing the following command::
+
+            matplotlib.pyplot.style.use('default')
+
 
     Raises
     ------

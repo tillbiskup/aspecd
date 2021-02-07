@@ -8,9 +8,11 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.1
 ===============
 
-* Plotter: Stackplot for SinglePlot2D and MultiPlot
+* Plotter: stackplot for SinglePlot2D and MultiPlot
 
 * Plotter: adding zero line(s)
+
+* Recipes: loading datasets using different ASpecD-derived packages (comparing different spectroscopic methods)
 
 * Report task: Add figure captions to context if available
 

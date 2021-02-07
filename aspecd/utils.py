@@ -493,7 +493,7 @@ def replace_value_in_dict(replacement=None, target=None):
     Replace value for given key in a dictionary, traversing recursively.
 
     The key in ``replacement`` needs to correspond to the value in
-    ``target_dict`` that should be replaced. Keys inthe dict ``replacement``
+    ``target_dict`` that should be replaced. Keys in the dict ``replacement``
     that have no corresponding value in ``target_dict`` are silently ignored.
 
     Parameters
@@ -518,14 +518,17 @@ def replace_value_in_dict(replacement=None, target=None):
         if isinstance(target[key], dict):
             target[key] = replace_value_in_dict(replacement, target[key])
         elif isinstance(target[key], list):
-            for list_index, list_element in enumerate(target[key]):
-                if isinstance(list_element, dict):
-                    target[key][list_index] = \
-                        replace_value_in_dict(replacement, list_element)
-                elif list_element.__hash__ and list_element in replacement:
-                    target[key][list_index] = replacement[list_element]
-                else:
-                    target[key][list_index] = list_element
+            if target[key]:
+                for list_index, list_element in enumerate(target[key]):
+                    if isinstance(list_element, dict):
+                        target[key][list_index] = \
+                            replace_value_in_dict(replacement, list_element)
+                    elif list_element.__hash__ and list_element in replacement:
+                        target[key][list_index] = replacement[list_element]
+                    else:
+                        target[key][list_index] = list_element
+            elif key in replacement:
+                target[key] = replacement[key]
         elif value in replacement:
             target[key] = replacement[value]
     return target

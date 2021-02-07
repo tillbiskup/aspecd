@@ -534,6 +534,12 @@ class TestReplaceValueInDict(unittest.TestCase):
         target_dict = utils.replace_value_in_dict(replacement, target_dict)
         self.assertEqual(replacement['vfoo'], target_dict['kfoo'][0]['kfoo'])
 
+    def test_replace_value_replaces_empty_list_in_target(self):
+        target_dict = {'kfoo': []}
+        replacement = {'kfoo': ['foo', 'bar']}
+        target_dict = utils.replace_value_in_dict(replacement, target_dict)
+        self.assertEqual(replacement['kfoo'], target_dict['kfoo'])
+
 
 class TestCopyValuesBetweenDicts(unittest.TestCase):
 
