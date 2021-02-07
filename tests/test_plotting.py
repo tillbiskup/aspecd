@@ -295,6 +295,13 @@ class TestSinglePlotter2D(unittest.TestCase):
     def test_instantiate_class(self):
         pass
 
+    def test_plot_with_1D_dataset_raises(self):
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.random.random([5])
+        with self.assertRaises(
+                aspecd.exceptions.PlotNotApplicableToDatasetError):
+            dataset_.plot(self.plotter)
+
     def test_has_type_property(self):
         self.assertTrue(hasattr(self.plotter, 'type'))
 
@@ -327,6 +334,64 @@ class TestSinglePlotter2D(unittest.TestCase):
         plotter = test_dataset.plot(self.plotter)
         self.assertEqual(xlabel, plotter.axes.get_xlabel())
         self.assertEqual(ylabel, plotter.axes.get_ylabel())
+
+
+class TestSinglePlotter2DStacked(unittest.TestCase):
+    def setUp(self):
+        self.plotter = plotting.SinglePlotter2DStacked()
+
+    def tearDown(self):
+        if self.plotter.fig:
+            plt.close(self.plotter.fig)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_plot_with_1D_dataset_raises(self):
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.random.random([5])
+        with self.assertRaises(
+                aspecd.exceptions.PlotNotApplicableToDatasetError):
+            plotter = dataset_.plot(self.plotter)
+
+    def test_parameters_have_stacking_dimension_key(self):
+        self.assertIn('stacking_dimension', self.plotter.parameters)
+
+    def test_plot_consists_of_correct_number_of_lines(self):
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.random.random([5, 10]) - 0.5
+        plotter = dataset_.plot(self.plotter)
+        self.assertEqual(12, len(plotter.axes.get_lines()))
+
+    def test_plot_along_zero_dim_consists_of_correct_number_of_lines(self):
+        self.plotter.parameters['stacking_dimension'] = 0
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.random.random([5, 10]) - 0.5
+        plotter = dataset_.plot(self.plotter)
+        self.assertEqual(7, len(plotter.axes.get_lines()))
+
+    def test_plot_stacks_plots(self):
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.random.random([5, 10]) - 0.5
+        plotter = dataset_.plot(self.plotter)
+        self.assertGreater(max(plotter.axes.get_lines()[5].get_ydata()),
+                           max(plotter.axes.get_lines()[0].get_ydata())*3)
+
+    def test_plot_along_zero_dim_stacks_plots(self):
+        self.plotter.parameters['stacking_dimension'] = 0
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.random.random([5, 10]) - 0.5
+        plotter = dataset_.plot(self.plotter)
+        self.assertGreater(max(plotter.axes.get_lines()[4].get_ydata()),
+                           max(plotter.axes.get_lines()[0].get_ydata())*3)
+
+    def test_plot_with_offset_stacks_plots_accordingly(self):
+        self.plotter.parameters['offset'] = 2
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.random.random([5, 10]) - 0.5
+        plotter = dataset_.plot(self.plotter)
+        self.assertGreater(max(plotter.axes.get_lines()[5].get_ydata()),
+                           max(plotter.axes.get_lines()[0].get_ydata())*10)
 
 
 class TestMultiPlotter(unittest.TestCase):

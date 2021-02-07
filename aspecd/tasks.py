@@ -1720,7 +1720,8 @@ class SingleplotTask(PlotTask):
               linestyle: dashed
             legend:
               location: northeast
-          show_legend: True
+          parameters:
+            show_legend: True
           caption:
             title: >
               Ideally a single sentence summarising the intend of the figure
@@ -1812,6 +1813,7 @@ class MultiplotTask(PlotTask):
                 unit: nm
               - quantity: intensity
                 unit:
+            show_legend: True
           caption:
             title: >
               Ideally a single sentence summarising the intend of the figure

@@ -200,22 +200,24 @@ class Plotter:
     parameters : :class:`dict`
         All parameters necessary for the plot, implicit and explicit
 
-    parameters['show_legend'] : :class:`bool`
-        Whether to show a legend in the plot
+        The following keys exist:
 
-        Default: False
+        show_legend : :class:`bool`
+            Whether to show a legend in the plot
 
-    parameters['show_zero_lines'] : :class:`bool`
-        Whether to show zero lines in the plot
+            Default: False
 
-        Regardless of whether you set this to true, zero lines will only be
-        added to the final plot if the zero value is within the current axes
-        limits.
+        show_zero_lines : :class:`bool`
+            Whether to show zero lines in the plot
 
-        Zero line properties can be set via the
-        :attr:`aspecd.plotting.Plotter.properties` attribute.
+            Regardless of whether you set this to true, zero lines will only be
+            added to the final plot if the zero value is within the current
+            axes limits.
 
-        Default: True
+            Zero line properties can be set via the
+            :attr:`aspecd.plotting.Plotter.properties` attribute.
+
+            Default: True
 
     properties : :class:`aspecd.plotting.PlotProperties`
         Properties of the plot, defining its appearance
@@ -429,6 +431,11 @@ class Plotter:
 
         If you ever need to change the appearance of your axes labels,
         override this method in a child class.
+
+        Returns
+        -------
+        label: :class:`str`
+            label for the axis
         """
         label = ''
         if axis.quantity:
@@ -799,6 +806,22 @@ class SinglePlotter2D(SinglePlotter):
             raise TypeError
         self._type = plot_type
 
+    @staticmethod
+    def applicable(dataset):
+        """Check whether plot is applicable to the given dataset.
+
+        Checks for the dimension of the data of the dataset, i.e. the
+        :attr:`aspecd.dataset.Data.data` attribute. Returns `True` if data
+        are two-dimensional, and `False` otherwise.
+
+        Returns
+        -------
+        applicable : :class:`bool`
+            `True` if successful, `False` otherwise.
+
+        """
+        return dataset.data.data.ndim == 2
+
     def _create_plot(self):
         """
         Create actual plot
@@ -830,6 +853,71 @@ class SinglePlotter2D(SinglePlotter):
         ylabel = self._create_axis_label_string(self.dataset.data.axes[0])
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel(ylabel)
+
+
+class SinglePlotter2DStacked(SinglePlotter):
+    # noinspection PyUnresolvedReferences
+    """Stacked plots of 2D data
+
+    A stackplot creates a series of lines stacked on top of each other from
+    a 2D dataset.
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for the plot, implicit and explicit
+
+        The following keys exist, in addition to the keys inherited from the
+        superclass:
+
+        stacking_dimension : :class:`int`
+            dimension of data along which to stack the plot
+
+            Default: 1
+
+        offset : :class:`float`
+            offset between lines
+
+            If not explicitly set, the plotter will try its best to determine a
+            sensible value, by using ``self.dataset.data.data.max() * 1.05``.
+
+            Default: 0
+
+        """
+
+    # noinspection PyTypeChecker
+    def __init__(self):
+        super().__init__()
+        self.parameters['stacking_dimension'] = 1
+        self.parameters['offset'] = 0
+
+    @staticmethod
+    def applicable(dataset):
+        """Check whether plot is applicable to the given dataset.
+
+        Checks for the dimension of the data of the dataset, i.e. the
+        :attr:`aspecd.dataset.Data.data` attribute. Returns `True` if data
+        are two-dimensional, and `False` otherwise.
+
+        Returns
+        -------
+        applicable : :class:`bool`
+            `True` if successful, `False` otherwise.
+
+        """
+        return dataset.data.data.ndim == 2
+
+    def _create_plot(self):
+        if not self.parameters['offset']:
+            self.parameters['offset'] = self.dataset.data.data.max() * 1.05
+        if self.parameters['stacking_dimension'] == 0:
+            for idx in range(self.dataset.data.data.shape[0]):
+                self.axes.plot(self.dataset.data.data[idx, :]
+                               + idx * self.parameters['offset'])
+        elif self.parameters['stacking_dimension'] == 1:
+            for idx in range(self.dataset.data.data.shape[1]):
+                self.axes.plot(self.dataset.data.data[:, idx]
+                               + idx * self.parameters['offset'])
 
 
 class MultiPlotter(Plotter):
@@ -870,6 +958,7 @@ class MultiPlotter(Plotter):
         self.properties = MultiPlotProperties()
         self.datasets = []
         self.description = 'Abstract plotting step for multiple dataset'
+        # noinspection PyTypeChecker
         self.parameters['axes'] = [aspecd.dataset.Axis(),
                                    aspecd.dataset.Axis()]
 
@@ -920,6 +1009,7 @@ class MultiPlotter(Plotter):
                            len(self.datasets)):
                 self.properties.add_drawing()
 
+    # noinspection PyUnresolvedReferences
     def _set_axes_labels(self):
         """Set axes labels from axes.
 
