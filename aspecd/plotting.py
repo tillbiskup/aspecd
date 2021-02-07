@@ -1759,8 +1759,8 @@ class MultiPlotProperties(PlotProperties):
         self.axes.apply(axes=plotter.axes)
         if hasattr(plotter, 'legend') and plotter.legend:
             self.legend.apply(legend=plotter.legend)
-        if hasattr(plotter, 'drawing'):
-            for idx, drawing in enumerate(plotter.drawing):
+        if hasattr(plotter, 'drawings'):
+            for idx, drawing in enumerate(plotter.drawings):
                 self.drawings[idx].apply(drawing=drawing)
 
 
@@ -1768,7 +1768,7 @@ class MultiPlot1DProperties(MultiPlotProperties):
     """
     Properties of a 1D multiplot, defining its appearance.
 
-    drawing : :class:`list`
+    drawings : :class:`list`
         Properties of the lines within a plot.
 
         Each element is a :obj:`aspecd.plotting.LineProperties` object

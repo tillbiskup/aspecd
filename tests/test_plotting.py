@@ -492,7 +492,7 @@ class TestMultiPlotter(unittest.TestCase):
         self.plotter.datasets.append(dataset.Dataset())
         self.plotter.plot()
         self.assertEqual(len(self.plotter.datasets),
-                         len(self.plotter.properties.drawing))
+                         len(self.plotter.properties.drawings))
 
     def test_plot_with_show_legend_set_to_true_adds_legend(self):
         self.plotter.datasets.append(dataset.Dataset())
@@ -546,12 +546,12 @@ class TestMultiPlotter1D(unittest.TestCase):
     def test_plot_with_datasets_adds_drawing_to_properties(self):
         self.plotter.datasets.append(dataset.Dataset())
         self.plotter.plot()
-        self.assertEqual(1, len(self.plotter.properties.drawing))
+        self.assertEqual(1, len(self.plotter.properties.drawings))
 
     def test_added_drawing_is_correct_type(self):
         self.plotter.datasets.append(dataset.Dataset())
         self.plotter.plot()
-        self.assertIs(type(self.plotter.properties.drawing[0]),
+        self.assertIs(type(self.plotter.properties.drawings[0]),
                       aspecd.plotting.LineProperties)
 
     def test_plot_sets_correct_line_color(self):
@@ -1203,7 +1203,7 @@ class TestMultiPlotProperties(unittest.TestCase):
         self.assertTrue(hasattr(self.plot_properties, 'axes'))
 
     def test_has_drawings_property(self):
-        self.assertTrue(hasattr(self.plot_properties, 'drawing'))
+        self.assertTrue(hasattr(self.plot_properties, 'drawings'))
 
     def test_has_legend_property(self):
         self.assertTrue(hasattr(self.plot_properties, 'legend'))
