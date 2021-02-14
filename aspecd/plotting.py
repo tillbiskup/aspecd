@@ -831,8 +831,9 @@ class SinglePlotter2D(SinglePlotter):
             Handle axes appropriately, depending on plot type.
 
         """
+
         plot_function = getattr(self.axes, self.type)
-        self.drawing = plot_function(self.dataset.data.data)
+        self.drawing = plot_function(self.dataset.data.data.T)
 
     def _set_axes_labels(self):
         """Set axes labels from axes in dataset.
@@ -850,8 +851,8 @@ class SinglePlotter2D(SinglePlotter):
         If you ever need to change the handling of your axes labels,
         override this method in a child class.
         """
-        xlabel = self._create_axis_label_string(self.dataset.data.axes[1])
-        ylabel = self._create_axis_label_string(self.dataset.data.axes[0])
+        xlabel = self._create_axis_label_string(self.dataset.data.axes[0])
+        ylabel = self._create_axis_label_string(self.dataset.data.axes[1])
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel(ylabel)
 

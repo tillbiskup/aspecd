@@ -333,10 +333,10 @@ class TestSinglePlotter2D(unittest.TestCase):
         test_dataset.data.axes[0].unit = 'foo'
         test_dataset.data.axes[1].quantity = 'one'
         test_dataset.data.axes[1].unit = 'bar'
-        xlabel = '$' + test_dataset.data.axes[1].quantity + '$' + ' / ' + \
-                 test_dataset.data.axes[1].unit
-        ylabel = '$' + test_dataset.data.axes[0].quantity + '$' + ' / ' + \
+        xlabel = '$' + test_dataset.data.axes[0].quantity + '$' + ' / ' + \
                  test_dataset.data.axes[0].unit
+        ylabel = '$' + test_dataset.data.axes[1].quantity + '$' + ' / ' + \
+                 test_dataset.data.axes[1].unit
         plotter = test_dataset.plot(self.plotter)
         self.assertEqual(xlabel, plotter.axes.get_xlabel())
         self.assertEqual(ylabel, plotter.axes.get_ylabel())
