@@ -362,6 +362,31 @@ class TestSinglePlotter2D(unittest.TestCase):
         test_dataset.data.data = np.random.random([5, 5])
         plotter = test_dataset.plot(self.plotter)
 
+    def test_plot_with_switched_axes(self):
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        test_dataset.data.axes[0].quantity = 'zero'
+        test_dataset.data.axes[0].unit = 'foo'
+        test_dataset.data.axes[0].values = np.linspace(5, 10, 5)
+        test_dataset.data.axes[1].quantity = 'one'
+        test_dataset.data.axes[1].unit = 'bar'
+        test_dataset.data.axes[1].values = np.linspace(50, 100, 5)
+        xlimits = tuple(test_dataset.data.axes[1].values[[0, -1]])
+        ylimits = tuple(test_dataset.data.axes[0].values[[0, -1]])
+        self.plotter.parameters['switch_axes'] = True
+        plotter = test_dataset.plot(self.plotter)
+        self.assertEqual(xlimits, plotter.axes.get_xlim())
+        self.assertEqual(ylimits, plotter.axes.get_ylim())
+
+    def test_plot_contour_with_levels(self):
+        self.plotter.type = 'contour'
+        self.plotter.parameters['levels'] = 40
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        plotter = test_dataset.plot(self.plotter)
+        self.assertGreaterEqual(len(plotter.drawing.levels),
+                                self.plotter.parameters['levels'] - 5)
+
 
 class TestSinglePlotter2DStacked(unittest.TestCase):
     def setUp(self):

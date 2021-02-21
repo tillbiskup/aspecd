@@ -437,6 +437,7 @@ class Plotter:
         -------
         label: :class:`str`
             label for the axis
+
         """
         label = ''
         if axis.quantity:
@@ -726,6 +727,7 @@ class SinglePlotter1D(SinglePlotter):
 
 
 class SinglePlotter2D(SinglePlotter):
+    # noinspection PyUnresolvedReferences
     """2D plots of single datasets.
 
     Convenience class taking care of 2D plots of single datasets. The type
@@ -738,9 +740,9 @@ class SinglePlotter2D(SinglePlotter):
     For details, see the documentation of its respective class,
     :class:`aspecd.plotting.SinglePlotProperties`.
 
-    To perform the plot, call the :meth:`plot` method of the dataset the plot
-    should be performed for, and provide a reference to the actual plotter
-    object to it.
+    To perform the plot, call the :meth:`plot` method of the dataset the
+    plot should be performed for, and provide a reference to the actual
+    plotter object to it.
 
     .. important::
         Due to the difference between axes conventions in plots,
@@ -755,6 +757,29 @@ class SinglePlotter2D(SinglePlotter):
         *y*, *z* axes, not in row-column indices.
 
 
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for the plot, implicit and explicit
+
+        The following keys exist, in addition to those of the superclasses:
+
+        switch_axes : :class:`bool`
+            Whether to switch *x* and *y* axes
+
+            Normally, the first axis is used as *x* axis, and the second
+            as *y* axis. Sometimes, switching this assignment is
+            necessary or convenient.
+
+            Default: False
+
+        levels : :class:`int`
+            Number of levels of a contour plot
+
+            If None, the number of levels will be determined automatically.
+
+            Default: None
+
     Raises
     ------
     TypeError
@@ -765,6 +790,8 @@ class SinglePlotter2D(SinglePlotter):
     def __init__(self):
         super().__init__()
         self.description = '2D plotting step for single dataset'
+        self.parameters['switch_axes'] = False
+        self.parameters['levels'] = None
         self._type = 'imshow'
         self._allowed_types = ['contour', 'contourf', 'imshow']
 
@@ -833,17 +860,31 @@ class SinglePlotter2D(SinglePlotter):
 
         """
         plot_function = getattr(self.axes, self.type)
-        if self.type == 'imshow':
-            data = np.flipud(self.dataset.data.data.T)
+        if self.parameters['switch_axes']:
+            data = self.dataset.data.data
         else:
             data = self.dataset.data.data.T
-        self.drawing = plot_function(data, extent=self._get_extent())
+        if self.type == 'imshow':
+            data = np.flipud(data)
+            self.drawing = plot_function(data, extent=self._get_extent())
+        else:
+            if self.parameters['levels']:
+                self.drawing = plot_function(data, extent=self._get_extent(),
+                                             levels=self.parameters['levels'])
+            else:
+                self.drawing = plot_function(data, extent=self._get_extent())
 
     def _get_extent(self):
-        extent = [self.dataset.data.axes[0].values[0],
-                  self.dataset.data.axes[0].values[-1],
-                  self.dataset.data.axes[1].values[0],
-                  self.dataset.data.axes[1].values[-1]]
+        if self.parameters['switch_axes']:
+            extent = [self.dataset.data.axes[1].values[0],
+                      self.dataset.data.axes[1].values[-1],
+                      self.dataset.data.axes[0].values[0],
+                      self.dataset.data.axes[0].values[-1]]
+        else:
+            extent = [self.dataset.data.axes[0].values[0],
+                      self.dataset.data.axes[0].values[-1],
+                      self.dataset.data.axes[1].values[0],
+                      self.dataset.data.axes[1].values[-1]]
         return extent
 
     def _set_axes_labels(self):
@@ -862,8 +903,12 @@ class SinglePlotter2D(SinglePlotter):
         If you ever need to change the handling of your axes labels,
         override this method in a child class.
         """
-        xlabel = self._create_axis_label_string(self.dataset.data.axes[0])
-        ylabel = self._create_axis_label_string(self.dataset.data.axes[1])
+        if self.parameters['switch_axes']:
+            xlabel = self._create_axis_label_string(self.dataset.data.axes[1])
+            ylabel = self._create_axis_label_string(self.dataset.data.axes[0])
+        else:
+            xlabel = self._create_axis_label_string(self.dataset.data.axes[0])
+            ylabel = self._create_axis_label_string(self.dataset.data.axes[1])
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel(ylabel)
 
