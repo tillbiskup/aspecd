@@ -752,7 +752,7 @@ class SinglePlotter2D(SinglePlotter):
         *i.e*. the *x* axis), the *x* axis in the plot will be the second
         axis, the *y* axis the first axis of your dataset.
 
-        While ususally, it is only a matter of convention how to display
+        While usually, it is only a matter of convention how to display
         your 2D data, it is often confusing, as we intuitively think in *x*,
         *y*, *z* axes, not in row-column indices.
 
@@ -780,6 +780,12 @@ class SinglePlotter2D(SinglePlotter):
 
             Default: None
 
+    properties : :class:`aspecd.plotting.SinglePlot2DProperties`
+        Properties of the plot, defining its appearance
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.SinglePlot2DProperties` class.
+
     Raises
     ------
     TypeError
@@ -792,6 +798,7 @@ class SinglePlotter2D(SinglePlotter):
         self.description = '2D plotting step for single dataset'
         self.parameters['switch_axes'] = False
         self.parameters['levels'] = None
+        self.properties = SinglePlot2DProperties()
         self._type = 'imshow'
         self._allowed_types = ['contour', 'contourf', 'imshow']
 
@@ -1706,6 +1713,30 @@ class SinglePlot1DProperties(SinglePlotProperties):
         self.drawing = LineProperties()
 
 
+class SinglePlot2DProperties(SinglePlotProperties):
+    """
+    Properties of a 2D single plot, defining its appearance.
+
+    Attributes
+    ----------
+    drawing : :class:`aspecd.plotting.SurfaceProperties`
+        Properties of the surface within a plot
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.SurfaceProperties` class.
+
+    Raises
+    ------
+    aspecd.plotting.MissingPlotterError
+        Raised if no plotter is provided.
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.drawing = SurfaceProperties()
+
+
 class MultiPlotProperties(PlotProperties):
     """
     Properties of a multiplot, defining its appearance.
@@ -2313,3 +2344,24 @@ class LineProperties(DrawingProperties):
         self.linestyle = 'solid'
         self.linewidth = 1.0
         self.marker = ''
+
+
+class SurfaceProperties(DrawingProperties):
+    """
+    Properties of a surface within a plot.
+
+    Basically, the attributes are a subset of what :mod:`matplotlib` defines
+    for :obj:`matplotlib.contour.ContourSet` and
+    :obj:`matplotlib.image.AxesImage` objects.
+
+    Attributes
+    ----------
+    cmap: :class:`str`
+        name of the colormap to use
+
+        For details see :class:`matplotlib.colors.Colormap`
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.cmap = 'viridis'

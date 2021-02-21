@@ -387,6 +387,21 @@ class TestSinglePlotter2D(unittest.TestCase):
         self.assertGreaterEqual(len(plotter.drawing.levels),
                                 self.plotter.parameters['levels'] - 5)
 
+    def test_set_cmap_from_dict(self):
+        cmap = 'RdGy'
+        properties = {'drawing': {'cmap': cmap}}
+        self.plotter.properties.from_dict(properties)
+        self.assertEqual(cmap, self.plotter.properties.drawing.cmap)
+
+    def test_plot_sets_correct_cmap(self):
+        cmap = 'RdGy'
+        dict_ = {'drawing': {'cmap': cmap}}
+        self.plotter.properties.from_dict(dict_)
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        self.plotter.plot(dataset=test_dataset)
+        self.assertEqual(cmap, self.plotter.drawing.cmap.name)
+
 
 class TestSinglePlotter2DStacked(unittest.TestCase):
     def setUp(self):
@@ -964,6 +979,42 @@ class TestLineProperties(unittest.TestCase):
         self.assertEqual(self.line_properties.label, line.get_label())
 
 
+class TestSurfaceProperties(unittest.TestCase):
+    def setUp(self):
+        self.properties = plotting.SurfaceProperties()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.properties, 'to_dict'))
+        self.assertTrue(callable(self.properties.to_dict))
+
+    def test_has_from_dict_method(self):
+        self.assertTrue(hasattr(self.properties, 'from_dict'))
+        self.assertTrue(callable(self.properties.from_dict))
+
+    def test_has_properties(self):
+        for prop in ['cmap']:
+            self.assertTrue(hasattr(self.properties, prop))
+
+    def test_has_apply_method(self):
+        self.assertTrue(hasattr(self.properties, 'apply'))
+        self.assertTrue(callable(self.properties.apply))
+
+    def test_apply_without_argument_raises(self):
+        with self.assertRaises(aspecd.exceptions.MissingDrawingError):
+            self.properties.apply()
+
+    @unittest.skip
+    def test_apply_sets_properties(self):
+        self.properties.cmap = 'RdGy'
+        # noinspection PyUnresolvedReferences
+        contour = matplotlib.lines.Line2D([0, 1], [0, 0])
+        self.properties.apply(drawing=contour)
+        self.assertEqual(self.properties.cmap, contour.cmap.name)
+
+
 class TestPlotProperties(unittest.TestCase):
     def setUp(self):
         self.plot_properties = plotting.PlotProperties()
@@ -1232,6 +1283,25 @@ class TestSinglePlot1DProperties(unittest.TestCase):
         self.plot_properties.apply(plotter=plot)
         self.assertEqual(self.plot_properties.drawing.linewidth,
                          plot.drawing.get_linewidth())
+        plt.close(plot.figure)
+
+
+class TestSinglePlot2DProperties(unittest.TestCase):
+    def setUp(self):
+        self.plot_properties = plotting.SinglePlot2DProperties()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_apply_sets_drawing_properties(self):
+        self.plot_properties.drawing.cmap = 'RdGy'
+        plot = plotting.SinglePlotter2D()
+        dataset_ = dataset.Dataset()
+        dataset_.data.data = np.random.random([5, 5])
+        plot.plot(dataset=dataset_)
+        self.plot_properties.apply(plotter=plot)
+        self.assertEqual(self.plot_properties.drawing.cmap,
+                         plot.drawing.cmap.name)
         plt.close(plot.figure)
 
 
