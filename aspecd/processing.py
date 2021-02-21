@@ -66,6 +66,10 @@ A few hints on writing own processing step classes:
   vice versa). Don't forget to declare this as a static method, using the
   ``@staticmethod`` decorator.
 
+* With the ``_sanitise_parameters`` method, the input parameters are
+  automatically checked and an appropriate exception can be thrown in order to
+  describe the error source to the user.
+
 Some more special cases are detailed below. For further advice, consult the
 source code of this module, and have a look at the concrete processing steps
 whose purpose is described below in more detail.
