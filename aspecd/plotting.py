@@ -168,8 +168,9 @@ import copy
 import os
 
 import matplotlib as mpl
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import numpy as np
-from matplotlib import pyplot as plt
 
 import aspecd.dataset
 import aspecd.exceptions
@@ -1010,6 +1011,23 @@ class SinglePlotter2DStacked(SinglePlotter):
         The following keys exist, in addition to the keys inherited from the
         superclass:
 
+        show_legend : :class:`bool`
+            Whether to show a legend in the plot
+
+            Default: False
+
+        show_zero_lines : :class:`bool`
+            Whether to show zero lines in the plot
+
+            Regardless of whether you set this to true, zero lines will only be
+            added to the final plot if the zero value is within the current
+            axes limits.
+
+            Zero line properties can be set via the
+            :attr:`aspecd.plotting.Plotter.properties` attribute.
+
+            Default: False
+
         stacking_dimension : :class:`int`
             dimension of data along which to stack the plot
 
@@ -1023,6 +1041,12 @@ class SinglePlotter2DStacked(SinglePlotter):
 
             Default: 0
 
+    properties : :class:`aspecd.plotting.SinglePlot1DProperties`
+        Properties of the plot, defining its appearance
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.SinglePlot1DProperties` class.
+
     """
 
     # noinspection PyTypeChecker
@@ -1030,9 +1054,14 @@ class SinglePlotter2DStacked(SinglePlotter):
         super().__init__()
         self.description = '2D stackplot for a single dataset'
         self.dataset = None
-        self.parameters['stacking_dimension'] = 1
-        self.parameters['offset'] = 0
+        self.parameters = {
+            'show_legend': False,
+            'show_zero_lines': False,
+            'stacking_dimension': 1,
+            'offset': 0,
+        }
         self.drawing = []
+        self.properties = SinglePlot1DProperties()
 
     @staticmethod
     def applicable(dataset):
@@ -1053,16 +1082,50 @@ class SinglePlotter2DStacked(SinglePlotter):
     def _create_plot(self):
         if not self.parameters['offset']:
             self.parameters['offset'] = self.dataset.data.data.max() * 1.05
+        yticks = []
         if self.parameters['stacking_dimension'] == 0:
             for idx in range(self.dataset.data.data.shape[0]):
-                handle = self.axes.plot(self.dataset.data.data[idx, :]
+                handle = self.axes.plot(self.dataset.data.axes[1].values,
+                                        self.dataset.data.data[idx, :]
                                         + idx * self.parameters['offset'])
                 self.drawing.append(handle[0])
-        elif self.parameters['stacking_dimension'] == 1:
+                yticks.append(idx * self.parameters['offset'])
+            yticklabels = self.dataset.data.axes[0].values.astype(str)
+        else:
             for idx in range(self.dataset.data.data.shape[1]):
-                handle = self.axes.plot(self.dataset.data.data[:, idx]
+                handle = self.axes.plot(self.dataset.data.axes[0].values,
+                                        self.dataset.data.data[:, idx]
                                         + idx * self.parameters['offset'])
                 self.drawing.append(handle[0])
+                yticks.append(idx * self.parameters['offset'])
+            yticklabels = self.dataset.data.axes[1].values.astype(str)
+        self.properties.axes.yticks = yticks
+        self.properties.axes.yticklabels = yticklabels
+
+    def _set_axes_labels(self):
+        """Set axes labels from axes in dataset.
+
+        This method is called automatically by :meth:`plot`.
+
+        .. note::
+            Due to the difference between axes conventions in plots,
+            with axes being labelled *x*, *y*, *z* accordingly, and the
+            convention of indexing arrays (first index refers to the row,
+            converting to the *y* axis, the second index to the column,
+            *i.e*. the *x* axis), labels have to be reverted for *x* and *y*
+            axis with respect to the situation with 1D data.
+
+        If you ever need to change the handling of your axes labels,
+        override this method in a child class.
+        """
+        if self.parameters['stacking_dimension'] == 0:
+            xlabel = self._create_axis_label_string(self.dataset.data.axes[1])
+            ylabel = self._create_axis_label_string(self.dataset.data.axes[0])
+        else:
+            xlabel = self._create_axis_label_string(self.dataset.data.axes[0])
+            ylabel = self._create_axis_label_string(self.dataset.data.axes[1])
+        self.axes.set_xlabel(xlabel)
+        self.axes.set_ylabel(ylabel)
 
 
 class MultiPlotter(Plotter):
@@ -2135,11 +2198,11 @@ class AxesProperties(aspecd.utils.Properties):
 
         possible values: "linear", "log", "symlog", "logit"
 
-    xticklabels: :class:`list`
-        x-tick labels: list of string labels
-
     xticks:
         y ticks with list of ticks
+
+    xticklabels: :class:`list`
+        x-tick labels: list of string labels
 
     ylabel: :class:`str`
         label for the y-axis
@@ -2152,11 +2215,11 @@ class AxesProperties(aspecd.utils.Properties):
 
         possible values: "linear", "log", "symlog", "logit"
 
-    yticklabels: :class:`list`
-        y-tick labels: list of string labels
-
     yticks:
         y ticks with list of ticks
+
+    yticklabels: :class:`list`
+        y-tick labels: list of string labels
 
     Raises
     ------
@@ -2206,6 +2269,14 @@ class AxesProperties(aspecd.utils.Properties):
         for property_, value in self._get_settable_properties().items():
             if hasattr(axes, 'set_' + property_):
                 getattr(axes, 'set_' + property_)(value)
+        if self.xticks is not None:
+            axes.xaxis.set_major_locator(ticker.FixedLocator(self.xticks))
+        if self.yticks is not None:
+            axes.yaxis.set_major_locator(ticker.FixedLocator(self.yticks))
+        if self.xticklabels is not None:
+            axes.set_xticklabels(self.xticklabels)
+        if self.yticklabels is not None:
+            axes.set_yticklabels(self.yticklabels)
 
     def _get_settable_properties(self):
         """
@@ -2225,7 +2296,12 @@ class AxesProperties(aspecd.utils.Properties):
         all_properties = self.to_dict()
         properties = dict()
         for prop in all_properties:
-            if all_properties[prop]:
+            if prop.startswith(('xtick', 'ytick')):
+                pass
+            elif isinstance(all_properties[prop], np.ndarray):
+                if any(all_properties[prop]):
+                    properties[prop] = all_properties[prop]
+            elif all_properties[prop]:
                 properties[prop] = all_properties[prop]
         return properties
 
@@ -2428,6 +2504,7 @@ class SurfaceProperties(DrawingProperties):
         name of the colormap to use
 
         For details see :class:`matplotlib.colors.Colormap`
+
     """
 
     def __init__(self):

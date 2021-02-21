@@ -1,4 +1,5 @@
 """Tests for plotting."""
+import warnings
 
 import matplotlib.figure
 import matplotlib.axes
@@ -431,14 +432,14 @@ class TestSinglePlotter2DStacked(unittest.TestCase):
         dataset_ = aspecd.dataset.CalculatedDataset()
         dataset_.data.data = np.random.random([5, 10]) - 0.5
         plotter = dataset_.plot(self.plotter)
-        self.assertEqual(12, len(plotter.axes.get_lines()))
+        self.assertGreaterEqual(10, len(plotter.axes.get_lines()))
 
     def test_plot_along_zero_dim_consists_of_correct_number_of_lines(self):
         self.plotter.parameters['stacking_dimension'] = 0
         dataset_ = aspecd.dataset.CalculatedDataset()
         dataset_.data.data = np.random.random([5, 10]) - 0.5
         plotter = dataset_.plot(self.plotter)
-        self.assertEqual(7, len(plotter.axes.get_lines()))
+        self.assertGreaterEqual(5, len(plotter.axes.get_lines()))
 
     def test_plot_stacks_plots(self):
         dataset_ = aspecd.dataset.CalculatedDataset()
@@ -455,6 +456,47 @@ class TestSinglePlotter2DStacked(unittest.TestCase):
         self.assertGreater(max(plotter.axes.get_lines()[4].get_ydata()),
                            max(plotter.axes.get_lines()[0].get_ydata())*3)
 
+    def test_plot_along_zero_dim_sets_correct_axes_labels(self):
+        self.plotter.parameters['stacking_dimension'] = 0
+        test_dataset = aspecd.dataset.CalculatedDataset()
+        test_dataset.data.data = np.random.random([5, 10]) - 0.5
+        test_dataset.data.axes[0].quantity = 'zero'
+        test_dataset.data.axes[0].unit = 'foo'
+        test_dataset.data.axes[1].quantity = 'one'
+        test_dataset.data.axes[1].unit = 'bar'
+        plotter = test_dataset.plot(self.plotter)
+        self.assertIn(test_dataset.data.axes[1].unit,
+                      plotter.axes.get_xlabel())
+
+    def test_plot_sets_correct_axes_limits(self):
+        test_dataset = aspecd.dataset.CalculatedDataset()
+        test_dataset.data.data = np.random.random([5, 10]) - 0.5
+        test_dataset.data.axes[0].quantity = 'zero'
+        test_dataset.data.axes[0].unit = 'foo'
+        test_dataset.data.axes[0].values = np.linspace(5, 10, 5)
+        test_dataset.data.axes[1].quantity = 'one'
+        test_dataset.data.axes[1].unit = 'bar'
+        test_dataset.data.axes[1].values = np.linspace(50, 100, 10)
+        plotter = test_dataset.plot(self.plotter)
+        xlimits = tuple(test_dataset.data.axes[0].values[[0, -1]])
+        self.assertLessEqual(plotter.axes.get_xlim()[0], xlimits[0])
+        self.assertGreaterEqual(plotter.axes.get_xlim()[1], xlimits[1])
+
+    def test_plot_along_zero_dim_sets_correct_axes_limits(self):
+        self.plotter.parameters['stacking_dimension'] = 0
+        test_dataset = aspecd.dataset.CalculatedDataset()
+        test_dataset.data.data = np.random.random([5, 10]) - 0.5
+        test_dataset.data.axes[0].quantity = 'zero'
+        test_dataset.data.axes[0].unit = 'foo'
+        test_dataset.data.axes[0].values = np.linspace(5, 10, 5)
+        test_dataset.data.axes[1].quantity = 'one'
+        test_dataset.data.axes[1].unit = 'bar'
+        test_dataset.data.axes[1].values = np.linspace(50, 100, 10)
+        plotter = test_dataset.plot(self.plotter)
+        xlimits = tuple(test_dataset.data.axes[1].values[[0, -1]])
+        self.assertLessEqual(plotter.axes.get_xlim()[0], xlimits[0])
+        self.assertGreaterEqual(plotter.axes.get_xlim()[1], xlimits[1])
+
     def test_plot_with_offset_stacks_plots_accordingly(self):
         self.plotter.parameters['offset'] = 2
         dataset_ = aspecd.dataset.CalculatedDataset()
@@ -470,7 +512,7 @@ class TestSinglePlotter2DStacked(unittest.TestCase):
         self.assertEqual(10, len(self.plotter.drawing))
 
     def test_plot_applies_drawing_properties_to_all_drawings(self):
-        self.plotter.properties.drawing.color = '#ace'
+        self.plotter.properties.drawing.color = '#aaccee'
         dataset_ = aspecd.dataset.CalculatedDataset()
         dataset_.data.data = np.random.random([5, 10]) - 0.5
         plotter = dataset_.plot(self.plotter)
@@ -478,6 +520,52 @@ class TestSinglePlotter2DStacked(unittest.TestCase):
                          plotter.axes.get_lines()[0]._color)
         self.assertEqual(self.plotter.properties.drawing.color,
                          plotter.axes.get_lines()[4]._color)
+
+    def test_set_color_from_dict(self):
+        color = '#aaccee'
+        properties = {'drawing': {'color': color}}
+        self.plotter.properties.from_dict(properties)
+        self.assertEqual(color, self.plotter.properties.drawing.color)
+
+    def test_plot_sets_correct_yticks(self):
+        test_dataset = aspecd.dataset.CalculatedDataset()
+        test_dataset.data.data = np.random.random([5, 10]) - 0.5
+        test_dataset.data.axes[1].quantity = 'one'
+        test_dataset.data.axes[1].unit = 'bar'
+        test_dataset.data.axes[1].values = np.linspace(50, 100, 10)
+        plotter = test_dataset.plot(self.plotter)
+        self.assertEqual(10, len(plotter.axes.get_yticks()))
+
+    def test_plot_along_zero_dim_sets_correct_yticks(self):
+        self.plotter.parameters['stacking_dimension'] = 0
+        test_dataset = aspecd.dataset.CalculatedDataset()
+        test_dataset.data.data = np.random.random([5, 10]) - 0.5
+        test_dataset.data.axes[0].quantity = 'zero'
+        test_dataset.data.axes[0].unit = 'foo'
+        test_dataset.data.axes[0].values = np.linspace(5, 10, 5)
+        plotter = test_dataset.plot(self.plotter)
+        self.assertEqual(5, len(plotter.axes.get_yticks()))
+
+    def test_plot_sets_correct_yticklabels(self):
+        test_dataset = aspecd.dataset.CalculatedDataset()
+        test_dataset.data.data = np.random.random([5, 10]) - 0.5
+        test_dataset.data.axes[1].quantity = 'one'
+        test_dataset.data.axes[1].unit = 'bar'
+        test_dataset.data.axes[1].values = np.linspace(50, 100, 10)
+        plotter = test_dataset.plot(self.plotter)
+        self.assertEqual(test_dataset.data.axes[1].values[0].astype(str),
+                         plotter.axes.get_yticklabels()[0].get_text())
+
+    def test_plot_along_zero_dim_sets_correct_yticklabels(self):
+        self.plotter.parameters['stacking_dimension'] = 0
+        test_dataset = aspecd.dataset.CalculatedDataset()
+        test_dataset.data.data = np.random.random([5, 10]) - 0.5
+        test_dataset.data.axes[0].quantity = 'zero'
+        test_dataset.data.axes[0].unit = 'foo'
+        test_dataset.data.axes[0].values = np.linspace(5, 10, 5)
+        plotter = test_dataset.plot(self.plotter)
+        self.assertEqual(test_dataset.data.axes[0].values[0].astype(str),
+                         plotter.axes.get_yticklabels()[0].get_text())
 
 
 class TestMultiPlotter(unittest.TestCase):
@@ -1150,6 +1238,54 @@ class TestAxisProperties(unittest.TestCase):
         plot.properties.from_dict(properties)
         plot.plot()
         self.assertEqual(label, plot.axes.get_xlabel())
+        plt.close(plot.figure)
+
+    def test_set_xticks(self):
+        self.axis_properties.xticks = np.linspace(0, 1, 11)
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertListEqual(list(self.axis_properties.xticks),
+                             list(plot.axes.get_xticks()))
+        plt.close(plot.figure)
+
+    def test_set_xtick_labels(self):
+        self.axis_properties.xticks = np.linspace(0, 1, 11)
+        self.axis_properties.xticklabels = np.linspace(2, 3, 11).astype(str)
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertEqual(self.axis_properties.xticklabels[5],
+                         plot.axes.get_xticklabels()[5].get_text())
+        plt.close(plot.figure)
+
+    def test_set_yticks(self):
+        self.axis_properties.yticks = np.linspace(0, 1, 11)
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertListEqual(list(self.axis_properties.yticks),
+                             list(plot.axes.get_yticks()))
+        plt.close(plot.figure)
+
+    def test_set_ytick_labels(self):
+        self.axis_properties.yticks = np.linspace(0, 1, 11)
+        self.axis_properties.yticklabels = np.linspace(2, 3, 11).astype(str)
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertEqual(self.axis_properties.yticklabels[5],
+                         plot.axes.get_yticklabels()[5].get_text())
+        plt.close(plot.figure)
+
+    def test_set_ticks_and_labels_does_not_issue_warning(self):
+        self.axis_properties.xticks = np.linspace(0, 1, 11)
+        self.axis_properties.xticklabels = np.linspace(2, 3, 11).astype(str)
+        plot = plotting.Plotter()
+        plot.plot()
+        with warnings.catch_warnings(record=True) as warning:
+            self.axis_properties.apply(axes=plot.axes)
+            self.assertFalse(len(warning))
         plt.close(plot.figure)
 
 
