@@ -168,6 +168,7 @@ import copy
 import os
 
 import matplotlib as mpl
+import numpy as np
 from matplotlib import pyplot as plt
 
 import aspecd.dataset
@@ -765,8 +766,7 @@ class SinglePlotter2D(SinglePlotter):
         super().__init__()
         self.description = '2D plotting step for single dataset'
         self._type = 'imshow'
-        self._allowed_types = ['contour', 'contourf', 'imshow', 'pcolor',
-                               'pcolormesh']
+        self._allowed_types = ['contour', 'contourf', 'imshow']
 
     @property
     def type(self):
@@ -824,16 +824,27 @@ class SinglePlotter2D(SinglePlotter):
         return dataset.data.data.ndim == 2
 
     def _create_plot(self):
-        """
-        Create actual plot
+        """Create actual plot.
 
         .. todo::
-            Handle axes appropriately, depending on plot type.
+            Handle imshow and contour plots appropriately, namely support
+            setting of contour levels and alike. Probably the plotting needs
+            to be done differently for both.
 
         """
-
         plot_function = getattr(self.axes, self.type)
-        self.drawing = plot_function(self.dataset.data.data.T)
+        if self.type == 'imshow':
+            data = np.flipud(self.dataset.data.data.T)
+        else:
+            data = self.dataset.data.data.T
+        self.drawing = plot_function(data, extent=self._get_extent())
+
+    def _get_extent(self):
+        extent = [self.dataset.data.axes[0].values[0],
+                  self.dataset.data.axes[0].values[-1],
+                  self.dataset.data.axes[1].values[0],
+                  self.dataset.data.axes[1].values[-1]]
+        return extent
 
     def _set_axes_labels(self):
         """Set axes labels from axes in dataset.
@@ -2183,10 +2194,32 @@ class DrawingProperties(aspecd.utils.Properties):
         for prop in self.get_properties():
             if isinstance(drawing, list):
                 for element in drawing:
-                    getattr(element, ''.join(['set_', prop]))(
-                        getattr(self, prop))
+                    self._save_set_drawing_property(element, prop)
             else:
-                getattr(drawing, ''.join(['set_', prop]))(getattr(self, prop))
+                self._save_set_drawing_property(drawing, prop)
+
+    def _save_set_drawing_property(self, drawing=None, prop=None):
+        """Save setting of drawing properties.
+
+        The method first checks whether the corresponding setter for the
+        property exists and only in this case sets the property.
+
+        .. todo::
+            Currently, the situation of no setter existing will be silently
+            ignored. This should change in the future with the advent of
+            logging.
+
+        Parameters
+        ----------
+        drawing : :class:`matplotlib.axes.Axes`
+            axis to set properties for
+
+        prop : :class:`str`
+            name of the property to set
+
+        """
+        if hasattr(drawing, ''.join(['set_', prop])):
+            getattr(drawing, ''.join(['set_', prop]))(getattr(self, prop))
 
 
 class LineProperties(DrawingProperties):

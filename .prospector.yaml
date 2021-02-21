@@ -21,3 +21,6 @@ pylint:
 
 pyroma:
   run: true
+
+bandit:
+  run: true

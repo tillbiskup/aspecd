@@ -341,6 +341,27 @@ class TestSinglePlotter2D(unittest.TestCase):
         self.assertEqual(xlabel, plotter.axes.get_xlabel())
         self.assertEqual(ylabel, plotter.axes.get_ylabel())
 
+    def test_plot_with_dataset_sets_axes_limits(self):
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        test_dataset.data.axes[0].quantity = 'zero'
+        test_dataset.data.axes[0].unit = 'foo'
+        test_dataset.data.axes[0].values = np.linspace(5, 10, 5)
+        test_dataset.data.axes[1].quantity = 'one'
+        test_dataset.data.axes[1].unit = 'bar'
+        test_dataset.data.axes[1].values = np.linspace(50, 100, 5)
+        xlimits = tuple(test_dataset.data.axes[0].values[[0, -1]])
+        ylimits = tuple(test_dataset.data.axes[1].values[[0, -1]])
+        plotter = test_dataset.plot(self.plotter)
+        self.assertEqual(xlimits, plotter.axes.get_xlim())
+        self.assertEqual(ylimits, plotter.axes.get_ylim())
+
+    def test_plot_contour(self):
+        self.plotter.type = 'contour'
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        plotter = test_dataset.plot(self.plotter)
+
 
 class TestSinglePlotter2DStacked(unittest.TestCase):
     def setUp(self):
