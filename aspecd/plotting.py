@@ -735,10 +735,10 @@ class SinglePlotter2D(SinglePlotter):
     attribute. Allowed types are stored in the
     :attr:`aspecd.plotting.SinglePlotter2D.allowed_types` attribute.
 
-    Quite a number of properties for figure, axes, and line can be set
-    using the :attr:`aspecd.plotting.SinglePlotter.properties` attribute.
+    Quite a number of properties for figure, axes, and surface can be set
+    using the :attr:`aspecd.plotting.SinglePlotter2D.properties` attribute.
     For details, see the documentation of its respective class,
-    :class:`aspecd.plotting.SinglePlotProperties`.
+    :class:`aspecd.plotting.SinglePlot2DProperties`.
 
     To perform the plot, call the :meth:`plot` method of the dataset the
     plot should be performed for, and provide a reference to the actual
@@ -750,7 +750,8 @@ class SinglePlotter2D(SinglePlotter):
         convention of indexing arrays (first index refers to the row,
         converting to the *y* axis, the second index to the column,
         *i.e*. the *x* axis), the *x* axis in the plot will be the second
-        axis, the *y* axis the first axis of your dataset.
+        axis, the *y* axis the first axis of your dataset. If you need to
+        change this, you can set the ``switch_axes`` parameter to True.
 
         While usually, it is only a matter of convention how to display
         your 2D data, it is often confusing, as we intuitively think in *x*,
@@ -790,6 +791,71 @@ class SinglePlotter2D(SinglePlotter):
     ------
     TypeError
         Raised when wrong plot type is set
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. Of course, all parameters settable
+    for the superclasses can be set as well. The examples focus each on a
+    single aspect.
+
+    In the simplest case, just invoke the plotter with default values:
+
+    .. code-block:: yaml
+
+       - kind: singleplot
+         type: SinglePlotter2D
+         properties:
+           filename: output.pdf
+
+    To change the axes (flip *x* and *y* axis):
+
+    .. code-block:: yaml
+
+       - kind: singleplot
+         type: SinglePlotter2D
+         properties:
+           filename: output.pdf
+           parameters:
+             switch_axes: True
+
+    To use another type (here: contour):
+
+    .. code-block:: yaml
+
+       - kind: singleplot
+         type: SinglePlotter2D
+         properties:
+           filename: output.pdf
+           type: contour
+
+    To set the number of levels of a contour plot to 10:
+
+    .. code-block:: yaml
+
+       - kind: singleplot
+         type: SinglePlotter2D
+         properties:
+           filename: output.pdf
+           type: contour
+           parameters:
+             levels: 10
+
+    To change the colormap (cmap) used:
+
+    .. code-block:: yaml
+
+       - kind: singleplot
+         type: SinglePlotter2D
+         properties:
+           filename: output.pdf
+           properties:
+             drawing:
+               cmap: RdGy
+
+    Make sure to check the documentation for further parameters that can be
+    set.
 
     """
 
@@ -860,26 +926,28 @@ class SinglePlotter2D(SinglePlotter):
     def _create_plot(self):
         """Create actual plot.
 
-        .. todo::
-            Handle imshow and contour plots appropriately, namely support
-            setting of contour levels and alike. Probably the plotting needs
-            to be done differently for both.
+        Due to ``imshow`` and ``contour`` needing slightly different
+        handling, the plotting is a bit more complex. Many parameters such
+        as extent and levels can *only* be set during  invoking the actual
+        plotting class.
 
         """
         plot_function = getattr(self.axes, self.type)
+        data = self._shape_data()
+        if self.parameters['levels']:
+            self.drawing = plot_function(data, extent=self._get_extent(),
+                                         levels=self.parameters['levels'])
+        else:
+            self.drawing = plot_function(data, extent=self._get_extent())
+
+    def _shape_data(self):
         if self.parameters['switch_axes']:
             data = self.dataset.data.data
         else:
             data = self.dataset.data.data.T
         if self.type == 'imshow':
             data = np.flipud(data)
-            self.drawing = plot_function(data, extent=self._get_extent())
-        else:
-            if self.parameters['levels']:
-                self.drawing = plot_function(data, extent=self._get_extent(),
-                                             levels=self.parameters['levels'])
-            else:
-                self.drawing = plot_function(data, extent=self._get_extent())
+        return data
 
     def _get_extent(self):
         if self.parameters['switch_axes']:
