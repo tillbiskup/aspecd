@@ -29,9 +29,9 @@ For later versions
 ==================
 
 * Remaining basic processing and analysis steps, such as baseline correction,
-algebra with datasets, slice extraction for >2D datasets, averaging (over
-parts of axis) for N-D datasets, peak finding, SNR determination, denoising,
-filtering, noise, cut dataset and axis (to common range)
+  algebra with datasets, slice extraction for >2D datasets, averaging (over
+  parts of axis) for N-D datasets, peak finding, SNR determination, denoising,
+  filtering, noise, cut dataset and axis (to common range)
 
 * Reporter: Method for adding dict representations of datasets to context
 
