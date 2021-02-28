@@ -1726,7 +1726,7 @@ class PlotProperties(aspecd.utils.Properties):
 
         Default values for the zero lines are:
 
-        * color: #ccc
+        * color: #cccccc
 
 
     Raises
@@ -1742,7 +1742,7 @@ class PlotProperties(aspecd.utils.Properties):
         self.legend = LegendProperties()
         self.zero_lines = LineProperties()
         # Set default properties
-        self.zero_lines.color = '#ccc'
+        self.zero_lines.color = '#cccccc'
 
     def apply(self, plotter=None):
         """
