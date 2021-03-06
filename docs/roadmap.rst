@@ -8,7 +8,7 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.1
 ===============
 
-* Plotter: stackplot for SinglePlot2D and MultiPlot
+* Plotter: stackplot for MultiPlot
 
 * Plotter: Fix bug for MultiPlotter1D with drawings property: Fails to run and apply the respective properties
 

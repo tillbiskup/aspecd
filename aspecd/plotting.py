@@ -108,6 +108,11 @@ Concrete plotters for single datasets
   Basic 2D plots for single datasets, allowing to plot a series of 2D plots,
   including contour plots and image-type display
 
+* :class:`aspecd.plotting.SinglePlotter2DStacked`
+
+  Stacked plots of 2D data, converting a 2D display into a series of 1D line
+  plots stacked on top of each other.
+
 * :class:`aspecd.plotting.SingleCompositePlotter`
 
   Composite plotter for single datasets, allowing to plot different views of
