@@ -363,7 +363,7 @@ class TestChef(unittest.TestCase):
         dataset_factory = dataset.DatasetFactory()
         dataset_factory.importer_factory = io.DatasetImporterFactory()
         self.recipe.dataset_factory = dataset_factory
-        self.dataset = 'foo'
+        self.dataset = '/foo'
         self.processing_task = {'kind': 'processing',
                                 'type': 'ProcessingStep'}
         self.analysis_task = {'kind': 'singleanalysis',
@@ -505,6 +505,15 @@ class TestChef(unittest.TestCase):
         recipe.from_dict(recipe_dict)
         self.chef.cook(recipe)
         self.assertIs(list, type(self.chef.history["datasets"]))
+
+    def test_datasets_value_in_history_preserves_dicts(self):
+        recipe = self.recipe
+        dataset_dict = {'source': self.dataset, 'label': 'foo'}
+        recipe_dict = {'datasets': [dataset_dict],
+                       'tasks': [self.processing_task]}
+        recipe.from_dict(recipe_dict)
+        self.chef.cook(recipe)
+        self.assertDictEqual(dataset_dict, self.chef.history["datasets"][0])
 
     def test_cook_adds_tasks_key_to_history(self):
         recipe = self.recipe

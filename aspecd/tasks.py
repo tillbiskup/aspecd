@@ -1123,7 +1123,8 @@ class Chef:
         self.history["system_info"] = system_info.to_dict()
         if self.recipe.default_package:
             self.history["default_package"] = self.recipe.default_package
-        self.history["datasets"] = list(self.recipe.datasets.keys())
+        recipe_dict = self.recipe.to_dict()
+        self.history["datasets"] = recipe_dict['datasets']
         self.history["tasks"] = []
 
 
