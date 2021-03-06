@@ -407,10 +407,13 @@ class TestSinglePlotter2D(unittest.TestCase):
 class TestSinglePlotter2DStacked(unittest.TestCase):
     def setUp(self):
         self.plotter = plotting.SinglePlotter2DStacked()
+        self.filename = 'foo.pdf'
 
     def tearDown(self):
         if self.plotter.fig:
             plt.close(self.plotter.fig)
+        if os.path.exists(self.filename):
+            os.remove(self.filename)
 
     def test_instantiate_class(self):
         pass
@@ -526,6 +529,16 @@ class TestSinglePlotter2DStacked(unittest.TestCase):
         properties = {'drawing': {'color': color}}
         self.plotter.properties.from_dict(properties)
         self.assertEqual(color, self.plotter.properties.drawing.color)
+
+    def test_save_plot_with_set_color_does_not_raise(self):
+        self.plotter.properties.drawing.color = '#aaccee'
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.random.random([5, 10]) - 0.5
+        plotter = dataset_.plot(self.plotter)
+        saver_ = aspecd.plotting.Saver()
+        saver_.filename = self.filename
+        plotter.save(saver_)
+        self.assertTrue(os.path.exists(self.filename))
 
     def test_plot_sets_correct_yticks(self):
         test_dataset = aspecd.dataset.CalculatedDataset()
