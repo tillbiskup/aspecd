@@ -1350,7 +1350,7 @@ class TestReportTask(unittest.TestCase):
         template_content = "{@dataset['id']}"
         self.prepare_template(template_content)
         self.task.from_dict(self.report_task)
-        self.recipe.output_directory = self.output_directory;
+        self.recipe.output_directory = self.output_directory
         self.task.recipe = self.recipe
         self.task.perform()
         self.assertTrue(os.path.exists(os.path.join(self.output_directory,

@@ -116,8 +116,70 @@ for datasets:
 
 In this case, all dataset names will be treated relative to the source
 directory. Note that if you provide the option
-``datasets_source_directory``, this needs to be an absolute path, as shown
-here for unixoid file systems.
+``datasets_source_directory``, this can be both, an absolute path, as shown
+here for unixoid file systems, and a relative path, as shown in the second
+example below.
+
+.. code-block:: yaml
+
+    datasets_source_directory: relative/path/to/my/datasets/
+
+    datasets:
+        - dataset1
+        - dataset2
+
+    tasks:
+      - kind: processing
+        type: ProcessingStep
+
+Here, paths have been given for unixoid file systems, using ``/`` as a
+separator. Adjust to your needs if necessary.
+
+
+Output directory
+----------------
+
+Some tasks, namely plotting and report tasks, can save their results to
+files. This will usually be the directory you cook the recipe from. However,
+sometimes it is quite convenient to specify an output directory, either
+relative or absolute.
+
+To do so, simply add the ``output_directory`` key to the top level of your
+recipe:
+
+.. code-block:: yaml
+
+    output_directory: /absolute/path/for/the/outputs
+
+    datasets:
+        - dataset
+
+    tasks:
+      - kind: singleplot
+        type: SinglePlotter
+        properties:
+          filename:
+            - fancyfigure.pdf
+
+As said, this path can as well be a relative path with respect to the
+directory you cook your recipes from:
+
+.. code-block:: yaml
+
+    output_directory: relative/path/for/the/outputs
+
+    datasets:
+        - dataset
+
+    tasks:
+      - kind: singleplot
+        type: SinglePlotter
+        properties:
+          filename:
+            - fancyfigure.pdf
+
+Here, paths have been given for unixoid file systems, using ``/`` as a
+separator. Adjust to your needs if necessary.
 
 
 Tasks from other packages
