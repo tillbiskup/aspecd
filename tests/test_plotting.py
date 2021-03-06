@@ -1503,12 +1503,12 @@ class TestMultiPlotProperties(unittest.TestCase):
         plt.close(plot.figure)
 
     def test_from_dict_sets_drawings(self):
-        dict_ = {'drawing': [{'label': 'foo'}]}
+        dict_ = {'drawings': [{'label': 'foo'}]}
         self.plot_properties.from_dict(dict_)
         self.assertEqual('foo', self.plot_properties.drawings[0].label)
 
     def test_from_dict_sets_multiple_drawings(self):
-        dict_ = {'drawing': [{'label': 'foo'}, {'label': 'bar'}]}
+        dict_ = {'drawings': [{'label': 'foo'}, {'label': 'bar'}]}
         self.plot_properties.from_dict(dict_)
         self.assertEqual('foo', self.plot_properties.drawings[0].label)
         self.assertEqual('bar', self.plot_properties.drawings[1].label)
@@ -1516,22 +1516,22 @@ class TestMultiPlotProperties(unittest.TestCase):
     def test_from_dict_does_not_add_drawing_if_it_exists(self):
         self.plot_properties.drawings.append(
             aspecd.plotting.DrawingProperties())
-        dict_ = {'drawing': [{'label': 'foo'}]}
+        dict_ = {'drawings': [{'label': 'foo'}]}
         self.plot_properties.from_dict(dict_)
         self.assertEqual(1, len(self.plot_properties.drawings))
 
     def test_from_dict_adds_missing_drawing(self):
-        dict_ = {'drawing': [{'label': 'foo'}]}
+        dict_ = {'drawings': [{'label': 'foo'}]}
         self.plot_properties.from_dict(dict_)
         self.assertEqual(1, len(self.plot_properties.drawings))
 
     def test_from_dict_adds_missing_drawings(self):
-        dict_ = {'drawing': [{'label': 'foo'}, {'label': 'bar'}]}
+        dict_ = {'drawings': [{'label': 'foo'}, {'label': 'bar'}]}
         self.plot_properties.from_dict(dict_)
         self.assertEqual(2, len(self.plot_properties.drawings))
 
     def test_from_dict_sets_legend(self):
-        dict_ = {'legend': {'loc': 'center'}, 'drawing': [{'label': 'foo'}]}
+        dict_ = {'legend': {'loc': 'center'}, 'drawings': [{'label': 'foo'}]}
         self.plot_properties.from_dict(dict_)
         self.assertEqual('center', self.plot_properties.legend.loc)
 
