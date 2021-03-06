@@ -605,6 +605,7 @@ class Recipe:
 
         If no factory is set, but a recipe imported from a file or set from
         a dictionary, an exception will be raised.
+
     task_factory : :class:`aspecd.tasks.TaskFactory`
         Factory for tasks
 
@@ -612,6 +613,7 @@ class Recipe:
 
         If no factory is set, but a recipe imported from a file or set from
         a dictionary, an exception will be raised.
+
     default_package: :class:`str`
         Name of the package the task objects are obtained from
 
@@ -620,9 +622,21 @@ class Recipe:
     datasets_source_directory: :class:`str`
         Root directory for the datasets.
 
-        Needs to be an absolute path, starting with the system-specific file
-        separator. If provided, datasets will be imported relative to this
-        path.
+        Interpreted as absolute path if starting with the system-specific file
+        separator. Otherwise, interpreted as relative to the current
+        directory. If provided, all output resulting from cooking a recipe
+        will be saved to this path.
+
+    output_directory: :class:`str`
+        Directory to save output (plots, reports, ...) to.
+
+        Interpreted as absolute path if starting with the system-specific file
+        separator. Otherwise, interpreted as relative to the current
+        directory. If provided, all output resulting from cooking a recipe
+        will be saved to this path.
+
+        Make sure the path actually exists. Otherwise, you may run into
+        trouble when tasks try to save their output.
 
     filename : :class:`str`
         Name of the (YAML) file the recipe was loaded from.
@@ -659,6 +673,7 @@ class Recipe:
         self.task_factory = TaskFactory()
         self.default_package = ''
         self.datasets_source_directory = ''
+        self.output_directory = ''
         self.filename = ''
 
     def from_dict(self, dict_=None):
@@ -689,16 +704,23 @@ class Recipe:
             raise aspecd.exceptions.MissingDatasetFactoryError
         if not self.task_factory:
             raise aspecd.exceptions.MissingTaskFactoryError
-        if 'default_package' in dict_:
-            self.default_package = dict_["default_package"]
-        if 'datasets_source_directory' in dict_:
-            self.datasets_source_directory = dict_['datasets_source_directory']
+        for keyword in ["default_package", "datasets_source_directory",
+                        "output_directory"]:
+            if keyword in dict_:
+                setattr(self, keyword, dict_[keyword])
+        if self.output_directory and not self.output_directory.startswith('/'):
+            self.output_directory = \
+                self._get_absolute_path(self.output_directory)
         if 'datasets' in dict_:
             for key in dict_['datasets']:
                 self._append_dataset(key)
         if 'tasks' in dict_:
             for key in dict_['tasks']:
                 self._append_task(key)
+
+    @staticmethod
+    def _get_absolute_path(path_=''):
+        return os.path.join(os.path.abspath(os.path.curdir), path_)
 
     def _append_dataset(self, key):
         properties = dict()
@@ -1687,6 +1709,8 @@ class PlotTask(Task):
         elif 'filename' in self.properties and self.properties['filename']:
             filename = self.properties['filename']
         if filename:
+            if self.recipe.output_directory:
+                filename = os.path.join(self.recipe.output_directory, filename)
             saver = aspecd.plotting.Saver(filename=filename)
             plot.save(saver)
 
@@ -1770,6 +1794,10 @@ class SingleplotTask(PlotTask):
         the number of datasets you apply the plotter to. Otherwise you may
         run into trouble.
 
+    .. note::
+        If the recipe contains the ``output_directory`` key on the top
+        level, the figure(s) will be saved to this directory.
+
     """
 
     def _perform(self):
@@ -1846,6 +1874,10 @@ class MultiplotTask(PlotTask):
         inferring the file format from the extension of the filename. For
         details of how the format is inferred see the documentation for the
         :meth:`matplotlib.figure.Figure.savefig` method.
+
+    .. note::
+        If the recipe contains the ``output_directory`` key on the top
+        level, the figure(s) will be saved to this directory.
 
     """
 
@@ -1934,6 +1966,10 @@ class ReportTask(Task):
         the number of datasets you apply the report to. Otherwise you may
         run into trouble.
 
+    .. note::
+        If the recipe contains the ``output_directory`` key on the top
+        level, the reports will be written to this directory.
+
 
     Attributes
     ----------
@@ -1960,6 +1996,9 @@ class ReportTask(Task):
             task.context['dataset'] = dataset.to_dict()
             if isinstance(self.properties["filename"], list):
                 task.filename = self.properties["filename"][idx]
+            if self.recipe.output_directory:
+                task.filename = os.path.join(self.recipe.output_directory,
+                                             task.filename)
             task.create()
             if self.compile and hasattr(task, 'compile'):
                 task.compile()

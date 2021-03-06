@@ -1,10 +1,11 @@
 """Tests for tasks."""
 import collections
+import datetime
 import glob
 import os
+import shutil
 import subprocess
 import unittest
-import datetime
 
 import numpy as np
 
@@ -49,6 +50,9 @@ class TestRecipe(unittest.TestCase):
 
     def test_has_default_package_property(self):
         self.assertTrue(hasattr(self.recipe, 'default_package'))
+
+    def test_has_output_directory_property(self):
+        self.assertTrue(hasattr(self.recipe, 'output_directory'))
 
     def test_import_from_without_importer_raises(self):
         with self.assertRaises(aspecd.exceptions.MissingImporterError):
@@ -121,10 +125,17 @@ class TestRecipe(unittest.TestCase):
         self.assertEqual(self.dataset, self.recipe.datasets[self.dataset].id)
 
     def test_from_dict_with_dataset_and_source_dir_sets_dataset_id(self):
-        dict_ = {'datasets': ['foo'], 'datasets_source_directory': '/bla/'}
+        dict_ = {'datasets': ['foo'], 'datasets_source_directory': '/bla'}
         self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         self.assertEqual('/bla/foo', self.recipe.datasets['foo'].id)
+
+    def test_from_dict_with_dataset_and_rel_source_dir_sets_dataset_id(self):
+        dict_ = {'datasets': ['foo'], 'datasets_source_directory': 'bla'}
+        self.recipe.dataset_factory = self.dataset_factory
+        self.recipe.from_dict(dict_)
+        abspath = os.path.join(os.path.abspath(os.path.curdir), 'bla', 'foo')
+        self.assertEqual(abspath, self.recipe.datasets['foo'].id)
 
     def test_from_dict_with_multiple_datasets_sets_datasets(self):
         dict_ = {'datasets': self.datasets}
@@ -288,6 +299,19 @@ class TestRecipe(unittest.TestCase):
         self.assertTrue(datasets)
         for dataset_ in datasets:
             self.assertTrue(isinstance(dataset_, dataset.Dataset))
+
+    def test_from_dict_with_output_directory_sets_output_directory(self):
+        dict_ = {'output_directory': '/foo'}
+        self.recipe.dataset_factory = self.dataset_factory
+        self.recipe.from_dict(dict_)
+        self.assertEqual('/foo', self.recipe.output_directory)
+
+    def test_from_dict_makes_output_directory_absolute_path(self):
+        dict_ = {'output_directory': 'foo'}
+        self.recipe.dataset_factory = self.dataset_factory
+        self.recipe.from_dict(dict_)
+        self.assertEqual(os.path.join(os.path.abspath(os.path.curdir), 'foo'),
+                         self.recipe.output_directory)
 
 
 class TestChef(unittest.TestCase):
@@ -1042,6 +1066,9 @@ class TestSinglePlotTask(unittest.TestCase):
         self.plotting_task = {'kind': 'singleplot',
                               'type': 'SinglePlotter',
                               'apply_to': self.dataset}
+        root_path = os.path.split(os.path.abspath(__file__))[0]
+        self.output_directory = os.path.join(root_path, 'output_directory')
+        os.mkdir(self.output_directory)
 
     def tearDown(self):
         if os.path.exists(self.figure_filename):
@@ -1049,6 +1076,8 @@ class TestSinglePlotTask(unittest.TestCase):
         for file in self.figure_filenames:
             if os.path.exists(file):
                 os.remove(file)
+        if os.path.exists(self.output_directory):
+            shutil.rmtree(self.output_directory)
 
     def prepare_recipe(self):
         dataset_factory = dataset.DatasetFactory()
@@ -1102,6 +1131,17 @@ class TestSinglePlotTask(unittest.TestCase):
         self.task.from_dict(self.plotting_task)
         self.task.recipe = self.recipe
         self.task.perform()
+
+    def test_perform_task_with_filename_and_output_directory_saves_plot(self):
+        self.prepare_recipe()
+        self.recipe.output_directory = self.output_directory
+        # noinspection PyTypeChecker
+        self.plotting_task['properties'] = {'filename': self.figure_filename}
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(os.path.exists(os.path.join(self.output_directory,
+                                                    self.figure_filename)))
 
 
 class TestMultiPlotTask(unittest.TestCase):
@@ -1159,6 +1199,9 @@ class TestReportTask(unittest.TestCase):
                                            'filename': self.filename,
                                            },
                             'apply_to': self.dataset}
+        root_path = os.path.split(os.path.abspath(__file__))[0]
+        self.output_directory = os.path.join(root_path, 'output_directory')
+        os.mkdir(self.output_directory)
 
     def tearDown(self):
         if os.path.exists(self.template):
@@ -1167,6 +1210,8 @@ class TestReportTask(unittest.TestCase):
             os.remove(self.filename)
         if os.path.exists(self.result):
             os.remove(self.result)
+        if os.path.exists(self.output_directory):
+            shutil.rmtree(self.output_directory)
 
     def prepare_recipe(self):
         dataset_factory = dataset.DatasetFactory()
@@ -1191,6 +1236,7 @@ class TestReportTask(unittest.TestCase):
         self.task.from_dict(self.report_task)
         self.task.recipe = self.recipe
         self.task.perform()
+        self.assertTrue(os.path.exists(self.filename))
 
     def test_perform_task_adds_dataset_to_context(self):
         self.prepare_recipe()
@@ -1298,6 +1344,17 @@ class TestReportTask(unittest.TestCase):
         for filename in self.report_task["properties"]["filename"]:
             if os.path.exists(filename):
                 os.remove(filename)
+
+    def test_report_gets_saved_to_output_directory_if_provided(self):
+        self.prepare_recipe()
+        template_content = "{@dataset['id']}"
+        self.prepare_template(template_content)
+        self.task.from_dict(self.report_task)
+        self.recipe.output_directory = self.output_directory;
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(os.path.exists(os.path.join(self.output_directory,
+                                                    self.filename)))
 
 
 class TestModelTask(unittest.TestCase):

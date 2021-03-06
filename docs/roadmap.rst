@@ -16,8 +16,6 @@ For version 0.1
 
 * Recipes: Create filenames for saving figures/... from patterns/placeholders available from the respective dataset (e.g., source basename)
 
-* Recipes: Add optional default output directory
-
 * Report task: Add figure captions to context if available
 
 * Metadata mapper via yaml file
