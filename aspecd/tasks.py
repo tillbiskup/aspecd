@@ -843,10 +843,31 @@ class Recipe:
         """
         dict_ = {'datasets': [], 'tasks': []}
         for dataset in self.datasets:
-            dict_['datasets'].append(self.datasets[dataset].id)
+            dataset_dict = {}
+            if not self.datasets[dataset].id == dataset:
+                dataset_dict['source'] = self.datasets[dataset].id
+                dataset_dict['id'] = dataset
+            if not self.datasets[dataset].label == self.datasets[dataset].id:
+                dataset_dict['source'] = self.datasets[dataset].id
+                dataset_dict['label'] = self.datasets[dataset].label
+            if self._dataset_from_foreign_package(self.datasets[dataset]):
+                dataset_dict['source'] = self.datasets[dataset].id
+                dataset_dict['package'] = \
+                    aspecd.utils.full_class_name(dataset).split('.')[0]
+            if dataset_dict:
+                dict_['datasets'].append(dataset_dict)
+            else:
+                dict_['datasets'].append(self.datasets[dataset].id)
         for task in self.tasks:
             dict_['tasks'].append(task.to_dict())
         return dict_
+
+    def _dataset_from_foreign_package(self, dataset=None):
+        package_names = ['aspecd']
+        if self.default_package:
+            package_names.append(self.default_package)
+        return not aspecd.utils.full_class_name(dataset).startswith(tuple(
+            package_names))
 
     def import_from(self, importer=None):
         """

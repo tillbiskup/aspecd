@@ -12,8 +12,6 @@ For version 0.1
 
 * Plotter: Fix bug for MultiPlotter1D with drawings property: Fails to run and apply the respective properties
 
-* Recipes: Saving additional infos for datasets in history
-
 * Recipes: Create filenames for saving figures/... from patterns/placeholders available from the respective dataset (e.g., source basename)
 
 * Report task: Add figure captions to context if available

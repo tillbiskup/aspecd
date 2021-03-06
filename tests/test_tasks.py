@@ -224,9 +224,51 @@ class TestRecipe(unittest.TestCase):
         for dataset_ in self.datasets:
             tmp = dataset.Dataset()
             tmp.id = dataset_
+            tmp.label = dataset_
             self.recipe.datasets[dataset_] = tmp
         dict_ = self.recipe.to_dict()
         self.assertEqual(self.datasets, dict_['datasets'])
+
+    def test_to_dict_with_dataset_with_id_returns_dataset_as_dict(self):
+        id_ = 'foobar'
+        tmp = dataset.Dataset()
+        tmp.id = self.dataset
+        tmp.label = self.dataset
+        self.recipe.datasets[id_] = tmp
+        dict_ = self.recipe.to_dict()
+        self.assertDictEqual({'source': self.dataset, 'id': id_},
+                             dict_['datasets'][0])
+
+    def test_to_dict_with_dataset_with_label_returns_dataset_as_dict(self):
+        label = 'foobar'
+        tmp = dataset.Dataset()
+        tmp.id = self.dataset
+        tmp.label = label
+        self.recipe.datasets[self.dataset] = tmp
+        dict_ = self.recipe.to_dict()
+        self.assertDictEqual({'source': self.dataset, 'label': label},
+                             dict_['datasets'][0])
+
+    def test_to_dict_with_dataset_w_label_and_id_returns_dataset_as_dict(self):
+        id_ = 'foobar'
+        label = 'foobar'
+        tmp = dataset.Dataset()
+        tmp.id = self.dataset
+        tmp.label = label
+        self.recipe.datasets[id_] = tmp
+        dict_ = self.recipe.to_dict()
+        self.assertDictEqual({'source': self.dataset, 'label': label, 'id': id_},
+                             dict_['datasets'][0])
+
+    def test_to_dict_with_foreign_dataset_returns_dataset_as_dict(self):
+        class ForeignDataset:
+            id = self.dataset
+            label = self.dataset
+        foreign_dataset = ForeignDataset()
+        self.recipe.datasets[self.dataset] = foreign_dataset
+        dict_ = self.recipe.to_dict()
+        self.assertDictEqual({'source': self.dataset, 'package': 'builtins'},
+                             dict_['datasets'][0])
 
     def test_to_dict_with_task_returns_task_dict(self):
         task = tasks.Task()
