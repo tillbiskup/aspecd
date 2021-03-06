@@ -717,8 +717,8 @@ class TestMultiPlotter1D(unittest.TestCase):
                       aspecd.plotting.LineProperties)
 
     def test_plot_sets_correct_line_color(self):
-        color = '#000000'
-        dict_ = {'drawing': [{'color': color}]}
+        color = '#abcdef'
+        dict_ = {'drawings': [{'color': color}]}
         self.plotter.properties.from_dict(dict_)
         self.plotter.datasets.append(dataset.Dataset())
         self.plotter.plot()

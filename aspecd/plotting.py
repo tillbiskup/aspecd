@@ -1933,12 +1933,12 @@ class MultiPlotProperties(PlotProperties):
             Raised if no dict is provided.
 
         """
-        if 'drawing' in dict_:
-            for idx in range(len(self.drawings), len(dict_['drawing'])):
+        if 'drawings' in dict_:
+            for idx in range(len(self.drawings), len(dict_['drawings'])):
                 self.add_drawing()
-            for idx, drawing in enumerate(dict_['drawing']):
+            for idx, drawing in enumerate(dict_['drawings']):
                 self.drawings[idx].from_dict(drawing)
-            dict_.pop('drawing')
+            dict_.pop('drawings')
         if dict_:
             super().from_dict(dict_)
 
