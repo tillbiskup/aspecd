@@ -1298,6 +1298,47 @@ class MultiPlotter1D(MultiPlotter):
         For the properties that can be set this way, see the documentation
         of the :class:`aspecd.plotting.MultiPlotProperties` class.
 
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. Of course, all parameters settable
+    for the superclasses can be set as well. The examples focus each on a
+    single aspect.
+
+    In the simplest case, just invoke the plotter with default values:
+
+    .. code-block:: yaml
+
+       - kind: multiplot
+         type: MultiPlotter1D
+         properties:
+           filename: output.pdf
+
+    To change the settings of each individual line (here the colour and label),
+    supposing you have three lines, you need to specify the properties in a
+    list for each of the drawings:
+
+    .. code-block:: yaml
+
+       - kind: multiplot
+         type: MultiPlotter1D
+         properties:
+           filename: output.pdf
+           properties:
+             drawings:
+               - color: '#FF0000'
+                 label: foo
+               - color: '#00FF00'
+                 label: bar
+               - color: '#0000FF'
+                 label: foobar
+
+    .. important::
+        If you set colours using the hexadecimal RGB triple prefixed by
+        ``#``, you need to explicitly tell YAML that these are strings,
+        surrounding the values by quotation marks.
+
     """
 
     def __init__(self):

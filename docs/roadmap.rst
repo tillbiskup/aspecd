@@ -10,8 +10,6 @@ For version 0.1
 
 * Plotter: stackplot for MultiPlot
 
-* Plotter: Fix bug for MultiPlotter1D with drawings property: Fails to run and apply the respective properties
-
 * Recipes: Create filenames for saving figures/... from patterns/placeholders available from the respective dataset (e.g., source basename)
 
 * Report task: Add figure captions to context if available
