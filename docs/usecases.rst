@@ -2,7 +2,11 @@
 Use cases
 =========
 
-Whereas the section on :doc:`writing applications based on the ASpecD framework <applications>` gave a first impression of how to use the ASpecD framework for own analysis software, this section provides a few ideas of how basic operation of applications based on the ASpecD framework may look like.
+Usually, you will either use an existing package based on the ASpecD framework (such as `cwEPR <https://docs.cwepr.de/>`_ or `trEPR <https://docs.trepr.de/>`_) or :doc:`write your own package based on the ASpecD framework <applications>` for your data analysis. However, this section will give you an impression how *working* with such a package, and particulary with *recipe-driven data analysis* may look like – and why it is fun and will help you tremendously speed up your data analysis, while allowing for full reproducibility.
+
+
+.. important::
+    The following section needs complete rewrite, as it predates the full implementation of recipe-driven data analysis. Once done, it will include a series of simple and not so simple tasks routinely occurring during scientific data analysis that can be performed with the functionality provided by the ASpecD framework.
 
 
 General usage
@@ -18,32 +22,73 @@ With the advent of "recipe-driven data analysis" this restriction will be lifted
 
 Interactive command-line (CLI) and graphical user interfaces (GUI) are an entirely different story, requiring a whole set of different skills and knowledge about concepts of software architecture developed within the last decades. However, the ASpecD framework provides the solid ground to build such interfaces upon. In terms of an overall software architecture, the ASpecD framework and the concepts contained form the inner core of an application for scientific data processing and analysis. User interfaces, similar to persistence layers, are outer layers the core does not know nor care about.
 
-Having said that, the following examples will---for the time being---show how to use applications based on the ASpecD framework in the most basic way, i.e., creating the respective objects by hand and let them interact.
+
+Importing datasets
+==================
+
+The first step in analysing data is to import them. In terms of recipe-driven data analysis, you only need to specify a unique identifier for your dataset, usually (for the time being) a path to a file accessible from your file system.
+
+.. code-block:: yaml
+
+    datasets:
+      - /path/to/my/first/dataset
+      - /path/to/my/second/dataset
 
 
-Conventions used
-================
+Things to add:
 
-To give somewhat sensible examples without restricting the imagination of the user, we assume throughout this section that the user has created or available an application for processing and analysing spectroscopic data that is called ``spectro``. The corresponding Python package shares this name as well and is assumed to be installed within a virtual environment the user works with.
+* specifying id and label
+* importing datasets from other packages
 
 
-Create a dataset and import data
-================================
+Operating on datasets
+=====================
 
-Most probably, the first step when processing and analysing data will be to actually import data into a dataset by using an importer.::
+Different operations can be performed on datasets, and the ASpecD framework distinguishes between processing and analysis tasks, for starters. The first will operate directly on the data of the dataset, alter them accordingly, and result in an altered dataset. The second will operate on the data of a dataset as well, but return an independent result, be it a scalar, a vector, or even a (new) dataset.
 
-    import spectro
+Operations on datasets are defined within the ``tasks:`` block of a recipe, like so:
 
-    dataset_ = dataset.Dataset()
-    importer = io.DatasetImporter(source="path/to/some/file/containing/data")
+.. code-block:: yaml
 
-    dataset_.import_from(importer)
+    tasks:
+      - kind: processing
+        type: SubtractBaseline
+        properties:
+          parameters:
+            kind: polynomial
+            order: 0
 
-This will import the data (and metadata) contained in the path provided to the argument ``source`` when instantiating the ``DatasetImporter`` object.
 
-A few comments on these few lines of code:
+Things to add:
 
-* Naming the dataset object ``dataset_`` prevents shadowing the module name. Feel free to give it another equally fitting name. Appending an underscore to a variable name in such case is a common solution complying to `PEP 8 <https://www.python.org/dev/peps/pep-0008/>`_.
+* example for an analysis step
+* description of how to set properties
+* applying a task to only a subset of the datasets loaded
+* storing results in variables and accessing results afterwards
 
-* Always define first an instance of the dataset class, and afterwards use the public methods of this object, such as ``import_from()`` or ``process()``.
 
+Can we see something?
+=====================
+
+One of the strengths of recipe-driven data analysis is that it can run fully unattended in the background or on some server even not having any graphical display attached. However, data analysis always yields some results we would like to look at. Here, two general options are provided by the ASpecD framework:
+
+* representations (*e.g.*, plots)
+* reports
+
+
+.. code-block:: yaml
+
+    tasks:
+      - kind: singleplot
+        type: SinglePlotter
+        properties:
+          filename:
+            - first-dataset.pdf
+            - second-dataset.pdf
+
+
+Things to add:
+
+* Setting properties for plots
+* Different kinds of plots
+* Reports
