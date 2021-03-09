@@ -63,13 +63,13 @@ Related projects
 
 There is a number of related packages that are based on the ASpecD framework and each focus on one particular type of spectroscopy. The most mature packages available to date are:
 
- * `trepr <https://docs.trepr.de/>`_
+* `trepr <https://docs.trepr.de/>`_
 
-   Package for processing and analysing time-resolved electron paramagnetic resonance (TREPR) data, developed by J. Popp and maintained by T. Biskup.
+  Package for processing and analysing time-resolved electron paramagnetic resonance (TREPR) data, developed by J. Popp and maintained by T. Biskup.
 
- * `cwepr <https://docs.cwepr.de/>`_
+* `cwepr <https://docs.cwepr.de/>`_
 
-   Package for processing and analysing continuous-wave electron paramagnetic resonance (cw-EPR) data, originally developed by P. Kirchner, currently developed and maintained by M. Schröder and T. Biskup.
+  Package for processing and analysing continuous-wave electron paramagnetic resonance (cw-EPR) data, originally developed by P. Kirchner, currently developed and maintained by M. Schröder and T. Biskup.
 
 You may as well be interested in the `LabInform project <https://www.labinform.de/>`_ focussing on the necessary more global infrastructure in a laboratory/scientific workgroup interested in more `reproducible research <https://www.reproducible-research.de/>`_. In short, LabInform is "The Open-Source Laboratory Information System".
 
@@ -84,8 +84,8 @@ Finally, don't forget to check out the website on `reproducible research <https:
    introduction
    concepts
    recipes
-   applications
    usecases
+   applications
 
 .. toctree::
    :maxdepth: 2

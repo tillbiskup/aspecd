@@ -12,7 +12,7 @@ Recipes have been briefly introduced already with the concept of :ref:`tasks <ta
 Data analysis without programming
 =================================
 
-Basically, recipe-driven data analysis can be thought of a special type of user interface to the ASpecD framework and derived packages. The normal user of such package has a clear idea how to process and analyse data, but is not necessarily interested in actually programming a lot. Furthermore, reproducible science requires the history of each and every processing and analysis step to be recorded and stored in a way that can be used and understood long after the steps have been carried out (think of decades rather than weeks or months).
+Basically, recipe-driven data analysis can be thought of a special type of user interface to the ASpecD framework and derived packages. The normal user of such package has a clear idea how to process and analyse data, but is not necessarily interested in (or capable of) actually programming a lot. Furthermore, reproducible science requires the history of each and every processing and analysis step to be recorded and stored in a way that can be used and understood long after the steps have been carried out (think of decades rather than weeks or months).
 
 From the user's perspective, all that is required is a human-writable file format and a list of datasets followed by a list of tasks to be performed on these datasets. For each task, the user will want to provide all necessary parameters. Eventually, the user is providing the metadata of the data analysis. Introducing the metaphor of recipe and cook prevents multiple meanings of the term "metadata" and the confusion this might cause. A recipe is a list of datasets and tasks to perform on them. Such recipe is processed by a cook. This is the origin of the term "recipe-driven data analysis".
 
@@ -20,6 +20,7 @@ So, how does it look like? Consider the following example:
 
 
 .. code-block:: yaml
+    :linenos:
 
     datasets:
       - /path/to/first/dataset
@@ -41,6 +42,34 @@ So, how does it look like? Consider the following example:
 
 
 Admittedly, that's a rather primitive recipe, only loading two datasets, performing a zeroth-order polynomial baseline correction, and afterwards plotting each of them separately. However, it should suffice to have you get the gist.
+
+
+Probably even more instructive is to compare the above recipe with the Python code necessary to perform similar tasks with two datasets, using all the high-level functionality the ASpecD framework provides:
+
+
+.. code-block:: python
+    :linenos:
+
+    dataset_filenames = ['/path/to/first/dataset', '/path/to/second/dataset']
+    figure_filenames = ['first-dataset.pdf', 'second-dataset.pdf']
+
+    importer_factory = aspecd.io.ImporterFactory()
+    baseline_subtraction = aspecd.processing.SubtractBaseline()
+    baseline_subtraction.parameters = {"kind": "polynomial", "order": 0}
+    plotter = aspecd.plotting.SinglePlotter()
+
+    for idx, dataset_source in enumerate(dataset_filenames):
+        dataset = aspecd.dataset.Dataset()
+        importer = importer_factory.get_importer(dataset_source)
+        dataset.import_from(importer)
+        dataset.process(baseline_subtraction)
+        plot = dataset.plot(plotter)
+        saver = aspecd.plotting.Saver()
+        saver.filename = figure_filenames[idx]
+        plot.save(saver)
+
+
+It is not the lines of code (both are pretty much the same) but the *readability* that is different for a recipe and the Python code. This is not to say that Python code is hard to read, the opposite is true. Nevertheless, there are differences in readability between any programming language and a descriptive structural language such as YAML. Furthermore, using a single loop in the Python code as in the above example was only possible in this simple case. Applying some tasks to a selection of datasets – while easy to implement in a recipe – is much more involved in actual code.
 
 
 Reproducible and automated
@@ -72,7 +101,7 @@ Of course, there are many aspects of data processing and analysis that eventuall
 History
 =======
 
-Processing a recipe will always result in documenting all tasks performed. This includes the complete set of available information necessary to reproduce and replay the tasks, both parameters and version information of the actual routines used. For ease of use, these protocols can be used again as recipes (if necessary after automatic conversion).
+Processing a recipe will always result in documenting all tasks performed. This includes the complete set of available information necessary to reproduce and replay the tasks, both parameters and version information of the actual routines used. For ease of use, these protocols can be used again as recipes.
 
 
 Human-writable

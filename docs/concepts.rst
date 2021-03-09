@@ -12,6 +12,8 @@ Dataset
 
 Every measurement (or calculation) produces (raw) data that are useless without additional information, such as experimental parameters. This additional information is termed "metadata" within the ASpecD framework. A dataset is the unit of (numerical) data and metadata. Another integral aspect is the `history`_ containing all relevant information regarding each single processing step performed on the data of the dataset.
 
+Additionally to combining numerical data and metadata, a dataset provides a common structure, unifying the different file formats used as source for both, data and metadata. Hence, the actual data format does not matter, greatly facilitating dealing with data from different sources (and even different kinds of data).
+
 
 Metadata
 ========
