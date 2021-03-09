@@ -23,6 +23,11 @@ With the advent of "recipe-driven data analysis" this restriction will be lifted
 Interactive command-line (CLI) and graphical user interfaces (GUI) are an entirely different story, requiring a whole set of different skills and knowledge about concepts of software architecture developed within the last decades. However, the ASpecD framework provides the solid ground to build such interfaces upon. In terms of an overall software architecture, the ASpecD framework and the concepts contained form the inner core of an application for scientific data processing and analysis. User interfaces, similar to persistence layers, are outer layers the core does not know nor care about.
 
 
+Things to add:
+
+* Serving recipes from the command-line
+
+
 Importing datasets
 ==================
 
