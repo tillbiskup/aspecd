@@ -26,6 +26,52 @@ applicable processing steps for all kinds of spectroscopic data. The latter
 are an attempt to relieve the developers of packages derived from the ASpecD
 framework from the task to reinvent the wheel over and over again.
 
+The next section gives an overview of the concrete processing steps
+implemented within the ASpecD framework. For details of how to implement
+your own processing steps, see the section below.
+
+
+Concrete processing steps
+=========================
+
+Besides providing the basis for processing steps for the ASpecD framework,
+ensuring full reproducibility and traceability, hence reproducible science
+and good scientific practice, this module comes with a (growing) number of
+general-purpose processing steps useful for basically all kinds of
+spectroscopic data.
+
+Here is a list as a first overview. For details, see the detailed
+documentation of each of the classes, readily accessible by the link.
+
+* :class:`aspecd.processing.Normalisation`
+
+  Normalise data.
+
+  There are different kinds of normalising data: maximum, minimum,
+  amplitude, area
+
+* :class:`aspecd.processing.Integration`
+
+  Integrate data
+
+* :class:`aspecd.processing.Differentiation`
+
+  Differentiate data, *i.e.*, return discrete first derivative
+
+* :class:`aspecd.processing.ScalarAlgebra`
+
+  Perform scalar algebraic operation on one dataset.
+
+  Operations available: add, subtract, multiply, divide (by given scalar)
+
+* :class:`aspecd.processing.Projection`
+
+  Project data, *i.e.* reduce dimensions along one axis.
+
+* :class:`aspecd.processing.SliceExtraction`
+
+  Extract slice along one dimension from dataset.
+
 
 Writing own processing steps
 ============================
@@ -96,48 +142,6 @@ While in this case, typically the axis value of the centre of the averaging
 window will be stored as new axis value, the other parameters should end up
 in the :attr:`aspecd.processing.ProcessingStep.parameters` dictionary. Thus,
 they are added to the dataset history and available for reports and alike.
-
-
-Concrete processing steps
-=========================
-
-Besides providing the basis for processing steps for the ASpecD framework,
-ensuring full reproducibility and traceability, hence reproducible science
-and good scientific practice, this module comes with a (growing) number of
-general-purpose processing steps useful for basically all kinds of
-spectroscopic data.
-
-Here is a list as a first overview. For details, see the detailed
-documentation of each of the classes, readily accessible by the link.
-
-* :class:`aspecd.processing.Normalisation`
-
-  Normalise data.
-
-  There are different kinds of normalising data: maximum, minimum,
-  amplitude, area
-
-* :class:`aspecd.processing.Integration`
-
-  Integrate data
-
-* :class:`aspecd.processing.Differentiation`
-
-  Differentiate data, *i.e.*, return discrete first derivative
-
-* :class:`aspecd.processing.ScalarAlgebra`
-
-  Perform scalar algebraic operation on one dataset.
-
-  Operations available: add, subtract, multiply, divide (by given scalar)
-
-* :class:`aspecd.processing.Projection`
-
-  Project data, *i.e.* reduce dimensions along one axis.
-
-* :class:`aspecd.processing.SliceExtraction`
-
-  Extract slice along one dimension from dataset.
 
 
 Module documentation
