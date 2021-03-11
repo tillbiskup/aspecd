@@ -34,6 +34,45 @@ Similarly, you would handle the export of your data (and metadata)
 contained in a dataset object using an exporter object, respectively.
 
 
+Importers for specific file formats
+-----------------------------------
+
+There exists a series of importers for specific file formats:
+
+* :class:`aspecd.io.AdfImporter`
+
+  Importer for data in ASpecD Dataset Format (ADF)
+
+* :class:`aspecd.io.AsdfImporter`
+
+  Importer for data in asdf format
+
+* :class:`aspecd.io.TxtImporter`
+
+  Importer for data in plain text format
+
+For details, see the respective class documentation.
+
+
+Exporters for specific file formats
+-----------------------------------
+
+Datasets need to be persisted sometimes, and currently, there exist two
+exporters for specific file formats that can be imported again using the
+respective importers. Furthermore, the full information contained in a
+dataset will be retained.
+
+* :class:`aspecd.io.AdfExporter`
+
+  Exporter for datasets to ASpecD Dataset Format (ADF)
+
+* :class:`aspecd.io.AsdfExporter`
+
+  Exporter for datasets to asdf format
+
+For details, see the respective class documentation.
+
+
 Writing importers for data
 --------------------------
 
@@ -308,11 +347,10 @@ class DatasetImporterFactory:
     case should be implemented in the non-public method :meth:`_get_importer`
     in any package based on the ASpecD framework.
 
-    In its most basic implementation, as done here, the non-public method
-    :meth:`_get_importer` simply returns the standard importer::
-
-        def _get_importer(self, source):
-            return DatasetImporter(source=source)
+    In its basic implementation, as done here, the non-public method
+    :meth:`_get_importer` returns the importers for ADF, ASDF, and TXT
+    depending on the file extension, and in all other cases the standard
+    importer.
 
     This might be a viable way for an own :class:`DatasetImporterFactory`
     implementation in the rare case of having only one single type of data,
@@ -892,6 +930,27 @@ class AsdfImporter(DatasetImporter):
 
 
 class TxtImporter(DatasetImporter):
+    """
+    Dataset importer for importing from plain text files (TXT).
+
+    Plain text files have often the disadvantage of no accompanying metadata,
+    therefore the use of plain text files for data storage is highly
+    discouraged, besides other problems like inherent low resolution/accuracy
+    or otherwise large file sizes.
+
+    The main reason for this class to exist is that it provides a simple way
+    to showcase ASpecD functionality reading from primitive data sources.
+    Besides that, sometimes you will encounter plain text files.
+
+    .. note::
+        The importer relies on :func:`numpy.loadtxt` for reading text files.
+        Hence, the same limitations apply, *e.g.* the dot as decimal separator.
+
+    If your data consist of two columns, the first will automatically be
+    interpreted as the *x* axis. In all other cases, data will be read as is
+    and no axes values explicitly written.
+
+    """
 
     def __init__(self, source=None):
         super().__init__(source=source)
