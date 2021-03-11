@@ -101,6 +101,21 @@ class TestDatasetImporterFactory(unittest.TestCase):
         with self.assertRaises(aspecd.exceptions.MissingSourceError):
             self.factory.get_importer()
 
+    def test_get_importer_with_adf_extension_returns_adf_importer(self):
+        source = '/foo.adf'
+        importer = self.factory.get_importer(source=source)
+        self.assertTrue(isinstance(importer, io.AdfImporter))
+
+    def test_get_importer_with_asdf_extension_returns_asdf_importer(self):
+        source = '/foo.asdf'
+        importer = self.factory.get_importer(source=source)
+        self.assertTrue(isinstance(importer, io.AsdfImporter))
+
+    def test_get_importer_with_txt_extension_returns_txt_importer(self):
+        source = '/foo.txt'
+        importer = self.factory.get_importer(source=source)
+        self.assertTrue(isinstance(importer, io.TxtImporter))
+
 
 class TestRecipeImporter(unittest.TestCase):
     def setUp(self):
@@ -381,3 +396,41 @@ class TestAsdfImporter(unittest.TestCase):
         self.dataset.import_from(self.importer)
         self.assertDictEqual(dataset_.history[0].to_dict(),
                              self.dataset.history[0].to_dict())
+
+
+class TestTxtImporter(unittest.TestCase):
+    def setUp(self):
+        self.importer = io.TxtImporter()
+        self.dataset = dataset.ExperimentalDataset()
+        self.source = 'target.txt'
+
+    def tearDown(self):
+        if os.path.exists(self.source):
+            os.remove(self.source)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_import_sets_data_and_origdata(self):
+        data = np.random.random(5)
+        np.savetxt(self.source, data)
+
+        self.importer.source = self.source
+        self.dataset.import_from(self.importer)
+        self.assertListEqual(list(data), list(self.dataset.data.data))
+        self.assertListEqual(list(data), list(self.dataset._origdata.data))
+
+    def test_import_two_column_data_sets_data_and_axis(self):
+        data = np.random.random([5, 2])
+        np.savetxt(self.source, data)
+
+        self.importer.source = self.source
+        self.dataset.import_from(self.importer)
+        self.assertListEqual(list(data[:, 1]),
+                             list(self.dataset.data.data))
+        self.assertListEqual(list(data[:, 1]),
+                             list(self.dataset._origdata.data))
+        self.assertListEqual(list(data[:, 0]),
+                             list(self.dataset.data.axes[0].values))
+        self.assertListEqual(list(data[:, 0]),
+                             list(self.dataset._origdata.axes[0].values))

@@ -172,6 +172,7 @@ import tempfile
 import zipfile
 
 import asdf
+import numpy as np
 
 import aspecd.exceptions
 import aspecd.utils
@@ -366,7 +367,15 @@ class DatasetImporterFactory:
     def _get_importer(self, source):
         if not source.startswith(os.pathsep):
             source = os.path.join(os.path.abspath(os.curdir), source)
-        return DatasetImporter(source=source)
+        _, file_extension = os.path.splitext(source)
+        if file_extension == '.adf':
+            return AdfImporter(source=source)
+        elif file_extension == '.asdf':
+            return AsdfImporter(source=source)
+        elif file_extension == '.txt':
+            return TxtImporter(source=source)
+        else:
+            return DatasetImporter(source=source)
 
 
 class DatasetExporter:
@@ -716,8 +725,8 @@ class AdfExporter(DatasetExporter):
 
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, target=None):
+        super().__init__(target=target)
         self.extension = '.adf'
         self._filenames = {
             'dataset': 'dataset.yaml',
@@ -817,8 +826,8 @@ class AdfImporter(DatasetImporter):
 
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, source=None):
+        super().__init__(source=source)
         self.extension = '.adf'
         self._dataset_yaml_filename = 'dataset.yaml'
         self._bin_dir = 'binaryData'
@@ -846,8 +855,8 @@ class AsdfExporter(DatasetExporter):
 
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, target=None):
+        super().__init__(target=target)
         self.extension = '.asdf'
 
     def _export(self):
@@ -870,8 +879,8 @@ class AsdfImporter(DatasetImporter):
 
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, source=None):
+        super().__init__(source=source)
         self.extension = '.asdf'
 
     def _import(self):
@@ -880,3 +889,17 @@ class AsdfImporter(DatasetImporter):
             dataset_dict = asdf_file.tree
             dataset_dict["history"] = dataset_dict.pop("dataset_history")
             self.dataset.from_dict(dataset_dict)
+
+
+class TxtImporter(DatasetImporter):
+
+    def __init__(self, source=None):
+        super().__init__(source=source)
+        self.extension = '.txt'
+
+    def _import(self, source=None):
+        data = np.loadtxt(self.source)
+        if len(np.shape(data)) > 1 and np.shape(data)[1] == 2:
+            self.dataset.data.axes[0].values = data[:, 0]
+            data = data[:, 1]
+        self.dataset.data.data = data
