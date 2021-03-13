@@ -14,8 +14,6 @@ For version 0.1
 
 * Report task: Add figure captions to context if available
 
-* Baseline correction (especially for examples of recipe-driven development)
-
 * Metadata mapper via yaml file
 
 * Documentation: Use cases

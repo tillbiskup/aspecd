@@ -72,6 +72,10 @@ documentation of each of the classes, readily accessible by the link.
 
   Extract slice along one dimension from dataset.
 
+* :class:`aspecd.processing.BaselineCorrection`
+
+  Correct baseline of dataset.
+
 
 Writing own processing steps
 ============================
@@ -148,6 +152,7 @@ Module documentation
 ====================
 
 """
+import math
 import operator
 
 import numpy as np
@@ -705,3 +710,102 @@ class SliceExtraction(ProcessingStep):
             self.dataset.data.data = \
                 self.dataset.data.data[:, self.parameters['index']]
         del self.dataset.data.axes[self.parameters['axis'] + 1]
+
+
+class BaselineCorrection(ProcessingStep):
+    """
+    Subtract baseline from dataset.
+
+    The coefficients to use will be calculated using the given order  and
+    written in the parameters. If no order is explicitly given, a shifted
+    baseline of zeroth order is assumed and will be processed for.
+
+    .. important::
+        Currently, baseline correction works *only* for **1D** datasets,
+        not for higher-dimensional datasets. This may, however, change in
+        the future.
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        kind : :class:`str`
+            The kind of baseline correction to be performed.
+
+            Default: polynomial
+
+        order : :class:`int`
+            The order for the baseline correction if no coefficients are given.
+
+            Default: 0
+
+        fit_area : :class:`float`
+            Percentage of the spectrum to consider as baseline on each side
+            of the spectrum, i.e. 10 means 10% left and 10 % right.
+
+            Default: 10
+
+        coefficients:
+            Filled during evaluation of the task, coefficients of the
+            baseline polynomial.
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.undoable = True
+        self.description = 'Correct baseline of dataset'
+        self.parameters['kind'] = 'polynomial'
+        self.parameters['order'] = 0
+        self.parameters['coefficients'] = []
+        self.parameters['fit_area'] = 10
+        self._xdata = []
+        self._ydata = []
+
+    @staticmethod
+    def applicable(dataset):
+        """
+        Check whether processing step is applicable to the given dataset.
+
+        Baseline correction is (currently) only applicable to datasets with
+        one-dimensional data.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset to check
+
+        Returns
+        -------
+        applicable : :class:`bool`
+            `True` if successful, `False` otherwise.
+
+        """
+        return len(dataset.data.axes) < 3
+
+    def _perform_task(self):
+        self._get_fit_range()
+        values_to_subtract = self._get_values_to_subtract()
+        self.dataset.data.data -= values_to_subtract
+
+    def _get_fit_range(self):
+        number_of_points = len(self.dataset.data.data)
+        data_points = \
+            math.ceil(number_of_points * self.parameters["fit_area"] / 100.0)
+        self._xdata = np.concatenate(
+            (self.dataset.data.axes[0].values[:data_points],
+             self.dataset.data.axes[0].values[-data_points:])
+        )
+        self._ydata = np.concatenate(
+            (self.dataset.data.data[:data_points],
+             self.dataset.data.data[-data_points:])
+        )
+
+    # noinspection PyUnresolvedReferences,PyCallingNonCallable
+    def _get_values_to_subtract(self):
+        polynomial = np.polynomial.Polynomial.fit(self._xdata,
+                                                  self._ydata,
+                                                  self.parameters['order'])
+        self.parameters['coefficients'] = polynomial.coef
+        return polynomial(self.dataset.data.axes[0].values)

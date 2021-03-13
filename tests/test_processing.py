@@ -457,3 +457,52 @@ class TestSliceExtraction(unittest.TestCase):
             self.processing.parameters['index'] = 3
             self.processing.parameters['axis'] = 2
             self.dataset.process(self.processing)
+
+
+class TestBaselineCorrection(unittest.TestCase):
+    def setUp(self):
+        self.processing = aspecd.processing.BaselineCorrection()
+        self.dataset = aspecd.dataset.Dataset()
+        self.dataset.data.data = np.linspace(0, 2, num=500)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('correct baseline',
+                      self.processing.description.lower())
+
+    def test_has_parameter_kind(self):
+        self.assertIn('kind', self.processing.parameters)
+
+    def test_has_parameter_order(self):
+        self.assertIn('order', self.processing.parameters)
+
+    def test_has_parameter_coefficients(self):
+        self.assertIn('coefficients', self.processing.parameters)
+
+    def test_has_parameter_fit_area(self):
+        self.assertIn('fit_area', self.processing.parameters)
+
+    def test_subtract_polynomial_baseline_of_zeroth_order(self):
+        self.processing.parameters['order'] = 0
+        self.dataset.process(self.processing)
+        self.assertAlmostEqual(0, self.dataset.data.data.mean())
+
+    def test_subtract_polynomial_baseline_of_first_order(self):
+        self.processing.parameters['order'] = 1
+        self.dataset.process(self.processing)
+        self.assertAlmostEqual(0, self.dataset.data.data[0])
+        self.assertAlmostEqual(0, self.dataset.data.data[-1])
+
+    def test_subtract_polynomial_sets_coefficients(self):
+        self.processing.parameters['order'] = 0
+        processing_step = self.dataset.process(self.processing)
+        self.assertTrue(processing_step.parameters['coefficients'])
+
+    def test_with_2D_dataset_raises(self):
+        dataset = aspecd.dataset.Dataset()
+        dataset.data.data = np.random.random([5, 5])
+        with self.assertRaises(
+                aspecd.exceptions.NotApplicableToDatasetError):
+            dataset.process(self.processing)
