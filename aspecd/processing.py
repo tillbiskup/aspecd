@@ -716,9 +716,13 @@ class BaselineCorrection(ProcessingStep):
     """
     Subtract baseline from dataset.
 
-    The coefficients to use will be calculated using the given order  and
-    written in the parameters. If no order is explicitly given, a shifted
-    baseline of zeroth order is assumed and will be processed for.
+    Currently, only polynomial baseline corrections are supported.
+
+    The coefficients used to calculate the baseline will be written to the
+    ``parameters`` dictionary upon processing.
+
+    If no order is explicitly given, a polynomial baseline of zeroth order
+    will be used.
 
     .. important::
         Currently, baseline correction works *only* for **1D** datasets,
@@ -742,13 +746,12 @@ class BaselineCorrection(ProcessingStep):
 
         fit_area : :class:`float`
             Percentage of the spectrum to consider as baseline on each side
-            of the spectrum, i.e. 10 means 10% left and 10 % right.
+            of the spectrum, i.e. 10 means 10% left and 10% right.
 
             Default: 10
 
         coefficients:
-            Filled during evaluation of the task, coefficients of the
-            baseline polynomial.
+            Coefficients used to calculate the baseline.
 
     """
 
