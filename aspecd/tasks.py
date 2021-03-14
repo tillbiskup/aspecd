@@ -334,6 +334,70 @@ classes need to reside in the same modules as in the ASpecD framework,
 dataset importer factory in the "io" module.
 
 
+Referring to other datasets and results
+---------------------------------------
+
+Some tasks yield results you usually would want to use later on in the
+recipe. Prime examples are analysis steps and plots. While analysis steps
+have a property ``result`` that can refer to either a dataset or something
+else, depending on the actual type of analysis step, plots have a ``label``
+that can be used to refer to them.
+
+While analysis steps always yield results, processing steps usually operate
+on a dataset that gets modified in turn. However, sometimes it is desired to
+return the modified dataset as a *new dataset*, independent of the original
+one. In this case, specify a ``result`` here, too. For details, see the
+:class:`aspecd.tasks.ProcessingTask` documentation below.
+
+
+Variable replacement
+--------------------
+
+Additionally to the labels described above, variables will be parsed and
+replaced. Currently, there are two types of variables that are understood:
+
+.. code-block:: yaml
+
+    key1: {{ basename(id) }}
+    key2: {{ id(id) }}
+
+Here, ``id`` is the id used internally for referring to a dataset,
+and ``{{ basename(id) }}`` will be replaced with the file basename of
+the respective dataset source, while ``{{ id(id) }}`` will be
+replaced by the id itself.
+
+Note: The spaces within the double curly brackets are only for better
+readability, they can be omitted, although this is not recommended.
+
+Why is this interesting? Suppose you would like to create a rather generic
+recipe always performing the same tasks, but for different datasets. A
+rather minimal example is given below:
+
+.. code-block:: yaml
+
+    datasets:
+      - source: /path/to/dataset
+        id: dataset
+
+    tasks:
+      - kind: processing
+        type: SubtractBaseline
+        properties:
+          parameters:
+            kind: polynomial
+            order: 0
+      - kind: singleplot
+        type: SinglePlotter
+        properties:
+          filename:
+            - {{ basename(dataset) }}.pdf
+
+Here, you can see that all you would need to do is to replace the ``source``
+with the actual path to your dataset. This will automatically perform the
+tasks of the recipe on the given dataset, storing the plot to a
+file named ``<basename>.pdf``.
+
+
 Executing recipes: serving the cooked results
 =============================================
 
@@ -503,22 +567,6 @@ performed. For details, see the documentation of the respective task
 subclass in this module below.
 
 
-Labels within recipes
-=====================
-
-Some tasks yield results you usually would want to use later on in the
-recipe. Prime examples are analysis steps and plots. While analysis steps
-have a property ``result`` that can refer to either a dataset or something
-else, depending on the actual type of analysis step, plots have a ``label``
-that can be used to refer to them.
-
-While analysis steps always yield results, processing steps usually operate
-on a dataset that gets modified in turn. However, sometimes it is desired to
-return the modified dataset as a *new dataset*, independent of the original
-one. In this case, specify a ``result`` here, too. For details, see the
-:class:`aspecd.tasks.ProcessingTask` documentation below.
-
-
 Prerequisites for recipe-driven data analysis
 =============================================
 
@@ -580,6 +628,7 @@ import collections
 import copy
 import datetime
 import os
+import re
 import sys
 
 import aspecd.dataset
@@ -1418,7 +1467,20 @@ class Task(aspecd.utils.ToDictMixin):
 
     def _parse_properties(self):
         """
-        Replace labels for datasets, results, and figures in properties
+        Replace labels for datasets, results, and figures in properties.
+
+        Additionally to labels, variables will be parsed and replaced.
+        Currently, there are two types of variables that are understood:
+
+        .. code-block:: yaml
+
+            key1: {{ basename(id) }}
+            key2: {{ id(id) }}
+
+        Here, ``id`` is the id used internally for referring to a dataset,
+        and ``{{ basename(id) }}`` will be replaced with the file basename of
+        the respective dataset source, while ``{{ id(id) }}`` will be
+        replaced by the id itself.
 
         Returns
         -------
@@ -1435,9 +1497,34 @@ class Task(aspecd.utils.ToDictMixin):
             if self.recipe.figures:
                 properties = aspecd.utils.replace_value_in_dict(
                     self.recipe.figures, properties)
+            properties = self._replace_variables_in_properties(properties)
         else:
             properties = self.properties
         return properties
+
+    def _replace_variables_in_properties(self, properties):
+        pattern = r'{{(.*)}}'
+        for key, value in properties.items():
+            if isinstance(value, dict):
+                self._replace_variables_in_properties(value)
+            elif isinstance(value, str):
+                matches = re.findall(pattern, value)
+                for match in matches:
+                    properties[key] = \
+                        re.sub(pattern,
+                               self._parse_variable(match.strip()), value)
+        return properties
+
+    def _parse_variable(self, variable):
+        replacement = ''
+        function, argument = re.findall(r'(\w*)\((\w*)\)', variable)[0]
+        if function == 'id':
+            replacement = argument
+        elif function == 'basename':
+            if argument in self.recipe.datasets.keys():
+                replacement = \
+                    aspecd.utils.basename(self.recipe.datasets[argument].id)
+        return replacement
 
 
 class ProcessingTask(Task):
@@ -2496,7 +2583,7 @@ class ChefDeService:
         """
         if "default_package" in self._recipe_dict.keys():
             class_name = self._recipe_dict["default_package"] + \
-                '.dataset.DatasetFactory'
+                         '.dataset.DatasetFactory'
             self._dataset_factory = aspecd.utils.object_from_class_name(
                 class_name)
         else:

@@ -777,6 +777,38 @@ class TestTask(unittest.TestCase):
         self.assertEqual(self.task.recipe.figures['bar'],
                          report_step.context['foo'])
 
+    def test_set_object_attributes_replaces_label(self):
+        processing_step = processing.ProcessingStep()
+        processing_step.parameters = {'foo': '', 'bar': ''}
+        metadata = {'parameters': {'foo': '{{ id(bar) }}.pdf'}}
+        self.task.properties = metadata
+        self.task.recipe = tasks.Recipe()
+        self.task.recipe.datasets['bar'] = dataset.Dataset()
+        self.task._set_object_attributes(processing_step)
+        self.assertEqual('bar.pdf', processing_step.parameters['foo'])
+
+    def test_set_object_attributes_replaces_label_without_spaces(self):
+        processing_step = processing.ProcessingStep()
+        processing_step.parameters = {'foo': '', 'bar': ''}
+        metadata = {'parameters': {'foo': '{{id(bar)}}.pdf'}}
+        self.task.properties = metadata
+        self.task.recipe = tasks.Recipe()
+        self.task.recipe.datasets['bar'] = dataset.Dataset()
+        self.task._set_object_attributes(processing_step)
+        self.assertEqual('bar.pdf', processing_step.parameters['foo'])
+
+    def test_set_object_attributes_replaces_basename(self):
+        processing_step = processing.ProcessingStep()
+        processing_step.parameters = {'foo': '', 'bar': ''}
+        metadata = {'parameters': {'foo': '{{ basename(bar) }}.pdf'}}
+        self.task.properties = metadata
+        self.task.recipe = tasks.Recipe()
+        dataset_ = dataset.Dataset()
+        dataset_.id = '/foo/bar/bla.blub'
+        self.task.recipe.datasets['bar'] = dataset_
+        self.task._set_object_attributes(processing_step)
+        self.assertEqual('bla.pdf', processing_step.parameters['foo'])
+
     # The following tests do *not* access non-public methods
     def test_to_dict_with_processing_step(self):
         kind = 'processing'
