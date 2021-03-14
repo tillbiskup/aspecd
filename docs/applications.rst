@@ -2,9 +2,14 @@
 Writing applications
 ====================
 
-As the name says, the ASpecD framework in itself only provides the scaffold for applications aiming at reproducible processing and analysis of spectroscopic data.
+As the name says, the ASpecD framework in itself only provides the scaffold for applications aiming at reproducible processing and analysis of spectroscopic data. However, that does not mean that you need to start from scratch when implementing a Python package for your preferred spectroscopic method. ASpecD comes with (some) "batteries included", namely an increasing list of generally applicable processing and analysis steps.
 
 Writing applications based on the ASpecD framework should be fairly straight-forward once familiar with its :doc:`concepts <concepts>`.
+
+
+.. note::
+
+    Most users of a package based on the ASpecD framework will not bother about how to further develop these packages. They will usually only work with the package by means of ":ref:`recipe-driven data analysis <recipes>`". However, if you are interested in writing or further developing packages for the analysis of spectroscopic data based on the ASpecD framework, continue reading.
 
 
 Before you start

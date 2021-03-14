@@ -5,27 +5,51 @@ Use cases
 Usually, you will either use an existing package based on the ASpecD framework (such as `cwEPR <https://docs.cwepr.de/>`_ or `trEPR <https://docs.trepr.de/>`_) or :doc:`write your own package based on the ASpecD framework <applications>` for your data analysis. However, this section will give you an impression how *working* with such a package, and particulary with *recipe-driven data analysis* may look like – and why it is fun and will help you tremendously speed up your data analysis, while allowing for full reproducibility.
 
 
-.. important::
-    The following section needs complete rewrite, as it predates the full implementation of recipe-driven data analysis. Once done, it will include a series of simple and not so simple tasks routinely occurring during scientific data analysis that can be performed with the functionality provided by the ASpecD framework.
-
-
 General usage
 =============
 
 The best tools will only get used if they are at least somewhat intuitively usable. One notable exception are tools such powerful and without viable alternative that a user will immediately see the advantages of getting used to a non-intuitive interface.
 
-The ASpecD framework may not be such a "best tool". It does, however, provide powerful functionality striving for fully reproducible data processing and analysis. Applications built on top of such a framework may revolutionise the way the average scientist looks at these fundamental aspects of science.
+It is up to the users to decide whether the ASpecD framework is such a "best tool". It does, however, provide powerful functionality striving for fully reproducible data processing and analysis, while keeping the usage as simple as possible. Applications built on top of such a framework may revolutionise the way the average scientist looks at these fundamental aspects of science.
 
-For the time being, the ASpecD framework focusses on fully developing these underlying concepts, not on user interfaces. Therefore, the standard way of using applications based on the ASpecD framework will be to manually create the different objects and interact with them either in a script or on the interactive command line.
+Currently, the main interface to the ASpecD framework and packages built upon it is the "**recipe-driven data analysis**":  the user writes "recipes" in form of human-readable YAML files telling the application which tasks to perform on what datasets. This allows for fully unattended, automated and scheduled processing of data, eventually including simulation and fitting. At the same time, it allows the user to analyse the data without need for actual programming. [#fn1]_
 
-With the advent of "recipe-driven data analysis" this restriction will be lifted. Here, the user will be able to write "recipes" in form of human-readable YAML files telling the application which tasks to perform on what datasets. This allows for fully unattended, automated and scheduled processing of data, eventually including simulation and fitting.
+Actually, there are two steps to recipe-driven data analysis:
 
-Interactive command-line (CLI) and graphical user interfaces (GUI) are an entirely different story, requiring a whole set of different skills and knowledge about concepts of software architecture developed within the last decades. However, the ASpecD framework provides the solid ground to build such interfaces upon. In terms of an overall software architecture, the ASpecD framework and the concepts contained form the inner core of an application for scientific data processing and analysis. User interfaces, similar to persistence layers, are outer layers the core does not know nor care about.
+* Writing a recipe, specifying what tasks shall be performed to which datasets.
 
+* Serving the recipe by typing a single command on the terminal.
 
-Things to add:
+To give you a first example, here is a short recipe, followed by the command you need to issue in the terminal:
 
-* Serving recipes from the command-line
+.. code-block:: yaml
+ :linenos:
+
+    datasets:
+      - /path/to/first/dataset
+      - /path/to/second/dataset
+
+    tasks:
+      - kind: processing
+        type: SubtractBaseline
+        properties:
+          parameters:
+            kind: polynomial
+            order: 0
+      - kind: singleplot
+        type: SinglePlotter
+        properties:
+          filename:
+            - first-dataset.pdf
+            - second-dataset.pdf
+
+The details of what happens here with this recipe will be detailed below, but it should nevertheless be pretty self-explaining. Suppose you have saved this recipe to a YAML file named ``my-first-recipe.yaml``. Then the only thing you need to do to actually "serve" the recipe and get the figure created is issuing the following command in a terminal:
+
+.. code-block:: bash
+
+    serve my-first-recipe.yaml
+
+If you wonder where the command ``serve`` comes from: This gets installed when you install the ASpecD Python package. Hence, it may only be available from within a Python virtual environment if you installed ASpecD this way (what is generally preferrable for Python packages).
 
 
 Importing datasets
@@ -97,3 +121,9 @@ Things to add:
 * Setting properties for plots
 * Different kinds of plots
 * Reports
+
+
+
+.. rubric:: Footnotes
+
+.. [#fn1] Interactive command-line (CLI) and graphical user interfaces (GUI) are an entirely different story, requiring a whole set of different skills and knowledge about concepts of software architecture developed within the last decades. However, the ASpecD framework provides the solid ground to build such interfaces upon. In terms of an overall software architecture, the ASpecD framework and the concepts contained form the inner core of an application for scientific data processing and analysis. User interfaces, similar to persistence layers, are outer layers the core does not know nor care about.
