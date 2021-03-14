@@ -23,7 +23,7 @@ A bit of terminology
 parameters :
     constant parameters (sometimes termed coefficients) characterising the model
 
-    Example: In case of a polynomial, the coefficients for would be the
+    Example: In case of a polynomial, the coefficients would be the
     parameters of the model.
 
 variables :
@@ -32,6 +32,14 @@ variables :
     Example: In case of a polynomial, the *x* values the model is
     evaluated for would be the variables, with the *y* values being the
     corresponding depending values dictated by the model and its parameters.
+
+
+Models provided within this module
+==================================
+
+.. todo::
+    There will be a number of models provided here, including, but probably
+    not limited to: polynomials, exponentials, sine, Gaussian, Lorentzian
 
 
 Writing your own models
@@ -96,13 +104,6 @@ for you:
   In case you used :meth:`aspecd.model.Model.from_dataset`, the axes from
   the dataset will be copied over from there.
 
-Models provided within this module
-==================================
-
-.. todo::
-    There will be a number of models provided here, including, but probably
-    not limited to: polynomials, exponentials, sine, Gaussian, Lorentzian
-
 
 Module documentation
 ====================
@@ -136,7 +137,7 @@ class Model:
     Attributes
     ----------
     name : :class:`str`
-        Name of the analysis step.
+        Name of the model.
 
         Defaults to the lower-case class name, don't change!
     parameters : :class:`dict`

@@ -679,3 +679,21 @@ class Properties(ToDictMixin):
             if not str(prop).startswith('_') and prop not in self._exclude:
                 props.append(prop)
         return props
+
+
+def basename(filename):
+    """
+    Return basename of given file (with absolute path and extension).
+
+    Parameters
+    ----------
+    filename : :class:`str`
+        Name of the file the basename should be returned for.
+
+    Returns
+    -------
+    basename : :class:`str`
+        Basename corresponding to the filename provided as input.
+
+    """
+    return os.path.splitext(os.path.split(filename)[-1])[0]

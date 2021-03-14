@@ -713,3 +713,24 @@ class TestProperties(unittest.TestCase):
             setattr(self.properties, prop, None)
         self.properties._exclude = ['foo']
         self.assertEqual(['bar'], self.properties.get_properties())
+
+
+class TestBasename(unittest.TestCase):
+
+    def test_basename_returns_last_part_of_path_without_extension(self):
+        self.assertEqual('bar', utils.basename('/foo/bar.bla'))
+
+    def test_basename_returns_last_part_if_starting_with_dot(self):
+        self.assertEqual('.bashrc', utils.basename('/home/doe/.bashrc'))
+
+    def test_basename_removes_only_last_extension(self):
+        self.assertEqual('foo.tar', utils.basename('/home/doe/foo.tar.gz'))
+
+    def test_basename_works_without_path(self):
+        self.assertEqual('foo', utils.basename('foo.bar'))
+
+    def test_basename_works_without_extension(self):
+        self.assertEqual('foo', utils.basename('/path/to/foo'))
+
+    def test_basename_works_with_relative_path(self):
+        self.assertEqual('foo', utils.basename('./path/to/foo'))

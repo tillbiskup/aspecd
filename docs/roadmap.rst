@@ -24,8 +24,7 @@ For version 0.1
 For later versions
 ==================
 
-* Remaining basic processing and analysis steps, such as baseline correction,
-  algebra with datasets, slice extraction for >2D datasets, averaging (over
+* Remaining basic processing and analysis steps, such as algebra with datasets, slice extraction for >2D datasets, averaging (over
   parts of axis) for N-D datasets, peak finding, SNR determination, denoising,
   filtering, noise, cut dataset and axis (to common range)
 
