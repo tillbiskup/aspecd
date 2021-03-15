@@ -809,6 +809,18 @@ class TestTask(unittest.TestCase):
         self.task._set_object_attributes(processing_step)
         self.assertEqual('bla.pdf', processing_step.parameters['foo'])
 
+    def test_set_object_attributes_replaces_path(self):
+        processing_step = processing.ProcessingStep()
+        processing_step.parameters = {'foo': '', 'bar': ''}
+        metadata = {'parameters': {'foo': '{{ path(bar) }}test.pdf'}}
+        self.task.properties = metadata
+        self.task.recipe = tasks.Recipe()
+        dataset_ = dataset.Dataset()
+        dataset_.id = '/foo/bar/bla.blub'
+        self.task.recipe.datasets['bar'] = dataset_
+        self.task._set_object_attributes(processing_step)
+        self.assertEqual('/foo/bar/test.pdf', processing_step.parameters['foo'])
+
     # The following tests do *not* access non-public methods
     def test_to_dict_with_processing_step(self):
         kind = 'processing'

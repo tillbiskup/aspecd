@@ -359,12 +359,14 @@ replaced. Currently, there are two types of variables that are understood:
 .. code-block:: yaml
 
     key1: {{ basename(id) }}
-    key2: {{ id(id) }}
+    key2: {{ path(id) }}
+    key3: {{ id(id) }}
 
 Here, ``id`` is the id used internally for referring to a dataset,
-and ``{{ basename(id) }}`` will be replaced with the file basename of
-the respective dataset source, while ``{{ id(id) }}`` will be
-replaced by the id itself.
+``{{ basename(id) }}`` will be replaced with the file basename of the
+respective dataset source, ``{{ path(id) }}`` will be replaced by the path
+of the respective dataset source, and  ``{{ id(id) }}`` will be replaced by
+the id itself.
 
 Note: The spaces within the double curly brackets are only for better
 readability, they can be omitted, although this is not recommended.
@@ -1470,17 +1472,19 @@ class Task(aspecd.utils.ToDictMixin):
         Replace labels for datasets, results, and figures in properties.
 
         Additionally to labels, variables will be parsed and replaced.
-        Currently, there are two types of variables that are understood:
+        Currently, the following types of variables are understood:
 
         .. code-block:: yaml
 
             key1: {{ basename(id) }}
-            key2: {{ id(id) }}
+            key2: {{ path(id) }}
+            key3: {{ id(id) }}
 
         Here, ``id`` is the id used internally for referring to a dataset,
-        and ``{{ basename(id) }}`` will be replaced with the file basename of
-        the respective dataset source, while ``{{ id(id) }}`` will be
-        replaced by the id itself.
+        ``{{ basename(id) }}`` will be replaced with the file basename of
+        the respective dataset source, ``{{ path(id) }}`` will be replaced
+        by the path of the respective dataset source, and  ``{{ id(id) }}``
+        will be replaced by the id itself.
 
         Returns
         -------
@@ -1524,6 +1528,10 @@ class Task(aspecd.utils.ToDictMixin):
             if argument in self.recipe.datasets.keys():
                 replacement = \
                     aspecd.utils.basename(self.recipe.datasets[argument].id)
+        elif function == 'path':
+            if argument in self.recipe.datasets.keys():
+                replacement = \
+                    aspecd.utils.path(self.recipe.datasets[argument].id)
         return replacement
 
 
