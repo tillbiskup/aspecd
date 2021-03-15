@@ -734,3 +734,12 @@ class TestBasename(unittest.TestCase):
 
     def test_basename_works_with_relative_path(self):
         self.assertEqual('foo', utils.basename('./path/to/foo'))
+
+
+class TestPath(unittest.TestCase):
+
+    def test_path_returns_path_without_filename(self):
+        self.assertEqual('/foo/', utils.path('/foo/bar.bla'))
+
+    def test_path_works_with_relative_path(self):
+        self.assertEqual('./foo/', utils.path('./foo/bar.bla'))

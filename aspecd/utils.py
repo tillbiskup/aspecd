@@ -683,12 +683,13 @@ class Properties(ToDictMixin):
 
 def basename(filename):
     """
-    Return basename of given file (with absolute path and extension).
+    Return basename of given filename.
 
     Parameters
     ----------
     filename : :class:`str`
-        Name of the file the basename should be returned for.
+        Name of the file (may contain absolute path and extension) the basename
+        should be returned for.
 
     Returns
     -------
@@ -697,3 +698,23 @@ def basename(filename):
 
     """
     return os.path.splitext(os.path.split(filename)[-1])[0]
+
+
+def path(filename):
+    """
+    Return path of given filename, with trailing separator.
+
+    Parameters
+    ----------
+    filename : :class:`str`
+        Name of the file (may contain absolute path and extension) the path
+        should be returned for.
+
+
+    Returns
+    -------
+    path : :class:`str`
+        path corresponding to the filename provided as input.
+
+    """
+    return os.path.split(filename)[:-1][0] + os.sep
