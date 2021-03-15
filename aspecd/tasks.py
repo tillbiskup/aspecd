@@ -354,7 +354,7 @@ Variable replacement
 --------------------
 
 Additionally to the labels described above, variables will be parsed and
-replaced. Currently, there are two types of variables that are understood:
+replaced. Currently, the following types of variables are understood:
 
 .. code-block:: yaml
 
@@ -378,8 +378,8 @@ rather minimal example is given below:
 .. code-block:: yaml
 
     datasets:
-      - source: /path/to/dataset
-        id: dataset
+      - source: /path/to/my_dataset.txt
+        id: first_measurement
 
     tasks:
       - kind: processing
@@ -392,12 +392,12 @@ rather minimal example is given below:
         type: SinglePlotter
         properties:
           filename:
-            - {{ basename(dataset) }}.pdf
+            - {{ basename(first_measurement) }}.pdf
 
 Here, you can see that all you would need to do is to replace the ``source``
 with the actual path to your dataset. This will automatically perform the
 tasks of the recipe on the given dataset, storing the plot to a
-file named ``<basename>.pdf``.
+file named ``my_dataset.pdf``.
 
 
 Executing recipes: serving the cooked results
@@ -1507,16 +1507,17 @@ class Task(aspecd.utils.ToDictMixin):
         return properties
 
     def _replace_variables_in_properties(self, properties):
-        pattern = r'{{(.*)}}'
+        pattern = r'{{([^}]*)}}'
         for key, value in properties.items():
             if isinstance(value, dict):
                 self._replace_variables_in_properties(value)
             elif isinstance(value, str):
                 matches = re.findall(pattern, value)
                 for match in matches:
-                    properties[key] = \
-                        re.sub(pattern,
-                               self._parse_variable(match.strip()), value)
+                    match_pattern = '{{' + match + '}}'
+                    value = value.replace(match_pattern,
+                                          self._parse_variable(match.strip()))
+                properties[key] = value
         return properties
 
     def _parse_variable(self, variable):
