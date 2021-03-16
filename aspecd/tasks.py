@@ -2591,8 +2591,8 @@ class ChefDeService:
         location, but in the package specified in the recipe, is created.
         """
         if "default_package" in self._recipe_dict.keys():
-            class_name = self._recipe_dict["default_package"] + \
-                         '.dataset.DatasetFactory'
+            class_name = self._recipe_dict["default_package"] \
+                + '.dataset.DatasetFactory'
             self._dataset_factory = aspecd.utils.object_from_class_name(
                 class_name)
         else:

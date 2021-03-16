@@ -12,8 +12,6 @@ For version 0.1
 
 * Report task: Add figure captions to context if available
 
-* Metadata mapper via yaml file
-
 * Documentation: Use cases
 
 * Documentation: YAML representation of dataset structure(s) (automatically generated together with the documentation and using the ``literalinclude`` directive)

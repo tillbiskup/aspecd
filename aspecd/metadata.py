@@ -4,12 +4,34 @@ Metadata are one key concept of the ASpecD framework, and they come in
 different flavours. Perhaps the easiest to grasp is metadata that accompany
 measurements---and are often stored separately from the data in metadata
 files. Other types of metadata are those of processing steps or
-representations.
+representations. This module is only concerned with the first kind of
+metadata, information accompanying data and usually recorded at the same
+time as the numeric data.
+
+Each :class:`aspecd.dataset.Dataset` contains a
+:attr:`aspecd.dataset.Dataset.metadata` attribute that is in turn an object
+of class :class:`aspecd.metadata.DatasetMetadata`. This latter object is
+composed of different metadata objects each inheriting from
+:class:`aspecd.metadata.Metadata`. Upon import of a dataset, the importer
+class needs to make sure that as many metadata as possible are read and
+imported to the dataset as well.
 
 Generally speaking, metadata can be thought of as key--value stores that
 might be hierarchically structured and thus cascaded. Nevertheless, classes
 have some advantages over using simple dictionaries, as there are certain
 operations that are common to some or all types of metadata.
+
+
+Metadata classes
+================
+
+The classes implemented in this module can be grouped into general metadata
+classes, concrete metadata classes, and metadata classes for datasets. Each
+will be described shortly below.
+
+
+General metadata classes
+------------------------
 
 The most basic class is :class:`aspecd.metadata.PhysicalQuantity` storing
 all relevant information about a physical quantity in an easily accessible
@@ -20,6 +42,10 @@ Next is :class:`aspecd.metadata.Metadata` as a generic class for all
 metadata containers. All other classes storing metadata, particularly those
 storing metadata accompanying measurements and therefore ending up in the
 metadata of a :class:`aspecd.dataset.Dataset`, should inherit from this class.
+
+
+Concrete metadata classes
+-------------------------
 
 Currently, three classes for actual metadata of experimental datasets and
 one class for calculated datasets are contained in the ASpecD framework,
@@ -32,6 +58,10 @@ been actively controlled at all during the measurement) for experimental
 datasets and :class:`aspecd.metadata.Calculation` for storing details about
 the calculation underlying the (numeric) data for calculated datasets.
 
+
+Metadata classes for datasets
+-----------------------------
+
 The attribute `metadata` in the :class:`aspecd.dataset.ExperimentalDataset`
 is of type :class:`aspecd.metadata.ExperimentalDatasetMetadata` and
 contains the three metadata classes for experimental datasets named above.
@@ -43,6 +73,10 @@ Similarly, the attribute `metadata` in the
 metadata class named above. Derived packages should extend this class
 accordingly wherever necessary.
 
+
+Converting metadata from and to dictionaries
+============================================
+
 All classes inheriting from :class:`aspecd.metadata.Metadata` provide a
 method :meth:`from_dict` allowing to set the attributes of the objects. This
 allows for easy use with metadata read from a file into a `dict`.
@@ -51,6 +85,10 @@ Similiarly, all classes inheriting from :class:`aspecd.metadata.Metadata` as
 well as :class:`aspecd.metadata.PhysicalQuantity` provide a method
 :meth:`to_dict` that returns a dictionary of all public attributes of the
 respective object. This allows to write metadata to a file.
+
+
+Mapping metadata read from external sources
+===========================================
 
 Generally, the representation and structure of metadata within the dataset
 of the ASpecD framework and each application derived from it is separate
@@ -62,10 +100,63 @@ there exists a generic mapper class :class:`aspecd.metadata.MetadataMapper`.
 This way, you can separate the representations of metadata and support
 mapping for different versions of metadata files.
 
+
+.. note::
+
+    As mappings can become quite complicated and specifying lists of
+    mappings for the :class:`aspecd.metadata.MetadataMapper` by hand can
+    become quite tedious, you can specify metadata mapping recipes in YAML
+    files in a rather simple syntax. See the documentation of the
+    :class:`aspecd.metadata.MetadataMapper` class and its
+    :meth:`aspecd.metadata.MetadataMapper.create_mappings` method for details.
+
+    This method and the underlying ideas are heavily based on concepts
+    and code developed by J. Popp for use within the `trEPR Python package
+    <https://docs.trepr.de/>`_.
+
+
+Metadata in packages based on the ASpecD framework
+==================================================
+
+The dataset as unit of (numerical) data and metadata is a key concept of the
+ASpecD framework and a necessary prerequisite for a semantic understanding
+within the routines. Every measurement (or calculation) produces (raw) data
+that are useless without additional information, such as experimental
+parameters. This additional information is termed "metadata" within the
+ASpecD framework.
+
+Additionally to combining numerical data and metadata, a dataset provides a
+common structure, unifying the different file formats used as source for
+both, data and metadata. Hence, the actual data format does not matter,
+greatly facilitating dealing with data from different sources (and even
+different kinds of data).
+
+Therefore, if you develop a new package based on the ASpecD framework,
+one of the first and most important steps is to create a (hierarchical)
+metadata structure for your datasets. This requires a thorough understanding
+of the spectroscopic method you develop the package for and most probably
+several years of practical experience in the lab. Good sources of
+inspiration are the vendor file formats usually storing instrument
+parameters and alike in some form. If you are lucky, you can actually access
+this information. If not, you may need to store these metadata in an
+additional external file that gets written manually during data recording.
+
+Some basic metadata that are rarely contained within vendor file formats,
+as they concern the actual sample measured, as well as metadata for
+calculated datasets can be found in the
+:class:`aspecd.metadata.ExperimentalDatasetMetadata` and
+:class:`aspecd.metadata.CalculatedDatasetMetadata`.
+
+
+Module documentation
+====================
+
 """
 
 import datetime
+import os
 
+import aspecd.exceptions
 import aspecd.utils
 
 
@@ -664,7 +755,8 @@ class MetadataMapper:
     Tasks that can be currently performed to map a dictionary to the
     internal structure of the metadata representation in a dataset contain
     renaming of keys via :meth:`rename_key` and combining items via
-    :meth:`combine_items`.
+    :meth:`combine_items` as well as copying keys via :meth:`copy_key` and
+    moving items via :meth:`move_item`.
 
     Rather than performing the mappings by hand, calling these methods
     repeatedly, you may use a mapping table contained in the
@@ -678,10 +770,23 @@ class MetadataMapper:
     converted data structure to your dataset's metadata attribute,
     using :meth:`ExperimentalDatasetMetadata.from_dict()`.
 
+    As it is often tedious to manually create the entries of the mapping
+    table residing in :attr:`mappings`, you can use mapping recipes stored
+    in YAML files together with the :meth:`create_mappings` method. For
+    details of the structure of the mapping recipe YAML files, see the
+    documentation of the :meth:`create_mappings` method. Note that you need
+    to specify the filename for the mapping recipe used in
+    :attr:`recipe_filename` as well as the version of the metadata file
+    format in :attr:`version` to get this to work. The :meth:`create_mappings`
+    method and the underlying ideas are heavily based on concepts and code
+    developed by J. Popp for use within the `trEPR Python package
+    <https://docs.trepr.de/>`_.
+
     Attributes
     ----------
     metadata : :class:`dict`
         Dictionary containing the metadata that are converted in place
+
     mappings : :class:`list`
         Tasks to perform to map dictionary
 
@@ -693,11 +798,27 @@ class MetadataMapper:
 
         For examples, see the documentation of the :meth:`map` method.
 
+    version : :class:`str`
+        Version of the metadata to map
+
+        Particularly important when you use :meth:`create_mappings` to
+        create the mappings from mapping recipes stored in a YAML file.
+
+    recipe_filename : :class:`str`
+        Name of the YAML file containing the mapping recipes
+
+        Needs to be specified when you use :meth:`create_mappings` to
+        create the mappings from mapping recipes stored in a YAML file.
+
     """
 
     def __init__(self):
         self.metadata = dict()
         self.mappings = []
+        self.version = ''
+        self.recipe_filename = ''
+        self._mapping_recipes = None
+        self._mapping_recipe = None
 
     def rename_key(self, old_key='', new_key=''):
         """
@@ -901,3 +1022,145 @@ class MetadataMapper:
             else:
                 method = getattr(self, mapping[1])
                 method(*mapping[2])
+
+    def create_mappings(self):
+        """
+        Create mappings from mapping recipe stored in YAML file.
+
+        Mapping recipes are stored in an external file (currently a YAML
+        file whose filename is stored in :attr:`recipe_filename`) in their
+        own format described hereafter. From this file, the recipes are read
+        and converted into mappings in the :attr:`mappings` attribute.
+
+        Based on the version number of the format the metadata from an external
+        source are stored in, the correct recipe is selected.
+
+        Following is an example of a YAML file containing recipes. Each map can
+        contain several types of mappings and the latter can contain several
+        entries:
+
+        .. code-block:: yaml
+
+            ---
+
+            format:
+              type: metadata mapper
+              version: 0.0.1
+
+            map 1:
+              metadata file versions:
+                - 0.1.6
+                - 0.1.5
+              combine items:
+                - old keys: ['Date start', 'Time start']
+                  new key: start
+                  pattern: ' '
+                  in dict: GENERAL
+              rename key:
+                - old key: GENERAL
+                  new key: measurement
+                  in dict:
+
+            map 2:
+              metadata file versions:
+                - 0.1.4
+              copy key:
+                - old key: Date
+                  new key: Date end
+                  in dict: GENERAL
+              move item:
+                - key: model
+                  source dict: measurement
+                  target dict: spectrometer
+                - key: Runs
+                  source dict: measurement
+                  target dict: experiment
+                  create target: True
+
+        Unknown mappings are silently ignored. The difference between the
+        two entries in ``move item`` is that in the latter case, the target
+        dictionary will be created. Be careful with this option, as typos
+        introduced in your mapping recipe will lead to hard-to-debug
+        behaviour of your application. See :meth:`move_item` for details.
+
+        Generally, the YAML file should be pretty self-explanatory. For
+        details of the different mappings, see the documentation of the
+        respective methods of the class, namely :meth:`combine_items`,
+        :meth:`rename_key`, :meth:`copy_key`, and :meth:`move_item`.
+
+        Note that you can name the mappings called here ``map 1`` and ``map 2``
+        as you like. Use descriptive names wherever possible.
+
+        A hint on the filenames for metadata recipe YAML files: Use
+        descriptive names containing the format of the metadata files. For
+        info files, something like ``infofile_metadata_mappings.yaml`` may
+        be reasonable.
+
+        This method and the underlying ideas are heavily based on concepts
+        and code developed by J. Popp for use within the `trEPR Python package
+        <https://docs.trepr.de/>`_.
+
+        """
+        if not self.recipe_filename:
+            raise aspecd.exceptions.MissingFilenameError(
+                message="You need to provide a recipe filename in "
+                        "self.recipe_filename")
+        self._load_mapping_recipe_from_file()
+        self._choose_mapping_recipe()
+        self._add_mappings_from_recipe()
+
+    def _load_mapping_recipe_from_file(self):
+        root_path = os.path.split(os.path.abspath(__file__))[0]
+        yaml_file = aspecd.utils.Yaml()
+        yaml_file.read_from(os.path.join(root_path, self.recipe_filename))
+        self._mapping_recipes = yaml_file.dict
+
+    def _choose_mapping_recipe(self):
+        for key in self._mapping_recipes.keys():
+            if key != 'format':
+                if self.version in \
+                        self._mapping_recipes[key]['metadata file versions']:
+                    self._mapping_recipe = self._mapping_recipes[key]
+        if not self._mapping_recipe:
+            raise aspecd.exceptions.MissingRecipeError(
+                message='No matching recipe found.')
+
+    def _add_mappings_from_recipe(self):
+        if 'combine items' in self._mapping_recipe.keys():
+            for i in range(len(self._mapping_recipe['combine items'])):
+                mapping = \
+                    [self._mapping_recipe['combine items'][i]['in dict'],
+                     'combine_items',
+                     [self._mapping_recipe['combine items'][i]['old keys'],
+                      self._mapping_recipe['combine items'][i]['new key'],
+                      self._mapping_recipe['combine items'][i]['pattern']]]
+                self.mappings.append(mapping)
+        if 'rename key' in self._mapping_recipe.keys():
+            for i in range(len(self._mapping_recipe['rename key'])):
+                mapping = \
+                    [self._mapping_recipe['rename key'][i]['in dict'],
+                     'rename_key',
+                     [self._mapping_recipe['rename key'][i]['old key'],
+                      self._mapping_recipe['rename key'][i]['new key']]]
+                self.mappings.append(mapping)
+        if 'copy key' in self._mapping_recipe.keys():
+            for i in range(len(self._mapping_recipe['copy key'])):
+                mapping = \
+                    [self._mapping_recipe['copy key'][i]['in dict'],
+                     'copy_key',
+                     [self._mapping_recipe['copy key'][i]['old key'],
+                      self._mapping_recipe['copy key'][i]['new key']
+                      ]
+                     ]
+                self.mappings.append(mapping)
+        if 'move item' in self._mapping_recipe.keys():
+            for i in range(len(self._mapping_recipe['move item'])):
+                sub_mapping = [
+                    self._mapping_recipe['move item'][i]['key'],
+                    self._mapping_recipe['move item'][i]['source dict'],
+                    self._mapping_recipe['move item'][i]['target dict'],
+                ]
+                if "create target" in self._mapping_recipe['move item'][i]:
+                    sub_mapping.append(True)
+                mapping = ['', 'move_item', sub_mapping]
+                self.mappings.append(mapping)

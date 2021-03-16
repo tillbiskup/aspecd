@@ -1,9 +1,10 @@
 """Tests for metadata."""
 
 import collections
+import os
 import unittest
 
-from aspecd import metadata
+from aspecd import metadata, exceptions, utils
 
 
 class TestPhysicalQuantity(unittest.TestCase):
@@ -471,6 +472,19 @@ class TestCalculatedDatasetMetadata(unittest.TestCase):
 class TestMetadataMapper(unittest.TestCase):
     def setUp(self):
         self.metadata_mapper = metadata.MetadataMapper()
+        self.filename = 'test_metadata_mappings.yaml'
+        self.root_path = os.path.join(
+            os.path.split(os.path.split(os.path.abspath(__file__))[0])[0],
+            "aspecd")
+
+    def tearDown(self):
+        if os.path.exists(os.path.join(self.root_path, self.filename)):
+            os.remove(os.path.join(self.root_path, self.filename))
+
+    def write_metadata_mapper_file(self, dict_=None):
+        yaml_file = utils.Yaml()
+        yaml_file.dict = dict_
+        yaml_file.write_to(os.path.join(self.root_path, self.filename))
 
     def test_instantiate_class(self):
         pass
@@ -678,3 +692,146 @@ class TestMetadataMapper(unittest.TestCase):
         self.metadata_mapper.mappings = mapping
         with self.assertRaises(KeyError):
             self.metadata_mapper.map()
+
+    def test_has_method_create_mappings(self):
+        self.assertTrue(callable(self.metadata_mapper.create_mappings))
+
+    def test_create_mappings_without_recipe_filename_raises(self):
+        with self.assertRaises(exceptions.MissingFilenameError):
+            self.metadata_mapper.create_mappings()
+
+    def test_create_mappings_with_missing_version_raises(self):
+        self.metadata_mapper.recipe_filename = self.filename
+        self.metadata_mapper.version = "0.1.0"
+        self.write_metadata_mapper_file(dict())
+        with self.assertRaises(exceptions.MissingRecipeError):
+            self.metadata_mapper.create_mappings()
+
+    def test_create_mappings_with_existing_version(self):
+        mapping_dict = {"mapping1": {"metadata file versions": ["0.1.0"]}}
+        self.metadata_mapper.recipe_filename = self.filename
+        self.metadata_mapper.version = "0.1.0"
+        self.write_metadata_mapper_file(mapping_dict)
+        self.metadata_mapper.create_mappings()
+
+    def test_create_mappings_with_existing_version_and_format(self):
+        mapping_dict = {
+            "format": {"type": "metadata mapper", "version": "0.1.0"},
+            "mapping1": {"metadata file versions": ["0.1.0"]}
+        }
+        self.metadata_mapper.recipe_filename = self.filename
+        self.metadata_mapper.version = "0.1.0"
+        self.write_metadata_mapper_file(mapping_dict)
+        self.metadata_mapper.create_mappings()
+
+    def test_create_mappings_adds_combine_items_to_mappings(self):
+        combine_items = [{
+            "old keys": ['Date start', 'Time start'],
+            "new key": "start",
+            "pattern": " ",
+            "in dict": "GENERAL"
+        }]
+        mapping = [
+            "GENERAL",
+            "combine_items",
+            [['Date start', 'Time start'], "start", " "]
+        ]
+        mapping_dict = {
+            "format": {"type": "metadata mapper", "version": "0.1.0"},
+            "mapping1": {"metadata file versions": ["0.1.0"],
+                         "combine items": combine_items}
+        }
+        self.metadata_mapper.recipe_filename = self.filename
+        self.metadata_mapper.version = "0.1.0"
+        self.write_metadata_mapper_file(mapping_dict)
+        self.metadata_mapper.create_mappings()
+        self.assertEqual(mapping, self.metadata_mapper.mappings[-1])
+
+    def test_create_mappings_adds_rename_key_to_mappings(self):
+        rename_key = [{
+            "old key": "GENERAL",
+            "new key": "measurement",
+            "in dict": ""
+        }]
+        mapping = [
+            "",
+            "rename_key",
+            ['GENERAL', 'measurement']
+        ]
+        mapping_dict = {
+            "format": {"type": "metadata mapper", "version": "0.1.0"},
+            "mapping1": {"metadata file versions": ["0.1.0"],
+                         "rename key": rename_key}
+        }
+        self.metadata_mapper.recipe_filename = self.filename
+        self.metadata_mapper.version = "0.1.0"
+        self.write_metadata_mapper_file(mapping_dict)
+        self.metadata_mapper.create_mappings()
+        self.assertEqual(mapping, self.metadata_mapper.mappings[-1])
+
+    def test_create_mappings_adds_copy_key_to_mappings(self):
+        copy_key = [{
+            "old key": "Date",
+            "new key": "Date end",
+            "in dict": "GENERAL"
+        }]
+        mapping = [
+            "GENERAL",
+            "copy_key",
+            ['Date', 'Date end']
+        ]
+        mapping_dict = {
+            "format": {"type": "metadata mapper", "version": "0.1.0"},
+            "mapping1": {"metadata file versions": ["0.1.0"],
+                         "copy key": copy_key}
+        }
+        self.metadata_mapper.recipe_filename = self.filename
+        self.metadata_mapper.version = "0.1.0"
+        self.write_metadata_mapper_file(mapping_dict)
+        self.metadata_mapper.create_mappings()
+        self.assertEqual(mapping, self.metadata_mapper.mappings[-1])
+
+    def test_create_mappings_adds_move_item_to_mappings(self):
+        move_item = [{
+            "key": "model",
+            "source dict": "measurement",
+            "target dict": "spectrometer"
+        }]
+        mapping = [
+            "",
+            "move_item",
+            ['model', 'measurement', 'spectrometer']
+        ]
+        mapping_dict = {
+            "format": {"type": "metadata mapper", "version": "0.1.0"},
+            "mapping1": {"metadata file versions": ["0.1.0"],
+                         "move item": move_item}
+        }
+        self.metadata_mapper.recipe_filename = self.filename
+        self.metadata_mapper.version = "0.1.0"
+        self.write_metadata_mapper_file(mapping_dict)
+        self.metadata_mapper.create_mappings()
+        self.assertEqual(mapping, self.metadata_mapper.mappings[-1])
+
+    def test_create_mappings_adds_move_item_with_create_to_mappings(self):
+        move_item = [{
+            "key": "model",
+            "source dict": "measurement",
+            "target dict": "spectrometer",
+            "create target": "True",
+        }]
+        mapping = [
+            "",
+            "move_item",
+            ['model', 'measurement', 'spectrometer', True]
+        ]
+        mapping_dict = {
+            "format": {"type": "metadata mapper", "version": "0.1.0"},
+            "mapping1": {"metadata file versions": ["0.1.0"],
+                         "move item": move_item}
+        }
+        self.metadata_mapper.recipe_filename = self.filename
+        self.metadata_mapper.version = "0.1.0"
+        self.write_metadata_mapper_file(mapping_dict)
+        self.metadata_mapper.create_mappings()
+        self.assertEqual(mapping, self.metadata_mapper.mappings[-1])

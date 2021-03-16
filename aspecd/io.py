@@ -307,6 +307,7 @@ class DatasetImporter:
             self.dataset = dataset
         self._import()
         # Untested due to lack of ideas how to test
+        # pylint: disable=protected-access
         self.dataset._origdata = copy.deepcopy(self.dataset.data)
         self.dataset.id = self.source
         self.dataset.label = self.source
@@ -408,12 +409,11 @@ class DatasetImporterFactory:
         _, file_extension = os.path.splitext(source)
         if file_extension == '.adf':
             return AdfImporter(source=source)
-        elif file_extension == '.asdf':
+        if file_extension == '.asdf':
             return AsdfImporter(source=source)
-        elif file_extension == '.txt':
+        if file_extension == '.txt':
             return TxtImporter(source=source)
-        else:
-            return DatasetImporter(source=source)
+        return DatasetImporter(source=source)
 
 
 class DatasetExporter:
@@ -956,7 +956,7 @@ class TxtImporter(DatasetImporter):
         super().__init__(source=source)
         self.extension = '.txt'
 
-    def _import(self, source=None):
+    def _import(self):
         data = np.loadtxt(self.source)
         if len(np.shape(data)) > 1 and np.shape(data)[1] == 2:
             self.dataset.data.axes[0].values = data[:, 0]
