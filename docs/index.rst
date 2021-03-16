@@ -35,7 +35,7 @@ What is even better: Actual data processing and analysis **no longer requires pr
             - second-dataset.pdf
 
 
-For more general information on the ASpecD framework see its `Homepage <https://www.aspecd.de/>`_, and for how to use it, carry on reading.
+For more general information on the ASpecD framework see its `Homepage <https://www.aspecd.de/>`_, and for how to use it, carry on reading. Interested in more real-live examples? Check out the :ref:`use cases section <use_cases>`.
 
 
 Features
