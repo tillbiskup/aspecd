@@ -202,6 +202,7 @@ Things to add:
 * Setting properties for plots
 * Different kinds of plots
 * Reports
+* Setting default output directory
 
 
 .. _specific_packages:
