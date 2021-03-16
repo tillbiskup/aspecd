@@ -1,6 +1,14 @@
 """
 Data analysis functionality.
 
+.. sidebar:: Processing vs. analysis steps
+
+    The key difference between processing and analysis steps: While a
+    processing step *modifies* the data of the dataset it operates on,
+    an analysis step returns a result based on data of a dataset, but leaves
+    the original dataset unchanged.
+
+
 Key to reproducible science is automatic documentation of each analysis
 step applied to the data of a dataset. Such an analysis step each is
 self-contained, meaning it contains every necessary information to perform
