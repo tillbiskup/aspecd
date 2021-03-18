@@ -8,6 +8,8 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.1
 ===============
 
+* Plotter: CompositePlotter - documentation and better handling of properties
+
 * Plotter: stackplot for MultiPlot
 
 * Report task: Add figure captions to context if available

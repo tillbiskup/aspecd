@@ -1420,6 +1420,18 @@ class MultiPlotter1D(MultiPlotter):
 class CompositePlotter(Plotter):
     """Base class for plots consisting of multiple axes.
 
+    .. todo:
+        This class needs appropriate documentation. Currently, developers
+        aiming at writing derived classes need to look into the actual
+        source code...
+
+    .. note::
+        When writing classes based on this class, do *not* override the
+        :meth:`_create_plot` method. Generally, providing a list of plotters
+        for each of the axes should be sufficient, and the CompositePlotter
+        will call the :meth:`plot` property of each of these plotters
+        automatically for you.
+
     Attributes
     ----------
     axes : :class:`list`
