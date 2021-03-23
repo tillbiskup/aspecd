@@ -496,6 +496,7 @@ Currently, the following subclasses are implemented:
 
   * :class:`aspecd.tasks.ReportTask`
   * :class:`aspecd.tasks.ModelTask`
+  * :class:`aspecd.tasks.ExportTask`
 
 As you can see from the above list, there are (currently) two special cases
 of kinds of tasks: analysis and plot tasks. Usually, you will set the
@@ -1393,7 +1394,7 @@ class Task(aspecd.utils.ToDictMixin):
             class_name = '.'.join([self.kind, self.type])
         try:
             obj = aspecd.utils.object_from_class_name(class_name)
-        except ImportError:
+        except (ImportError, AttributeError):
             if self.package:
                 package_name = self.package
             else:
@@ -2265,6 +2266,81 @@ class ModelTask(Task):
         result = task.create()
         if self.result:
             self.recipe.results[self.result] = result
+
+
+class ExportTask(Task):
+    """
+    Export of datasets.
+
+    Sometimes, datasets need to be exported and stored as file.
+
+    For more information on the underlying general class,
+    see :class:`aspecd.io.DatasetExporter`.
+
+    For an example of how such an export task may be included into a recipe,
+    see the YAML listing below:
+
+    .. code-block:: yaml
+
+        kind: export
+        type: AdfExporter
+        properties:
+          target:
+            - dataset.adf
+        apply_to:
+          - loi:xxx
+
+    Note that you can refer to datasets and results created during cooking
+    of a recipe using their respective labels. Those labels will
+    automatically be replaced by the actual dataset/result prior to
+    performing the task.
+
+    In case you apply the task to more than one dataset, you will need to
+    supply a list of filenames instead of only a single filename. A minimal
+    example may look like this:
+
+    .. code-block:: yaml
+
+        kind: export
+        type: AdfExporter
+        properties:
+          target:
+            - dataset1.adf
+            - dataset2.adf
+        apply_to:
+          - loi:xxx
+          - loi:yyy
+
+    .. important::
+        Make sure to provide the same number of file names in your recipe as
+        the number of datasets you apply the exporter to. Otherwise you may
+        run into trouble.
+
+    .. note::
+        If the recipe contains the ``output_directory`` key on the top
+        level, the datasets will be saved to this directory.
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self._module = 'io'
+
+    def _perform(self):
+        targets = []
+        if "target" in self.properties \
+                and isinstance(self.properties["target"], list) \
+                and len(self.apply_to) == len(self.properties["target"]):
+            targets = self.properties["target"]
+        for idx, dataset_id in enumerate(self.apply_to):
+            dataset = self.recipe.get_dataset(dataset_id)
+            task = self.get_object()
+            if targets:
+                task.target = targets[idx]
+            if self.recipe.output_directory:
+                task.target = os.path.join(self.recipe.output_directory,
+                                           task.target)
+            dataset.export_to(task)
 
 
 class TaskFactory:

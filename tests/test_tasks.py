@@ -257,7 +257,9 @@ class TestRecipe(unittest.TestCase):
         tmp.label = label
         self.recipe.datasets[id_] = tmp
         dict_ = self.recipe.to_dict()
-        self.assertDictEqual({'source': self.dataset, 'label': label, 'id': id_},
+        self.assertDictEqual({'source': self.dataset,
+                              'label': label,
+                              'id': id_},
                              dict_['datasets'][0])
 
     def test_to_dict_with_foreign_dataset_returns_dataset_as_dict(self):
@@ -1535,6 +1537,76 @@ class TestModelTask(unittest.TestCase):
         np.testing.assert_allclose(
             self.recipe.datasets[self.dataset].data.axes[0].values,
             self.recipe.results[result].data.axes[0].values)
+
+
+class TestExportTask(unittest.TestCase):
+    def setUp(self):
+        self.task = tasks.ExportTask()
+        self.recipe = tasks.Recipe()
+        self.dataset = 'foo'
+        self.filename = 'foo.txt'
+        self.filename2 = 'bla.txt'
+        self.export_task = {'kind': 'export',
+                            'type': 'TxtExporter',
+                            'properties': {'target': self.filename},
+                            }
+        root_path = os.path.split(os.path.abspath(__file__))[0]
+        self.output_directory = os.path.join(root_path, 'output_directory')
+        os.mkdir(self.output_directory)
+
+    def tearDown(self):
+        if os.path.exists(self.filename):
+            os.remove(self.filename)
+        if os.path.exists(self.filename2):
+            os.remove(self.filename2)
+        if os.path.exists(self.output_directory):
+            shutil.rmtree(self.output_directory)
+
+    def prepare_recipe(self):
+        dataset_factory = dataset.DatasetFactory()
+        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        self.recipe.dataset_factory = dataset_factory
+        recipe_dict = {'datasets': [self.dataset],
+                       'tasks': [self.export_task]}
+        self.recipe.from_dict(recipe_dict)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_perform_task(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.export_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+
+    def test_perform_task_writes_file(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.export_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(os.path.exists(self.filename))
+
+    def test_perform_task_with_multiple_datasets_writes_files(self):
+        self.export_task['properties']['target'] = [self.filename,
+                                                    self.filename2]
+        recipe_dict = {'datasets': ['foo', 'bar'],
+                       'tasks': [self.export_task]}
+        self.prepare_recipe()
+        self.recipe.from_dict(recipe_dict)
+        self.task.from_dict(self.export_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(os.path.exists(self.filename))
+        self.assertTrue(os.path.exists(self.filename2))
+
+    def test_perform_task_with_output_directory_writes_file(self):
+        self.prepare_recipe()
+        self.recipe.output_directory = self.output_directory
+        self.task.from_dict(self.export_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(os.path.exists(os.path.join(self.output_directory,
+                                                    self.filename)))
 
 
 class TestTaskFactory(unittest.TestCase):

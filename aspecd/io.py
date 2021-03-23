@@ -24,7 +24,9 @@ methods of the :class:`aspecd.dataset.Dataset` class, thus first
 instantiating an object of that class and an appropriate importer or
 exporter, and afterwards only operating on the dataset using its methods.
 
-In its most generic form, this may look something like::
+In its most generic form, this may look something like:
+
+.. code-block::
 
     dataset = aspecd.dataset.Dataset()
     importer = aspecd.io.DatasetImporter(source="/path/to/your/data")
@@ -32,6 +34,71 @@ In its most generic form, this may look something like::
 
 Similarly, you would handle the export of your data (and metadata)
 contained in a dataset object using an exporter object, respectively.
+
+.. code-block::
+
+    dataset = aspecd.dataset.Dataset()
+    importer = aspecd.io.DatasetExporter(target="/path/to/destination")
+    dataset.export_to(exporter)
+
+
+However, if you use :ref:`recipe-driven data analysis <recipes>`, things
+become much simpler:
+
+* Imports will be automatically taken care of.
+
+* Exports can be specified as simple task.
+
+
+A simple example of a recipe only loading datasets and afterwards exporting
+them could look like this:
+
+.. code-block:: yaml
+
+    datasets:
+      - /path/to/first/dataset
+      - /path/to/second/dataset
+
+    tasks:
+      - kind: export
+        type: AdfExporter
+        properties:
+          target:
+            - dataset1
+            - dataset2
+
+
+What is happening here? Two datasets are imported, and afterwards exported
+to the ASpecD Dataset Format (ADF) using the :class:`aspecd.io.AdfExporter`.
+
+Another frequent use case, although one that admittedly pretty much opposes
+the whole idea of the ASpecD framework in terms of reproducibility and
+traceability: Your collaboration partners require you to provide them with
+raw data they can import into their favourite program for creating plots.
+The only viable way: export to plain text (ouch!) - saying good-bye to all
+your metadata and history:
+
+.. code-block:: yaml
+
+    datasets:
+      - /path/to/first/cool/dataset
+      - /path/to/second/cool/dataset
+      - /path/to/another/cool/dataset
+
+    tasks:
+      - kind: export
+        type: TxtExporter
+        properties:
+          target:
+            - cool-dataset1
+            - cool-dataset2
+            - cool-dataset3
+
+
+In this case, you can as well add whatever processing necessary to your
+datasets before exporting them, and you see that recipes come in quite handy
+here.
+
 
 
 Importers for specific file formats
