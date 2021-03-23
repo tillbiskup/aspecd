@@ -72,6 +72,23 @@ dataset will be retained.
 
 For details, see the respective class documentation.
 
+A bit a special case is the exporter to plain text files, as this file
+format does *not* preserve the metadata stored within the dataset and should
+only be used as last resort:
+
+* :class:`aspecd.io.TxtExporter`
+
+  Exporter for data to plain text format
+
+
+.. warning::
+    All metadata contained within a dataset (including the full history)
+    are lost when exporting to plain text. Therefore, using this
+    exporter will usually result in you loosing reproducibility. Hence,
+    better think twice before using this exporter and use entirely on
+    your own risk and only if you *really* know what you are doing (and
+    why).
+
 
 Writing importers for data
 --------------------------
@@ -464,8 +481,8 @@ class DatasetExporter:
         dataset as argument. Therefore, in this case setting the dataset
         property within the exporter object is not necessary.
 
-        The actual export should be implemented within the non-public method
-        :meth:`_export`.
+        The actual export is implemented within the non-public method
+        :meth:`_export` that gets automatically called.
 
         Parameters
         ----------
@@ -962,3 +979,85 @@ class TxtImporter(DatasetImporter):
             self.dataset.data.axes[0].values = data[:, 0]
             data = data[:, 1]
         self.dataset.data.data = data
+
+
+class TxtExporter(DatasetExporter):
+    """
+    Dataset exporter for exporting to plain text files (TXT).
+
+    Plain text files have often the disadvantage of no accompanying metadata,
+    therefore the use of plain text files for data storage is highly
+    discouraged, besides other problems like inherent low resolution/accuracy
+    or otherwise large file sizes.
+
+    .. warning::
+        All metadata contained within a dataset (including the full history)
+        are lost when exporting to plain text. Therefore, using this
+        exporter will usually result in you loosing reproducibility. Hence,
+        better think twice before using this exporter and use entirely on
+        your own risk and only if you *really* know what you are doing (and
+        why).
+
+    The main reason for this class to exist is that sometimes there is a
+    need to export data to a simple exchange format that can be shared with
+    collaboration partners.
+
+    .. note::
+        The importer relies on :func:`numpy.savetxt` for writing text files.
+        Hence, the same limitations apply, *e.g.* only working for 1D and 2D
+        data, but not data with more than two dimensions.
+
+    In case of 1D data, the resulting file will consist of two columns,
+    with the first column consisting of the axis values and the second column
+    containing the actual data. An example of the contents of such a file
+    are given below:
+
+    .. code-block::
+
+        3.400000000000000000e+02 6.340967862812832978e-01
+        3.410000000000000000e+02 3.424209074593306257e-01
+        3.420000000000000000e+02 1.675116805484100357e-02
+
+    In case of 2D data, the resulting file will contain the axes values in the
+    first row/column respectively. Hence, the size of the matrix will be +1
+    in both directions compared to the size of the actual data and the first
+    element (top left) will always be zero (and shall be ignored). An
+    example of the contents of such a file are given below:
+
+    .. code-block::
+
+        0.000000000000000000e+00 4.000000000000000000e+00 5.000000000000000000e+00
+        3.400000000000000000e+02 6.340967862812832978e-01 5.979077980106655144e-01
+        3.410000000000000000e+02 3.424209074593306257e-01 1.052868239245914328e-01
+        3.420000000000000000e+02 1.675116805484100357e-02 9.050894282755458375e-01
+
+    These two examples show immediately two of the problems of this file
+    format: You are left to guess the quantity and unit of each the axes,
+    and these files get quite big, as many decimal places are stored to
+    not loose numerical resolution. With 50 characters per line for a 1D
+    dataset (translating to at least one byte each), you end up with 50 kB
+    for 1000 values.
+
+    """
+
+    def __init__(self, target=None):
+        super().__init__(target=target)
+        self.extension = '.txt'
+
+    def _export(self):
+        if not self.target:
+            raise aspecd.exceptions.MissingTargetError
+
+        if len(self.dataset.data.axes) == 2:
+            data = np.asarray([self.dataset.data.axes[0].values,
+                               self.dataset.data.data]).T
+        else:
+            data = np.zeros(np.asarray(self.dataset.data.data.shape)+1)
+            data[1:, 0] = self.dataset.data.axes[0].values
+            data[0, 1:] = self.dataset.data.axes[1].values
+            data[1:, 1:] = self.dataset.data.data
+
+        np.savetxt(self._sanitise_file_extension(self.target), data)
+
+    def _sanitise_file_extension(self, target=None):
+        return "".join([os.path.splitext(target)[0], self.extension])

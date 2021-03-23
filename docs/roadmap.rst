@@ -12,6 +12,8 @@ For version 0.1
 
 * Plotter: stackplot for MultiPlot
 
+* Export task (including documentation in the io module)
+
 * Report task: Add figure captions to context if available
 
 * Documentation: Use cases

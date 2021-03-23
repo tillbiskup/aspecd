@@ -434,3 +434,59 @@ class TestTxtImporter(unittest.TestCase):
                              list(self.dataset.data.axes[0].values))
         self.assertListEqual(list(data[:, 0]),
                              list(self.dataset._origdata.axes[0].values))
+
+
+class TestTxtExporter(unittest.TestCase):
+    def setUp(self):
+        self.exporter = io.TxtExporter()
+        self.dataset = dataset.ExperimentalDataset()
+        self.target = 'target.txt'
+
+    def tearDown(self):
+        if os.path.exists(self.target):
+            os.remove(self.target)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_export_from_without_target_raises(self):
+        with self.assertRaises(aspecd.exceptions.MissingTargetError):
+            self.exporter.export_from(dataset=self.dataset)
+
+    def test_export_with_target_creates_file(self):
+        self.exporter.target = self.target
+        self.exporter.export_from(self.dataset)
+        self.assertTrue(os.path.exists(self.target))
+
+    def test_export_creates_file_with_correct_extension(self):
+        self.exporter.target = os.path.splitext(self.target)[0]
+        self.exporter.export_from(self.dataset)
+        self.assertTrue(os.path.exists(self.target))
+
+    def test_export_with_1D_dataset_adds_axis_as_first_column(self):
+        self.dataset.data.data = np.linspace(3, 4, 11)
+        self.exporter.target = self.target
+        self.exporter.export_from(self.dataset)
+        with open(self.target, 'r') as file:
+            first_line = file.readline()
+        self.assertTrue(first_line.startswith('0.'))
+        self.assertIn('3.', first_line)
+
+    def test_export_with_3D_dataset_raises(self):
+        self.dataset.data.data = np.random.random([3, 3, 3])
+        self.exporter.target = self.target
+        with self.assertRaises(ValueError):
+            self.exporter.export_from(self.dataset)
+
+    def test_export_with_2D_dataset_adds_axes_as_first_column_row(self):
+        self.dataset.data.data = np.random.random([3, 4])
+        self.exporter.target = self.target
+        self.exporter.export_from(self.dataset)
+        with open(self.target, 'r') as file:
+            first_line = file.readline()
+            second_line = file.readline()
+            third_line = file.readline()
+        self.assertTrue(first_line.startswith('0.'))
+        self.assertIn('3.', first_line)
+        self.assertTrue(second_line.startswith('0.'))
+        self.assertTrue(third_line.startswith('1.'))
