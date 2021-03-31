@@ -28,7 +28,7 @@ So, how does it look like? Consider the following example:
 
     tasks:
       - kind: processing
-        type: SubtractBaseline
+        type: BaselineCorrection
         properties:
           parameters:
             kind: polynomial
@@ -54,7 +54,7 @@ Probably even more instructive is to compare the above recipe with the Python co
     figure_filenames = ['first-dataset.pdf', 'second-dataset.pdf']
 
     importer_factory = aspecd.io.ImporterFactory()
-    baseline_subtraction = aspecd.processing.SubtractBaseline()
+    baseline_subtraction = aspecd.processing.BaselineCorrection()
     baseline_subtraction.parameters = {"kind": "polynomial", "order": 0}
     plotter = aspecd.plotting.SinglePlotter()
 

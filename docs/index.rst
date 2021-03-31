@@ -22,7 +22,7 @@ What is even better: Actual data processing and analysis **no longer requires pr
 
     tasks:
       - kind: processing
-        type: SubtractBaseline
+        type: BaselineCorrection
         properties:
           parameters:
             kind: polynomial

@@ -33,7 +33,7 @@ To give you a first example, here is a short recipe, followed by the command you
 
     tasks:
       - kind: processing
-        type: SubtractBaseline
+        type: BaselineCorrection
         properties:
           parameters:
             kind: polynomial
@@ -160,7 +160,7 @@ Operations on datasets are defined within the ``tasks:`` block of a recipe, like
 
     tasks:
       - kind: processing
-        type: SubtractBaseline
+        type: BaselineCorrection
         properties:
           parameters:
             kind: polynomial
