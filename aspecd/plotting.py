@@ -1837,7 +1837,7 @@ class SinglePlotProperties(PlotProperties):
         Properties of the axes.
 
         For the properties that can be set this way, see the documentation
-        of the :class:`aspecd.plotting.AxisProperties` class.
+        of the :class:`aspecd.plotting.AxesProperties` class.
 
     drawing : :class:`aspecd.plotting.DrawingProperties`
         Properties of the line within a plot
@@ -1936,7 +1936,7 @@ class MultiPlotProperties(PlotProperties):
         Properties of the axes.
 
         For the properties that can be set this way, see the documentation
-        of the :class:`aspecd.plotting.AxisProperties` class.
+        of the :class:`aspecd.plotting.AxesProperties` class.
 
     drawings : :class:`list`
         Properties of the lines within a plot.
@@ -2094,7 +2094,7 @@ class CompositePlotProperties(PlotProperties):
         Properties of the axes.
 
         For the properties that can be set this way, see the documentation
-        of the :class:`aspecd.plotting.AxisProperties` class.
+        of the :class:`aspecd.plotting.AxesProperties` class.
 
     Raises
     ------
