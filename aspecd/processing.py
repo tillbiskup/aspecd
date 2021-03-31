@@ -744,11 +744,16 @@ class BaselineCorrection(ProcessingStep):
 
             Default: 0
 
-        fit_area : :class:`float`
-            Percentage of the spectrum to consider as baseline on each side
-            of the spectrum, i.e. 10 means 10% left and 10% right.
+        fit_area :
+            Parts of the spectrum to be considered as baseline, can be given
+            as list or single number. If one number is given, it takes that
+            percentage from both sides, respectively, i.e. 10 means 10% left
+            and 10% right. If a list of two numbers is provided,
+            the corresponding percentages are taken from each side of the
+            spectrum, i.e. ``[5, 20]`` takes 5% from the left side and 20%
+            from the right.
 
-            Default: 10
+            Default: [10, 10]
 
         coefficients:
             Coefficients used to calculate the baseline.
@@ -762,7 +767,7 @@ class BaselineCorrection(ProcessingStep):
         self.parameters['kind'] = 'polynomial'
         self.parameters['order'] = 0
         self.parameters['coefficients'] = []
-        self.parameters['fit_area'] = 10
+        self.parameters['fit_area'] = [10, 10]
         self._xdata = []
         self._ydata = []
 
@@ -787,6 +792,15 @@ class BaselineCorrection(ProcessingStep):
         """
         return len(dataset.data.axes) < 3
 
+    def _sanitise_parameters(self):
+        if isinstance(self.parameters['fit_area'], (float, int)):
+            fit_area = self.parameters['fit_area']
+            self.parameters['fit_area'] = [fit_area, fit_area]
+        if isinstance(self.parameters['fit_area'], list) \
+                and len(self.parameters['fit_area']) == 1:
+            fit_area = self.parameters['fit_area'][0]
+            self.parameters['fit_area'] = [fit_area, fit_area]
+
     def _perform_task(self):
         self._get_fit_range()
         values_to_subtract = self._get_values_to_subtract()
@@ -794,15 +808,17 @@ class BaselineCorrection(ProcessingStep):
 
     def _get_fit_range(self):
         number_of_points = len(self.dataset.data.data)
-        data_points = \
-            math.ceil(number_of_points * self.parameters["fit_area"] / 100.0)
+        data_points_left = \
+            math.ceil(number_of_points * self.parameters["fit_area"][0] / 100.0)
+        data_points_right = \
+            math.ceil(number_of_points * self.parameters["fit_area"][1] / 100.0)
         self._xdata = np.concatenate(
-            (self.dataset.data.axes[0].values[:data_points],
-             self.dataset.data.axes[0].values[-data_points:])
+            (self.dataset.data.axes[0].values[:data_points_left],
+             self.dataset.data.axes[0].values[-data_points_right:])
         )
         self._ydata = np.concatenate(
-            (self.dataset.data.data[:data_points],
-             self.dataset.data.data[-data_points:])
+            (self.dataset.data.data[:data_points_left],
+             self.dataset.data.data[-data_points_right:])
         )
 
     # noinspection PyUnresolvedReferences,PyCallingNonCallable
