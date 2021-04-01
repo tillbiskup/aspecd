@@ -544,3 +544,101 @@ class TestBaselineCorrection(unittest.TestCase):
         self.processing.parameters['percentage'] = [20, ]
         self.dataset.process(self.processing)
         self.assertAlmostEqual(self.dataset.data.data[19], 0)
+
+
+class TestAveraging(unittest.TestCase):
+    def setUp(self):
+        self.processing = aspecd.processing.Averaging()
+        self.dataset = aspecd.dataset.Dataset()
+        # data = np.sin(np.linspace(0, 2*np.pi, num=500))
+        self.dataset.data.data = np.random.random([5, 500])
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('average', self.processing.description.lower())
+
+    def test_is_undoable(self):
+        self.assertTrue(self.processing.undoable)
+
+    def test_with_1D_dataset_raises(self):
+        dataset = aspecd.dataset.Dataset()
+        dataset.data.data = np.sin(np.linspace(0, 2*np.pi, num=500))
+        with self.assertRaises(
+                aspecd.exceptions.NotApplicableToDatasetError):
+            dataset.process(self.processing)
+
+    def test_without_range_raises(self):
+        with self.assertRaises(ValueError):
+            self.dataset.process(self.processing)
+
+    def test_with_start_range_outside_axis_range_raises(self):
+        self.processing.parameters["range"] = [-1, 3]
+        with self.assertRaises(ValueError):
+            self.dataset.process(self.processing)
+
+    def test_with_end_range_outside_axis_range_raises(self):
+        self.processing.parameters["range"] = \
+            [1, self.dataset.data.data.shape[0]+1]
+        with self.assertRaises(ValueError):
+            self.dataset.process(self.processing)
+
+    def test_average_reduces_data_dimensionality(self):
+        self.processing.parameters["range"] = [2, 3]
+        self.dataset.process(self.processing)
+        self.assertEqual(1, self.dataset.data.data.ndim)
+
+    def test_average_averages_correctly(self):
+        self.processing.parameters["range"] = [2, 3]
+        data = np.average(self.dataset.data.data[2:3, :], axis=0)
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(data, self.dataset.data.data)
+
+    def test_average_removes_axis(self):
+        self.processing.parameters["range"] = [2, 3]
+        self.dataset.process(self.processing)
+        self.assertEqual(2, len(self.dataset.data.axes))
+
+    def test_average_removes_correct_axis(self):
+        self.processing.parameters["range"] = [2, 3]
+        self.dataset.data.axes[1].quantity = 'foo'
+        self.dataset.data.axes[2].quantity = 'intensity'
+        self.dataset.process(self.processing)
+        self.assertNotEqual('foo', self.dataset.data.axes[1])
+        self.assertNotEqual('intensity', self.dataset.data.axes[-1])
+
+    def test_average_averages_along_first_axis_by_default(self):
+        length = self.dataset.data.data.shape[1]
+        self.processing.parameters["range"] = [2, 3]
+        self.dataset.process(self.processing)
+        self.assertEqual(length, self.dataset.data.data.shape[0])
+
+    def test_average_along_second_axis(self):
+        length = self.dataset.data.data.shape[0]
+        self.processing.parameters["range"] = [2, 3]
+        self.processing.parameters['axis'] = 1
+        self.dataset.process(self.processing)
+        self.assertEqual(length, self.dataset.data.data.shape[0])
+
+    def test_average_along_second_axis_averages_correctly(self):
+        length = self.dataset.data.data.shape[0]
+        self.processing.parameters["range"] = [20, 30]
+        self.processing.parameters['axis'] = 1
+        data = np.average(self.dataset.data.data[:, 20:30], axis=1)
+        self.dataset.process(self.processing)
+        self.assertEqual(length, self.dataset.data.data.shape[0])
+        np.testing.assert_allclose(data, self.dataset.data.data)
+
+    def test_along_second_axis_with_end_range_outside_axis_range_raises(self):
+        self.processing.parameters['axis'] = 1
+        self.processing.parameters["range"] = \
+            [1, self.dataset.data.data.shape[1]+1]
+        with self.assertRaises(ValueError):
+            self.dataset.process(self.processing)
+
+    def test_average_along_non_existing_axis_raises(self):
+        with self.assertRaisesRegex(IndexError, "Axis [0-9]+ out of bounds"):
+            self.processing.parameters["range"] = [2, 3]
+            self.processing.parameters['axis'] = 2
+            self.dataset.process(self.processing)

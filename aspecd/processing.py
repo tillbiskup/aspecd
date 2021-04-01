@@ -76,6 +76,10 @@ documentation of each of the classes, readily accessible by the link.
 
   Correct baseline of dataset.
 
+* :class:`aspecd.processing.Averaging`
+
+  Average data over given range along given axis.
+
 
 Writing own processing steps
 ============================
@@ -713,6 +717,7 @@ class SliceExtraction(ProcessingStep):
 
 
 class BaselineCorrection(ProcessingStep):
+    # noinspection PyUnresolvedReferences
     """
     Subtract baseline from dataset.
 
@@ -758,7 +763,7 @@ class BaselineCorrection(ProcessingStep):
         coefficients:
             Coefficients used to calculate the baseline.
 
-    """
+        """
 
     def __init__(self):
         super().__init__()
@@ -828,3 +833,103 @@ class BaselineCorrection(ProcessingStep):
                                                   self.parameters['order'])
         self.parameters['coefficients'] = polynomial.coef
         return polynomial(self.dataset.data.axes[0].values)
+
+
+class Averaging(ProcessingStep):
+    # noinspection PyUnresolvedReferences
+    """
+    Average data over given range along given axis.
+
+    .. important::
+        Currently, baseline correction works *only* for **2D** datasets,
+        not for higher-dimensional datasets. This may, however, change in
+        the future.
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        axis : :class:`int`
+            The axis to average along.
+
+            Default: 0
+
+        range : :class:`list`
+            The range (start, end) to average over.
+
+            Default: []
+
+    Raises
+    ------
+    ValueError
+        Raised if range is out of range for given axis or empty
+
+    IndexError
+        Raised if axis is out of bounds for given dataset
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.undoable = True
+        self.description = \
+            'Average data over given range along given axis.'
+        self.parameters["range"] = []
+        self.parameters['axis'] = 0
+
+    @staticmethod
+    def applicable(dataset):
+        """
+        Check whether processing step is applicable to the given dataset.
+
+        Averaging is only applicable to datasets with data of at least two
+        dimensions.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset to check
+
+        Returns
+        -------
+        applicable : :class:`bool`
+            `True` if successful, `False` otherwise.
+
+        Raises
+        ------
+        ValueError
+            Raised if range is out of range for given axis or empty
+
+        IndexError
+            Raised if axis is out of bounds for given dataset
+
+        """
+        return len(dataset.data.axes) > 2
+
+    def _perform_task(self):
+        if not self.parameters["range"]:
+            raise ValueError("No range given in parameters to average over.")
+        if self.parameters['axis'] > self.dataset.data.data.ndim - 1:
+            raise IndexError("Axis %i out of bounds" % self.parameters['axis'])
+        if self._out_of_range():
+            raise ValueError("Given range out of axis range.")
+        range_ = self.parameters["range"]
+        if self.parameters["axis"] == 0:
+            self.dataset.data.data = \
+                np.average(self.dataset.data.data[range_[0]:range_[1], :],
+                           axis=self.parameters["axis"])
+        else:
+            self.dataset.data.data = \
+                np.average(self.dataset.data.data[:, range_[0]:range_[1]],
+                           axis=self.parameters["axis"])
+        del self.dataset.data.axes[self.parameters['axis'] + 1]
+
+    def _out_of_range(self):
+        out_of_range = False
+        if self.parameters["range"][0] < 0:
+            out_of_range = True
+        elif self.parameters["range"][1] > \
+                self.dataset.data.data.shape[self.parameters["axis"]]:
+            out_of_range = True
+        return out_of_range
