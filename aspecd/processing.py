@@ -630,7 +630,7 @@ class Projection(ProcessingStep):
             raise IndexError("Axis %i out of bounds" % self.parameters['axis'])
         self.dataset.data.data = np.average(self.dataset.data.data,
                                             axis=self.parameters['axis'])
-        del self.dataset.data.axes[self.parameters['axis'] + 1]
+        del self.dataset.data.axes[self.parameters['axis']]
 
 
 class SliceExtraction(ProcessingStep):
@@ -896,14 +896,6 @@ class Averaging(ProcessingStep):
         applicable : :class:`bool`
             `True` if successful, `False` otherwise.
 
-        Raises
-        ------
-        ValueError
-            Raised if range is out of range for given axis or empty
-
-        IndexError
-            Raised if axis is out of bounds for given dataset
-
         """
         return len(dataset.data.axes) > 2
 
@@ -925,7 +917,7 @@ class Averaging(ProcessingStep):
             self.dataset.data.data = \
                 np.average(self.dataset.data.data[:, range_[0]:range_[1]],
                            axis=self.parameters["axis"])
-        del self.dataset.data.axes[self.parameters['axis'] + 1]
+        del self.dataset.data.axes[self.parameters['axis']]
 
     def _out_of_range(self):
         out_of_range = False

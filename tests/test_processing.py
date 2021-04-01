@@ -366,11 +366,21 @@ class TestProjection(unittest.TestCase):
         self.assertEqual(2, len(self.dataset.data.axes))
 
     def test_project_removes_correct_axis(self):
-        self.dataset.data.axes[1].quantity = 'foo'
+        self.dataset.data.axes[0].quantity = 'foo'
+        self.dataset.data.axes[1].quantity = 'bar'
         self.dataset.data.axes[2].quantity = 'intensity'
         self.dataset.process(self.processing)
-        self.assertNotEqual('foo', self.dataset.data.axes[1])
-        self.assertNotEqual('intensity', self.dataset.data.axes[-1])
+        self.assertEqual('bar', self.dataset.data.axes[0].quantity)
+        self.assertEqual('intensity', self.dataset.data.axes[-1].quantity)
+
+    def test_project_removes_correct_axis_projecting_along_second_axis(self):
+        self.dataset.data.axes[0].quantity = 'foo'
+        self.dataset.data.axes[1].quantity = 'bar'
+        self.dataset.data.axes[2].quantity = 'intensity'
+        self.processing.parameters['axis'] = 1
+        self.dataset.process(self.processing)
+        self.assertEqual('foo', self.dataset.data.axes[0].quantity)
+        self.assertEqual('intensity', self.dataset.data.axes[-1].quantity)
 
     def test_project_averages_along_first_axis_by_default(self):
         self.dataset.process(self.processing)
@@ -602,11 +612,12 @@ class TestAveraging(unittest.TestCase):
 
     def test_average_removes_correct_axis(self):
         self.processing.parameters["range"] = [2, 3]
-        self.dataset.data.axes[1].quantity = 'foo'
+        self.dataset.data.axes[0].quantity = 'foo'
+        self.dataset.data.axes[1].quantity = 'bar'
         self.dataset.data.axes[2].quantity = 'intensity'
         self.dataset.process(self.processing)
-        self.assertNotEqual('foo', self.dataset.data.axes[1])
-        self.assertNotEqual('intensity', self.dataset.data.axes[-1])
+        self.assertEqual('bar', self.dataset.data.axes[0].quantity)
+        self.assertEqual('intensity', self.dataset.data.axes[-1].quantity)
 
     def test_average_averages_along_first_axis_by_default(self):
         length = self.dataset.data.data.shape[1]
