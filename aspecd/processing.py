@@ -875,7 +875,7 @@ class Averaging(ProcessingStep):
         self.undoable = True
         self.description = \
             'Average data over given range along given axis.'
-        self.parameters["range"] = []
+        self.parameters["range"] = None
         self.parameters['axis'] = 0
 
     @staticmethod
@@ -907,13 +907,15 @@ class Averaging(ProcessingStep):
         """
         return len(dataset.data.axes) > 2
 
-    def _perform_task(self):
+    def _sanitise_parameters(self):
         if not self.parameters["range"]:
             raise ValueError("No range given in parameters to average over.")
         if self.parameters['axis'] > self.dataset.data.data.ndim - 1:
             raise IndexError("Axis %i out of bounds" % self.parameters['axis'])
         if self._out_of_range():
             raise ValueError("Given range out of axis range.")
+
+    def _perform_task(self):
         range_ = self.parameters["range"]
         if self.parameters["axis"] == 0:
             self.dataset.data.data = \
