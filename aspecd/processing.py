@@ -845,6 +845,9 @@ class Averaging(ProcessingStep):
         not for higher-dimensional datasets. This may, however, change in
         the future.
 
+    .. todo::
+        Implement averaging with range given in axis values rather than indices.
+
     Attributes
     ----------
     parameters : :class:`dict`
