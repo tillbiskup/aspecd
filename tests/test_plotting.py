@@ -290,6 +290,16 @@ class TestSinglePlotter1D(unittest.TestCase):
         plotter = dataset_.plot(self.plotter)
         self.assertEqual([0., 0.], plotter.ax.get_lines()[1].get_ydata())
 
+    def test_plot_with_show_legend_sets_legend_label(self):
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.random.random([10])-0.5
+        dataset_.data.axes[0].values = np.linspace(4, 5, 10)
+        dataset_.label = 'foo'
+        self.plotter.parameters['show_legend'] = True
+        plotter = dataset_.plot(self.plotter)
+        self.assertEqual(dataset_.label,
+                         plotter.legend.get_texts()[0].get_text())
+
 
 class TestSinglePlotter2D(unittest.TestCase):
     def setUp(self):
@@ -1493,14 +1503,16 @@ class TestMultiPlotProperties(unittest.TestCase):
 
     def test_apply_sets_legend_properties(self):
         self.plot_properties.legend.loc = 'center'
-        plot = plotting.MultiPlotter()
-        plot.datasets = [dataset.Dataset()]
-        plot.plot()
-        plot.legend = plot.axes.legend()
-        self.plot_properties.apply(plotter=plot)
+        plotter = plotting.MultiPlotter()
+        dataset_ = dataset.Dataset()
+        dataset_.label = 'foo'
+        plotter.datasets = [dataset_]
+        plotter.plot()
+        plotter.legend = plotter.axes.legend()
+        self.plot_properties.apply(plotter=plotter)
         self.assertEqual(self.plot_properties.legend.loc,
-                         plot.legend.loc)
-        plt.close(plot.figure)
+                         plotter.legend.loc)
+        plt.close(plotter.figure)
 
     def test_from_dict_sets_drawings(self):
         dict_ = {'drawings': [{'label': 'foo'}]}

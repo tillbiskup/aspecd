@@ -712,8 +712,11 @@ class SinglePlotter1D(SinglePlotter):
 
     def _create_plot(self):
         plot_function = getattr(self.axes, self.type)
+        if not self.properties.drawing.label:
+            self.properties.drawing.label = self.dataset.label
         self.drawing, = plot_function(self.dataset.data.axes[0].values,
-                                      self.dataset.data.data)
+                                      self.dataset.data.data,
+                                      label=self.properties.drawing.label)
 
     @staticmethod
     def applicable(dataset):
