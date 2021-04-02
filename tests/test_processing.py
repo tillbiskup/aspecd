@@ -510,13 +510,6 @@ class TestBaselineCorrection(unittest.TestCase):
         processing_step = self.dataset.process(self.processing)
         self.assertTrue(processing_step.parameters['coefficients'])
 
-    def test_with_2D_dataset_raises(self):
-        dataset = aspecd.dataset.Dataset()
-        dataset.data.data = np.random.random([5, 5])
-        with self.assertRaises(
-                aspecd.exceptions.NotApplicableToDatasetError):
-            dataset.process(self.processing)
-
     def test_baseline_correction_without_area(self):
         self.dataset.data.data = np.ones(100) + 10
         self.dataset.data.axes[0].values = np.linspace(1, 100, num=100)
@@ -554,6 +547,19 @@ class TestBaselineCorrection(unittest.TestCase):
         self.processing.parameters['percentage'] = [20, ]
         self.dataset.process(self.processing)
         self.assertAlmostEqual(self.dataset.data.data[19], 0)
+
+    def test_with_2D_dataset(self):
+        dataset = aspecd.dataset.Dataset()
+        dataset.data.data = np.ones([5, 100])
+        dataset.process(self.processing)
+        self.assertAlmostEqual(0, dataset.data.data.mean())
+
+    def test_with_2D_dataset_along_second_axis(self):
+        dataset = aspecd.dataset.Dataset()
+        dataset.data.data = np.ones([5, 100])
+        self.processing.parameters["axis"] = 1
+        dataset.process(self.processing)
+        self.assertAlmostEqual(0, dataset.data.data.mean())
 
 
 class TestAveraging(unittest.TestCase):

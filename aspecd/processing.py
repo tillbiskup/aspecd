@@ -730,9 +730,8 @@ class BaselineCorrection(ProcessingStep):
     will be used.
 
     .. important::
-        Currently, baseline correction works *only* for **1D** datasets,
-        not for higher-dimensional datasets. This may, however, change in
-        the future.
+        Baseline correction works *only* for **1D and 2D** datasets,
+        not for higher-dimensional datasets.
 
     Attributes
     ----------
@@ -763,6 +762,13 @@ class BaselineCorrection(ProcessingStep):
         coefficients:
             Coefficients used to calculate the baseline.
 
+        axis : :class:`int`
+            Axis along which to perform the baseline correction.
+
+            Only necessary in case of 2D data.
+
+            Default: 0
+
         """
 
     def __init__(self):
@@ -773,8 +779,11 @@ class BaselineCorrection(ProcessingStep):
         self.parameters['order'] = 0
         self.parameters['coefficients'] = []
         self.parameters['fit_area'] = [10, 10]
-        self._xdata = []
-        self._ydata = []
+        self.parameters['axis'] = 0
+        self._data_points_left = None
+        self._data_points_right = None
+        self._axis_values = []
+        self._intensity_values = []
 
     @staticmethod
     def applicable(dataset):
@@ -795,7 +804,7 @@ class BaselineCorrection(ProcessingStep):
             `True` if successful, `False` otherwise.
 
         """
-        return len(dataset.data.axes) < 3
+        return len(dataset.data.axes) < 4
 
     def _sanitise_parameters(self):
         if isinstance(self.parameters['fit_area'], (float, int)):
@@ -808,31 +817,55 @@ class BaselineCorrection(ProcessingStep):
 
     def _perform_task(self):
         self._get_fit_range()
-        values_to_subtract = self._get_values_to_subtract()
-        self.dataset.data.data -= values_to_subtract
+        self._get_axis_values()
+        if self._is_n_dimensional():
+            axis = 1 if self.parameters["axis"] == 0 else 0
+            if self.parameters["axis"] == 0:
+                for idx in range(self.dataset.data.data.shape[axis]):
+                    self._get_intensity_values(self.dataset.data.data[:, idx])
+                    values_to_subtract = self._get_values_to_subtract()
+                    self.dataset.data.data[:, idx] -= values_to_subtract
+            else:
+                for idx in range(self.dataset.data.data.shape[axis]):
+                    self._get_intensity_values(self.dataset.data.data[idx, :])
+                    values_to_subtract = self._get_values_to_subtract()
+                    self.dataset.data.data[idx, :] -= values_to_subtract
+        else:
+            self._get_intensity_values(self.dataset.data.data)
+            values_to_subtract = self._get_values_to_subtract()
+            self.dataset.data.data -= values_to_subtract
 
     def _get_fit_range(self):
         number_of_points = len(self.dataset.data.data)
-        data_points_left = \
+        self._data_points_left = \
             math.ceil(number_of_points * self.parameters["fit_area"][0] / 100.0)
-        data_points_right = \
+        self._data_points_right = \
             math.ceil(number_of_points * self.parameters["fit_area"][1] / 100.0)
-        self._xdata = np.concatenate(
-            (self.dataset.data.axes[0].values[:data_points_left],
-             self.dataset.data.axes[0].values[-data_points_right:])
+
+    def _get_axis_values(self):
+        axis = self.parameters["axis"]
+        self._axis_values = np.concatenate(
+            (self.dataset.data.axes[axis].values[:self._data_points_left],
+             self.dataset.data.axes[axis].values[-self._data_points_right:])
         )
-        self._ydata = np.concatenate(
-            (self.dataset.data.data[:data_points_left],
-             self.dataset.data.data[-data_points_right:])
+
+    def _get_intensity_values(self, data):
+        self._intensity_values = np.concatenate(
+            (data[:self._data_points_left],
+             data[-self._data_points_right:])
         )
 
     # noinspection PyUnresolvedReferences,PyCallingNonCallable
     def _get_values_to_subtract(self):
-        polynomial = np.polynomial.Polynomial.fit(self._xdata,
-                                                  self._ydata,
+        polynomial = np.polynomial.Polynomial.fit(self._axis_values,
+                                                  self._intensity_values,
                                                   self.parameters['order'])
         self.parameters['coefficients'] = polynomial.coef
-        return polynomial(self.dataset.data.axes[0].values)
+        axis = self.parameters["axis"]
+        return polynomial(self.dataset.data.axes[axis].values)
+
+    def _is_n_dimensional(self):
+        return len(self.dataset.data.axes) > 2
 
 
 class Averaging(ProcessingStep):
@@ -900,7 +933,7 @@ class Averaging(ProcessingStep):
             `True` if successful, `False` otherwise.
 
         """
-        return len(dataset.data.axes) > 2
+        return len(dataset.data.axes) == 3
 
     def _sanitise_parameters(self):
         if not self.parameters["range"]:
