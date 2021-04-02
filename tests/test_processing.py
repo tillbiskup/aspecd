@@ -659,3 +659,26 @@ class TestAveraging(unittest.TestCase):
             self.processing.parameters["range"] = [2, 3]
             self.processing.parameters['axis'] = 2
             self.dataset.process(self.processing)
+
+    def test_average_with_wrong_unit_raises(self):
+        self.processing.parameters["unit"] = "foo"
+        self.processing.parameters["range"] = [2, 3]
+        with self.assertRaises(ValueError):
+            self.dataset.process(self.processing)
+
+    def test_average_with_axis_units(self):
+        self.processing.parameters["unit"] = "axis"
+        self.dataset.data.axes[0].values = \
+            np.linspace(30, 70, len(self.dataset.data.axes[0].values))
+        self.processing.parameters["range"] = [30, 40]
+        data = np.average(self.dataset.data.data[0:2, :], axis=0)
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(data, self.dataset.data.data)
+
+    def test_average_with_axis_units_out_of_range_raises(self):
+        self.processing.parameters["unit"] = "axis"
+        self.dataset.data.axes[0].values = \
+            np.linspace(30, 70, len(self.dataset.data.axes[0].values))
+        self.processing.parameters["range"] = [300, 400]
+        with self.assertRaises(ValueError):
+            self.dataset.process(self.processing)

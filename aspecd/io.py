@@ -1119,7 +1119,7 @@ class TxtExporter(DatasetExporter):
             data = np.asarray([self.dataset.data.axes[0].values,
                                self.dataset.data.data]).T
         else:
-            data = np.zeros(np.asarray(self.dataset.data.data.shape)+1)
+            data = np.zeros(np.asarray(self.dataset.data.data.shape) + 1)
             data[1:, 0] = self.dataset.data.axes[0].values
             data[0, 1:] = self.dataset.data.axes[1].values
             data[1:, 1:] = self.dataset.data.data

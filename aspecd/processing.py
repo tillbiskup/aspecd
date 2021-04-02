@@ -769,7 +769,7 @@ class BaselineCorrection(ProcessingStep):
 
             Default: 0
 
-        """
+    """
 
     def __init__(self):
         super().__init__()
@@ -878,9 +878,6 @@ class Averaging(ProcessingStep):
         not for higher-dimensional datasets. This may, however, change in
         the future.
 
-    .. todo::
-        Implement averaging with range given in axis values rather than indices.
-
     Attributes
     ----------
     parameters : :class:`dict`
@@ -896,10 +893,17 @@ class Averaging(ProcessingStep):
 
             Default: []
 
+        unit : :class:`str`
+            Unit used for specifying the range: either "axis" or "index".
+
+            Default: "index"
+
     Raises
     ------
     ValueError
         Raised if range is out of range for given axis or empty
+
+        Raised if unit is not either "axis" or "index"
 
     IndexError
         Raised if axis is out of bounds for given dataset
@@ -913,6 +917,7 @@ class Averaging(ProcessingStep):
             'Average data over given range along given axis.'
         self.parameters["range"] = None
         self.parameters['axis'] = 0
+        self.parameters['unit'] = "index"
 
     @staticmethod
     def applicable(dataset):
@@ -940,11 +945,13 @@ class Averaging(ProcessingStep):
             raise ValueError("No range given in parameters to average over.")
         if self.parameters['axis'] > self.dataset.data.data.ndim - 1:
             raise IndexError("Axis %i out of bounds" % self.parameters['axis'])
+        if self.parameters["unit"] not in ["index", "axis"]:
+            raise ValueError("Wrong unit, needs to be either index or axis.")
         if self._out_of_range():
             raise ValueError("Given range out of axis range.")
 
     def _perform_task(self):
-        range_ = self.parameters["range"]
+        range_ = self._get_range()
         if self.parameters["axis"] == 0:
             self.dataset.data.data = \
                 np.average(self.dataset.data.data[range_[0]:range_[1], :],
@@ -957,9 +964,39 @@ class Averaging(ProcessingStep):
 
     def _out_of_range(self):
         out_of_range = False
-        if self.parameters["range"][0] < 0:
-            out_of_range = True
-        elif self.parameters["range"][1] > \
-                self.dataset.data.data.shape[self.parameters["axis"]]:
-            out_of_range = True
+        if self.parameters["unit"] == "index":
+            if self.parameters["range"][0] < 0:
+                out_of_range = True
+            elif self.parameters["range"][1] > \
+                    self.dataset.data.data.shape[self.parameters["axis"]]:
+                out_of_range = True
+        else:
+            axis = self.parameters["axis"]
+            if self.parameters["range"][0] < \
+                    min(self.dataset.data.axes[axis].values) \
+                    or self.parameters["range"][0] > \
+                    max(self.dataset.data.axes[axis].values):
+                out_of_range = True
+            if self.parameters["range"][1] < \
+                    min(self.dataset.data.axes[axis].values) \
+                    or self.parameters["range"][1] > \
+                    max(self.dataset.data.axes[axis].values):
+                out_of_range = True
         return out_of_range
+
+    def _get_range(self):
+        if self.parameters["unit"] == "index":
+            range_ = self.parameters["range"]
+        else:
+            axis = self.parameters["axis"]
+            range_ = [
+                self._get_index(self.dataset.data.axes[axis].values,
+                                self.parameters["range"][0]),
+                self._get_index(self.dataset.data.axes[axis].values,
+                                self.parameters["range"][1]) + 1
+            ]
+        return range_
+
+    @staticmethod
+    def _get_index(vector, value):
+        return np.abs(vector - value).argmin()
