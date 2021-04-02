@@ -607,7 +607,7 @@ class TestAveraging(unittest.TestCase):
 
     def test_average_averages_correctly(self):
         self.processing.parameters["range"] = [2, 3]
-        data = np.average(self.dataset.data.data[2:3, :], axis=0)
+        data = np.average(self.dataset.data.data[2:3+1, :], axis=0)
         self.dataset.process(self.processing)
         np.testing.assert_allclose(data, self.dataset.data.data)
 
@@ -642,7 +642,7 @@ class TestAveraging(unittest.TestCase):
         length = self.dataset.data.data.shape[0]
         self.processing.parameters["range"] = [20, 30]
         self.processing.parameters['axis'] = 1
-        data = np.average(self.dataset.data.data[:, 20:30], axis=1)
+        data = np.average(self.dataset.data.data[:, 20:30+1], axis=1)
         self.dataset.process(self.processing)
         self.assertEqual(length, self.dataset.data.data.shape[0])
         np.testing.assert_allclose(data, self.dataset.data.data)
@@ -668,6 +668,15 @@ class TestAveraging(unittest.TestCase):
 
     def test_average_with_axis_units(self):
         self.processing.parameters["unit"] = "axis"
+        self.dataset.data.axes[0].values = \
+            np.linspace(30, 70, len(self.dataset.data.axes[0].values))
+        self.processing.parameters["range"] = [30, 40]
+        data = np.average(self.dataset.data.data[0:2, :], axis=0)
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(data, self.dataset.data.data)
+
+    def test_unit_is_case_insensitive(self):
+        self.processing.parameters["unit"] = "aXis"
         self.dataset.data.axes[0].values = \
             np.linspace(30, 70, len(self.dataset.data.axes[0].values))
         self.processing.parameters["range"] = [30, 40]

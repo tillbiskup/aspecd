@@ -430,6 +430,37 @@ class Normalisation(ProcessingStep):
 
         Defaults to "maximum"
 
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    In the simplest case, just invoke the normalisation with default values:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: Normalisation
+
+    This will normalise your data to their maximum.
+
+    Sometimes, normalising to maximum is not what you need, hence you can
+    control in more detail the criterion using the appropriate parameter:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: Normalisation
+         properties:
+           parameters:
+             kind: amplitude
+
+    In this case, you would normalise to the amplitude, meaning setting the
+    difference between minimum and maximum to one. For other kinds, see above.
+
     """
 
     def __init__(self):
@@ -463,6 +494,22 @@ class Integration(ProcessingStep):
         N-D arrays can be integrated as well. In this case,
         :func:`np.cumsum` will operate on the last axis.
 
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    As currently, there are no parameters you can set, integrating is as
+    simple as this:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: Integration
+
     """
 
     def __init__(self):
@@ -493,6 +540,22 @@ class Differentiation(ProcessingStep):
     .. note::
         N-D arrays can be integrated as well. In this case,
         :func:`np.diff` will operate on the last axis.
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    As currently, there are no parameters you can set, differentiating is as
+    simple as this:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: Differentiation
 
     """
 
@@ -537,6 +600,29 @@ class ScalarAlgebra(ProcessingStep):
     ------
     ValueError
         Raised if no or wrong kind is provided
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    In case you would like to add a fixed value of 42 to your dataset:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: ScalarAlgebra
+         properties:
+           parameters:
+             kind: add
+             value: 42
+
+    Similarly, you could use "minus", "times", "by", "add", "subtract",
+    "multiply", or "divide" as kind - resulting in the given algebraic
+    operation.
 
     """
 
@@ -594,6 +680,38 @@ class Projection(ProcessingStep):
 
     IndexError
         Raised if axis is out of bounds for given dataset
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    In the simplest case, just invoke the projection with default values:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: Projection
+
+    This will project the data along the first axis (index 0), yielding a 1D
+    dataset.
+
+    If you would like to project along the second axis (index 1), simply set
+    the appropriate parameter:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: Projection
+         properties:
+           parameters:
+             axis: 1
+
+    This will project the data along the second axis (index 1), yielding a 1D
+    dataset.
 
     """
 
@@ -668,6 +786,41 @@ class SliceExtraction(ProcessingStep):
         Raised if index is out of bounds for given axis
 
         Raised if axis is out of bounds for given dataset
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    In the simplest case, just invoke the slice extraction with an index only:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: SliceExtraction
+         properties:
+           parameters:
+             index: 5
+
+    This will extract the sixth slice (index five) along the first axis (index
+    zero).
+
+    If you would like to extract a slice along the second axis (with index
+    one), simply provide both parameters, index and axis:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: SliceExtraction
+         properties:
+           parameters:
+             index: 5
+             axis: 1
+
+    This will extract the sixth slice along the second axis.
 
     """
 
@@ -769,6 +922,67 @@ class BaselineCorrection(ProcessingStep):
 
             Default: 0
 
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    In the simplest case, just invoke the baseline correction with default
+    values:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: BaselineCorrection
+
+    In this case, a zeroth-order polynomial baseline will be subtracted from
+    your dataset using ten percent to the left and right, and in case of a
+    2D dataset, the baseline correction will be performed along the first
+    axis (index zero) for all indices of the second axis (index 1).
+
+    Of course, often you want to control a little bit more how the baseline
+    will be corrected. This can be done by explicitly setting some parameters.
+
+    Suppose you want to perform a baseline correction with a polynomial of
+    first order:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: BaselineCorrection
+         properties:
+           parameters:
+             order: 1
+
+    If you want to change the (percental) area used for fitting the
+    baseline, and even specify different ranges left and right:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: BaselineCorrection
+         properties:
+           parameters:
+             fit_area: [5, 20]
+
+    Here, five percent from the left and 20 percent from the right are used.
+
+    Finally, suppose you have a 2D dataset and want to average along the
+    second axis (index one):
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: BaselineCorrection
+         properties:
+           parameters:
+             axis: 1
+
+    Of course, you can combine the different options.
+
     """
 
     def __init__(self):
@@ -791,7 +1005,7 @@ class BaselineCorrection(ProcessingStep):
         Check whether processing step is applicable to the given dataset.
 
         Baseline correction is (currently) only applicable to datasets with
-        one-dimensional data.
+        one- and two-dimensional data.
 
         Parameters
         ----------
@@ -873,10 +1087,17 @@ class Averaging(ProcessingStep):
     """
     Average data over given range along given axis.
 
-    .. important::
+    .. note::
         Currently, baseline correction works *only* for **2D** datasets,
         not for higher-dimensional datasets. This may, however, change in
         the future.
+
+    .. important::
+        Indices for the range work slightly different than in Python: While
+        still zero-based, a range of [2, 3] will result in having the third
+        and fourth column/row averaged. This seems more intuitive to the
+        average scientist than sticking with Python (and having in this case
+        the third column/row returned).
 
     Attributes
     ----------
@@ -908,6 +1129,56 @@ class Averaging(ProcessingStep):
     IndexError
         Raised if axis is out of bounds for given dataset
 
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    In the simplest case, just invoke the averaging with a range only:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: Averaging
+         properties:
+           parameters:
+             range: [2, 3]
+
+    In this case, you will get your dataset averaged along the first axis
+    (index zero), and averaged over the indices 2 and 3 of the second axis.
+
+    If you would like to average over the second axis (index 1),
+    just specify this axis:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: Averaging
+         properties:
+           parameters:
+             range: [2, 3]
+             axis: 1
+
+    And as it is sometimes more convenient to give ranges in axis values
+    rather than indices, even this is possible. Suppose the axis you would
+    like to average over runs from 340 to 350 and you would like to average
+    from 342 to 344:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: Averaging
+         properties:
+           parameters:
+             range: [342, 344]
+             unit: axis
+
+    In case of you providing the range in axis units rather than indices,
+    the value closest to the actual axis value will be chosen automatically.
+
     """
 
     def __init__(self):
@@ -924,8 +1195,7 @@ class Averaging(ProcessingStep):
         """
         Check whether processing step is applicable to the given dataset.
 
-        Averaging is only applicable to datasets with data of at least two
-        dimensions.
+        Averaging is only applicable to datasets with two-dimensional data.
 
         Parameters
         ----------
@@ -945,6 +1215,7 @@ class Averaging(ProcessingStep):
             raise ValueError("No range given in parameters to average over.")
         if self.parameters['axis'] > self.dataset.data.data.ndim - 1:
             raise IndexError("Axis %i out of bounds" % self.parameters['axis'])
+        self.parameters["unit"] = self.parameters["unit"].lower()
         if self.parameters["unit"] not in ["index", "axis"]:
             raise ValueError("Wrong unit, needs to be either index or axis.")
         if self._out_of_range():
@@ -987,6 +1258,7 @@ class Averaging(ProcessingStep):
     def _get_range(self):
         if self.parameters["unit"] == "index":
             range_ = self.parameters["range"]
+            range_[1] += 1
         else:
             axis = self.parameters["axis"]
             range_ = [
