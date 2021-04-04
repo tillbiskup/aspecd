@@ -744,6 +744,48 @@ class TestMultiPlotter1D(unittest.TestCase):
                          self.plotter.legend.get_texts()[0].get_text())
 
 
+class TestMultiPlotter1DStacked(unittest.TestCase):
+    def setUp(self):
+        self.plotter = plotting.MultiPlotter1DStacked()
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.sin(np.linspace(0, 2*np.pi))
+        self.plotter.datasets.append(dataset_)
+        self.plotter.datasets.append(dataset_)
+        self.plotter.datasets.append(dataset_)
+
+    def tearDown(self):
+        if self.plotter.fig:
+            plt.close(self.plotter.fig)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_description_is_sensible(self):
+        self.assertNotIn('Abstract', self.plotter.description)
+
+    def test_plot_stacks_plots(self):
+        self.plotter.plot()
+        self.assertLess(min(self.plotter.axes.get_lines()[2].get_ydata()),
+                        min(self.plotter.axes.get_lines()[0].get_ydata())*2)
+
+    def test_plot_removes_yticks(self):
+        self.plotter.plot()
+        self.assertEqual(0, len(self.plotter.axes.get_yticklabels()))
+
+    def test_plot_has_zero_lines_turned_off_by_default(self):
+        self.plotter.plot()
+        self.assertFalse(self.plotter.parameters["show_zero_lines"])
+
+    def test_parameters_have_offset_key(self):
+        self.assertIn('offset', self.plotter.parameters)
+
+    def test_plot_stacks_plots_with_given_offset(self):
+        self.plotter.parameters["offset"] = 10
+        self.plotter.plot()
+        self.assertLess(min(self.plotter.axes.get_lines()[2].get_ydata()),
+                        min(self.plotter.axes.get_lines()[0].get_ydata())*20)
+
+
 class TestCompositePlotter(unittest.TestCase):
     def setUp(self):
         self.plotter = plotting.CompositePlotter()

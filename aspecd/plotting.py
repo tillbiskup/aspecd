@@ -1420,6 +1420,77 @@ class MultiPlotter1D(MultiPlotter):
             self.drawings.append(drawing)
 
 
+class MultiPlotter1DStacked(MultiPlotter1D):
+    """
+    Stacked 1D plots of multiple datasets.
+
+    Convenience class taking care of 1D plots of multiple datasets. The type
+    of plot can be set in its :attr:`aspecd.plotting.MultiPlotter1D.type`
+    attribute. Allowed types are stored in the
+    :attr:`aspecd.plotting.MultiPlotter1D.allowed_types` attribute.
+
+    Quite a number of properties for figure, axes, and line can be set
+    using the :attr:`aspecd.plotting.MultiPlotter1D.properties` attribute.
+    For details, see the documentation of its respective class,
+    :class:`aspecd.plotting.MultiPlot1DProperties`.
+
+    To perform the plot, call the :meth:`plot` method of the plotter directly.
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        offset : :class:`float`
+            The offset used for stacking the individual lines of the plot.
+
+            If not provided, automatically a best fit will be calculated.
+
+            Default: None
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. Of course, all parameters settable
+    for the superclasses can be set as well. The examples focus each on a
+    single aspect.
+
+    In the simplest case, just invoke the plotter with default values:
+
+    .. code-block:: yaml
+
+       - kind: multiplot
+         type: MultiPlotter1DStacked
+         properties:
+           filename: output.pdf
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = '1D plotter for stacked display of multiple datasets'
+        self.parameters["show_zero_lines"] = False
+        self.parameters["offset"] = None
+
+    def _create_plot(self):
+        """Actual drawing of datasets"""
+        if not self.parameters['offset']:
+            offset = abs(self.datasets[0].data.data.min()) * 1.05
+        else:
+            offset = self.parameters["offset"]
+        plot_function = getattr(self.axes, self.type)
+        for idx, dataset in enumerate(self.datasets):
+            if not self.properties.drawings[idx].label:
+                self.properties.drawings[idx].label = dataset.label
+            drawing, = plot_function(dataset.data.axes[0].values,
+                                     dataset.data.data - idx * offset,
+                                     label=self.properties.drawings[idx].label)
+            self.drawings.append(drawing)
+        self.axes.tick_params(axis='y', which='both', left=False,
+                              right=False, labelleft=False, labelright=False)
+
+
 class CompositePlotter(Plotter):
     """Base class for plots consisting of multiple axes.
 
