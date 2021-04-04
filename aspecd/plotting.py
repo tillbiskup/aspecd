@@ -127,6 +127,10 @@ Concrete plotters for multiple datasets
   Basic line plots for multiple datasets, allowing to plot a series of
   line-type plots, including (semi)log plots
 
+* :class:`aspecd.plotting.MultiPlotter1DStacked`
+
+  Stacked line plots for multiple datasets, allowing to plot a series of
+  line-type plots, including (semi)log plots
 
 
 Plotting to existing axes
