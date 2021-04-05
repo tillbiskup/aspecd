@@ -1469,6 +1469,30 @@ class MultiPlotter1DStacked(MultiPlotter1D):
          properties:
            filename: output.pdf
 
+    To change the settings of each individual line (here the colour and label),
+    supposing you have three lines, you need to specify the properties in a
+    list for each of the drawings:
+
+    .. code-block:: yaml
+
+       - kind: multiplot
+         type: MultiPlotter1DStacked
+         properties:
+           filename: output.pdf
+           properties:
+             drawings:
+               - color: '#FF0000'
+                 label: foo
+               - color: '#00FF00'
+                 label: bar
+               - color: '#0000FF'
+                 label: foobar
+
+    .. important::
+        If you set colours using the hexadecimal RGB triple prefixed by
+        ``#``, you need to explicitly tell YAML that these are strings,
+        surrounding the values by quotation marks.
+
     """
 
     def __init__(self):
@@ -1498,10 +1522,28 @@ class MultiPlotter1DStacked(MultiPlotter1D):
 class CompositePlotter(Plotter):
     """Base class for plots consisting of multiple axes.
 
-    .. todo::
-        This class needs appropriate documentation. Currently, developers
-        aiming at writing derived classes need to look into the actual
-        source code...
+    The underlying idea of composite plotters is to use a dedicated
+    existing plotter for each axis and assign this plotter to the list of
+    plotters of the CompositePlotter object. Thus the actual plotting task
+    is left to the individual plotter and the CompositePlotter only takes
+    care of the specifics of plots consisting of more than one axis.
+
+    In the framework of the CompositePlotter you can define the grid within
+    which the axes are arranged. First, you define the grid dimension as a
+    two-element vector, and second you define the subplot locations as list
+    of four-element vectors. For details, see the documentation of the
+    attributes :attr:`grid_dimensions` and :attr:`subplot_locations` below.
+
+    For each of the subplots, define a plotter and add the object to the
+    list of plotters, the attribute :attr:`plotter`. Make sure to equip each
+    of these plotters with the necessary information. To actually plot,
+    use the :meth:`plot` method of the CompositePlotter object.
+
+    If you would like to display a single dataset in several ways within one
+    and the same figure window, have a look at the
+    :class:`SingleCompositePlotter` class. This class pretty much behaves
+    like an ordinary SinglePlotter, where you can (and should) use the
+    :meth:`aspecd.dataset.Dataset.plot` method to plot.
 
     .. note::
         When writing classes based on this class, do *not* override the
@@ -1589,8 +1631,18 @@ class CompositePlotter(Plotter):
 class SingleCompositePlotter(CompositePlotter):
     """Composite plotter for single datasets
 
-    Used for different representations of one and the same dataset in
-    multiple axes contained in one figure.
+    This composite plotter is used for different representations of one and the
+    same dataset in multiple axes contained in one figure. In this respect,
+    it works like all the other ordinary single plotters derived from
+    :class:`SinglePlotter`, *i.e.* it usually gets called by using the dataset's
+    :meth:`aspecd.dataset.Dataset.plot` method.
+
+    As with the generic :class:`CompositePlotter`, specify both the axes
+    grid and locations as well as the plotters to use for each individual
+    plot. Calling :meth:`plot` by means of
+    :meth:`aspecd.dataset.Dataset.plot` will assign the dataset to each of
+    the individual plotters and make them plot the data contained in the
+    dataset.
 
     Attributes
     ----------
@@ -2322,8 +2374,12 @@ class AxesProperties(aspecd.utils.Properties):
     aspect: {'auto', 'equal'} or num
         aspect of the axis scaling, i.e. the ratio of y-unit to x-unit
 
+        Default: 'auto'
+
     facecolor: color
-        facecolor of the Axes
+        facecolor of the axes
+
+        Default: None
 
     title: :class:`str`
         title for the axis
@@ -2331,39 +2387,61 @@ class AxesProperties(aspecd.utils.Properties):
         Note that this is a per-axis title, unlike the figure title set for
         the whole figure.
 
+        Default: ''
+
     xlabel: :class:`str`
         label for the x-axis
 
+        Default: ''
+
     xlim: :class:`list`
         x-axis view limits, two floats
+
+        Default: []
 
     xscale: :class:`str`
         x-axis scale
 
         possible values: "linear", "log", "symlog", "logit"
 
+        Default: 'linear'
+
     xticks:
         y ticks with list of ticks
+
+        Default: None
 
     xticklabels: :class:`list`
         x-tick labels: list of string labels
 
+        Default: None
+
     ylabel: :class:`str`
         label for the y-axis
 
+        Default: ''
+
     ylim: :class:`list`
         y-axis view limits, two floats
+
+        Default: []
 
     yscale: :class:`str`
         y-axis scale
 
         possible values: "linear", "log", "symlog", "logit"
 
+        Default: 'linear'
+
     yticks:
         y ticks with list of ticks
 
+        Default: None
+
     yticklabels: :class:`list`
         y-tick labels: list of string labels
+
+        Default: None
 
     Raises
     ------

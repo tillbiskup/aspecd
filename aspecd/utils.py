@@ -77,8 +77,8 @@ class ToDictMixin:
     To do so, there are two non_public attributes of this class each class
     inheriting from it will be able to set as well:
 
-    * ``_exclude_from_to_dict``
-    * ``_include_in_to_dict``
+    * :attr:`_exclude_from_to_dict`
+    * :attr:`_include_in_to_dict`
 
     The names should be rather telling. For details, see below.
 
