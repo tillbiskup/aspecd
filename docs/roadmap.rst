@@ -10,8 +10,6 @@ For version 0.1
 
 * Plotter: CompositePlotter - documentation and better handling of properties
 
-* Plotter: stackplot for MultiPlot
-
 * Report task: Add figure captions to context if available
 
 * Documentation: Use cases
@@ -28,15 +26,15 @@ For later versions
 
 * Reporter: Method for adding dict representations of datasets to context
 
-* Reporter task: Operating on recipes, *i.e.* report on all tasks in a recipe
+* Report task: Operating on recipes, *i.e.* report on all tasks in a recipe
 
-* Reporter task: Adding arbitrary dict representations of properties of datasets/results to context
-
-* Templates for creating derived packages
+* Report task: Adding arbitrary dict representations of properties of datasets/results to context
 
 * Default report templates for each type of processing/analysis task
 
   Includes deciding where to store these templates, whether to have them stored in different directories for different languages, and alike. Ideally, templates should be copied to a user-accessible directory for modifying there.
+
+* Templates for creating derived packages
 
 * Logging
 

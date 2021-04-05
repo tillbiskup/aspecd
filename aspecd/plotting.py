@@ -1498,7 +1498,7 @@ class MultiPlotter1DStacked(MultiPlotter1D):
 class CompositePlotter(Plotter):
     """Base class for plots consisting of multiple axes.
 
-    .. todo:
+    .. todo::
         This class needs appropriate documentation. Currently, developers
         aiming at writing derived classes need to look into the actual
         source code...
@@ -1543,6 +1543,9 @@ class CompositePlotter(Plotter):
         the list of axes, the corresponding plotter will be accessed and its
         :meth:`aspecd.plotting.Plotter.plot` method called.
 
+    properties : :class:`aspecd.plotting.CompositePlotProperties`
+        Properties of the plot, defining its appearance
+
     Raises
     ------
     aspecd.exceptions.MissingPlotterError
@@ -1585,6 +1588,9 @@ class CompositePlotter(Plotter):
 
 class SingleCompositePlotter(CompositePlotter):
     """Composite plotter for single datasets
+
+    Used for different representations of one and the same dataset in
+    multiple axes contained in one figure.
 
     Attributes
     ----------
@@ -2168,8 +2174,10 @@ class CompositePlotProperties(PlotProperties):
 
     Attributes
     ----------
-    axes : :class:`aspecd.plotting.AxesProperties`
+    axes : :class:`list`
         Properties of the axes.
+
+        List of objects of class :class:`aspecd.plotting.AxesProperties`.
 
         For the properties that can be set this way, see the documentation
         of the :class:`aspecd.plotting.AxesProperties` class.
