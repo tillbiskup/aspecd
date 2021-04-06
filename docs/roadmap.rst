@@ -36,6 +36,8 @@ For later versions
 
   Includes deciding where to store these templates, whether to have them stored in different directories for different languages, and alike. Ideally, templates should be copied to a user-accessible directory for modifying there.
 
+* Importer with parameters in recipe (*e.g.*, for CSV importer)
+
 * Templates for creating derived packages
 
 * Logging

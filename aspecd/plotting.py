@@ -464,14 +464,18 @@ class Plotter:
             if isinstance(self.axes, list):
                 for axes in self.axes:
                     if axes.get_ylim()[0] <= 0 <= axes.get_ylim()[1]:
-                        axes.axhline(**self.properties.zero_lines.to_dict())
+                        axes.axhline(**self.properties.zero_lines.to_dict(),
+                                     zorder=1)
                     if axes.get_xlim()[0] <= 0 <= axes.get_xlim()[1]:
-                        axes.axvline(**self.properties.zero_lines.to_dict())
+                        axes.axvline(**self.properties.zero_lines.to_dict(),
+                                     zorder=1)
             else:
                 if self.axes.get_ylim()[0] <= 0 <= self.axes.get_ylim()[1]:
-                    self.axes.axhline(**self.properties.zero_lines.to_dict())
+                    self.axes.axhline(**self.properties.zero_lines.to_dict(),
+                                     zorder=1)
                 if self.axes.get_xlim()[0] <= 0 <= self.axes.get_xlim()[1]:
-                    self.axes.axvline(**self.properties.zero_lines.to_dict())
+                    self.axes.axvline(**self.properties.zero_lines.to_dict(),
+                                     zorder=1)
 
 
 class SinglePlotter(Plotter):
