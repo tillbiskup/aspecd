@@ -44,6 +44,12 @@ For later versions
 
 * Tabular representations of characteristics extracted from datasets
 
+* SinglePlotter2DStacked
+
+    * Format labels to have only 2-4 decimals.
+
+    * show zero lines for every line.
+
 
 Todos
 =====
