@@ -1219,6 +1219,7 @@ class MultiPlotter(Plotter):
         self._set_drawing_properties()
         super().plot()
         self._set_axes_labels()
+        self.properties.apply(plotter=self)
 
     def _check_for_applicability(self):
         if not self.datasets:

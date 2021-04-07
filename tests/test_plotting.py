@@ -672,6 +672,21 @@ class TestMultiPlotter(unittest.TestCase):
         self.plotter.plot()
         self.assertIs(type(self.plotter.legend), matplotlib.legend.Legend)
 
+    def test_axes_properties_set_axes_labels(self):
+        self.plotter.properties.axes.xlabel = 'foo'
+        self.plotter.properties.axes.ylabel = 'bar'
+        test_dataset = dataset.Dataset()
+        test_dataset.data.axes[0].quantity = 'foo'
+        test_dataset.data.axes[0].unit = 'bar'
+        test_dataset.data.axes[1].quantity = 'foo'
+        test_dataset.data.axes[1].unit = 'bar'
+        self.plotter.datasets.append(test_dataset)
+        self.plotter.plot()
+        self.assertEqual(self.plotter.properties.axes.xlabel,
+                         self.plotter.axes.get_xlabel())
+        self.assertEqual(self.plotter.properties.axes.ylabel,
+                         self.plotter.axes.get_ylabel())
+
 
 class TestMultiPlotter1D(unittest.TestCase):
     def setUp(self):
