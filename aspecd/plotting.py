@@ -472,10 +472,10 @@ class Plotter:
             else:
                 if self.axes.get_ylim()[0] <= 0 <= self.axes.get_ylim()[1]:
                     self.axes.axhline(**self.properties.zero_lines.to_dict(),
-                                     zorder=1)
+                                      zorder=1)
                 if self.axes.get_xlim()[0] <= 0 <= self.axes.get_xlim()[1]:
                     self.axes.axvline(**self.properties.zero_lines.to_dict(),
-                                     zorder=1)
+                                      zorder=1)
 
 
 class SinglePlotter(Plotter):
@@ -1106,7 +1106,7 @@ class SinglePlotter2DStacked(SinglePlotter):
                                         + idx * self.parameters['offset'])
                 self.drawing.append(handle[0])
                 yticks.append(idx * self.parameters['offset'])
-            yticklabels = self.dataset.data.axes[0].values.astype(str)
+            yticklabels = self.dataset.data.axes[0].values.astype(float)
         else:
             for idx in range(self.dataset.data.data.shape[1]):
                 handle = self.axes.plot(self.dataset.data.axes[0].values,
@@ -1114,7 +1114,7 @@ class SinglePlotter2DStacked(SinglePlotter):
                                         + idx * self.parameters['offset'])
                 self.drawing.append(handle[0])
                 yticks.append(idx * self.parameters['offset'])
-            yticklabels = self.dataset.data.axes[1].values.astype(str)
+            yticklabels = self.dataset.data.axes[1].values.astype(float)
         self.properties.axes.yticks = yticks
         self.properties.axes.yticklabels = yticklabels
 
@@ -1430,6 +1430,7 @@ class MultiPlotter1D(MultiPlotter):
 
 
 class MultiPlotter1DStacked(MultiPlotter1D):
+    # noinspection PyUnresolvedReferences
     """
     Stacked 1D plots of multiple datasets.
 

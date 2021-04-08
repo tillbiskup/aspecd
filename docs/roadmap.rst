@@ -46,9 +46,9 @@ For later versions
 
 * SinglePlotter2DStacked
 
-    * Format labels to have only 2-4 decimals.
+    * Format labels to have only 2-4 decimals (customisable).
 
-    * show zero lines for every line.
+    * Show zero lines for every line.
 
 
 Todos
