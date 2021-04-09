@@ -590,6 +590,17 @@ class TestSinglePlotter2DStacked(unittest.TestCase):
         self.assertEqual(test_dataset.data.axes[0].values[0].astype(str),
                          plotter.axes.get_yticklabels()[0].get_text())
 
+    def test_plot_with_ytick_format_sets_correct_yticklabels(self):
+        test_dataset = aspecd.dataset.CalculatedDataset()
+        test_dataset.data.data = np.random.random([5, 10]) - 0.5
+        test_dataset.data.axes[1].quantity = 'one'
+        test_dataset.data.axes[1].unit = 'bar'
+        test_dataset.data.axes[1].values = np.linspace(50, 100, 10)
+        self.plotter.parameters["yticklabelformat"] = '%.2f'
+        plotter = test_dataset.plot(self.plotter)
+        self.assertEqual('%.2f' % test_dataset.data.axes[1].values[2],
+                         plotter.axes.get_yticklabels()[2].get_text())
+
 
 class TestMultiPlotter(unittest.TestCase):
     def setUp(self):

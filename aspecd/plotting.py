@@ -1057,6 +1057,19 @@ class SinglePlotter2DStacked(SinglePlotter):
 
             Default: 0
 
+        yticklabelformat : :class:`string`
+            format for tick labels on the y axis
+
+            Useful in case of too many decimals displayed on the y axis.
+            Uses (currently) the "old-style" formatting syntax familiar from
+            the C programming language, *e.g.* "%.2f" would format your
+            labels with two decimals (including rounding).
+
+            If "None", no explicit formatting will be performed and the
+            defaults of Matplotlib applied.
+
+            Default: None
+
     properties : :class:`aspecd.plotting.SinglePlot1DProperties`
         Properties of the plot, defining its appearance
 
@@ -1075,6 +1088,7 @@ class SinglePlotter2DStacked(SinglePlotter):
             'show_zero_lines': False,
             'stacking_dimension': 1,
             'offset': 0,
+            'yticklabelformat': None,
         }
         self.drawing = []
         self.properties = SinglePlot1DProperties()
@@ -1116,7 +1130,13 @@ class SinglePlotter2DStacked(SinglePlotter):
                 yticks.append(idx * self.parameters['offset'])
             yticklabels = self.dataset.data.axes[1].values.astype(float)
         self.properties.axes.yticks = yticks
-        self.properties.axes.yticklabels = yticklabels
+        self.properties.axes.yticklabels = self._format_yticklabels(yticklabels)
+
+    def _format_yticklabels(self, yticklabels):
+        if self.parameters['yticklabelformat']:
+            formatting = self.parameters['yticklabelformat']
+            yticklabels = [formatting % label for label in yticklabels]
+        return yticklabels
 
     def _set_axes_labels(self):
         """Set axes labels from axes in dataset.
