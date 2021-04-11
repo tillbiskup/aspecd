@@ -48,8 +48,7 @@ For later versions
 
     * Show zero lines for every line.
 
-* Plotter: Factory to create single plots of each given dataset. Probably needs
-a way to create default filenames (e.g. label + date?).
+* Plotter: Factory to create single plots of each given dataset. Probably needs a way to create default filenames (e.g. label + date?).
 
 
 Todos
