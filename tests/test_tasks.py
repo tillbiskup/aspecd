@@ -486,6 +486,33 @@ class TestChef(unittest.TestCase):
         self.chef.cook(recipe=recipe)
         self.assertIn('default_package', self.chef.history)
 
+    def test_cook_adds_datasets_source_directory_to_history(self):
+        recipe = self.recipe
+        recipe_dict = {'datasets': [self.dataset],
+                       'tasks': [self.analysis_task],
+                       'datasets_source_directory': 'foo'}
+        recipe.from_dict(recipe_dict)
+        self.chef.cook(recipe=recipe)
+        self.assertIn('datasets_source_directory', self.chef.history)
+
+    def test_cook_with_datasets_source_directory_shortens_dataset_paths(self):
+        recipe = self.recipe
+        recipe_dict = {'datasets': ['bar'],
+                       'tasks': [self.analysis_task],
+                       'datasets_source_directory': '/foo'}
+        recipe.from_dict(recipe_dict)
+        self.chef.cook(recipe=recipe)
+        self.assertEqual('bar', self.chef.history["datasets"][0]["source"])
+
+    def test_cook_adds_output_directory_to_history(self):
+        recipe = self.recipe
+        recipe_dict = {'datasets': [self.dataset],
+                       'tasks': [self.analysis_task],
+                       'output_directory': 'foo'}
+        recipe.from_dict(recipe_dict)
+        self.chef.cook(recipe=recipe)
+        self.assertIn('output_directory', self.chef.history)
+
     def test_system_info_value_in_history_is_ordered_dict(self):
         recipe = self.recipe
         self.chef.cook(recipe)

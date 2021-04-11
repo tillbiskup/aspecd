@@ -1173,10 +1173,20 @@ class Chef:
         self.history["info"] = {'start': timestamp, 'end': ''}
         system_info = aspecd.system.SystemInfo(self.recipe.default_package)
         self.history["system_info"] = system_info.to_dict()
-        if self.recipe.default_package:
-            self.history["default_package"] = self.recipe.default_package
+        for key in ['default_package', 'datasets_source_directory',
+                    'output_directory']:
+            if getattr(self.recipe, key):
+                self.history[key] = getattr(self.recipe, key)
         recipe_dict = self.recipe.to_dict()
         self.history["datasets"] = recipe_dict['datasets']
+        if self.recipe.datasets_source_directory:
+            source_dir = self.recipe.datasets_source_directory + "/"
+            for dataset in self.history["datasets"]:
+                if isinstance(dataset, dict):
+                    dataset["source"] = \
+                        dataset["source"].replace(source_dir, '')
+                else:
+                    dataset.replace(source_dir, '')
         self.history["tasks"] = []
 
 
