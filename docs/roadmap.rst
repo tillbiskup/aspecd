@@ -46,9 +46,10 @@ For later versions
 
 * SinglePlotter2DStacked
 
-    * Format labels to have only 2-4 decimals (customisable).
-
     * Show zero lines for every line.
+
+* Plotter: Factory to create single plots of each given dataset. Probably needs
+a way to create default filenames (e.g. label + date?).
 
 
 Todos
