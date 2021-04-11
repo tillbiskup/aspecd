@@ -273,7 +273,7 @@ class Plotter:
 
     Raises
     ------
-    aspecd.plotting.MissingSaverError
+    aspecd.exceptions.MissingSaverError
         Raised when no saver is provided when trying to save
 
     """
@@ -409,7 +409,7 @@ class Plotter:
 
         Raises
         ------
-        aspecd.plotting.MissingSaverError
+        aspecd.exceptions.MissingSaverError
             Raised if no Saver is provided as parameter.
 
         """
@@ -522,10 +522,10 @@ class SinglePlotter(Plotter):
 
     Raises
     ------
-    aspecd.plotting.MissingDatasetError
+    aspecd.exceptions.MissingDatasetError
         Raised when no dataset exists to act on
 
-    aspecd.plotting.PlotNotApplicableToDatasetError
+    aspecd.exceptions.PlotNotApplicableToDatasetError
         Raised when processing step is not applicable to dataset
 
     """
@@ -573,9 +573,9 @@ class SinglePlotter(Plotter):
 
         Raises
         ------
-        aspecd.plotting.PlotNotApplicableToDatasetError
+        aspecd.exceptions.PlotNotApplicableToDatasetError
             Raised when plotting is not applicable to dataset
-        aspecd.plotting.MissingDatasetError
+        aspecd.exceptions.MissingDatasetError
             Raised when no dataset exists to act on
 
         """
@@ -669,6 +669,23 @@ class SinglePlotter1D(SinglePlotter):
     TypeError
         Raised when wrong plot type is set
 
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. Of course, all parameters settable
+    for the superclasses can be set as well. The examples focus each on a
+    single aspect.
+
+    In the simplest case, just invoke the plotter with default values:
+
+    .. code-block:: yaml
+
+       - kind: singleplot
+         type: SinglePlotter1D
+         properties:
+           filename: output.pdf
+
     """
 
     def __init__(self):
@@ -693,7 +710,7 @@ class SinglePlotter1D(SinglePlotter):
 
         Raises
         ------
-        aspecd.plotting.TypeError
+        TypeError
             Raised in case of wrong type
 
         """
@@ -899,7 +916,7 @@ class SinglePlotter2D(SinglePlotter):
 
         Raises
         ------
-        aspecd.plotting.TypeError
+        TypeError
             Raised in case of wrong type
 
         """
@@ -1250,9 +1267,9 @@ class MultiPlotter(Plotter):
 
     Raises
     ------
-    aspecd.plotting.MissingDatasetError
+    aspecd.exceptions.MissingDatasetError
         Raised when no dataset exists to act on
-    aspecd.plotting.PlotNotApplicableToDatasetError
+    aspecd.exceptions.PlotNotApplicableToDatasetError
         Raised when processing step is not applicable to dataset
 
     """
@@ -1288,10 +1305,10 @@ class MultiPlotter(Plotter):
 
         Raises
         ------
-        aspecd.plotting.PlotNotApplicableToDatasetError
+        aspecd.exceptions.PlotNotApplicableToDatasetError
             Raised when plotting is not applicable to at least one of the
             datasets listed in :attr:`datasets`
-        aspecd.plotting.MissingDatasetError
+        aspecd.exceptions.MissingDatasetError
             Raised when no datasets exist to act on
 
         """
@@ -1456,7 +1473,7 @@ class MultiPlotter1D(MultiPlotter):
 
         Raises
         ------
-        aspecd.plotting.TypeError
+        TypeError
             Raised in case of wrong type
 
         """
@@ -1761,10 +1778,10 @@ class SingleCompositePlotter(CompositePlotter):
 
     Raises
     ------
-    aspecd.plotting.MissingDatasetError
+    aspecd.exceptions.MissingDatasetError
         Raised when no dataset exists to act on
 
-    aspecd.plotting.PlotNotApplicableToDatasetError
+    aspecd.exceptions.PlotNotApplicableToDatasetError
         Raised when processing step is not applicable to dataset
 
     """
@@ -1805,9 +1822,9 @@ class SingleCompositePlotter(CompositePlotter):
 
         Raises
         ------
-        aspecd.plotting.PlotNotApplicableToDatasetError
+        aspecd.exceptions.PlotNotApplicableToDatasetError
             Raised when plotting is not applicable to dataset
-        aspecd.plotting.MissingDatasetError
+        aspecd.exceptions.MissingDatasetError
             Raised when no dataset exists to act on
 
         """
@@ -1879,9 +1896,9 @@ class Saver:
 
     Raises
     ------
-    aspecd.plotting.MissingFilenameError
+    aspecd.exceptions.MissingFilenameError
         Raised if no filename is provided for saver.
-    aspecd.plotting.MissingPlotError
+    aspecd.exceptions.MissingPlotError
         Raised if no plot is provided to act upon.
 
     """
@@ -1911,9 +1928,9 @@ class Saver:
 
         Raises
         ------
-        aspecd.plotting.MissingFilenameError
+        aspecd.exceptions.MissingFilenameError
             Raised if no filename is provided for saver.
-        aspecd.plotting.MissingPlotError
+        aspecd.exceptions.MissingPlotError
             Raised if no plot is provided to act upon.
 
         """
@@ -2035,7 +2052,7 @@ class PlotProperties(aspecd.utils.Properties):
 
     Raises
     ------
-    aspecd.plotting.MissingPlotterError
+    aspecd.exceptions.MissingPlotterError
         Raised if no plotter is provided.
 
     """
@@ -2064,7 +2081,7 @@ class PlotProperties(aspecd.utils.Properties):
 
         Raises
         ------
-        aspecd.plotting.MissingPlotterError
+        aspecd.exceptions.MissingPlotterError
             Raised if no plotter is provided.
 
         """
@@ -2093,7 +2110,7 @@ class SinglePlotProperties(PlotProperties):
 
     Raises
     ------
-    aspecd.plotting.MissingPlotterError
+    aspecd.exceptions.MissingPlotterError
         Raised if no plotter is provided.
 
     """
@@ -2114,7 +2131,7 @@ class SinglePlotProperties(PlotProperties):
 
         Raises
         ------
-        aspecd.plotting.MissingPlotterError
+        aspecd.exceptions.MissingPlotterError
             Raised if no plotter is provided.
 
         """
@@ -2138,7 +2155,7 @@ class SinglePlot1DProperties(SinglePlotProperties):
 
     Raises
     ------
-    aspecd.plotting.MissingPlotterError
+    aspecd.exceptions.MissingPlotterError
         Raised if no plotter is provided.
 
     """
@@ -2162,7 +2179,7 @@ class SinglePlot2DProperties(SinglePlotProperties):
 
     Raises
     ------
-    aspecd.plotting.MissingPlotterError
+    aspecd.exceptions.MissingPlotterError
         Raised if no plotter is provided.
 
     """
@@ -2228,7 +2245,7 @@ class MultiPlotProperties(PlotProperties):
 
         Raises
         ------
-        aspecd.plotting.MissingDictError
+        aspecd.exceptions.MissingDictError
             Raised if no dict is provided.
 
         """
@@ -2274,7 +2291,7 @@ class MultiPlotProperties(PlotProperties):
 
         Raises
         ------
-        aspecd.plotting.MissingPlotterError
+        aspecd.exceptions.MissingPlotterError
             Raised if no plotter is provided.
 
         """
@@ -2301,7 +2318,7 @@ class MultiPlot1DProperties(MultiPlotProperties):
 
     Raises
     ------
-    aspecd.plotting.MissingPlotterError
+    aspecd.exceptions.MissingPlotterError
         Raised if no plotter is provided.
 
     """
@@ -2346,7 +2363,7 @@ class CompositePlotProperties(PlotProperties):
 
     Raises
     ------
-    aspecd.plotting.MissingPlotterError
+    aspecd.exceptions.MissingPlotterError
         Raised if no plotter is provided.
 
     """
@@ -2372,7 +2389,7 @@ class CompositePlotProperties(PlotProperties):
 
         Raises
         ------
-        aspecd.plotting.MissingDictError
+        aspecd.exceptions.MissingDictError
             Raised if no dict is provided.
 
         """
@@ -2401,7 +2418,7 @@ class CompositePlotProperties(PlotProperties):
 
         Raises
         ------
-        aspecd.plotting.MissingPlotterError
+        aspecd.exceptions.MissingPlotterError
             Raised if no plotter is provided.
 
         """
@@ -2437,7 +2454,7 @@ class FigureProperties(aspecd.utils.Properties):
 
     Raises
     ------
-    aspecd.plotting.MissingFigureError
+    aspecd.exceptions.MissingFigureError
         Raised if no figure is provided.
 
     """
@@ -2459,7 +2476,7 @@ class FigureProperties(aspecd.utils.Properties):
 
         Raises
         ------
-        aspecd.plotting.MissingFigureError
+        aspecd.exceptions.MissingFigureError
             Raised if no figure is provided.
 
         """
@@ -2555,7 +2572,7 @@ class AxesProperties(aspecd.utils.Properties):
 
     Raises
     ------
-    aspecd.plotting.MissingAxisError
+    aspecd.exceptions.MissingAxisError
         Raised if no axis is provided.
 
     """
@@ -2591,7 +2608,7 @@ class AxesProperties(aspecd.utils.Properties):
 
         Raises
         ------
-        aspecd.plotting.MissingAxisError
+        aspecd.exceptions.MissingAxisError
             Raised if no axis is provided.
 
         """
@@ -2658,7 +2675,7 @@ class LegendProperties(aspecd.utils.Properties):
 
     Raises
     ------
-    aspecd.plotting.MissingLegendError
+    aspecd.exceptions.MissingLegendError
         Raised if no legend is provided.
 
     """
@@ -2690,7 +2707,7 @@ class LegendProperties(aspecd.utils.Properties):
 
         Raises
         ------
-        aspecd.plotting.MissingFigureError
+        aspecd.exceptions.MissingFigureError
             Raised if no figure is provided.
 
         """
@@ -2714,7 +2731,7 @@ class DrawingProperties(aspecd.utils.Properties):
 
     Raises
     ------
-    aspecd.plotting.MissingDrawingError
+    aspecd.exceptions.MissingDrawingError
         Raised if no drawing is provided.
 
     """
@@ -2737,7 +2754,7 @@ class DrawingProperties(aspecd.utils.Properties):
 
         Raises
         ------
-        aspecd.plotting.MissingDrawingError
+        aspecd.exceptions.MissingDrawingError
             Raised if no line is provided.
 
         """
@@ -2808,7 +2825,7 @@ class LineProperties(DrawingProperties):
 
     Raises
     ------
-    aspecd.plotting.MissingDrawingError
+    aspecd.exceptions.MissingDrawingError
         Raised if no line is provided.
 
     """
