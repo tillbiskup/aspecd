@@ -601,13 +601,6 @@ class TestSinglePlotter2DStacked(unittest.TestCase):
         self.assertEqual('%.2f' % test_dataset.data.axes[1].values[2],
                          plotter.axes.get_yticklabels()[2].get_text())
 
-    def test_plot_zero_lines_for_each_trace(self):
-        dataset_ = aspecd.dataset.CalculatedDataset()
-        dataset_.data.data = np.random.random([5, 10]) - 0.5
-        self.plotter.parameters['show_zero_lines'] = True
-        plotter = dataset_.plot(self.plotter)
-        self.assertGreaterEqual(20, len(plotter.axes.get_lines()))
-
 
 class TestMultiPlotter(unittest.TestCase):
     def setUp(self):
@@ -817,12 +810,6 @@ class TestMultiPlotter1DStacked(unittest.TestCase):
         self.plotter.plot()
         self.assertLess(min(self.plotter.axes.get_lines()[2].get_ydata()),
                         min(self.plotter.axes.get_lines()[0].get_ydata())*20)
-
-    def test_plot_zero_lines_for_each_trace(self):
-        self.plotter.parameters['show_zero_lines'] = True
-        self.plotter.plot()
-        self.assertEqual(2*len(self.plotter.datasets),
-                         len(self.plotter.axes.get_lines()))
 
 
 class TestCompositePlotter(unittest.TestCase):
