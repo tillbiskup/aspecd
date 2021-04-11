@@ -4,6 +4,12 @@
 Use cases
 =========
 
+.. sidebar:: Contents
+
+    .. contents::
+        :local:
+        :depth: 1
+
 Usually, you will either use an existing package based on the ASpecD framework (such as `cwEPR <https://docs.cwepr.de/>`_ or `trEPR <https://docs.trepr.de/>`_) or :doc:`write your own package based on the ASpecD framework <applications>` for your data analysis. However, this section will give you an impression how *working* with such a package, and particulary with *recipe-driven data analysis* may look like – and why it is fun and will help you tremendously speed up your data analysis, while allowing for full reproducibility.
 
 
@@ -167,14 +173,63 @@ Operations on datasets are defined within the ``tasks:`` block of a recipe, like
             order: 0
 
 
-Things to add:
+You can see already the general structure of how to define a task as well as a number of important aspects. Tasks are items in a list, hence the prepending ``-``. Furthermore, for each task, you need to provide both, kind and type. Usually, the "kind" is identical to the (ASpecD) module the respective class used to perform the task is located in, such as "processing". There are, however, special cases where you need to be more specific, as in cases of plots (more later). The "type" always refers to the class name of the object eventually used to perform the task.
 
-* example for an analysis step
-* description of how to set properties
+Another aspect shown already in the example above is how to set properties for the individual tasks using the "properties" keyword. Which properties you can set depends on the particular type of task and can be found in the API documentation. In the example given above, you set the "parameters" property of the :obj:`aspecd.processing.BaselineCorrection` object.
 
-  (and where to find documentation which properties can be set)
-* applying a task to only a subset of the datasets loaded
-* storing results in variables and accessing results afterwards
+
+Applying a task to only a subset of the datasets loaded
+-------------------------------------------------------
+
+One particular strength of recipe-driven data analysis is its simple approach to operating on and comparing multiple datasets. Simply provide a list of datasets at the beginning of a recipe and work on them afterwards.
+
+Often, however, you would like to restrict a certain task to a subset of the datasets loaded within the recipe. This is fairly easy as well, as every task as the ``apply_to`` keyword for exactly this purpose:
+
+.. code-block:: yaml
+
+    datasets:
+      - dataset
+      - another_dataset
+
+    tasks:
+      - kind: processing
+        type: BaselineCorrection
+        properties:
+          parameters:
+            kind: polynomial
+            order: 0
+        apply_to:
+          - dataset
+
+
+In this case, the task is only applied to the first dataset loaded. If you work with several datasets, it is most convenient to work with expressive labels that you can specify for each dataset individually (see above for details).
+
+
+Storing results in variables and accessing results
+--------------------------------------------------
+
+Some tasks return results, and you usually want to refer to these results later in your recipe. Analysis steps will always yield results, but sometimes you would like to work on a copy of a dataset upon processing rather than modifying the original dataset, as would be normal for processing steps. In any case, simply provide a label with the key ``result``.
+
+.. code-block:: yaml
+
+    tasks:
+      - kind: processing
+        type: BaselineCorrection
+        properties:
+          parameters:
+            kind: polynomial
+            order: 0
+        result: baseline_corrected_dataset
+
+
+You can refer to these results in the same way as you can refer to datasets, even using the labels in the ``apply_to`` field of a following task.
+
+
+.. todo::
+
+    Things to add:
+
+      * example for an analysis step
 
 
 Can we see something?
@@ -185,24 +240,124 @@ One of the strengths of recipe-driven data analysis is that it can run fully una
 * representations (*e.g.*, plots)
 * reports
 
+While graphical representations, *i.e.* plots, are fully covered by the ASpecD framework, reports usually need a bit more work and contribution from the user due to their underlying complexity. Here, we will focus mostly on plots.
+
+
+Graphical representation: a simple plot
+---------------------------------------
+
+The importance of graphical representations for data processing and analysis cannot be overestimated. Hence, a typical use case is to generate plots of a dataset following individual processing steps such as baseline correction. As recipes work in a non-interactive mode, saving these plots to files is a prerequisite. The most simple and straight-forward graphical representation would be defined in a recipe as follows:
 
 .. code-block:: yaml
+
+    tasks:
+      - kind: singleplot
+        type: SinglePlotter1D
+        properties:
+          filename:
+            - dataset.pdf
+
+This will create a simple plot of a single one-dimensional dataset using default settings and store the result to the file ``dataset.pdf``. Of course, you can apply the same plotting step to a series of datasets. As long as the list of datasets the plotter is employed for matches the number of filenames provided, everything should work smoothly:
+
+.. code-block:: yaml
+
+    datasets:
+      - dataset
+      - another_dataset
+
+    tasks:
+      - kind: singleplot
+        type: SinglePlotter1D
+        properties:
+          filename:
+            - first_dataset.pdf
+            - second_dataset.pdf
+
+
+Remember that you can use the key ``apply_to`` for any task to restict the list of datasets it is applied to, that you can set these labels for the datasets, and that you can refer to results labels as well.
+
+
+Setting properties for plots
+----------------------------
+
+Plots are, compared to processing and analysis steps, highly complex tasks, probably only beaten by reports. There are literally zillions of properties you can explicitly set for a plot (or implicitly assume), such as line colours, widths, and styles, axes labels, and much more.
+
+Some aspects eternalised in the `"Zen of Python" <https://www.python.org/dev/peps/pep-0020/>`_ can be applied to graphical representations in general and to defining them in context of a framework for data analysis in particular:
+
+  | Explicit is better than implicit.
+  | Simple is better than complex.
+  | Complex is better than complicated.
+
+Therefore, ASpecD allows you to set pretty many parameters of a plot explicitly, resulting in quite lengthly recipes if used excessively. This gives you fine-grained control over the look and feel of your plots and aims at a maximum of reproducibility. Both are quite important when it comes to preparing graphics for publications. On the other hand, it tries to provide sensible defaults that work "out of the box" for most of the standard cases.
+
+Setting properties is identical to what has been discussed for other types of tasks above. Simply provide the keys corresponding to the properties below the ``properties`` key, as shown for the ``filename`` above. Which properties can be set depends on the type of plotter used. Generally, they are grouped hierarchically, and each plotter will have the following keys: ``figure``, ``legend``, ``zero_lines``. The properties of each of them can be looked up in the respective API documentation for the classes: :class:`aspecd.plotting.FigureProperties`, :class:`aspecd.plotting.LegendProperties`, :class:`aspecd.plotting.LineProperties`.
+
+To give you a first impression of how a more detailed and explicit setting of plot properties may look like, see the following example:
+
+
+.. code-block:: yaml
+
+    tasks:
+      - kind: singleplot
+        type: SinglePlotter1D
+        properties:
+          figure:
+            size: 6, 4.5
+            dpi: 300
+            title: My first figure
+          axes:
+            facecolor: '#cccccc'
+          drawing:
+            color: tab:red
+            linewidth: 2
+          legend:
+            location: upper right
+            frameon: False
+          filename:
+            - dataset.pdf
+
+
+Of course, this is only a (small) subset of all the properties you can set for a plot. See the API documentation of the respective plotter classes for more details.
+
+
+Different kinds of plots
+------------------------
+
+"Batteries included" is one of the concepts of the Python programming language that helped its wide-spread adoption. While scientific plotting is intrinsically complex, there are not so many different types of plots, and the ASpecD framework tries to provide the user with at least the most common of them "out of the box". This allows users of one package derived from ASpecD to use the same plotting capabilities in any other package using ASpecD. Together with a user-friendly and intuitive interface, this greatly facilitates plotting with ASpecD.
+
+Generally, we can distinguish between plotters working with single and those operating on multiple datasets. Another distinction is one- and two-dimensional datasets. For more details, see the :mod:`aspecd.plotting` module documentation.
+
+
+Setting the default output directory
+------------------------------------
+
+Plots as well as reports usually result in files being written to the hard drive (or, more generally, to some storage device). For playing around, having the plots and reports written to the current directory may be sensible and straight-forward. In a productive context, however, you will usually have clear ideas where to store your generated representations and reports, and this will often be a dedicated (sub)directory.
+
+Of course, you can provide a full path to each output file for plots and reports. But similar to the datasets source directory (see above), you can provide a default output directory in the recipe:
+
+.. code-block:: yaml
+
+    output_directory: /absolute/path/for/the/output
+
+    datasets:
+      - dataset
 
     tasks:
       - kind: singleplot
         type: SinglePlotter
         properties:
           filename:
-            - first-dataset.pdf
-            - second-dataset.pdf
+            - dataset-representation.pdf
 
 
-Things to add:
+In the above example, an absolute path has been provided for the output, and of course you can provide relative paths for the filenames of the plot. Similar to the absolute path set using ``output_directory``, you can set relative paths that are interpreted relative to the path the recipe is cooked from.
 
-* Setting properties for plots
-* Different kinds of plots
-* Reports
-* Setting default output directory
+
+.. todo::
+
+    Things to add:
+
+    * Reports
 
 
 .. _specific_packages:

@@ -12,19 +12,25 @@ For version 0.1
 
 * Report task: Add figure captions to context if available
 
-* Documentation: Use cases
-
 * Documentation: YAML representation of dataset structure(s) (automatically generated together with the documentation and using the ``literalinclude`` directive)
 
 
-For later versions
-==================
+For version 0.2
+===============
 
 * Remaining basic processing and analysis steps, such as algebra with datasets, slice extraction for >2D datasets, peak finding, SNR determination, denoising, filtering, noise, cut dataset and axis (to common range)
 
 * Normalising over parts of a dataset
 
 * :meth:`aspecd.processing.ProcessingStep._set_defaults()` method called before :meth:`aspecd.processing.ProcessingStep._sanitise_parameters`
+
+* Importer with parameters in recipe (*e.g.*, for CSV importer)
+
+* Expand use cases
+
+
+For later versions
+==================
 
 * Reporter: Method for adding dict representations of datasets to context
 
@@ -35,8 +41,6 @@ For later versions
 * Default report templates for each type of processing/analysis task
 
   Includes deciding where to store these templates, whether to have them stored in different directories for different languages, and alike. Ideally, templates should be copied to a user-accessible directory for modifying there.
-
-* Importer with parameters in recipe (*e.g.*, for CSV importer)
 
 * Templates for creating derived packages
 
