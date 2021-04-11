@@ -1076,6 +1076,56 @@ class SinglePlotter2DStacked(SinglePlotter):
         For the properties that can be set this way, see the documentation
         of the :class:`aspecd.plotting.SinglePlot1DProperties` class.
 
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. Of course, all parameters settable
+    for the superclasses can be set as well. The examples focus each on a
+    single aspect.
+
+    In the simplest case, just invoke the plotter with default values:
+
+    .. code-block:: yaml
+
+       - kind: singleplot
+         type: SinglePlotter2DStacked
+         properties:
+           filename: output.pdf
+
+    If you need to more precisely control the formatting of the y tick
+    labels, particularly the number of decimals shown, you can set the
+    formatting accordingly:
+
+    .. code-block:: yaml
+
+       - kind: singleplot
+         type: SinglePlotter2DStacked
+         properties:
+           filename: output.pdf
+           parameters:
+             yticklabelformat: '%.2f'
+
+    In this particular case, the y tick labels will appear with only two
+    decimals. Note that currently, the "old style" formatting specifications
+    are used due to their widespread use in other programming languages and
+    hence the familiarity of many users with this particular notation.
+
+    Sometimes you want to have horizontal "zero lines" appear for each
+    individual trace of the stacked plot. This can be achieved explicitly
+    setting the "show_zero_lines" parameter to "True" that is set to "False"
+    by default:
+
+    .. code-block:: yaml
+
+       - kind: singleplot
+         type: SinglePlotter2DStacked
+         properties:
+           filename: output.pdf
+           parameters:
+             show_zero_lines: True
+
     """
 
     # noinspection PyTypeChecker
@@ -1162,6 +1212,16 @@ class SinglePlotter2DStacked(SinglePlotter):
             ylabel = self._create_axis_label_string(self.dataset.data.axes[1])
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel(ylabel)
+
+    def _add_zero_lines(self):
+        if self.parameters['show_zero_lines']:
+            dimension = self.parameters['stacking_dimension']
+            for idx in range(self.dataset.data.data.shape[dimension]):
+                offset = idx * self.parameters['offset']
+                self.axes.axhline(
+                    y=offset,
+                    **self.properties.zero_lines.to_dict(),
+                    zorder=1)
 
 
 class MultiPlotter(Plotter):
@@ -1519,6 +1579,20 @@ class MultiPlotter1DStacked(MultiPlotter1D):
         ``#``, you need to explicitly tell YAML that these are strings,
         surrounding the values by quotation marks.
 
+    Sometimes you want to have horizontal "zero lines" appear for each
+    individual trace of the stacked plot. This can be achieved explicitly
+    setting the "show_zero_lines" parameter to "True" that is set to "False"
+    by default:
+
+    .. code-block:: yaml
+
+       - kind: multiplot
+         type: MultiPlotter1DStacked
+         properties:
+           filename: output.pdf
+           parameters:
+             show_zero_lines: True
+
     """
 
     def __init__(self):
@@ -1531,6 +1605,7 @@ class MultiPlotter1DStacked(MultiPlotter1D):
         """Actual drawing of datasets"""
         if not self.parameters['offset']:
             offset = abs(self.datasets[0].data.data.min()) * 1.05
+            self.parameters["offset"] = offset
         else:
             offset = self.parameters["offset"]
         plot_function = getattr(self.axes, self.type)
@@ -1543,6 +1618,15 @@ class MultiPlotter1DStacked(MultiPlotter1D):
             self.drawings.append(drawing)
         self.axes.tick_params(axis='y', which='both', left=False,
                               right=False, labelleft=False, labelright=False)
+
+    def _add_zero_lines(self):
+        if self.parameters['show_zero_lines']:
+            for idx in range(len(self.datasets)):
+                offset = idx * self.parameters['offset']
+                self.axes.axhline(
+                    y=offset,
+                    **self.properties.zero_lines.to_dict(),
+                    zorder=1)
 
 
 class CompositePlotter(Plotter):

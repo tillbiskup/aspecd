@@ -44,10 +44,6 @@ For later versions
 
 * Tabular representations of characteristics extracted from datasets
 
-* SinglePlotter2DStacked
-
-    * Show zero lines for every line.
-
 * Plotter: Factory to create single plots of each given dataset. Probably needs a way to create default filenames (e.g. label + date?).
 
 
