@@ -41,7 +41,7 @@ For more general information on the ASpecD framework see its `Homepage <https://
 Features
 --------
 
-A list of features, not all implemented yet but aimed at for the first public release (ASpecD 0.1):
+A list of features:
 
 * Framework for writing applications handling spectroscopic data
 
@@ -78,6 +78,8 @@ Where to start
 
 Users new to ASpecD should probably start :doc:`at the beginning <audience>`, those familiar with its :doc:`underlying concepts <concepts>` may jump straight to the section explaining how to :doc:`write applications based on the ASpecD framework <applications>`.
 
+If you are interested in how working with the ASpecD framework looks like, particularly recipe-driven data analysis, have a look at the :doc:`use cases section <usecases>`.
+
 The :doc:`API documentation <api/index>` is the definite source of information for developers, besides having a look at the source code.
 
 
@@ -102,6 +104,7 @@ Finally, don't forget to check out the website on `reproducible research <https:
 .. toctree::
    :maxdepth: 2
    :caption: User Manual:
+   :hidden:
 
    audience
    introduction
@@ -113,20 +116,13 @@ Finally, don't forget to check out the website on `reproducible research <https:
 .. toctree::
    :maxdepth: 2
    :caption: Developers:
+   :hidden:
 
    people
    developers
    roadmap
    adf
    api/index
-
-
-Indices and tables
-------------------
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
 
 
 License
