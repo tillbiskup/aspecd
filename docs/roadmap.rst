@@ -10,6 +10,10 @@ For version 0.1
 
 * Plotter: CompositePlotter - better handling of properties
 
+* Plotter: CompositePlotter for MultiPlotter
+
+* Tasks: CompositePlotter
+
 * Report task: Add figure captions to context if available
 
 * Documentation: YAML representation of dataset structure(s) (automatically generated together with the documentation and using the ``literalinclude`` directive)
