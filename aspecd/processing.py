@@ -666,6 +666,12 @@ class Projection(ProcessingStep):
     increasing signal-to-noise ratio if multiple scans have been recorded as
     2D dataset.
 
+    While projection can be considered a special case of averaging as
+    performed by :class:`aspecd.processing.Averaging` and using the whole
+    range of one axis, averaging is usually performed over part of an axis
+    only. Hence projection is semantically different and therefore
+    implemented as a separate processing step.
+
     Attributes
     ----------
     parameters["axis"] : :class:`int`
@@ -1087,10 +1093,13 @@ class Averaging(ProcessingStep):
     """
     Average data over given range along given axis.
 
+    While projection as performed by :class:`aspecd.processing.Projection`
+    can be considered a special case of averaging using the whole range of
+    one axis, averaging is usually performed over part of an axis only.
+
     .. note::
-        Currently, baseline correction works *only* for **2D** datasets,
-        not for higher-dimensional datasets. This may, however, change in
-        the future.
+        Currently, averaging works *only* for **2D** datasets, not for
+        higher-dimensional datasets. This may, however, change in the future.
 
     .. important::
         Indices for the range work slightly different than in Python: While
