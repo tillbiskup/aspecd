@@ -412,7 +412,7 @@ class Normalisation(ProcessingStep):
 
     .. todo::
         Handle noisy data, at least for normalising to maximum, minimum,
-        and amplitude.
+        and amplitude, for >1D data (determine noise accordingly).
 
     .. todo::
         How to handle noisy data in case of area normalisation, as this would
@@ -420,16 +420,27 @@ class Normalisation(ProcessingStep):
 
     Attributes
     ----------
-    parameters["kind"] : :class:`str`
-        Kind of normalisation to use
+    parameters : :class:`dict`
+        All parameters necessary for this step.
 
-        Valid values: "maximum", "minimum", "amplitude", "area"
+        kind : :class:`str`
+            Kind of normalisation to use
 
-        Note that the first three can be abbreviated, everything containing
-        "max", "min", "amp" will be understood respectively.
+            Valid values: "maximum", "minimum", "amplitude", "area"
 
-        Defaults to "maximum"
+            Note that the first three can be abbreviated, everything containing
+            "max", "min", "amp" will be understood respectively.
 
+            Defaults to "maximum"
+
+        noise_range : :class:`int`
+            Data range to use for determining noise level
+
+            If provided, the normalisation will account for the noise.
+
+            Numbers are interpreted as percentage.
+
+            Default: None
 
     Examples
     --------
@@ -468,17 +479,32 @@ class Normalisation(ProcessingStep):
         self.undoable = True
         self.description = 'Normalise data'
         self.parameters["kind"] = 'maximum'
+        self.parameters["noise_range"] = None
+        self._noise_amplitude = 0
 
     def _perform_task(self):
+        self._determine_noise_amplitude()
         if "max" in self.parameters["kind"].lower():
-            self.dataset.data.data /= self.dataset.data.data.max()
-        elif "min" in self.parameters["kind"].lower():
-            self.dataset.data.data /= self.dataset.data.data.min()
-        elif "amp" in self.parameters["kind"].lower():
             self.dataset.data.data /= (self.dataset.data.data.max() -
-                                       self.dataset.data.data.min())
+                                       self._noise_amplitude / 2)
+        elif "min" in self.parameters["kind"].lower():
+            self.dataset.data.data /= (self.dataset.data.data.min() -
+                                       self._noise_amplitude / 2)
+        elif "amp" in self.parameters["kind"].lower():
+            self.dataset.data.data /= ((self.dataset.data.data.max() -
+                                       self.dataset.data.data.min()) -
+                                       self._noise_amplitude)
         elif "area" in self.parameters["kind"].lower():
             self.dataset.data.data /= np.sum(np.abs(self.dataset.data.data))
+
+    def _determine_noise_amplitude(self):
+        if self.parameters["noise_range"]:
+            number_of_points = len(self.dataset.data.data)
+            data_points = \
+                math.ceil(number_of_points
+                          * self.parameters["noise_range"] / 100.0)
+            data_range = self.dataset.data.data[0:data_points]
+            self._noise_amplitude = max(data_range) - min(data_range)
 
 
 class Integration(ProcessingStep):

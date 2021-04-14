@@ -158,6 +158,37 @@ class TestNormalisation(unittest.TestCase):
         # noinspection PyTypeChecker
         self.assertAlmostEqual(1, np.sum(np.abs(self.dataset.data.data)), 4)
 
+    def test_normalise_to_maximum_with_noisy_data(self):
+        self.dataset.data.data = \
+            np.concatenate((np.zeros(50), self.dataset.data.data, np.zeros(50)))
+        self.dataset.data.data \
+            += (np.random.random(len(self.dataset.data.data))-0.5) * 0.5
+        self.processing.parameters["kind"] = 'maximum'
+        self.processing.parameters["noise_range"] = 10
+        self.dataset.process(self.processing)
+        self.assertGreaterEqual(1.25, self.dataset.data.data.max(), 1)
+
+    def test_normalise_to_minimum_with_noisy_data(self):
+        self.dataset.data.data = \
+            np.concatenate((np.zeros(50), self.dataset.data.data, np.zeros(50)))
+        self.dataset.data.data \
+            += (np.random.random(len(self.dataset.data.data))-0.5) * 0.5
+        self.processing.parameters["kind"] = 'minimum'
+        self.processing.parameters["noise_range"] = 10
+        self.dataset.process(self.processing)
+        self.assertLessEqual(-1.25, self.dataset.data.data.min(), 1)
+
+    def test_normalise_to_amplitude_with_noisy_data(self):
+        self.dataset.data.data = \
+            np.concatenate((np.zeros(50), self.dataset.data.data, np.zeros(50)))
+        self.dataset.data.data \
+            += (np.random.random(len(self.dataset.data.data))-0.5) * 0.5
+        self.processing.parameters["kind"] = 'amplitude'
+        self.processing.parameters["noise_range"] = 10
+        self.dataset.process(self.processing)
+        self.assertGreaterEqual(1.25, self.dataset.data.data.max() -
+                                self.dataset.data.data.min())
+
 
 class TestIntegration(unittest.TestCase):
     def setUp(self):
