@@ -900,25 +900,6 @@ class TestCompositePlotter(unittest.TestCase):
         with self.assertRaises(aspecd.exceptions.MissingPlotterError):
             self.plotter.plot()
 
-    def test_plot_with_datasets_adds_axes_to_properties(self):
-        self.plotter.grid_dimensions = [1, 1]
-        self.plotter.subplot_locations = [[0, 0, 1, 1]]
-        single_plotter = plotting.SinglePlotter1D()
-        single_plotter.dataset = self.dataset
-        self.plotter.plotter.append(single_plotter)
-        self.plotter.plot()
-        self.assertEqual(1, len(self.plotter.properties.axes))
-
-    def test_added_axes_is_correct_type(self):
-        self.plotter.grid_dimensions = [1, 1]
-        self.plotter.subplot_locations = [[0, 0, 1, 1]]
-        single_plotter = plotting.SinglePlotter1D()
-        single_plotter.dataset = self.dataset
-        self.plotter.plotter.append(single_plotter)
-        self.plotter.plot()
-        self.assertIs(type(self.plotter.properties.axes[0]),
-                      aspecd.plotting.AxesProperties)
-
 
 class TestSingleCompositePlotter(unittest.TestCase):
     def setUp(self):
@@ -1691,42 +1672,8 @@ class TestCompositePlotProperties(unittest.TestCase):
         self.assertTrue(hasattr(self.plot_properties, 'from_dict'))
         self.assertTrue(callable(self.plot_properties.from_dict))
 
-    def test_added_axes_is_axes_properties_object(self):
-        self.plot_properties.add_axes()
-        self.assertIs(type(self.plot_properties.axes[0]),
-                      aspecd.plotting.AxesProperties)
-
-    def test_from_dict_sets_axes(self):
-        dict_ = {'axes': [{'xlabel': 'foo'}]}
-        self.plot_properties.from_dict(dict_)
-        self.assertEqual('foo', self.plot_properties.axes[0].xlabel)
-
-    def test_from_dict_sets_multiple_axes(self):
-        dict_ = {'axes': [{'xlabel': 'foo'}, {'xlabel': 'bar'}]}
-        self.plot_properties.from_dict(dict_)
-        self.assertEqual('foo', self.plot_properties.axes[0].xlabel)
-        self.assertEqual('bar', self.plot_properties.axes[1].xlabel)
-
-    def test_from_dict_does_not_add_axes_if_it_exists(self):
-        self.plot_properties.axes.append(
-            aspecd.plotting.DrawingProperties())
-        dict_ = {'axes': [{'xlabel': 'foo'}]}
-        self.plot_properties.from_dict(dict_)
-        self.assertEqual(1, len(self.plot_properties.axes))
-
-    def test_from_dict_adds_missing_axes(self):
-        dict_ = {'axes': [{'xlabel': 'foo'}]}
-        self.plot_properties.from_dict(dict_)
-        self.assertEqual(1, len(self.plot_properties.axes))
-
-    def test_from_dict_adds_multiple_missing_axes(self):
-        dict_ = {'axes': [{'xlabel': 'foo'}, {'xlabel': 'bar'}]}
-        self.plot_properties.from_dict(dict_)
-        self.assertEqual(2, len(self.plot_properties.axes))
-
     def test_apply_sets_axis_properties(self):
-        self.plot_properties.add_axes()
-        self.plot_properties.axes[0].xlabel = 'foo'
+        self.plot_properties.axes.xlabel = 'foo'
         plot = plotting.CompositePlotter()
         plot.grid_dimensions = [1, 1]
         plot.subplot_locations = [[0, 0, 1, 1]]
@@ -1737,6 +1684,42 @@ class TestCompositePlotProperties(unittest.TestCase):
         plot.plotter.append(single_plotter)
         plot.plot()
         self.plot_properties.apply(plotter=plot)
-        self.assertEqual(self.plot_properties.axes[0].xlabel,
+        self.assertEqual(self.plot_properties.axes.xlabel,
+                         plot.axes[0].get_xlabel())
+        plt.close(plot.figure)
+
+    def test_apply_sets_axis_properties_for_multiple_plots(self):
+        self.plot_properties.axes.xlabel = 'foo'
+        plot = plotting.CompositePlotter()
+        plot.grid_dimensions = [2, 1]
+        plot.subplot_locations = [[0, 0, 1, 1], [1, 0, 1, 1]]
+        single_plotter = plotting.SinglePlotter1D()
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.sin(np.linspace(0, 2*np.pi, 101))
+        single_plotter.dataset = dataset_
+        plot.plotter.append(single_plotter)
+        plot.plotter.append(single_plotter)
+        plot.plot()
+        self.plot_properties.apply(plotter=plot)
+        self.assertEqual(self.plot_properties.axes.xlabel,
+                         plot.axes[0].get_xlabel())
+        self.assertEqual(self.plot_properties.axes.xlabel,
+                         plot.axes[1].get_xlabel())
+        plt.close(plot.figure)
+
+    def test_apply_overrides_axis_properties(self):
+        self.plot_properties.axes.xlabel = 'foo'
+        plot = plotting.CompositePlotter()
+        plot.grid_dimensions = [1, 1]
+        plot.subplot_locations = [[0, 0, 1, 1]]
+        single_plotter = plotting.SinglePlotter1D()
+        single_plotter.properties.axes.xlabel = 'bar'
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.sin(np.linspace(0, 2*np.pi, 101))
+        single_plotter.dataset = dataset_
+        plot.plotter.append(single_plotter)
+        plot.plot()
+        self.plot_properties.apply(plotter=plot)
+        self.assertEqual(self.plot_properties.axes.xlabel,
                          plot.axes[0].get_xlabel())
         plt.close(plot.figure)

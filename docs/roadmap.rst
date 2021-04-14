@@ -8,8 +8,6 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.1
 ===============
 
-* Plotter: CompositePlotter - better handling of properties
-
 * Plotter: CompositePlotter for MultiPlotter
 
 * Tasks: CompositePlotter

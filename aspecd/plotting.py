@@ -1715,6 +1715,12 @@ class CompositePlotter(Plotter):
     properties : :class:`aspecd.plotting.CompositePlotProperties`
         Properties of the plot, defining its appearance
 
+        These properties are used for the CompositePlot as such, and if set
+        will override those properties of the individual plotters used to
+        fill the axes of the CompositePlot. For details, see the
+        documentation of the :class:`aspecd.plotting.CompositePlotProperties`
+        class.
+
     Raises
     ------
     aspecd.exceptions.MissingPlotterError
@@ -1749,10 +1755,6 @@ class CompositePlotter(Plotter):
             self.plotter[idx].figure = self.figure
             self.plotter[idx].axes = axes
             self.plotter[idx].plot()
-        if len(self.properties.axes) < len(self.axes):
-            for _ in range(len(self.properties.axes),
-                           len(self.axes)):
-                self.properties.add_axes()
 
 
 class SingleCompositePlotter(CompositePlotter):
@@ -2353,10 +2355,12 @@ class CompositePlotProperties(PlotProperties):
 
     Attributes
     ----------
-    axes : :class:`list`
-        Properties of the axes.
+    axes : :class:`aspecd.plotting.AxesProperties`
+        Properties for all axes of the CompositePlotter.
 
-        List of objects of class :class:`aspecd.plotting.AxesProperties`.
+        This property is used to set properties for all axes of a
+        CompositePlotter at once. This will override the settings of the
+        individual plotters.
 
         For the properties that can be set this way, see the documentation
         of the :class:`aspecd.plotting.AxesProperties` class.
@@ -2370,42 +2374,7 @@ class CompositePlotProperties(PlotProperties):
 
     def __init__(self):
         super().__init__()
-        self.axes = []
-
-    def from_dict(self, dict_=None):
-        """
-        Set attributes from dictionary.
-
-        The key ``axes`` is handled in a special way: First of all,
-        :attr:`aspecd.plotting.CompositePlotProperties.axes` is a list,
-        hence we need to iterate over the entries of the list. Furthermore,
-        a new element of the list is appended only if it does not exist
-        already.
-
-        Parameters
-        ----------
-        dict_ : :class:`dict`
-            Dictionary containing information of a task.
-
-        Raises
-        ------
-        aspecd.exceptions.MissingDictError
-            Raised if no dict is provided.
-
-        """
-        if 'axes' in dict_:
-            for idx in range(len(self.axes), len(dict_['axes'])):
-                self.add_axes()
-            for idx, axes in enumerate(dict_['axes']):
-                self.axes[idx].from_dict(axes)
-            dict_.pop('axes')
-        if dict_:
-            super().from_dict(dict_)
-
-    def add_axes(self):
-        """Add a :obj:`aspecd.plotting.AxesProperties` object to the list."""
-        axes_properties = AxesProperties()
-        self.axes.append(axes_properties)
+        self.axes = AxesProperties()
 
     def apply(self, plotter=None):
         """
@@ -2425,7 +2394,7 @@ class CompositePlotProperties(PlotProperties):
         super().apply(plotter=plotter)
         if hasattr(plotter, 'axes'):
             for idx, axes in enumerate(plotter.axes):
-                self.axes[idx].apply(axes=axes)
+                self.axes.apply(axes=axes)
 
 
 class FigureProperties(aspecd.utils.Properties):
@@ -2501,7 +2470,7 @@ class AxesProperties(aspecd.utils.Properties):
     aspect: {'auto', 'equal'} or num
         aspect of the axis scaling, i.e. the ratio of y-unit to x-unit
 
-        Default: 'auto'
+        Default: ''
 
     facecolor: color
         facecolor of the axes
@@ -2531,7 +2500,7 @@ class AxesProperties(aspecd.utils.Properties):
 
         possible values: "linear", "log", "symlog", "logit"
 
-        Default: 'linear'
+        Default: ''
 
     xticks:
         y ticks with list of ticks
@@ -2558,7 +2527,7 @@ class AxesProperties(aspecd.utils.Properties):
 
         possible values: "linear", "log", "symlog", "logit"
 
-        Default: 'linear'
+        Default: ''
 
     yticks:
         y ticks with list of ticks
@@ -2579,17 +2548,17 @@ class AxesProperties(aspecd.utils.Properties):
 
     def __init__(self):
         super().__init__()
-        self.aspect = 'auto'
+        self.aspect = ''
         self.facecolor = None
         self.title = ''
         self.xlabel = ''
         self.xlim = []
-        self.xscale = 'linear'
+        self.xscale = ''
         self.xticklabels = None
         self.xticks = None
         self.ylabel = ''
         self.ylim = []
-        self.yscale = 'linear'
+        self.yscale = ''
         self.yticklabels = None
         self.yticks = None
 
