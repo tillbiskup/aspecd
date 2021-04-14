@@ -48,6 +48,9 @@ class TestRecipe(unittest.TestCase):
     def test_has_figures_property(self):
         self.assertTrue(hasattr(self.recipe, 'figures'))
 
+    def test_has_plotters_property(self):
+        self.assertTrue(hasattr(self.recipe, 'plotters'))
+
     def test_has_default_package_property(self):
         self.assertTrue(hasattr(self.recipe, 'default_package'))
 
@@ -863,6 +866,17 @@ class TestTask(unittest.TestCase):
         self.task._set_object_attributes(processing_step)
         self.assertEqual('/foo/bar/bla.pdf', processing_step.parameters['foo'])
 
+    def test_set_object_attributes_replaces_plotter_from_recipe(self):
+        processing_step = processing.ProcessingStep()
+        processing_step.parameters = {'foo': '', 'bar': ''}
+        metadata = {'parameters': {'foo': 'bar'}}
+        self.task.properties = metadata
+        self.task.recipe = tasks.Recipe()
+        self.task.recipe.plotters['bar'] = plotting.Plotter()
+        self.task._set_object_attributes(processing_step)
+        self.assertEqual(self.task.recipe.plotters['bar'],
+                         processing_step.parameters['foo'])
+
     # The following tests do *not* access non-public methods
     def test_to_dict_with_processing_step(self):
         kind = 'processing'
@@ -1190,6 +1204,25 @@ class TestPlotTask(unittest.TestCase):
         # noinspection PyTypeChecker
         self.assertEqual(self.plotting_task['properties']['caption']['title'],
                          self.recipe.figures[label].caption.title)
+
+    def test_has_result_property(self):
+        self.assertTrue(hasattr(self.task, 'result'))
+
+    def test_result_attribute_gets_set_from_dict(self):
+        self.prepare_recipe()
+        result = 'foo'
+        self.plotting_task['result'] = result
+        self.task.from_dict(self.plotting_task)
+        self.assertEqual(result, self.task.result)
+
+    def test_perform_task_with_result_adds_plotter(self):
+        self.prepare_recipe()
+        result = 'foo'
+        self.plotting_task['result'] = result
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(len(self.recipe.plotters))
 
 
 class TestSinglePlotTask(unittest.TestCase):

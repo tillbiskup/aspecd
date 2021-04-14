@@ -8,17 +8,15 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.1
 ===============
 
-* Plotter: CompositePlotter for MultiPlotter
-
-* Tasks: CompositePlotter
-
-* Report task: Add figure captions to context if available
+* Tasks: CompositePlotter (requires referring to pre-defined plotters)
 
 * Documentation: YAML representation of dataset structure(s) (automatically generated together with the documentation and using the ``literalinclude`` directive)
 
 
 For version 0.2
 ===============
+
+* Report task: Add figure captions to context if available
 
 * Remaining basic processing and analysis steps, such as algebra with datasets, slice extraction for >2D datasets, peak finding, SNR determination, denoising, filtering, noise, cut dataset and axis (to common range)
 

@@ -714,6 +714,15 @@ class Recipe:
 
         Each entry is an object of class :class:`aspecd.tasks.FigureRecord`.
 
+    plotters : :class:`collections.OrderedDict`
+        Ordered dictionary of plotters originating from plotting tasks
+
+        Each entry is an object of class :class:`aspecd.plotting.Plotter`.
+
+        To end up in the list of plotters, the plot task needs to define a
+        result. This is mainly used for tasks involving CompositePlotters,
+        to define the plotters for each individual plot panel.
+
     dataset_factory : :class:`aspecd.dataset.DatasetFactory`
         Factory for datasets used to retrieve datasets
 
@@ -782,6 +791,7 @@ class Recipe:
         self.datasets = collections.OrderedDict()
         self.results = collections.OrderedDict()
         self.figures = collections.OrderedDict()
+        self.plotters = collections.OrderedDict()
         self.tasks = list()
         self.dataset_factory = None
         self.task_factory = TaskFactory()
@@ -1480,7 +1490,7 @@ class Task(aspecd.utils.ToDictMixin):
 
     def _parse_properties(self):
         """
-        Replace labels for datasets, results, and figures in properties.
+        Replace labels for datasets, results, figures, plotters in properties.
 
         Additionally to labels, variables will be parsed and replaced.
         Currently, the following types of variables are understood:
@@ -1512,6 +1522,9 @@ class Task(aspecd.utils.ToDictMixin):
             if self.recipe.figures:
                 properties = aspecd.utils.replace_value_in_dict(
                     self.recipe.figures, properties)
+            if self.recipe.plotters:
+                properties = aspecd.utils.replace_value_in_dict(
+                    self.recipe.plotters, properties)
             properties = self._replace_variables_in_properties(properties)
         else:
             properties = self.properties
@@ -1854,11 +1867,18 @@ class PlotTask(Task):
         key and a :obj:`aspecd.tasks.FigureRecord` object stored containing
         all information necessary for further handling the results of the plot.
 
+    result : :class:`str`
+        Label for the plotter of a plotting step.
+
+        This is useful in case of CompositePlotters, where different
+        plotters need to be defined for each of the panels.
+
     """
 
     def __init__(self):
         super().__init__()
         self.label = ''
+        self.result = ''
         self._module = 'plotting'
 
     def perform(self):
@@ -1877,12 +1897,17 @@ class PlotTask(Task):
         super().perform()
         if self.label:
             self._add_figure_to_recipe()
+        if self.result:
+            self._add_plotter_to_recipe()
 
     def _add_figure_to_recipe(self):
         figure_record = FigureRecord()
         # noinspection PyTypeChecker
         figure_record.from_plotter(self.get_object())
         self.recipe.figures[self.label] = figure_record
+
+    def _add_plotter_to_recipe(self):
+        self.recipe.plotters[self.result] = copy.deepcopy(self.get_object())
 
     def save_plot(self, plot=None):
         """
