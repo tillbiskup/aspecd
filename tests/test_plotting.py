@@ -824,6 +824,10 @@ class TestMultiPlotter1DStacked(unittest.TestCase):
         self.assertEqual(2*len(self.plotter.datasets),
                          len(self.plotter.axes.get_lines()))
 
+    def test_plot_zero_lines_for_each_trace_at_correct_position(self):
+        self.plotter.parameters['show_zero_lines'] = True
+        self.plotter.plot()
+        self.assertGreater(0, self.plotter.axes.get_lines()[-1].get_ydata()[0])
 
 class TestCompositePlotter(unittest.TestCase):
     def setUp(self):

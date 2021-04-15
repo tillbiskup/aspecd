@@ -1639,7 +1639,7 @@ class MultiPlotter1DStacked(MultiPlotter1D):
     def _add_zero_lines(self):
         if self.parameters['show_zero_lines']:
             for idx in range(len(self.datasets)):
-                offset = idx * self.parameters['offset']
+                offset = -idx * self.parameters['offset']
                 self.axes.axhline(
                     y=offset,
                     **self.properties.zero_lines.to_dict(),
@@ -2393,7 +2393,7 @@ class CompositePlotProperties(PlotProperties):
         """
         super().apply(plotter=plotter)
         if hasattr(plotter, 'axes'):
-            for idx, axes in enumerate(plotter.axes):
+            for axes in plotter.axes:
                 self.axes.apply(axes=axes)
 
 

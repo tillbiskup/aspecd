@@ -10,6 +10,8 @@ For version 0.1
 
 * Tasks: CompositePlotter (requires referring to pre-defined plotters)
 
+* Plotter: Grid
+
 * Documentation: YAML representation of dataset structure(s) (automatically generated together with the documentation and using the ``literalinclude`` directive)
 
 
