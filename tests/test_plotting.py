@@ -1451,6 +1451,37 @@ class TestLegendProperties(unittest.TestCase):
         self.assertNotIn('location', self.legend_properties.to_dict())
 
 
+class TestGridProperties(unittest.TestCase):
+    def setUp(self):
+        self.grid_properties = plotting.GridProperties()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.grid_properties, 'to_dict'))
+        self.assertTrue(callable(self.grid_properties.to_dict))
+
+    def test_has_from_dict_method(self):
+        self.assertTrue(hasattr(self.grid_properties, 'from_dict'))
+        self.assertTrue(callable(self.grid_properties.from_dict))
+
+    def test_has_properties(self):
+        for prop in ['show', 'which', 'axis', 'lines']:
+            self.assertTrue(hasattr(self.grid_properties, prop))
+
+    def test_has_apply_method(self):
+        self.assertTrue(hasattr(self.grid_properties, 'apply'))
+        self.assertTrue(callable(self.grid_properties.apply))
+
+    def test_apply_without_argument_raises(self):
+        with self.assertRaises(TypeError):
+            self.grid_properties.apply()
+
+    def test_lines_color_is_sensible_for_grid(self):
+        self.assertEqual('#cccccc', self.grid_properties.lines.color)
+
+
 class TestSinglePlotProperties(unittest.TestCase):
     def setUp(self):
         self.plot_properties = plotting.SinglePlotProperties()

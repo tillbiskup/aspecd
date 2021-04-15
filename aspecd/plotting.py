@@ -2828,3 +2828,19 @@ class SurfaceProperties(DrawingProperties):
     def __init__(self):
         super().__init__()
         self.cmap = 'viridis'
+
+
+class GridProperties(aspecd.utils.Properties):
+
+    def __init__(self):
+        super().__init__()
+        self.show = False
+        self.which = ''
+        self.axis = ''
+        self.lines = LineProperties()
+        # Set default properties
+        self.lines.color = '#cccccc'
+
+    def apply(self, grid=None):
+        if not grid:
+            raise TypeError('Missing 1 positional argument: grid')
