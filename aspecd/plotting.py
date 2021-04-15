@@ -2831,6 +2831,36 @@ class SurfaceProperties(DrawingProperties):
 
 
 class GridProperties(aspecd.utils.Properties):
+    """
+    Properties of a line within a plot.
+
+    Basically, the attributes are a subset of what :mod:`matplotlib` defines
+    for :obj:`matplotlib.lines.Line2D` objects.
+
+    Attributes
+    ----------
+    show: :class:`bool`
+        whether to show grids
+
+    which: :class:`str`
+        grid lines to set: {'major', 'minor', 'both'}
+
+        For details see :meth:`matplotlib.axes.Axes.grid`
+
+    axis: :class:`str`
+        axis for which grid lines should be displayed: {'both', 'x', 'y'}
+
+        For details see :meth:`matplotlib.axes.Axes.grid`
+
+    lines: :class:`aspecd.plotting.LineProperties`
+        line properties of the grid
+
+    Raises
+    ------
+    TypeError
+        Raised if no axes is provided.
+
+    """
 
     def __init__(self):
         super().__init__()
@@ -2841,6 +2871,34 @@ class GridProperties(aspecd.utils.Properties):
         # Set default properties
         self.lines.color = '#cccccc'
 
-    def apply(self, grid=None):
-        if not grid:
-            raise TypeError('Missing 1 positional argument: grid')
+    def apply(self, axes=None):
+        """
+        Apply properties to axes.
+
+        If :attr:`show` is false, no grid will be displayed. Otherwise,
+        the properties will be set, including the line properties.
+
+        Parameters
+        ----------
+        axes: :class:`matplotlib.axes.Axes`
+            axis to set properties for
+
+        Raises
+        ------
+        TypeError
+            Raised if called without axes object
+
+        """
+        if not axes:
+            raise TypeError('Missing 1 positional argument: axes')
+        # Partly untested code: no plan how to test that a grid is present
+        if not self.show:
+            axes.grid(False)
+        else:
+            if self.which and self.axis:
+                axes.grid(True, which=self.which, axis=self.axis,
+                          **self.lines.to_dict())
+            elif self.which:
+                axes.grid(True, which=self.which, **self.lines.to_dict())
+            elif self.axis:
+                axes.grid(True, axis=self.axis, **self.lines.to_dict())

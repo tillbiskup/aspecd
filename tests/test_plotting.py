@@ -1481,6 +1481,16 @@ class TestGridProperties(unittest.TestCase):
     def test_lines_color_is_sensible_for_grid(self):
         self.assertEqual('#cccccc', self.grid_properties.lines.color)
 
+    def test_apply_properties_sets_properties(self):
+        self.grid_properties.show = True
+        self.grid_properties.lines.color = '#b0b0b0'
+        plot = plotting.Plotter()
+        plot.plot()
+        self.grid_properties.apply(axes=plot.axes)
+        self.assertEqual(self.grid_properties.lines.color,
+                         plot.axes.xaxis.get_gridlines()[0].get_color())
+        plt.close(plot.figure)
+
 
 class TestSinglePlotProperties(unittest.TestCase):
     def setUp(self):
