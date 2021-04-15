@@ -1483,7 +1483,7 @@ class TestGridProperties(unittest.TestCase):
 
     def test_apply_properties_sets_properties(self):
         self.grid_properties.show = True
-        self.grid_properties.lines.color = '#b0b0b0'
+        self.grid_properties.lines.color = '#cccccc'
         plot = plotting.Plotter()
         plot.plot()
         self.grid_properties.apply(axes=plot.axes)
@@ -1505,6 +1505,9 @@ class TestSinglePlotProperties(unittest.TestCase):
     def test_has_axes_property(self):
         self.assertTrue(hasattr(self.plot_properties, 'axes'))
 
+    def test_has_grid_property(self):
+        self.assertTrue(hasattr(self.plot_properties, 'grid'))
+
     def test_has_drawing_property(self):
         self.assertTrue(hasattr(self.plot_properties, 'drawing'))
 
@@ -1523,6 +1526,16 @@ class TestSinglePlotProperties(unittest.TestCase):
         self.plot_properties.apply(plotter=plot)
         self.assertEqual(self.plot_properties.axes.xlabel,
                          plot.axes.get_xlabel())
+        plt.close(plot.figure)
+
+    def test_apply_sets_grid_properties(self):
+        self.plot_properties.grid.show = True
+        self.plot_properties.grid.lines.color = '#000000'
+        plot = plotting.SinglePlotter()
+        plot.plot(dataset=dataset.Dataset())
+        self.plot_properties.apply(plotter=plot)
+        self.assertEqual(self.plot_properties.grid.lines.color,
+                         plot.axes.xaxis.get_gridlines()[0].get_color())
         plt.close(plot.figure)
 
     def test_apply_sets_drawing_properties(self):
@@ -1584,6 +1597,9 @@ class TestMultiPlotProperties(unittest.TestCase):
     def test_has_axes_property(self):
         self.assertTrue(hasattr(self.plot_properties, 'axes'))
 
+    def test_has_grid_property(self):
+        self.assertTrue(hasattr(self.plot_properties, 'grid'))
+
     def test_has_drawings_property(self):
         self.assertTrue(hasattr(self.plot_properties, 'drawings'))
 
@@ -1606,6 +1622,16 @@ class TestMultiPlotProperties(unittest.TestCase):
         self.plot_properties.apply(plotter=plot)
         self.assertEqual(self.plot_properties.axes.xlabel,
                          plot.axes.get_xlabel())
+        plt.close(plot.figure)
+
+    def test_apply_sets_grid_properties(self):
+        self.plot_properties.grid.show = True
+        self.plot_properties.grid.lines.color = '#000000'
+        plot = plotting.SinglePlotter()
+        plot.plot(dataset=dataset.Dataset())
+        self.plot_properties.apply(plotter=plot)
+        self.assertEqual(self.plot_properties.grid.lines.color,
+                         plot.axes.xaxis.get_gridlines()[0].get_color())
         plt.close(plot.figure)
 
     def test_apply_sets_legend_properties(self):

@@ -2104,6 +2104,12 @@ class SinglePlotProperties(PlotProperties):
         For the properties that can be set this way, see the documentation
         of the :class:`aspecd.plotting.AxesProperties` class.
 
+    grid : :class:`aspecd.plotting.GridProperties`
+        Properties of the grid.
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.GridProperties` class.
+
     drawing : :class:`aspecd.plotting.DrawingProperties`
         Properties of the line within a plot
 
@@ -2120,6 +2126,7 @@ class SinglePlotProperties(PlotProperties):
     def __init__(self):
         super().__init__()
         self.axes = AxesProperties()
+        self.grid = GridProperties()
         self.drawing = DrawingProperties()
 
     def apply(self, plotter=None):
@@ -2139,6 +2146,7 @@ class SinglePlotProperties(PlotProperties):
         """
         super().apply(plotter=plotter)
         self.axes.apply(axes=plotter.axes)
+        self.grid.apply(axes=plotter.axes)
         if plotter.drawing:
             self.drawing.apply(drawing=plotter.drawing)
 
@@ -2203,6 +2211,12 @@ class MultiPlotProperties(PlotProperties):
         For the properties that can be set this way, see the documentation
         of the :class:`aspecd.plotting.AxesProperties` class.
 
+    grid : :class:`aspecd.plotting.GridProperties`
+        Properties of the grid.
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.GridProperties` class.
+
     drawings : :class:`list`
         Properties of the lines within a plot.
 
@@ -2221,6 +2235,7 @@ class MultiPlotProperties(PlotProperties):
     def __init__(self):
         super().__init__()
         self.axes = AxesProperties()
+        self.grid = GridProperties()
         self.drawings = []
 
     def from_dict(self, dict_=None):
@@ -2299,6 +2314,7 @@ class MultiPlotProperties(PlotProperties):
         """
         super().apply(plotter=plotter)
         self.axes.apply(axes=plotter.axes)
+        self.grid.apply(axes=plotter.axes)
         if hasattr(plotter, 'legend') and plotter.legend:
             self.legend.apply(legend=plotter.legend)
         if hasattr(plotter, 'drawings'):
@@ -2807,6 +2823,23 @@ class LineProperties(DrawingProperties):
         self.linewidth = 1.0
         self.marker = ''
 
+    def settable_properties(self):
+        """
+        Return properties that are not empty or None.
+
+        Returns
+        -------
+        properties : :class:`dict`
+            Dictionary containing all settable properties, *i.e.* properties
+            that are neither empty nor None.
+
+        """
+        properties = dict()
+        for prop in self.get_properties():
+            if getattr(self, prop):
+                properties[prop] = getattr(self, prop)
+        return properties
+
 
 class SurfaceProperties(DrawingProperties):
     """
@@ -2897,8 +2930,12 @@ class GridProperties(aspecd.utils.Properties):
         else:
             if self.which and self.axis:
                 axes.grid(True, which=self.which, axis=self.axis,
-                          **self.lines.to_dict())
+                          **self.lines.settable_properties())
             elif self.which:
-                axes.grid(True, which=self.which, **self.lines.to_dict())
+                axes.grid(True, which=self.which,
+                          **self.lines.settable_properties())
             elif self.axis:
-                axes.grid(True, axis=self.axis, **self.lines.to_dict())
+                axes.grid(True, axis=self.axis,
+                          **self.lines.settable_properties())
+            else:
+                axes.grid(True, **self.lines.settable_properties())
