@@ -2875,13 +2875,14 @@ class GridProperties(aspecd.utils.Properties):
     show: :class:`bool`
         whether to show grids
 
-    which: :class:`str`
-        grid lines to set: {'major', 'minor', 'both'}
+    ticks: :class:`str`
+        ticks to set grid lines for: {'major', 'minor', 'both'}
 
-        For details see :meth:`matplotlib.axes.Axes.grid`
+        For details see the ``which`` parameter of
+        :meth:`matplotlib.axes.Axes.grid`
 
     axis: :class:`str`
-        axis for which grid lines should be displayed: {'both', 'x', 'y'}
+        axis to set grid lines for: {'both', 'x', 'y'}
 
         For details see :meth:`matplotlib.axes.Axes.grid`
 
@@ -2898,7 +2899,7 @@ class GridProperties(aspecd.utils.Properties):
     def __init__(self):
         super().__init__()
         self.show = False
-        self.which = ''
+        self.ticks = ''
         self.axis = ''
         self.lines = LineProperties()
         # Set default properties
@@ -2928,11 +2929,11 @@ class GridProperties(aspecd.utils.Properties):
         if not self.show:
             axes.grid(False)
         else:
-            if self.which and self.axis:
-                axes.grid(True, which=self.which, axis=self.axis,
+            if self.ticks and self.axis:
+                axes.grid(True, which=self.ticks, axis=self.axis,
                           **self.lines.settable_properties())
-            elif self.which:
-                axes.grid(True, which=self.which,
+            elif self.ticks:
+                axes.grid(True, which=self.ticks,
                           **self.lines.settable_properties())
             elif self.axis:
                 axes.grid(True, axis=self.axis,

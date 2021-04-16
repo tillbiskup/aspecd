@@ -1467,7 +1467,7 @@ class TestGridProperties(unittest.TestCase):
         self.assertTrue(callable(self.grid_properties.from_dict))
 
     def test_has_properties(self):
-        for prop in ['show', 'which', 'axis', 'lines']:
+        for prop in ['show', 'ticks', 'axis', 'lines']:
             self.assertTrue(hasattr(self.grid_properties, prop))
 
     def test_has_apply_method(self):
