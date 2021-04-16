@@ -1355,6 +1355,74 @@ class TestMultiPlotTask(unittest.TestCase):
         self.assertTrue(os.path.exists(self.figure_filename))
 
 
+class TestCompositePlotTask(unittest.TestCase):
+    def setUp(self):
+        self.task = tasks.CompositeplotTask()
+        self.pretask = tasks.SingleplotTask()
+        self.recipe = tasks.Recipe()
+        self.dataset = ['foo']
+        self.figure_filename = 'foo.pdf'
+        self.singleplotting_task = {'kind': 'singleplot',
+                                    'type': 'SinglePlotter1D',
+                                    'apply_to': self.dataset,
+                                    'result': 'singleplotter'}
+        self.plotting_task = {'kind': 'compositeplot',
+                              'type': 'CompositePlotter',
+                              'properties': {'plotter': ['singleplotter']}}
+
+    def tearDown(self):
+        if os.path.exists(self.figure_filename):
+            os.remove(self.figure_filename)
+
+    def prepare_recipe(self):
+        dataset_factory = dataset.DatasetFactory()
+        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        self.recipe.dataset_factory = dataset_factory
+        recipe_dict = {'datasets': self.dataset,
+                       'tasks': [self.singleplotting_task, self.plotting_task]}
+        self.recipe.from_dict(recipe_dict)
+
+    def test_instantiate_class(self):
+        pass
+
+    def  test_task_has_correct_module(self):
+        self.assertEqual('plotting', self.task._module)
+
+    def test_perform_task(self):
+        self.prepare_recipe()
+        self.pretask.from_dict(self.singleplotting_task)
+        self.pretask.recipe = self.recipe
+        self.pretask.perform()
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(isinstance(self.task._task.plotter[0],
+                                   aspecd.plotting.Plotter))
+
+    def test_perform_task_with_filename_saves_plot(self):
+        self.prepare_recipe()
+        self.pretask.from_dict(self.singleplotting_task)
+        self.pretask.recipe = self.recipe
+        self.pretask.perform()
+        # noinspection PyTypeChecker
+        self.plotting_task['properties']['filename'] = self.figure_filename
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(os.path.exists(self.figure_filename))
+
+    def test_task_to_dict(self):
+        self.prepare_recipe()
+        self.pretask.from_dict(self.singleplotting_task)
+        self.pretask.recipe = self.recipe
+        self.pretask.perform()
+        # noinspection PyTypeChecker
+        self.plotting_task['properties']['filename'] = self.figure_filename
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.task.to_dict()
+
 class TestReportTask(unittest.TestCase):
     def setUp(self):
         self.task = tasks.ReportTask()

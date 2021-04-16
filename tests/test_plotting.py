@@ -300,6 +300,35 @@ class TestSinglePlotter1D(unittest.TestCase):
         self.assertEqual(dataset_.label,
                          plotter.legend.get_texts()[0].get_text())
 
+    def test_axes_tight_x_sets_xlim_to_data_limits(self):
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.random.random([100])
+        dataset_.data.axes[0].values = np.linspace(np.pi, 2*np.pi, 100)
+        self.plotter.parameters['tight'] = 'x'
+        plotter = dataset_.plot(self.plotter)
+        self.assertEqual(dataset_.data.axes[0].values[0],
+                         plotter.axes.get_xlim()[0])
+
+    def test_axes_tight_y_sets_xlim_to_data_limits(self):
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.random.random([100])
+        dataset_.data.axes[0].values = np.linspace(np.pi, 2*np.pi, 100)
+        self.plotter.parameters['tight'] = 'y'
+        plotter = dataset_.plot(self.plotter)
+        self.assertEqual(dataset_.data.data.min(),
+                         plotter.axes.get_ylim()[0])
+
+    def test_axes_tight_both_sets_xlim_and_ylim_to_data_limits(self):
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.random.random([100])
+        dataset_.data.axes[0].values = np.linspace(np.pi, 2*np.pi, 100)
+        self.plotter.parameters['tight'] = 'both'
+        plotter = dataset_.plot(self.plotter)
+        self.assertEqual(dataset_.data.axes[0].values[0],
+                         plotter.axes.get_xlim()[0])
+        self.assertEqual(dataset_.data.data.min(),
+                         plotter.axes.get_ylim()[0])
+
 
 class TestSinglePlotter2D(unittest.TestCase):
     def setUp(self):
@@ -371,7 +400,7 @@ class TestSinglePlotter2D(unittest.TestCase):
         self.plotter.type = 'contour'
         test_dataset = dataset.Dataset()
         test_dataset.data.data = np.random.random([5, 5])
-        plotter = test_dataset.plot(self.plotter)
+        test_dataset.plot(self.plotter)
 
     def test_plot_with_switched_axes(self):
         test_dataset = dataset.Dataset()
@@ -829,6 +858,7 @@ class TestMultiPlotter1DStacked(unittest.TestCase):
         self.plotter.plot()
         self.assertGreater(0, self.plotter.axes.get_lines()[-1].get_ydata()[0])
 
+
 class TestCompositePlotter(unittest.TestCase):
     def setUp(self):
         self.plotter = plotting.CompositePlotter()
@@ -850,6 +880,9 @@ class TestCompositePlotter(unittest.TestCase):
 
     def test_has_subplot_locations_property(self):
         self.assertTrue(hasattr(self.plotter, 'subplot_locations'))
+
+    def test_has_axes_positions_property(self):
+        self.assertTrue(hasattr(self.plotter, 'axes_positions'))
 
     def test_has_plotter_property(self):
         self.assertTrue(hasattr(self.plotter, 'plotter'))
@@ -903,6 +936,17 @@ class TestCompositePlotter(unittest.TestCase):
         self.plotter.plotter.append(single_plotter)
         with self.assertRaises(aspecd.exceptions.MissingPlotterError):
             self.plotter.plot()
+
+    def test_plot_sets_axes_position(self):
+        self.plotter.grid_dimensions = [1, 1]
+        self.plotter.subplot_locations = [[0, 0, 1, 1]]
+        self.plotter.axes_positions = [[0.3, 0.3, 0.6, 0.6]]
+        single_plotter = plotting.SinglePlotter1D()
+        single_plotter.dataset = self.dataset
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plot()
+        self.assertEqual(self.plotter.axes_positions[0][0],
+                         list(self.plotter.axes[0].get_position().bounds)[0])
 
 
 class TestSingleCompositePlotter(unittest.TestCase):
@@ -1298,9 +1342,9 @@ class TestAxisProperties(unittest.TestCase):
         self.assertTrue(callable(self.axis_properties.from_dict))
 
     def test_has_properties(self):
-        for prop in ['aspect', 'facecolor', 'title', 'xlabel', 'xlim',
-                     'xscale', 'xticklabels', 'xticks', 'ylabel', 'ylim',
-                     'yscale', 'yticklabels', 'yticks']:
+        for prop in ['aspect', 'facecolor', 'position', 'title',
+                     'xlabel', 'xlim', 'xscale', 'xticklabels', 'xticks',
+                     'ylabel', 'ylim', 'yscale', 'yticklabels', 'yticks']:
             self.assertTrue(hasattr(self.axis_properties, prop))
 
     def test_has_apply_properties_method(self):

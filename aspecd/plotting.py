@@ -201,6 +201,11 @@ class Plotter:
     The actual implementation of the plotting is done in the private method
     :meth:`_create_plot` that in turn gets called by :meth:`plot`.
 
+    .. note::
+        Usually, you will never implement an instance of this class for
+        actual plotting tasks, but rather one of the child classes.
+
+
     Attributes
     ----------
     name : :class:`str`
@@ -520,6 +525,7 @@ class SinglePlotter(Plotter):
     drawing : :class:`matplotlib.artist.Artist`
         Actual graphical representation of the data
 
+
     Raises
     ------
     aspecd.exceptions.MissingDatasetError
@@ -664,6 +670,18 @@ class SinglePlotter1D(SinglePlotter):
         For the properties that can be set this way, see the documentation
         of the :class:`aspecd.plotting.SinglePlot1DProperties` class.
 
+    parameters : :class:`dict`
+        All parameters necessary for the plot, implicit and explicit
+
+        The following keys exist, in addition to those of the superclass:
+
+        tight: :class:`str`
+            Whether to set the axes limits tight to the data
+
+            Possible values: 'x', 'y', 'both'
+
+            Default: ''
+
     Raises
     ------
     TypeError
@@ -692,6 +710,8 @@ class SinglePlotter1D(SinglePlotter):
         super().__init__()
         self.description = '1D plotting step for single dataset'
         self.properties = SinglePlot1DProperties()
+        # noinspection PyTypeChecker
+        self.parameters['tight'] = ''
         self._type = 'plot'
         self._allowed_types = ['plot', 'scatter', 'step', 'loglog',
                                'semilogx', 'semilogy', 'stemplot']
@@ -742,6 +762,13 @@ class SinglePlotter1D(SinglePlotter):
         self.drawing, = plot_function(self.dataset.data.axes[0].values,
                                       self.dataset.data.data,
                                       label=self.properties.drawing.label)
+        if self.parameters['tight']:
+            if self.parameters['tight'] in ('x', 'both'):
+                self.axes.set_xlim([self.dataset.data.axes[0].values.min(),
+                                    self.dataset.data.axes[0].values.max()])
+            if self.parameters['tight'] in ('y', 'both'):
+                self.axes.set_ylim([self.dataset.data.data.min(),
+                                    self.dataset.data.data.max()])
 
     @staticmethod
     def applicable(dataset):
@@ -1703,6 +1730,16 @@ class CompositePlotter(Plotter):
 
         Default: [[0, 0, 1, 1]]
 
+    axes_positions: :class:`list`
+        List of axes positions
+
+        Each axes position is a list with four numeric elements:
+        [left, bottom, width, height]
+
+        Values are in the interval [0..1]
+
+        Default: []
+
     plotter : :class:`list`
         List of plotters
 
@@ -1736,6 +1773,7 @@ class CompositePlotter(Plotter):
         self.axes = []
         self.grid_dimensions = [1, 1]
         self.subplot_locations = [[0, 0, 1, 1]]
+        self.axes_positions = []
         self.plotter = []
         self.properties = CompositePlotProperties()
 
@@ -1755,6 +1793,8 @@ class CompositePlotter(Plotter):
             self.plotter[idx].figure = self.figure
             self.plotter[idx].axes = axes
             self.plotter[idx].plot()
+        for idx, position in enumerate(self.axes_positions):
+            self.axes[idx].set_position(position)
 
 
 class SingleCompositePlotter(CompositePlotter):
@@ -2493,6 +2533,13 @@ class AxesProperties(aspecd.utils.Properties):
 
         Default: None
 
+    position: :class:`list`
+        position of the axes: left, bottom, width, height
+
+        four numbers in the interval [0..1]
+
+        Default: []
+
     title: :class:`str`
         title for the axis
 
@@ -2566,6 +2613,7 @@ class AxesProperties(aspecd.utils.Properties):
         super().__init__()
         self.aspect = ''
         self.facecolor = None
+        self.position = []
         self.title = ''
         self.xlabel = ''
         self.xlim = []

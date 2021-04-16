@@ -1306,6 +1306,7 @@ class Task(aspecd.utils.ToDictMixin):
         self.recipe = recipe
         self._module = ''
         self._exclude_from_to_dict = ['recipe']
+        self._task = None
 
     def from_dict(self, dict_=None):
         """
@@ -1653,10 +1654,10 @@ class ProcessingTask(Task):
                 self.result = None
         for number, dataset_id in enumerate(self.apply_to):
             dataset = self.recipe.get_dataset(dataset_id)
-            task = self.get_object()
+            self._task = self.get_object()
             if self.result:
                 dataset_copy = copy.deepcopy(dataset)
-                dataset_copy.process(processing_step=task)
+                dataset_copy.process(processing_step=self._task)
                 if result_labels:
                     dataset_copy.id = self.result[number]
                     self.recipe.results[self.result[number]] = dataset_copy
@@ -1664,7 +1665,7 @@ class ProcessingTask(Task):
                     dataset_copy.id = self.result
                     self.recipe.results[self.result] = dataset_copy
             else:
-                dataset.process(processing_step=task)
+                dataset.process(processing_step=self._task)
 
 
 class AnalysisTask(Task):
@@ -1745,12 +1746,12 @@ class SingleanalysisTask(AnalysisTask):
     def _perform(self):
         for dataset_id in self.apply_to:
             dataset = self.recipe.get_dataset(dataset_id)
-            task = self.get_object()
-            task = dataset.analyse(analysis_step=task)
+            self._task = self.get_object()
+            self._task = dataset.analyse(analysis_step=self._task)
             if self.result:
-                if isinstance(task.result, aspecd.dataset.Dataset):
-                    task.result.id = self.result
-                self.recipe.results[self.result] = task.result
+                if isinstance(self._task.result, aspecd.dataset.Dataset):
+                    self._task.result.id = self.result
+                self.recipe.results[self.result] = self._task.result
 
 
 class MultianalysisTask(AnalysisTask):
@@ -1800,20 +1801,21 @@ class MultianalysisTask(AnalysisTask):
 
     # noinspection PyUnresolvedReferences
     def _perform(self):
-        task = self.get_object()
-        task.datasets = self.recipe.get_datasets(self.apply_to)
-        task.analyse()
+        self._task = self.get_object()
+        self._task.datasets = self.recipe.get_datasets(self.apply_to)
+        self._task.analyse()
         if self.result:
             # NOTE: This code is currently widely untested due to lack of
             # ideas of how to test it properly.
             if isinstance(self.result, list):
-                if len(self.result) != len(task.result):
+                if len(self.result) != len(self._task.result):
                     raise IndexError('List of result labels and results '
                                      ' must be of same length')
                 for index, label in enumerate(self.result):
-                    self._assign_result(label=label, result=task.result[index])
+                    self._assign_result(label=label,
+                                        result=self._task.result[index])
             else:
-                self._assign_result(label=self.result, result=task.result)
+                self._assign_result(label=self.result, result=self._task.result)
 
     def _assign_result(self, label='', result=None):
         if isinstance(result, aspecd.dataset.Dataset):
@@ -1835,8 +1837,8 @@ class AnnotationTask(Task):
     def _perform(self):
         for dataset_id in self.apply_to:
             dataset = self.recipe.get_dataset(dataset_id)
-            task = self.get_object()
-            dataset.annotate(annotation_=task)
+            self._task = self.get_object()
+            dataset.annotate(annotation_=self._task)
 
 
 class PlotTask(Task):
@@ -1907,7 +1909,7 @@ class PlotTask(Task):
         self.recipe.figures[self.label] = figure_record
 
     def _add_plotter_to_recipe(self):
-        self.recipe.plotters[self.result] = copy.deepcopy(self.get_object())
+        self.recipe.plotters[self.result] = self._task
 
     def save_plot(self, plot=None):
         """
@@ -2024,12 +2026,12 @@ class SingleplotTask(PlotTask):
             filenames = self.properties["filename"]
         for number, dataset_id in enumerate(self.apply_to):
             dataset = self.recipe.get_dataset(dataset_id)
-            task = self.get_object()
+            self._task = self.get_object()
             if filenames:
-                task.filename = filenames[number]
-            dataset.plot(plotter=task)
+                self._task.filename = filenames[number]
+            dataset.plot(plotter=self._task)
             # noinspection PyTypeChecker
-            self.save_plot(plot=task)
+            self.save_plot(plot=self._task)
 
 
 class MultiplotTask(PlotTask):
@@ -2078,7 +2080,7 @@ class MultiplotTask(PlotTask):
     automatically be replaced by the actual dataset/result prior to
     performing the task.
 
-    A specialty of plots of multiple dataseets is that you cannot
+    A specialty of plots of multiple datasets is that you cannot
     necessarily infer the axis labels from the datasets, hence may be
     interested to set them directly. This is done using the ``axes`` key of
     the ``parameters`` property of the :class:`aspecd.plotting.MultiPlotter`
@@ -2098,12 +2100,89 @@ class MultiplotTask(PlotTask):
     """
 
     def _perform(self):
-        task = self.get_object()
-        task.datasets = self.recipe.get_datasets(self.apply_to)
+        self._task = self.get_object()
+        self._task.datasets = self.recipe.get_datasets(self.apply_to)
         # noinspection PyUnresolvedReferences
-        task.plot()
+        self._task.plot()
         # noinspection PyTypeChecker
-        self.save_plot(plot=task)
+        self.save_plot(plot=self._task)
+
+
+class CompositeplotTask(PlotTask):
+    """
+    Compositeplot step defined as task in recipe-driven data analysis.
+
+    Compositeplot steps are performed on a list of plots and combine them in
+    one single figure. For more common plots employing only a single axes,
+    see :class:`aspecd.tasks.SingleplotTask` and
+    :class:`aspecd.tasks.MultiplotTask`.
+
+    For more information on the underlying general class,
+    see :class:`aspecd.plotting.CompositePlotter`.
+
+    For an example of how such a compositeplot task may be included into a
+    recipe, see the YAML listing below:
+
+    .. code-block:: yaml
+
+        kind: singleplot
+        type: SinglePlotter1D
+        apply_to:
+          - dataset1
+        result: 1D_plot
+
+        kind: singleplot
+        type: SinglePlotter2D
+        apply_to:
+          - dataset2
+        result: 2D_plot
+
+        kind: compositeplot
+        type: CompositePlotter
+        properties:
+          grid_dimensions: [1, 2]
+          subplot_locations:
+            - [0, 0, 1, 1]
+            - [0, 1, 1, 1]
+          plotters:
+            - 1D_plot
+            - 2D_plot
+          filename: composed_plot.pdf
+
+    The crucial aspect here is to first define the individual plotters that
+    get used for the respective panels of the CompositePlotter. In this
+    particular example, two different plots on two different datasets are
+    created and afterwards combined into the CompositePlotter. Furthermore,
+    for a CompositePlot you need to specify both, grid dimensions and
+    subplot locations, as they will be set to one single axis by default.
+
+    """
+
+    def to_dict(self):
+        """
+        Create dictionary containing public attributes of the object.
+
+        Returns
+        -------
+        public_attributes : :class:`collections.OrderedDict`
+            Ordered dictionary containing the public attributes of the object
+
+            The order of attribute definition is preserved
+
+        """
+        # Replace plotter objects with reference name
+        for idx, plotter in enumerate(self.properties['plotter']):
+            for key, value in self.recipe.plotters.items():
+                if plotter is value:
+                    self.properties['plotter'] = key
+        super().to_dict()
+
+    def _perform(self):
+        self._task = self.get_object()
+        # noinspection PyUnresolvedReferences
+        self._task.plot()
+        # noinspection PyTypeChecker
+        self.save_plot(plot=self._task)
 
 
 class ReportTask(Task):
