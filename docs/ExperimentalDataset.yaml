@@ -1,0 +1,74 @@
+data:
+  calculated: false
+  data:
+    type: numpy.ndarray
+    dtype: float64
+    array: []
+  axes:
+  - quantity: ''
+    symbol: ''
+    unit: ''
+    label: ''
+    values:
+      type: numpy.ndarray
+      dtype: float64
+      array: []
+  - quantity: ''
+    symbol: ''
+    unit: ''
+    label: ''
+    values:
+      type: numpy.ndarray
+      dtype: float64
+      array: []
+metadata:
+  measurement:
+    start: null
+    end: null
+    purpose: ''
+    operator: ''
+    labbook_entry: ''
+  sample:
+    name: ''
+    id: null
+    loi: ''
+  temperature_control:
+    temperature:
+      unit: ''
+      dimension: ''
+      name: ''
+      value: 0.0
+    controller: ''
+history: []
+analyses: []
+annotations: []
+representations: []
+id: ''
+label: ''
+references: []
+tasks: []
+_origdata:
+  calculated: false
+  data:
+    type: numpy.ndarray
+    dtype: float64
+    array: []
+  axes:
+  - quantity: ''
+    symbol: ''
+    unit: ''
+    label: ''
+    values:
+      type: numpy.ndarray
+      dtype: float64
+      array: []
+  - quantity: ''
+    symbol: ''
+    unit: ''
+    label: ''
+    values:
+      type: numpy.ndarray
+      dtype: float64
+      array: []
+_package_name: aspecd
+_history_pointer: -1

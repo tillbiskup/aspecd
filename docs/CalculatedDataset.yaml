@@ -1,0 +1,60 @@
+data:
+  calculated: true
+  data:
+    type: numpy.ndarray
+    dtype: float64
+    array: []
+  axes:
+  - quantity: ''
+    symbol: ''
+    unit: ''
+    label: ''
+    values:
+      type: numpy.ndarray
+      dtype: float64
+      array: []
+  - quantity: ''
+    symbol: ''
+    unit: ''
+    label: ''
+    values:
+      type: numpy.ndarray
+      dtype: float64
+      array: []
+metadata:
+  calculation:
+    type: ''
+    parameters: {}
+history: []
+analyses: []
+annotations: []
+representations: []
+id: ''
+label: ''
+references: []
+tasks: []
+_origdata:
+  calculated: true
+  data:
+    type: numpy.ndarray
+    dtype: float64
+    array: []
+  axes:
+  - quantity: ''
+    symbol: ''
+    unit: ''
+    label: ''
+    values:
+      type: numpy.ndarray
+      dtype: float64
+      array: []
+  - quantity: ''
+    symbol: ''
+    unit: ''
+    label: ''
+    values:
+      type: numpy.ndarray
+      dtype: float64
+      array: []
+_package_name: aspecd
+_history_pointer: -1

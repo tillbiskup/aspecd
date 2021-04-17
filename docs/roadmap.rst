@@ -8,9 +8,9 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.1
 ===============
 
-* Tasks: CompositePlotter (requires referring to pre-defined plotters)
+* Documentation: Sphinx for multiple versions
 
-* Documentation: YAML representation of dataset structure(s) (automatically generated together with the documentation and using the ``literalinclude`` directive)
+* VCS: branches and handling of releases
 
 
 For version 0.2
