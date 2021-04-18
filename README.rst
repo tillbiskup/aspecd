@@ -3,11 +3,34 @@ ASpecD
 
 ASpecD is a framework for handling spectroscopic data focussing on reproducibility. In short: Each and every processing step applied to your data will be recorded and can be traced back, and additionally, for each representation of your data (e.g., figures, tables) you can easily follow how the data shown have been processed and where they originate from.
 
+What is even better: Actual data processing and analysis **no longer requires programming skills**, but is as simple as writing a text file summarising all the steps you want to have been performed on your dataset(s) in an organised way. Curious? Here is an example::
+
+    datasets:
+      - /path/to/first/dataset
+      - /path/to/second/dataset
+
+    tasks:
+      - kind: processing
+        type: BaselineCorrection
+        properties:
+          parameters:
+            kind: polynomial
+            order: 0
+      - kind: singleplot
+        type: SinglePlotter
+        properties:
+          filename:
+            - first-dataset.pdf
+            - second-dataset.pdf
+
+
+For more general information on the ASpecD framework see its `homepage <https://www.aspecd.de/>`_, and for how to use it, its `documentation <https://doc.aspecd.de/>`_.
+
 
 Features
 --------
 
-A list of features, not all implemented yet but aimed at for the first public release (ASpecD 0.1):
+A list of features:
 
 * Framework for writing applications handling spectroscopic data
 
@@ -23,7 +46,7 @@ A list of features, not all implemented yet but aimed at for the first public re
 
 * Report generation using pre-defined templates
 
-* Recipe-driven data analysis, allowing tasks to be performed fully unattended in the background
+* Recipe-driven data analysis, allowing tasks to be performed fully unattended in the background and without programming skills
 
 
 And to make it even more convenient for users and future-proof:
@@ -38,3 +61,27 @@ And to make it even more convenient for users and future-proof:
 .. warning::
   The ASpecD framework is currently under active development and still considered in Alpha development state. Therefore, expect frequent changes in features and public APIs that may break your own code. Nevertheless, feedback as well as feature requests are highly welcome.
 
+
+
+Related projects
+----------------
+
+There is a number of related packages that are based on the ASpecD framework and each focus on one particular type of spectroscopy. The most mature packages available to date are:
+
+* `trepr <https://docs.trepr.de/>`_
+
+  Package for processing and analysing time-resolved electron paramagnetic resonance (TREPR) data, developed by J. Popp and maintained by T. Biskup.
+
+* `cwepr <https://docs.cwepr.de/>`_
+
+  Package for processing and analysing continuous-wave electron paramagnetic resonance (cw-EPR) data, originally developed by P. Kirchner, currently developed and maintained by M. Schröder and T. Biskup.
+
+You may as well be interested in the `LabInform project <https://www.labinform.de/>`_ focussing on the necessary more global infrastructure in a laboratory/scientific workgroup interested in more `reproducible research <https://www.reproducible-research.de/>`_. In short, LabInform is "The Open-Source Laboratory Information System".
+
+Finally, don't forget to check out the website on `reproducible research <https://www.reproducible-research.de/>`_ covering in more general terms aspects of reproducible research and good scientific practice.
+
+
+License
+-------
+
+This program is free software: you can redistribute it and/or modify it under the terms of the **BSD License**.
