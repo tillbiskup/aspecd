@@ -29,6 +29,7 @@ setuptools.setup(
         "reproducible science",
         "reproducible research",
         "good scientific practice",
+        "recipe-driven data analysis",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -42,6 +43,8 @@ setuptools.setup(
         "Intended Audience :: Science/Research",
         "Development Status :: 4 - Beta",
         "Topic :: Scientific/Engineering",
+        "Topic :: Scientific/Engineering :: Chemistry",
+        "Topic :: Scientific/Engineering :: Physics",
         "Topic :: Software Development :: Libraries :: Application Frameworks"
     ],
     install_requires=[
