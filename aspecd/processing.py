@@ -1134,6 +1134,9 @@ class Averaging(ProcessingStep):
         average scientist than sticking with Python (and having in this case
         the third column/row returned).
 
+    You can use negative indices as well, as long as the resulting indices
+    are still within the range of the corresponding data dimension.
+
     Attributes
     ----------
     parameters : :class:`dict`
@@ -1271,10 +1274,10 @@ class Averaging(ProcessingStep):
     def _out_of_range(self):
         out_of_range = False
         if self.parameters["unit"] == "index":
-            if self.parameters["range"][0] < 0:
+            axis_length = self.dataset.data.data.shape[self.parameters["axis"]]
+            if abs(self.parameters["range"][0]) > axis_length:
                 out_of_range = True
-            elif self.parameters["range"][1] > \
-                    self.dataset.data.data.shape[self.parameters["axis"]]:
+            elif self.parameters["range"][1] > axis_length:
                 out_of_range = True
         else:
             axis = self.parameters["axis"]
@@ -1293,7 +1296,8 @@ class Averaging(ProcessingStep):
     def _get_range(self):
         if self.parameters["unit"] == "index":
             range_ = self.parameters["range"]
-            range_[1] += 1
+            if range_[1] > 0:
+                range_[1] += 1
         else:
             axis = self.parameters["axis"]
             range_ = [

@@ -621,7 +621,7 @@ class TestAveraging(unittest.TestCase):
             self.dataset.process(self.processing)
 
     def test_with_start_range_outside_axis_range_raises(self):
-        self.processing.parameters["range"] = [-1, 3]
+        self.processing.parameters["range"] = [-6, 3]
         with self.assertRaises(ValueError):
             self.dataset.process(self.processing)
 
@@ -639,6 +639,18 @@ class TestAveraging(unittest.TestCase):
     def test_average_averages_correctly(self):
         self.processing.parameters["range"] = [2, 3]
         data = np.average(self.dataset.data.data[2:3+1, :], axis=0)
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(data, self.dataset.data.data)
+
+    def test_average_with_negative_second_value_averages_correctly(self):
+        self.processing.parameters["range"] = [2, -1]
+        data = np.average(self.dataset.data.data[2:-1, :], axis=0)
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(data, self.dataset.data.data)
+
+    def test_average_with_two_negative_values_averages_correctly(self):
+        self.processing.parameters["range"] = [-2, -1]
+        data = np.average(self.dataset.data.data[-2:-1, :], axis=0)
         self.dataset.process(self.processing)
         np.testing.assert_allclose(data, self.dataset.data.data)
 
