@@ -55,7 +55,7 @@ And to make it even more convenient for users and future-proof:
 
 * Developed fully test-driven
 
-* Extensive user and API documentation
+* `Extensive user and API documentation <https://docs.aspecd.de/>`_
 
 
 .. warning::
