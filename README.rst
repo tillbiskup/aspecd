@@ -1,7 +1,7 @@
 ASpecD
 ======
 
-ASpecD is a framework for handling spectroscopic data focussing on reproducibility. In short: Each and every processing step applied to your data will be recorded and can be traced back, and additionally, for each representation of your data (e.g., figures, tables) you can easily follow how the data shown have been processed and where they originate from.
+ASpecD is a **framework for handling spectroscopic data** focussing on **reproducibility**. In short: Each and every processing step applied to your data will be recorded and can be traced back, and additionally, for each representation of your data (e.g., figures, tables) you can easily follow how the data shown have been processed and where they originate from.
 
 What is even better: Actual data processing and analysis **no longer requires programming skills**, but is as simple as writing a text file summarising all the steps you want to have been performed on your dataset(s) in an organised way. Curious? Here is an example::
 
@@ -61,6 +61,11 @@ And to make it even more convenient for users and future-proof:
 .. warning::
   The ASpecD framework is currently under active development and still considered in Beta development state. Therefore, expect changes in features and public APIs that may break your own code. Nevertheless, feedback as well as feature requests are highly welcome.
 
+
+Target audience
+---------------
+
+The ASpecD framework addresses every scientist working with data (both, measured and calculated) on a daily base and concerned with `reproducibility <https://www.reproducible-research.de/>`_. The ASpecD framework ensures reproducibility and---as much as possible---replicability of data processing, starting from recording data and ending with their final (graphical) representation, e.g., in a peer-reviewed publication. This is achieved by automatically creating a gap-less record of each operation performed on your data. If you do care about reproducibility and are looking for a system that helps you to achieve this goal, ASpecD may well be interesting for you.
 
 
 Related projects
