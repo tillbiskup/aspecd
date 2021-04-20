@@ -1901,6 +1901,9 @@ class PlotTask(Task):
             self._add_figure_to_recipe()
         if self.result:
             self._add_plotter_to_recipe()
+        if hasattr(self._task, 'figure'):
+            import matplotlib.pyplot as plt
+            plt.close(self._task.figure)
 
     def _add_figure_to_recipe(self):
         figure_record = FigureRecord()

@@ -8,6 +8,7 @@ import subprocess
 import unittest
 
 import numpy as np
+from matplotlib import pyplot as plt
 
 import aspecd.exceptions
 from aspecd import dataset, io, plotting, processing, report, tasks, utils
@@ -1313,6 +1314,13 @@ class TestSinglePlotTask(unittest.TestCase):
         self.assertTrue(os.path.exists(os.path.join(self.output_directory,
                                                     self.figure_filename)))
 
+    def test_perform_task_closes_figure(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertFalse(plt.fignum_exists(self.task._task.figure.number))
+
 
 class TestMultiPlotTask(unittest.TestCase):
     def setUp(self):
@@ -1353,6 +1361,13 @@ class TestMultiPlotTask(unittest.TestCase):
         self.task.recipe = self.recipe
         self.task.perform()
         self.assertTrue(os.path.exists(self.figure_filename))
+
+    def test_perform_task_closes_figure(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertFalse(plt.fignum_exists(self.task._task.figure.number))
 
 
 class TestCompositePlotTask(unittest.TestCase):
