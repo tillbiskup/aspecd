@@ -623,7 +623,7 @@ class Dataset(aspecd.utils.ToDictMixin):
                 del self.references[index]
                 break
 
-    def from_dict(self, dict_=None):
+    def from_dict(self, dict_=None):  # noqa: MC0001
         """
         Set properties from dictionary.
 

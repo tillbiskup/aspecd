@@ -634,6 +634,8 @@ import os
 import re
 import sys
 
+import matplotlib.pyplot as plt
+
 import aspecd.dataset
 import aspecd.exceptions
 import aspecd.io
@@ -800,7 +802,7 @@ class Recipe:
         self.output_directory = ''
         self.filename = ''
 
-    def from_dict(self, dict_=None):
+    def from_dict(self, dict_=None):  # noqa: MC0001
         """
         Set attributes from dictionary.
 
@@ -1468,6 +1470,7 @@ class Task(aspecd.utils.ToDictMixin):
                     setattr(obj, key, properties[key])
 
     def _set_attributes_in_dict(self, source=None, target=None):
+        # pylint: disable=too-many-nested-blocks
         for key in source:
             if key in target:
                 if isinstance(target[key], dict):
@@ -1902,7 +1905,6 @@ class PlotTask(Task):
         if self.result:
             self._add_plotter_to_recipe()
         if hasattr(self._task, 'figure'):
-            import matplotlib.pyplot as plt
             plt.close(self._task.figure)
 
     def _add_figure_to_recipe(self):
@@ -2174,7 +2176,7 @@ class CompositeplotTask(PlotTask):
 
         """
         # Replace plotter objects with reference name
-        for idx, plotter in enumerate(self.properties['plotter']):
+        for plotter in self.properties['plotter']:
             for key, value in self.recipe.plotters.items():
                 if plotter is value:
                     self.properties['plotter'] = key

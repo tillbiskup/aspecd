@@ -1090,12 +1090,14 @@ class BaselineCorrection(ProcessingStep):
 
     def _get_axis_values(self):
         axis = self.parameters["axis"]
+        # pylint: disable=invalid-unary-operand-type
         self._axis_values = np.concatenate(
             (self.dataset.data.axes[axis].values[:self._data_points_left],
              self.dataset.data.axes[axis].values[-self._data_points_right:])
         )
 
     def _get_intensity_values(self, data):
+        # pylint: disable=invalid-unary-operand-type
         self._intensity_values = np.concatenate(
             (data[:self._data_points_left],
              data[-self._data_points_right:])

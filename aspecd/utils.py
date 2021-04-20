@@ -500,7 +500,7 @@ class Yaml:
             os.mkdir(self.binary_directory)
 
 
-def replace_value_in_dict(replacement=None, target=None):
+def replace_value_in_dict(replacement=None, target=None):  # noqa: MC0001
     """
     Replace value for given key in a dictionary, traversing recursively.
 
