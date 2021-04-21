@@ -867,6 +867,7 @@ class Recipe:
         if 'package' in properties:
             dataset_factory = \
                 self._get_dataset_factory(package=properties['package'])
+            # noinspection PyUnresolvedReferences
             dataset = dataset_factory.get_dataset(source=source)
         else:
             dataset = self.dataset_factory.get_dataset(source=source)
@@ -1904,8 +1905,6 @@ class PlotTask(Task):
             self._add_figure_to_recipe()
         if self.result:
             self._add_plotter_to_recipe()
-        if hasattr(self._task, 'figure'):
-            plt.close(self._task.figure)
 
     def _add_figure_to_recipe(self):
         figure_record = FigureRecord()
@@ -2037,6 +2036,8 @@ class SingleplotTask(PlotTask):
             dataset.plot(plotter=self._task)
             # noinspection PyTypeChecker
             self.save_plot(plot=self._task)
+            # noinspection PyUnresolvedReferences
+            plt.close(self._task.figure)
 
 
 class MultiplotTask(PlotTask):
@@ -2111,6 +2112,8 @@ class MultiplotTask(PlotTask):
         self._task.plot()
         # noinspection PyTypeChecker
         self.save_plot(plot=self._task)
+        # noinspection PyUnresolvedReferences
+        plt.close(self._task.figure)
 
 
 class CompositeplotTask(PlotTask):

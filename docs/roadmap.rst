@@ -28,6 +28,8 @@ For version 0.2
 
 * Expand use cases
 
+* Plot task: default filename for saved figure
+
 
 For later versions
 ==================
