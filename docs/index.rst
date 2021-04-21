@@ -83,6 +83,18 @@ If you are interested in how working with the ASpecD framework looks like, parti
 The :doc:`API documentation <api/index>` is the definite source of information for developers, besides having a look at the source code.
 
 
+Installation
+------------
+
+To install the ASpecD framework on your computer (sensibly within a Python virtual environment), open a terminal (activate your virtual environment), and type in the following:
+
+.. code-block:: bash
+
+    pip install aspecd
+
+Have a look at the more detailed :doc:`installation instructions <installing>` as well.
+
+
 Related projects
 ----------------
 
@@ -112,6 +124,7 @@ Finally, don't forget to check out the website on `reproducible research <https:
    recipes
    usecases
    applications
+   installing
 
 .. toctree::
    :maxdepth: 2

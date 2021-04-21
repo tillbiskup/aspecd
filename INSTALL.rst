@@ -1,7 +1,7 @@
 Installing the ASpecD package
 =============================
 
-Installing the ASpecD package is as simple as installing any other Python package, as ASpeD is available from the `Python Package Index (PyPI) <https://www.pypi.org/>`_. Simply open a terminal on your computer and type::
+Installing the ASpecD package is as simple as installing any other Python package, as ASpecD is available from the `Python Package Index (PyPI) <https://www.pypi.org/>`_. Simply open a terminal on your computer and type::
 
   pip install aspecd
 
