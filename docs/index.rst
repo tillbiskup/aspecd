@@ -133,6 +133,7 @@ Finally, don't forget to check out the website on `reproducible research <https:
 
    people
    developers
+   release-history
    roadmap
    adf
    dataset-structure
