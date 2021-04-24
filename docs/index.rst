@@ -3,6 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.4717937.svg
+   :target: https://doi.org/10.5281/zenodo.4717937
+   :align: right
+
 ASpecD documentation
 ====================
 
