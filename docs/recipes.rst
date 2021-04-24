@@ -34,7 +34,7 @@ So, how does it look like? Consider the following example:
             kind: polynomial
             order: 0
       - kind: singleplot
-        type: SinglePlotter
+        type: SinglePlotter1D
         properties:
           filename:
             - first-dataset.pdf
@@ -56,7 +56,7 @@ Probably even more instructive is to compare the above recipe with the Python co
     importer_factory = aspecd.io.ImporterFactory()
     baseline_subtraction = aspecd.processing.BaselineCorrection()
     baseline_subtraction.parameters = {"kind": "polynomial", "order": 0}
-    plotter = aspecd.plotting.SinglePlotter()
+    plotter = aspecd.plotting.SinglePlotter1D()
 
     for idx, dataset_source in enumerate(dataset_filenames):
         dataset = aspecd.dataset.Dataset()

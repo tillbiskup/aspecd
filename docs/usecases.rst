@@ -45,7 +45,7 @@ To give you a first example, here is a short recipe, followed by the command you
             kind: polynomial
             order: 0
       - kind: singleplot
-        type: SinglePlotter
+        type: SinglePlotter1D
         properties:
           filename:
             - first-dataset.pdf
