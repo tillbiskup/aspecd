@@ -952,13 +952,16 @@ class TestCompositePlotter(unittest.TestCase):
     def test_plot_sets_axes_position(self):
         self.plotter.grid_dimensions = [1, 1]
         self.plotter.subplot_locations = [[0, 0, 1, 1]]
-        self.plotter.axes_positions = [[0.3, 0.3, 0.6, 0.6]]
+        self.plotter.axes_positions = [[0.2, 0.2, -0.2, -0.2]]
         single_plotter = plotting.SinglePlotter1D()
         single_plotter.dataset = self.dataset
         self.plotter.plotter.append(single_plotter)
         self.plotter.plot()
-        self.assertEqual(self.plotter.axes_positions[0][0],
-                         list(self.plotter.axes[0].get_position().bounds)[0])
+        offsets = self.plotter.axes_positions[0]
+        axis_position = [0.125 + offsets[0]*0.775, 0.110 + offsets[1]*0.77,
+                         offsets[2]*0.775, offsets[3]*0.77]
+        self.assertListEqual(axis_position,
+                             list(self.plotter.axes[0].get_position().bounds))
 
 
 class TestSingleCompositePlotter(unittest.TestCase):

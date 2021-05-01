@@ -1735,12 +1735,22 @@ class CompositePlotter(Plotter):
         Default: [[0, 0, 1, 1]]
 
     axes_positions: :class:`list`
-        List of axes positions
+        List of axes positions for fine-adjustment
 
         Each axes position is a list with four numeric elements:
-        [left, bottom, width, height]
+        [left_scale, bottom_scale, width_scale, height_scale] that are
+        applied in the following way to the position of the individual axes:
 
-        Values are in the interval [0..1]
+        [left, bottom, width, height] = ax[idx].get_position().bounds
+        new_position = [
+            left + left_scale * width, bottom + bottom_scale * height,
+            width * width_scale, height * height_scale
+        ]
+        ax[idx].set_position(new_position)
+
+        Values can be both, positive and negative floats. Note, however,
+        that negative values for the width and height parameter will mirror
+        the axes accordingly.
 
         Default: []
 
@@ -1798,7 +1808,13 @@ class CompositePlotter(Plotter):
             self.plotter[idx].axes = axes
             self.plotter[idx].plot()
         for idx, position in enumerate(self.axes_positions):
-            self.axes[idx].set_position(position)
+            left, bottom, width, height = self.axes[idx].get_position().bounds
+            print(left, bottom, width, height)
+            new_position = [
+                left + position[0]*width, bottom + position[1]*height,
+                position[2]*width, position[3]*height
+            ]
+            self.axes[idx].set_position(new_position)
 
 
 class SingleCompositePlotter(CompositePlotter):
