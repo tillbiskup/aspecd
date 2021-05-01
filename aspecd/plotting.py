@@ -842,6 +842,9 @@ class SinglePlotter2D(SinglePlotter):
 
             Default: None
 
+        show_contour_lines : :class:`bool`
+            Whether to show contour lines in case of contourf plot
+
     properties : :class:`aspecd.plotting.SinglePlot2DProperties`
         Properties of the plot, defining its appearance
 
@@ -925,6 +928,7 @@ class SinglePlotter2D(SinglePlotter):
         self.description = '2D plotting step for single dataset'
         self.parameters['switch_axes'] = False
         self.parameters['levels'] = None
+        self.parameters['show_contour_lines'] = False
         self.properties = SinglePlot2DProperties()
         self._type = 'imshow'
         self._allowed_types = ['contour', 'contourf', 'imshow']
@@ -999,11 +1003,14 @@ class SinglePlotter2D(SinglePlotter):
         if self.type == 'imshow':
             self.drawing = plot_function(data, extent=self._get_extent(),
                                          aspect='auto')
-        elif self.parameters['levels']:
+            return
+        if self.parameters['levels']:
             self.drawing = plot_function(data, extent=self._get_extent(),
                                          levels=self.parameters['levels'])
         else:
             self.drawing = plot_function(data, extent=self._get_extent())
+        if self.type == 'contourf' and self.parameters['show_contour_lines']:
+            self.axes.contour(self.drawing)
 
     def _shape_data(self):
         if self.parameters['switch_axes']:
@@ -1739,14 +1746,14 @@ class CompositePlotter(Plotter):
 
         Each axes position is a list with four numeric elements:
         [left_scale, bottom_scale, width_scale, height_scale] that are
-        applied in the following way to the position of the individual axes:
+        applied in the following way to the position of the individual axes::
 
-        [left, bottom, width, height] = ax[idx].get_position().bounds
-        new_position = [
-            left + left_scale * width, bottom + bottom_scale * height,
-            width * width_scale, height * height_scale
-        ]
-        ax[idx].set_position(new_position)
+            [left, bottom, width, height] = ax[idx].get_position().bounds
+            new_position = [
+                left + left_scale * width, bottom + bottom_scale * height,
+                width * width_scale, height * height_scale
+            ]
+            ax[idx].set_position(new_position)
 
         Values can be both, positive and negative floats. Note, however,
         that negative values for the width and height parameter will mirror

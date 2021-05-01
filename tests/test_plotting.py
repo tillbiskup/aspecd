@@ -1,6 +1,7 @@
 """Tests for plotting."""
 import warnings
 
+import matplotlib.collections
 import matplotlib.figure
 import matplotlib.axes
 import matplotlib.legend
@@ -453,6 +454,16 @@ class TestSinglePlotter2D(unittest.TestCase):
         test_dataset.data.data = np.random.random([5, 5])
         plotter = test_dataset.plot(self.plotter)
         self.assertEqual('auto', self.plotter.ax._aspect)
+
+    def test_show_contour_lines_plots_contour_lines_in_contourf(self):
+        self.plotter.type = 'contourf'
+        self.plotter.parameters['show_contour_lines'] = True
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        plotter = test_dataset.plot(self.plotter)
+        line_collection = [isinstance(x, matplotlib.collections.LineCollection)
+                           for x in plotter.ax.get_children()]
+        self.assertTrue(any(line_collection))
 
 
 class TestSinglePlotter2DStacked(unittest.TestCase):
