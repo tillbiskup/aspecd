@@ -995,7 +995,11 @@ class SinglePlotter2D(SinglePlotter):
         """
         plot_function = getattr(self.axes, self.type)
         data = self._shape_data()
-        if self.parameters['levels']:
+        # matplotlib imshow and contour have incompatible properties
+        if self.type == 'imshow':
+            self.drawing = plot_function(data, extent=self._get_extent(),
+                                         aspect='auto')
+        elif self.parameters['levels']:
             self.drawing = plot_function(data, extent=self._get_extent(),
                                          levels=self.parameters['levels'])
         else:

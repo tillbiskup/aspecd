@@ -442,6 +442,18 @@ class TestSinglePlotter2D(unittest.TestCase):
         self.plotter.plot(dataset=test_dataset)
         self.assertEqual(cmap, self.plotter.drawing.cmap.name)
 
+    def test_plot_imshow_with_levels_ignores_levels(self):
+        self.plotter.parameters['levels'] = 40
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        test_dataset.plot(self.plotter)
+
+    def test_plot_imshow_sets_aspect_to_auto(self):
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        plotter = test_dataset.plot(self.plotter)
+        self.assertEqual('auto', self.plotter.ax._aspect)
+
 
 class TestSinglePlotter2DStacked(unittest.TestCase):
     def setUp(self):
