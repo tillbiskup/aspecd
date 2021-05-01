@@ -1809,7 +1809,6 @@ class CompositePlotter(Plotter):
             self.plotter[idx].plot()
         for idx, position in enumerate(self.axes_positions):
             left, bottom, width, height = self.axes[idx].get_position().bounds
-            print(left, bottom, width, height)
             new_position = [
                 left + position[0]*width, bottom + position[1]*height,
                 position[2]*width, position[3]*height

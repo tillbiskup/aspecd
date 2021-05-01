@@ -10,6 +10,8 @@ Version 0.1.1
 
 Not yet released
 
+* CompositePlotter: more intuitive axes_positions (7b83f36c70)
+
 * Fix bug with aspect ratio of 2D plots using imshow (eb94be1da0)
 
 * Update intersphinx mapping for matplotlib (2e6049549b)
