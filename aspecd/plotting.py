@@ -177,6 +177,7 @@ import copy
 import os
 
 import matplotlib as mpl
+import matplotlib.collections
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
@@ -918,6 +919,27 @@ class SinglePlotter2D(SinglePlotter):
              drawing:
                cmap: RdGy
 
+    To plot both, filled contours and contour lines, setting the appearance
+    of the contour lines as well:
+
+    .. code-block:: yaml
+
+       - kind: singleplot
+         type: SinglePlotter2D
+         properties:
+           type: contourf
+           filename: output.pdf
+           parameters:
+             show_contour_lines: True
+           properties:
+             drawing:
+               cmap: RdGy
+               linewidths: 0.5
+               linestyles: '-'
+               colors: k
+
+    In this particular case, the contour lines are thin black solid lines.
+
     Make sure to check the documentation for further parameters that can be
     set.
 
@@ -1010,7 +1032,8 @@ class SinglePlotter2D(SinglePlotter):
         else:
             self.drawing = plot_function(data, extent=self._get_extent())
         if self.type == 'contourf' and self.parameters['show_contour_lines']:
-            self.axes.contour(self.drawing)
+            self.axes.contour(self.drawing, colors='k', linewidths=0.5,
+                              linestyles='-')
 
     def _shape_data(self):
         if self.parameters['switch_axes']:
@@ -2925,16 +2948,40 @@ class SurfaceProperties(DrawingProperties):
 
     Attributes
     ----------
-    cmap: :class:`str`
+    cmap : :class:`str`
         name of the colormap to use
 
         For details see :class:`matplotlib.colors.Colormap`
+
+    linewidths : :class:`float`
+        Width of the contour lines (if present)
+
+    linestyles : :class:`str`
+        Style of the contour lines (if present)
+
+    colors : :class:`str`
+        Colour of the contour lines (if present)
 
     """
 
     def __init__(self):
         super().__init__()
         self.cmap = 'viridis'
+        self.linewidths = None
+        self.linestyles = None
+        self.colors = None
+
+    def apply(self, drawing=None):
+        super().apply(drawing=drawing)
+        children = drawing.axes.get_children()
+        for child in children:
+            if isinstance(child, mpl.collections.LineCollection):
+                if self.linewidths:
+                    child.set_linewidths(self.linewidths)
+                if self.linestyles:
+                    child.set_linestyles(self.linestyles)
+                if self.colors:
+                    child.set_color(self.colors)
 
 
 class GridProperties(aspecd.utils.Properties):

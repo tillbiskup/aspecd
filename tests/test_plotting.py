@@ -452,7 +452,7 @@ class TestSinglePlotter2D(unittest.TestCase):
     def test_plot_imshow_sets_aspect_to_auto(self):
         test_dataset = dataset.Dataset()
         test_dataset.data.data = np.random.random([5, 5])
-        plotter = test_dataset.plot(self.plotter)
+        test_dataset.plot(self.plotter)
         self.assertEqual('auto', self.plotter.ax._aspect)
 
     def test_show_contour_lines_plots_contour_lines_in_contourf(self):
@@ -464,6 +464,95 @@ class TestSinglePlotter2D(unittest.TestCase):
         line_collection = [isinstance(x, matplotlib.collections.LineCollection)
                            for x in plotter.ax.get_children()]
         self.assertTrue(any(line_collection))
+
+    def test_contour_plot_sets_correct_linewidths(self):
+        self.plotter.type = 'contour'
+        dict_ = {'drawing': {'linewidths': 2}}
+        self.plotter.properties.from_dict(dict_)
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        plotter = test_dataset.plot(self.plotter)
+        line_collection = [
+            x for x in plotter.ax.get_children()
+            if isinstance(x, matplotlib.collections.LineCollection)
+        ]
+        self.assertEqual(dict_['drawing']['linewidths'],
+                         line_collection[0].get_linewidths()[0])
+
+    def test_contour_plot_sets_correct_linestyles(self):
+        self.plotter.type = 'contour'
+        dict_ = {'drawing': {'linestyles': ':', 'linewidths': 1}}
+        self.plotter.properties.from_dict(dict_)
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        plotter = test_dataset.plot(self.plotter)
+        line_collection = [
+            x for x in plotter.ax.get_children()
+            if isinstance(x, matplotlib.collections.LineCollection)
+        ]
+        # linestyle ':' => (0.0, [1.0, 1.65]) for linewidth = 1
+        self.assertEqual((0.0, [1.0, 1.65]),
+                         line_collection[0].get_linestyles()[0])
+
+    def test_contour_plot_sets_correct_colors(self):
+        self.plotter.type = 'contour'
+        dict_ = {'drawing': {'colors': 'k'}}
+        self.plotter.properties.from_dict(dict_)
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        plotter = test_dataset.plot(self.plotter)
+        line_collection = [
+            x for x in plotter.ax.get_children()
+            if isinstance(x, matplotlib.collections.LineCollection)
+        ]
+        self.assertListEqual([0., 0., 0., 1.],
+                             list(line_collection[0].get_colors()[0]))
+
+    def test_contourf_plot_with_contour_lines_sets_correct_linewidths(self):
+        self.plotter.type = 'contourf'
+        self.plotter.parameters['show_contour_lines'] = True
+        dict_ = {'drawing': {'linewidths': 2}}
+        self.plotter.properties.from_dict(dict_)
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        plotter = test_dataset.plot(self.plotter)
+        line_collection = [
+            x for x in plotter.ax.get_children()
+            if isinstance(x, matplotlib.collections.LineCollection)
+        ]
+        self.assertEqual(dict_['drawing']['linewidths'],
+                         line_collection[0].get_linewidths()[0])
+
+    def test_contourf_plot_with_contour_lines_sets_correct_linestyles(self):
+        self.plotter.type = 'contourf'
+        self.plotter.parameters['show_contour_lines'] = True
+        dict_ = {'drawing': {'linestyles': ':', 'linewidths': 1}}
+        self.plotter.properties.from_dict(dict_)
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        plotter = test_dataset.plot(self.plotter)
+        line_collection = [
+            x for x in plotter.ax.get_children()
+            if isinstance(x, matplotlib.collections.LineCollection)
+        ]
+        # linestyle ':' => (0.0, [1.0, 1.65]) for linewidth = 1
+        self.assertEqual((0.0, [1.0, 1.65]),
+                         line_collection[0].get_linestyles()[0])
+
+    def test_contourf_plot_with_contour_lines_sets_correct_colors(self):
+        self.plotter.type = 'contourf'
+        self.plotter.parameters['show_contour_lines'] = True
+        dict_ = {'drawing': {'colors': 'k'}}
+        self.plotter.properties.from_dict(dict_)
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        plotter = test_dataset.plot(self.plotter)
+        line_collection = [
+            x for x in plotter.ax.get_children()
+            if isinstance(x, matplotlib.collections.LineCollection)
+        ]
+        self.assertListEqual([0., 0., 0., 1.],
+                             list(line_collection[0].get_colors()[0]))
 
 
 class TestSinglePlotter2DStacked(unittest.TestCase):
