@@ -10,7 +10,9 @@ Version 0.1.1
 
 Not yet released
 
-* MultiPlotter:
+* SliceExtraction: Remove correct axis from dataset ()
+
+* MultiPlotter1D*: Fix problem in conjunction with CompositePlotter and assigning drawings (1987ce2c2d)
 
 * SliceExtraction: fix problem extracting slice with index zero (c5a44172a4)
 

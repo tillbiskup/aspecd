@@ -898,7 +898,7 @@ class SliceExtraction(ProcessingStep):
         else:
             self.dataset.data.data = \
                 self.dataset.data.data[:, self.parameters['index']]
-        del self.dataset.data.axes[self.parameters['axis'] + 1]
+        del self.dataset.data.axes[self.parameters['axis']]
 
 
 class BaselineCorrection(ProcessingStep):
