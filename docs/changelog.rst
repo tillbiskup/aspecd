@@ -24,7 +24,9 @@ Version 0.1.1
 
 Not yet released
 
-* CompositePlotter: Legends for subplots work ()
+* MetadataMapper: Mappings are automatically loaded from file if filename is given ()
+
+* CompositePlotter: Legends for subplots work (7ef1837458)
 
 * SliceExtraction: Remove correct axis from dataset (0c4d97f598)
 

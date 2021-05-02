@@ -1015,6 +1015,8 @@ class MetadataMapper:
         hard to track bugs.
 
         """
+        if self.recipe_filename:
+            self.create_mappings()
         for mapping in self.mappings:
             if mapping[0]:
                 method = getattr(self, ''.join(['_', mapping[1], '_in_dict']))

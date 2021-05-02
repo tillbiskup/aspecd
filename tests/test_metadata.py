@@ -500,6 +500,14 @@ class TestMetadataMapper(unittest.TestCase):
         self.assertTrue(new_key in self.metadata_mapper.metadata.keys())
         self.assertFalse(old_key in self.metadata_mapper.metadata.keys())
 
+    def test_rename_uppercase_key(self):
+        new_key = 'foo'
+        old_key = 'BAR'
+        self.metadata_mapper.metadata[old_key] = 'bar'
+        self.metadata_mapper.rename_key(old_key, new_key)
+        self.assertTrue(new_key in self.metadata_mapper.metadata.keys())
+        self.assertFalse(old_key in self.metadata_mapper.metadata.keys())
+
     def test_has_method_combine_items(self):
         self.assertTrue(callable(self.metadata_mapper.combine_items))
 
@@ -834,4 +842,29 @@ class TestMetadataMapper(unittest.TestCase):
         self.metadata_mapper.version = "0.1.0"
         self.write_metadata_mapper_file(mapping_dict)
         self.metadata_mapper.create_mappings()
+        self.assertEqual(mapping, self.metadata_mapper.mappings[-1])
+
+    def test_map_adds_items_to_mappings_if_filename_is_given(self):
+        combine_items = [{
+            "old keys": ['Date start', 'Time start'],
+            "new key": "start",
+            "pattern": " ",
+            "in dict": "GENERAL"
+        }]
+        mapping = [
+            "GENERAL",
+            "combine_items",
+            [['Date start', 'Time start'], "start", " "]
+        ]
+        mapping_dict = {
+            "format": {"type": "metadata mapper", "version": "0.1.0"},
+            "mapping1": {"metadata file versions": ["0.1.0"],
+                         "combine items": combine_items}
+        }
+        self.metadata_mapper.recipe_filename = self.filename
+        self.metadata_mapper.version = "0.1.0"
+        self.write_metadata_mapper_file(mapping_dict)
+        self.metadata_mapper.metadata = {'GENERAL': {'Date start': '',
+                                                     'Time start': ''}}
+        self.metadata_mapper.map()
         self.assertEqual(mapping, self.metadata_mapper.mappings[-1])
