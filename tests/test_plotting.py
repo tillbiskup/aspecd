@@ -1063,6 +1063,17 @@ class TestCompositePlotter(unittest.TestCase):
         self.assertListEqual(axis_position,
                              list(self.plotter.axes[0].get_position().bounds))
 
+    def test_plot_shows_legend(self):
+        self.plotter.grid_dimensions = [1, 1]
+        self.plotter.subplot_locations = [[0, 0, 1, 1]]
+        single_plotter = plotting.SinglePlotter1D()
+        single_plotter.dataset = self.dataset
+        single_plotter.parameters['show_legend'] = True
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plot()
+        self.assertTrue(isinstance(self.plotter.axes[0].get_legend(),
+                                   matplotlib.legend.Legend))
+
 
 class TestSingleCompositePlotter(unittest.TestCase):
     def setUp(self):

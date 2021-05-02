@@ -463,7 +463,7 @@ class Plotter:
 
     def _set_legend(self):
         if self.parameters['show_legend']:
-            self.legend = plt.legend(**self.properties.legend.to_dict())
+            self.legend = self.axes.legend(**self.properties.legend.to_dict())
 
     def _add_zero_lines(self):
         if self.parameters['show_zero_lines']:
