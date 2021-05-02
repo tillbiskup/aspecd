@@ -1578,6 +1578,7 @@ class MultiPlotter1D(MultiPlotter):
     def _create_plot(self):
         """Actual drawing of datasets"""
         plot_function = getattr(self.axes, self.type)
+        self.drawings = []
         for idx, dataset in enumerate(self.datasets):
             if not self.properties.drawings[idx].label:
                 self.properties.drawings[idx].label = dataset.label
@@ -1687,6 +1688,7 @@ class MultiPlotter1DStacked(MultiPlotter1D):
         else:
             offset = self.parameters["offset"]
         plot_function = getattr(self.axes, self.type)
+        self.drawings = []
         for idx, dataset in enumerate(self.datasets):
             if not self.properties.drawings[idx].label:
                 self.properties.drawings[idx].label = dataset.label

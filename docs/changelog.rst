@@ -10,6 +10,10 @@ Version 0.1.1
 
 Not yet released
 
+* MultiPlotter:
+
+* SliceExtraction: fix problem extracting slice with index zero (c5a44172a4)
+
 * CompositePlotter: more intuitive axes_positions (7b83f36c70)
 
 * Fix bug with aspect ratio of 2D plots using imshow (eb94be1da0)
