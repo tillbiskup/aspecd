@@ -24,7 +24,9 @@ Version 0.1.1
 
 Not yet released
 
-* MetadataMapper: Mappings are automatically loaded from file if filename is given ()
+* MetadataMapper: Fix sequence of mapping operations performed ()
+
+* MetadataMapper: Mappings are automatically loaded from file if filename is given (2eedfa01a5)
 
 * CompositePlotter: Legends for subplots work (7ef1837458)
 
