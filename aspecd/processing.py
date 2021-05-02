@@ -791,6 +791,9 @@ class SliceExtraction(ProcessingStep):
     to operate only on a slice along a particular axis. One example may be
     to compare first and last trace of a 2D dataset.
 
+    You can either provide indices or axis values. For the latter, set the
+    parameter "unit" accordingly. For details, see below.
+
     .. important::
         Currently, slice extraction works *only* for **2D** datasets,
         not for higher-dimensional datasets. This may, however, change in
@@ -798,26 +801,52 @@ class SliceExtraction(ProcessingStep):
 
     Attributes
     ----------
-    parameters["index"] : :class:`int`
-        Index of the slice to extract
+    parameters : :class:`dict`
+        All parameters necessary for this step.
 
-        If no index is provided or the given index is out of bounds for the
-        given axis, an IndexError is raised.
+        axis : :class:`int`
+            Axis to take the index from to extract the slice
 
-    parameters["axis"] : :class:`int`
-        Axis to take the index from to extract the slice
+            If an invalid axis is provided, an IndexError is raised.
 
-        Default value: 0
+            Default: 0
+
+        position : :class:`int`
+            Position of the slice to extract
+
+            Positions can be given as axis indices (default) or axis values,
+            if the parameter "unit" is set accordingly. For details, see below.
+
+            If no position is provided or the given position is out of
+            bounds for the given axis, a ValueError is raised.
+
+        unit : :class:`str`
+            Unit used for specifying the range: either "axis" or "index".
+
+            If an invalid value is provided, a ValueError is raised.
+
+            Default: "index"
 
     Raises
     ------
     aspecd.exceptions.NotApplicableToDatasetError
         Raised if dataset has not enough dimensions
 
-    IndexError
+    ValueError
         Raised if index is out of bounds for given axis
 
+        Raised if wrong unit is given
+
+    IndexError
         Raised if axis is out of bounds for given dataset
+
+
+    .. versionchanged:: 0.2
+       Parameter "index" renamed to "position" to reflect values to be
+       either indices or axis values
+
+    .. versionadded:: 0.2
+       Slice positions can be given both, as axis indices and axis values
 
 
     Examples
@@ -835,7 +864,7 @@ class SliceExtraction(ProcessingStep):
          type: SliceExtraction
          properties:
            parameters:
-             index: 5
+             position: 5
 
     This will extract the sixth slice (index five) along the first axis (index
     zero).
@@ -849,10 +878,27 @@ class SliceExtraction(ProcessingStep):
          type: SliceExtraction
          properties:
            parameters:
-             index: 5
+             position: 5
              axis: 1
 
     This will extract the sixth slice along the second axis.
+
+    And as it is sometimes more convenient to give ranges in axis values
+    rather than indices, even this is possible. Suppose the axis you would
+    like to extract a slice from runs from 340 to 350 and you would like to
+    extract the slice corresponding to 343:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: SliceExtraction
+         properties:
+           parameters:
+             position: 343
+             unit: axis
+
+    In case of you providing the range in axis units rather than indices,
+    the value closest to the actual axis value will be chosen automatically.
 
     """
 
@@ -860,8 +906,9 @@ class SliceExtraction(ProcessingStep):
         super().__init__()
         self.undoable = True
         self.description = 'Extract slice from dataset'
-        self.parameters['index'] = None
+        self.parameters['position'] = None
         self.parameters['axis'] = 0
+        self.parameters['unit'] = 'index'
 
     @staticmethod
     def applicable(dataset):
@@ -883,22 +930,52 @@ class SliceExtraction(ProcessingStep):
         """
         return len(dataset.data.axes) == 3
 
-    def _perform_task(self):
-        if not self.parameters['index'] and self.parameters['index'] != 0:
-            raise IndexError('No index provided for slice extraction')
-        if self.parameters['index'] > self.dataset.data.data.shape[0]:
-            raise IndexError('Index %i out of bounds' % self.parameters[
-                'index'])
+    def _sanitise_parameters(self):
+        if not self.parameters['position'] and self.parameters['position'] != 0:
+            raise IndexError('No position provided for slice extraction')
         if self.parameters['axis'] > self.dataset.data.data.ndim - 1:
             raise IndexError("Axis %i out of bounds" % self.parameters['axis'])
+        self.parameters["unit"] = self.parameters["unit"].lower()
+        if self.parameters["unit"] not in ["index", "axis"]:
+            raise ValueError("Wrong unit, needs to be either index or axis.")
+        if self._out_of_range():
+            raise ValueError("Index out of axis range.")
 
+    def _perform_task(self):
+        slice_ = self._get_slice()
         if self.parameters['axis'] == 0:
-            self.dataset.data.data = \
-                self.dataset.data.data[self.parameters['index'], :]
+            self.dataset.data.data = self.dataset.data.data[slice_, :]
         else:
-            self.dataset.data.data = \
-                self.dataset.data.data[:, self.parameters['index']]
+            self.dataset.data.data = self.dataset.data.data[:, slice_]
         del self.dataset.data.axes[self.parameters['axis']]
+
+    def _out_of_range(self):
+        out_of_range = False
+        if self.parameters["unit"] == "index":
+            axis_length = self.dataset.data.data.shape[self.parameters["axis"]]
+            if abs(self.parameters["position"]) > axis_length:
+                out_of_range = True
+        else:
+            axis = self.parameters["axis"]
+            if self.parameters["position"] < \
+                    min(self.dataset.data.axes[axis].values) \
+                    or self.parameters["position"] > \
+                    max(self.dataset.data.axes[axis].values):
+                out_of_range = True
+        return out_of_range
+
+    def _get_slice(self):
+        if self.parameters["unit"] == "index":
+            slice_ = self.parameters["position"]
+        else:
+            axis = self.parameters["axis"]
+            slice_ = self._get_index(self.dataset.data.axes[axis].values,
+                                     self.parameters["position"])
+        return slice_
+
+    @staticmethod
+    def _get_index(vector, value):
+        return np.abs(vector - value).argmin()
 
 
 class BaselineCorrection(ProcessingStep):

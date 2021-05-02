@@ -10,7 +10,9 @@ Version 0.2.0
 
 Not yet released
 
-New features:
+
+New features
+------------
 
 * SinglePlotter2D:
 
@@ -18,13 +20,21 @@ New features:
 
   * Lines of contour plot can be styled
 
+* SliceExtraction now handles both, axis indices and axis values
+
+
+Changes
+-------
+
+* SliceExtraction: parameter "index" renamed to "position"
+
 
 Version 0.1.1
 =============
 
 Not yet released
 
-* MetadataMapper: Fix sequence of mapping operations performed ()
+* MetadataMapper: Fix sequence of mapping operations performed (d864cf10a4)
 
 * MetadataMapper: Mappings are automatically loaded from file if filename is given (2eedfa01a5)
 

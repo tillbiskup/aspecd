@@ -457,29 +457,29 @@ class TestSliceExtraction(unittest.TestCase):
             self.dataset.process(self.processing)
 
     def test_with_index_exceeding_dimension_raises(self):
-        self.processing.parameters['index'] = 10
-        with self.assertRaisesRegex(IndexError, "Index [0-9]+ out of bounds"):
+        self.processing.parameters['position'] = 10
+        with self.assertRaisesRegex(ValueError, "Index out of axis range."):
             self.dataset.process(self.processing)
 
     def test_extract_slice(self):
         origdata = self.dataset.data.data
-        self.processing.parameters['index'] = 3
+        self.processing.parameters['position'] = 3
         self.dataset.process(self.processing)
         np.testing.assert_allclose(origdata[3, :], self.dataset.data.data)
 
     def test_extract_slice_with_index_zero(self):
         origdata = self.dataset.data.data
-        self.processing.parameters['index'] = 0
+        self.processing.parameters['position'] = 0
         self.dataset.process(self.processing)
         np.testing.assert_allclose(origdata[0, :], self.dataset.data.data)
 
     def test_extract_slice_removes_axis(self):
-        self.processing.parameters['index'] = 3
+        self.processing.parameters['position'] = 3
         self.dataset.process(self.processing)
         self.assertEqual(2, len(self.dataset.data.axes))
 
     def test_extract_slice_removes_correct_axis(self):
-        self.processing.parameters['index'] = 3
+        self.processing.parameters['position'] = 3
         self.dataset.data.axes[0].quantity = 'foo'
         self.dataset.data.axes[1].quantity = 'bar'
         self.dataset.data.axes[2].quantity = 'intensity'
@@ -488,7 +488,7 @@ class TestSliceExtraction(unittest.TestCase):
         self.assertEqual('intensity', self.dataset.data.axes[-1].quantity)
 
     def test_extract_slice_removes_correct_axis_with_axis_one(self):
-        self.processing.parameters['index'] = 3
+        self.processing.parameters['position'] = 3
         self.processing.parameters['axis'] = 1
         self.dataset.data.axes[0].quantity = 'foo'
         self.dataset.data.axes[1].quantity = 'bar'
@@ -499,21 +499,53 @@ class TestSliceExtraction(unittest.TestCase):
 
     def test_extract_slice_operates_along_first_axis_by_default(self):
         origdata = self.dataset.data.data
-        self.processing.parameters['index'] = 3
+        self.processing.parameters['position'] = 3
         self.dataset.process(self.processing)
         np.testing.assert_allclose(origdata[3, :], self.dataset.data.data)
 
     def test_extract_slice_along_second_axis(self):
         origdata = self.dataset.data.data
-        self.processing.parameters['index'] = 3
+        self.processing.parameters['position'] = 3
         self.processing.parameters['axis'] = 1
         self.dataset.process(self.processing)
         np.testing.assert_allclose(origdata[:, 3], self.dataset.data.data)
 
     def test_extract_slice_along_non_existing_axis_raises(self):
         with self.assertRaisesRegex(IndexError, "Axis [0-9]+ out of bounds"):
-            self.processing.parameters['index'] = 3
+            self.processing.parameters['position'] = 3
             self.processing.parameters['axis'] = 2
+            self.dataset.process(self.processing)
+
+    def test_extract_slice_with_wrong_unit_raises(self):
+        self.processing.parameters["unit"] = "foo"
+        self.processing.parameters["position"] = 3
+        with self.assertRaises(ValueError):
+            self.dataset.process(self.processing)
+
+    def test_extract_slice_with_axis_units(self):
+        self.processing.parameters["unit"] = "axis"
+        self.dataset.data.axes[0].values = \
+            np.linspace(30, 70, len(self.dataset.data.axes[0].values))
+        self.processing.parameters["position"] = 40
+        data = self.dataset.data.data[1, :]
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(data, self.dataset.data.data)
+
+    def test_unit_is_case_insensitive(self):
+        self.processing.parameters["unit"] = "aXis"
+        self.dataset.data.axes[0].values = \
+            np.linspace(30, 70, len(self.dataset.data.axes[0].values))
+        self.processing.parameters["position"] = 40
+        data = self.dataset.data.data[1, :]
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(data, self.dataset.data.data)
+
+    def test_extract_slice__with_axis_units_out_of_range_raises(self):
+        self.processing.parameters["unit"] = "axis"
+        self.dataset.data.axes[0].values = \
+            np.linspace(30, 70, len(self.dataset.data.axes[0].values))
+        self.processing.parameters["position"] = 300
+        with self.assertRaises(ValueError):
             self.dataset.process(self.processing)
 
 
