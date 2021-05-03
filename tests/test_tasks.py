@@ -1381,6 +1381,10 @@ class TestCompositePlotTask(unittest.TestCase):
                                     'type': 'SinglePlotter1D',
                                     'apply_to': self.dataset,
                                     'result': 'singleplotter'}
+        self.multiplotting_task = {'kind': 'multiplot',
+                                   'type': 'MultiPlotter1D',
+                                   'apply_to': self.dataset,
+                                   'result': 'multiplotter'}
         self.plotting_task = {'kind': 'compositeplot',
                               'type': 'CompositePlotter',
                               'properties': {'plotter': ['singleplotter']}}
@@ -1414,6 +1418,19 @@ class TestCompositePlotTask(unittest.TestCase):
         self.assertTrue(isinstance(self.task._task.plotter[0],
                                    aspecd.plotting.Plotter))
 
+    def test_perform_task_with_multiplotter(self):
+        self.pretask = tasks.MultiplotTask()
+        self.plotting_task['properties']['plotter'] = ['multiplotter']
+        self.prepare_recipe()
+        self.pretask.from_dict(self.multiplotting_task)
+        self.pretask.recipe = self.recipe
+        self.pretask.perform()
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(isinstance(self.task._task.plotter[0],
+                                   aspecd.plotting.Plotter))
+
     def test_perform_task_with_filename_saves_plot(self):
         self.prepare_recipe()
         self.pretask.from_dict(self.singleplotting_task)
@@ -1437,6 +1454,7 @@ class TestCompositePlotTask(unittest.TestCase):
         self.task.recipe = self.recipe
         self.task.perform()
         self.task.to_dict()
+
 
 class TestReportTask(unittest.TestCase):
     def setUp(self):

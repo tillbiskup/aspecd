@@ -467,6 +467,12 @@ class TestSliceExtraction(unittest.TestCase):
         self.dataset.process(self.processing)
         np.testing.assert_allclose(origdata[3, :], self.dataset.data.data)
 
+    def test_extract_slice_with_index_zero(self):
+        origdata = self.dataset.data.data
+        self.processing.parameters['index'] = 0
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(origdata[0, :], self.dataset.data.data)
+
     def test_extract_slice_removes_axis(self):
         self.processing.parameters['index'] = 3
         self.dataset.process(self.processing)
@@ -474,11 +480,22 @@ class TestSliceExtraction(unittest.TestCase):
 
     def test_extract_slice_removes_correct_axis(self):
         self.processing.parameters['index'] = 3
-        self.dataset.data.axes[1].quantity = 'foo'
+        self.dataset.data.axes[0].quantity = 'foo'
+        self.dataset.data.axes[1].quantity = 'bar'
         self.dataset.data.axes[2].quantity = 'intensity'
         self.dataset.process(self.processing)
-        self.assertNotEqual('foo', self.dataset.data.axes[1])
-        self.assertNotEqual('intensity', self.dataset.data.axes[-1])
+        self.assertEqual('bar', self.dataset.data.axes[0].quantity)
+        self.assertEqual('intensity', self.dataset.data.axes[-1].quantity)
+
+    def test_extract_slice_removes_correct_axis_with_axis_one(self):
+        self.processing.parameters['index'] = 3
+        self.processing.parameters['axis'] = 1
+        self.dataset.data.axes[0].quantity = 'foo'
+        self.dataset.data.axes[1].quantity = 'bar'
+        self.dataset.data.axes[2].quantity = 'intensity'
+        self.dataset.process(self.processing)
+        self.assertEqual('foo', self.dataset.data.axes[0].quantity)
+        self.assertEqual('intensity', self.dataset.data.axes[-1].quantity)
 
     def test_extract_slice_operates_along_first_axis_by_default(self):
         origdata = self.dataset.data.data

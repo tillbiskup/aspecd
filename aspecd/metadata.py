@@ -1015,6 +1015,8 @@ class MetadataMapper:
         hard to track bugs.
 
         """
+        if self.recipe_filename:
+            self.create_mappings()
         for mapping in self.mappings:
             if mapping[0]:
                 method = getattr(self, ''.join(['_', mapping[1], '_in_dict']))
@@ -1088,6 +1090,12 @@ class MetadataMapper:
         respective methods of the class, namely :meth:`combine_items`,
         :meth:`rename_key`, :meth:`copy_key`, and :meth:`move_item`.
 
+        .. important::
+
+            The sequence of operations can sometimes be crucial. They are
+            called as follows: "copy key" -> "combine items" -> "rename key"
+            -> "remove items"
+
         Note that you can name the mappings called here ``map 1`` and ``map 2``
         as you like. Use descriptive names wherever possible.
 
@@ -1126,6 +1134,16 @@ class MetadataMapper:
                 message='No matching recipe found.')
 
     def _add_mappings_from_recipe(self):
+        if 'copy key' in self._mapping_recipe.keys():
+            for i in range(len(self._mapping_recipe['copy key'])):
+                mapping = \
+                    [self._mapping_recipe['copy key'][i]['in dict'],
+                     'copy_key',
+                     [self._mapping_recipe['copy key'][i]['old key'],
+                      self._mapping_recipe['copy key'][i]['new key']
+                      ]
+                     ]
+                self.mappings.append(mapping)
         if 'combine items' in self._mapping_recipe.keys():
             for i in range(len(self._mapping_recipe['combine items'])):
                 mapping = \
@@ -1142,16 +1160,6 @@ class MetadataMapper:
                      'rename_key',
                      [self._mapping_recipe['rename key'][i]['old key'],
                       self._mapping_recipe['rename key'][i]['new key']]]
-                self.mappings.append(mapping)
-        if 'copy key' in self._mapping_recipe.keys():
-            for i in range(len(self._mapping_recipe['copy key'])):
-                mapping = \
-                    [self._mapping_recipe['copy key'][i]['in dict'],
-                     'copy_key',
-                     [self._mapping_recipe['copy key'][i]['old key'],
-                      self._mapping_recipe['copy key'][i]['new key']
-                      ]
-                     ]
                 self.mappings.append(mapping)
         if 'move item' in self._mapping_recipe.keys():
             for i in range(len(self._mapping_recipe['move item'])):

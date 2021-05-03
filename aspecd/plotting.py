@@ -462,7 +462,7 @@ class Plotter:
 
     def _set_legend(self):
         if self.parameters['show_legend']:
-            self.legend = plt.legend(**self.properties.legend.to_dict())
+            self.legend = self.axes.legend(**self.properties.legend.to_dict())
 
     def _add_zero_lines(self):
         if self.parameters['show_zero_lines']:
@@ -995,7 +995,11 @@ class SinglePlotter2D(SinglePlotter):
         """
         plot_function = getattr(self.axes, self.type)
         data = self._shape_data()
-        if self.parameters['levels']:
+        # matplotlib imshow and contour have incompatible properties
+        if self.type == 'imshow':
+            self.drawing = plot_function(data, extent=self._get_extent(),
+                                         aspect='auto')
+        elif self.parameters['levels']:
             self.drawing = plot_function(data, extent=self._get_extent(),
                                          levels=self.parameters['levels'])
         else:
@@ -1544,6 +1548,7 @@ class MultiPlotter1D(MultiPlotter):
     def _create_plot(self):
         """Actual drawing of datasets"""
         plot_function = getattr(self.axes, self.type)
+        self.drawings = []
         for idx, dataset in enumerate(self.datasets):
             if not self.properties.drawings[idx].label:
                 self.properties.drawings[idx].label = dataset.label
@@ -1653,6 +1658,7 @@ class MultiPlotter1DStacked(MultiPlotter1D):
         else:
             offset = self.parameters["offset"]
         plot_function = getattr(self.axes, self.type)
+        self.drawings = []
         for idx, dataset in enumerate(self.datasets):
             if not self.properties.drawings[idx].label:
                 self.properties.drawings[idx].label = dataset.label
@@ -1731,12 +1737,22 @@ class CompositePlotter(Plotter):
         Default: [[0, 0, 1, 1]]
 
     axes_positions: :class:`list`
-        List of axes positions
+        List of axes positions for fine-adjustment
 
         Each axes position is a list with four numeric elements:
-        [left, bottom, width, height]
+        [left_scale, bottom_scale, width_scale, height_scale] that are
+        applied in the following way to the position of the individual axes:
 
-        Values are in the interval [0..1]
+        [left, bottom, width, height] = ax[idx].get_position().bounds
+        new_position = [
+            left + left_scale * width, bottom + bottom_scale * height,
+            width * width_scale, height * height_scale
+        ]
+        ax[idx].set_position(new_position)
+
+        Values can be both, positive and negative floats. Note, however,
+        that negative values for the width and height parameter will mirror
+        the axes accordingly.
 
         Default: []
 
@@ -1794,7 +1810,12 @@ class CompositePlotter(Plotter):
             self.plotter[idx].axes = axes
             self.plotter[idx].plot()
         for idx, position in enumerate(self.axes_positions):
-            self.axes[idx].set_position(position)
+            left, bottom, width, height = self.axes[idx].get_position().bounds
+            new_position = [
+                left + position[0] * width, bottom + position[1] * height,
+                position[2] * width, position[3] * height
+            ]
+            self.axes[idx].set_position(new_position)
 
 
 class SingleCompositePlotter(CompositePlotter):

@@ -805,7 +805,7 @@ class SliceExtraction(ProcessingStep):
         given axis, an IndexError is raised.
 
     parameters["axis"] : :class:`int`
-        Axis to average along
+        Axis to take the index from to extract the slice
 
         Default value: 0
 
@@ -884,7 +884,7 @@ class SliceExtraction(ProcessingStep):
         return len(dataset.data.axes) == 3
 
     def _perform_task(self):
-        if not self.parameters['index']:
+        if not self.parameters['index'] and self.parameters['index'] != 0:
             raise IndexError('No index provided for slice extraction')
         if self.parameters['index'] > self.dataset.data.data.shape[0]:
             raise IndexError('Index %i out of bounds' % self.parameters[
@@ -898,7 +898,7 @@ class SliceExtraction(ProcessingStep):
         else:
             self.dataset.data.data = \
                 self.dataset.data.data[:, self.parameters['index']]
-        del self.dataset.data.axes[self.parameters['axis'] + 1]
+        del self.dataset.data.axes[self.parameters['axis']]
 
 
 class BaselineCorrection(ProcessingStep):

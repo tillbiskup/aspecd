@@ -2152,7 +2152,7 @@ class CompositeplotTask(PlotTask):
           subplot_locations:
             - [0, 0, 1, 1]
             - [0, 1, 1, 1]
-          plotters:
+          plotter:
             - 1D_plot
             - 2D_plot
           filename: composed_plot.pdf
