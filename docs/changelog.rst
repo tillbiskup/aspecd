@@ -34,6 +34,8 @@ Version 0.1.1
 
 Not yet released
 
+The following bugs have been fixed:
+
 * MetadataMapper: Fix sequence of mapping operations performed (d864cf10a4)
 
 * MetadataMapper: Mappings are automatically loaded from file if filename is given (2eedfa01a5)

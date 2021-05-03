@@ -95,7 +95,8 @@ autodoc_default_options = {
 
 # Multiversion configuration
 smv_branch_whitelist = r'^master.*$'
-smv_released_pattern = r'^refs/tags/v\d+\.\d+\.\d+$'
+smv_tag_whitelist = r'^v\d+\.\d+$'
+smv_released_pattern = r'^refs/tags/v\d+\.\d+$'
 
 tag = subprocess.run("git describe --tags `git rev-list --tags "
                      "--max-count=1`", shell=True, capture_output=True)
