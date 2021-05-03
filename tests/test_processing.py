@@ -46,6 +46,9 @@ class TestProcessingStep(unittest.TestCase):
     def test_description_property_is_string(self):
         self.assertTrue(isinstance(self.processing.description, str))
 
+    def test_description_property_is_sensible(self):
+        self.assertIn(self.processing.description, 'Abstract processing step')
+
     def test_has_comment_property(self):
         self.assertTrue(hasattr(self.processing, 'comment'))
 
@@ -55,6 +58,22 @@ class TestProcessingStep(unittest.TestCase):
     def test_has_process_method(self):
         self.assertTrue(hasattr(self.processing, 'process'))
         self.assertTrue(callable(self.processing.process))
+
+
+class TestSingleProcessingStep(unittest.TestCase):
+    def setUp(self):
+        self.processing = aspecd.processing.SingleProcessingStep()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_is_processingstep(self):
+        self.assertTrue(isinstance(self.processing,
+                                   aspecd.processing.ProcessingStep))
+
+    def test_description_property_is_sensible(self):
+        self.assertIn(self.processing.description,
+                      'Abstract singleprocessing step')
 
     def test_process_without_processingstep_and_with_dataset(self):
         self.processing.dataset = aspecd.dataset.Dataset()
@@ -93,6 +112,62 @@ class TestProcessingStep(unittest.TestCase):
         history_record = self.processing.create_history_record()
         self.assertTrue(isinstance(history_record,
                                    aspecd.history.ProcessingHistoryRecord))
+
+
+class TestMultiProcessingStep(unittest.TestCase):
+    def setUp(self):
+        self.processing = aspecd.processing.MultiProcessingStep()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_is_processingstep(self):
+        self.assertTrue(isinstance(self.processing,
+                                   aspecd.processing.ProcessingStep))
+
+    def test_description_property_is_sensible(self):
+        self.assertIn(self.processing.description,
+                      'Abstract multiprocessing step')
+
+    def test_has_datasets_property(self):
+        self.assertTrue(hasattr(self.processing, 'datasets'))
+
+    def test_datasets_property_is_list(self):
+        self.assertTrue(isinstance(self.processing.datasets, list))
+
+    def test_process_without_datasets_raises(self):
+        with self.assertRaises(aspecd.exceptions.MissingDatasetError):
+            self.processing.process()
+
+    def test_process_with_datasets(self):
+        self.processing.datasets.append(aspecd.dataset.Dataset())
+        self.processing.process()
+
+    def test_process_checks_applicability(self):
+        dataset1 = aspecd.dataset.Dataset()
+        dataset1.data.data = np.random.random([5, 5])
+        dataset2 = aspecd.dataset.Dataset()
+        dataset2.data.data = np.random.random(5)
+
+        class MyProcessingStep(aspecd.processing.MultiProcessingStep):
+            @staticmethod
+            def applicable(dataset):
+                return len(dataset.data.axes) == 2
+
+        processing_step = MyProcessingStep()
+        processing_step.datasets.append(dataset1)
+        processing_step.datasets.append(dataset2)
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            processing_step.process()
+
+    def test_process_with_datasets_appends_history_record(self):
+        dataset1 = aspecd.dataset.Dataset()
+        dataset2 = aspecd.dataset.Dataset()
+        self.processing.datasets.append(dataset1)
+        self.processing.datasets.append(dataset2)
+        self.processing.process()
+        self.assertTrue(dataset1.history)
+        self.assertTrue(dataset2.history)
 
 
 class TestNormalisation(unittest.TestCase):
@@ -783,3 +858,20 @@ class TestAveraging(unittest.TestCase):
         self.processing.parameters["range"] = [300, 400]
         with self.assertRaises(ValueError):
             self.dataset.process(self.processing)
+
+
+class TestExtractCommonRange(unittest.TestCase):
+    def setUp(self):
+        self.processing = aspecd.processing.ExtractCommonRange()
+        self.dataset1 = aspecd.dataset.Dataset()
+        self.dataset2 = aspecd.dataset.Dataset()
+        # data = np.sin(np.linspace(0, 2*np.pi, num=500))
+        self.dataset1.data.data = np.random.random([10, 10])
+        self.dataset1.data.axes[0].values = np.linspace(0, 5, 10)
+        self.dataset1.data.axes[1].values = np.linspace(0, 5, 10)
+        self.dataset2.data.data = np.random.random([15, 15])
+        self.dataset2.data.axes[0].values = np.linspace(5, 15, 15)
+        self.dataset2.data.axes[1].values = np.linspace(5, 15, 15)
+
+    def test_instantiate_class(self):
+        pass

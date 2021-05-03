@@ -20,7 +20,7 @@ class TestRecipe(unittest.TestCase):
         self.filename = 'test.yaml'
         self.dataset = '/foo'
         self.datasets = ['/foo', '/bar']
-        self.task = {'kind': 'processing', 'type': 'ProcessingStep'}
+        self.task = {'kind': 'processing', 'type': 'SingleProcessingStep'}
         self.dataset_factory = dataset.DatasetFactory()
         self.dataset_factory.importer_factory = io.DatasetImporterFactory()
 
@@ -371,7 +371,7 @@ class TestChef(unittest.TestCase):
         self.recipe.dataset_factory = dataset_factory
         self.dataset = '/foo'
         self.processing_task = {'kind': 'processing',
-                                'type': 'ProcessingStep'}
+                                'type': 'SingleProcessingStep'}
         self.analysis_task = {'kind': 'singleanalysis',
                               'type': 'SingleAnalysisStep'}
         self.annotation_task = {'kind': 'annotation',
@@ -681,23 +681,23 @@ class TestTask(unittest.TestCase):
 
     def test_get_object_with_full_class_name_returns_correct_object(self):
         kind = 'aspecd.processing'
-        type_ = 'ProcessingStep'
+        type_ = 'SingleProcessingStep'
         self.task.kind = kind
         self.task.type = type_
         obj = self.task.get_object()
-        self.assertTrue(isinstance(obj, processing.ProcessingStep))
+        self.assertTrue(isinstance(obj, processing.SingleProcessingStep))
 
     def test_get_object_without_package_name_returns_correct_object(self):
         kind = 'processing'
-        type_ = 'ProcessingStep'
+        type_ = 'SingleProcessingStep'
         self.task.kind = kind
         self.task.type = type_
         obj = self.task.get_object()
-        self.assertTrue(isinstance(obj, processing.ProcessingStep))
+        self.assertTrue(isinstance(obj, processing.SingleProcessingStep))
 
     def test_get_object_sets_object_attributes(self):
         kind = 'processing'
-        type_ = 'ProcessingStep'
+        type_ = 'SingleProcessingStep'
         metadata = {'parameters': {'foo': 'bar'}}
         self.task.kind = kind
         self.task.type = type_
@@ -707,7 +707,7 @@ class TestTask(unittest.TestCase):
 
     def test_get_object_sets_only_existing_object_attributes(self):
         kind = 'processing'
-        type_ = 'ProcessingStep'
+        type_ = 'SingleProcessingStep'
         metadata = {'foo': {'foo': 'bar'}}
         self.task.kind = kind
         self.task.type = type_
@@ -718,7 +718,7 @@ class TestTask(unittest.TestCase):
     # ATTENTION: The following tests access protected methods - due to not
     # knowing better how to do it properly for the time being...
     def test_set_object_attributes_sets_field_in_dict(self):
-        processing_step = processing.ProcessingStep()
+        processing_step = processing.SingleProcessingStep()
         processing_step.parameters = {'foo': 'a', 'bar': 'b'}
         metadata = {'parameters': {'foo': 'bar'}}
         self.task.properties = metadata
@@ -727,7 +727,7 @@ class TestTask(unittest.TestCase):
                          processing_step.parameters['foo'])
 
     def test_set_object_attributes_sets_fields_in_dict(self):
-        processing_step = processing.ProcessingStep()
+        processing_step = processing.SingleProcessingStep()
         processing_step.parameters = {'foo': 'a', 'bar': 'b'}
         metadata = {'parameters': {'foo': 'bar', 'bar': 'foo'}}
         self.task.properties = metadata
@@ -738,7 +738,7 @@ class TestTask(unittest.TestCase):
                          processing_step.parameters['bar'])
 
     def test_set_object_attributes_sets_fields_in_object_in_list(self):
-        processing_step = processing.ProcessingStep()
+        processing_step = processing.SingleProcessingStep()
         processing_step.parameters = {'foo': [aspecd.dataset.Axis()]}
         metadata = {'parameters': {'foo': [{'unit': 'foo'}]}}
         self.task.properties = metadata
@@ -747,7 +747,7 @@ class TestTask(unittest.TestCase):
                          processing_step.parameters['foo'][0].unit)
 
     def test_set_object_attributes_sets_fields_in_objects_in_list(self):
-        processing_step = processing.ProcessingStep()
+        processing_step = processing.SingleProcessingStep()
         processing_step.parameters = {'foo': [aspecd.dataset.Axis(),
                                               aspecd.dataset.Axis()]}
         metadata = {'parameters': {'foo': [{'unit': 'foo'}, {'unit': 'bar'}]}}
@@ -759,7 +759,7 @@ class TestTask(unittest.TestCase):
                          processing_step.parameters['foo'][1].unit)
 
     def test_set_object_attributes_does_not_override_dict(self):
-        processing_step = processing.ProcessingStep()
+        processing_step = processing.SingleProcessingStep()
         processing_step.parameters = {'foo': 'a', 'bar': 'b'}
         metadata = {'parameters': {'foo': 'bar'}}
         self.task.properties = metadata
@@ -767,7 +767,7 @@ class TestTask(unittest.TestCase):
         self.assertTrue('bar' in processing_step.parameters)
 
     def test_set_object_attributes_replaces_results_dataset_from_recipe(self):
-        processing_step = processing.ProcessingStep()
+        processing_step = processing.SingleProcessingStep()
         processing_step.parameters = {'foo': '', 'bar': ''}
         metadata = {'parameters': {'foo': 'bar'}}
         self.task.properties = metadata
@@ -778,7 +778,7 @@ class TestTask(unittest.TestCase):
                          processing_step.parameters['foo'])
 
     def test_set_object_attributes_replaces_results_from_recipe(self):
-        processing_step = processing.ProcessingStep()
+        processing_step = processing.SingleProcessingStep()
         processing_step.parameters = {'foo': '', 'bar': ''}
         metadata = {'parameters': {'foo': 'bar'}}
         self.task.properties = metadata
@@ -789,7 +789,7 @@ class TestTask(unittest.TestCase):
                          processing_step.parameters['foo'])
 
     def test_set_object_attributes_replaces_datasets_from_recipe(self):
-        processing_step = processing.ProcessingStep()
+        processing_step = processing.SingleProcessingStep()
         processing_step.parameters = {'foo': '', 'bar': ''}
         metadata = {'parameters': {'foo': 'bar'}}
         self.task.properties = metadata
@@ -811,7 +811,7 @@ class TestTask(unittest.TestCase):
                          report_step.context['foo'])
 
     def test_set_object_attributes_replaces_label(self):
-        processing_step = processing.ProcessingStep()
+        processing_step = processing.SingleProcessingStep()
         processing_step.parameters = {'foo': '', 'bar': ''}
         metadata = {'parameters': {'foo': '{{ id(bar) }}.pdf'}}
         self.task.properties = metadata
@@ -821,7 +821,7 @@ class TestTask(unittest.TestCase):
         self.assertEqual('bar.pdf', processing_step.parameters['foo'])
 
     def test_set_object_attributes_replaces_label_without_spaces(self):
-        processing_step = processing.ProcessingStep()
+        processing_step = processing.SingleProcessingStep()
         processing_step.parameters = {'foo': '', 'bar': ''}
         metadata = {'parameters': {'foo': '{{id(bar)}}.pdf'}}
         self.task.properties = metadata
@@ -831,7 +831,7 @@ class TestTask(unittest.TestCase):
         self.assertEqual('bar.pdf', processing_step.parameters['foo'])
 
     def test_set_object_attributes_replaces_basename(self):
-        processing_step = processing.ProcessingStep()
+        processing_step = processing.SingleProcessingStep()
         processing_step.parameters = {'foo': '', 'bar': ''}
         metadata = {'parameters': {'foo': '{{ basename(bar) }}.pdf'}}
         self.task.properties = metadata
@@ -843,7 +843,7 @@ class TestTask(unittest.TestCase):
         self.assertEqual('bla.pdf', processing_step.parameters['foo'])
 
     def test_set_object_attributes_replaces_path(self):
-        processing_step = processing.ProcessingStep()
+        processing_step = processing.SingleProcessingStep()
         processing_step.parameters = {'foo': '', 'bar': ''}
         metadata = {'parameters': {'foo': '{{ path(bar) }}test.pdf'}}
         self.task.properties = metadata
@@ -855,7 +855,7 @@ class TestTask(unittest.TestCase):
         self.assertEqual('/foo/bar/test.pdf', processing_step.parameters['foo'])
 
     def test_set_object_attributes_replaces_path_and_basename(self):
-        processing_step = processing.ProcessingStep()
+        processing_step = processing.SingleProcessingStep()
         processing_step.parameters = {'foo': '', 'bar': ''}
         metadata = {'parameters': {'foo': '{{ path(bar) }}{{ basename('
                                           'bar)}}.pdf'}}
@@ -868,7 +868,7 @@ class TestTask(unittest.TestCase):
         self.assertEqual('/foo/bar/bla.pdf', processing_step.parameters['foo'])
 
     def test_set_object_attributes_replaces_plotter_from_recipe(self):
-        processing_step = processing.ProcessingStep()
+        processing_step = processing.SingleProcessingStep()
         processing_step.parameters = {'foo': '', 'bar': ''}
         metadata = {'parameters': {'foo': 'bar'}}
         self.task.properties = metadata
@@ -881,7 +881,7 @@ class TestTask(unittest.TestCase):
     # The following tests do *not* access non-public methods
     def test_to_dict_with_processing_step(self):
         kind = 'processing'
-        type_ = 'ProcessingStep'
+        type_ = 'SingleProcessingStep'
         self.task.kind = kind
         self.task.type = type_
         self.task.recipe = tasks.Recipe()
@@ -897,7 +897,7 @@ class TestProcessingTask(unittest.TestCase):
 
     def prepare_recipe(self):
         self.processing_task = {'kind': 'processing',
-                                'type': 'ProcessingStep',
+                                'type': 'SingleProcessingStep',
                                 'apply_to': self.dataset}
         dataset_factory = dataset.DatasetFactory()
         dataset_factory.importer_factory = io.DatasetImporterFactory()

@@ -20,11 +20,33 @@ but change its data. The information necessary to reproduce each processing
 step gets added to the :attr:`aspecd.dataset.Dataset.history` attribute of a
 dataset.
 
-The module contains both, a base class for processing steps (
-:class:`aspecd.processing.ProcessingStep`) as well as a series of generally
-applicable processing steps for all kinds of spectroscopic data. The latter
-are an attempt to relieve the developers of packages derived from the ASpecD
-framework from the task to reinvent the wheel over and over again.
+Generally, two types of processing steps can be distinguished:
+
+* Processing steps for handling single datasets
+
+  Shall be derived from :class:`aspecd.processing.SingleProcessingStep`.
+
+* Processing steps for handling multiple datasets
+
+  Shall be derived from :class:`aspecd.processing.MultiProcessingStep`.
+
+In the first case, the processing is usually handled using the
+:meth:`processing` method of the respective :obj:`aspecd.dataset.Dataset`
+object. Additionally, those processing steps always only operate on the data
+of a single dataset. Processing steps handling single datasets should always
+inherit from the :class:`aspecd.processing.SingleProcessingStep` class.
+
+In the second case, the processing step is handled using the :meth:`processing`
+method of the :obj:`aspecd.processing.ProcessingStep` object, and the datasets
+are stored as a list within the processing step. As these processing steps span
+several datasets. Processing steps handling multiple datasets should
+always inherit from the :class:`aaspecd.processing.MultiProcessingStep` class.
+
+The module contains both, base classes for processing steps (as detailed
+above) as well as a series of generally applicable processing steps for all
+kinds of spectroscopic data. The latter are an attempt to relieve the
+developers of packages derived from the ASpecD framework from the task to
+reinvent the wheel over and over again.
 
 The next section gives an overview of the concrete processing steps
 implemented within the ASpecD framework. For details of how to implement
@@ -84,12 +106,13 @@ documentation of each of the classes, readily accessible by the link.
 Writing own processing steps
 ============================
 
-Each real processing step should inherit from
-:class:`aspecd.processing.ProcessingStep` as documented there. Furthermore,
-all processing steps should be contained in one module named "processing".
-This allows for easy automation and replay of processing steps, particularly
-in context of recipe-driven data analysis (for details, see the
-:mod:`aspecd.tasks` module).
+Each real processing step should inherit from either
+:class:`aspecd.processing.SingleProcessingStep` in case of operating on a
+single dataset only or from :class:`aspecd.processing.MultiProcessingStep` in
+case of operating on several datasets at once. Furthermore, all processing
+steps should be contained in one module named "processing". This allows for
+easy automation and replay of processing steps, particularly in context of
+recipe-driven data analysis (for details, see the :mod:`aspecd.tasks` module).
 
 
 General advice
@@ -97,7 +120,8 @@ General advice
 
 A few hints on writing own processing step classes:
 
-* Always inherit from :class:`aspecd.processing.ProcessingStep`.
+* Always inherit from :class:`aspecd.processing.SingleProcessingStep` or
+  :class:`aspecd.processing.MultiProcessingStep`, depending on your needs.
 
 * Store all parameters, implicit and explicit, in the dict ``parameters`` of
   the :class:`aspecd.processing.ProcessingStep` class, *not* in separate
@@ -174,6 +198,163 @@ class ProcessingStep:
     perform the processing step, should eventually be stored in the property
     "self.parameters" (currently a dictionary).
 
+    Further things that need to be changed upon inheriting from this class
+    are the string stored in ``description``, being basically a one-liner,
+    and the flag ``undoable`` if necessary.
+
+    .. admonition:: When is a processing step undoable?
+
+        Sometimes, the question arises what distinguishes an undoable
+        processing step from one that isn't, particularly in light of having
+        the original data stored in the dataset.
+
+        One simple case of a processing step that cannot easily be undone and
+        *redone* afterwards (undo needs always to be thought in light of an
+        inverting redo) is adding data of two datasets together. From the
+        point of view of the single dataset, the other dataset is not
+        accessible. Therefore, such a step is undoable (subtracting two
+        datasets as well, of course).
+
+
+    The actual implementation of the processing step is done in the private
+    method :meth:`_perform_task` that in turn gets called by :meth:`process`
+    which is called by the :meth:`aspecd.dataset.Dataset.process` method of the
+    dataset object.
+
+    .. note::
+        Usually, you will never implement an instance of this class for
+        actual processing tasks, but rather one of the child classes, namely
+        :class:`aspecd.processing.SingleProcessingStep` and
+        :class:`aspecd.processing.MultiProcessingStep`, depending on whether
+        your processing step operates on a single dataset or requires
+        multiple datasets.
+
+    Attributes
+    ----------
+    undoable : :class:`bool`
+        Can this processing step be reverted?
+
+    name : :class:`str`
+        Name of the analysis step.
+
+        Defaults to the lower-case class name, don't change!
+
+    parameters : :class:`dict`
+        Parameters required for performing the processing step
+
+        All parameters, implicit and explicit.
+
+    info : :class:`dict`
+        Additional information used, e.g., in a report (derived values, ...)
+
+    description : :class:`str`
+        Short description, to be set in class definition
+
+    comment : :class:`str`
+        User-supplied comment describing intent, purpose, reason, ...
+
+    Raises
+    ------
+    aspecd.exceptions.NotApplicableToDatasetError
+        Raised when processing step is not applicable to dataset
+    aspecd.exceptions.MissingDatasetError
+        Raised when no dataset exists to act on
+
+    """
+
+    def __init__(self):
+        self.undoable = False
+        self.name = aspecd.utils.full_class_name(self)
+        self.parameters = dict()
+        self.info = dict()
+        self.description = 'Abstract processing step'
+        self.comment = ''
+
+    def process(self):
+        """Perform the actual processing step.
+
+        The actual processing step should be implemented within the non-public
+        method :meth:`_perform_task`. Besides that, the applicability of the
+        processing step to the given dataset(s) will be checked
+        automatically using the non-public method :meth:`_check_applicability`
+        and the parameters will be sanitised by calling the non-public
+        method :meth:`_sanitise_parameters` prior to calling
+        :meth:`_perform_task`.
+
+        """
+        self._check_applicability()
+        self._sanitise_parameters()
+        self._perform_task()
+
+    # noinspection PyUnusedLocal
+    @staticmethod
+    def applicable(dataset):  # pylint: disable=unused-argument
+        """Check whether processing step is applicable to the given dataset.
+
+        Returns `True` by default and needs to be implemented in classes
+        inheriting from SingleProcessingStep according to their needs.
+
+        This is a static method that gets called automatically by each class
+        inheriting from :class:`aspecd.processing.SingleProcessingStep`. Hence,
+        if you need to override it in your own class, make the method static
+        as well. An example of an implementation testing for two-dimensional
+        data is given below::
+
+            @staticmethod
+            def applicable(dataset):
+                return len(dataset.data.axes) == 3
+
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset to check
+
+        Returns
+        -------
+        applicable : :class:`bool`
+            `True` if successful, `False` otherwise.
+
+        """
+        return True
+
+    def _check_applicability(self):
+        """Check that processing step is applicable to dataset(s)
+
+        Needs to be implemented in classes inheriting from ProcessingStep
+        according to their needs.
+
+        """
+
+    def _sanitise_parameters(self):
+        """Ensure parameters provided for processing step are correct.
+
+        Needs to be implemented in classes inheriting from ProcessingStep
+        according to their needs. Most probably, you want to check for
+        correct types of all parameters as well as values within sensible
+        borders.
+
+        """
+
+    def _perform_task(self):
+        """Perform the actual processing step on the dataset.
+
+        The implementation of the actual processing goes in here in all
+        classes inheriting from ProcessingStep. This method is automatically
+        called by :meth:`self.processing` after some background checks.
+
+        """
+
+
+class SingleProcessingStep(ProcessingStep):
+    """Base class for processing steps operating on single datasets.
+
+    Each class actually performing a processing step involving only a
+    single dataset should inherit from this class. Furthermore,
+    all parameters, implicit and explicit, necessary to perform the
+    processing step, should eventually be stored in the property
+    "self.parameters" (currently a dictionary).
+
     To perform the processing step, call the :meth:`process` method of the
     dataset the processing should be applied to, and provide a reference to the
     actual processing_step object to it.
@@ -203,49 +384,31 @@ class ProcessingStep:
 
     Attributes
     ----------
-    undoable : :class:`bool`
-        Can this processing step be reverted?
-    name : :class:`str`
-        Name of the analysis step.
-
-        Defaults to the lower-case class name, don't change!
-    parameters : :class:`dict`
-        Parameters required for performing the processing step
-
-        All parameters, implicit and explicit.
-    info : :class:`dict`
-        Additional information used, e.g., in a report (derived values, ...)
-    description : :class:`str`
-        Short description, to be set in class definition
-    comment : :class:`str`
-        User-supplied comment describing intent, purpose, reason, ...
     dataset : :class:`aspecd.dataset.Dataset`
         Dataset the processing step should be performed on
 
     Raises
     ------
-    aspecd.processing.NotApplicableToDatasetError
+    aspecd.exceptions.NotApplicableToDatasetError
         Raised when processing step is not applicable to dataset
-    aspecd.processing.MissingDatasetError
+    aspecd.exceptions.MissingDatasetError
         Raised when no dataset exists to act on
 
     """
 
     def __init__(self):
-        self.undoable = False
-        self.name = aspecd.utils.full_class_name(self)
-        self.parameters = dict()
-        self.info = dict()
-        self.description = 'Abstract processing step'
-        self.comment = ''
+        super().__init__()
+        self.description = 'Abstract singleprocessing step'
         self.dataset = None
 
+    # pylint: disable=arguments-differ
     def process(self, dataset=None, from_dataset=False):
         """Perform the actual processing step on the given dataset.
 
         If no dataset is provided at method call, but is set as property in
-        the ProcessingStep object, the :meth:`aspecd.dataset.Dataset.process`
-        method of the dataset will be called and thus the history written.
+        the SingleProcessingStep object,
+        the :meth:`aspecd.dataset.Dataset.process` method of the dataset
+        will be called and thus the history written.
 
         If no dataset is provided at method call nor as property in the
         object, the method will raise a respective exception.
@@ -253,7 +416,7 @@ class ProcessingStep:
         The :obj:`aspecd.dataset.Dataset` object always call this method with
         the respective dataset as argument. Therefore, in this case setting
         the dataset property within the
-        :obj:`aspecd.processing.ProcessingStep` object is not necessary.
+        :obj:`aspecd.processing.SingleProcessingStep` object is not necessary.
 
         The actual processing step should be implemented within the non-public
         method :meth:`_perform_task`. Besides that, the applicability of the
@@ -278,15 +441,32 @@ class ProcessingStep:
 
         Raises
         ------
-        aspecd.processing.NotApplicableToDatasetError
+        aspecd.exceptions.NotApplicableToDatasetError
             Raised when processing step is not applicable to dataset
-        aspecd.processing.MissingDatasetError
+        aspecd.exceptions.MissingDatasetError
             Raised when no dataset exists to act on
 
         """
         self._assign_dataset(dataset=dataset)
         self._call_from_dataset(from_dataset=from_dataset)
         return self.dataset
+
+    def _assign_dataset(self, dataset=None):
+        if not dataset:
+            if not self.dataset:
+                raise aspecd.exceptions.MissingDatasetError
+        else:
+            self.dataset = dataset
+
+    def _call_from_dataset(self, from_dataset=False):
+        if not from_dataset:
+            self.dataset.process(self)
+        else:
+            super().process()
+
+    def _check_applicability(self):
+        if not self.applicable(self.dataset):
+            raise aspecd.exceptions.NotApplicableToDatasetError
 
     def create_history_record(self):
         """
@@ -307,78 +487,116 @@ class ProcessingStep:
             package=self.dataset.package_name, processing_step=self)
         return history_record
 
-    def _assign_dataset(self, dataset=None):
-        if not dataset:
-            if not self.dataset:
-                raise aspecd.exceptions.MissingDatasetError
-        else:
-            self.dataset = dataset
 
-    def _call_from_dataset(self, from_dataset=False):
-        if not from_dataset:
-            self.dataset.process(self)
-        else:
-            self._check_applicability()
-            self._sanitise_parameters()
-            self._perform_task()
+class MultiProcessingStep(ProcessingStep):
+    """Base class for processing steps operating on multiple datasets.
+
+    Each class actually performing a processing step involving multiple
+    datasets should inherit from this class. Furthermore,
+    all parameters, implicit and explicit, necessary to perform the
+    processing step, should eventually be stored in the property
+    "self.parameters" (currently a dictionary).
+
+    To perform the processing step, call the :meth:`process` method
+    directly. This will take care of writing the history to each individual
+    dataset as well.
+
+    Further things that need to be changed upon inheriting from this class
+    are the string stored in ``description``, being basically a one-liner,
+    and the flag ``undoable`` if necessary.
+
+    .. admonition:: When is a processing step undoable?
+
+        Sometimes, the question arises what distinguishes an undoable
+        processing step from one that isn't, particularly in light of having
+        the original data stored in the dataset.
+
+        One simple case of a processing step that cannot easily be undone and
+        *redone* afterwards (undo needs always to be thought in light of an
+        inverting redo) is adding data of two datasets together. From the
+        point of view of the single dataset, the other dataset is not
+        accessible. Therefore, such a step is undoable (subtracting two
+        datasets as well, of course).
+
+
+    The actual implementation of the processing step is done in the private
+    method :meth:`_perform_task` that in turn gets called by :meth:`process`
+    which is called by the :meth:`aspecd.dataset.Dataset.process` method of the
+    dataset object.
+
+    Attributes
+    ----------
+    datasets : :class:`list`
+        List of :class:`aspecd.dataset.Dataset` objects the processing step
+        should act on
+
+    Raises
+    ------
+    aspecd.exceptions.NotApplicableToDatasetError
+        Raised when processing step is not applicable to dataset
+    aspecd.exceptions.MissingDatasetError
+        Raised when no dataset exists to act on
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = 'Abstract multiprocessing step'
+        self.datasets = []
+
+    def process(self):
+        """Perform the actual processing step.
+
+        The actual processing step should be implemented within the non-public
+        method :meth:`_perform_task`. Besides that, the applicability of the
+        processing step to the given datasets will be checked
+        automatically using the non-public method :meth:`_check_applicability`
+        and the parameters will be sanitised by calling the non-public
+        method :meth:`_sanitise_parameters` prior to calling
+        :meth:`_perform_task`.
+
+        Raises
+        ------
+        aspecd.exceptions.NotApplicableToDatasetError
+            Raised when processing step is not applicable to dataset
+        aspecd.exceptions.MissingDatasetError
+            Raised when no dataset exists to act on
+
+        """
+        if not self.datasets:
+            raise aspecd.exceptions.MissingDatasetError
+        super().process()
+        history_record = self.create_history_record()
+        for dataset in self.datasets:
+            dataset.history.append(history_record)
 
     def _check_applicability(self):
-        if not self.applicable(self.dataset):
-            raise aspecd.exceptions.NotApplicableToDatasetError
+        for dataset in self.datasets:
+            if not self.applicable(dataset):
+                raise aspecd.exceptions.NotApplicableToDatasetError
 
-    # noinspection PyUnusedLocal
-    @staticmethod
-    def applicable(dataset):  # pylint: disable=unused-argument
-        """Check whether processing step is applicable to the given dataset.
+    def create_history_record(self):
+        """
+        Create history record to be added to the dataset.
 
-        Returns `True` by default and needs to be implemented in classes
-        inheriting from ProcessingStep according to their needs.
-
-        This is a static method that gets called automatically by each class
-        inheriting from :class:`aspecd.processing.ProcessingStep`. Hence,
-        if you need to override it in your own class, make the method static
-        as well. An example of an implementation testing for two-dimensional
-        data is given below::
-
-            @staticmethod
-            def applicable(dataset):
-                return len(dataset.data.axes) == 3
-
-
-        Parameters
-        ----------
-        dataset : :class:`aspecd.dataset.Dataset`
-            dataset to check
+        Usually, this method gets called from within the
+        :meth:`aspecd.dataset.process` method of the
+        :class:`aspecd.dataset.Dataset` class and ensures the history of
+        each processing step to get written properly.
 
         Returns
         -------
-        applicable : :class:`bool`
-            `True` if successful, `False` otherwise.
+        history_record : :class:`aspecd.history.ProcessingHistoryRecord`
+            history record for processing step
 
         """
-        return True
-
-    def _sanitise_parameters(self):
-        """Ensure parameters provided for processing step are correct.
-
-        Needs to be implemented in classes inheriting from ProcessingStep
-        according to their needs. Most probably, you want to check for
-        correct types of all parameters as well as values within sensible
-        borders.
-
-        """
-
-    def _perform_task(self):
-        """Perform the actual processing step on the dataset.
-
-        The implementation of the actual processing goes in here in all
-        classes inheriting from ProcessingStep. This method is automatically
-        called by :meth:`self.processing` after some background checks.
-
-        """
+        history_record = aspecd.history.ProcessingHistoryRecord(
+            package=self.datasets[0].package_name, processing_step=self)
+        return history_record
 
 
-class Normalisation(ProcessingStep):
+class Normalisation(SingleProcessingStep):
+    # noinspection PyUnresolvedReferences
     """
     Normalise data.
 
@@ -507,7 +725,7 @@ class Normalisation(ProcessingStep):
             self._noise_amplitude = max(data_range) - min(data_range)
 
 
-class Integration(ProcessingStep):
+class Integration(SingleProcessingStep):
     """
     Integrate data
 
@@ -549,7 +767,7 @@ class Integration(ProcessingStep):
             np.cumsum(self.dataset.data.data, axis=dim - 1)
 
 
-class Differentiation(ProcessingStep):
+class Differentiation(SingleProcessingStep):
     """
     Differentiate data, *i.e.*, return discrete first derivative
 
@@ -602,7 +820,7 @@ class Differentiation(ProcessingStep):
                                 self.dataset.data.data[:, [-1]]), axis=1)
 
 
-class ScalarAlgebra(ProcessingStep):
+class ScalarAlgebra(SingleProcessingStep):
     """Perform scalar algebraic operation on one dataset.
 
     To compare datasets (by eye), it might be useful to adapt its intensity
@@ -684,7 +902,7 @@ class ScalarAlgebra(ProcessingStep):
                                            self.parameters['value'])
 
 
-class Projection(ProcessingStep):
+class Projection(SingleProcessingStep):
     """
     Project data, *i.e.* reduce dimensions along one axis.
 
@@ -783,7 +1001,8 @@ class Projection(ProcessingStep):
         del self.dataset.data.axes[self.parameters['axis']]
 
 
-class SliceExtraction(ProcessingStep):
+class SliceExtraction(SingleProcessingStep):
+    # noinspection PyUnresolvedReferences
     """
     Extract slice along one dimension from dataset.
 
@@ -978,7 +1197,7 @@ class SliceExtraction(ProcessingStep):
         return np.abs(vector - value).argmin()
 
 
-class BaselineCorrection(ProcessingStep):
+class BaselineCorrection(SingleProcessingStep):
     # noinspection PyUnresolvedReferences
     """
     Subtract baseline from dataset.
@@ -1193,7 +1412,7 @@ class BaselineCorrection(ProcessingStep):
         return len(self.dataset.data.axes) > 2
 
 
-class Averaging(ProcessingStep):
+class Averaging(SingleProcessingStep):
     # noinspection PyUnresolvedReferences
     """
     Average data over given range along given axis.
@@ -1390,3 +1609,7 @@ class Averaging(ProcessingStep):
     @staticmethod
     def _get_index(vector, value):
         return np.abs(vector - value).argmin()
+
+
+class ExtractCommonRange(SingleProcessingStep):
+    pass

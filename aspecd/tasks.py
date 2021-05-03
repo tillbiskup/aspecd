@@ -52,7 +52,7 @@ To give a first impression of how such a recipe may look like:
 
     tasks:
       - kind: processing
-        type: ProcessingStep
+        type: SingleProcessingStep
         properties:
           parameters:
             param1: bar
@@ -74,7 +74,7 @@ determines which kind of task should be performed. For each kind, a class
 subclassing :class:`aspecd.tasks.Task` needs to exist. For details,
 see below. The key ``type`` stores the name of the actual class, such as a
 concrete processing step derived from
-:class:`aspecd.processing.ProcessingStep`. The dictionary ``properties``
+:class:`aspecd.processing.SingleProcessingStep`. The dictionary ``properties``
 contains keys corresponding to the attributes of the respective class.
 Depending on the type of task, additional keys can be used, such as
 ``apply_to`` to determine the datasets this task should be applied to,
@@ -111,7 +111,7 @@ for datasets:
 
     tasks:
       - kind: processing
-        type: ProcessingStep
+        type: SingleProcessingStep
 
 
 In this case, all dataset names will be treated relative to the source
@@ -130,7 +130,7 @@ example below.
 
     tasks:
       - kind: processing
-        type: ProcessingStep
+        type: SingleProcessingStep
 
 Here, paths have been given for unixoid file systems, using ``/`` as a
 separator. Adjust to your needs if necessary.
@@ -200,7 +200,7 @@ name like so:
 
     tasks:
       - kind: processing
-        type: ProcessingStep
+        type: SingleProcessingStep
 
 
 If you would like to use a class from a different package for only one task,
@@ -210,7 +210,7 @@ feel free to prefix the "kind" attribute of the respective task, as shown:
 
     tasks:
       - kind: some_other_package.processing
-        type: ProcessingStep
+        type: SingleProcessingStep
 
 
 Of course, in order to work, this package termed here "some_other_package"
@@ -232,7 +232,7 @@ a default package and overriding this for a particular task:
 
     tasks:
       - kind: some_other_package.processing
-        type: ProcessingStep
+        type: SingleProcessingStep
 
 
 Setting own labels (and properties) for datasets
@@ -511,7 +511,7 @@ is true for plots. To make this a bit easier to follow, see the example below.
 
     tasks:
       - kind: processing
-        type: ProcessingStep
+        type: SingleProcessingStep
 
       - kind: singleanalysis
         type: AnalysisStep
@@ -585,7 +585,7 @@ ASpecD framework, a series of prerequisites needs to be met, *i.e.*, classes
 implemented. Besides the usual suspects such as
 :class:`aspecd.dataset.Dataset` and its constituents as well as the
 different processing and analysis steps based on
-:class:`aspecd.processing.ProcessingStep` and
+:class:`aspecd.processing.SingleProcessingStep` and
 :class:`aspecd.analysis.SingleAnalysisStep`, two different factory
 classes need to be implemented in particular, subclassing
 
@@ -1572,7 +1572,7 @@ class ProcessingTask(Task):
     Processing steps will always be performed individually for each dataset.
 
     For more information on the underlying general class,
-    see :class:`aspecd.processing.ProcessingStep`.
+    see :class:`aspecd.processing.SingleProcessingStep`.
 
     For an example of how such a processing task may be included into a
     recipe, see the YAML listing below:
@@ -1580,7 +1580,7 @@ class ProcessingTask(Task):
     .. code-block:: yaml
 
         kind: processing
-        type: ProcessingStep
+        type: SingleProcessingStep
         properties:
           parameters:
             param1: bar
@@ -1605,7 +1605,7 @@ class ProcessingTask(Task):
     .. code-block:: yaml
 
         kind: processing
-        type: ProcessingStep
+        type: SingleProcessingStep
         result: label
 
 
@@ -1617,7 +1617,7 @@ class ProcessingTask(Task):
     .. code-block:: yaml
 
         kind: processing
-        type: ProcessingStep
+        type: SingleProcessingStep
         apply_to:
           - loi:xxx
           - loi:yyy

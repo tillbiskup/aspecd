@@ -84,7 +84,7 @@ class TestHistoryRecord(unittest.TestCase):
 
 class TestProcessingStepRecord(unittest.TestCase):
     def setUp(self):
-        self.processing_step = processing.ProcessingStep()
+        self.processing_step = processing.SingleProcessingStep()
         self.processing_record = \
             aspecd.history.ProcessingStepRecord(self.processing_step)
 
@@ -112,7 +112,7 @@ class TestProcessingStepRecord(unittest.TestCase):
 
     def test_create_processing_step_returns_processing_object(self):
         test_object = self.processing_record.create_processing_step()
-        self.assertTrue(isinstance(test_object, processing.ProcessingStep))
+        self.assertTrue(isinstance(test_object, processing.SingleProcessingStep))
 
     def test_processing_object_has_correct_undoable_value(self):
         self.processing_record.undoable = True
@@ -177,7 +177,7 @@ class TestProcessingStepRecord(unittest.TestCase):
 
 class TestProcessingHistoryRecord(unittest.TestCase):
     def setUp(self):
-        self.processing_step = processing.ProcessingStep()
+        self.processing_step = processing.SingleProcessingStep()
         self.historyrecord = \
             aspecd.history.ProcessingHistoryRecord(self.processing_step)
 

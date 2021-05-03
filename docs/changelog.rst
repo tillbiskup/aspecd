@@ -14,6 +14,8 @@ Not yet released
 New features
 ------------
 
+* ProcessingStep split into SingleProcessingStep and MultiProcessingStep
+
 * SinglePlotter2D:
 
   * Filled contour plot with additional contour lines that can be styled

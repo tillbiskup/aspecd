@@ -122,7 +122,7 @@ class TestMultiAnalysisStep(unittest.TestCase):
 class TestPreprocessing(unittest.TestCase):
     def setUp(self):
         self.analysisstep = analysis.SingleAnalysisStep()
-        self.processingstep = processing.ProcessingStep()
+        self.processingstep = processing.SingleProcessingStep()
 
     def test_has_add_preprocessing_step_method(self):
         self.assertTrue(hasattr(self.analysisstep, 'add_preprocessing_step'))

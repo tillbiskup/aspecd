@@ -60,7 +60,7 @@ series of classes for storing history records:
     Generic base class for all kinds of history records.
 
     For all classes operating on datasets, such as
-    :class:`aspecd.processing.ProcessingStep`,
+    :class:`aspecd.processing.SingleProcessingStep`,
     :class:`aspecd.analysis.SingleAnalysisStep` and others, there exist at
     least two "representations": (i) the generic one not (necessarily) tied
     to any concrete dataset, thus portable, and (ii) a concrete one having
@@ -227,7 +227,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         """Apply processing step to dataset.
 
         Every processing step is an object of type
-        :class:`aspecd.processing.ProcessingStep` and is passed as argument
+        :class:`aspecd.processing.SingleProcessingStep` and is passed as argument
         to :meth:`process`.
 
         Calling this function ensures that the history record is added to the
@@ -243,12 +243,12 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         Parameters
         ----------
-        processing_step : :obj:`aspecd.processing.ProcessingStep`
+        processing_step : :obj:`aspecd.processing.SingleProcessingStep`
             processing step to apply to the dataset
 
         Returns
         -------
-        processing_step : :obj:`aspecd.processing.ProcessingStep`
+        processing_step : :obj:`aspecd.processing.SingleProcessingStep`
             processing step applied to the dataset
 
         Raises

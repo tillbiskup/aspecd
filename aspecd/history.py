@@ -27,7 +27,7 @@ class HistoryRecord(aspecd.utils.ToDictMixin):
     """Generic base class for all kinds of history records.
 
     For all classes operating on datasets, such as
-    :class:`aspecd.processing.ProcessingStep`,
+    :class:`aspecd.processing.SingleProcessingStep`,
     :class:`aspecd.analysis.SingleAnalysisStep` and others, there exist at
     least two "representations": (i) the generic one not (necessarily) tied
     to any concrete dataset, thus portable, and (ii) a concrete one having
@@ -100,9 +100,9 @@ class ProcessingStepRecord(aspecd.utils.ToDictMixin):
     """Base class for processing step records stored in the dataset history.
 
     The history of a :class:`aspecd.dataset.Dataset` should *not* contain
-    references to :class:`aspecd.processing.ProcessingStep` objects, but rather
+    references to :class:`aspecd.processing.SingleProcessingStep` objects, but rather
     records that contain all necessary information to create the respective
-    objects inherited from :class:`aspecd.processing.ProcessingStep`. One
+    objects inherited from :class:`aspecd.processing.SingleProcessingStep`. One
     reason for this is simply that we want to import datasets containing
     processing steps in their history for which no corresponding processing
     class exists in the current installation of the application.
@@ -130,7 +130,7 @@ class ProcessingStepRecord(aspecd.utils.ToDictMixin):
 
     Parameters
     ----------
-    processing_step : :class:`aspecd.processing.ProcessingStep`
+    processing_step : :class:`aspecd.processing.SingleProcessingStep`
         Processing step the record should be created for.
 
     Raises
@@ -157,7 +157,7 @@ class ProcessingStepRecord(aspecd.utils.ToDictMixin):
 
         Parameters
         ----------
-        processing_step : :obj:`aspecd.processing.ProcessingStep`
+        processing_step : :obj:`aspecd.processing.SingleProcessingStep`
             Object to obtain information from
 
         """
@@ -170,7 +170,7 @@ class ProcessingStepRecord(aspecd.utils.ToDictMixin):
 
         Returns
         -------
-        processing_step : :class:`aspecd.processing.ProcessingStep`
+        processing_step : :class:`aspecd.processing.SingleProcessingStep`
             actual processing step object that can be used for processing,
             e.g., in context of undo/redo
 
@@ -208,7 +208,7 @@ class ProcessingHistoryRecord(HistoryRecord):
 
     Parameters
     ----------
-    processing_step : :class:`aspecd.processing.ProcessingStep`
+    processing_step : :class:`aspecd.processing.SingleProcessingStep`
         processing step the history is saved for
 
     package : :class:`str`

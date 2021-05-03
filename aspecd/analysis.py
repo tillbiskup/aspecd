@@ -82,7 +82,7 @@ class AnalysisStep:
 
     Raises
     ------
-    aspecd.analysis.MissingDatasetError
+    aspecd.exceptions.MissingDatasetError
         Raised when no dataset exists to act on
 
     """
@@ -195,7 +195,7 @@ class SingleAnalysisStep(AnalysisStep):
 
     Raises
     ------
-    aspecd.analysis.MissingDatasetError
+    aspecd.exceptions.MissingDatasetError
         Raised when no dataset exists to act on
 
     """
@@ -251,10 +251,10 @@ class SingleAnalysisStep(AnalysisStep):
 
         Raises
         ------
-        aspecd.processing.NotApplicableToDatasetError
+        aspecd.exceptions.NotApplicableToDatasetError
             Raised when analysis step is not applicable to dataset
 
-        aspecd.processing.MissingDatasetError
+        aspecd.exceptions.MissingDatasetError
             Raised when no dataset exists to act on
 
         """
@@ -373,10 +373,10 @@ class MultiAnalysisStep(AnalysisStep):
 
         Raises
         ------
-        aspecd.analysis.MissingDatasetError
+        aspecd.exceptions.MissingDatasetError
             Raised when no datasets exist to act on
 
-        aspecd.processing.NotApplicableToDatasetError
+        aspecd.exceptions.NotApplicableToDatasetError
             Raised when analysis step is not applicable to dataset
 
         """

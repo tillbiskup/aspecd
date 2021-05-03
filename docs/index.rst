@@ -85,7 +85,7 @@ ASpecD is free software. However, if you use ASpecD for your own research, pleas
 
 Till Biskup. ASpecD (2021). `doi:10.5281/zenodo.4717937 <https://doi.org/10.5281/zenodo.4717937>`_
 
-To make things easier, ASpecD has a `DOI <https://doi.org/10.5281/zenodo.4717937>`_ provided by `Zenodo <https://zenodo.org/>`_, and you may click on the badge below to directly access the record associated with it.
+To make things easier, ASpecD has a `DOI <https://doi.org/10.5281/zenodo.4717937>`_ provided by `Zenodo <https://zenodo.org/>`_, and you may click on the badge below to directly access the record associated with it. Note that this DOI refers to the package as such and always forwards to the most current version.
 
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.4717937.svg
    :target: https://doi.org/10.5281/zenodo.4717937

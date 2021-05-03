@@ -307,7 +307,7 @@ class TestAdfImporter(unittest.TestCase):
 
     def test_import_sets_history(self):
         dataset_ = dataset.ExperimentalDataset()
-        processing_step = aspecd.processing.ProcessingStep()
+        processing_step = aspecd.processing.SingleProcessingStep()
         processing_step.comment = 'foo'
         dataset_.process(processing_step)
         dataset_.export_to(self.exporter)
@@ -388,7 +388,7 @@ class TestAsdfImporter(unittest.TestCase):
 
     def test_import_sets_history(self):
         dataset_ = dataset.ExperimentalDataset()
-        processing_step = aspecd.processing.ProcessingStep()
+        processing_step = aspecd.processing.SingleProcessingStep()
         processing_step.comment = 'foo'
         dataset_.process(processing_step)
         dataset_.export_to(self.exporter)

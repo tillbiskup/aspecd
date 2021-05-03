@@ -81,7 +81,7 @@ class TestDataset(unittest.TestCase):
 class TestDatasetProcessing(unittest.TestCase):
     def setUp(self):
         self.dataset = dataset.Dataset()
-        self.processing_step = processing.ProcessingStep()
+        self.processing_step = processing.SingleProcessingStep()
 
     def test_has_process_method(self):
         self.assertTrue(hasattr(self.dataset, 'process'))
@@ -122,9 +122,9 @@ class TestDatasetProcessing(unittest.TestCase):
                          self.dataset.history[-1].processing)
 
     def test_process_returns_processing_object(self):
-        processing_object = processing.ProcessingStep()
+        processing_object = processing.SingleProcessingStep()
         processing_step = self.dataset.process(processing_object)
-        self.assertTrue(isinstance(processing_step, processing.ProcessingStep))
+        self.assertTrue(isinstance(processing_step, processing.SingleProcessingStep))
 
     def test_process_sets_package_in_sysinfo(self):
         # Fake package name
@@ -134,21 +134,21 @@ class TestDatasetProcessing(unittest.TestCase):
         self.assertTrue("numpy" in history_record.sysinfo.packages.keys())
 
     def test_undoable_processing_step_does_not_touch_origdata(self):
-        processing_step = processing.ProcessingStep()
+        processing_step = processing.SingleProcessingStep()
         processing_step.undoable = True
         old_origdata = self.dataset._origdata
         self.dataset.process(processing_step)
         self.assertIs(self.dataset._origdata, old_origdata)
 
     def test_not_undoable_processing_step_resets_origdata(self):
-        processing_step = processing.ProcessingStep()
+        processing_step = processing.SingleProcessingStep()
         processing_step.undoable = False
         old_origdata = self.dataset._origdata
         self.dataset.process(processing_step)
         self.assertIsNot(self.dataset._origdata, old_origdata)
 
     def test_not_undoable_processing_step_empties_representations(self):
-        processing_step = processing.ProcessingStep()
+        processing_step = processing.SingleProcessingStep()
         processing_step.undoable = False
         self.dataset.process(processing_step)
         self.assertEqual(self.dataset.representations, [])
@@ -170,7 +170,7 @@ class TestDatasetProcessing(unittest.TestCase):
 class TestDatasetUndo(unittest.TestCase):
     def setUp(self):
         self.dataset = dataset.Dataset()
-        self.processingStep = processing.ProcessingStep()
+        self.processingStep = processing.SingleProcessingStep()
 
     def test_has_undo_method(self):
         self.assertTrue(hasattr(self.dataset, 'undo'))
@@ -214,7 +214,7 @@ class TestDatasetUndo(unittest.TestCase):
 class TestDatasetRedo(unittest.TestCase):
     def setUp(self):
         self.dataset = dataset.Dataset()
-        self.processingStep = processing.ProcessingStep()
+        self.processingStep = processing.SingleProcessingStep()
 
     def test_has_redo_method(self):
         self.assertTrue(hasattr(self.dataset, 'redo'))
@@ -287,7 +287,7 @@ class TestDatasetIO(unittest.TestCase):
 class TestDatasetProcessingWithHistory(unittest.TestCase):
     def setUp(self):
         self.dataset = dataset.Dataset()
-        self.processingStep = processing.ProcessingStep()
+        self.processingStep = processing.SingleProcessingStep()
         self.dataset.process(self.processingStep)
         self.dataset.undo()
 
@@ -330,7 +330,7 @@ class TestDatasetAnalysis(unittest.TestCase):
                                    aspecd.history.AnalysisHistoryRecord))
 
     def test_added_analysis_record_contains_history(self):
-        processing_step = processing.ProcessingStep()
+        processing_step = processing.SingleProcessingStep()
         self.dataset.process(processing_step)
         self.dataset.analyse(self.analysis_step)
         analysis_ = self.dataset.analyses[-1]
@@ -338,7 +338,7 @@ class TestDatasetAnalysis(unittest.TestCase):
                          len(analysis_.analysis.preprocessing))
 
     def test_added_analysis_record_history_is_deepcopy(self):
-        processing_step = processing.ProcessingStep()
+        processing_step = processing.SingleProcessingStep()
         self.dataset.process(processing_step)
         self.dataset.analyse(self.analysis_step)
         analysis_ = self.dataset.analyses[-1]
@@ -497,7 +497,7 @@ class TestDatasetRepresentations(unittest.TestCase):
                                    aspecd.history.PlotHistoryRecord))
 
     def test_added_plot_record_contains_history(self):
-        processing_step = processing.ProcessingStep()
+        processing_step = processing.SingleProcessingStep()
         self.dataset.process(processing_step)
         self.dataset.plot(self.plotter)
         representation = self.dataset.representations[-1]
@@ -505,7 +505,7 @@ class TestDatasetRepresentations(unittest.TestCase):
                          len(representation.plot.preprocessing))
 
     def test_added_plot_record_history_is_deepcopy(self):
-        processing_step = processing.ProcessingStep()
+        processing_step = processing.SingleProcessingStep()
         self.dataset.process(processing_step)
         self.dataset.plot(self.plotter)
         representation = self.dataset.representations[-1]
@@ -568,7 +568,7 @@ class TestDatasetToDict(unittest.TestCase):
         self.dataset.to_dict()
 
     def test_to_dict_with_processing_step(self):
-        processing_step = aspecd.processing.ProcessingStep()
+        processing_step = aspecd.processing.SingleProcessingStep()
         self.dataset.process(processing_step)
         self.dataset.to_dict()
 
@@ -654,7 +654,7 @@ class TestDatasetFromDict(unittest.TestCase):
                          self.dataset.metadata.sample.name)
 
     def test_from_dict_sets_history(self):
-        processing_step = processing.ProcessingStep()
+        processing_step = processing.SingleProcessingStep()
         self.dataset.process(processing_step)
         dataset_dict = self.dataset.to_dict()
         new_dataset = dataset.Dataset()
@@ -701,7 +701,7 @@ class TestDatasetFromDict(unittest.TestCase):
                              new_dataset.references[0].to_dict())
 
     def test_from_dict_sets_tasks(self):
-        processing_step = processing.ProcessingStep()
+        processing_step = processing.SingleProcessingStep()
         self.dataset.process(processing_step)
         dataset_dict = self.dataset.to_dict()
         new_dataset = dataset.Dataset()
@@ -838,13 +838,13 @@ class TestDatasetReference(unittest.TestCase):
         self.assertEqual(self.dataset.id, self.reference.id)
 
     def test_from_dataset_sets_history(self):
-        processing_step = aspecd.processing.ProcessingStep()
+        processing_step = aspecd.processing.SingleProcessingStep()
         self.dataset.process(processing_step)
         self.reference.from_dataset(self.dataset)
         self.assertTrue(self.reference.history)
 
     def test_from_dataset_copies_history(self):
-        processing_step = aspecd.processing.ProcessingStep()
+        processing_step = aspecd.processing.SingleProcessingStep()
         self.dataset.process(processing_step)
         self.reference.from_dataset(self.dataset)
         self.assertIsNot(self.dataset.history, self.reference.history)
@@ -876,7 +876,7 @@ class TestDatasetReference(unittest.TestCase):
         self.assertEqual(self.reference.id, dataset_.id)
 
     def test_to_dataset_applies_history(self):
-        processing_step = aspecd.processing.ProcessingStep()
+        processing_step = aspecd.processing.SingleProcessingStep()
         self.dataset.process(processing_step)
         self.reference.from_dataset(self.dataset)
         dataset_ = self.reference.to_dataset()
