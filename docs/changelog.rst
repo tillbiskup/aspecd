@@ -32,27 +32,27 @@ Changes
 Version 0.1.1
 =============
 
-Not yet released
+Released 2021-05-03
 
 The following bugs have been fixed:
 
-* MetadataMapper: Fix sequence of mapping operations performed (d864cf10a4)
+* MetadataMapper: Fix sequence of mapping operations performed
 
-* MetadataMapper: Mappings are automatically loaded from file if filename is given (2eedfa01a5)
+* MetadataMapper: Mappings are automatically loaded from file if filename is given
 
-* CompositePlotter: Legends for subplots work (7ef1837458)
+* CompositePlotter: Legends for subplots work
 
-* SliceExtraction: Remove correct axis from dataset (0c4d97f598)
+* SliceExtraction: Remove correct axis from dataset
 
-* MultiPlotter1D*: Fix problem in conjunction with CompositePlotter and assigning drawings (1987ce2c2d)
+* MultiPlotter1D*: Fix problem in conjunction with CompositePlotter and assigning drawings
 
-* SliceExtraction: fix problem extracting slice with index zero (c5a44172a4)
+* SliceExtraction: fix problem extracting slice with index zero
 
-* CompositePlotter: more intuitive axes_positions (7b83f36c70)
+* CompositePlotter: more intuitive axes_positions
 
-* Fix bug with aspect ratio of 2D plots using imshow (eb94be1da0)
+* Fix bug with aspect ratio of 2D plots using imshow
 
-* Update intersphinx mapping for matplotlib (2e6049549b)
+* Update intersphinx mapping for matplotlib
 
 
 Version 0.1.0

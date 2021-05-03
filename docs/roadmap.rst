@@ -8,6 +8,8 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.2
 ===============
 
+* Add Zenodo badge to start page of documentation in release
+
 * Report task: Add figure captions to context if available
 
 * Remaining basic processing and analysis steps, such as algebra with datasets, slice extraction for >2D datasets, peak finding, SNR determination, denoising, filtering, noise, cut dataset and axis (to common range)

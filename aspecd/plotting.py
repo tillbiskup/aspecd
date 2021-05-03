@@ -1842,8 +1842,8 @@ class CompositePlotter(Plotter):
         for idx, position in enumerate(self.axes_positions):
             left, bottom, width, height = self.axes[idx].get_position().bounds
             new_position = [
-                left + position[0]*width, bottom + position[1]*height,
-                position[2]*width, position[3]*height
+                left + position[0] * width, bottom + position[1] * height,
+                position[2] * width, position[3] * height
             ]
             self.axes[idx].set_position(new_position)
 
@@ -2974,6 +2974,15 @@ class SurfaceProperties(DrawingProperties):
         self.colors = None
 
     def apply(self, drawing=None):
+        """
+        Apply properties to drawing.
+
+        Parameters
+        ----------
+        drawing:
+            matplotlib object to set properties for
+
+        """
         super().apply(drawing=drawing)
         children = drawing.axes.get_children()
         for child in children:
