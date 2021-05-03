@@ -43,9 +43,6 @@ class TestProcessingStep(unittest.TestCase):
     def test_has_description_property(self):
         self.assertTrue(hasattr(self.processing, 'description'))
 
-    def test_description_property_is_string(self):
-        self.assertTrue(isinstance(self.processing.description, str))
-
     def test_description_property_is_sensible(self):
         self.assertIn(self.processing.description, 'Abstract processing step')
 
@@ -865,13 +862,150 @@ class TestExtractCommonRange(unittest.TestCase):
         self.processing = aspecd.processing.ExtractCommonRange()
         self.dataset1 = aspecd.dataset.Dataset()
         self.dataset2 = aspecd.dataset.Dataset()
-        # data = np.sin(np.linspace(0, 2*np.pi, num=500))
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_is_multiprocessing_step(self):
+        self.assertTrue(isinstance(self.processing,
+                                   aspecd.processing.MultiProcessingStep))
+
+    def test_with_only_one_dataset_raises(self):
+        self.processing.datasets.append(self.dataset1)
+        with self.assertRaisesRegex(IndexError, "Need more than one dataset"):
+            self.processing.process()
+
+    def test_process_with_datasets_with_different_dimensions_raises(self):
+        self.dataset1.data.data = np.random.random(10)
+        self.dataset2.data.data = np.random.random([10, 10])
+        self.processing.datasets.append(self.dataset1)
+        self.processing.datasets.append(self.dataset2)
+        with self.assertRaisesRegex(ValueError, "different dimensions"):
+            self.processing.process()
+
+    def test_process_1D_datasets_with_disjoint_axes_values_raises(self):
+        self.dataset1.data.data = np.random.random(10)
+        self.dataset1.data.axes[0].values = np.linspace(0, 5, 10)
+        self.dataset2.data.data = np.random.random(15)
+        self.dataset2.data.axes[0].values = np.linspace(10, 15, 15)
+        self.processing.datasets.append(self.dataset1)
+        self.processing.datasets.append(self.dataset2)
+        with self.assertRaisesRegex(ValueError, "disjoint axes values"):
+            self.processing.process()
+
+    def test_process_2D_datasets_with_disjoint_axes_values_raises(self):
         self.dataset1.data.data = np.random.random([10, 10])
         self.dataset1.data.axes[0].values = np.linspace(0, 5, 10)
         self.dataset1.data.axes[1].values = np.linspace(0, 5, 10)
         self.dataset2.data.data = np.random.random([15, 15])
-        self.dataset2.data.axes[0].values = np.linspace(5, 15, 15)
-        self.dataset2.data.axes[1].values = np.linspace(5, 15, 15)
+        self.dataset2.data.axes[0].values = np.linspace(0, 5, 15)
+        self.dataset2.data.axes[1].values = np.linspace(10, 15, 15)
+        self.processing.datasets.append(self.dataset1)
+        self.processing.datasets.append(self.dataset2)
+        with self.assertRaisesRegex(ValueError, "disjoint axes values"):
+            self.processing.process()
 
-    def test_instantiate_class(self):
-        pass
+    def test_process_datasets_with_different_axes_units_raises(self):
+        self.dataset1.data.data = np.random.random([10, 10])
+        self.dataset1.data.axes[0].values = np.linspace(0, 5, 10)
+        self.dataset1.data.axes[1].values = np.linspace(0, 5, 10)
+        self.dataset1.data.axes[0].unit = 'foo'
+        self.dataset1.data.axes[1].unit = 'bar'
+        self.dataset2.data.data = np.random.random([10, 10])
+        self.dataset2.data.axes[0].values = np.linspace(0, 5, 10)
+        self.dataset2.data.axes[1].values = np.linspace(0, 5, 10)
+        self.dataset2.data.axes[0].unit = 'foobar'
+        self.dataset2.data.axes[1].unit = 'bar'
+        self.processing.datasets.append(self.dataset1)
+        self.processing.datasets.append(self.dataset2)
+        with self.assertRaisesRegex(ValueError, "different units"):
+            self.processing.process()
+
+    def test_process_ignores_different_axes_units_if_told_so(self):
+        self.dataset1.data.data = np.random.random([10, 10])
+        self.dataset1.data.axes[0].values = np.linspace(0, 5, 10)
+        self.dataset1.data.axes[1].values = np.linspace(0, 5, 10)
+        self.dataset1.data.axes[0].unit = 'foo'
+        self.dataset1.data.axes[1].unit = 'bar'
+        self.dataset2.data.data = np.random.random([10, 10])
+        self.dataset2.data.axes[0].values = np.linspace(0, 5, 10)
+        self.dataset2.data.axes[1].values = np.linspace(0, 5, 10)
+        self.dataset2.data.axes[0].unit = 'foobar'
+        self.dataset2.data.axes[1].unit = 'bar'
+        self.processing.datasets.append(self.dataset1)
+        self.processing.datasets.append(self.dataset2)
+        self.processing.parameters["ignore_units"] = True
+        self.processing.process()
+
+    def test_process_sets_common_range_for_1d_datasets(self):
+        self.dataset1.data.data = np.random.random([10])
+        self.dataset1.data.axes[0].values = np.linspace(0, 5, 10)
+        self.dataset2.data.data = np.random.random([10])
+        self.dataset2.data.axes[0].values = np.linspace(1, 4, 10)
+        self.processing.datasets.append(self.dataset1)
+        self.processing.datasets.append(self.dataset2)
+        self.processing.process()
+        self.assertListEqual(self.processing.parameters["common_range"],
+                             [[1., 4.]])
+
+    def test_process_sets_common_range_for_2d_datasets(self):
+        self.dataset1.data.data = np.random.random([10, 10])
+        self.dataset1.data.axes[0].values = np.linspace(0, 5, 10)
+        self.dataset1.data.axes[1].values = np.linspace(10, 15, 10)
+        self.dataset2.data.data = np.random.random([10, 10])
+        self.dataset2.data.axes[0].values = np.linspace(1, 4, 10)
+        self.dataset2.data.axes[1].values = np.linspace(11, 14, 10)
+        self.processing.datasets.append(self.dataset1)
+        self.processing.datasets.append(self.dataset2)
+        self.processing.process()
+        self.assertListEqual(self.processing.parameters["common_range"],
+                             [[1., 4.], [11., 14.]])
+
+    def test_process_sets_npoints_for_1d_datasets(self):
+        self.dataset1.data.data = np.random.random([10])
+        self.dataset1.data.axes[0].values = np.linspace(0, 5, 11)
+        self.dataset2.data.data = np.random.random([10])
+        self.dataset2.data.axes[0].values = np.linspace(1, 4, 11)
+        self.processing.datasets.append(self.dataset1)
+        self.processing.datasets.append(self.dataset2)
+        self.processing.process()
+        self.assertEqual([7], self.processing.parameters["npoints"])
+
+    def test_process_sets_npoints_for_2d_datasets(self):
+        self.dataset1.data.data = np.random.random([10, 10])
+        self.dataset1.data.axes[0].values = np.linspace(0, 5, 11)
+        self.dataset1.data.axes[1].values = np.linspace(10, 15, 11)
+        self.dataset2.data.data = np.random.random([10, 10])
+        self.dataset2.data.axes[0].values = np.linspace(1, 4, 11)
+        self.dataset2.data.axes[1].values = np.linspace(11, 14, 11)
+        self.processing.datasets.append(self.dataset1)
+        self.processing.datasets.append(self.dataset2)
+        self.processing.process()
+        self.assertEqual([7, 7], self.processing.parameters["npoints"])
+
+    def test_process_interpolates_axes_for_1d_datasets(self):
+        self.dataset1.data.data = np.linspace(10, 15, 11)
+        self.dataset1.data.axes[0].values = np.linspace(0, 5, 11)
+        self.dataset2.data.data = np.linspace(11, 14, 11)
+        self.dataset2.data.axes[0].values = np.linspace(1, 4, 11)
+        self.processing.datasets.append(self.dataset1)
+        self.processing.datasets.append(self.dataset2)
+        self.processing.process()
+        self.assertListEqual(list(np.linspace(1, 4, 7)),
+                             list(self.dataset1.data.axes[0].values))
+        self.assertListEqual(list(np.linspace(1, 4, 7)),
+                             list(self.dataset2.data.axes[0].values))
+
+    @unittest.skip
+    def test_process_interpolates_data_for_1d_datasets(self):
+        self.dataset1.data.data = np.linspace(10, 15, 11)
+        self.dataset1.data.axes[0].values = np.linspace(0, 5, 11)
+        self.dataset2.data.data = np.linspace(11, 14, 11)
+        self.dataset2.data.axes[0].values = np.linspace(1, 4, 11)
+        self.processing.datasets.append(self.dataset1)
+        self.processing.datasets.append(self.dataset2)
+        self.processing.process()
+        self.assertListEqual(list(np.linspace(11, 14, 7)),
+                             list(self.dataset1.data.data))
+        self.assertListEqual(list(np.linspace(11, 14, 7)),
+                             list(self.dataset2.data.data))

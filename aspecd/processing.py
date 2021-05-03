@@ -1611,5 +1611,77 @@ class Averaging(SingleProcessingStep):
         return np.abs(vector - value).argmin()
 
 
-class ExtractCommonRange(SingleProcessingStep):
-    pass
+class ExtractCommonRange(MultiProcessingStep):
+
+    def __init__(self):
+        super().__init__()
+        self.parameters["ignore_units"] = False
+        self.parameters["common_range"] = []
+        self.parameters["npoints"] = []
+
+    def _perform_task(self):
+        if len(self.datasets) < 2:
+            raise IndexError("Need more than one dataset")
+        self._check_dimensions()
+        self._check_common_range()
+        if not self.parameters["ignore_units"]:
+            self._check_axes_units()
+        self._calculate_number_of_points()
+        self._interpolate()
+
+    def _check_dimensions(self):
+        old_dimension = None
+        for dataset in self.datasets:
+            new_dimension = dataset.data.data.ndim
+            if old_dimension and old_dimension != new_dimension:
+                raise ValueError("Datasets have different dimensions")
+            else:
+                old_dimension = new_dimension
+
+    def _check_common_range(self):
+        for dim in range(self.datasets[0].data.data.ndim):
+            minima = []
+            maxima = []
+            for dataset in self.datasets:
+                minima.append(dataset.data.axes[dim].values[0])
+                maxima.append(dataset.data.axes[dim].values[-1])
+            if np.amax(minima) > np.amin(maxima):
+                raise ValueError("Datasets have disjoint axes values")
+            self.parameters["common_range"].append([np.amax(minima),
+                                                    np.amin(maxima)])
+
+    def _check_axes_units(self):
+        old_units = None
+        for dataset in self.datasets:
+            new_units = []
+            for axis in dataset.data.axes:
+                new_units.append(axis.unit)
+            if old_units and old_units != new_units:
+                raise ValueError("Datasets have axes with different units")
+            else:
+                old_units = new_units
+
+    def _calculate_number_of_points(self):
+        for dim in range(self.datasets[0].data.data.ndim):
+            common_range = self.parameters["common_range"][dim]
+            number_of_points = []
+            for dataset in self.datasets:
+                values = dataset.data.axes[dim].values
+                # noinspection PyUnresolvedReferences
+                number_of_points.append(
+                    (values <= common_range[1]).nonzero()[0][-1] -
+                    (values >= common_range[0]).nonzero()[0][0]+1
+                )
+            # TODO: Make this adjustable, not always taking the minimum (
+            #  i.e., coarsest grid)
+            self.parameters["npoints"].append(np.amin(number_of_points))
+
+    def _interpolate(self):
+        for dim in range(self.datasets[0].data.data.ndim):
+            common_range = self.parameters["common_range"][dim]
+            number_of_points = self.parameters["npoints"][dim]
+            for dataset in self.datasets:
+                dataset.data.axes[dim].values = np.linspace(common_range[0],
+                                                            common_range[1],
+                                                            number_of_points)
+                # dataset.data.data = np.interp()
