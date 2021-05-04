@@ -1680,8 +1680,11 @@ class ExtractCommonRange(MultiProcessingStep):
         for dim in range(self.datasets[0].data.data.ndim):
             common_range = self.parameters["common_range"][dim]
             number_of_points = self.parameters["npoints"][dim]
+            axis_values = np.linspace(common_range[0], common_range[1],
+                                      number_of_points)
             for dataset in self.datasets:
-                dataset.data.axes[dim].values = np.linspace(common_range[0],
-                                                            common_range[1],
-                                                            number_of_points)
-                # dataset.data.data = np.interp()
+                if self.datasets[0].data.data.ndim == 1:
+                    dataset.data.data = np.interp(axis_values,
+                                                  dataset.data.axes[0].values,
+                                                  dataset.data.data)
+                dataset.data.axes[dim].values = axis_values

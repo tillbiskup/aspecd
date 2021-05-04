@@ -962,9 +962,9 @@ class TestExtractCommonRange(unittest.TestCase):
                              [[1., 4.], [11., 14.]])
 
     def test_process_sets_npoints_for_1d_datasets(self):
-        self.dataset1.data.data = np.random.random([10])
+        self.dataset1.data.data = np.random.random([11])
         self.dataset1.data.axes[0].values = np.linspace(0, 5, 11)
-        self.dataset2.data.data = np.random.random([10])
+        self.dataset2.data.data = np.random.random([11])
         self.dataset2.data.axes[0].values = np.linspace(1, 4, 11)
         self.processing.datasets.append(self.dataset1)
         self.processing.datasets.append(self.dataset2)
@@ -996,7 +996,6 @@ class TestExtractCommonRange(unittest.TestCase):
         self.assertListEqual(list(np.linspace(1, 4, 7)),
                              list(self.dataset2.data.axes[0].values))
 
-    @unittest.skip
     def test_process_interpolates_data_for_1d_datasets(self):
         self.dataset1.data.data = np.linspace(10, 15, 11)
         self.dataset1.data.axes[0].values = np.linspace(0, 5, 11)
