@@ -853,16 +853,19 @@ class ScalarAlgebra(SingleProcessingStep):
 
     Attributes
     ----------
-    parameters["kind"] : :class:`str`
-        Kind of scalar algebra to use
+    parameters : :class:`dict`
+        All parameters necessary for this step.
 
-        Valid values: "plus", "minus", "times", "by", "add", "subtract",
-        "multiply", "divide", "+", "-", "*", "/"
+        kind : :class:`str`
+            Kind of scalar algebra to use
 
-    parameters["value"] : :class:`float`
-        Parameter of the scalar algebraic operation
+            Valid values: "plus", "minus", "times", "by", "add", "subtract",
+            "multiply", "divide", "+", "-", "*", "/"
 
-        Default value: 1
+        value : :class:`float`
+            Parameter of the scalar algebraic operation
+
+            Default value: 1.0
 
     Raises
     ------
@@ -899,7 +902,7 @@ class ScalarAlgebra(SingleProcessingStep):
         self.undoable = True
         self.description = 'Perform scalar algebra on one dataset.'
         self.parameters['kind'] = None
-        self.parameters['value'] = 1
+        self.parameters['value'] = 1.0
         self._kinds = {
             'plus': operator.add,
             'add': operator.add,
@@ -915,17 +918,17 @@ class ScalarAlgebra(SingleProcessingStep):
             '/': operator.truediv
         }
 
-    def _perform_task(self):
-        operator_ = self._kinds[self.parameters['kind'].lower()]
-        self.dataset.data.data = operator_(self.dataset.data.data,
-                                           self.parameters['value'])
-
     def _sanitise_parameters(self):
         if not self.parameters['kind']:
             raise ValueError('No kind of scalar operation given')
         if self.parameters['kind'].lower() not in self._kinds:
             raise ValueError('Scalar operation "%s" not understood'
                              % self.parameters['kind'])
+
+    def _perform_task(self):
+        operator_ = self._kinds[self.parameters['kind'].lower()]
+        self.dataset.data.data = operator_(self.dataset.data.data,
+                                           self.parameters['value'])
 
 
 class Projection(SingleProcessingStep):
@@ -944,10 +947,13 @@ class Projection(SingleProcessingStep):
 
     Attributes
     ----------
-    parameters["axis"] : :class:`int`
-        Axis to average along
+    parameters : :class:`dict`
+        All parameters necessary for this step.
 
-        Default value: 0
+        axis : :class:`int`
+            Axis to average along
+
+            Default value: 0
 
     Raises
     ------
@@ -1637,6 +1643,106 @@ class Averaging(SingleProcessingStep):
     @staticmethod
     def _get_index(vector, value):
         return np.abs(vector - value).argmin()
+
+
+class ScalarAxisAlgebra(SingleProcessingStep):
+    # noinspection PyUnresolvedReferences
+    """Perform scalar algebraic operation on the axis of a dataset.
+
+    Sometimes, changing the values of an axis can be quite useful,
+    for example to apply corrections obtained by some analysis step.
+    Usually, this requires scalar algebraic operations on the axis values.
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        kind : :class:`str`
+            Kind of scalar algebra to use
+
+            Valid values: "plus", "minus", "times", "by", "add", "subtract",
+            "multiply", "divide", "+", "-", "*", "/", "power", "pow", "**"
+
+        axis : :class:`int`
+            Axis to operate on
+
+            Default value: 0
+
+        value : :class:`float`
+            Parameter of the scalar algebraic operation
+
+            Default value: None
+
+    Raises
+    ------
+    ValueError
+        Raised if no or wrong kind is provided
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    In case you would like to add a fixed value of 42 to the first axis
+    (index 0) your dataset:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: ScalarAxisAlgebra
+         properties:
+           parameters:
+             kind: plus
+             axis: 0
+             value: 42
+
+    Similarly, you could use "minus", "times", "by", "add", "subtract",
+    "multiply", "divide", and "power" as kind - resulting in the given
+    algebraic operation.
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = 'Scalar algebra on the axis of a dataset'
+        self.undoable = True
+        self.parameters['kind'] = None
+        self.parameters['axis'] = 0
+        self.parameters['value'] = None
+        self._kinds = {
+            'plus': operator.add,
+            'add': operator.add,
+            '+': operator.add,
+            'minus': operator.sub,
+            'subtract': operator.sub,
+            '-': operator.sub,
+            'times': operator.mul,
+            'multiply': operator.mul,
+            '*': operator.mul,
+            'by': operator.truediv,
+            'divide': operator.truediv,
+            '/': operator.truediv,
+            'power': operator.pow,
+            'pow': operator.pow,
+            '**': operator.pow,
+        }
+
+    def _sanitise_parameters(self):
+        if not self.parameters['kind']:
+            raise ValueError('No kind of scalar operation given')
+        if self.parameters['kind'].lower() not in self._kinds:
+            raise ValueError('Scalar operation "%s" not understood'
+                             % self.parameters['kind'])
+
+    def _perform_task(self):
+        operator_ = self._kinds[self.parameters['kind'].lower()]
+        self.dataset.data.axes[self.parameters['axis']].values = \
+            operator_(self.dataset.data.axes[0].values,
+                      self.parameters['value'])
 
 
 class DatasetAlgebra(SingleProcessingStep):

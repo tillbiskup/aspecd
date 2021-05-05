@@ -955,6 +955,183 @@ class TestDatasetAlgebra(unittest.TestCase):
                              "dataset"])
 
 
+class TestScalarAxisAlgebra(unittest.TestCase):
+    def setUp(self):
+        self.processing = aspecd.processing.ScalarAxisAlgebra()
+        self.dataset = aspecd.dataset.Dataset()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('scalar algebra on the axis',
+                      self.processing.description.lower())
+
+    def test_is_singleprocessing_step(self):
+        self.assertTrue(isinstance(self.processing,
+                                   aspecd.processing.SingleProcessingStep))
+
+    def test_is_undoable(self):
+        self.assertTrue(self.processing.undoable)
+
+    def test_process_without_kind_raises(self):
+        with self.assertRaises(ValueError):
+            self.dataset.process(self.processing)
+
+    def test_process_with_wrong_kind_raises(self):
+        self.processing.parameters["kind"] = 'foo'
+        with self.assertRaises(ValueError):
+            self.dataset.process(self.processing)
+
+    def test_add(self):
+        self.processing.parameters["kind"] = 'add'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)+3
+                               == self.dataset.data.axes[0].values))
+
+    def test_plus(self):
+        self.processing.parameters["kind"] = 'plus'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)+3
+                               == self.dataset.data.axes[0].values))
+
+    def test_add_specified_by_sign(self):
+        self.processing.parameters["kind"] = '+'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)+3
+                               == self.dataset.data.axes[0].values))
+
+    def test_add_with_2D_dataset_and_second_axis(self):
+        self.processing.parameters["kind"] = 'plus'
+        self.processing.parameters["axis"] = 1
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random([5, 5])
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.data.axes[1].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)
+                               == self.dataset.data.axes[0].values))
+        self.assertTrue(np.all(np.linspace(0, 5, 5)+3
+                               == self.dataset.data.axes[1].values))
+
+    def test_subtract(self):
+        self.processing.parameters["kind"] = 'subtract'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)-3
+                               == self.dataset.data.axes[0].values))
+
+    def test_minus(self):
+        self.processing.parameters["kind"] = 'minus'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)-3
+                               == self.dataset.data.axes[0].values))
+
+    def test_subtract_specified_by_sign(self):
+        self.processing.parameters["kind"] = '-'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)-3
+                               == self.dataset.data.axes[0].values))
+
+    def test_multiply(self):
+        self.processing.parameters["kind"] = 'multiply'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)*3
+                               == self.dataset.data.axes[0].values))
+
+    def test_times(self):
+        self.processing.parameters["kind"] = 'times'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)*3
+                               == self.dataset.data.axes[0].values))
+
+    def test_multiply_specified_by_sign(self):
+        self.processing.parameters["kind"] = '*'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)*3
+                               == self.dataset.data.axes[0].values))
+
+    def test_divide(self):
+        self.processing.parameters["kind"] = 'divide'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)/3
+                               == self.dataset.data.axes[0].values))
+
+    def test_by(self):
+        self.processing.parameters["kind"] = 'by'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)/3
+                               == self.dataset.data.axes[0].values))
+
+    def test_divide_specified_by_sign(self):
+        self.processing.parameters["kind"] = '/'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)/3
+                               == self.dataset.data.axes[0].values))
+
+    def test_power(self):
+        self.processing.parameters["kind"] = 'power'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)**3
+                               == self.dataset.data.axes[0].values))
+
+    def test_pow(self):
+        self.processing.parameters["kind"] = 'pow'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)**3
+                               == self.dataset.data.axes[0].values))
+
+    def test_power_specified_by_sign(self):
+        self.processing.parameters["kind"] = '**'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)**3
+                               == self.dataset.data.axes[0].values))
+
+
 class TestExtractCommonRange(unittest.TestCase):
     def setUp(self):
         self.processing = aspecd.processing.ExtractCommonRange()

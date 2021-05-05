@@ -16,7 +16,6 @@ For version 0.2
 
 * Remaining basic processing and analysis steps:
 
-  * ScalarAxisAlgebra: perform scalar algebra on values of an axis
   * slice extraction for >2D datasets (is a slice always 1D?)
   * ? general slicing (extracting subsets of data)
   * interpolation (useful as well for reducing knots of a grid for 3D plots)
