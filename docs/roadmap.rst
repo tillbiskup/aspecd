@@ -40,6 +40,8 @@ For version 0.2
 For later versions
 ==================
 
+* Recipes: Subrecipes that can be included in recipes
+
 * Report task: Add figure captions to context if available
 
 * Reporter: Method for adding dict representations of datasets to context

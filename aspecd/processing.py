@@ -93,6 +93,18 @@ independently.
 
   Operations available: add, subtract, multiply, divide (by given scalar)
 
+* :class:`aspecd.processing.ScalarAxisAlgebra`
+
+  Perform scalar algebraic operation on axis values of a dataset.
+
+  Operations available: add, subtract, multiply, divide, power (by given scalar)
+
+* :class:`aspecd.processing.DatasetAlgebra`
+
+  Perform scalar algebraic operation on two datasets.
+
+  Operations available: add, subtract
+
 * :class:`aspecd.processing.Projection`
 
   Project data, *i.e.* reduce dimensions along one axis.
@@ -147,7 +159,7 @@ A few hints on writing own processing step classes:
   the :class:`aspecd.processing.ProcessingStep` class, *not* in separate
   properties of the class. Only this way, you can ensure full
   reproducibility and compatibility of recipe-driven data analysis (for
-  details, see the :mod:`aspecd.tasks` module).
+  details of the latter, see the :mod:`aspecd.tasks` module).
 
 * Always set the ``description`` property to a sensible value.
 
@@ -155,7 +167,9 @@ A few hints on writing own processing step classes:
   processing steps can be undone.
 
 * Implement the actual processing in the ``_perform_task`` method of the
-  processing step.
+  processing step. For sanitising parameters and checking general
+  applicability of the processing step to the dataset(s) at hand, continue
+  reading.
 
 * Make sure to implement the
   :meth:`aspecd.processing.ProcessingStep.applicable` method according to your
@@ -1704,6 +1718,9 @@ class ScalarAxisAlgebra(SingleProcessingStep):
     "multiply", "divide", and "power" as kind - resulting in the given
     algebraic operation.
 
+
+    .. versionadded:: 0.2
+
     """
 
     def __init__(self):
@@ -1747,7 +1764,7 @@ class ScalarAxisAlgebra(SingleProcessingStep):
 
 class DatasetAlgebra(SingleProcessingStep):
     # noinspection PyUnresolvedReferences
-    """Perform scalar algebraic operation on two dataset.
+    """Perform scalar algebraic operation on two datasets.
 
     To improve the signal-to-noise ratio, adding the data of two datasets
     can sometimes be useful. Alternatively, adding or subtracting the data
@@ -1827,6 +1844,9 @@ class DatasetAlgebra(SingleProcessingStep):
              dataset: label_to_other_dataset
          apply_to:
            - label_to_dataset
+
+
+    .. versionadded:: 0.2
 
     """
 
@@ -1979,8 +1999,7 @@ class ExtractCommonRange(MultiProcessingStep):
             new_dimension = dataset.data.data.ndim
             if old_dimension and old_dimension != new_dimension:
                 raise ValueError("Datasets have different dimensions")
-            else:
-                old_dimension = new_dimension
+            old_dimension = new_dimension
 
     def _check_common_range(self):
         for dim in range(self.datasets[0].data.data.ndim):
@@ -2002,8 +2021,7 @@ class ExtractCommonRange(MultiProcessingStep):
                 new_units.append(axis.unit)
             if old_units and old_units != new_units:
                 raise ValueError("Datasets have axes with different units")
-            else:
-                old_units = new_units
+            old_units = new_units
 
     def _calculate_number_of_points(self):
         for dim in range(self.datasets[0].data.data.ndim):
@@ -2014,7 +2032,7 @@ class ExtractCommonRange(MultiProcessingStep):
                 # noinspection PyUnresolvedReferences
                 number_of_points.append(
                     (values <= common_range[1]).nonzero()[0][-1] -
-                    (values >= common_range[0]).nonzero()[0][0]+1
+                    (values >= common_range[0]).nonzero()[0][0] + 1
                 )
             # TODO: Make this adjustable, not always taking the minimum (
             #  i.e., coarsest grid)

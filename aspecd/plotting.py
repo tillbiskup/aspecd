@@ -177,6 +177,7 @@ import copy
 import os
 
 import matplotlib as mpl
+# pylint: disable=unused-import
 import matplotlib.collections
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
