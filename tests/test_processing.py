@@ -857,6 +857,50 @@ class TestAveraging(unittest.TestCase):
             self.dataset.process(self.processing)
 
 
+class TestDatasetAlgebra(unittest.TestCase):
+    def setUp(self):
+        self.processing = aspecd.processing.DatasetAlgebra()
+        self.dataset1 = aspecd.dataset.Dataset()
+        self.dataset2 = aspecd.dataset.Dataset()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('algebra', self.processing.description.lower())
+        self.assertIn('datasets', self.processing.description.lower())
+
+    def test_is_singleprocessing_step(self):
+        self.assertTrue(isinstance(self.processing,
+                                   aspecd.processing.SingleProcessingStep))
+
+    def test_process_without_parameter_dataset_raises(self):
+        with self.assertRaises(aspecd.exceptions.MissingDatasetError):
+            self.dataset1.process(self.processing)
+
+    @unittest.skip
+    def test_is_not_undoable(self):
+        self.assertFalse(self.processing.undoable)
+
+    def test_process_without_kind_raises(self):
+        self.processing.parameters["dataset"] = self.dataset2
+        with self.assertRaises(ValueError):
+            self.dataset1.process(self.processing)
+
+    def test_process_with_wrong_kind_raises(self):
+        self.processing.parameters["dataset"] = self.dataset2
+        self.processing.parameters["kind"] = 'foo'
+        with self.assertRaises(ValueError):
+            self.dataset1.process(self.processing)
+
+    def test_process_with_differing_shapes_raises(self):
+        self.dataset1.data.data = np.random.random(5)
+        self.dataset2.data.data = np.random.random(6)
+        self.processing.parameters["dataset"] = self.dataset2
+        self.processing.parameters["kind"] = "add"
+        with self.assertRaisesRegex(ValueError, "different shapes"):
+            self.dataset1.process(self.processing)
+
 class TestExtractCommonRange(unittest.TestCase):
     def setUp(self):
         self.processing = aspecd.processing.ExtractCommonRange()
@@ -866,9 +910,15 @@ class TestExtractCommonRange(unittest.TestCase):
     def test_instantiate_class(self):
         pass
 
+    def test_has_appropriate_description(self):
+        self.assertIn('common data range', self.processing.description.lower())
+
     def test_is_multiprocessing_step(self):
         self.assertTrue(isinstance(self.processing,
                                    aspecd.processing.MultiProcessingStep))
+
+    def test_is_undoable(self):
+        self.assertTrue(self.processing.undoable)
 
     def test_with_only_one_dataset_raises(self):
         self.processing.datasets.append(self.dataset1)

@@ -16,8 +16,6 @@ New features
 
 * ExtractCommonRange for 1D and 2D datasets
 
-* ProcessingStep split into SingleProcessingStep and MultiProcessingStep
-
 * SinglePlotter2D:
 
   * Filled contour plot with additional contour lines that can be styled
@@ -31,6 +29,10 @@ Changes
 -------
 
 * SliceExtraction: parameter "index" renamed to "position"
+
+* ProcessingStep split into SingleProcessingStep and MultiProcessingStep
+
+  All processing steps previously inheriting from aspecd.ProcessingStep need to inherit now from aspecd.SingleProcessingStep to continue working as expected.
 
 
 New dependencies

@@ -10,11 +10,23 @@ For version 0.2
 
 * Add Zenodo badge to start page of documentation in release
 
+* Tasks: MultiProcessingTask (and shortcut for SingleProcessingTask)
+
 * Full list of required packages (including their installed versions) in SystemInfo, to be included in history (and recipe history)
 
-* Report task: Add figure captions to context if available
+* Remaining basic processing and analysis steps:
 
-* Remaining basic processing and analysis steps, such as algebra with datasets, slice extraction for >2D datasets, peak finding, SNR determination, denoising, filtering, noise, cut dataset and axis (to common range)
+  * algebra with datasets
+  * slice extraction for >2D datasets (is a slice always 1D?)
+  * ? general slicing (extracting subsets of data)
+  * interpolation (useful as well for reducing knots of a grid for 3D plots)
+  * peak finding
+  * SNR determination
+  * denoising
+  * filtering
+  * adding noise
+  * ScalarAxisAlgebra: perform scalar algebra on values of an axis
+  * ? AxisAlgebra: provide a function that gets evaluated on the values of an axis
 
 * Normalising over parts of a dataset
 
@@ -29,6 +41,8 @@ For version 0.2
 
 For later versions
 ==================
+
+* Report task: Add figure captions to context if available
 
 * Reporter: Method for adding dict representations of datasets to context
 

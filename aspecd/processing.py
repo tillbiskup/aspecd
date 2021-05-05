@@ -916,14 +916,16 @@ class ScalarAlgebra(SingleProcessingStep):
         }
 
     def _perform_task(self):
+        operator_ = self._kinds[self.parameters['kind'].lower()]
+        self.dataset.data.data = operator_(self.dataset.data.data,
+                                           self.parameters['value'])
+
+    def _sanitise_parameters(self):
         if not self.parameters['kind']:
             raise ValueError('No kind of scalar operation given')
         if self.parameters['kind'].lower() not in self._kinds:
             raise ValueError('Scalar operation "%s" not understood'
                              % self.parameters['kind'])
-        operator_ = self._kinds[self.parameters['kind'].lower()]
-        self.dataset.data.data = operator_(self.dataset.data.data,
-                                           self.parameters['value'])
 
 
 class Projection(SingleProcessingStep):
@@ -1018,11 +1020,13 @@ class Projection(SingleProcessingStep):
         return len(dataset.data.axes) > 2
 
     def _perform_task(self):
-        if self.parameters['axis'] > self.dataset.data.data.ndim - 1:
-            raise IndexError("Axis %i out of bounds" % self.parameters['axis'])
         self.dataset.data.data = np.average(self.dataset.data.data,
                                             axis=self.parameters['axis'])
         del self.dataset.data.axes[self.parameters['axis']]
+
+    def _sanitise_parameters(self):
+        if self.parameters['axis'] > self.dataset.data.data.ndim - 1:
+            raise IndexError("Axis %i out of bounds" % self.parameters['axis'])
 
 
 class SliceExtraction(SingleProcessingStep):
@@ -1635,6 +1639,37 @@ class Averaging(SingleProcessingStep):
         return np.abs(vector - value).argmin()
 
 
+class DatasetAlgebra(SingleProcessingStep):
+
+    def __init__(self):
+        super().__init__()
+        self.description = 'Perform algebra using two datasets.'
+        self.parameters["dataset"] = None
+        self.parameters["kind"] = ''
+        self._kinds = {
+            'plus': operator.add,
+            'add': operator.add,
+            '+': operator.add,
+            'minus': operator.sub,
+            'subtract': operator.sub,
+            '-': operator.sub,
+        }
+
+    def _sanitise_parameters(self):
+        if not self.parameters["dataset"]:
+            raise aspecd.exceptions.MissingDatasetError
+        if not self.parameters["kind"]:
+            raise ValueError('No kind of scalar operation given')
+        if self.parameters['kind'].lower() not in self._kinds:
+            raise ValueError('Scalar operation "%s" not understood'
+                             % self.parameters['kind'])
+
+    def _perform_task(self):
+        if self.dataset.data.data.shape \
+                != self.parameters["dataset"].data.data.shape:
+            raise ValueError("Data of datasets have different shapes.")
+
+
 class ExtractCommonRange(MultiProcessingStep):
     # noinspection PyUnresolvedReferences
     """
@@ -1649,6 +1684,14 @@ class ExtractCommonRange(MultiProcessingStep):
         Currently, extracting the common range works *only* for **1D and 2D**
         datasets, not for higher-dimensional datasets. This may, however,
         change in the future.
+
+    .. todo::
+        * Make type of interpolation controllable
+
+        * Make number of points controllable (in absolute numbers as well as
+          minimum and maximum points with respect to datasets)
+
+        * Check for ways to make it work with ND, N>2
 
     Attributes
     ----------
@@ -1695,6 +1738,8 @@ class ExtractCommonRange(MultiProcessingStep):
 
     def __init__(self):
         super().__init__()
+        self.description = 'Extract common data range of several datasets'
+        self.undoable = True
         self.parameters["ignore_units"] = False
         self.parameters["common_range"] = []
         self.parameters["npoints"] = []
@@ -1720,9 +1765,11 @@ class ExtractCommonRange(MultiProcessingStep):
         """
         return len(dataset.data.axes) <= 3
 
-    def _perform_task(self):
+    def _sanitise_parameters(self):
         if len(self.datasets) < 2:
             raise IndexError("Need more than one dataset")
+
+    def _perform_task(self):
         self._check_dimensions()
         self._check_common_range()
         if not self.parameters["ignore_units"]:
