@@ -847,7 +847,7 @@ class Differentiation(SingleProcessingStep):
 class ScalarAlgebra(SingleProcessingStep):
     """Perform scalar algebraic operation on one dataset.
 
-    To compare datasets (by eye), it might be useful to adapt its intensity
+    To compare datasets (by eye), it might be useful to adapt their intensity
     by algebraic operations. Adding, subtracting, multiplying and dividing
     are implemented here.
 
@@ -1640,10 +1640,93 @@ class Averaging(SingleProcessingStep):
 
 
 class DatasetAlgebra(SingleProcessingStep):
+    # noinspection PyUnresolvedReferences
+    """Perform scalar algebraic operation on two dataset.
+
+    To improve the signal-to-noise ratio, adding the data of two datasets
+    can sometimes be useful. Alternatively, adding or subtracting the data
+    of two datasets can be used to help interpreting the signals.
+
+    .. important::
+        The data of the two datasets to perform the scalar algebraic
+        operation on need to have the same dimension (that is checked for),
+        and to obtain meaningful results, usually the axes values need to be
+        identical as well. For this purpose, use the
+        :class:`ExtractCommonRange` processing step.
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        kind : :class:`str`
+            Kind of scalar algebra to use
+
+            Valid values: "plus", "minus", "add", "subtract", "+", "-"
+
+            Note that in contrast to scalar algebra, multiply and divide are
+            not implemented for operation on two datasets.
+
+        dataset : :class:`aspecd.dataset.Dataset`
+            Dataset whose data to add or subtract
+
+    Raises
+    ------
+    ValueError
+        Raised if no or wrong kind is provided
+
+        Raised if data of datasets have different shapes
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    In case you would like to add the data of the dataset referred to by its
+    label ``label_to_other_dataset`` to your dataset:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: DatasetAlgebra
+         properties:
+           parameters:
+             kind: plus
+             dataset: label_to_other_dataset
+
+    Similarly, you could use "minus", "add", "subtract" as kind - resulting
+    in the given algebraic operation.
+
+    As mentioned already, the data of both datasets need to have identical
+    shape, and comparison is only meaningful if the axes are compatible as
+    well. Hence, you will usually want to perform a ExtractCommonRange
+    processing step before doing algebra with two datasets:
+
+    .. code-block:: yaml
+
+       - kind: multiprocessing
+         type: ExtractCommonRange
+         results:
+           - label_to_dataset
+           - label_to_other_dataset
+
+       - kind: processing
+         type: DatasetAlgebra
+         properties:
+           parameters:
+             kind: plus
+             dataset: label_to_other_dataset
+         apply_to:
+           - label_to_dataset
+
+    """
 
     def __init__(self):
         super().__init__()
-        self.description = 'Perform algebra using two datasets.'
+        self.description = 'Perform algebra using two datasets'
         self.parameters["dataset"] = None
         self.parameters["kind"] = ''
         self._kinds = {
@@ -1665,6 +1748,13 @@ class DatasetAlgebra(SingleProcessingStep):
                              % self.parameters['kind'])
 
     def _perform_task(self):
+        self._check_shape()
+        operator_ = self._kinds[self.parameters['kind'].lower()]
+        self.dataset.data.data = operator_(self.dataset.data.data,
+                                           self.parameters['dataset'].data.data)
+        self.parameters["dataset"] = self.parameters['dataset'].id
+
+    def _check_shape(self):
         if self.dataset.data.data.shape \
                 != self.parameters["dataset"].data.data.shape:
             raise ValueError("Data of datasets have different shapes.")

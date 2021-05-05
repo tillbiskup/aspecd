@@ -901,6 +901,60 @@ class TestDatasetAlgebra(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "different shapes"):
             self.dataset1.process(self.processing)
 
+    def test_add_with_1d_datasets(self):
+        self.dataset1.data.data = np.ones(5)
+        self.dataset2.data.data = np.ones(5)
+        self.processing.parameters["dataset"] = self.dataset2
+        self.processing.parameters["kind"] = "add"
+        self.dataset1.process(self.processing)
+        self.assertTrue(np.all(self.dataset1.data.data == 2))
+
+    def test_subtract_with_1d_datasets(self):
+        self.dataset1.data.data = np.ones(5) * 2
+        self.dataset2.data.data = np.ones(5)
+        self.processing.parameters["dataset"] = self.dataset2
+        self.processing.parameters["kind"] = "subtract"
+        self.dataset1.process(self.processing)
+        self.assertTrue(np.all(self.dataset1.data.data == 1))
+
+    def test_add_with_2d_datasets(self):
+        self.dataset1.data.data = np.ones([5, 5])
+        self.dataset2.data.data = np.ones([5, 5])
+        self.processing.parameters["dataset"] = self.dataset2
+        self.processing.parameters["kind"] = "add"
+        self.dataset1.process(self.processing)
+        self.assertTrue(np.all(self.dataset1.data.data == 2))
+
+    def test_subtract_with_2d_datasets(self):
+        self.dataset1.data.data = np.ones([5, 5]) * 2
+        self.dataset2.data.data = np.ones([5, 5])
+        self.processing.parameters["dataset"] = self.dataset2
+        self.processing.parameters["kind"] = "subtract"
+        self.dataset1.process(self.processing)
+        self.assertTrue(np.all(self.dataset1.data.data == 1))
+
+    def test_process_replaces_dataset_parameter_with_dataset_id(self):
+        self.dataset1.data.data = np.ones(5)
+        self.dataset2.data.data = np.ones(5)
+        self.dataset2.id = '12345'
+        self.processing.parameters["dataset"] = self.dataset2
+        self.processing.parameters["kind"] = "add"
+        processing = self.dataset1.process(self.processing)
+        self.assertEqual(self.dataset2.id,
+                         processing.parameters["dataset"])
+
+    def test_process_writes_dataset_id_in_history(self):
+        self.dataset1.data.data = np.ones(5)
+        self.dataset2.data.data = np.ones(5)
+        self.dataset2.id = '12345'
+        self.processing.parameters["dataset"] = self.dataset2
+        self.processing.parameters["kind"] = "add"
+        self.dataset1.process(self.processing)
+        self.assertEqual(self.dataset2.id,
+                         self.dataset1.history[-1].processing.parameters[
+                             "dataset"])
+
+
 class TestExtractCommonRange(unittest.TestCase):
     def setUp(self):
         self.processing = aspecd.processing.ExtractCommonRange()
