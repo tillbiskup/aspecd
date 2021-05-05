@@ -184,6 +184,7 @@ import math
 import operator
 
 import numpy as np
+from scipy import interpolate
 
 import aspecd.exceptions
 import aspecd.history
@@ -1612,12 +1613,86 @@ class Averaging(SingleProcessingStep):
 
 
 class ExtractCommonRange(MultiProcessingStep):
+    # noinspection PyUnresolvedReferences
+    """
+    Extract the common range of data for multiple datasets using interpolation.
+
+    One prerequisite for adding up multiple datasets in a meaningful way is to
+    have their data dimensions as well as their respective axes values
+    agree. This usually requires interpolating the data to a common set of
+    axes.
+
+    .. important::
+        Currently, extracting the common range works *only* for **1D and 2D**
+        datasets, not for higher-dimensional datasets. This may, however,
+        change in the future.
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        ignore_units : :class:`bool`
+            Whether to ignore the axes units when checking the datasets for
+            applicability.
+
+            Usually, the axes units should be identical, but sometimes,
+            they may be named differently or be compatible anyways. Use with
+            care and only in case you exactly know what you do
+
+            Default: False
+
+        common_range : :class:`list`
+            Common range of values for each axis as determined by the
+            processing step.
+
+            For >1D datasets, this will be a list of lists.
+
+        npoints : :class:`list`
+            Number of points used for the final grid the data are
+            interpolated on.
+
+            The length is identical to the dimensions of the data of the
+            datasets.
+
+    Raises
+    ------
+    ValueError
+        Raised if datasets have axes with different units or disjoint values
+
+        Raised if datasets have different dimensions
+
+    IndexError
+        Raised if axis is out of bounds for given dataset
+
+    """
 
     def __init__(self):
         super().__init__()
         self.parameters["ignore_units"] = False
         self.parameters["common_range"] = []
         self.parameters["npoints"] = []
+
+    @staticmethod
+    def applicable(dataset):
+        """
+        Check whether processing step is applicable to the given dataset.
+
+        Extracting a common range is currently only applicable to datasets with
+        one- and two-dimensional data, due to the underlying interpolation.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset to check
+
+        Returns
+        -------
+        applicable : :class:`bool`
+            `True` if successful, `False` otherwise.
+
+        """
+        return len(dataset.data.axes) <= 3
 
     def _perform_task(self):
         if len(self.datasets) < 2:
@@ -1677,14 +1752,23 @@ class ExtractCommonRange(MultiProcessingStep):
             self.parameters["npoints"].append(np.amin(number_of_points))
 
     def _interpolate(self):
+        axis_values = []
         for dim in range(self.datasets[0].data.data.ndim):
             common_range = self.parameters["common_range"][dim]
             number_of_points = self.parameters["npoints"][dim]
-            axis_values = np.linspace(common_range[0], common_range[1],
-                                      number_of_points)
-            for dataset in self.datasets:
-                if self.datasets[0].data.data.ndim == 1:
-                    dataset.data.data = np.interp(axis_values,
-                                                  dataset.data.axes[0].values,
-                                                  dataset.data.data)
-                dataset.data.axes[dim].values = axis_values
+            axis_values.append(np.linspace(common_range[0], common_range[1],
+                                           number_of_points))
+        for dataset in self.datasets:
+            if self.datasets[0].data.data.ndim == 1:
+                interp = interpolate.interp1d(dataset.data.axes[0].values,
+                                              dataset.data.data)
+                dataset.data.data = interp(axis_values[0])
+            elif self.datasets[0].data.data.ndim == 2:
+                # Note: interp2d uses Cartesian indexing (x,y => col, row),
+                #       not matrix indexing (row, col)
+                interp = interpolate.interp2d(dataset.data.axes[1].values,
+                                              dataset.data.axes[0].values,
+                                              dataset.data.data)
+                dataset.data.data = interp(axis_values[1], axis_values[0])
+            for dim in range(self.datasets[0].data.data.ndim):
+                dataset.data.axes[dim].values = axis_values[dim]

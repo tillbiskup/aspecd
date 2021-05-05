@@ -51,6 +51,7 @@ setuptools.setup(
         'jinja2',
         'matplotlib',
         'numpy',
+        'scipy',
         'oyaml',
         'asdf',
     ],

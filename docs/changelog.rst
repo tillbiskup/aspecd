@@ -14,6 +14,8 @@ Not yet released
 New features
 ------------
 
+* ExtractCommonRange for 1D and 2D datasets
+
 * ProcessingStep split into SingleProcessingStep and MultiProcessingStep
 
 * SinglePlotter2D:
@@ -29,6 +31,12 @@ Changes
 -------
 
 * SliceExtraction: parameter "index" renamed to "position"
+
+
+New dependencies
+----------------
+
+* scipy (for interpolation in ExtractCommonRange)
 
 
 Version 0.1.1

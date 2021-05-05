@@ -10,6 +10,8 @@ For version 0.2
 
 * Add Zenodo badge to start page of documentation in release
 
+* Full list of required packages (including their installed versions) in SystemInfo, to be included in history (and recipe history)
+
 * Report task: Add figure captions to context if available
 
 * Remaining basic processing and analysis steps, such as algebra with datasets, slice extraction for >2D datasets, peak finding, SNR determination, denoising, filtering, noise, cut dataset and axis (to common range)

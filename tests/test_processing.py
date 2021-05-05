@@ -875,6 +875,14 @@ class TestExtractCommonRange(unittest.TestCase):
         with self.assertRaisesRegex(IndexError, "Need more than one dataset"):
             self.processing.process()
 
+    def test_with_datasets_with_more_than_2d_raises(self):
+        self.dataset1.data.data = np.random.random([10, 10, 10])
+        self.dataset2.data.data = np.random.random([10, 10, 10])
+        self.processing.datasets.append(self.dataset1)
+        self.processing.datasets.append(self.dataset2)
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            self.processing.process()
+
     def test_process_with_datasets_with_different_dimensions_raises(self):
         self.dataset1.data.data = np.random.random(10)
         self.dataset2.data.data = np.random.random([10, 10])
@@ -972,10 +980,10 @@ class TestExtractCommonRange(unittest.TestCase):
         self.assertEqual([7], self.processing.parameters["npoints"])
 
     def test_process_sets_npoints_for_2d_datasets(self):
-        self.dataset1.data.data = np.random.random([10, 10])
+        self.dataset1.data.data = np.random.random([11, 11])
         self.dataset1.data.axes[0].values = np.linspace(0, 5, 11)
         self.dataset1.data.axes[1].values = np.linspace(10, 15, 11)
-        self.dataset2.data.data = np.random.random([10, 10])
+        self.dataset2.data.data = np.random.random([11, 11])
         self.dataset2.data.axes[0].values = np.linspace(1, 4, 11)
         self.dataset2.data.axes[1].values = np.linspace(11, 14, 11)
         self.processing.datasets.append(self.dataset1)
@@ -1008,3 +1016,22 @@ class TestExtractCommonRange(unittest.TestCase):
                              list(self.dataset1.data.data))
         self.assertListEqual(list(np.linspace(11, 14, 7)),
                              list(self.dataset2.data.data))
+
+    def test_process_interpolates_data_for_2d_datasets(self):
+        axis0 = np.linspace(0,5,11)
+        axis1 = np.linspace(0,5,11)
+        rows, cols = np.meshgrid(axis0, axis1, indexing='ij')
+        self.dataset1.data.data = np.sin(rows**2+cols**2)
+        self.dataset1.data.axes[0].values = axis0
+        self.dataset1.data.axes[1].values = axis1
+        axis0 = np.linspace(2,4,5)
+        axis1 = np.linspace(2,4,5)
+        rows, cols = np.meshgrid(axis0, axis1, indexing='ij')
+        self.dataset2.data.data = np.sin(rows**2+cols**2)
+        self.dataset2.data.axes[0].values = axis0
+        self.dataset2.data.axes[1].values = axis1
+        self.processing.datasets.append(self.dataset1)
+        self.processing.datasets.append(self.dataset2)
+        self.processing.process()
+        self.assertTrue(np.all(self.dataset2.data.data
+                               == self.dataset1.data.data))
