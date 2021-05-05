@@ -1,5 +1,6 @@
 """Tests for tasks."""
 import collections
+import copy
 import datetime
 import glob
 import os
@@ -943,6 +944,85 @@ class TestProcessingTask(unittest.TestCase):
         self.task.recipe = self.recipe
         self.task.perform()
         self.assertTrue(len(self.recipe.results))
+
+    def test_perform_task_with_result_and_multiple_datasets_adds_results(self):
+        self.prepare_recipe()
+        result = ['foo', 'bar']
+        recipe_dict = {'datasets': result,
+                       'tasks': [self.processing_task]}
+        self.recipe.from_dict(recipe_dict)
+        self.processing_task['result'] = result
+        self.processing_task['apply_to'] = result
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertEqual(len(result), len(self.recipe.results))
+
+
+class TestMultiProcessingTask(unittest.TestCase):
+    def setUp(self):
+        self.task = tasks.MultiprocessingTask()
+        self.recipe = tasks.Recipe()
+        self.dataset = ['foo']
+
+    def prepare_recipe(self):
+        self.processing_task = {'kind': 'multiprocessing',
+                                'type': 'MultiProcessingStep',
+                                'apply_to': self.dataset}
+        dataset_factory = dataset.DatasetFactory()
+        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        self.recipe.dataset_factory = dataset_factory
+        recipe_dict = {'datasets': self.dataset,
+                       'tasks': [self.processing_task]}
+        self.recipe.from_dict(recipe_dict)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_perform_task(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(self.recipe.datasets[self.dataset[0]].history)
+
+    def test_perform_task_on_multiple_datasets(self):
+        self.dataset = ['foo', 'bar']
+        self.prepare_recipe()
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        for dataset_ in self.recipe.datasets:
+            self.assertTrue(self.recipe.datasets[dataset_].history)
+
+    def test_has_result_property(self):
+        self.assertTrue(hasattr(self.task, 'result'))
+
+    def test_result_attribute_gets_set_from_dict(self):
+        self.prepare_recipe()
+        result = 'foo'
+        self.processing_task['result'] = result
+        self.task.from_dict(self.processing_task)
+        self.assertEqual(result, self.task.result)
+
+    def test_perform_task_with_result_adds_result(self):
+        self.prepare_recipe()
+        result = 'foo'
+        self.processing_task['result'] = result
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(len(self.recipe.results))
+
+    def test_perform_task_with_result_does_not_change_original_dataset(self):
+        self.prepare_recipe()
+        result = ['foo']
+        self.processing_task['result'] = result
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertNotEqual(self.recipe.results[result[0]],
+                            self.recipe.datasets[self.dataset[0]])
 
     def test_perform_task_with_result_and_multiple_datasets_adds_results(self):
         self.prepare_recipe()

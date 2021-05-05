@@ -14,6 +14,8 @@ Not yet released
 New features
 ------------
 
+* MultiprocessingTask
+
 * ScalarAxisAlgebra: perform scalar algebra on axis values
 
 * DatasetAlgebra: add and subtract data of second dataset to/from dataset

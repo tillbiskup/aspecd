@@ -859,6 +859,7 @@ class Differentiation(SingleProcessingStep):
 
 
 class ScalarAlgebra(SingleProcessingStep):
+    # noinspection PyUnresolvedReferences
     """Perform scalar algebraic operation on one dataset.
 
     To compare datasets (by eye), it might be useful to adapt their intensity
@@ -946,6 +947,7 @@ class ScalarAlgebra(SingleProcessingStep):
 
 
 class Projection(SingleProcessingStep):
+    # noinspection PyUnresolvedReferences
     """
     Project data, *i.e.* reduce dimensions along one axis.
 

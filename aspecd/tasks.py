@@ -1629,12 +1629,12 @@ class ProcessingTask(Task):
     Attributes
     ----------
     result : :class:`str`
-        Label for the result of a processing step.
+        Label for the results of a processing step.
 
         Processing steps always operate on datasets. However, sometimes it
         is useful to have a processing task return a copy of the processed
         dataset, in order to compare different processings afterwards.
-        Therefore, you can specify a ``results`` label. In this case,
+        Therefore, you can specify a ``result`` label. In this case,
         the dataset will be copied first, the processing step performed on
         it, and afterwards the result returned as a *new* dataset that is
         accessible throughout the rest of the recipe with the label provided.
@@ -1670,6 +1670,95 @@ class ProcessingTask(Task):
                     self.recipe.results[self.result] = dataset_copy
             else:
                 dataset.process(processing_step=self._task)
+
+
+class MultiprocessingTask(Task):
+    """
+    Multiprocessing step defined as task in recipe-driven data analysis.
+
+    Processing steps will always be performed individually for each dataset.
+    Nevertheless, in this particular case, the processing depends on the
+    list of datasets provided in the ``apply_to`` field
+
+    For more information on the underlying general class,
+    see :class:`aspecd.processing.MultiProcessingStep`.
+
+    For an example of how such a processing task may be included into a
+    recipe, see the YAML listing below:
+
+    .. code-block:: yaml
+
+        kind: multiprocessing
+        type: MultiProcessingStep
+        properties:
+          parameters:
+            param1: bar
+            param2: foo
+        apply_to:
+          - loi:xxx
+          - loi:yyy
+
+    Note that you can refer to datasets and results created during cooking
+    of a recipe using their respective labels. Those labels will
+    automatically be replaced by the actual dataset/result prior to
+    performing the task.
+
+    Sometimes it can come in quite handy to compare different processing
+    steps on the same original dataset, *e.g.* a series of different
+    parameters. Here, what you are interested in is to work on *copies* of
+    the original dataset and get the results stored additionally. Here you go:
+
+    .. code-block:: yaml
+
+        kind: multiprocessing
+        type: MultiProcessingStep
+        apply_to:
+          - loi:xxx
+          - loi:yyy
+        result:
+          - label1
+          - label2
+
+
+    Attributes
+    ----------
+    result : :class:`list`
+        Labels for the results of a processing step.
+
+        Processing steps always operate on datasets. However, sometimes it
+        is useful to have a processing task return a copy of the processed
+        dataset, in order to compare different processings afterwards.
+        Therefore, you can specify a ``result`` label. In this case,
+        the dataset will be copied first, the processing step performed on
+        it, and afterwards the result returned as a *new* dataset that is
+        accessible throughout the rest of the recipe with the label provided.
+
+        In case you perform the processing on several datasets, you may want
+        to provide as many result labels as there are datasets. Otherwise,
+        no result will be assigned.
+
+    """
+
+    def __init__(self, recipe=None):
+        super().__init__(recipe=recipe)
+        self._module = 'processing'
+        self.result = ''
+
+    def _perform(self):
+        self._task = self.get_object()
+        if self.result:
+            datasets = []
+            for dataset in self.recipe.get_datasets(self.apply_to):
+                datasets.append(copy.deepcopy(dataset))
+            self._task.datasets = datasets
+            # noinspection PyUnresolvedReferences
+            self._task.process()
+            for number, dataset in enumerate(self._task.datasets):
+                self.recipe.results[self.result[number]] = dataset
+        else:
+            self._task.datasets = self.recipe.get_datasets(self.apply_to)
+            # noinspection PyUnresolvedReferences
+            self._task.process()
 
 
 class AnalysisTask(Task):
