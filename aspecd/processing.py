@@ -65,6 +65,13 @@ spectroscopic data.
 Here is a list as a first overview. For details, see the detailed
 documentation of each of the classes, readily accessible by the link.
 
+
+Processing steps operating on individual datasets
+-------------------------------------------------
+
+The following processing steps operate each on individual datasets
+independently.
+
 * :class:`aspecd.processing.Normalisation`
 
   Normalise data.
@@ -101,6 +108,19 @@ documentation of each of the classes, readily accessible by the link.
 * :class:`aspecd.processing.Averaging`
 
   Average data over given range along given axis.
+
+
+Processing steps operating on multiple datasets at once
+-------------------------------------------------------
+
+The following processing steps operate each on more than one dataset at the
+same time, requiring at least two datasets as an input to work.
+
+* :class:`aspecd.processing.ExtractCommonRange`
+
+  Extract the common range of data for multiple datasets using interpolation.
+
+  Useful (and often necessary) for performing algebraic operations on datasets.
 
 
 Writing own processing steps
@@ -537,6 +557,9 @@ class MultiProcessingStep(ProcessingStep):
         Raised when processing step is not applicable to dataset
     aspecd.exceptions.MissingDatasetError
         Raised when no dataset exists to act on
+
+
+    .. versionadded:: 0.2
 
     """
 
@@ -1664,6 +1687,9 @@ class ExtractCommonRange(MultiProcessingStep):
 
     IndexError
         Raised if axis is out of bounds for given dataset
+
+
+    .. versionadded:: 0.2
 
     """
 
