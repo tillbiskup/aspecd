@@ -612,7 +612,7 @@ class TestSliceExtraction(unittest.TestCase):
         self.dataset.process(self.processing)
         np.testing.assert_allclose(data, self.dataset.data.data)
 
-    def test_extract_slice__with_axis_units_out_of_range_raises(self):
+    def test_extract_slice_with_axis_units_out_of_range_raises(self):
         self.processing.parameters["unit"] = "axis"
         self.dataset.data.axes[0].values = \
             np.linspace(30, 70, len(self.dataset.data.axes[0].values))

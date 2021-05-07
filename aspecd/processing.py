@@ -1058,7 +1058,7 @@ class SliceExtraction(SingleProcessingStep):
 
     With multidimensional datasets, there are use cases where you would like
     to operate only on a slice along a particular axis. One example may be
-    to compare first and last trace of a 2D dataset.
+    to compare the first and last trace of a 2D dataset.
 
     You can either provide indices or axis values. For the latter, set the
     parameter "unit" accordingly. For details, see below.
@@ -1211,11 +1211,8 @@ class SliceExtraction(SingleProcessingStep):
             raise ValueError("Index out of axis range.")
 
     def _perform_task(self):
-        slice_ = self._get_slice()
-        if self.parameters['axis'] == 0:
-            self.dataset.data.data = self.dataset.data.data[slice_, :]
-        else:
-            self.dataset.data.data = self.dataset.data.data[:, slice_]
+        slice_object = self._get_slice()
+        self.dataset.data.data = self.dataset.data.data[slice_object]
         del self.dataset.data.axes[self.parameters['axis']]
 
     def _out_of_range(self):
@@ -1234,13 +1231,19 @@ class SliceExtraction(SingleProcessingStep):
         return out_of_range
 
     def _get_slice(self):
+        # Extract position
         if self.parameters["unit"] == "index":
             slice_ = self.parameters["position"]
         else:
             axis = self.parameters["axis"]
             slice_ = self._get_index(self.dataset.data.axes[axis].values,
                                      self.parameters["position"])
-        return slice_
+        # Create slice object
+        slice_object = []
+        for _ in range(self.dataset.data.data.ndim):
+            slice_object.append(slice(None))
+        slice_object[self.parameters["axis"]] = slice_
+        return tuple(slice_object)
 
     @staticmethod
     def _get_index(vector, value):
