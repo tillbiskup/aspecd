@@ -34,7 +34,11 @@ New features
 Changes
 -------
 
-* SliceExtraction: parameter "index" renamed to "position"
+* SliceExtraction:
+
+  * parameter "index" renamed to "position"
+
+  * works for ND datasets with N>1
 
 * ProcessingStep split into SingleProcessingStep and MultiProcessingStep
 

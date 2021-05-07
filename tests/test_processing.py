@@ -620,6 +620,45 @@ class TestSliceExtraction(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.dataset.process(self.processing)
 
+    def test_extract_2d_slice_from_3d_dataset(self):
+        self.dataset.data.data = np.random.random([5, 5, 5])
+        origdata = self.dataset.data.data
+        self.processing.parameters['position'] = 3
+        self.processing.parameters['axis'] = 0
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(origdata[3, :, :], self.dataset.data.data)
+
+    def test_extract_2d_slice_from_3d_dataset_along_third_dimension(self):
+        self.dataset.data.data = np.random.random([5, 5, 5])
+        origdata = self.dataset.data.data
+        self.processing.parameters['position'] = 3
+        self.processing.parameters['axis'] = 2
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(origdata[:, :, 3], self.dataset.data.data)
+
+    def test_extract_1d_slice_from_3d_dataset(self):
+        self.dataset.data.data = np.random.random([5, 5, 5])
+        origdata = self.dataset.data.data
+        self.processing.parameters['position'] = [3, 3]
+        self.processing.parameters['axis'] = [0, 1]
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(origdata[3, 3, :], self.dataset.data.data)
+
+    def test_extract_slice_from_3d_dataset_with_3_axes_raises(self):
+        self.dataset.data.data = np.random.random([5, 5, 5])
+        self.processing.parameters['position'] = [3, 3, 3]
+        self.processing.parameters['axis'] = [0, 1, 2]
+        with self.assertRaisesRegex(ValueError, 'Too many axes'):
+            self.dataset.process(self.processing)
+
+    def test_extract_slice_with_uneven_axes_and_positions_count_raises(self):
+        self.dataset.data.data = np.random.random([5, 5, 5])
+        self.processing.parameters['position'] = [3]
+        self.processing.parameters['axis'] = [0, 1]
+        message = 'Need same number of values for position and axis'
+        with self.assertRaisesRegex(ValueError, message):
+            self.dataset.process(self.processing)
+
 
 class TestBaselineCorrection(unittest.TestCase):
     def setUp(self):

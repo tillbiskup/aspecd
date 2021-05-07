@@ -111,7 +111,7 @@ independently.
 
 * :class:`aspecd.processing.SliceExtraction`
 
-  Extract slice along one dimension from dataset.
+  Extract slice along one ore more dimensions from dataset.
 
 * :class:`aspecd.processing.BaselineCorrection`
 
@@ -1054,37 +1054,45 @@ class Projection(SingleProcessingStep):
 class SliceExtraction(SingleProcessingStep):
     # noinspection PyUnresolvedReferences
     """
-    Extract slice along one dimension from dataset.
+    Extract slice along one ore more dimensions from dataset.
 
     With multidimensional datasets, there are use cases where you would like
     to operate only on a slice along a particular axis. One example may be
     to compare the first and last trace of a 2D dataset.
 
-    You can either provide indices or axis values. For the latter, set the
-    parameter "unit" accordingly. For details, see below.
+    Note that "slice" can be anything from 1D to a ND array with at least
+    one dimension less than the original array. If you want to extract a 1D
+    slice from a ND dataset with N>2, you need to provide N-1 values for
+    ``position`` and ``axis``. Make sure to always provide as many values
+    for ``position`` than you provide for ``axis``.
 
-    .. important::
-        Currently, slice extraction works *only* for **2D** datasets,
-        not for higher-dimensional datasets. This may, however, change in
-        the future.
+    You can either provide indices or axis values for ``position``. For the
+    latter, set the parameter "unit" accordingly. For details, see below.
 
     Attributes
     ----------
     parameters : :class:`dict`
         All parameters necessary for this step.
 
-        axis : :class:`int`
-            Axis to take the index from to extract the slice
+        axis :
+            Index of the axis or list of indices of the axes to take the
+            position from to extract the slice
+
+            If you provide a list of axes, you need to provide as many
+            positions as axes.
 
             If an invalid axis is provided, an IndexError is raised.
 
             Default: 0
 
-        position : :class:`int`
-            Position of the slice to extract
+        position :
+            Position(s) of the slice to extract
 
             Positions can be given as axis indices (default) or axis values,
             if the parameter "unit" is set accordingly. For details, see below.
+
+            If you provide a list of positions, you need to provide as many
+            axes as positions.
 
             If no position is provided or the given position is out of
             bounds for the given axis, a ValueError is raised.
@@ -1116,6 +1124,8 @@ class SliceExtraction(SingleProcessingStep):
 
     .. versionadded:: 0.2
        Slice positions can be given both, as axis indices and axis values
+
+       Works for ND datasets with N>1
 
 
     Examples
@@ -1169,6 +1179,26 @@ class SliceExtraction(SingleProcessingStep):
     In case of you providing the range in axis units rather than indices,
     the value closest to the actual axis value will be chosen automatically.
 
+    For ND datasets with N>2, you can either extract a 1D or ND slice,
+    with N always at least one dimension less than the original data. To
+    extract a 2D slice from a 3D dataset, simply proceed as above, providing
+    one value each for position and axis. If, however, you want to extract a
+    1D slice from a 3D dataset, you need to provide two values each for
+    position and axis:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: SliceExtraction
+         properties:
+           parameters:
+             position: [21, 42]
+             axis: [0, 2]
+
+    This particular case would be equivalent to ``data[21, :, 42]`` assuming
+    ``data`` to contain the numeric data, besides, of course, that the
+    processing step takes care of removing the axes as well.
+
     """
 
     def __init__(self):
@@ -1197,13 +1227,23 @@ class SliceExtraction(SingleProcessingStep):
             `True` if successful, `False` otherwise.
 
         """
-        return len(dataset.data.axes) == 3
+        return len(dataset.data.axes) >= 3
 
     def _sanitise_parameters(self):
         if not self.parameters['position'] and self.parameters['position'] != 0:
             raise IndexError('No position provided for slice extraction')
-        if self.parameters['axis'] > self.dataset.data.data.ndim - 1:
-            raise IndexError("Axis %i out of bounds" % self.parameters['axis'])
+        self.parameters['position'] = np.atleast_1d(self.parameters['position'])
+        self.parameters['axis'] = np.atleast_1d(self.parameters['axis'])
+        if self.parameters['axis'].size > self.dataset.data.data.ndim - 1:
+            raise ValueError('Too many axes (%i) provided for %iD dataset' %
+                             (self.parameters['axis'].size,
+                              self.dataset.data.data.ndim))
+        if self.parameters['axis'].size != self.parameters['position'].size:
+            raise ValueError('Need same number of values for position and axis')
+        for axis in self.parameters['axis']:
+            if axis > self.dataset.data.data.ndim - 1:
+                raise IndexError("Axis %i out of bounds" %
+                                 self.parameters['axis'])
         self.parameters["unit"] = self.parameters["unit"].lower()
         if self.parameters["unit"] not in ["index", "axis"]:
             raise ValueError("Wrong unit, needs to be either index or axis.")
@@ -1213,36 +1253,36 @@ class SliceExtraction(SingleProcessingStep):
     def _perform_task(self):
         slice_object = self._get_slice()
         self.dataset.data.data = self.dataset.data.data[slice_object]
-        del self.dataset.data.axes[self.parameters['axis']]
+        for axis in self.parameters["axis"]:
+            del self.dataset.data.axes[axis]
 
     def _out_of_range(self):
         out_of_range = False
-        if self.parameters["unit"] == "index":
-            axis_length = self.dataset.data.data.shape[self.parameters["axis"]]
-            if abs(self.parameters["position"]) > axis_length:
-                out_of_range = True
-        else:
-            axis = self.parameters["axis"]
-            if self.parameters["position"] < \
-                    min(self.dataset.data.axes[axis].values) \
-                    or self.parameters["position"] > \
-                    max(self.dataset.data.axes[axis].values):
-                out_of_range = True
+        for idx, axis in enumerate(self.parameters["axis"]):
+            position = self.parameters["position"][idx]
+            if self.parameters["unit"] == "index":
+                axis_length = self.dataset.data.data.shape[axis]
+                if abs(position) > axis_length:
+                    out_of_range = True
+            else:
+                if position < min(self.dataset.data.axes[axis].values) \
+                        or position > max(self.dataset.data.axes[axis].values):
+                    out_of_range = True
         return out_of_range
 
     def _get_slice(self):
-        # Extract position
-        if self.parameters["unit"] == "index":
-            slice_ = self.parameters["position"]
-        else:
-            axis = self.parameters["axis"]
-            slice_ = self._get_index(self.dataset.data.axes[axis].values,
-                                     self.parameters["position"])
-        # Create slice object
+        # Create empty slice object
         slice_object = []
         for _ in range(self.dataset.data.data.ndim):
             slice_object.append(slice(None))
-        slice_object[self.parameters["axis"]] = slice_
+        # Extract position(s) and overwrite slice object
+        for idx, axis in enumerate(self.parameters["axis"]):
+            if self.parameters["unit"] == "index":
+                slice_ = self.parameters["position"][idx]
+            else:
+                slice_ = self._get_index(self.dataset.data.axes[axis].values,
+                                         self.parameters["position"][idx])
+            slice_object[axis] = slice_
         return tuple(slice_object)
 
     @staticmethod
