@@ -1107,15 +1107,19 @@ class SliceExtraction(SingleProcessingStep):
     Raises
     ------
     aspecd.exceptions.NotApplicableToDatasetError
-        Raised if dataset has not enough dimensions
+        Raised if dataset has not enough dimensions (*i.e.*, 1D dataset).
 
     ValueError
-        Raised if index is out of bounds for given axis
+        Raised if index is out of bounds for given axis.
 
-        Raised if wrong unit is given
+        Raised if wrong unit is given.
+
+        Raised if too many values for axis are given.
+
+        Raised if number of values for position and axis differ.
 
     IndexError
-        Raised if axis is out of bounds for given dataset
+        Raised if axis is out of bounds for given dataset.
 
 
     .. versionchanged:: 0.2
@@ -1125,6 +1129,7 @@ class SliceExtraction(SingleProcessingStep):
     .. versionadded:: 0.2
        Slice positions can be given both, as axis indices and axis values
 
+    .. versionadded:: 0.2
        Works for ND datasets with N>1
 
 

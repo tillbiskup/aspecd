@@ -1672,6 +1672,28 @@ class ProcessingTask(Task):
                 dataset.process(processing_step=self._task)
 
 
+class SingleprocessingTask(ProcessingTask):
+    """
+    Singleprocessing step defined as task in recipe-driven data analysis.
+
+    This is a convenience alias class for :class:`ProcessingTask`.
+    Therefore, the following two tasks are identical:
+
+    .. code-block:: yaml
+
+        - kind: processing
+          type: SingleProcessingStep
+
+        - kind: singleprocessing
+          type: SingleProcessingStep
+
+    """
+
+    def __init__(self, recipe=None):
+        super().__init__(recipe=recipe)
+        self._module = 'processing'
+
+
 class MultiprocessingTask(Task):
     """
     Multiprocessing step defined as task in recipe-driven data analysis.

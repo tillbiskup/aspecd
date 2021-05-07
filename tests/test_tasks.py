@@ -959,6 +959,34 @@ class TestProcessingTask(unittest.TestCase):
         self.assertEqual(len(result), len(self.recipe.results))
 
 
+class TestSingleProcessingTask(unittest.TestCase):
+    def setUp(self):
+        self.task = tasks.SingleprocessingTask()
+        self.recipe = tasks.Recipe()
+        self.dataset = ['foo']
+
+    def prepare_recipe(self):
+        self.processing_task = {'kind': 'singleprocessing',
+                                'type': 'SingleProcessingStep',
+                                'apply_to': self.dataset}
+        dataset_factory = dataset.DatasetFactory()
+        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        self.recipe.dataset_factory = dataset_factory
+        recipe_dict = {'datasets': self.dataset,
+                       'tasks': [self.processing_task]}
+        self.recipe.from_dict(recipe_dict)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_perform_task(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(self.recipe.datasets[self.dataset[0]].history)
+
+
 class TestMultiProcessingTask(unittest.TestCase):
     def setUp(self):
         self.task = tasks.MultiprocessingTask()

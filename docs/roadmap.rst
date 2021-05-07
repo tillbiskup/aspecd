@@ -10,8 +10,6 @@ For version 0.2
 
 * Add Zenodo badge to start page of documentation in release
 
-* Tasks: shortcut for SingleProcessingTask)
-
 * Full list of required packages (including their installed versions) in SystemInfo, to be included in history (and recipe history)
 
 * Remaining basic processing and analysis steps:
