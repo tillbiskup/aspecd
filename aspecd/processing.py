@@ -1321,7 +1321,7 @@ class RangeExtraction(SingleProcessingStep):
             step] of :class:`slice`.
 
         unit : :class:`str`
-            Unit used for specifying the range: either "axis" or "index".
+            Unit used for specifying the range: "axis", "index", "percentage".
 
             If an invalid value is provided, a ValueError is raised.
 
@@ -1331,6 +1331,8 @@ class RangeExtraction(SingleProcessingStep):
     ------
     ValueError
         Raised if index is out of bounds for given axis.
+
+        Raised if wrong unit is given.
 
     IndexError
         Raised if no range is provided.
@@ -1404,6 +1406,24 @@ class RangeExtraction(SingleProcessingStep):
     silently ignored. Furthermore, the nearest axis values will be used for
     the range.
 
+    In some cases you may want to extract a range by providing percentages
+    instead of indices or axis values. Even this can be done:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: RangeExtraction
+         properties:
+           parameters:
+             range: [0, 10]
+             unit: percentage
+
+    Here, the first ten percent of the data of the 1D dataset will be
+    extracted, or more exactly the indices falling within the first ten
+    percent. Note that in this case, setting a step is meaningless and will be
+    silently ignored. Furthermore, the nearest axis values will be used for
+    the range.
+
     """
 
     def __init__(self):
@@ -1422,7 +1442,7 @@ class RangeExtraction(SingleProcessingStep):
                              (len(self.parameters["range"]),
                               self.dataset.data.data.ndim))
         self.parameters["unit"] = self.parameters["unit"].lower()
-        if self.parameters["unit"] not in ["index", "axis"]:
+        if self.parameters["unit"] not in ["index", "axis", "percentage"]:
             raise ValueError("Wrong unit, needs to be either index or axis.")
         if self._out_of_range():
             raise ValueError("Range out of axis range.")
@@ -1439,11 +1459,19 @@ class RangeExtraction(SingleProcessingStep):
                 if self.parameters["unit"] == "index":
                     slice_ = slice(self.parameters["range"][dim][0],
                                    self.parameters["range"][dim][1])
-                else:
+                elif self.parameters["unit"] == "axis":
                     start = self._get_index(self.dataset.data.axes[dim].values,
                                             self.parameters["range"][dim][0])
                     stop = self._get_index(self.dataset.data.axes[dim].values,
                                            self.parameters["range"][dim][1])
+                    slice_ = slice(start, stop)
+                else:
+                    start = math.ceil(self.dataset.data.axes[dim].values.size
+                                      * self.parameters["range"][dim][0]
+                                      / 100.0)
+                    stop = math.ceil(self.dataset.data.axes[dim].values.size
+                                     * self.parameters["range"][dim][1]
+                                     / 100.0) + 1
                     slice_ = slice(start, stop)
             # Important: Change axes first, then data
             self.dataset.data.axes[dim].values = \
@@ -1456,13 +1484,18 @@ class RangeExtraction(SingleProcessingStep):
         for dim in range(len(self.parameters["range"])):
             for index in self.parameters["range"][dim]:
                 if self.parameters["unit"] == "index":
-                    if abs(index) > self.dataset.data.axes[0].values.size + 1:
+                    if abs(index) > self.dataset.data.axes[dim].values.size + 1:
                         out_of_range = True
-                else:
+                elif self.parameters["unit"] == "axis":
                     axis_values = self.dataset.data.axes[dim].values
                     for value in self.parameters["range"][dim]:
                         if value < axis_values.min() \
                                 or value > axis_values.max():
+                            out_of_range = True
+                else:
+                    axis_values = self.dataset.data.axes[dim].values
+                    for value in self.parameters["range"][dim]:
+                        if value < 0 or value > 100:
                             out_of_range = True
         return out_of_range
 

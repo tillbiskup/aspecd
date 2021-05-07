@@ -666,7 +666,7 @@ class TestRangeExtraction(unittest.TestCase):
         self.dataset = aspecd.dataset.Dataset()
         self.dataset.data.data = np.random.random(10)
         self.dataset2d = aspecd.dataset.Dataset()
-        self.dataset2d.data.data = np.random.random([10, 20])
+        self.dataset2d.data.data = np.random.random([10, 8])
 
     def test_instantiate_class(self):
         pass
@@ -687,7 +687,7 @@ class TestRangeExtraction(unittest.TestCase):
             self.dataset.process(self.processing)
 
     def test_range_exceeding_dimension_of_2nd_axis_raises(self):
-        self.processing.parameters['range'] = [[3, 5], [3, 20]]
+        self.processing.parameters['range'] = [[3, 5], [3, 10]]
         with self.assertRaisesRegex(ValueError, "Range out of axis range"):
             self.dataset2d.process(self.processing)
 
@@ -705,6 +705,14 @@ class TestRangeExtraction(unittest.TestCase):
         self.processing.parameters['unit'] = 'axis'
         with self.assertRaisesRegex(ValueError, "Range out of axis range"):
             self.dataset2d.process(self.processing)
+
+    def test_range_exceeding_dimension_with_percentage_unit_raises(self):
+        self.dataset.data.data = np.random.random(200)
+        self.dataset.data.axes[0].values = np.linspace(0, 200, 200)
+        self.processing.parameters['range'] = [3, 101]
+        self.processing.parameters['unit'] = 'percentage'
+        with self.assertRaisesRegex(ValueError, "Range out of axis range"):
+            self.dataset.process(self.processing)
 
     def test_extract_range(self):
         origdata = self.dataset.data.data
@@ -747,15 +755,15 @@ class TestRangeExtraction(unittest.TestCase):
 
     def test_extract_range_with_2d_data_adjusts_axis(self):
         self.dataset2d.data.axes[0].values = np.linspace(10, 20, 10)
-        self.dataset2d.data.axes[1].values = np.linspace(20, 30, 20)
-        origaxis0 = self.dataset.data.axes[0].values
-        origaxis1 = self.dataset.data.axes[1].values
+        self.dataset2d.data.axes[1].values = np.linspace(20, 30, 8)
+        origaxis0 = self.dataset2d.data.axes[0].values
+        origaxis1 = self.dataset2d.data.axes[1].values
         self.processing.parameters['range'] = [[3, 6], [2, 5]]
-        self.dataset.process(self.processing)
+        self.dataset2d.process(self.processing)
         np.testing.assert_allclose(origaxis0[3:6],
-                                   self.dataset.data.axes[0].values)
+                                   self.dataset2d.data.axes[0].values)
         np.testing.assert_allclose(origaxis1[2:5],
-                                   self.dataset.data.axes[1].values)
+                                   self.dataset2d.data.axes[1].values)
 
     def test_extract_range_with_wrong_unit_raises(self):
         self.processing.parameters['range'] = [3, 6]
@@ -770,6 +778,13 @@ class TestRangeExtraction(unittest.TestCase):
         self.processing.parameters['unit'] = 'axis'
         self.dataset.process(self.processing)
         np.testing.assert_allclose(origdata[3:6], self.dataset.data.data)
+
+    def test_extract_range_with_percentage_units(self):
+        origdata = self.dataset.data.data
+        self.processing.parameters['range'] = [10, 80]
+        self.processing.parameters['unit'] = 'percentage'
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(origdata[1:9], self.dataset.data.data)
 
 
 class TestBaselineCorrection(unittest.TestCase):
