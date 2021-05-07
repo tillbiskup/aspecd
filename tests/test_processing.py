@@ -681,10 +681,30 @@ class TestRangeExtraction(unittest.TestCase):
         with self.assertRaisesRegex(IndexError, "for range extraction"):
             self.dataset.process(self.processing)
 
-    def test_with_range_exceeding_dimension_raises(self):
+    def test_range_exceeding_dimension_raises(self):
         self.processing.parameters['range'] = [3, 20]
         with self.assertRaisesRegex(ValueError, "Range out of axis range"):
             self.dataset.process(self.processing)
+
+    def test_range_exceeding_dimension_of_2nd_axis_raises(self):
+        self.processing.parameters['range'] = [[3, 5], [3, 20]]
+        with self.assertRaisesRegex(ValueError, "Range out of axis range"):
+            self.dataset2d.process(self.processing)
+
+    def test_range_exceeding_dimension_with_axis_units_raises(self):
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 10)
+        self.processing.parameters['range'] = [3, 8]
+        self.processing.parameters['unit'] = 'axis'
+        with self.assertRaisesRegex(ValueError, "Range out of axis range"):
+            self.dataset.process(self.processing)
+
+    def test_range_exceeding_dimension_of_2nd_axis_with_axis_units_raises(self):
+        self.dataset2d.data.axes[0].values = np.linspace(0, 5, 10)
+        self.dataset2d.data.axes[1].values = np.linspace(0, 5, 10)
+        self.processing.parameters['range'] = [[2, 4], [3, 20]]
+        self.processing.parameters['unit'] = 'axis'
+        with self.assertRaisesRegex(ValueError, "Range out of axis range"):
+            self.dataset2d.process(self.processing)
 
     def test_extract_range(self):
         origdata = self.dataset.data.data
@@ -736,6 +756,20 @@ class TestRangeExtraction(unittest.TestCase):
                                    self.dataset.data.axes[0].values)
         np.testing.assert_allclose(origaxis1[2:5],
                                    self.dataset.data.axes[1].values)
+
+    def test_extract_range_with_wrong_unit_raises(self):
+        self.processing.parameters['range'] = [3, 6]
+        self.processing.parameters['unit'] = 'foo'
+        with self.assertRaisesRegex(ValueError, 'Wrong unit'):
+            self.dataset.process(self.processing)
+
+    def test_extract_range_with_axis_units(self):
+        origdata = self.dataset.data.data
+        self.dataset.data.axes[0].values = np.linspace(0, 18, 10)
+        self.processing.parameters['range'] = [6, 12]
+        self.processing.parameters['unit'] = 'axis'
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(origdata[3:6], self.dataset.data.data)
 
 
 class TestBaselineCorrection(unittest.TestCase):

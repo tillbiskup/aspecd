@@ -20,7 +20,6 @@ For version 0.2
   * denoising
   * filtering
   * adding noise
-  * ? general slicing (extracting subsets of data)
   * ? AxisAlgebra: provide a function that gets evaluated on the values of an axis
 
 * Normalising over parts of a dataset

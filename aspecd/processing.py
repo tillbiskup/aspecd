@@ -1257,7 +1257,7 @@ class SliceExtraction(SingleProcessingStep):
         if self.parameters["unit"] not in ["index", "axis"]:
             raise ValueError("Wrong unit, needs to be either index or axis.")
         if self._out_of_range():
-            raise ValueError("Index out of axis range.")
+            raise ValueError("Position out of axis range.")
 
     def _perform_task(self):
         slice_object = self._get_slice()
@@ -1300,6 +1300,7 @@ class SliceExtraction(SingleProcessingStep):
 
 
 class RangeExtraction(SingleProcessingStep):
+    # noinspection PyUnresolvedReferences
     """
     Extract range of data from dataset.
 
@@ -1319,6 +1320,13 @@ class RangeExtraction(SingleProcessingStep):
             indices needs to be provided that are used for start, stop [,
             step] of :class:`slice`.
 
+        unit : :class:`str`
+            Unit used for specifying the range: either "axis" or "index".
+
+            If an invalid value is provided, a ValueError is raised.
+
+            Default: "index"
+
     Raises
     ------
     ValueError
@@ -1332,6 +1340,70 @@ class RangeExtraction(SingleProcessingStep):
 
     .. versionadded:: 0.2
 
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    In the simplest case, just invoke the range extraction with one range
+    only, assuming a 1D dataset:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: RangeExtraction
+         properties:
+           parameters:
+             range: [5, 10]
+
+    This will extract the range ``data[5:10]`` from your data (and adjust
+    the axis accordingly). In case of 2D data, it would be fairly similar,
+    except of now providing two ranges:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: RangeExtraction
+         properties:
+           parameters:
+             range:
+              - [5, 10]
+              - [3, 6]
+
+    Additionally, you can provide step sizes, just as you can do when
+    slicing in Python:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: RangeExtraction
+         properties:
+           parameters:
+             range: [5, 10, 2]
+
+    This is equivalent to ``data[5:10:2]`` or ``data[(slice(5, 10, 2))]``,
+    accordingly.
+
+    Sometimes, it is more convenient to give ranges in axis values rather
+    than indices. This can be achieved by setting the parameter ``unit`` to
+    "axis":
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: RangeExtraction
+         properties:
+           parameters:
+             range: [5, 10]
+             unit: axis
+
+    Note that in this case, setting a step is meaningless and will be
+    silently ignored. Furthermore, the nearest axis values will be used for
+    the range.
+
     """
 
     def __init__(self):
@@ -1339,6 +1411,7 @@ class RangeExtraction(SingleProcessingStep):
         self.description = 'Extract range from data of dataset'
         self.undoable = True
         self.parameters["range"] = []
+        self.parameters["unit"] = 'index'
 
     def _sanitise_parameters(self):
         if not self.parameters["range"]:
@@ -1348,25 +1421,54 @@ class RangeExtraction(SingleProcessingStep):
             raise IndexError('Got only %i range for %iD data' %
                              (len(self.parameters["range"]),
                               self.dataset.data.data.ndim))
-        for index in self.parameters["range"][0]:
-            if abs(index) > self.dataset.data.axes[0].values.size + 1:
-                raise ValueError("Range out of axis range")
+        self.parameters["unit"] = self.parameters["unit"].lower()
+        if self.parameters["unit"] not in ["index", "axis"]:
+            raise ValueError("Wrong unit, needs to be either index or axis.")
+        if self._out_of_range():
+            raise ValueError("Range out of axis range.")
 
     def _perform_task(self):
         slice_object = []
         for dim in range(self.dataset.data.data.ndim):
-            if len(self.parameters["range"][dim]) > 2:
+            if len(self.parameters["range"][dim]) > 2 \
+                    and self.parameters["unit"] == "index":
                 slice_ = slice(self.parameters["range"][dim][0],
                                self.parameters["range"][dim][1],
                                self.parameters["range"][dim][2])
             else:
-                slice_ = slice(self.parameters["range"][dim][0],
-                               self.parameters["range"][dim][1])
+                if self.parameters["unit"] == "index":
+                    slice_ = slice(self.parameters["range"][dim][0],
+                                   self.parameters["range"][dim][1])
+                else:
+                    start = self._get_index(self.dataset.data.axes[dim].values,
+                                            self.parameters["range"][dim][0])
+                    stop = self._get_index(self.dataset.data.axes[dim].values,
+                                           self.parameters["range"][dim][1])
+                    slice_ = slice(start, stop)
             # Important: Change axes first, then data
             self.dataset.data.axes[dim].values = \
                 self.dataset.data.axes[dim].values[slice_]
             slice_object.append(slice_)
         self.dataset.data.data = self.dataset.data.data[tuple(slice_object)]
+
+    def _out_of_range(self):
+        out_of_range = False
+        for dim in range(len(self.parameters["range"])):
+            for index in self.parameters["range"][dim]:
+                if self.parameters["unit"] == "index":
+                    if abs(index) > self.dataset.data.axes[0].values.size + 1:
+                        out_of_range = True
+                else:
+                    axis_values = self.dataset.data.axes[dim].values
+                    for value in self.parameters["range"][dim]:
+                        if value < axis_values.min() \
+                                or value > axis_values.max():
+                            out_of_range = True
+        return out_of_range
+
+    @staticmethod
+    def _get_index(vector, value):
+        return np.abs(vector - value).argmin()
 
 
 class BaselineCorrection(SingleProcessingStep):
