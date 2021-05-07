@@ -1295,6 +1295,27 @@ class SliceExtraction(SingleProcessingStep):
         return np.abs(vector - value).argmin()
 
 
+class RangeExtraction(SingleProcessingStep):
+
+    def __init__(self):
+        super().__init__()
+        self.description = 'Extract range from data of dataset'
+        self.undoable = True
+        self.parameters["range"] = []
+
+    def _sanitise_parameters(self):
+        if not self.parameters["range"]:
+            raise IndexError('No range provided for range extraction')
+        for index in self.parameters["range"]:
+            if index not in self.dataset.data.axes[0].values:
+                raise ValueError("Range out of axis range")
+
+    def _perform_task(self):
+        slice_object = (slice(self.parameters["range"][0],
+                              self.parameters["range"][1]))
+        self.dataset.data.data = self.dataset.data.data[slice_object]
+
+
 class BaselineCorrection(SingleProcessingStep):
     # noinspection PyUnresolvedReferences
     """

@@ -660,6 +660,39 @@ class TestSliceExtraction(unittest.TestCase):
             self.dataset.process(self.processing)
 
 
+class TestRangeExtraction(unittest.TestCase):
+    def setUp(self):
+        self.processing = aspecd.processing.RangeExtraction()
+        self.dataset = aspecd.dataset.Dataset()
+        self.dataset.data.data = np.random.random(10)
+        self.dataset2d = aspecd.dataset.Dataset()
+        self.dataset.data.data = np.random.random([10, 20])
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('extract range', self.processing.description.lower())
+
+    def test_is_undoable(self):
+        self.assertTrue(self.processing.undoable)
+
+    def test_without_range_raises(self):
+        with self.assertRaisesRegex(IndexError, "for range extraction"):
+            self.dataset.process(self.processing)
+
+    def test_with_range_exceeding_dimension_raises(self):
+        self.processing.parameters['range'] = [3, 20]
+        with self.assertRaisesRegex(ValueError, "Range out of axis range"):
+            self.dataset.process(self.processing)
+
+    def test_extract_range(self):
+        origdata = self.dataset.data.data
+        self.processing.parameters['range'] = [3, 6]
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(origdata[3:6], self.dataset.data.data)
+
+
 class TestBaselineCorrection(unittest.TestCase):
     def setUp(self):
         self.processing = aspecd.processing.BaselineCorrection()
