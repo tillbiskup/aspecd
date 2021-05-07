@@ -113,6 +113,10 @@ independently.
 
   Extract slice along one ore more dimensions from dataset.
 
+* :class:`aspecd.processing.RangeExtraction`
+
+  Extract range of data from a dataset.
+
 * :class:`aspecd.processing.BaselineCorrection`
 
   Correct baseline of dataset.
@@ -1296,6 +1300,39 @@ class SliceExtraction(SingleProcessingStep):
 
 
 class RangeExtraction(SingleProcessingStep):
+    """
+    Extract range of data from dataset.
+
+    There are many reasons to look only at a certain range of data of a
+    given dataset. For a ND array, one would use slicing, but for a dataset,
+    one needs to have the axes adjusted as well, hence this processing step.
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        range : :class:`list`
+            List of lists with indices for the slicing
+
+            For each dimension of the data of the dataset, one list of
+            indices needs to be provided that are used for start, stop [,
+            step] of :class:`slice`.
+
+    Raises
+    ------
+    ValueError
+        Raised if index is out of bounds for given axis.
+
+    IndexError
+        Raised if no range is provided.
+
+        Raised if number of ranges does not fit data dimensions.
+
+
+    .. versionadded:: 0.2
+
+    """
 
     def __init__(self):
         super().__init__()
@@ -1306,14 +1343,30 @@ class RangeExtraction(SingleProcessingStep):
     def _sanitise_parameters(self):
         if not self.parameters["range"]:
             raise IndexError('No range provided for range extraction')
-        for index in self.parameters["range"]:
-            if index not in self.dataset.data.axes[0].values:
+        self.parameters["range"] = np.atleast_2d(self.parameters["range"])
+        if len(self.parameters["range"]) < self.dataset.data.data.ndim:
+            raise IndexError('Got only %i range for %iD data' %
+                             (len(self.parameters["range"]),
+                              self.dataset.data.data.ndim))
+        for index in self.parameters["range"][0]:
+            if abs(index) > self.dataset.data.axes[0].values.size + 1:
                 raise ValueError("Range out of axis range")
 
     def _perform_task(self):
-        slice_object = (slice(self.parameters["range"][0],
-                              self.parameters["range"][1]))
-        self.dataset.data.data = self.dataset.data.data[slice_object]
+        slice_object = []
+        for dim in range(self.dataset.data.data.ndim):
+            if len(self.parameters["range"][dim]) > 2:
+                slice_ = slice(self.parameters["range"][dim][0],
+                               self.parameters["range"][dim][1],
+                               self.parameters["range"][dim][2])
+            else:
+                slice_ = slice(self.parameters["range"][dim][0],
+                               self.parameters["range"][dim][1])
+            # Important: Change axes first, then data
+            self.dataset.data.axes[dim].values = \
+                self.dataset.data.axes[dim].values[slice_]
+            slice_object.append(slice_)
+        self.dataset.data.data = self.dataset.data.data[tuple(slice_object)]
 
 
 class BaselineCorrection(SingleProcessingStep):

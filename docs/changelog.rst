@@ -14,7 +14,9 @@ Not yet released
 New features
 ------------
 
-* MultiprocessingTask
+* RangeExtraction: extract range of data from dataset (using slice notation)
+
+* MultiprocessingTask (and SingleprocessingTask aliasing ProcessingTask)
 
 * ScalarAxisAlgebra: perform scalar algebra on axis values
 

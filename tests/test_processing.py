@@ -666,7 +666,7 @@ class TestRangeExtraction(unittest.TestCase):
         self.dataset = aspecd.dataset.Dataset()
         self.dataset.data.data = np.random.random(10)
         self.dataset2d = aspecd.dataset.Dataset()
-        self.dataset.data.data = np.random.random([10, 20])
+        self.dataset2d.data.data = np.random.random([10, 20])
 
     def test_instantiate_class(self):
         pass
@@ -691,6 +691,51 @@ class TestRangeExtraction(unittest.TestCase):
         self.processing.parameters['range'] = [3, 6]
         self.dataset.process(self.processing)
         np.testing.assert_allclose(origdata[3:6], self.dataset.data.data)
+
+    def test_extract_range_adjusts_axis(self):
+        self.dataset.data.axes[0].values = np.linspace(10, 20, 10)
+        origaxis = self.dataset.data.axes[0].values
+        self.processing.parameters['range'] = [3, 6]
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(origaxis[3:6],
+                                   self.dataset.data.axes[0].values)
+
+    def test_extract_range_with_step(self):
+        origdata = self.dataset.data.data
+        self.processing.parameters['range'] = [3, 6, 2]
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(origdata[3:6:2], self.dataset.data.data)
+
+    def test_extract_range_with_step_adjusts_axis(self):
+        self.dataset.data.axes[0].values = np.linspace(10, 20, 10)
+        origaxis = self.dataset.data.axes[0].values
+        self.processing.parameters['range'] = [3, 6, 2]
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(origaxis[3:6:2],
+                                   self.dataset.data.axes[0].values)
+
+    def test_extract_range_with_2d_data_with_only_one_range_raises(self):
+        self.processing.parameters['range'] = [3, 6]
+        with self.assertRaisesRegex(IndexError, 'Got only 1 range for 2D data'):
+            self.dataset2d.process(self.processing)
+
+    def test_extract_range_with_2d_data(self):
+        origdata = self.dataset2d.data.data
+        self.processing.parameters['range'] = [[3, 6], [2, 5]]
+        self.dataset2d.process(self.processing)
+        np.testing.assert_allclose(origdata[3:6, 2:5], self.dataset2d.data.data)
+
+    def test_extract_range_with_2d_data_adjusts_axis(self):
+        self.dataset2d.data.axes[0].values = np.linspace(10, 20, 10)
+        self.dataset2d.data.axes[1].values = np.linspace(20, 30, 20)
+        origaxis0 = self.dataset.data.axes[0].values
+        origaxis1 = self.dataset.data.axes[1].values
+        self.processing.parameters['range'] = [[3, 6], [2, 5]]
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(origaxis0[3:6],
+                                   self.dataset.data.axes[0].values)
+        np.testing.assert_allclose(origaxis1[2:5],
+                                   self.dataset.data.axes[1].values)
 
 
 class TestBaselineCorrection(unittest.TestCase):
