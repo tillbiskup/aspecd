@@ -218,6 +218,7 @@ Module documentation
 ====================
 
 """
+import copy
 import math
 import operator
 
@@ -693,10 +694,32 @@ class Normalisation(SingleProcessingStep):
 
             Defaults to "maximum"
 
+        range : :class:`list`
+            Range of the data of the dataset to normalise for.
+
+            This can be quite useful if you want to normalise for a specific
+            feature, *e.g.* an artifact that you've recorded separately and
+            want to subtract from the data, or more generally to normalise
+            to certain features of your data irrespective of other parts.
+
+            Ranges can be given as indices or in axis units, and for ND
+            datasets, you need to provide as many ranges as dimensions of
+            your data. Units default to indices, but can be specified using
+            the parameter ``range_unit``, see below.
+
+            As internally, :class:`RangeExtraction` is used, see there for
+            more details of how to provide ranges.
+
+        range_unit : :class:`str`
+            Unit used for the range.
+
+            Can be either "index" (default) or "axis".
+
         noise_range : :class:`int`
             Data range to use for determining noise level
 
-            If provided, the normalisation will account for the noise.
+            If provided, the normalisation will account for the noise in
+            case of normalising to minimum, maximum, and amplitude.
 
             Numbers are interpreted as percentage.
 
@@ -732,6 +755,46 @@ class Normalisation(SingleProcessingStep):
     In this case, you would normalise to the amplitude, meaning setting the
     difference between minimum and maximum to one. For other kinds, see above.
 
+    If you want to normalise not over the entire range of the dataset,
+    but only over a dedicated range, simply provide the necessary parameters:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: Normalisation
+         properties:
+           parameters:
+             range: [50, 150]
+
+    In this case, we assume a 1D dataset and use indices, requiring the data
+    to span at least over 150 points. Of course, it is often more convenient
+    to provide axis units. Here you go:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: Normalisation
+         properties:
+           parameters:
+             range: [340, 350]
+             range_unit: axis
+
+    And in case of ND datasets with N>1, make sure to provide as many ranges
+    as dimensions of your dataset, in case of a 2D dataset:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: Normalisation
+         properties:
+           parameters:
+             range:
+               - [50, 150]
+               - [30, 40]
+
+    Here as well, the range can be given in indices or axis units,
+    but defaults to indices if no unit is explicitly given.
+
     """
 
     def __init__(self):
@@ -739,23 +802,31 @@ class Normalisation(SingleProcessingStep):
         self.undoable = True
         self.description = 'Normalise data'
         self.parameters["kind"] = 'maximum'
+        self.parameters["range"] = None
+        self.parameters["range_unit"] = "index"
         self.parameters["noise_range"] = None
         self._noise_amplitude = 0
 
     def _perform_task(self):
         self._determine_noise_amplitude()
+        if self.parameters["range"]:
+            range_extraction = RangeExtraction()
+            range_extraction.parameters["range"] = self.parameters["range"]
+            range_extraction.parameters["unit"] = self.parameters["range_unit"]
+            dataset_copy = copy.deepcopy(self.dataset)
+            dataset_copy.process(range_extraction)
+            data = dataset_copy.data.data
+        else:
+            data = self.dataset.data.data
         if "max" in self.parameters["kind"].lower():
-            self.dataset.data.data /= (self.dataset.data.data.max() -
-                                       self._noise_amplitude / 2)
+            self.dataset.data.data /= (data.max() - self._noise_amplitude / 2)
         elif "min" in self.parameters["kind"].lower():
-            self.dataset.data.data /= (self.dataset.data.data.min() -
-                                       self._noise_amplitude / 2)
+            self.dataset.data.data /= (data.min() - self._noise_amplitude / 2)
         elif "amp" in self.parameters["kind"].lower():
-            self.dataset.data.data /= ((self.dataset.data.data.max() -
-                                       self.dataset.data.data.min()) -
+            self.dataset.data.data /= ((data.max() - data.min()) -
                                        self._noise_amplitude)
         elif "area" in self.parameters["kind"].lower():
-            self.dataset.data.data /= np.sum(np.abs(self.dataset.data.data))
+            self.dataset.data.data /= np.sum(np.abs(data))
 
     def _determine_noise_amplitude(self):
         if self.parameters["noise_range"]:
@@ -1493,7 +1564,6 @@ class RangeExtraction(SingleProcessingStep):
                                 or value > axis_values.max():
                             out_of_range = True
                 else:
-                    axis_values = self.dataset.data.axes[dim].values
                     for value in self.parameters["range"][dim]:
                         if value < 0 or value > 100:
                             out_of_range = True

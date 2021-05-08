@@ -261,6 +261,32 @@ class TestNormalisation(unittest.TestCase):
         self.assertGreaterEqual(1.25, self.dataset.data.data.max() -
                                 self.dataset.data.data.min())
 
+    def test_normalise_to_maximum_over_range(self):
+        self.dataset.data.data = np.append(self.dataset.data.data,
+                                           self.dataset.data.data * 0.5)
+        self.processing.parameters["kind"] = 'maximum'
+        self.processing.parameters["range"] = [501, 1000]
+        self.dataset.process(self.processing)
+        self.assertEqual(2.0, self.dataset.data.data.max())
+
+    def test_normalise_to_maximum_over_range_with_axis_units(self):
+        self.dataset.data.data = np.append(self.dataset.data.data,
+                                           self.dataset.data.data * 0.5)
+        self.dataset.data.axes[0].values = np.linspace(0, 6 * np.pi, 1000)
+        self.processing.parameters["kind"] = 'maximum'
+        self.processing.parameters["range"] = [3*np.pi, 6*np.pi]
+        self.processing.parameters["range_unit"] = "axis"
+        self.dataset.process(self.processing)
+        self.assertEqual(2.0, self.dataset.data.data.max())
+
+    def test_normalise_to_maximum_2d_with_range(self):
+        self.processing.parameters["kind"] = 'maximum'
+        self.processing.parameters["range"] = [[50, 150], [50, 150]]
+        self.dataset.data.data = np.random.random([200, 200])
+        self.dataset.data.data[50:150, 50:150] *= 0.5
+        self.dataset.process(self.processing)
+        self.assertAlmostEqual(2, self.dataset.data.data.max(), 2)
+
 
 class TestIntegration(unittest.TestCase):
     def setUp(self):
@@ -530,7 +556,7 @@ class TestSliceExtraction(unittest.TestCase):
 
     def test_with_index_exceeding_dimension_raises(self):
         self.processing.parameters['position'] = 10
-        with self.assertRaisesRegex(ValueError, "Index out of axis range."):
+        with self.assertRaisesRegex(ValueError, "Position out of axis range."):
             self.dataset.process(self.processing)
 
     def test_extract_slice(self):
