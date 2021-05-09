@@ -725,6 +725,10 @@ class Normalisation(SingleProcessingStep):
 
             Default: None
 
+    .. versionadded:: 0.2
+       Normalising over range of data
+
+
     Examples
     --------
     For convenience, a series of examples in recipe style (for details of
