@@ -1351,7 +1351,7 @@ class TestScalarAxisAlgebra(unittest.TestCase):
 
 class TestExtractCommonRange(unittest.TestCase):
     def setUp(self):
-        self.processing = aspecd.processing.ExtractCommonRange()
+        self.processing = aspecd.processing.CommonRangeExtraction()
         self.dataset1 = aspecd.dataset.Dataset()
         self.dataset2 = aspecd.dataset.Dataset()
 

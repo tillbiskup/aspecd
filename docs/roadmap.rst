@@ -15,10 +15,12 @@ For version 0.2
 * Remaining basic processing and analysis steps:
 
   * interpolation (useful as well for reducing knots of a grid for 3D plots)
+  * filtering
   * peak finding
   * SNR determination
+  * determine basic characteristics: min, max, amplitude, area
+  * ? statistics: mean, median, variance, standard deviation
   * denoising
-  * filtering
   * adding noise
   * ? AxisAlgebra: provide a function that gets evaluated on the values of an axis
 

@@ -28,7 +28,7 @@ New features
 
 * DatasetAlgebra: add and subtract data of second dataset to/from dataset
 
-* ExtractCommonRange for 1D and 2D datasets
+* CommonRangeExtraction for 1D and 2D datasets
 
 * SinglePlotter2D:
 

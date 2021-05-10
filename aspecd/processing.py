@@ -132,7 +132,7 @@ Processing steps operating on multiple datasets at once
 The following processing steps operate each on more than one dataset at the
 same time, requiring at least two datasets as an input to work.
 
-* :class:`aspecd.processing.ExtractCommonRange`
+* :class:`aspecd.processing.CommonRangeExtraction`
 
   Extract the common range of data for multiple datasets using interpolation.
 
@@ -2126,7 +2126,7 @@ class DatasetAlgebra(SingleProcessingStep):
         operation on need to have the same dimension (that is checked for),
         and to obtain meaningful results, usually the axes values need to be
         identical as well. For this purpose, use the
-        :class:`ExtractCommonRange` processing step.
+        :class:`CommonRangeExtraction` processing step.
 
     Attributes
     ----------
@@ -2176,13 +2176,13 @@ class DatasetAlgebra(SingleProcessingStep):
 
     As mentioned already, the data of both datasets need to have identical
     shape, and comparison is only meaningful if the axes are compatible as
-    well. Hence, you will usually want to perform a ExtractCommonRange
+    well. Hence, you will usually want to perform a CommonRangeExtraction
     processing step before doing algebra with two datasets:
 
     .. code-block:: yaml
 
        - kind: multiprocessing
-         type: ExtractCommonRange
+         type: CommonRangeExtraction
          results:
            - label_to_dataset
            - label_to_other_dataset
@@ -2237,7 +2237,7 @@ class DatasetAlgebra(SingleProcessingStep):
             raise ValueError("Data of datasets have different shapes.")
 
 
-class ExtractCommonRange(MultiProcessingStep):
+class CommonRangeExtraction(MultiProcessingStep):
     # noinspection PyUnresolvedReferences
     """
     Extract the common range of data for multiple datasets using interpolation.
