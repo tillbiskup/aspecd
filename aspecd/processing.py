@@ -2421,16 +2421,15 @@ class CommonRangeExtraction(MultiProcessingStep):
 
     .. important::
         Currently, extracting the common range works *only* for **1D and 2D**
-        datasets, not for higher-dimensional datasets. This may, however,
-        change in the future.
+        datasets, not for higher-dimensional datasets, due to the underlying
+        method of interpolation. See :class:`Interpolation` for details. This
+        may, however, change in the future.
 
     .. todo::
         * Make type of interpolation controllable
 
         * Make number of points controllable (in absolute numbers as well as
           minimum and maximum points with respect to datasets)
-
-        * Check for ways to make it work with ND, N>2
 
     Attributes
     ----------
@@ -2562,23 +2561,9 @@ class CommonRangeExtraction(MultiProcessingStep):
             self.parameters["npoints"].append(np.amin(number_of_points))
 
     def _interpolate(self):
-        axis_values = []
-        for dim in range(self.datasets[0].data.data.ndim):
-            common_range = self.parameters["common_range"][dim]
-            number_of_points = self.parameters["npoints"][dim]
-            axis_values.append(np.linspace(common_range[0], common_range[1],
-                                           number_of_points))
         for dataset in self.datasets:
-            if self.datasets[0].data.data.ndim == 1:
-                interp = interpolate.interp1d(dataset.data.axes[0].values,
-                                              dataset.data.data)
-                dataset.data.data = interp(axis_values[0])
-            elif self.datasets[0].data.data.ndim == 2:
-                # Note: interp2d uses Cartesian indexing (x,y => col, row),
-                #       not matrix indexing (row, col)
-                interp = interpolate.interp2d(dataset.data.axes[1].values,
-                                              dataset.data.axes[0].values,
-                                              dataset.data.data)
-                dataset.data.data = interp(axis_values[1], axis_values[0])
-            for dim in range(self.datasets[0].data.data.ndim):
-                dataset.data.axes[dim].values = axis_values[dim]
+            interpolation = Interpolation()
+            interpolation.parameters["range"] = self.parameters["common_range"]
+            interpolation.parameters["npoints"] = self.parameters["npoints"]
+            interpolation.parameters["unit"] = "axis"
+            dataset.process(interpolation)
