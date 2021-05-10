@@ -14,6 +14,8 @@ Not yet released
 New features
 ------------
 
+* Interpolation (at least for 1D and 2D datasets)
+
 * Normalisation:
 
   * Act on parts of the data of a dataset

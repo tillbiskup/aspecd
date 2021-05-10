@@ -1349,7 +1349,136 @@ class TestScalarAxisAlgebra(unittest.TestCase):
                                == self.dataset.data.axes[0].values))
 
 
-class TestExtractCommonRange(unittest.TestCase):
+class TestInterpolation(unittest.TestCase):
+    def setUp(self):
+        self.processing = aspecd.processing.Interpolation()
+        self.dataset = aspecd.dataset.Dataset()
+        self.dataset.data.data = np.linspace(10, 20, 11)
+        self.dataset.data.axes[0].values = np.linspace(5, 15, 11)
+        self.dataset2d = aspecd.dataset.Dataset()
+        self.dataset2d.data.data = \
+            np.reshape(np.tile(np.linspace(0, 5, 11), 21), (21, 11))
+        self.dataset2d.data.axes[0].values = np.linspace(30, 40, 21)
+        self.dataset2d.data.axes[1].values = np.linspace(5, 15, 11)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('interpolate', self.processing.description.lower())
+
+    def test_is_undoable(self):
+        self.assertTrue(self.processing.undoable)
+
+    def test_with_dataset_with_more_than_2d_raises(self):
+        dataset = aspecd.dataset.Dataset()
+        dataset.data.data = np.random.random([11, 11, 11])
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            dataset.process(self.processing)
+
+    def test_interpolate_without_range_raises(self):
+        self.processing.parameters["npoints"] = 21
+        with self.assertRaisesRegex(ValueError, 'No range provided'):
+            self.dataset.process(self.processing)
+
+    def test_interpolate_without_npoints_raises(self):
+        self.processing.parameters["range"] = [0, 10]
+        with self.assertRaisesRegex(ValueError, 'No number of points provided'):
+            self.dataset.process(self.processing)
+
+    def test_interpolate_1d_data_with_range_outside_data_raises(self):
+        self.processing.parameters["range"] = [15, 15]
+        self.processing.parameters["npoints"] = 21
+        with self.assertRaisesRegex(IndexError, 'out of range'):
+            self.dataset.process(self.processing)
+
+    def test_interpolate_1d_data_interpolates_data(self):
+        self.processing.parameters["range"] = [0, 10]
+        self.processing.parameters["npoints"] = 21
+        self.dataset.process(self.processing)
+        self.assertListEqual(list(np.linspace(10, 20, 21)),
+                             list(self.dataset.data.data))
+
+    def test_interpolate_1d_data_interpolates_axis(self):
+        self.processing.parameters["range"] = [0, 10]
+        self.processing.parameters["npoints"] = 21
+        self.dataset.process(self.processing)
+        self.assertListEqual(list(np.linspace(5, 15, 21)),
+                             list(self.dataset.data.axes[0].values))
+
+    def test_interpolate_with_wrong_unit_raises(self):
+        self.processing.parameters["range"] = [5, 15]
+        self.processing.parameters["npoints"] = 21
+        self.processing.parameters["unit"] = "foo"
+        with self.assertRaisesRegex(ValueError, "Unknown unit foo"):
+            self.dataset.process(self.processing)
+
+    def test_interpolate_1d_data_with_axis_unit_outside_range_raises(self):
+        self.processing.parameters["range"] = [0, 10]
+        self.processing.parameters["npoints"] = 21
+        self.processing.parameters["unit"] = "axis"
+        with self.assertRaisesRegex(IndexError, 'out of range'):
+            self.dataset.process(self.processing)
+
+    def test_interpolate_1d_data_with_axis_unit_interpolates_data(self):
+        self.processing.parameters["range"] = [5, 15]
+        self.processing.parameters["npoints"] = 21
+        self.processing.parameters["unit"] = "axis"
+        self.dataset.process(self.processing)
+        self.assertListEqual(list(np.linspace(10, 20, 21)),
+                             list(self.dataset.data.data))
+
+    def test_interpolate_1d_data_with_axis_unit_interpolates_axis(self):
+        self.processing.parameters["range"] = [5, 15]
+        self.processing.parameters["npoints"] = 21
+        self.processing.parameters["unit"] = "axis"
+        self.dataset.process(self.processing)
+        self.assertListEqual(list(np.linspace(5, 15, 21)),
+                             list(self.dataset.data.axes[0].values))
+
+    def test_interpolate_2d_data_with_missing_range_raises(self):
+        self.processing.parameters["range"] = [0, 10]
+        self.processing.parameters["npoints"] = [41, 21]
+        with self.assertRaisesRegex(IndexError, 'List of ranges does not fit '
+                                                'data dimensions'):
+            self.dataset2d.process(self.processing)
+
+    def test_interpolate_2d_data_with_missing_npoints_raises(self):
+        self.processing.parameters["range"] = [[0, 20], [0, 10]]
+        self.processing.parameters["npoints"] = 41
+        with self.assertRaisesRegex(IndexError, 'List of npoints does not fit '
+                                                'data dimensions'):
+            self.dataset2d.process(self.processing)
+
+    def test_interpolate_2d_data_outside_range_raises(self):
+        self.processing.parameters["range"] = [[30, 320], [0, 10]]
+        self.processing.parameters["npoints"] = [41, 21]
+        with self.assertRaisesRegex(IndexError, 'out of range'):
+            self.dataset2d.process(self.processing)
+
+    def test_interpolate_2d_data_outside_range_with_axis_values_raises(self):
+        self.processing.parameters["range"] = [[30, 320], [0, 10]]
+        self.processing.parameters["npoints"] = [41, 21]
+        self.processing.parameters["unit"] = "axis"
+        with self.assertRaisesRegex(IndexError, 'out of range'):
+            self.dataset2d.process(self.processing)
+
+    def test_interpolate_2d_data_interpolates_data(self):
+        self.processing.parameters["range"] = [[0, 20], [0, 10]]
+        self.processing.parameters["npoints"] = [41, 21]
+        self.dataset2d.process(self.processing)
+        self.assertListEqual(list(np.linspace(0, 5, 21)),
+                             list(self.dataset2d.data.data[1, :]))
+
+    def test_interpolate_2d_data_interpolates_axis(self):
+        self.processing.parameters["range"] = [[0, 20], [0, 10]]
+        self.processing.parameters["npoints"] = [41, 21]
+        self.dataset2d.process(self.processing)
+        self.assertListEqual(list(np.linspace(30, 40, 41)),
+                             list(self.dataset2d.data.axes[0].values))
+
+
+class TestCommonRangeExtraction(unittest.TestCase):
     def setUp(self):
         self.processing = aspecd.processing.CommonRangeExtraction()
         self.dataset1 = aspecd.dataset.Dataset()

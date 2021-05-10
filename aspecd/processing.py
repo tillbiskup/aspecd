@@ -2237,6 +2237,178 @@ class DatasetAlgebra(SingleProcessingStep):
             raise ValueError("Data of datasets have different shapes.")
 
 
+class Interpolation(SingleProcessingStep):
+    # noinspection PyUnresolvedReferences
+    """
+    Interpolate data
+
+    As soon as data of different datasets should be arithmetically combined,
+    they need to have an identical grid. Often, this can only be achieved by
+    interpolating one or both datasets.
+
+    Take care not to use interpolation to artificially smooth your data.
+
+    For an in-depth discussion of interpolating ND data, see the
+    following discussions on Stack Overflow, particularly the answers by Joe
+    Kington providing both, theoretical insight and Python code:
+
+    * `<https://stackoverflow.com/a/6238859>`_
+
+    * `<https://stackoverflow.com/a/32763635>`_
+
+
+    .. important::
+        Currently, interpolation works *only* for **1D and 2D** datasets,
+        not for higher-dimensional datasets. This may, however, change in
+        the future.
+
+    .. todo::
+        * Make type of interpolation controllable
+
+        * Check for ways to make it work with ND, N>2
+
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        range : :class:`list`
+            Range of the axis to interpolate for
+
+            Needs to be a list of lists in case of ND datasets with N>1,
+            containing N two-element vectors as ranges for each of the axes.
+
+        npoints : :class:`list`
+            Number of points to interpolate for
+
+            Needs to be a list in case of ND datasets with N>1, containing N
+            elements, one for each of the axes.
+
+        unit : :class:`str`
+            Unit the ranges are given in
+
+            Can be either "index" (default) or "axis".
+
+    Raises
+    ------
+    ValueError
+        Raised if no range to interpolate for is provided.
+
+        Raised if no number of points to interpolate for is provided.
+
+        Raised if unit is unknown.
+
+    IndexError
+        Raised if list of ranges does not fit data dimensions.
+
+        Raised if list of npoints does not fit data dimensions.
+
+        Raised if given range is out of range of data/axes
+
+
+    .. versionadded:: 0.2
+
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = 'Interpolate data of dataset'
+        self.undoable = True
+        self.parameters["range"] = None
+        self.parameters["npoints"] = None
+        self.parameters["unit"] = "index"
+        self._axis_values = []
+
+    @staticmethod
+    def applicable(dataset):
+        """
+        Check whether processing step is applicable to the given dataset.
+
+        Interpolation is currently only applicable to datasets with one- and
+        two-dimensional data.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset to check
+
+        Returns
+        -------
+        applicable : :class:`bool`
+            `True` if successful, `False` otherwise.
+
+        """
+        return len(dataset.data.axes) <= 3
+
+    def _sanitise_parameters(self):
+        if not self.parameters["range"]:
+            raise ValueError('No range provided to interpolate for')
+        if not self.parameters["npoints"]:
+            raise ValueError('No number of points provided to interpolate for')
+        if self.parameters["unit"] not in ("index", "axis"):
+            raise ValueError('Unknown unit %s' % self.parameters["unit"])
+        self.parameters["range"] = np.atleast_2d(self.parameters["range"])
+        if len(self.parameters["range"]) < self.dataset.data.data.ndim:
+            raise IndexError("List of ranges does not fit data dimensions")
+        self.parameters["npoints"] = np.atleast_1d(self.parameters["npoints"])
+        if len(self.parameters["npoints"]) < self.dataset.data.data.ndim:
+            raise IndexError("List of npoints does not fit data dimensions")
+        if self._out_of_range():
+            raise IndexError('Range out of range.')
+
+    def _perform_task(self):
+        self._get_axis_values()
+        if self.dataset.data.data.ndim == 1:
+            interp = interpolate.interp1d(self.dataset.data.axes[0].values,
+                                          self.dataset.data.data)
+            self.dataset.data.data = interp(self._axis_values[0])
+        elif self.dataset.data.data.ndim == 2:
+            # Note: interp2d uses Cartesian indexing (x,y => col, row),
+            #       not matrix indexing (row, col)
+            interp = interpolate.interp2d(self.dataset.data.axes[1].values,
+                                          self.dataset.data.axes[0].values,
+                                          self.dataset.data.data)
+            self.dataset.data.data = interp(self._axis_values[1],
+                                            self._axis_values[0])
+        for dim in range(self.dataset.data.data.ndim):
+            self.dataset.data.axes[dim].values = self._axis_values[dim]
+
+    def _out_of_range(self):
+        out_of_range = False
+        for dim in range(self.dataset.data.data.ndim):
+            axes_values = self.dataset.data.axes[dim].values
+            if self.parameters["unit"] == "index":
+                if abs(self.parameters["range"][dim][0]) > len(axes_values):
+                    out_of_range = True
+            else:
+                for value in self.parameters["range"][dim]:
+                    if value < axes_values.min() or value > axes_values.max():
+                        out_of_range = True
+        return out_of_range
+
+    def _get_axis_values(self):
+        for dim in range(self.dataset.data.data.ndim):
+            if self.parameters["unit"] == "index":
+                range_ = self.parameters["range"][dim]
+            else:
+                range_ = [
+                    self._get_index(self.dataset.data.axes[dim].values,
+                                    self.parameters["range"][dim][0]),
+                    self._get_index(self.dataset.data.axes[dim].values,
+                                    self.parameters["range"][dim][1])
+                ]
+            start = self.dataset.data.axes[dim].values[range_[0]]
+            stop = self.dataset.data.axes[dim].values[range_[1]]
+            self._axis_values.append(
+                np.linspace(start, stop, self.parameters["npoints"][dim]))
+
+    @staticmethod
+    def _get_index(vector, value):
+        return np.abs(vector - value).argmin()
+
+
 class CommonRangeExtraction(MultiProcessingStep):
     # noinspection PyUnresolvedReferences
     """

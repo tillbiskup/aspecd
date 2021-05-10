@@ -14,7 +14,6 @@ For version 0.2
 
 * Remaining basic processing and analysis steps:
 
-  * interpolation (useful as well for reducing knots of a grid for 3D plots)
   * filtering
   * peak finding
   * SNR determination
