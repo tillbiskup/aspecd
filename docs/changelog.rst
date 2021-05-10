@@ -14,6 +14,12 @@ Not yet released
 New features
 ------------
 
+* Normalisation:
+
+  * Act on parts of the data of a dataset
+
+  * Handle noise for ND data with N>1
+
 * RangeExtraction: extract range of data from dataset (using slice notation)
 
 * MultiprocessingTask (and SingleprocessingTask aliasing ProcessingTask)

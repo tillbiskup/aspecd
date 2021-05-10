@@ -22,8 +22,6 @@ For version 0.2
   * adding noise
   * ? AxisAlgebra: provide a function that gets evaluated on the values of an axis
 
-* Normalising over parts of a dataset
-
 * :meth:`aspecd.processing.ProcessingStep._set_defaults()` method called before :meth:`aspecd.processing.ProcessingStep._sanitise_parameters`
 
 * Importer with parameters in recipe (*e.g.*, for CSV importer)

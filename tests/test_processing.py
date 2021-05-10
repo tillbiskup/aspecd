@@ -236,7 +236,7 @@ class TestNormalisation(unittest.TestCase):
         self.dataset.data.data \
             += (np.random.random(len(self.dataset.data.data))-0.5) * 0.5
         self.processing.parameters["kind"] = 'maximum'
-        self.processing.parameters["noise_range"] = 10
+        self.processing.parameters["noise_range"] = [0, 10]
         self.dataset.process(self.processing)
         self.assertGreaterEqual(1.25, self.dataset.data.data.max(), 1)
 
@@ -246,7 +246,7 @@ class TestNormalisation(unittest.TestCase):
         self.dataset.data.data \
             += (np.random.random(len(self.dataset.data.data))-0.5) * 0.5
         self.processing.parameters["kind"] = 'minimum'
-        self.processing.parameters["noise_range"] = 10
+        self.processing.parameters["noise_range"] = [0, 10]
         self.dataset.process(self.processing)
         self.assertLessEqual(-1.25, self.dataset.data.data.min(), 1)
 
@@ -256,10 +256,35 @@ class TestNormalisation(unittest.TestCase):
         self.dataset.data.data \
             += (np.random.random(len(self.dataset.data.data))-0.5) * 0.5
         self.processing.parameters["kind"] = 'amplitude'
-        self.processing.parameters["noise_range"] = 10
+        self.processing.parameters["noise_range"] = [0, 10]
         self.dataset.process(self.processing)
         self.assertGreaterEqual(1.25, self.dataset.data.data.max() -
                                 self.dataset.data.data.min())
+
+    def test_normalise_to_maximum_with_noisy_2d_data(self):
+        data = \
+            np.concatenate((np.zeros(50), self.dataset.data.data, np.zeros(50)))
+        self.dataset.data.data = np.reshape(np.tile(data, 100), (100, 600))
+        self.dataset.data.data \
+            += (np.random.random(self.dataset.data.data.shape)-0.5) * 0.5
+        self.processing.parameters["kind"] = 'maximum'
+        self.processing.parameters["noise_range"] = [[0, 10], [0, 10]]
+        self.dataset.process(self.processing)
+        self.assertGreaterEqual(1.25, self.dataset.data.data.max(), 1)
+
+    def test_normalise_to_maximum_with_noisy_2d_data_and_axis_units(self):
+        data = \
+            np.concatenate((np.zeros(50), self.dataset.data.data, np.zeros(50)))
+        self.dataset.data.data = np.reshape(np.tile(data, 100), (100, 600))
+        self.dataset.data.data \
+            += (np.random.random(self.dataset.data.data.shape)-0.5) * 0.5
+        self.dataset.data.axes[0].values = np.linspace(21, 42, 100)
+        self.dataset.data.axes[1].values = np.linspace(340, 350, 600)
+        self.processing.parameters["kind"] = 'maximum'
+        self.processing.parameters["noise_range"] = [[21, 25], [340, 341]]
+        self.processing.parameters["noise_range_unit"] = "axis"
+        self.dataset.process(self.processing)
+        self.assertGreaterEqual(1.25, self.dataset.data.data.max(), 1)
 
     def test_normalise_to_maximum_over_range(self):
         self.dataset.data.data = np.append(self.dataset.data.data,

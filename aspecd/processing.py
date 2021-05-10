@@ -672,10 +672,6 @@ class Normalisation(SingleProcessingStep):
         the data as a whole are normalised accordingly.
 
     .. todo::
-        Handle noisy data, at least for normalising to maximum, minimum,
-        and amplitude, for >1D data (determine noise accordingly).
-
-    .. todo::
         How to handle noisy data in case of area normalisation, as this would
         probably account for double the noise if simply taking the absolute?
 
@@ -715,18 +711,36 @@ class Normalisation(SingleProcessingStep):
 
             Can be either "index" (default) or "axis".
 
-        noise_range : :class:`int`
+        noise_range : :class:`list`
             Data range to use for determining noise level
 
             If provided, the normalisation will account for the noise in
             case of normalising to minimum, maximum, and amplitude.
 
-            Numbers are interpreted as percentage.
+            In case of ND datasets with N>1, you need to provide as many
+            ranges as dimensions of your data.
+
+            Numbers are interpreted by default as percentage.
 
             Default: None
 
+        noise_range_unit : :class:`str`
+            Unit for specifying noise range
+
+            Valid units are "index", "axis", "percentage", with the latter
+            being default. As internally, :class:`RangeExtraction` gets
+            used, see there for further details.
+
+            Default: percentage
+
     .. versionadded:: 0.2
        Normalising over range of data
+
+    .. versionadded:: 0.2
+       Accounting for noise for ND data with N>1
+
+    .. versionchanged:: 0.2
+       noise_range changed to list from integer
 
 
     Examples
@@ -809,6 +823,7 @@ class Normalisation(SingleProcessingStep):
         self.parameters["range"] = None
         self.parameters["range_unit"] = "index"
         self.parameters["noise_range"] = None
+        self.parameters["noise_range_unit"] = "percentage"
         self._noise_amplitude = 0
 
     def _perform_task(self):
@@ -834,12 +849,15 @@ class Normalisation(SingleProcessingStep):
 
     def _determine_noise_amplitude(self):
         if self.parameters["noise_range"]:
-            number_of_points = len(self.dataset.data.data)
-            data_points = \
-                math.ceil(number_of_points
-                          * self.parameters["noise_range"] / 100.0)
-            data_range = self.dataset.data.data[0:data_points]
-            self._noise_amplitude = max(data_range) - min(data_range)
+            range_extraction = RangeExtraction()
+            range_extraction.parameters["unit"] = \
+                self.parameters["noise_range_unit"]
+            range_extraction.parameters["range"] = \
+                self.parameters["noise_range"]
+            dataset_copy = copy.deepcopy(self.dataset)
+            dataset_copy.process(range_extraction)
+            data_range = dataset_copy.data.data
+            self._noise_amplitude = data_range.max() - data_range.min()
 
 
 class Integration(SingleProcessingStep):
