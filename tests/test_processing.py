@@ -1350,6 +1350,7 @@ class TestScalarAxisAlgebra(unittest.TestCase):
 
 
 class TestInterpolation(unittest.TestCase):
+    
     def setUp(self):
         self.processing = aspecd.processing.Interpolation()
         self.dataset = aspecd.dataset.Dataset()
@@ -1476,6 +1477,26 @@ class TestInterpolation(unittest.TestCase):
         self.dataset2d.process(self.processing)
         self.assertListEqual(list(np.linspace(30, 40, 41)),
                              list(self.dataset2d.data.axes[0].values))
+
+
+class TestFiltering(unittest.TestCase):
+
+    def setUp(self):
+        self.processing = aspecd.processing.Filtering()
+        self.dataset = aspecd.dataset.Dataset()
+        self.dataset.data.data = np.linspace(10, 20, 11)
+        self.dataset2d = aspecd.dataset.Dataset()
+        self.dataset2d.data.data = \
+            np.reshape(np.tile(np.linspace(0, 5, 11), 21), (21, 11))
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('filter', self.processing.description.lower())
+
+    def test_is_undoable(self):
+        self.assertTrue(self.processing.undoable)
 
 
 class TestCommonRangeExtraction(unittest.TestCase):

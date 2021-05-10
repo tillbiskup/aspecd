@@ -125,6 +125,10 @@ independently.
 
   Average data over given range along given axis.
 
+* :class:`aspecd.processing.Integration`
+
+  Interpolate data
+
 
 Processing steps operating on multiple datasets at once
 -------------------------------------------------------
@@ -2407,6 +2411,14 @@ class Interpolation(SingleProcessingStep):
     @staticmethod
     def _get_index(vector, value):
         return np.abs(vector - value).argmin()
+
+
+class Filtering(SingleProcessingStep):
+
+    def __init__(self):
+        super().__init__()
+        self.description = 'Apply filter to data'
+        self.undoable = True
 
 
 class CommonRangeExtraction(MultiProcessingStep):
