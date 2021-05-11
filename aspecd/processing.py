@@ -129,6 +129,10 @@ independently.
 
   Interpolate data
 
+* :class:`aspecd.processing.Filtering`
+
+  Filter data
+
 
 Processing steps operating on multiple datasets at once
 -------------------------------------------------------
@@ -227,6 +231,8 @@ import math
 import operator
 
 import numpy as np
+import scipy.ndimage
+import scipy.signal
 from scipy import interpolate
 
 import aspecd.exceptions
@@ -737,15 +743,6 @@ class Normalisation(SingleProcessingStep):
 
             Default: percentage
 
-    .. versionadded:: 0.2
-       Normalising over range of data
-
-    .. versionadded:: 0.2
-       Accounting for noise for ND data with N>1
-
-    .. versionchanged:: 0.2
-       noise_range changed to list from integer
-
 
     Examples
     --------
@@ -816,6 +813,16 @@ class Normalisation(SingleProcessingStep):
 
     Here as well, the range can be given in indices or axis units,
     but defaults to indices if no unit is explicitly given.
+
+
+    .. versionadded:: 0.2
+       Normalising over range of data
+
+    .. versionadded:: 0.2
+       Accounting for noise for ND data with N>1
+
+    .. versionchanged:: 0.2
+       noise_range changed to list from integer
 
     """
 
@@ -2311,6 +2318,43 @@ class Interpolation(SingleProcessingStep):
         Raised if given range is out of range of data/axes
 
 
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Generally, interpolating requires to provide both, a range and a number
+    of points:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: Interpolation
+         properties:
+           parameters:
+             range: [10, 100]
+             npoints: 901
+
+    This would interpolate your data between their indices 10 and 100 using
+    901 points. As it is sometimes (often) more convenient to work with
+    axis units, you can tell the processing step to use axis values instead
+    of indices:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: Interpolation
+         properties:
+           parameters:
+             range: [340, 350]
+             npoints: 1001
+             unit: axis
+
+    This would interpolate your (1D) data between the axis values 340 and
+    350 using 1001 points.
+
     .. versionadded:: 0.2
 
 
@@ -2414,11 +2458,158 @@ class Interpolation(SingleProcessingStep):
 
 
 class Filtering(SingleProcessingStep):
+    # noinspection PyUnresolvedReferences
+    """
+    Filter data.
+
+    Generally, filtering is a large field of (digital) signal processing,
+    and currently, this class only implements a very small subset of filters
+    often applied in spectroscopy, namely low-pass filters that can be used
+    for smoothing ("denoising") data.
+
+    Filtering makes heavy use of the :mod:`scipy.ndimage` and
+    :mod:`scipy.signal` modules of the SciPy package. For details, see there.
+
+    Filtering works with data with arbitrary dimensions, in this case
+    applying the filter in each dimension.
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        type : :class:`str`
+            Type of the filter to use
+
+            Currently, three types are supported: "uniform", "gaussian",
+            "savitzky-golay". For convenience, a list of aliases exists for
+            each of these types, and if you use one of these aliases,
+            it will be replaced by its generic name:
+
+            ================ ===============================================
+            Generic          Alias
+            ================ ===============================================
+            'uniform'        'box', 'boxcar', 'moving-average', 'car'
+            'gaussian'       'binom', 'binomial'
+            'savitzky-golay' 'savitzky_golay', 'savitzky golay', 'savgol',
+                             'savitzky'
+            ================ ===============================================
+
+        window_length : :class:`int`
+            Length of the filter window
+
+            The window needs to be smaller than the actual data. If you
+            provide a window length that exceeds the data range,
+            an exception will be raised.
+
+        order : :class:`int`
+            Polynomial order for the Savitzky-Golay filter
+
+            Only necessary for this type of filter. If no order is given for
+            this filter, an exception will be raised.
+
+
+    Raises
+    ------
+    ValueError
+        Raised if no or wrong filter type is provided.
+
+        Raised if no filter window is provided.
+
+        Raised if filter window exceeds data range.
+
+        Raised in case of Savitzky-Golay filter when no order is provided.
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Generally, filtering requires to provide both, a type of filter and a
+    window length. Therefore, for uniform and Gaussian filters, this would be:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: Filtering
+         properties:
+           parameters:
+             type: uniform
+             window_length: 10
+
+    Of course, at least uniform filtering (also known as boxcar or moving
+    average) is strongly discouraged due to the artifacts introduced.
+    Probably the best bet for applying a filter to smooth your data is the
+    Savitzky-Golay filter:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: Filtering
+         properties:
+           parameters:
+             type: savitzky-golay
+             window_length: 10
+             order: 3
+
+    Note that for this filter, you need to provide the polynomial order as
+    well. To get best results, you will need to experiment with the
+    parameters a bit.
+
+
+    .. versionadded:: 0.2
+
+    """
 
     def __init__(self):
         super().__init__()
         self.description = 'Apply filter to data'
         self.undoable = True
+        self.parameters["type"] = None
+        self.parameters["window_length"] = None
+        self.parameters["order"] = None
+        self._types = {
+            'uniform': ['uniform', 'box', 'boxcar', 'moving-average', 'car'],
+            'gaussian': ['gaussian', 'binom', 'binomial'],
+            'savitzky-golay': ['savitzky-golay', 'savitzky_golay',
+                               'savitzky golay', 'savgol', 'savitzky']
+        }
+
+    def _sanitise_parameters(self):
+        if not self.parameters["type"]:
+            raise ValueError("Missing filter type")
+        self._convert_filter_type()
+        if self.parameters["type"] not in self._types:
+            raise ValueError("Wrong filter type %s" % self.parameters["type"])
+        if not self.parameters["window_length"]:
+            raise ValueError("Missing filter window length")
+        if self.parameters["window_length"] > min(self.dataset.data.data.shape):
+            raise ValueError("Filter window outside data range")
+        if self.parameters["type"] == "savitzky-golay" \
+                and not self.parameters["order"]:
+            raise ValueError("Missing order for this filter")
+
+    def _perform_task(self):
+        if self.parameters["type"] == "uniform":
+            self.dataset.data.data = scipy.ndimage.uniform_filter(
+                self.dataset.data.data, self.parameters["window_length"])
+        elif self.parameters["type"] == "gaussian":
+            self.dataset.data.data = scipy.ndimage.gaussian_filter(
+                self.dataset.data.data, self.parameters["window_length"])
+        elif self.parameters["type"] == "savitzky-golay":
+            self.dataset.data.data = scipy.signal.savgol_filter(
+                self.dataset.data.data,
+                self.parameters["window_length"],
+                self.parameters["order"]
+            )
+
+    def _convert_filter_type(self):
+        for filter_type, aliases in self._types.items():
+            if self.parameters["type"] in aliases:
+                self.parameters["type"] = filter_type
 
 
 class CommonRangeExtraction(MultiProcessingStep):
@@ -2480,6 +2671,68 @@ class CommonRangeExtraction(MultiProcessingStep):
 
     IndexError
         Raised if axis is out of bounds for given dataset
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    In case you would like to bring all datasets currently loaded into your
+    recipe to a common range (use with caution, however), things can be as
+    simple as:
+
+    .. code-block:: yaml
+
+       - kind: multiprocessing
+         type: CommonRangeExtraction
+
+    Note that this will operate on *all* datasets currently available in
+    your recipe, including results from other processing steps. Therefore,
+    it is usually better to be explicit, using ``apply_to``. Otherwise,
+    you can use this processing step early on in your recipe.
+
+    Usually, however, you will want to restrict this to a subset using
+    ``apply_to`` and provide labels for the results:
+
+    .. code-block:: yaml
+
+       - kind: multiprocessing
+         type: CommonRangeExtraction
+         results:
+           - dataset1_cut
+           - dataset2_cut
+         apply_tp:
+           - dataset1
+           - dataset2
+
+    If you want to perform algebraic operations on datasets, the data of both
+    datasets need to have identical shape, and comparison is only meaningful
+    if the axes are compatible as well. Hence, you will usually want to
+    perform a CommonRangeExtraction processing step before doing algebra
+    with two datasets:
+
+    .. code-block:: yaml
+
+       - kind: multiprocessing
+         type: CommonRangeExtraction
+         results:
+           - label_to_dataset
+           - label_to_other_dataset
+
+       - kind: processing
+         type: DatasetAlgebra
+         properties:
+           parameters:
+             kind: plus
+             dataset: label_to_other_dataset
+         apply_to:
+           - label_to_dataset
+
+    For details of the algebraic operations on datasets,
+    see :class:`DatasetAlgebra`.
 
 
     .. versionadded:: 0.2

@@ -1,8 +1,9 @@
 """Tests for processing."""
-
 import unittest
 
 import numpy as np
+import scipy.ndimage
+import scipy.signal
 
 import aspecd.dataset
 import aspecd.exceptions
@@ -1487,7 +1488,7 @@ class TestFiltering(unittest.TestCase):
         self.dataset.data.data = np.linspace(10, 20, 11)
         self.dataset2d = aspecd.dataset.Dataset()
         self.dataset2d.data.data = \
-            np.reshape(np.tile(np.linspace(0, 5, 11), 21), (21, 11))
+            np.reshape(np.tile(np.linspace(0, 5, 21), 11), (11, 21))
 
     def test_instantiate_class(self):
         pass
@@ -1497,6 +1498,134 @@ class TestFiltering(unittest.TestCase):
 
     def test_is_undoable(self):
         self.assertTrue(self.processing.undoable)
+
+    def test_process_without_type_raises(self):
+        with self.assertRaisesRegex(ValueError, 'Missing filter type'):
+            self.dataset.process(self.processing)
+
+    def test_process_with_wrong_type_raises(self):
+        self.processing.parameters["type"] = "foo"
+        with self.assertRaisesRegex(ValueError, 'Wrong filter type foo'):
+            self.dataset.process(self.processing)
+
+    def test_process_without_window_length_raises(self):
+        self.processing.parameters["type"] = "uniform"
+        with self.assertRaisesRegex(ValueError, 'Missing filter window length'):
+            self.dataset.process(self.processing)
+
+    def test_process_with_window_outside_data_range_raises(self):
+        self.processing.parameters["type"] = "uniform"
+        self.processing.parameters["window_length"] = \
+            min(self.dataset2d.data.data.shape) + 1
+        with self.assertRaisesRegex(ValueError, 'Filter window outside data '
+                                                'range'):
+            self.dataset2d.process(self.processing)
+
+    def test_process_with_window_outside_data_range_with_2d_data_raises(self):
+        self.processing.parameters["type"] = "uniform"
+        self.processing.parameters["window_length"] = \
+            self.dataset.data.data.size + 1
+        with self.assertRaisesRegex(ValueError, 'Filter window outside data '
+                                                'range'):
+            self.dataset.process(self.processing)
+
+    def test_uniform_filter_with_1d_data(self):
+        self.processing.parameters["type"] = "uniform"
+        self.processing.parameters["window_length"] = 3
+        filtered_data = scipy.ndimage.uniform_filter(self.dataset.data.data, 3)
+        self.dataset.process(self.processing)
+        self.assertTrue(all(filtered_data == self.dataset.data.data))
+
+    def test_gaussian_filter_with_1d_data(self):
+        self.processing.parameters["type"] = "gaussian"
+        self.processing.parameters["window_length"] = 3
+        filtered_data = \
+            scipy.ndimage.gaussian_filter(self.dataset.data.data,
+                                          self.processing.parameters[
+                                              "window_length"])
+        self.dataset.process(self.processing)
+        self.assertTrue(all(filtered_data == self.dataset.data.data))
+
+    def test_savitzky_golay_filter_without_order_raises(self):
+        self.processing.parameters["type"] = "savitzky-golay"
+        self.processing.parameters["window_length"] = 3
+        with self.assertRaisesRegex(ValueError, "Missing order for this "
+                                                "filter"):
+            self.dataset.process(self.processing)
+
+    def test_savitzky_golay_filter_with_1d_data(self):
+        self.processing.parameters["type"] = "savitzky-golay"
+        self.processing.parameters["window_length"] = 3
+        self.processing.parameters["order"] = 2
+        filtered_data = \
+            scipy.signal.savgol_filter(self.dataset.data.data,
+                                       self.processing.parameters[
+                                           "window_length"],
+                                       self.processing.parameters["order"])
+        self.dataset.process(self.processing)
+        self.assertTrue(all(filtered_data == self.dataset.data.data))
+
+    def test_uniform_filter_with_1d_data_with_alternative_names(self):
+        alternative_names = ['box', 'boxcar', 'moving-average', 'car']
+        self.processing.parameters["window_length"] = 3
+        for filter_name in alternative_names:
+            with self.subTest(filter_name = filter_name):
+                filtered_data = \
+                    scipy.ndimage.uniform_filter(self.dataset.data.data,
+                                                 self.processing.parameters[
+                                                     "window_length"])
+                self.processing.parameters["type"] = filter_name
+                self.dataset.process(self.processing)
+                self.assertTrue(all(filtered_data == self.dataset.data.data))
+
+    def test_gaussian_filter_with_1d_data_with_alternative_names(self):
+        alternative_names = ['binom', 'binomial']
+        self.processing.parameters["window_length"] = 3
+        for filter_name in alternative_names:
+            with self.subTest(filter_name = filter_name):
+                filtered_data = \
+                    scipy.ndimage.gaussian_filter(self.dataset.data.data,
+                                                 self.processing.parameters[
+                                                     "window_length"])
+                self.processing.parameters["type"] = filter_name
+                self.dataset.process(self.processing)
+                self.assertTrue(all(filtered_data == self.dataset.data.data))
+
+    def test_savitzky_golay_filter_with_1d_data_with_alternative_names(self):
+        alternative_names = ['savitzky_golay', 'savitzky golay', 'savgol',
+                             'savitzky']
+        self.processing.parameters["window_length"] = 3
+        self.processing.parameters["order"] = 2
+        for filter_name in alternative_names:
+            with self.subTest(filter_name = filter_name):
+                filtered_data = \
+                    scipy.signal.savgol_filter(self.dataset.data.data,
+                                               self.processing.parameters[
+                                                   "window_length"],
+                                               self.processing.parameters[
+                                                   "order"])
+                self.processing.parameters["type"] = filter_name
+                self.dataset.process(self.processing)
+                self.assertTrue(all(filtered_data == self.dataset.data.data))
+
+    def test_filter_with_alternative_names_sets_generic_filter_type(self):
+        alternative_names = ['box', 'boxcar', 'moving-average', 'car']
+        self.processing.parameters["window_length"] = 3
+        for filter_name in alternative_names:
+            with self.subTest(filter_name = filter_name):
+                self.processing.parameters["type"] = filter_name
+                processing = self.dataset.process(self.processing)
+                self.assertEqual("uniform", processing.parameters["type"])
+
+    def test_uniform_filter_with_2d_data(self):
+        self.processing.parameters["type"] = "uniform"
+        self.processing.parameters["window_length"] = 3
+        filtered_data = scipy.ndimage.uniform_filter(
+            self.dataset2d.data.data,
+            self.processing.parameters["window_length"]
+        )
+        self.dataset2d.process(self.processing)
+        self.assertTrue((filtered_data == self.dataset2d.data.data).all())
 
 
 class TestCommonRangeExtraction(unittest.TestCase):

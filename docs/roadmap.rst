@@ -14,14 +14,10 @@ For version 0.2
 
 * Remaining basic processing and analysis steps:
 
-  * filtering
   * peak finding
   * SNR determination
   * determine basic characteristics: min, max, amplitude, area
   * ? statistics: mean, median, variance, standard deviation
-  * denoising
-  * adding noise
-  * ? AxisAlgebra: provide a function that gets evaluated on the values of an axis
 
 * :meth:`aspecd.processing.ProcessingStep._set_defaults()` method called before :meth:`aspecd.processing.ProcessingStep._sanitise_parameters`
 
@@ -30,6 +26,16 @@ For version 0.2
 * Expand use cases
 
 * Plot task: default filename for saved figure
+
+
+For version 0.3
+===============
+
+* Remaining basic processing and analysis steps:
+
+  * denoising
+  * adding noise
+  * ? AxisAlgebra: provide a function that gets evaluated on the values of an axis
 
 
 For later versions

@@ -14,6 +14,8 @@ Not yet released
 New features
 ------------
 
+* Filtering (with uniform, Gaussian, and Savitzky-Golay filter)
+
 * Interpolation (at least for 1D and 2D datasets)
 
 * Normalisation:
