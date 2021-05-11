@@ -74,7 +74,9 @@ Analysis steps operating on individual datasets
 The following analysis steps operate each on individual datasets
 independently.
 
-* ...
+* :class:`BasicCharacteristics`
+
+  Determine basic key characteristics of a dataset
 
 
 Writing own analysis steps
@@ -137,6 +139,8 @@ Module documentation
 
 
 import copy
+
+import numpy as np
 
 import aspecd.exceptions
 import aspecd.history
@@ -499,17 +503,185 @@ class MultiAnalysisStep(AnalysisStep):
 
 
 class BasicCharacteristics(SingleAnalysisStep):
+    # noinspection PyUnresolvedReferences
+    """
+    Determine basic key characteristics of a dataset.
+
+    Extracting basic characteristics (minimum, maximum, area, amplitude) of
+    a dataset is programmatically quite simple. This class provides a
+    working solution from within the ASpecD framework.
+
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        type : :class:`str`
+            Type of the characteristic to extract from the data
+
+            Valid values are "min", "max", "amplitude", and "area".
+
+        output : :class:`str`
+            Kind of output: (intensity) value, axes value(s), or axes indices
+
+            Valid values are "value" (default), "axes", and "indices". For
+            amplitude and area, as these characteristics have no analogon on
+            the axes, only "value" is a valid output option.
+
+            Default: "value"
+
+    result :
+        Characteristic(s) of the dataset.
+
+        The actual return type depends on the type of characteristics and
+        output selected.
+
+        ========================= ============= ==============
+        type (characteristic)     output        return type
+        ========================= ============= ==============
+        min, max, amplitude, area value         :class:`float`
+        min, max                  axes, indices :class:`list`
+        all                       value         :class:`dict`
+        ========================= ============= ==============
+
+
+    Raises
+    ------
+    ValueError
+        Raised if no  type of characteristics is provided.
+
+        Raised if type of characteristics is unknown.
+
+        Raised if output type is unknown.
+
+        Raised if output type is not available for type of characteristics.
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Extracting the characteristic of a dataset is quite simple:
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: BasicCharacteristics
+         properties:
+           parameters:
+             type: min
+         result: min_of_dataset
+
+    This would simply return the minimum (value) of a given dataset in the
+    result assigned to the recipe-internal variable ``min_of_dataset``.
+    Similarly, you can extract "max", "area", and "amplitude" from your
+    dataset. In case you are interested in the axes values or indices,
+    set the output parameter appropriately:
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: BasicCharacteristics
+         properties:
+           parameters:
+             type: min
+             output: axes
+         result: min_of_dataset
+
+    In this particular case, this would return the axes values of the
+    global minimum of your dataset in the result. Note that those other
+    output types are only available for "min" and "max", as "area" and
+    "amplitude" have no analogon on the axes.
+
+    Sometimes, you are interested in getting the values of all
+    characteristics at once in form of a dictionary:
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: BasicCharacteristics
+         properties:
+           parameters:
+             type: all
+         result: min_of_dataset
+
+    Make sure to understand the different types the result has depending on
+    the characteristic and output type chosen. For details, see the table
+    above.
+
+    """
 
     def __init__(self):
         super().__init__()
         self.description = 'Obtain basic characteristics'
         self.parameters["type"] = None
+        self.parameters["output"] = "value"
 
     def _sanitise_parameters(self):
         if not self.parameters["type"]:
             raise ValueError("No type of characteristics given")
-        if self.parameters["type"] not in []:
+        if self.parameters["type"] not in ['min', 'max', 'amplitude', 'area',
+                                           'all']:
             raise ValueError("Unknown type %s" % self.parameters["type"])
+        if self.parameters["output"] not in ['value', 'axes', 'indices']:
+            raise ValueError("Unknown output type %s"
+                             % self.parameters["output"])
+        if self.parameters["output"] in ["axes", "indices"] and \
+                self.parameters["type"] in ["area", "amplitude"]:
+            raise ValueError("Output %s not available for characteristic %s."
+                             % (self.parameters["output"],
+                                self.parameters["type"]))
+
+    def _perform_task(self):
+        if self.parameters["type"] in ['min', 'max', 'amplitude', 'area']:
+            self.result = self._get_characteristic(
+                kind=self.parameters["type"],
+                output=self.parameters["output"])
+        if self.parameters["type"] == "all":
+            self.result = {
+                'min': self._get_characteristic("min"),
+                'max': self._get_characteristic("max"),
+                'amplitude': self._get_characteristic("amplitude"),
+                'area': self._get_characteristic("area"),
+            }
+
+    def _get_characteristic(self, kind=None, output="value"):  # noqa: MC0001
+        result = None
+        if output == "value":
+            if kind == "min":
+                result = self.dataset.data.data.min()
+            if kind == "max":
+                result = self.dataset.data.data.max()
+            if kind == "amplitude":
+                result = \
+                    self.dataset.data.data.max() - self.dataset.data.data.min()
+            if kind == "area":
+                result = self.dataset.data.data.sum()
+        if output == "axes":
+            if kind == "min":
+                result = []
+                idx = np.unravel_index(self.dataset.data.data.argmin(),
+                                       self.dataset.data.data.shape)
+                for dim in range(self.dataset.data.data.ndim):
+                    result.append(self.dataset.data.axes[dim].values[idx[dim]])
+            if kind == "max":
+                result = []
+                idx = np.unravel_index(self.dataset.data.data.argmax(),
+                                       self.dataset.data.data.shape)
+                for dim in range(self.dataset.data.data.ndim):
+                    result.append(self.dataset.data.axes[dim].values[idx[dim]])
+        if output == "indices":
+            if kind == "min":
+                result = list(np.unravel_index(self.dataset.data.data.argmin(),
+                                               self.dataset.data.data.shape))
+            if kind == "max":
+                result = list(np.unravel_index(self.dataset.data.data.argmax(),
+                                               self.dataset.data.data.shape))
+        return result
 
 
 class SignalToNoiseRatio(SingleAnalysisStep):
@@ -518,6 +690,11 @@ class SignalToNoiseRatio(SingleAnalysisStep):
 
     Needs perhaps to be moved to another module, if it turns out that
     analysis and processing steps depend on each other sometimes.
+
+    One possibility would be to create two modules complex_processing and
+    complex_analysis that both import processing and analysis and that are
+    searched for by the respective analysis and processing task (to have an
+    easier user interface).
     """
 
     def __init__(self):

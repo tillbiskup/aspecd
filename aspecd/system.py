@@ -14,9 +14,10 @@ available of this fact.
 """
 
 import getpass
-import pkg_resources
 import platform
 import sys
+
+import pkg_resources
 
 import aspecd.utils
 

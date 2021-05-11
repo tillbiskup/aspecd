@@ -2,6 +2,8 @@
 
 import unittest
 
+import numpy as np
+
 import aspecd.analysis
 import aspecd.dataset
 import aspecd.exceptions
@@ -140,6 +142,9 @@ class TestBasicCharacteristics(unittest.TestCase):
     def setUp(self):
         self.analysis = aspecd.analysis.BasicCharacteristics()
         self.dataset = aspecd.dataset.Dataset()
+        self.dataset.data.data = np.random.random(10)
+        self.dataset3d = aspecd.dataset.Dataset()
+        self.dataset3d.data.data = np.random.random([10, 10, 10])
 
     def test_instantiate_class(self):
         pass
@@ -158,6 +163,171 @@ class TestBasicCharacteristics(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,
                                     "Unknown type foo"):
             self.dataset.analyse(self.analysis)
+
+    def test_analyse_with_unknown_output_raises(self):
+        self.analysis.parameters["type"] = "min"
+        self.analysis.parameters["output"] = "foo"
+        with self.assertRaisesRegex(ValueError,
+                                    "Unknown output type foo"):
+            self.dataset.analyse(self.analysis)
+
+    def test_min(self):
+        self.analysis.parameters["type"] = "min"
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertEqual(self.dataset.data.data.min(), analysis.result)
+
+    def test_max(self):
+        self.analysis.parameters["type"] = "max"
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertEqual(self.dataset.data.data.max(), analysis.result)
+
+    def test_amplitude(self):
+        self.analysis.parameters["type"] = "amplitude"
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertEqual(
+            self.dataset.data.data.max()-self.dataset.data.data.min(),
+            analysis.result)
+
+    def test_area(self):
+        self.analysis.parameters["type"] = "area"
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertEqual(self.dataset.data.data.sum(), analysis.result)
+
+    def test_all(self):
+        self.analysis.parameters["type"] = "all"
+        result_dict = {
+            'min': self.dataset.data.data.min(),
+            'max': self.dataset.data.data.max(),
+            'amplitude':
+                self.dataset.data.data.max() - self.dataset.data.data.min(),
+            'area': self.dataset.data.data.sum(),
+        }
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertEqual(result_dict, analysis.result)
+
+    def test_min_with_axes_output(self):
+        self.analysis.parameters["type"] = "min"
+        self.analysis.parameters["output"] = "axes"
+        analysis = self.dataset.analyse(self.analysis)
+        result = \
+            [self.dataset.data.axes[0].values[self.dataset.data.data.argmin()]]
+        self.assertEqual(result, analysis.result)
+
+    def test_max_with_axes_output(self):
+        self.analysis.parameters["type"] = "max"
+        self.analysis.parameters["output"] = "axes"
+        analysis = self.dataset.analyse(self.analysis)
+        result = \
+            [self.dataset.data.axes[0].values[self.dataset.data.data.argmax()]]
+        self.assertEqual(result, analysis.result)
+
+    def test_min_with_indices_output(self):
+        self.analysis.parameters["type"] = "min"
+        self.analysis.parameters["output"] = "indices"
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertEqual([self.dataset.data.data.argmin()], analysis.result)
+
+    def test_max_with_indices_output(self):
+        self.analysis.parameters["type"] = "max"
+        self.analysis.parameters["output"] = "indices"
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertEqual([self.dataset.data.data.argmax()], analysis.result)
+
+    def test_area_or_amplitude_with_axes_output_raises(self):
+        characteristics = ["area", "amplitude"]
+        self.analysis.parameters["output"] = "axes"
+        for characteristic in characteristics:
+            with self.subTest(characteristic=characteristic):
+                self.analysis.parameters["type"] = characteristic
+                with self.assertRaisesRegex(ValueError,
+                                            "Output %s not available for "\
+                                            "characteristic %s."
+                                            % ("axes", characteristic)):
+                    self.dataset.analyse(self.analysis)
+
+    def test_area_or_amplitude_with_indices_output_raises(self):
+        characteristics = ["area", "amplitude"]
+        self.analysis.parameters["output"] = "indices"
+        for characteristic in characteristics:
+            with self.subTest(characteristic=characteristic):
+                self.analysis.parameters["type"] = characteristic
+                with self.assertRaisesRegex(ValueError,
+                                            "Output %s not available for "\
+                                            "characteristic %s."
+                                            % ("indices", characteristic)):
+                    self.dataset.analyse(self.analysis)
+
+    def test_min_with_3d_data(self):
+        self.analysis.parameters["type"] = "min"
+        analysis = self.dataset3d.analyse(self.analysis)
+        self.assertEqual(self.dataset3d.data.data.min(), analysis.result)
+
+    def test_max_with_3d_data(self):
+        self.analysis.parameters["type"] = "max"
+        analysis = self.dataset3d.analyse(self.analysis)
+        self.assertEqual(self.dataset3d.data.data.max(), analysis.result)
+
+    def test_amplitude_with_3d_data(self):
+        self.analysis.parameters["type"] = "amplitude"
+        analysis = self.dataset3d.analyse(self.analysis)
+        self.assertEqual(
+            self.dataset3d.data.data.max()-self.dataset3d.data.data.min(),
+            analysis.result)
+
+    def test_area_with_3d_data(self):
+        self.analysis.parameters["type"] = "area"
+        analysis = self.dataset3d.analyse(self.analysis)
+        self.assertEqual(self.dataset3d.data.data.sum(), analysis.result)
+
+    def test_all_with_3d_data(self):
+        self.analysis.parameters["type"] = "all"
+        result_dict = {
+            'min': self.dataset3d.data.data.min(),
+            'max': self.dataset3d.data.data.max(),
+            'amplitude':
+                self.dataset3d.data.data.max() - self.dataset3d.data.data.min(),
+            'area': self.dataset3d.data.data.sum(),
+        }
+        analysis = self.dataset3d.analyse(self.analysis)
+        self.assertEqual(result_dict, analysis.result)
+
+    def test_min_with_axes_output_with_3d_data(self):
+        self.analysis.parameters["type"] = "min"
+        self.analysis.parameters["output"] = "axes"
+        analysis = self.dataset3d.analyse(self.analysis)
+        result = []
+        idx = np.unravel_index(self.dataset3d.data.data.argmin(),
+                               self.dataset3d.data.data.shape)
+        for dim in range(self.dataset3d.data.data.ndim):
+            result.append(self.dataset3d.data.axes[dim].values[idx[dim]])
+        self.assertEqual(result, analysis.result)
+
+    def test_max_with_axes_output_with_3d_data(self):
+        self.analysis.parameters["type"] = "max"
+        self.analysis.parameters["output"] = "axes"
+        analysis = self.dataset3d.analyse(self.analysis)
+        result = []
+        idx = np.unravel_index(self.dataset3d.data.data.argmax(),
+                               self.dataset3d.data.data.shape)
+        for dim in range(self.dataset3d.data.data.ndim):
+            result.append(self.dataset3d.data.axes[dim].values[idx[dim]])
+        self.assertEqual(result, analysis.result)
+
+    def test_min_with_indices_output_with_3d_data(self):
+        self.analysis.parameters["type"] = "min"
+        self.analysis.parameters["output"] = "indices"
+        analysis = self.dataset3d.analyse(self.analysis)
+        result = list(np.unravel_index(self.dataset3d.data.data.argmin(),
+                                       self.dataset3d.data.data.shape))
+        self.assertListEqual(result, analysis.result)
+
+    def test_max_with_indices_output_with_3d_data(self):
+        self.analysis.parameters["type"] = "max"
+        self.analysis.parameters["output"] = "indices"
+        analysis = self.dataset3d.analyse(self.analysis)
+        result = list(np.unravel_index(self.dataset3d.data.data.argmax(),
+                                       self.dataset3d.data.data.shape))
+        self.assertListEqual(result, analysis.result)
 
 
 class TestSignalToNoiseRatio(unittest.TestCase):
