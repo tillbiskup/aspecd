@@ -48,6 +48,8 @@ New features
 Changes
 -------
 
+* SystemInfo: Packages contain now full list of dependencies with version numbers of currently installed packages
+
 * SliceExtraction:
 
   * parameter "index" renamed to "position"

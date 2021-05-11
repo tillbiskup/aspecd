@@ -1,6 +1,8 @@
 """Tests for system."""
 
+import importlib
 import os
+import pkg_resources
 import platform
 import sys
 import unittest
@@ -30,10 +32,26 @@ class TestSystemInfo(unittest.TestCase):
         login_name = os.getlogin()
         self.assertEqual(self.sysinfo.user["login"], login_name)
 
-    def test_modules_property_contains_aspecd_key(self):
+    def test_packages_property_contains_aspecd_key(self):
         self.assertTrue("aspecd" in self.sysinfo.packages.keys())
 
-    def test_instantiate_class_with_package_name_adds_key_to_modules(self):
+    def test_packages_property_contains_keys_of_all_requirements(self):
+        requirements = [requirement.name for requirement in
+                        pkg_resources.get_distribution("aspecd").requires()]
+        for requirement in requirements:
+            with self.subTest(requirement=requirement):
+                self.assertIn(requirement, self.sysinfo.packages.keys())
+
+    def test_packages_property_contains_versions_of_all_requirements(self):
+        requirements = [requirement.name for requirement in
+                        pkg_resources.get_distribution("aspecd").requires()]
+        for requirement in requirements:
+            with self.subTest(requirement=requirement):
+                self.assertIn(
+                    pkg_resources.get_distribution(requirement).version,
+                    self.sysinfo.packages[requirement])
+
+    def test_instantiate_class_with_package_name_adds_key_to_packages(self):
         sysinfo = system.SystemInfo(package="numpy")
         self.assertTrue("numpy" in sysinfo.packages.keys())
 
@@ -43,7 +61,20 @@ class TestSystemInfo(unittest.TestCase):
         self.assertEqual(utils.package_version(package_name),
                          sysinfo.packages[package_name])
 
-    def test_modules_property_aspecd_key_has_correct_version(self):
+    # noinspection PyUnresolvedReferences
+    @unittest.skipUnless(importlib.util.find_spec("sphinx"),
+                         'Package "sphinx" not installed locally')
+    def test_instantiate_class_with_package_name_adds_its_dependencies(self):
+        package_name = "sphinx"
+        sysinfo = system.SystemInfo(package=package_name)
+        print("foo!")
+        requirements = [requirement.name for requirement in
+                        pkg_resources.get_distribution(package_name).requires()]
+        for requirement in requirements:
+            with self.subTest(requirement=requirement):
+                self.assertIn(requirement, sysinfo.packages.keys())
+
+    def test_packages_property_aspecd_key_has_correct_version(self):
         version = utils.get_aspecd_version()
         self.assertEqual(self.sysinfo.packages["aspecd"], version)
 
