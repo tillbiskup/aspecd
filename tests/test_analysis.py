@@ -2,14 +2,16 @@
 
 import unittest
 
+import aspecd.analysis
+import aspecd.dataset
 import aspecd.exceptions
 import aspecd.history
-from aspecd import analysis, processing, dataset
+import aspecd.processing
 
 
 class TestAnalysisStep(unittest.TestCase):
     def setUp(self):
-        self.analysisstep = analysis.AnalysisStep()
+        self.analysisstep = aspecd.analysis.AnalysisStep()
 
     def test_instantiate_class(self):
         pass
@@ -57,7 +59,7 @@ class TestAnalysisStep(unittest.TestCase):
 
 class TestSingleAnalysisStep(unittest.TestCase):
     def setUp(self):
-        self.analysisstep = analysis.SingleAnalysisStep()
+        self.analysisstep = aspecd.analysis.SingleAnalysisStep()
 
     def test_instantiate_class(self):
         pass
@@ -69,12 +71,12 @@ class TestSingleAnalysisStep(unittest.TestCase):
         self.assertTrue(isinstance(self.analysisstep.preprocessing, list))
 
     def test_analyse_with_dataset(self):
-        test_dataset = dataset.Dataset()
+        test_dataset = aspecd.dataset.Dataset()
         self.analysisstep.analyse(test_dataset)
         self.assertGreater(len(test_dataset.analyses), 0)
 
     def test_analyse_without_argument_and_with_dataset(self):
-        self.analysisstep.dataset = dataset.Dataset()
+        self.analysisstep.dataset = aspecd.dataset.Dataset()
         self.analysisstep.analyse()
         self.assertGreater(len(self.analysisstep.dataset.analyses), 0)
 
@@ -83,15 +85,15 @@ class TestSingleAnalysisStep(unittest.TestCase):
             self.analysisstep.analyse()
 
     def test_analyse_returns_dataset(self):
-        test_dataset = self.analysisstep.analyse(dataset.Dataset())
-        self.assertTrue(isinstance(test_dataset, dataset.Dataset))
+        test_dataset = self.analysisstep.analyse(aspecd.dataset.Dataset())
+        self.assertTrue(isinstance(test_dataset, aspecd.dataset.Dataset))
 
     def test_has_create_history_record_method(self):
         self.assertTrue(hasattr(self.analysisstep, 'create_history_record'))
         self.assertTrue(callable(self.analysisstep.create_history_record))
 
     def test_create_history_record_returns_history_record(self):
-        self.analysisstep.dataset = dataset.Dataset()
+        self.analysisstep.dataset = aspecd.dataset.Dataset()
         history_record = self.analysisstep.create_history_record()
         self.assertTrue(isinstance(history_record,
                                    aspecd.history.AnalysisHistoryRecord))
@@ -99,7 +101,7 @@ class TestSingleAnalysisStep(unittest.TestCase):
 
 class TestMultiAnalysisStep(unittest.TestCase):
     def setUp(self):
-        self.analysisstep = analysis.MultiAnalysisStep()
+        self.analysisstep = aspecd.analysis.MultiAnalysisStep()
 
     def test_instantiate_class(self):
         pass
@@ -115,14 +117,14 @@ class TestMultiAnalysisStep(unittest.TestCase):
             self.analysisstep.analyse()
 
     def test_analyse_with_datasets(self):
-        self.analysisstep.datasets.append(dataset.Dataset())
+        self.analysisstep.datasets.append(aspecd.dataset.Dataset())
         self.analysisstep.analyse()
 
 
 class TestPreprocessing(unittest.TestCase):
     def setUp(self):
-        self.analysisstep = analysis.SingleAnalysisStep()
-        self.processingstep = processing.SingleProcessingStep()
+        self.analysisstep = aspecd.analysis.SingleAnalysisStep()
+        self.processingstep = aspecd.processing.SingleProcessingStep()
 
     def test_has_add_preprocessing_step_method(self):
         self.assertTrue(hasattr(self.analysisstep, 'add_preprocessing_step'))
@@ -132,3 +134,39 @@ class TestPreprocessing(unittest.TestCase):
         self.analysisstep.add_preprocessing_step(self.processingstep)
         self.assertIsNot(self.processingstep,
                          self.analysisstep.preprocessing[-1])
+
+
+class TestBasicCharacteristics(unittest.TestCase):
+    def setUp(self):
+        self.analysis = aspecd.analysis.BasicCharacteristics()
+        self.dataset = aspecd.dataset.Dataset()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('basic characteristics',
+                      self.analysis.description.lower())
+
+    def test_analyse_without_type_raises(self):
+        with self.assertRaisesRegex(ValueError,
+                                    "No type of characteristics given"):
+            self.dataset.analyse(self.analysis)
+
+    def test_analyse_with_unknown_type_raises(self):
+        self.analysis.parameters["type"] = "foo"
+        with self.assertRaisesRegex(ValueError,
+                                    "Unknown type foo"):
+            self.dataset.analyse(self.analysis)
+
+
+class TestSignalToNoiseRatio(unittest.TestCase):
+    def setUp(self):
+        self.analysis = aspecd.analysis.SignalToNoiseRatio()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('signal-to-noise ratio',
+                      self.analysis.description.lower())

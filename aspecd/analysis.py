@@ -21,12 +21,117 @@ some result is obtained that is stored separately, together with the
 parameters of the analysis step, in the
 :attr:`aspecd.dataset.Dataset.analyses` attribute of the dataset.
 
-Each real analysis step should inherit from
-:class:`aspecd.analysis.SingleAnalysisStep` as documented there. Furthermore,
-each analysis step should be contained in one module named "analysis".
-This allows for easy automation and replay of analysis steps, particularly
-in context of recipe-driven data analysis (for details, see the
-:mod:`aspecd.tasks` module).
+
+Generally, two types of analysis steps can be distinguished:
+
+* Analysis steps for handling single datasets
+
+  Shall be derived from :class:`aspecd.analysis.SingleAnalysisStep`.
+
+* Analysis steps for handling multiple datasets
+
+  Shall be derived from :class:`aspecd.analysis.MultiAnalysisStep`.
+
+In the first case, the analysis is usually handled using the
+:meth:`analyse` method of the respective :obj:`aspecd.dataset.Dataset`
+object. Additionally, those analysis steps always only operate on the data
+of a single dataset. Analysis steps handling single datasets should always
+inherit from the :class:`aspecd.analysis.SingleAnalysisStep` class.
+
+In the second case, the analysis step is handled using the :meth:`analyse`
+method of the :obj:`aspecd.analysis.AnalysisStep` object, and the datasets
+are stored as a list within the analysis step. As these analysis steps span
+several datasets. Analysis steps handling multiple datasets should
+always inherit from the :class:`aaspecd.analysis.MultiAnalysisStep` class.
+
+The module contains both, base classes for analysis steps (as detailed
+above) as well as a series of generally applicable analysis steps for all
+kinds of spectroscopic data. The latter are an attempt to relieve the
+developers of packages derived from the ASpecD framework from the task to
+reinvent the wheel over and over again.
+
+The next section gives an overview of the concrete analysis steps
+implemented within the ASpecD framework. For details of how to implement
+your own analysis steps, see the section below.
+
+
+Concrete analysis steps
+=======================
+
+Besides providing the basis for analysis steps for the ASpecD framework,
+ensuring full reproducibility and traceability, hence reproducible science
+and good scientific practice, this module comes with a (growing) number of
+general-purpose analysis steps useful for basically all kinds of
+spectroscopic data.
+
+Here is a list as a first overview. For details, see the detailed
+documentation of each of the classes, readily accessible by the link.
+
+
+Analysis steps operating on individual datasets
+-----------------------------------------------
+
+The following analysis steps operate each on individual datasets
+independently.
+
+* ...
+
+
+Writing own analysis steps
+==========================
+
+Each real analysis step should inherit from either
+:class:`aspecd.processing.SingleProcessingStep` in case of operating on a
+single dataset only or from :class:`aspecd.processing.MultiProcessingStep` in
+case of operating on several datasets at once. Furthermore, all analysis
+steps should be contained in one module named "analysis". This allows for
+easy automation and replay of analysis steps, particularly in context of
+recipe-driven data analysis (for details, see the :mod:`aspecd.tasks` module).
+
+
+General advice
+--------------
+
+A few hints on writing own analysis step classes:
+
+* Always inherit from :class:`aspecd.analysis.SingleAnalysisStep` or
+  :class:`aspecd.analysis.MultiAnalysisStep`, depending on your needs.
+
+* Store all parameters, implicit and explicit, in the dict ``parameters`` of
+  the :class:`aspecd.analysis.AnalysisStep` class, *not* in separate
+  properties of the class. Only this way, you can ensure full
+  reproducibility and compatibility of recipe-driven data analysis (for
+  details of the latter, see the :mod:`aspecd.tasks` module).
+
+* Always set the ``description`` property to a sensible value.
+
+* Implement the actual analysis in the ``_perform_task`` method of the
+  analysis step. For sanitising parameters and checking general
+  applicability of the analysis step to the dataset(s) at hand, continue
+  reading.
+
+* Make sure to implement the
+  :meth:`aspecd.analysis.AnalysisStep.applicable` method according to your
+  needs. Typical cases would be to check for the dimensionality of the
+  underlying data, as some analysis steps may work only for 1D data (or
+  vice versa). Don't forget to declare this as a static method, using the
+  ``@staticmethod`` decorator.
+
+* With the ``_sanitise_parameters`` method, the input parameters are
+  automatically checked and an appropriate exception can be thrown in order to
+  describe the error source to the user.
+
+Some more special cases are detailed below. For further advice, consult the
+source code of this module, and have a look at the concrete processing steps
+whose purpose is described below in more detail.
+
+.. todo::
+    Add description of special cases as applicable
+
+
+Module documentation
+====================
+
 
 """
 
@@ -391,3 +496,30 @@ class MultiAnalysisStep(AnalysisStep):
         for dataset in self.datasets:
             if not self.applicable(dataset):
                 raise aspecd.exceptions.NotApplicableToDatasetError
+
+
+class BasicCharacteristics(SingleAnalysisStep):
+
+    def __init__(self):
+        super().__init__()
+        self.description = 'Obtain basic characteristics'
+        self.parameters["type"] = None
+
+    def _sanitise_parameters(self):
+        if not self.parameters["type"]:
+            raise ValueError("No type of characteristics given")
+        if self.parameters["type"] not in []:
+            raise ValueError("Unknown type %s" % self.parameters["type"])
+
+
+class SignalToNoiseRatio(SingleAnalysisStep):
+    """
+    Determine the signal-to-noise ratio of a dataset.
+
+    Needs perhaps to be moved to another module, if it turns out that
+    analysis and processing steps depend on each other sometimes.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = 'Determine signal-to-noise ratio'
