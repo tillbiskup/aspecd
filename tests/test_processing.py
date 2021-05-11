@@ -1615,6 +1615,13 @@ class TestFiltering(unittest.TestCase):
         self.dataset.process(self.processing)
         self.assertTrue(all(filtered_data == self.dataset.data.data))
 
+    def test_uniform_filter_with_1d_data_preserves_shape(self):
+        self.processing.parameters["type"] = "uniform"
+        self.processing.parameters["window_length"] = 3
+        orig_shape = self.dataset.data.data.shape
+        self.dataset.process(self.processing)
+        self.assertEqual(orig_shape, self.dataset.data.data.shape)
+
     def test_gaussian_filter_with_1d_data(self):
         self.processing.parameters["type"] = "gaussian"
         self.processing.parameters["window_length"] = 3
@@ -1624,6 +1631,13 @@ class TestFiltering(unittest.TestCase):
                                               "window_length"])
         self.dataset.process(self.processing)
         self.assertTrue(all(filtered_data == self.dataset.data.data))
+
+    def test_gaussian_filter_with_1d_data_preserves_shape(self):
+        self.processing.parameters["type"] = "gaussian"
+        self.processing.parameters["window_length"] = 3
+        orig_shape = self.dataset.data.data.shape
+        self.dataset.process(self.processing)
+        self.assertEqual(orig_shape, self.dataset.data.data.shape)
 
     def test_savitzky_golay_filter_without_order_raises(self):
         self.processing.parameters["type"] = "savitzky-golay"
@@ -1643,6 +1657,14 @@ class TestFiltering(unittest.TestCase):
                                        self.processing.parameters["order"])
         self.dataset.process(self.processing)
         self.assertTrue(all(filtered_data == self.dataset.data.data))
+
+    def test_savitzky_golay__filter_with_1d_data_preserves_shape(self):
+        self.processing.parameters["type"] = "savitzky-golay"
+        self.processing.parameters["window_length"] = 3
+        self.processing.parameters["order"] = 2
+        orig_shape = self.dataset.data.data.shape
+        self.dataset.process(self.processing)
+        self.assertEqual(orig_shape, self.dataset.data.data.shape)
 
     def test_uniform_filter_with_1d_data_with_alternative_names(self):
         alternative_names = ['box', 'boxcar', 'moving-average', 'car']

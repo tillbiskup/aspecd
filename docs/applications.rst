@@ -200,13 +200,13 @@ Processing steps
 
 After having created classes for the dataset and storing the accompanying metadata, it is time to think of processing your data. As set out in the :doc:`introduction <introduction>` already in quite some detail, reproducibility is both, at the heart of good scientific practice as well as the ASpecD framework.
 
-Therefore, both, as a developer writing analysis software based on the ASpecD framework as well as its user, you need not bother about such aspects as having processing steps writing a history containing all their parameters. All you need to do is to subclass :class:`aspecd.processing.ProcessingStep` and adhere to a few basic rules when implementing your own data processing classes.
+Therefore, both, as a developer writing analysis software based on the ASpecD framework as well as its user, you need not bother about such aspects as having processing steps writing a history containing all their parameters. All you need to do is to subclass :class:`aspecd.processing.SingleProcessingStep` (in most cases, and in some rare cases :class:`aspecd.processing.MultiProcessingStep`) and adhere to a few basic rules when implementing your own data processing classes.
 
 Let's assume for simplicity that you want to write a processing step called "MyProcessing". Generally, you would start out creating a module ``processing`` within your Python project, if it does not exist already, and add some basic code to it::
 
-    import aspecd
+    import aspecd.processing
 
-    class MyProcessing(aspecd.processing.ProcessingStep):
+    class MyProcessing(aspecd.processing.SingleProcessingStep):
 
         def __init__(self):
             super().__init__()
@@ -230,7 +230,89 @@ A few comments on this code stub:
 
 * Put *all* your processing steps into the :mod:`processing` module, as this is a prerequisite for reproducing your data processing afterwards. This is another application of the "convention over configuration" strategy greatly facilitating the automatic handling of your data.
 
-If you need to sanitise the parameters before applying the actual processing step to your data, override the non-public method ``_sanitise_parameters()`` that will be called straight before ``_perform_task()`` when calling the ``process()`` method on either the ``ProcessingStep`` object or the ``Dataset`` object.
+If you need to sanitise the parameters before applying the actual processing step to your data, override the non-public method ``_sanitise_parameters()`` that will be called straight before ``_perform_task()`` when calling the ``process()`` method on either the ``ProcessingStep`` object or the ``Dataset`` object. Furthermore, if you need to set some default parameters, override the non-public method ``_set_defaults()`` that will be called even before ``_sanitise_parameters()``. Therefore, a more complex example of a processing step could look like this::
+
+    import aspecd.processing
+
+    class MyProcessing(aspecd.processing.SingleProcessingStep):
+
+        def __init__(self):
+            super().__init__()
+            self.description = 'My processing step'
+            self.undoable = True
+            self.parameters["type"] = None
+
+        @staticmethod
+        def applicable(dataset):
+            return len(dataset.data.axes) <= 3
+
+        def _sanitise_parameters(self):
+            if not self.parameters["type"]:
+                raise ValueError("No type provided.")
+
+        def _perform_task(self):
+            # And here goes your code performing the actual processing step
+
+As processing steps tend to become complex, at least from a programmer's perspective if parameters need to be checked, and easily if you need to deal with different cases such as 1D and ND with N>1 separately, developing these classes test-first (*i.e.*, applying test-driven development, TDD) is a good idea and will help you and your users being confident in the correct functioning of your code.
+
+From own experience implementing a list of concrete processing steps in the ASpecD framework, the following steps provided useful and may serve as a starting point for own developments::
+
+    import unittest
+
+    import spectro.processing
+
+
+    class TestMyProcessingStep(unittest.TestCase):
+        def setUp(self):
+            self.processing = spectro.processing.MyProcessingStep()
+
+        def test_instantiate_class(self):
+            pass
+
+        def test_has_appropriate_description(self):
+            self.assertIn('<whatever describes it>',
+                          self.processing.description.lower())
+
+        def test_is_undoable(self):
+            self.assertTrue(self.processing.undoable)
+
+A few comments on this code stub:
+
+* Use the :mod:`unittest` module of the Python standard library and make yourself familiar with its basic operation and features if not already done.
+
+* Import your module you want to test.
+
+* Write (at least) one test class for each class you want to test, adhering to a strict naming convention, starting with ``Test`` and containing the name of the class you want to test. This class needs to inherit from :class:`unittest.TestCase`.
+
+* Always use a method ``setUp`` that at least instantiates an object of your processing step class and assigns it to the attribute ``self.processing``. This convention makes it very convenient to test your processing steps and to decouple the actual test code (in the test methods of your test class) from the name of the class under test---very helpful for some "copy&paste" with modifications afterwards.
+
+* Always start with instantiating your class as a first test. Only then start to implement the class.
+
+* Always test for the appropriate description in the parameter ``description`` and for the correct setting of the flag ``undoable``.
+
+Of course, this only gets you started, and until now, we have not tested a single line of code actually processing your data. The latter of course highly depends on your actual processing step. But there are usually a few more things to test before you start implementing the actual processing step. This includes applicability to a certain type of datasets, mostly this is a check for the dimensions of your data, and the corresponing code needs to be implemented in :meth:`aspecd.processing.ProcessingStep.applicable`. Other things contain tests for correct parameters, with the corresponding code being implemented in :meth:`aspecd.processing.ProcessingStep._sanitise_parameters`. The latter can involve quite a number of tests, and the better you test here, the better the user experience will become. Taking into account the same aspects as shown above in the second example for implementing a processing step, your additional tests may be::
+
+    import unittest
+
+    import numpy as np
+
+    import spectro.processing
+
+
+    class TestMyProcessingStep(unittest.TestCase)
+
+        # All the code from above, including setUp
+
+        def test_process_with_3d_dataset_raises(self):
+            self.dataset.data.data = np.random.random([5, 5, 5])
+            with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+                self.dataset.process(self.processing)
+
+        def test_process_without_type_parameter_raises(self):
+            with self.assertRaisesRegex(ValueError, "No type provided"):
+                self.dataset.process(self.processing)
+
+Of course, you need to import numpy in this case, for having the data assigned random numbers in this case, but you will anyway often use numpy for your actual processing. Furthermore, you can see here why not defining the standard parameters for a processing step in the ``setUp`` method is quite helpful, as it helps you see in your tests explicitly how to actually use your class. Using ``assertRaisesRegex`` is a good idea to enforce sensible error messages of the exceptions raised. For more details, you may have a look into the test classes of the ASpecD framework for now.
 
 
 What's next?
