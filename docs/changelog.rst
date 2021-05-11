@@ -14,6 +14,8 @@ Not yet released
 New features
 ------------
 
+* BasicCharacteristics
+
 * ProcessingStep provides non-public method ``_set_defaults`` for setting default parameters before sanitising parameters.
 
 * Filtering (with uniform, Gaussian, and Savitzky-Golay filter)
