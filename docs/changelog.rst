@@ -14,6 +14,8 @@ Not yet released
 New features
 ------------
 
+* ProcessingStep provides non-public method ``_set_defaults`` for setting default parameters before sanitising parameters.
+
 * Filtering (with uniform, Gaussian, and Savitzky-Golay filter)
 
 * Interpolation (at least for 1D and 2D datasets)

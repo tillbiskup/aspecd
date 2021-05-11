@@ -73,6 +73,85 @@ class TestSingleProcessingStep(unittest.TestCase):
         self.assertIn(self.processing.description,
                       'Abstract singleprocessing step')
 
+    def test_process_checks_applicability(self):
+        class MyProcessingStep(aspecd.processing.SingleProcessingStep):
+
+            @staticmethod
+            def applicable(dataset):
+                return False
+
+        dataset = aspecd.dataset.Dataset()
+        processing = MyProcessingStep()
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            dataset.process(processing)
+
+    def test_process_sets_default_parameters(self):
+        class MyProcessingStep(aspecd.processing.SingleProcessingStep):
+
+            def __init__(self):
+                super().__init__()
+                self.parameters["test"] = None
+
+            def _set_defaults(self):
+                if not self.parameters["test"]:
+                    self.parameters["test"] = "It works!"
+
+        dataset = aspecd.dataset.Dataset()
+        processing = MyProcessingStep()
+        processing = dataset.process(processing)
+        self.assertEqual("It works!", processing.parameters["test"])
+
+    def test_process_sets_default_parameters_before_sanitising(self):
+        class MyProcessingStep(aspecd.processing.SingleProcessingStep):
+
+            def __init__(self):
+                super().__init__()
+                self.parameters["test"] = None
+
+            def _set_defaults(self):
+                if not self.parameters["test"]:
+                    self.parameters["test"] = "It works!"
+
+            def _sanitise_parameters(self):
+                if not self.parameters["test"]:
+                    raise ValueError("No parameter test")
+
+        dataset = aspecd.dataset.Dataset()
+        processing = MyProcessingStep()
+        processing = dataset.process(processing)
+        self.assertEqual("It works!", processing.parameters["test"])
+
+    def test_process_sanitises_parameters(self):
+        class MyProcessingStep(aspecd.processing.SingleProcessingStep):
+
+            def __init__(self):
+                super().__init__()
+                self.parameters["test"] = None
+
+            def _sanitise_parameters(self):
+                if not self.parameters["test"]:
+                    raise ValueError("No parameter test")
+
+        dataset = aspecd.dataset.Dataset()
+        processing = MyProcessingStep()
+        with self.assertRaisesRegex(ValueError, "No parameter test"):
+            dataset.process(processing)
+
+    def test_process_performs_task(self):
+        class MyProcessingStep(aspecd.processing.SingleProcessingStep):
+
+            def __init__(self):
+                super().__init__()
+                self.parameters["test"] = None
+
+            def _perform_task(self):
+                self.parameters["test"] = "It works!"
+
+        dataset = aspecd.dataset.Dataset()
+        processing = MyProcessingStep()
+        processing = dataset.process(processing)
+        self.assertEqual("It works!", processing.parameters["test"])
+
     def test_process_without_processingstep_and_with_dataset(self):
         self.processing.dataset = aspecd.dataset.Dataset()
         self.processing.process()

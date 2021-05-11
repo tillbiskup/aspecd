@@ -12,14 +12,12 @@ For version 0.2
 
 * Full list of required packages (including their installed versions) in SystemInfo, to be included in history (and recipe history)
 
-* Remaining basic processing and analysis steps:
+* Remaining basic analysis steps:
 
   * peak finding
   * SNR determination
   * determine basic characteristics: min, max, amplitude, area
   * ? statistics: mean, median, variance, standard deviation
-
-* :meth:`aspecd.processing.ProcessingStep._set_defaults()` method called before :meth:`aspecd.processing.ProcessingStep._sanitise_parameters`
 
 * Importer with parameters in recipe (*e.g.*, for CSV importer)
 

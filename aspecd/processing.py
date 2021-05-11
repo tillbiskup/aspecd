@@ -326,13 +326,15 @@ class ProcessingStep:
         The actual processing step should be implemented within the non-public
         method :meth:`_perform_task`. Besides that, the applicability of the
         processing step to the given dataset(s) will be checked
-        automatically using the non-public method :meth:`_check_applicability`
-        and the parameters will be sanitised by calling the non-public
-        method :meth:`_sanitise_parameters` prior to calling
-        :meth:`_perform_task`.
+        automatically using the non-public method :meth:`_check_applicability`,
+        default parameter values will be set calling the non-public method
+        :meth:`_set_defaults`, and the parameters will be sanitised by
+        calling the non-public method :meth:`_sanitise_parameters` prior to
+        calling :meth:`_perform_task`.
 
         """
         self._check_applicability()
+        self._set_defaults()
         self._sanitise_parameters()
         self._perform_task()
 
@@ -373,6 +375,17 @@ class ProcessingStep:
 
         Needs to be implemented in classes inheriting from ProcessingStep
         according to their needs.
+
+        """
+
+    def _set_defaults(self):
+        """Set default values for parameters.
+
+        Needs to be implemented in classes inheriting from ProcessingStep
+        according to their needs. Note that this method will be called after
+        checking for general applicability, but before sanitising
+        parameters. Therefore, you can set default parameters and afterwards
+        continue with sanitising as usual.
 
         """
 
@@ -470,9 +483,12 @@ class SingleProcessingStep(ProcessingStep):
 
         The actual processing step should be implemented within the non-public
         method :meth:`_perform_task`. Besides that, the applicability of the
-        processing step to the given dataset will be checked automatically and
-        the parameters will be sanitised by calling the non-public method
-        :meth:`_sanitise_parameters`.
+        processing step to the given dataset(s) will be checked
+        automatically using the non-public method :meth:`_check_applicability`,
+        default parameter values will be set calling the non-public method
+        :meth:`_set_defaults`, and the parameters will be sanitised by
+        calling the non-public method :meth:`_sanitise_parameters` prior to
+        calling :meth:`_perform_task`.
 
         Parameters
         ----------
@@ -602,11 +618,12 @@ class MultiProcessingStep(ProcessingStep):
 
         The actual processing step should be implemented within the non-public
         method :meth:`_perform_task`. Besides that, the applicability of the
-        processing step to the given datasets will be checked
-        automatically using the non-public method :meth:`_check_applicability`
-        and the parameters will be sanitised by calling the non-public
-        method :meth:`_sanitise_parameters` prior to calling
-        :meth:`_perform_task`.
+        processing step to the given dataset(s) will be checked
+        automatically using the non-public method :meth:`_check_applicability`,
+        default parameter values will be set calling the non-public method
+        :meth:`_set_defaults`, and the parameters will be sanitised by
+        calling the non-public method :meth:`_sanitise_parameters` prior to
+        calling :meth:`_perform_task`.
 
         Raises
         ------
