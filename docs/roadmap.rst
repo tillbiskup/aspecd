@@ -14,7 +14,6 @@ For version 0.2
 
   * peak finding
   * SNR determination
-  * ? statistics: mean, median, variance, standard deviation
 
 * Importer with parameters in recipe (*e.g.*, for CSV importer)
 

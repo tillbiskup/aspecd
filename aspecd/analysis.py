@@ -655,38 +655,46 @@ class BasicCharacteristics(SingleAnalysisStep):
                 'area': self._get_characteristic("area"),
             }
 
-    def _get_characteristic(self, kind=None, output="value"):  # noqa: MC0001
+    def _get_characteristic(self, kind=None, output="value"):
+        function = getattr(self, '_get_characteristic_' + output)
+        return function(kind=kind)
+
+    def _get_characteristic_value(self, kind=None):
         result = None
-        if output == "value":
-            if kind == "min":
-                result = self.dataset.data.data.min()
-            if kind == "max":
-                result = self.dataset.data.data.max()
-            if kind == "amplitude":
-                result = \
-                    self.dataset.data.data.max() - self.dataset.data.data.min()
-            if kind == "area":
-                result = self.dataset.data.data.sum()
-        if output == "axes":
-            if kind == "min":
-                result = []
-                idx = np.unravel_index(self.dataset.data.data.argmin(),
-                                       self.dataset.data.data.shape)
-                for dim in range(self.dataset.data.data.ndim):
-                    result.append(self.dataset.data.axes[dim].values[idx[dim]])
-            if kind == "max":
-                result = []
-                idx = np.unravel_index(self.dataset.data.data.argmax(),
-                                       self.dataset.data.data.shape)
-                for dim in range(self.dataset.data.data.ndim):
-                    result.append(self.dataset.data.axes[dim].values[idx[dim]])
-        if output == "indices":
-            if kind == "min":
-                result = list(np.unravel_index(self.dataset.data.data.argmin(),
-                                               self.dataset.data.data.shape))
-            if kind == "max":
-                result = list(np.unravel_index(self.dataset.data.data.argmax(),
-                                               self.dataset.data.data.shape))
+        if kind == "min":
+            result = self.dataset.data.data.min()
+        if kind == "max":
+            result = self.dataset.data.data.max()
+        if kind == "amplitude":
+            result = np.ptp(self.dataset.data.data)
+        if kind == "area":
+            result = self.dataset.data.data.sum()
+        return result
+
+    def _get_characteristic_axes(self, kind=None):
+        result = None
+        if kind == "min":
+            result = []
+            idx = np.unravel_index(self.dataset.data.data.argmin(),
+                                   self.dataset.data.data.shape)
+            for dim in range(self.dataset.data.data.ndim):
+                result.append(self.dataset.data.axes[dim].values[idx[dim]])
+        if kind == "max":
+            result = []
+            idx = np.unravel_index(self.dataset.data.data.argmax(),
+                                   self.dataset.data.data.shape)
+            for dim in range(self.dataset.data.data.ndim):
+                result.append(self.dataset.data.axes[dim].values[idx[dim]])
+        return result
+
+    def _get_characteristic_indices(self, kind=None):
+        result = None
+        if kind == "min":
+            result = list(np.unravel_index(self.dataset.data.data.argmin(),
+                                           self.dataset.data.data.shape))
+        if kind == "max":
+            result = list(np.unravel_index(self.dataset.data.data.argmax(),
+                                           self.dataset.data.data.shape))
         return result
 
 
