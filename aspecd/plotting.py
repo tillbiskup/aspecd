@@ -648,6 +648,7 @@ class SinglePlotter(Plotter):
 
 
 class SinglePlotter1D(SinglePlotter):
+    # noinspection PyUnresolvedReferences
     """1D plots of single datasets.
 
     Convenience class taking care of 1D plots of single datasets. The type
@@ -950,6 +951,7 @@ class SinglePlotter2D(SinglePlotter):
         super().__init__()
         self.description = '2D plotting step for single dataset'
         self.parameters['switch_axes'] = False
+        # noinspection PyTypeChecker
         self.parameters['levels'] = None
         self.parameters['show_contour_lines'] = False
         self.properties = SinglePlot2DProperties()
@@ -1679,6 +1681,7 @@ class MultiPlotter1DStacked(MultiPlotter1D):
         super().__init__()
         self.description = '1D plotter for stacked display of multiple datasets'
         self.parameters["show_zero_lines"] = False
+        # noinspection PyTypeChecker
         self.parameters["offset"] = None
 
     def _create_plot(self):

@@ -227,8 +227,8 @@ class Dataset(aspecd.utils.ToDictMixin):
         """Apply processing step to dataset.
 
         Every processing step is an object of type
-        :class:`aspecd.processing.SingleProcessingStep` and is passed as argument
-        to :meth:`process`.
+        :class:`aspecd.processing.SingleProcessingStep` and is passed as
+        argument to :meth:`process`.
 
         Calling this function ensures that the history record is added to the
         dataset as well as a few basic checks are performed such as for leading
@@ -699,6 +699,7 @@ class Dataset(aspecd.utils.ToDictMixin):
                                 + element["kind"].capitalize() + 'HistoryRecord'
                         record = aspecd.utils.object_from_class_name(
                             record_class_name)
+                        # noinspection PyUnresolvedReferences
                         record.from_dict(element["task"])
                         self.tasks.append({'kind': element["kind"],
                                            'task': record})
