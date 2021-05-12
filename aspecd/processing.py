@@ -638,7 +638,7 @@ class MultiProcessingStep(ProcessingStep):
         super().process()
         history_record = self.create_history_record()
         for dataset in self.datasets:
-            dataset._append_processing_history_record(history_record)
+            dataset.append_history_record(history_record)
 
     def _check_applicability(self):
         for dataset in self.datasets:

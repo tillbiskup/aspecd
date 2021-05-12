@@ -29,7 +29,13 @@ For version 0.3
   * denoising
   * adding noise
   * ? AxisAlgebra: provide a function that gets evaluated on the values of an axis
-  * Interpolation for ND with N>2
+  * Interpolation
+
+    * for ND with N>2
+    * different types of interpolation
+
+  * BlindSNREstimation with alternative methods
+
 
 
 For later versions

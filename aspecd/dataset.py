@@ -262,7 +262,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         processing_step = copy.deepcopy(processing_step)
         processing_step.process(self, from_dataset=True)
         history_record = processing_step.create_history_record()
-        self._append_processing_history_record(history_record)
+        self.append_history_record(history_record)
         self._append_task(kind='processing', task=history_record)
         self._handle_not_undoable(processing_step=processing_step)
         return processing_step
@@ -330,7 +330,24 @@ class Dataset(aspecd.utils.ToDictMixin):
     def _has_leading_history(self):
         return len(self.history) - 1 > self._history_pointer
 
-    def _append_processing_history_record(self, history_record):
+    def append_history_record(self, history_record):
+        """Append history record to dataset history.
+
+        This method should never be called manually, but only from within
+        classes of the ASpecD framework, at least as long as you are not
+        interested in Orwellian History.
+
+        Parameters
+        ----------
+        history_record : :class:`aspecd.history.HistoryRecord`
+            History record (of a processing step) to be appended.
+
+
+        .. versionchanged:: 0.2
+            Converted into a public method, due to needs of
+            :class:`aspecd.processing.MultiProcessingStep`
+
+        """
         self.history.append(history_record)
         self._increment_history_pointer()
 

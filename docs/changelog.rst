@@ -14,6 +14,10 @@ Not yet released
 New features
 ------------
 
+* BlindSNREstimation (currently only with simplest method)
+
+* BasicStatistics
+
 * BasicCharacteristics
 
 * ProcessingStep provides non-public method ``_set_defaults`` for setting default parameters before sanitising parameters.
@@ -49,6 +53,8 @@ New features
 
 Changes
 -------
+
+* Dataset: method :meth:`aspecd.dataset.append_history_record` made public
 
 * SystemInfo: Packages contain now full list of dependencies with version numbers of currently installed packages
 
