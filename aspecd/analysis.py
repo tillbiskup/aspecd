@@ -76,7 +76,11 @@ independently.
 
 * :class:`BasicCharacteristics`
 
-  Determine basic key characteristics of a dataset
+  Extract basic characteristics of a dataset
+
+* :class:`BasicStatistics`
+
+  Extract basic statistical measures of a dataset
 
 
 Writing own analysis steps
@@ -505,7 +509,7 @@ class MultiAnalysisStep(AnalysisStep):
 class BasicCharacteristics(SingleAnalysisStep):
     # noinspection PyUnresolvedReferences
     """
-    Determine basic key characteristics of a dataset.
+    Extract basic characteristics of a dataset.
 
     Extracting basic characteristics (minimum, maximum, area, amplitude) of
     a dataset is programmatically quite simple. This class provides a
@@ -517,8 +521,8 @@ class BasicCharacteristics(SingleAnalysisStep):
     parameters : :class:`dict`
         All parameters necessary for this step.
 
-        type : :class:`str`
-            Type of the characteristic to extract from the data
+        kind : :class:`str`
+            Kind of the characteristic to extract from the data
 
             Valid values are "min", "max", "amplitude", and "area".
 
@@ -538,7 +542,7 @@ class BasicCharacteristics(SingleAnalysisStep):
         output selected.
 
         ========================= ============= ==============
-        type (characteristic)     output        return type
+        kind (characteristic)     output        return type
         ========================= ============= ==============
         min, max, amplitude, area value         :class:`float`
         min, max                  axes, indices :class:`list`
@@ -549,13 +553,13 @@ class BasicCharacteristics(SingleAnalysisStep):
     Raises
     ------
     ValueError
-        Raised if no  type of characteristics is provided.
+        Raised if no kind of characteristics is provided.
 
-        Raised if type of characteristics is unknown.
+        Raised if kind of characteristics is unknown.
 
         Raised if output type is unknown.
 
-        Raised if output type is not available for type of characteristics.
+        Raised if output type is not available for kind of characteristics.
 
 
     Examples
@@ -613,35 +617,37 @@ class BasicCharacteristics(SingleAnalysisStep):
     the characteristic and output type chosen. For details, see the table
     above.
 
+    .. versionadded:: 0.2
+
     """
 
     def __init__(self):
         super().__init__()
         self.description = 'Obtain basic characteristics'
-        self.parameters["type"] = None
+        self.parameters["kind"] = None
         self.parameters["output"] = "value"
 
     def _sanitise_parameters(self):
-        if not self.parameters["type"]:
-            raise ValueError("No type of characteristics given")
-        if self.parameters["type"] not in ['min', 'max', 'amplitude', 'area',
+        if not self.parameters["kind"]:
+            raise ValueError("No kind of characteristics given")
+        if self.parameters["kind"] not in ['min', 'max', 'amplitude', 'area',
                                            'all']:
-            raise ValueError("Unknown type %s" % self.parameters["type"])
+            raise ValueError("Unknown kind %s" % self.parameters["kind"])
         if self.parameters["output"] not in ['value', 'axes', 'indices']:
             raise ValueError("Unknown output type %s"
                              % self.parameters["output"])
         if self.parameters["output"] in ["axes", "indices"] and \
-                self.parameters["type"] in ["area", "amplitude"]:
+                self.parameters["kind"] in ["area", "amplitude"]:
             raise ValueError("Output %s not available for characteristic %s."
                              % (self.parameters["output"],
-                                self.parameters["type"]))
+                                self.parameters["kind"]))
 
     def _perform_task(self):
-        if self.parameters["type"] in ['min', 'max', 'amplitude', 'area']:
+        if self.parameters["kind"] in ['min', 'max', 'amplitude', 'area']:
             self.result = self._get_characteristic(
-                kind=self.parameters["type"],
+                kind=self.parameters["kind"],
                 output=self.parameters["output"])
-        if self.parameters["type"] == "all":
+        if self.parameters["kind"] == "all":
             self.result = {
                 'min': self._get_characteristic("min"),
                 'max': self._get_characteristic("max"),
@@ -682,6 +688,78 @@ class BasicCharacteristics(SingleAnalysisStep):
                 result = list(np.unravel_index(self.dataset.data.data.argmax(),
                                                self.dataset.data.data.shape))
         return result
+
+
+class BasicStatistics(SingleAnalysisStep):
+    # noinspection PyUnresolvedReferences
+    """
+    Extract basic statistical measures of a dataset.
+
+    Extracting basic statistical measures (mean, median, std, var) of
+    a dataset is programmatically quite simple. This class provides a
+    working solution from within the ASpecD framework.
+
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        kind : :class:`str`
+            Kind of the statistical measure to extract from the data
+
+            Valid values are "mean", "median", "std", and "var".
+
+
+    Raises
+    ------
+    ValueError
+        Raised if no kind of statistical measure is provided.
+
+        Raised if kind of statistical measure is unknown.
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Extracting the statistical measure of a dataset is quite simple:
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: BasicStatistics
+         properties:
+           parameters:
+             type: median
+         result: median_of_dataset
+
+    This would simply return the minimum (value) of a given dataset in the
+    result assigned to the recipe-internal variable ``median_of_dataset``.
+    Similarly, you can extract "mean", "std" (standard deviation), and "var"
+    (variance) from your dataset.
+
+    .. versionadded:: 0.2
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = 'Obtain basic statistics'
+        self.parameters["kind"] = None
+
+    def _sanitise_parameters(self):
+        if not self.parameters["kind"]:
+            raise ValueError("No kind of statistics given")
+        if self.parameters["kind"] not in ['mean', 'median', 'std', 'var']:
+            raise ValueError("Unknown kind %s" % self.parameters["kind"])
+
+    def _perform_task(self):
+        function = getattr(np, self.parameters["kind"])
+        self.result = function(self.dataset.data.data)
 
 
 class SignalToNoiseRatio(SingleAnalysisStep):

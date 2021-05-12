@@ -153,48 +153,48 @@ class TestBasicCharacteristics(unittest.TestCase):
         self.assertIn('basic characteristics',
                       self.analysis.description.lower())
 
-    def test_analyse_without_type_raises(self):
+    def test_analyse_without_kind_raises(self):
         with self.assertRaisesRegex(ValueError,
-                                    "No type of characteristics given"):
+                                    "No kind of characteristics given"):
             self.dataset.analyse(self.analysis)
 
-    def test_analyse_with_unknown_type_raises(self):
-        self.analysis.parameters["type"] = "foo"
+    def test_analyse_with_unknown_kind_raises(self):
+        self.analysis.parameters["kind"] = "foo"
         with self.assertRaisesRegex(ValueError,
-                                    "Unknown type foo"):
+                                    "Unknown kind foo"):
             self.dataset.analyse(self.analysis)
 
     def test_analyse_with_unknown_output_raises(self):
-        self.analysis.parameters["type"] = "min"
+        self.analysis.parameters["kind"] = "min"
         self.analysis.parameters["output"] = "foo"
         with self.assertRaisesRegex(ValueError,
                                     "Unknown output type foo"):
             self.dataset.analyse(self.analysis)
 
     def test_min(self):
-        self.analysis.parameters["type"] = "min"
+        self.analysis.parameters["kind"] = "min"
         analysis = self.dataset.analyse(self.analysis)
         self.assertEqual(self.dataset.data.data.min(), analysis.result)
 
     def test_max(self):
-        self.analysis.parameters["type"] = "max"
+        self.analysis.parameters["kind"] = "max"
         analysis = self.dataset.analyse(self.analysis)
         self.assertEqual(self.dataset.data.data.max(), analysis.result)
 
     def test_amplitude(self):
-        self.analysis.parameters["type"] = "amplitude"
+        self.analysis.parameters["kind"] = "amplitude"
         analysis = self.dataset.analyse(self.analysis)
         self.assertEqual(
             self.dataset.data.data.max()-self.dataset.data.data.min(),
             analysis.result)
 
     def test_area(self):
-        self.analysis.parameters["type"] = "area"
+        self.analysis.parameters["kind"] = "area"
         analysis = self.dataset.analyse(self.analysis)
         self.assertEqual(self.dataset.data.data.sum(), analysis.result)
 
     def test_all(self):
-        self.analysis.parameters["type"] = "all"
+        self.analysis.parameters["kind"] = "all"
         result_dict = {
             'min': self.dataset.data.data.min(),
             'max': self.dataset.data.data.max(),
@@ -206,7 +206,7 @@ class TestBasicCharacteristics(unittest.TestCase):
         self.assertEqual(result_dict, analysis.result)
 
     def test_min_with_axes_output(self):
-        self.analysis.parameters["type"] = "min"
+        self.analysis.parameters["kind"] = "min"
         self.analysis.parameters["output"] = "axes"
         analysis = self.dataset.analyse(self.analysis)
         result = \
@@ -214,7 +214,7 @@ class TestBasicCharacteristics(unittest.TestCase):
         self.assertEqual(result, analysis.result)
 
     def test_max_with_axes_output(self):
-        self.analysis.parameters["type"] = "max"
+        self.analysis.parameters["kind"] = "max"
         self.analysis.parameters["output"] = "axes"
         analysis = self.dataset.analyse(self.analysis)
         result = \
@@ -222,13 +222,13 @@ class TestBasicCharacteristics(unittest.TestCase):
         self.assertEqual(result, analysis.result)
 
     def test_min_with_indices_output(self):
-        self.analysis.parameters["type"] = "min"
+        self.analysis.parameters["kind"] = "min"
         self.analysis.parameters["output"] = "indices"
         analysis = self.dataset.analyse(self.analysis)
         self.assertEqual([self.dataset.data.data.argmin()], analysis.result)
 
     def test_max_with_indices_output(self):
-        self.analysis.parameters["type"] = "max"
+        self.analysis.parameters["kind"] = "max"
         self.analysis.parameters["output"] = "indices"
         analysis = self.dataset.analyse(self.analysis)
         self.assertEqual([self.dataset.data.data.argmax()], analysis.result)
@@ -238,7 +238,7 @@ class TestBasicCharacteristics(unittest.TestCase):
         self.analysis.parameters["output"] = "axes"
         for characteristic in characteristics:
             with self.subTest(characteristic=characteristic):
-                self.analysis.parameters["type"] = characteristic
+                self.analysis.parameters["kind"] = characteristic
                 with self.assertRaisesRegex(ValueError,
                                             "Output %s not available for "\
                                             "characteristic %s."
@@ -250,7 +250,7 @@ class TestBasicCharacteristics(unittest.TestCase):
         self.analysis.parameters["output"] = "indices"
         for characteristic in characteristics:
             with self.subTest(characteristic=characteristic):
-                self.analysis.parameters["type"] = characteristic
+                self.analysis.parameters["kind"] = characteristic
                 with self.assertRaisesRegex(ValueError,
                                             "Output %s not available for "\
                                             "characteristic %s."
@@ -258,29 +258,29 @@ class TestBasicCharacteristics(unittest.TestCase):
                     self.dataset.analyse(self.analysis)
 
     def test_min_with_3d_data(self):
-        self.analysis.parameters["type"] = "min"
+        self.analysis.parameters["kind"] = "min"
         analysis = self.dataset3d.analyse(self.analysis)
         self.assertEqual(self.dataset3d.data.data.min(), analysis.result)
 
     def test_max_with_3d_data(self):
-        self.analysis.parameters["type"] = "max"
+        self.analysis.parameters["kind"] = "max"
         analysis = self.dataset3d.analyse(self.analysis)
         self.assertEqual(self.dataset3d.data.data.max(), analysis.result)
 
     def test_amplitude_with_3d_data(self):
-        self.analysis.parameters["type"] = "amplitude"
+        self.analysis.parameters["kind"] = "amplitude"
         analysis = self.dataset3d.analyse(self.analysis)
         self.assertEqual(
             self.dataset3d.data.data.max()-self.dataset3d.data.data.min(),
             analysis.result)
 
     def test_area_with_3d_data(self):
-        self.analysis.parameters["type"] = "area"
+        self.analysis.parameters["kind"] = "area"
         analysis = self.dataset3d.analyse(self.analysis)
         self.assertEqual(self.dataset3d.data.data.sum(), analysis.result)
 
     def test_all_with_3d_data(self):
-        self.analysis.parameters["type"] = "all"
+        self.analysis.parameters["kind"] = "all"
         result_dict = {
             'min': self.dataset3d.data.data.min(),
             'max': self.dataset3d.data.data.max(),
@@ -292,7 +292,7 @@ class TestBasicCharacteristics(unittest.TestCase):
         self.assertEqual(result_dict, analysis.result)
 
     def test_min_with_axes_output_with_3d_data(self):
-        self.analysis.parameters["type"] = "min"
+        self.analysis.parameters["kind"] = "min"
         self.analysis.parameters["output"] = "axes"
         analysis = self.dataset3d.analyse(self.analysis)
         result = []
@@ -303,7 +303,7 @@ class TestBasicCharacteristics(unittest.TestCase):
         self.assertEqual(result, analysis.result)
 
     def test_max_with_axes_output_with_3d_data(self):
-        self.analysis.parameters["type"] = "max"
+        self.analysis.parameters["kind"] = "max"
         self.analysis.parameters["output"] = "axes"
         analysis = self.dataset3d.analyse(self.analysis)
         result = []
@@ -314,7 +314,7 @@ class TestBasicCharacteristics(unittest.TestCase):
         self.assertEqual(result, analysis.result)
 
     def test_min_with_indices_output_with_3d_data(self):
-        self.analysis.parameters["type"] = "min"
+        self.analysis.parameters["kind"] = "min"
         self.analysis.parameters["output"] = "indices"
         analysis = self.dataset3d.analyse(self.analysis)
         result = list(np.unravel_index(self.dataset3d.data.data.argmin(),
@@ -322,12 +322,79 @@ class TestBasicCharacteristics(unittest.TestCase):
         self.assertListEqual(result, analysis.result)
 
     def test_max_with_indices_output_with_3d_data(self):
-        self.analysis.parameters["type"] = "max"
+        self.analysis.parameters["kind"] = "max"
         self.analysis.parameters["output"] = "indices"
         analysis = self.dataset3d.analyse(self.analysis)
         result = list(np.unravel_index(self.dataset3d.data.data.argmax(),
                                        self.dataset3d.data.data.shape))
         self.assertListEqual(result, analysis.result)
+
+
+class TestBasicStatistics(unittest.TestCase):
+    def setUp(self):
+        self.analysis = aspecd.analysis.BasicStatistics()
+        self.dataset = aspecd.dataset.Dataset()
+        self.dataset.data.data = np.random.random(10)
+        self.dataset3d = aspecd.dataset.Dataset()
+        self.dataset3d.data.data = np.random.random([10, 10, 10])
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('basic statistics',
+                      self.analysis.description.lower())
+
+    def test_analyse_without_kind_raises(self):
+        with self.assertRaisesRegex(ValueError,
+                                    "No kind of statistics given"):
+            self.dataset.analyse(self.analysis)
+
+    def test_analyse_with_unknown_kind_raises(self):
+        self.analysis.parameters["kind"] = "foo"
+        with self.assertRaisesRegex(ValueError,
+                                    "Unknown kind foo"):
+            self.dataset.analyse(self.analysis)
+
+    def test_mean_with_1d_data(self):
+        self.analysis.parameters["kind"] = "mean"
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertEqual(np.mean(self.dataset.data.data), analysis.result)
+
+    def test_median_with_1d_data(self):
+        self.analysis.parameters["kind"] = "median"
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertEqual(np.median(self.dataset.data.data), analysis.result)
+
+    def test_std_with_1d_data(self):
+        self.analysis.parameters["kind"] = "std"
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertEqual(np.std(self.dataset.data.data), analysis.result)
+
+    def test_var_with_1d_data(self):
+        self.analysis.parameters["kind"] = "var"
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertEqual(np.var(self.dataset.data.data), analysis.result)
+
+    def test_mean_with_3d_data(self):
+        self.analysis.parameters["kind"] = "mean"
+        analysis = self.dataset3d.analyse(self.analysis)
+        self.assertEqual(np.mean(self.dataset3d.data.data), analysis.result)
+
+    def test_median_with_3d_data(self):
+        self.analysis.parameters["kind"] = "median"
+        analysis = self.dataset3d.analyse(self.analysis)
+        self.assertEqual(np.median(self.dataset3d.data.data), analysis.result)
+
+    def test_std_with_3d_data(self):
+        self.analysis.parameters["kind"] = "std"
+        analysis = self.dataset3d.analyse(self.analysis)
+        self.assertEqual(np.std(self.dataset3d.data.data), analysis.result)
+
+    def test_var_with_3d_data(self):
+        self.analysis.parameters["kind"] = "var"
+        analysis = self.dataset3d.analyse(self.analysis)
+        self.assertEqual(np.var(self.dataset3d.data.data), analysis.result)
 
 
 class TestSignalToNoiseRatio(unittest.TestCase):

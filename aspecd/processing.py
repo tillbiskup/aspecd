@@ -2374,7 +2374,6 @@ class Interpolation(SingleProcessingStep):
 
     .. versionadded:: 0.2
 
-
     """
 
     def __init__(self):
