@@ -246,6 +246,15 @@ class TestMultiProcessingStep(unittest.TestCase):
         self.assertTrue(dataset1.history)
         self.assertTrue(dataset2.history)
 
+    def test_process_with_datasets_increments_history_pointer(self):
+        dataset1 = aspecd.dataset.Dataset()
+        dataset2 = aspecd.dataset.Dataset()
+        self.processing.datasets.append(dataset1)
+        self.processing.datasets.append(dataset2)
+        self.processing.process()
+        self.assertEqual(len(dataset1.history)-1, dataset1._history_pointer)
+        self.assertEqual(len(dataset2.history)-1, dataset2._history_pointer)
+
 
 class TestNormalisation(unittest.TestCase):
     def setUp(self):
@@ -1201,6 +1210,18 @@ class TestDatasetAlgebra(unittest.TestCase):
     def test_add_with_1d_datasets(self):
         self.dataset1.data.data = np.ones(5)
         self.dataset2.data.data = np.ones(5)
+        self.processing.parameters["dataset"] = self.dataset2
+        self.processing.parameters["kind"] = "add"
+        self.dataset1.process(self.processing)
+        self.assertTrue(np.all(self.dataset1.data.data == 2))
+
+    def test_add_with_1d_datasets_with_history(self):
+        self.dataset1.data.data = np.ones(5)
+        self.dataset2.data.data = np.ones(5)
+        preprocessing = aspecd.processing.Normalisation()
+        preprocessing.parameters["kind"] = "max"
+        self.dataset1.process(preprocessing)
+        self.dataset2.process(preprocessing)
         self.processing.parameters["dataset"] = self.dataset2
         self.processing.parameters["kind"] = "add"
         self.dataset1.process(self.processing)
