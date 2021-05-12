@@ -397,6 +397,31 @@ class TestBasicStatistics(unittest.TestCase):
         self.assertEqual(np.var(self.dataset3d.data.data), analysis.result)
 
 
+class TestBlindSNREstimation(unittest.TestCase):
+    def setUp(self):
+        self.analysis = aspecd.analysis.BlindSNREstimation()
+        self.dataset = aspecd.dataset.Dataset()
+        self.dataset.data.data = np.random.random(10)
+        self.dataset3d = aspecd.dataset.Dataset()
+        self.dataset3d.data.data = np.random.random([10, 10, 10])
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('blind signal-to-noise ratio estimation',
+                      self.analysis.description.lower())
+
+    def test_analyse_without_method_sets_method_to_simple(self):
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertEqual(analysis.parameters["method"], "simple")
+
+    def test_simple_method(self):
+        analysis = self.dataset.analyse(self.analysis)
+        result = self.dataset.data.data.mean()/self.dataset.data.data.std()
+        self.assertEqual(result, analysis.result)
+
+
 class TestSignalToNoiseRatio(unittest.TestCase):
     def setUp(self):
         self.analysis = aspecd.analysis.SignalToNoiseRatio()

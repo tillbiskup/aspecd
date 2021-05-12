@@ -82,6 +82,10 @@ independently.
 
   Extract basic statistical measures of a dataset
 
+* :class:`BlindSNREstimation`
+
+  Blind, *i.e.* parameter-free, estimation of the signal-to-noise ratio.
+
 
 Writing own analysis steps
 ==========================
@@ -745,7 +749,7 @@ class BasicStatistics(SingleAnalysisStep):
              type: median
          result: median_of_dataset
 
-    This would simply return the minimum (value) of a given dataset in the
+    This would simply return the median of the data of a given dataset in the
     result assigned to the recipe-internal variable ``median_of_dataset``.
     Similarly, you can extract "mean", "std" (standard deviation), and "var"
     (variance) from your dataset.
@@ -768,6 +772,101 @@ class BasicStatistics(SingleAnalysisStep):
     def _perform_task(self):
         function = getattr(np, self.parameters["kind"])
         self.result = function(self.dataset.data.data)
+
+
+class BlindSNREstimation(SingleAnalysisStep):
+    # noinspection PyUnresolvedReferences
+    """
+    Blind, *i.e.* parameter-free, estimation of the signal-to-noise ratio.
+
+    In spectroscopy, the signal-to-noise ratio (SNR) is usually defined as the
+    ratio of mean (of the signal) to standard deviation (of the noise) of a
+    signal or measurement.
+
+    For accurate estimations, this requires to be able to separate noise and
+    signal, hence to define a part of the overall measurement not including
+    signal. As this is not always possible, there are different ways to make
+    a blind estimate of the SNR, *i.e.* without additional parameters.
+
+    The simplest possible of all blind estimates is the ratio of mean to
+    standard deviation of the whole signal.
+
+    .. important::
+        Currently, only the simplest of all possible ways to blindly
+        estimate the SNR is supported. This will, however, most probably
+        change in the future.
+
+    For more information, the following resources may be useful:
+
+    * `<http://nipy.org/nitime/examples/snr_example.html>`_
+
+    * `<https://github.com/hrtlacek/SNR>`_
+
+    * `<https://arxiv.org/abs/2011.05113>`_
+
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        method : :class:`str`
+            Method used to blindly estimate the SNR
+
+            Valid values are "simple".
+
+            Default: "simple"
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Obtaining a blind estimate of the SNR of a dataset is quite simple:
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: BlindSNREstimation
+         result: SNR_of_dataset
+
+    This would simply return the SNR of the data of a given dataset in the
+    result assigned to the recipe-internal variable ``SNR_of_dataset``.
+
+    To have more control over the method used to blindly estimate the SNR,
+    explicitly provide a method:
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: BlindSNREstimation
+         properties:
+           parameters:
+             method: simple
+         result: SNR_of_dataset
+
+    Note that currently, only "simple" is supported as a method (see above).
+
+    .. versionadded:: 0.2
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = 'Blind signal-to-noise ratio estimation'
+        self.parameters["method"] = None
+
+    def _sanitise_parameters(self):
+        if not self.parameters["method"]:
+            self.parameters["method"] = "simple"
+
+    def _perform_task(self):
+        if self.parameters["method"] == "simple":
+            self.result = \
+                self.dataset.data.data.mean() / self.dataset.data.data.std()
 
 
 class SignalToNoiseRatio(SingleAnalysisStep):

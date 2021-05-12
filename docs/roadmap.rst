@@ -13,7 +13,6 @@ For version 0.2
 * Remaining basic analysis steps:
 
   * peak finding
-  * SNR determination
 
 * Importer with parameters in recipe (*e.g.*, for CSV importer)
 
