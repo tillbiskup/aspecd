@@ -35,6 +35,7 @@ For version 0.3
     * different types of interpolation
 
   * BlindSNREstimation with alternative methods
+  * SNREstimation with explicitly providing noise (using both, processing and analysis)
 
 
 

@@ -329,8 +329,9 @@ class SingleAnalysisStep(AnalysisStep):
         """Perform the actual analysis step on the given dataset.
 
         If no dataset is provided at method call, but is set as property in
-        the SingleAnalysisStep object, the process method of the dataset
-        will be called and thus the history written.
+        the SingleAnalysisStep object, the analysd method of the dataset
+        will be called and thus the analysis added to the list of analyses
+        of the dataset.
 
         If no dataset is provided at method call nor as property in the
         object, the method will raise a respective exception.
