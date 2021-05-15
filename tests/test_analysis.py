@@ -3,6 +3,7 @@
 import unittest
 
 import numpy as np
+import scipy.signal
 
 import aspecd.analysis
 import aspecd.dataset
@@ -240,7 +241,7 @@ class TestBasicCharacteristics(unittest.TestCase):
             with self.subTest(characteristic=characteristic):
                 self.analysis.parameters["kind"] = characteristic
                 with self.assertRaisesRegex(ValueError,
-                                            "Output %s not available for "\
+                                            "Output %s not available for "
                                             "characteristic %s."
                                             % ("axes", characteristic)):
                     self.dataset.analyse(self.analysis)
@@ -252,7 +253,7 @@ class TestBasicCharacteristics(unittest.TestCase):
             with self.subTest(characteristic=characteristic):
                 self.analysis.parameters["kind"] = characteristic
                 with self.assertRaisesRegex(ValueError,
-                                            "Output %s not available for "\
+                                            "Output %s not available for "
                                             "characteristic %s."
                                             % ("indices", characteristic)):
                     self.dataset.analyse(self.analysis)
@@ -420,6 +421,183 @@ class TestBlindSNREstimation(unittest.TestCase):
         analysis = self.dataset.analyse(self.analysis)
         result = self.dataset.data.data.mean()/self.dataset.data.data.std()
         self.assertEqual(result, analysis.result)
+
+
+class TestPeakFinding(unittest.TestCase):
+    def setUp(self):
+        self.analysis = aspecd.analysis.PeakFinding()
+        self.dataset = aspecd.dataset.Dataset()
+        self.dataset.data.data = np.sin(np.linspace(0, 8*np.pi, num=1000))
+        self.noisy_dataset = aspecd.dataset.Dataset()
+        self.noisy_dataset.data.data = np.sin(np.linspace(0, 8*np.pi, num=1000))
+        self.noisy_dataset.data.data \
+            += (np.random.random(len(self.noisy_dataset.data.data))-0.5)*0.2
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('peak finding', self.analysis.description.lower())
+
+    def test_with_nd_dataset_raises(self):
+        self.dataset.data.data = np.random.random([5, 5])
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            self.dataset.analyse(self.analysis)
+
+    def test_analyse_returns_peak_positions(self):
+        analysis = self.dataset.analyse(self.analysis)
+        result, _ = scipy.signal.find_peaks(self.dataset.data.data)
+        self.assertListEqual(list(result), list(analysis.result))
+
+    def test_analyse_returns_peak_positions_in_axis_values(self):
+        self.dataset.data.axes[0].values = \
+            np.linspace(340, 350, len(self.dataset.data.data))
+        analysis = self.dataset.analyse(self.analysis)
+        result, _ = scipy.signal.find_peaks(self.dataset.data.data)
+        result = self.dataset.data.axes[0].values[result]
+        self.assertListEqual(list(result), list(analysis.result))
+
+    def test_analyse_returns_properties(self):
+        self.analysis.parameters["return_properties"] = True
+        analysis = self.dataset.analyse(self.analysis)
+        result, _ = scipy.signal.find_peaks(self.dataset.data.data)
+        self.assertListEqual(list(result), list(analysis.result[0]))
+        self.assertEqual(dict, type(analysis.result[1]))
+
+    def test_analyse_returns_dataset(self):
+        self.analysis.parameters["return_dataset"] = True
+        analysis = self.dataset.analyse(self.analysis)
+        result, _ = scipy.signal.find_peaks(self.dataset.data.data)
+        self.assertListEqual(list(result),
+                             list(analysis.result.data.axes[0].values))
+        self.assertEqual(aspecd.dataset.CalculatedDataset,
+                         type(analysis.result))
+        self.assertEqual(self.analysis.name,
+                         analysis.result.metadata.calculation.type)
+        self.assertDictEqual(self.analysis.parameters,
+                             analysis.result.metadata.calculation.parameters)
+
+    def test_analyse_returns_negative_peak_positions(self):
+        self.analysis.parameters["negative_peaks"] = True
+        analysis = self.dataset.analyse(self.analysis)
+        positive, _ = scipy.signal.find_peaks(self.dataset.data.data)
+        negative, _ = scipy.signal.find_peaks(-self.dataset.data.data)
+        result = np.sort(np.concatenate((positive, negative)))
+        self.assertListEqual(list(result), list(analysis.result))
+
+    def test_analyse_with_negative_peaks_does_not_return_properties(self):
+        self.analysis.parameters["negative_peaks"] = True
+        self.analysis.parameters["return_properties"] = True
+        analysis = self.dataset.analyse(self.analysis)
+        positive, _ = scipy.signal.find_peaks(self.dataset.data.data)
+        negative, _ = scipy.signal.find_peaks(-self.dataset.data.data)
+        result = np.sort(np.concatenate((positive, negative)))
+        self.assertListEqual(list(result), list(analysis.result))
+
+    def test_analyse_with_height(self):
+        self.analysis.parameters["height"] = 1
+        analysis = self.noisy_dataset.analyse(self.analysis)
+        result, _ = scipy.signal.find_peaks(
+            self.noisy_dataset.data.data,
+            height=self.analysis.parameters["height"])
+        self.assertListEqual(list(result), list(analysis.result))
+
+    def test_analyse_with_height_with_negative_peak_positions(self):
+        self.analysis.parameters["negative_peaks"] = True
+        self.analysis.parameters["height"] = 1
+        analysis = self.noisy_dataset.analyse(self.analysis)
+        positive, _ = scipy.signal.find_peaks(
+            self.noisy_dataset.data.data,
+            height=self.analysis.parameters["height"])
+        negative, _ = scipy.signal.find_peaks(
+            -self.noisy_dataset.data.data,
+            height=self.analysis.parameters["height"])
+        result = np.sort(np.concatenate((positive, negative)))
+        self.assertListEqual(list(result), list(analysis.result))
+
+    def test_analyse_with_threshold(self):
+        self.analysis.parameters["threshold"] = 0.145
+        analysis = self.noisy_dataset.analyse(self.analysis)
+        result, _ = scipy.signal.find_peaks(
+            self.noisy_dataset.data.data,
+            threshold=self.analysis.parameters["threshold"])
+        self.assertListEqual(list(result), list(analysis.result))
+
+    def test_analyse_with_threshold_with_negative_peak_positions(self):
+        self.analysis.parameters["negative_peaks"] = True
+        self.analysis.parameters["threshold"] = 0.145
+        analysis = self.noisy_dataset.analyse(self.analysis)
+        positive, _ = scipy.signal.find_peaks(
+            self.noisy_dataset.data.data,
+            threshold=self.analysis.parameters["threshold"])
+        negative, _ = scipy.signal.find_peaks(
+            -self.noisy_dataset.data.data,
+            threshold=self.analysis.parameters["threshold"])
+        result = np.sort(np.concatenate((positive, negative)))
+        self.assertListEqual(list(result), list(analysis.result))
+
+    def test_analyse_with_distance(self):
+        self.analysis.parameters["distance"] = 100
+        analysis = self.noisy_dataset.analyse(self.analysis)
+        result, _ = scipy.signal.find_peaks(
+            self.noisy_dataset.data.data,
+            distance=self.analysis.parameters["distance"])
+        self.assertListEqual(list(result), list(analysis.result))
+
+    def test_analyse_with_distance_with_negative_peak_positions(self):
+        self.analysis.parameters["negative_peaks"] = True
+        self.analysis.parameters["distance"] = 100
+        analysis = self.noisy_dataset.analyse(self.analysis)
+        positive, _ = scipy.signal.find_peaks(
+            self.noisy_dataset.data.data,
+            distance=self.analysis.parameters["distance"])
+        negative, _ = scipy.signal.find_peaks(
+            -self.noisy_dataset.data.data,
+            distance=self.analysis.parameters["distance"])
+        result = np.sort(np.concatenate((positive, negative)))
+        self.assertListEqual(list(result), list(analysis.result))
+
+    def test_analyse_with_prominence(self):
+        self.analysis.parameters["prominence"] = 0.2
+        analysis = self.noisy_dataset.analyse(self.analysis)
+        result, _ = scipy.signal.find_peaks(
+            self.noisy_dataset.data.data,
+            prominence=self.analysis.parameters["prominence"])
+        self.assertListEqual(list(result), list(analysis.result))
+
+    def test_analyse_with_prominence_with_negative_peak_positions(self):
+        self.analysis.parameters["negative_peaks"] = True
+        self.analysis.parameters["prominence"] = 0.2
+        analysis = self.noisy_dataset.analyse(self.analysis)
+        positive, _ = scipy.signal.find_peaks(
+            self.noisy_dataset.data.data,
+            prominence=self.analysis.parameters["prominence"])
+        negative, _ = scipy.signal.find_peaks(
+            -self.noisy_dataset.data.data,
+            prominence=self.analysis.parameters["prominence"])
+        result = np.sort(np.concatenate((positive, negative)))
+        self.assertListEqual(list(result), list(analysis.result))
+
+    def test_analyse_with_width(self):
+        self.analysis.parameters["width"] = 5
+        analysis = self.noisy_dataset.analyse(self.analysis)
+        result, _ = scipy.signal.find_peaks(
+            self.noisy_dataset.data.data,
+            width=self.analysis.parameters["width"])
+        self.assertListEqual(list(result), list(analysis.result))
+
+    def test_analyse_with_width_with_negative_peak_positions(self):
+        self.analysis.parameters["negative_peaks"] = True
+        self.analysis.parameters["width"] = 5
+        analysis = self.noisy_dataset.analyse(self.analysis)
+        positive, _ = scipy.signal.find_peaks(
+            self.noisy_dataset.data.data,
+            width=self.analysis.parameters["width"])
+        negative, _ = scipy.signal.find_peaks(
+            -self.noisy_dataset.data.data,
+            width=self.analysis.parameters["width"])
+        result = np.sort(np.concatenate((positive, negative)))
+        self.assertListEqual(list(result), list(analysis.result))
 
 
 class TestSignalToNoiseRatio(unittest.TestCase):

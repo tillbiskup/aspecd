@@ -14,6 +14,8 @@ Not yet released
 New features
 ------------
 
+* PeakFinding (for 1D data)
+
 * BlindSNREstimation (currently only with simplest method)
 
 * BasicStatistics

@@ -149,7 +149,9 @@ Module documentation
 import copy
 
 import numpy as np
+import scipy.signal
 
+import aspecd.dataset
 import aspecd.exceptions
 import aspecd.history
 import aspecd.utils
@@ -868,6 +870,254 @@ class BlindSNREstimation(SingleAnalysisStep):
         if self.parameters["method"] == "simple":
             self.result = \
                 self.dataset.data.data.mean() / self.dataset.data.data.std()
+
+
+class PeakFinding(SingleAnalysisStep):
+    # noinspection PyUnresolvedReferences
+    """
+    Peak finding in one dimension.
+
+    Finding peaks is a use case often encountered in analysing spectroscopic
+    data, but it is far from trivial and usually requires careful choosing
+    of parameters to yield sensible results.
+
+    The peak finding relies on the :func:`scipy.signal.find_peaks` function,
+    hence you can set most of the parameters this function understands. For
+    details of the parameters, see as well the SciPy documentation.
+
+    .. important::
+        Peak finding can only be applied to 1D datasets, due to the
+        underlying algorithm.
+
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        negative_peaks : :class:`bool`
+            Whether to include negative peaks in peak finding as well.
+
+            Negative peaks are searched for by inverting the sign of the
+            signal, and the list of peak positions is sorted.
+
+            Default: False
+
+        return_properties : :class:`bool`
+            Whether to return properties together with the peak positions.
+
+            If properties shall be returned as well, the attribute
+            :attr:`result` will be a tuple containing the list of peak
+            positions as first element and a dictionary  with peak
+            properties as second element.
+
+            Note: If negative peaks shall be returned as well, this option
+            will be silently ignored and only the peak positions returned.
+
+            Default: False
+
+        return_dataset : :class:`bool`
+            Whether to return a calculated dataset as result.
+
+            In this case, the result will be an object of class
+            :class:`aspecd.dataset.CalculatedDataset`, with the data
+            containing the peak intensities and the corresponding axis
+            values the peak positions. Thus, this can be used to plot the
+            peaks on top of the original data.
+
+            Default: False
+
+        height : number or ndarray or sequence
+            Required height of peaks. Either a number, None, an array
+            matching x or a 2-element sequence of the former. The first
+            element is always interpreted as the minimal and the second,
+            if supplied, as the maximal required height.
+
+            Default: None
+
+        threshold : number or ndarray or sequence
+            Required threshold of peaks, the vertical distance to its
+            neighboring samples. Either a number, None, an array matching x
+            or a 2-element sequence of the former. The first element is
+            always interpreted as the minimal and the second, if supplied,
+            as the maximal required threshold.
+
+            Default: None
+
+        distance : number
+            Required minimal horizontal distance (>= 1) in samples between
+            neighbouring peaks. Smaller peaks are removed first until the
+            condition is fulfilled for all remaining peaks.
+
+            Default: None
+
+        prominence : number or ndarray or sequence
+            Required prominence of peaks. Either a number, None, an array
+            matching x or a 2-element sequence of the former. The first
+            element is always interpreted as the minimal and the second,
+            if supplied, as the maximal required prominence.
+
+            Default: None
+
+        width : number or ndarray or sequence
+            Required width of peaks in samples. Either a number, None,
+            an array matching x or a 2-element sequence of the former. The
+            first element is always interpreted as the minimal and the
+            second, if supplied, as the maximal required width.
+
+            Default: None
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Finding the peak positions of a basically noise-free dataset is quite
+    simple:
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: PeakFinding
+         result: peaks
+
+    This would simply return the peak positions of the data of a given dataset
+    in the result assigned to the recipe-internal variable ``peaks``.
+
+    To have more control over the method used to find peaks, you can set a
+    number of parameters. To get the negative peaks as well (normally,
+    only positive peaks will be looked for):
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: PeakFinding
+         properties:
+           parameters:
+             negative_peaks: True
+         result: peaks
+
+    Sometimes it is convenient to have the peaks returned as a dataset,
+    to plot the data and highlight the peaks found:
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: PeakFinding
+         properties:
+           parameters:
+             return_dataset: True
+         result: peaks
+
+    From the options that can be set for the function
+    :func:`scipy.signal.find_peaks`, you can set "height", "threshold",
+    "distance", "prominence", and "width". For details, see the SciPy
+    documentation.
+
+    For noisy data, "prominence" can be a good option to only find "true" peaks:
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: PeakFinding
+         properties:
+           parameters:
+             prominence: 0.2
+         result: peaks
+
+    If you supply one of these additional options, you might be interested
+    not only in the peak positions, but in the properties of the peaks found
+    as well.
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: PeakFinding
+         properties:
+           parameters:
+             prominence: 0.2
+             return_properties: True
+         result: peaks
+
+    In this case, the result, here stored in the variable "peaks", will be a
+    tuple with the peak positions as first element and a dictionary with
+    properties as the second element. Note that if you ask for negative
+    peaks as well, this option will silently be ignored and only the peak
+    positions returned.
+
+    .. versionadded:: 0.2
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = 'Peak finding in 1D'
+        self.parameters["negative_peaks"] = False
+        self.parameters["return_properties"] = False
+        self.parameters["return_dataset"] = False
+        self.parameters["height"] = None
+        self.parameters["threshold"] = None
+        self.parameters["distance"] = None
+        self.parameters["prominence"] = None
+        self.parameters["width"] = None
+
+    @staticmethod
+    def applicable(dataset):
+        """
+        Check whether analysis step is applicable to the given dataset.
+
+        Peak finding can only be applied to 1D datasets.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            Dataset to check
+
+        Returns
+        -------
+        applicable : :class:`bool`
+            Whether dataset is applicable
+
+        """
+        return dataset.data.data.ndim == 1
+
+    def _perform_task(self):
+        peaks, properties = scipy.signal.find_peaks(
+            self.dataset.data.data,
+            height=self.parameters["height"],
+            threshold=self.parameters["threshold"],
+            distance=self.parameters["distance"],
+            prominence=self.parameters["prominence"],
+            width=self.parameters["width"],
+        )
+        if self.parameters["negative_peaks"]:
+            negative, _ = scipy.signal.find_peaks(
+                -self.dataset.data.data,
+                height=self.parameters["height"],
+                threshold=self.parameters["threshold"],
+                distance=self.parameters["distance"],
+                prominence=self.parameters["prominence"],
+                width=self.parameters["width"],
+            )
+            peaks = np.sort(np.concatenate((peaks, negative)))
+        if self.parameters["return_dataset"]:
+            dataset = aspecd.dataset.CalculatedDataset()
+            dataset.metadata.calculation.type = self.name
+            dataset.metadata.calculation.parameters = self.parameters
+            dataset.data.data = self.dataset.data.data[peaks]
+            dataset.data.axes[0] = self.dataset.data.axes[0]
+            dataset.data.axes[0].values = \
+                self.dataset.data.axes[0].values[peaks]
+            dataset.data.axes[1] = self.dataset.data.axes[1]
+            self.result = dataset
+        elif self.parameters["return_properties"] \
+                and not self.parameters["negative_peaks"]:
+            self.result = (peaks, properties)
+        else:
+            self.result = self.dataset.data.axes[0].values[peaks]
 
 
 class SignalToNoiseRatio(SingleAnalysisStep):

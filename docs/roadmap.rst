@@ -10,10 +10,6 @@ For version 0.2
 
 * Add Zenodo badge to start page of documentation in release
 
-* Remaining basic analysis steps:
-
-  * peak finding
-
 * Importer with parameters in recipe (*e.g.*, for CSV importer)
 
 * Expand use cases
