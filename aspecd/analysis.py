@@ -168,13 +168,29 @@ class AnalysisStep:
     some result is obtained. This result is stored separately,
     together with the parameters of the analysis step, in the
     :attr:`aspecd.dataset.Dataset.analyses` attribute of the dataset and
-    can be found in the :attr:`aspecd.analysis.SingleAnalysisStep.result`
+    can be found in the :attr:`aspecd.analysis.AnalysisStep.result`
     attribute.
 
-    In case :attr:`aspecd.analysis.SingleAnalysisStep.result` is a dataset,
+    In case :attr:`aspecd.analysis.AnalysisStep.result` is a dataset,
     it is a calculated dataset (:class:`aspecd.dataset.CalculatedDataset`),
     and the idea behind storing the result in form of a dataset is to be
-    able to plot and further process these results in a fully generic manner.
+    able to plot and further process these results in a fully generic
+    manner. To create such a calculated dataset, use the method
+    :meth:`create_dataset` that will automatically set minimal metadata for
+    you.
+
+    The actual implementation of the analysis step is done in the private
+    method :meth:`_perform_task` that in turn gets called by :meth:`analyse`
+    which is called by the :meth:`aspecd.dataset.Dataset.analyse` method of the
+    dataset object.
+
+    .. note::
+        Usually, you will never implement an instance of this class for
+        actual analysis tasks, but rather one of the child classes, namely
+        :class:`aspecd.analysis.SingleAnalysisStep` and
+        :class:`aspecd.analysis.MultiAnalysisStep`, depending on whether
+        your analysis step operates on a single dataset or requires
+        multiple datasets.
 
     Attributes
     ----------
@@ -182,10 +198,12 @@ class AnalysisStep:
         Name of the analysis step.
 
         Defaults to the lower-case class name, don't change!
+
     parameters : :class:`dict`
         Parameters required for performing the analysis step
 
         All parameters, implicit and explicit.
+
     result
         Results of the analysis step
 
@@ -194,8 +212,10 @@ class AnalysisStep:
 
         In case of a dataset, it is a calculated dataset
         (:class:`aspecd.dataset.CalculatedDataset`)
+
     description : :class:`str`
         Short description, to be set in class definition
+
     comment : :class:`str`
         User-supplied comment describing intent, purpose, reason, ...
 
@@ -231,6 +251,33 @@ class AnalysisStep:
 
         """
         return self.analyse()
+
+    def create_dataset(self):
+        """
+        Create calculated dataset containing minimal metadata.
+
+        The following metadata are set:
+
+        ======================= ==================
+        Metadata                Value
+        ======================= ==================
+        calculation.type        :attr:`name`
+        calculation.parameters  :attr:`parameters`
+        ======================= ==================
+
+        Returns
+        -------
+        dataset : :class:`aspecd.dataset.CalculatedDataset`
+            (Calculated) dataset containing minimal metadata.
+
+
+        .. versionadded:: 0.2
+
+        """
+        dataset = aspecd.dataset.CalculatedDataset()
+        dataset.metadata.calculation.type = self.name
+        dataset.metadata.calculation.parameters = self.parameters
+        return dataset
 
     def _sanitise_parameters(self):
         """Ensure parameters provided for analysis step are correct.
@@ -303,12 +350,19 @@ class SingleAnalysisStep(AnalysisStep):
     and the idea behind storing the result in form of a dataset is to be
     able to plot and further process these results in a fully generic manner.
 
+    The actual implementation of the analysis step is done in the private
+    method :meth:`_perform_task` that in turn gets called by :meth:`analyse`
+    which is called by the :meth:`aspecd.dataset.Dataset.analyse` method of the
+    dataset object.
+
     Attributes
     ----------
     preprocessing : :class:`list`
         List of necessary preprocessing steps to perform the analysis.
+
     description : :class:`str`
         Short description, to be set in class definition
+
     dataset : :class:`aspecd.dataset.Dataset`
         Dataset the analysis step should be performed on
 
@@ -462,6 +516,9 @@ class MultiAnalysisStep(AnalysisStep):
     :attr:`aspecd.dataset.Dataset.analyses` attribute of the dataset and
     can be found in the :attr:`aspecd.analysis.MultiAnalysisStep.result`
     attribute.
+
+    The actual implementation of the analysis step is done in the private
+    method :meth:`_perform_task` that in turn gets called by :meth:`analyse`.
 
     Attributes
     ----------
@@ -1104,9 +1161,7 @@ class PeakFinding(SingleAnalysisStep):
             )
             peaks = np.sort(np.concatenate((peaks, negative)))
         if self.parameters["return_dataset"]:
-            dataset = aspecd.dataset.CalculatedDataset()
-            dataset.metadata.calculation.type = self.name
-            dataset.metadata.calculation.parameters = self.parameters
+            dataset = self.create_dataset()
             dataset.data.data = self.dataset.data.data[peaks]
             dataset.data.axes[0] = self.dataset.data.axes[0]
             dataset.data.axes[0].values = \

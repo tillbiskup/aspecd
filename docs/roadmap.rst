@@ -10,6 +10,8 @@ For version 0.2
 
 * Add Zenodo badge to start page of documentation in release
 
+* Proper handling of results for SingleAnalysisStep in recipes when applied to a list of datasets (result must be a list in this case)
+
 * Importer with parameters in recipe (*e.g.*, for CSV importer)
 
 * Expand use cases

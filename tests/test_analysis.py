@@ -59,6 +59,21 @@ class TestAnalysisStep(unittest.TestCase):
         self.assertTrue(hasattr(self.analysisstep, 'applicable'))
         self.assertTrue(callable(self.analysisstep.applicable))
 
+    def test_create_dataset_creates_calculated_dataset(self):
+        self.assertIs(aspecd.dataset.CalculatedDataset,
+                      type(self.analysisstep.create_dataset()))
+
+    def test_created_dataset_has_correct_type_in_metadata(self):
+        dataset = self.analysisstep.create_dataset()
+        self.assertEqual(self.analysisstep.name,
+                         dataset.metadata.calculation.type)
+
+    def test_created_dataset_contains_parameters_in_metadata(self):
+        self.analysisstep.parameters["foo"] = "bar"
+        dataset = self.analysisstep.create_dataset()
+        self.assertDictEqual(self.analysisstep.parameters,
+                             dataset.metadata.calculation.parameters)
+
 
 class TestSingleAnalysisStep(unittest.TestCase):
     def setUp(self):

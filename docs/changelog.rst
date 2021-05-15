@@ -14,6 +14,8 @@ Not yet released
 New features
 ------------
 
+* Method ``create_dataset()`` in AnalysisStep
+
 * PeakFinding (for 1D data)
 
 * BlindSNREstimation (currently only with simplest method)
@@ -22,7 +24,7 @@ New features
 
 * BasicCharacteristics
 
-* ProcessingStep provides non-public method ``_set_defaults`` for setting default parameters before sanitising parameters.
+* ProcessingStep provides non-public method ``_set_defaults()`` for setting default parameters before sanitising parameters.
 
 * Filtering (with uniform, Gaussian, and Savitzky-Golay filter)
 
