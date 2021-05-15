@@ -14,8 +14,6 @@ For version 0.2
 
 * Importer with parameters in recipe (*e.g.*, for CSV importer)
 
-* Expand use cases
-
 * Plot task: default filename for saved figure
 
 
@@ -34,6 +32,8 @@ For version 0.3
 
   * BlindSNREstimation with alternative methods
   * SNREstimation with explicitly providing noise (using both, processing and analysis)
+
+* Expand use cases: reports
 
 
 

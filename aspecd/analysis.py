@@ -84,7 +84,11 @@ independently.
 
 * :class:`BlindSNREstimation`
 
-  Blind, *i.e.* parameter-free, estimation of the signal-to-noise ratio.
+  Blind, *i.e.* parameter-free, estimation of the signal-to-noise ratio
+
+* :class:`PeakFinding`
+
+  Find peaks in 1D datasets
 
 
 Writing own analysis steps
@@ -111,9 +115,12 @@ A few hints on writing own analysis step classes:
   the :class:`aspecd.analysis.AnalysisStep` class, *not* in separate
   properties of the class. Only this way, you can ensure full
   reproducibility and compatibility of recipe-driven data analysis (for
-  details of the latter, see the :mod:`aspecd.tasks` module).
+  details of the latter, see the :mod:`aspecd.tasks` module). Additionally,
+  this way, if you return a (calculated) dataset, these parameters get
+  automatically added to the metadata of the calculated dataset.
 
-* Always set the ``description`` property to a sensible value.
+* Always set the ``description`` property to a sensible value. Be as concise
+  as possible. The first line of the class docstring may be a good inspiration.
 
 * Implement the actual analysis in the ``_perform_task`` method of the
   analysis step. For sanitising parameters and checking general

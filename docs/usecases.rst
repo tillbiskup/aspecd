@@ -224,12 +224,40 @@ Some tasks return results, and you usually want to refer to these results later 
 
 You can refer to these results in the same way as you can refer to datasets, even using the labels in the ``apply_to`` field of a following task.
 
+Storing the result becomes particularly important if the task is not a processing step, but an analysis step, as the latter does not result in an altered dataset. A simple example would be determining the signal-to-noise ratio of the data:
 
-.. todo::
+.. code-block:: yaml
 
-    Things to add:
+    tasks:
+      - kind: singleanalysis
+        type: BlindSNREstimation
+        result: SNR
 
-      * example for an analysis step
+
+Note that in case of analysis steps, you need to explicitly tell whether you use an analysis step operating on individual datasets (as in this example, kind: ``singleanalysis``) or an analysis step operating on a list of datasets at once (kind: ``multianalysis``). In case of processing steps, as long as you want to operate on individual datasets, giving ``processing`` as kind will always work.
+
+The type of the result returned by an analysis step depends on the particular analysis step performed and possibly the parameters given. Some analysis steps can return either a (calculated) dataset or some other type. One example would be peak finding:
+
+.. code-block:: yaml
+
+    tasks:
+      - kind: singleanalysis
+        type: PeakFinding
+        result: peaks
+
+In this case, the result is a list of peaks. If, however, you would like to get a calculated dataset, provide the appropriate parameter:
+
+.. code-block:: yaml
+
+    tasks:
+      - kind: singleanalysis
+        type: PeakFinding
+        properties:
+          parameters:
+            return_dataset: True
+        result: peaks
+
+Now, the result will be a calculated dataset, and in this particular case, this can be quite helpful for plotting both, the original data and the detected peaks highlighted on top. As peak finding is often rather tricky, visual inspection of the results is usually necessary.
 
 
 Can we see something?

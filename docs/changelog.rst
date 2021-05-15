@@ -76,7 +76,7 @@ Changes
 New dependencies
 ----------------
 
-* scipy (for interpolation in ExtractCommonRange)
+* scipy (for interpolation in ExtractCommonRange and various analysis steps)
 
 
 Version 0.1.1
