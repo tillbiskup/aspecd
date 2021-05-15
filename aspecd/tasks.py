@@ -1855,18 +1855,50 @@ class SingleanalysisTask(AnalysisTask):
     automatically be replaced by the actual dataset/result prior to
     performing the task.
 
+    And if you now want to do that for multiple datasets, you can do that as
+    well. However, make sure to provide as many result labels as you have
+    datasets to perform the analysis step on, as otherwise no result will
+    be stored:
+
+    .. code-block:: yaml
+
+        kind: singleanalysis
+        type: SingleAnalysisStep
+        apply_to:
+          - loi:xxx
+          - loi:yyy
+        result:
+          - label1
+          - label2
+
+    In case you perform the analysis on several datasets, you may want to
+    provide as many result labels as there are datasets. Otherwise,
+    no result will be assigned.
+
     """
 
     # noinspection PyUnresolvedReferences
     def _perform(self):
-        for dataset_id in self.apply_to:
+        result_labels = None
+        if self.result and isinstance(self.result, list):
+            if len(self.result) == len(self.apply_to):
+                result_labels = self.result
+            else:
+                self.result = None
+        for number, dataset_id in enumerate(self.apply_to):
             dataset = self.recipe.get_dataset(dataset_id)
             self._task = self.get_object()
             self._task = dataset.analyse(analysis_step=self._task)
             if self.result:
-                if isinstance(self._task.result, aspecd.dataset.Dataset):
-                    self._task.result.id = self.result
-                self.recipe.results[self.result] = self._task.result
+                if result_labels:
+                    if isinstance(self._task.result, aspecd.dataset.Dataset):
+                        self._task.result.id = self.result[number]
+                    self.recipe.results[self.result[number]] = \
+                        self._task.result
+                else:
+                    if isinstance(self._task.result, aspecd.dataset.Dataset):
+                        self._task.result.id = self.result
+                    self.recipe.results[self.result] = self._task.result
 
 
 class MultianalysisTask(AnalysisTask):

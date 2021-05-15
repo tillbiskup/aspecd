@@ -1143,6 +1143,19 @@ class TestSingleAnalysisTask(unittest.TestCase):
         self.task.perform()
         self.assertEqual(self.recipe.results[result].id, result)
 
+    def test_perform_task_with_result_and_multiple_datasets_adds_results(self):
+        self.prepare_recipe()
+        result = ['foo', 'bar']
+        recipe_dict = {'datasets': result,
+                       'tasks': [self.analysis_task]}
+        self.recipe.from_dict(recipe_dict)
+        self.analysis_task['result'] = result
+        self.analysis_task['apply_to'] = result
+        self.task.from_dict(self.analysis_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertEqual(len(result), len(self.recipe.results))
+
 
 class TestMultiAnalysisTask(unittest.TestCase):
     def setUp(self):

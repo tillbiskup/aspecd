@@ -142,8 +142,30 @@ Some more special cases are detailed below. For further advice, consult the
 source code of this module, and have a look at the concrete processing steps
 whose purpose is described below in more detail.
 
-.. todo::
-    Add description of special cases as applicable
+
+Adding parameters upon analysis
+-------------------------------
+
+Sometimes there is the need to persist values that are only obtained during
+analysis of the data. These parameters should end up in the
+:attr:`aspecd.analysis.AnalysisStep.parameters` dictionary. Thus,
+they are added to the dataset history and available for reports and alike.
+
+
+Returning calculated datasets as result
+---------------------------------------
+
+The type of the attribute :attr:`aspecd.analysis.AnalysisStep.result`
+depends strongly on the specific analysis step. Sometimes, a calculated
+dataset will be returned. A typical example is
+:class:`aspecd.analysis.PeakFinding`, where you can explicitly ask for a
+calculated dataset to be returned and use this result later for plotting
+both, original data and detected peaks overlaid. To have the minimal
+metadata of the calculated dataset set correctly, use the method
+:meth:`aspecd.analysis.AnalysisStep.create_dataset` to obtain the calculated
+dataset. This will set both, type of calculation (to the full class name of
+the analysis step) and parameters. Of course, you are solely responsible to
+set the data and axes values (and further metadata, if applicable).
 
 
 Module documentation
