@@ -210,6 +210,15 @@ make a (deep) copy of your axes, then change the dimension of your data,
 and afterwards restore the remaining values from the temporarily stored axes.
 
 
+Changing the length of your data
+--------------------------------
+
+When changing the length of the data, always change the corresponding axes
+values *first*, and only afterwards the data, as changing the data will
+change the axes values and adjust their length to the length of the
+corresponding dimension of the data.
+
+
 Adding parameters upon processing
 ---------------------------------
 

@@ -152,6 +152,15 @@ analysis of the data. These parameters should end up in the
 they are added to the dataset history and available for reports and alike.
 
 
+Changing the length of your data
+--------------------------------
+
+When changing the length of the data, always change the corresponding axes
+values *first*, and only afterwards the data, as changing the data will
+change the axes values and adjust their length to the length of the
+corresponding dimension of the data.
+
+
 Returning calculated datasets as result
 ---------------------------------------
 
