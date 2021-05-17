@@ -116,6 +116,19 @@ class TestDatasetImporterFactory(unittest.TestCase):
         importer = self.factory.get_importer(source=source)
         self.assertTrue(isinstance(importer, io.TxtImporter))
 
+    def test_get_importer_with_importer_returns_specific_importer(self):
+        source = '/foo'
+        importer = 'TxtImporter'
+        importer = self.factory.get_importer(source=source, importer=importer)
+        self.assertTrue(isinstance(importer, io.TxtImporter))
+
+    def test_get_importer_with_parameters_sets_parameters(self):
+        source = '/foo'
+        parameters = {'foo': 'bla', 'bar': 'blub'}
+        importer = self.factory.get_importer(source=source,
+                                             parameters=parameters)
+        self.assertDictEqual(parameters, importer.parameters)
+
 
 class TestRecipeImporter(unittest.TestCase):
     def setUp(self):

@@ -329,10 +329,17 @@ class DatasetImporter:
 
     Attributes
     ----------
-    dataset : :obj:`aspecd.dataset.Dataset`
+    dataset : :class:`aspecd.dataset.Dataset`
         dataset to import data and metadata into
-    source : string
+
+    source : :class:`str`
         specifier of the source the data and metadata will be read from
+
+    parameters : :class:`dict`
+        Additional parameters to control import options.
+
+        Useful in case of, *e.g.*, CSV importers where the user may want to
+        set things such as the delimiter
 
     Raises
     ------
@@ -344,6 +351,7 @@ class DatasetImporter:
     def __init__(self, source=None):
         self.source = source
         self.dataset = None
+        self.parameters = dict()
 
     def import_into(self, dataset=None):
         """Perform the actual import into the given dataset.
@@ -441,6 +449,15 @@ class DatasetImporterFactory:
     implementation in the rare case of having only one single type of data,
     but provides a sensible starting point for own developments.
 
+
+    Attributes
+    ----------
+    source : :class:`str`
+        Source of the dataset to be loaded.
+
+        Gets set by calling the method :meth:`get_importer` with the
+        ``source`` parameter.
+
     Raises
     ------
     aspecd.io.MissingSourceError
@@ -448,13 +465,22 @@ class DatasetImporterFactory:
 
     """
 
-    def get_importer(self, source=''):
+    def __init__(self):
+        self.source = None
+
+    def get_importer(self, source='', importer='', parameters=None):
         """
         Return importer object for dataset specified by its source.
 
         The actual code for deciding which type of importer to return in what
         case should be implemented in the non-public method
         :meth:`_get_importer` in any package based on the ASpecD framework.
+
+        If no importer gets returned by the method :meth:`_get_importer`,
+        the ASpecD-interal importers will be checked for matching the file
+        type. Thus, you can overwrite the behaviour of any filetype
+        supported natively by the ASpecD framework, but retain compatibility
+        to the ASpecD-specific file types.
 
         .. note::
             Currently, only filenames/paths are supported, and if ``source``
@@ -483,21 +509,49 @@ class DatasetImporterFactory:
         if not source:
             raise aspecd.exceptions.MissingSourceError(
                 'A source is required to return an appropriate importer')
-        return self._get_importer(source)
+        self.source = source
+        if importer:
+            package_name = aspecd.utils.package_name(self)
+            full_class_name = '.'.join([package_name, 'io', importer])
+            importer = aspecd.utils.object_from_class_name(full_class_name)
+        if not importer:
+            importer = self._get_importer()
+        if not importer:
+            importer = self._get_aspecd_importer()
+        importer.parameters = parameters
+        return importer
 
     # noinspection PyMethodMayBeStatic
-    # pylint: disable=no-self-use
-    def _get_importer(self, source):
-        if not source.startswith(os.pathsep):
-            source = os.path.join(os.path.abspath(os.curdir), source)
-        _, file_extension = os.path.splitext(source)
+    def _get_importer(self):
+        """Choose appropriate importer for a dataset.
+
+        Every package inheriting from the ASpecD framework should implement
+        this method. Note that in case you do not handle a filetype and
+        hence return no importer, the default ASpecD importer will be
+        checked for matching the given source. Thus, you can overwrite the
+        behaviour of any filetype supported natively by the ASpecD
+        framework, but retain compatibility to the ASpecD-specific file types.
+
+        Returns
+        -------
+        importer : :class:`aspecd.io.DatasetImporter`
+            Importer for the specific file type
+
+        """
+        importer = None
+        return importer
+
+    def _get_aspecd_importer(self):
+        if not self.source.startswith(os.pathsep):
+            self.source = os.path.join(os.path.abspath(os.curdir), self.source)
+        _, file_extension = os.path.splitext(self.source)
         if file_extension == '.adf':
-            return AdfImporter(source=source)
+            return AdfImporter(source=self.source)
         if file_extension == '.asdf':
-            return AsdfImporter(source=source)
+            return AsdfImporter(source=self.source)
         if file_extension == '.txt':
-            return TxtImporter(source=source)
-        return DatasetImporter(source=source)
+            return TxtImporter(source=self.source)
+        return DatasetImporter(source=self.source)
 
 
 class DatasetExporter:

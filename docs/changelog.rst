@@ -14,6 +14,10 @@ Not yet released
 New features
 ------------
 
+* DatasetImporterFactory: importer can be set explicitly, parameters can be passed to importers
+
+* DatasetImporter with parameters property
+
 * Meaningful error messages for exceptions in ProcessingSteps, AnalysisSteps, Plotters
 
 * Method ``create_dataset()`` in AnalysisStep
@@ -59,6 +63,8 @@ New features
 
 Changes
 -------
+
+* Removed parameter ``source`` from method ``_get_importer`` in DatasetImporterFactory, importer factories of derived packages now handle ASpecD-implemented importers by default.
 
 * Dataset: method :meth:`aspecd.dataset.append_history_record` made public
 

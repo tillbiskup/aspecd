@@ -533,7 +533,7 @@ class SinglePlotter(Plotter):
     aspecd.exceptions.MissingDatasetError
         Raised when no dataset exists to act on
 
-    aspecd.exceptions.PlotNotApplicableToDatasetError
+    aspecd.exceptions.NotApplicableToDatasetError
         Raised when processing step is not applicable to dataset
 
     """
@@ -1371,7 +1371,7 @@ class MultiPlotter(Plotter):
 
         Raises
         ------
-        aspecd.exceptions.PlotNotApplicableToDatasetError
+        aspecd.exceptions.NotApplicableToDatasetError
             Raised when plotting is not applicable to at least one of the
             datasets listed in :attr:`datasets`
         aspecd.exceptions.MissingDatasetError
@@ -1921,7 +1921,7 @@ class SingleCompositePlotter(CompositePlotter):
 
         Raises
         ------
-        aspecd.exceptions.PlotNotApplicableToDatasetError
+        aspecd.exceptions.NotApplicableToDatasetError
             Raised when plotting is not applicable to dataset
         aspecd.exceptions.MissingDatasetError
             Raised when no dataset exists to act on
