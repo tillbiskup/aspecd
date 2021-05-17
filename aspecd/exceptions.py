@@ -60,21 +60,6 @@ class MissingDatasetError(Error):
         self.message = message
 
 
-class PlotNotApplicableToDatasetError(Error):
-    """Exception raised when processing step is not applicable to dataset
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__(message)
-        self.message = message
-
-
 class MissingSaverError(Error):
     """Exception raised when no saver is provided.
 

@@ -14,6 +14,8 @@ Not yet released
 New features
 ------------
 
+* Meaningful error messages for exceptions in ProcessingSteps, AnalysisSteps, Plotters
+
 * Method ``create_dataset()`` in AnalysisStep
 
 * PeakFinding (for 1D data)
@@ -71,6 +73,16 @@ Changes
 * ProcessingStep split into SingleProcessingStep and MultiProcessingStep
 
   All processing steps previously inheriting from aspecd.ProcessingStep need to inherit now from aspecd.SingleProcessingStep to continue working as expected.
+
+* Plots throw "NotApplicableToDataset" exceptions rather than "PlotNotApplicableToDataset"
+
+
+Fixes
+-----
+
+* SingleanalysisTask assigns results of multiple (individual) datasets
+
+* Exceptions print messages
 
 
 New dependencies

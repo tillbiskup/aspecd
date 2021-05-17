@@ -35,16 +35,6 @@ class TestMissingDatasetError(unittest.TestCase):
             raise self.exception('bla')
 
 
-class TestPlotNotApplicableToDatasetError(unittest.TestCase):
-
-    def setUp(self):
-        self.exception = aspecd.exceptions.PlotNotApplicableToDatasetError
-
-    def test_prints_message(self):
-        with self.assertRaisesRegex(self.exception, 'bla'):
-            raise self.exception('bla')
-
-
 class TestMissingSaverError(unittest.TestCase):
 
     def setUp(self):

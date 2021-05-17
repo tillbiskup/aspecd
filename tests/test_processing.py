@@ -85,6 +85,21 @@ class TestSingleProcessingStep(unittest.TestCase):
         with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
             dataset.process(processing)
 
+    def test_process_checks_applicability_prints_helpful_message(self):
+        class MyProcessingStep(aspecd.processing.SingleProcessingStep):
+
+            @staticmethod
+            def applicable(dataset):
+                return False
+
+        dataset = aspecd.dataset.Dataset()
+        dataset.id = "foo"
+        processing = MyProcessingStep()
+        message = "MyProcessingStep not applicable to dataset with id foo"
+        with self.assertRaisesRegex(
+                aspecd.exceptions.NotApplicableToDatasetError, message):
+            dataset.process(processing)
+
     def test_process_sets_default_parameters(self):
         class MyProcessingStep(aspecd.processing.SingleProcessingStep):
 
@@ -235,6 +250,27 @@ class TestMultiProcessingStep(unittest.TestCase):
         processing_step.datasets.append(dataset1)
         processing_step.datasets.append(dataset2)
         with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            processing_step.process()
+
+    def test_process_checks_applicability_prints_helpful_message(self):
+        dataset1 = aspecd.dataset.Dataset()
+        dataset1.data.data = np.random.random([5, 5])
+        dataset1.id = "foo"
+        dataset2 = aspecd.dataset.Dataset()
+        dataset2.data.data = np.random.random(5)
+        dataset2.id = "bar"
+
+        class MyProcessingStep(aspecd.processing.MultiProcessingStep):
+            @staticmethod
+            def applicable(dataset):
+                return len(dataset.data.axes) == 2
+
+        processing_step = MyProcessingStep()
+        processing_step.datasets.append(dataset1)
+        processing_step.datasets.append(dataset2)
+        message = "MyProcessingStep not applicable to dataset with id foo"
+        with self.assertRaisesRegex(
+                aspecd.exceptions.NotApplicableToDatasetError, message):
             processing_step.process()
 
     def test_process_with_datasets_appends_history_record(self):

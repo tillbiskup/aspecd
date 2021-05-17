@@ -581,7 +581,7 @@ class SinglePlotter(Plotter):
 
         Raises
         ------
-        aspecd.exceptions.PlotNotApplicableToDatasetError
+        aspecd.exceptions.NotApplicableToDatasetError
             Raised when plotting is not applicable to dataset
         aspecd.exceptions.MissingDatasetError
             Raised when no dataset exists to act on
@@ -631,7 +631,9 @@ class SinglePlotter(Plotter):
 
     def _check_applicability(self):
         if not self.applicable(self.dataset):
-            raise aspecd.exceptions.PlotNotApplicableToDatasetError
+            message = "%s not applicable to dataset with id %s" \
+                      % (self.name, self.dataset.id)
+            raise aspecd.exceptions.NotApplicableToDatasetError(message=message)
 
     def _set_axes_labels(self):
         """Set axes labels from axes in dataset.
@@ -1333,7 +1335,7 @@ class MultiPlotter(Plotter):
     ------
     aspecd.exceptions.MissingDatasetError
         Raised when no dataset exists to act on
-    aspecd.exceptions.PlotNotApplicableToDatasetError
+    aspecd.exceptions.NotApplicableToDatasetError
         Raised when processing step is not applicable to dataset
 
     """
@@ -1386,8 +1388,8 @@ class MultiPlotter(Plotter):
         if not self.datasets:
             raise aspecd.exceptions.MissingDatasetError
         if not all([self.applicable(dataset) for dataset in self.datasets]):
-            raise aspecd.exceptions.PlotNotApplicableToDatasetError(
-                'Plot not applicable to one or more datasets')
+            raise aspecd.exceptions.NotApplicableToDatasetError(
+                '%s not applicable to one or more datasets' % self.name)
 
     def _set_drawing_properties(self):
         if len(self.properties.drawings) < len(self.datasets):
@@ -1878,7 +1880,7 @@ class SingleCompositePlotter(CompositePlotter):
     aspecd.exceptions.MissingDatasetError
         Raised when no dataset exists to act on
 
-    aspecd.exceptions.PlotNotApplicableToDatasetError
+    aspecd.exceptions.NotApplicableToDatasetError
         Raised when processing step is not applicable to dataset
 
     """
@@ -1969,7 +1971,9 @@ class SingleCompositePlotter(CompositePlotter):
 
     def _check_applicability(self):
         if not self.applicable(self.dataset):
-            raise aspecd.exceptions.PlotNotApplicableToDatasetError
+            message = "%s not applicable to dataset with id %s" \
+                      % (self.name, self.dataset.id)
+            raise aspecd.exceptions.NotApplicableToDatasetError(message=message)
 
 
 class Saver:

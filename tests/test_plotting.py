@@ -221,6 +221,33 @@ class TestSinglePlotter(unittest.TestCase):
         test_dataset = self.plotter.plot(dataset=dataset.Dataset())
         self.assertTrue(isinstance(test_dataset, dataset.Dataset))
 
+    def test_plot_checks_applicability(self):
+        class MyPlotter(aspecd.plotting.SinglePlotter):
+
+            @staticmethod
+            def applicable(dataset):
+                return False
+
+        dataset = aspecd.dataset.Dataset()
+        plotter = MyPlotter()
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            dataset.plot(plotter)
+
+    def test_plot_check_applicability_prints_helpful_message(self):
+        class MyPlotter(aspecd.plotting.SinglePlotter):
+
+            @staticmethod
+            def applicable(dataset):
+                return False
+
+        dataset = aspecd.dataset.Dataset()
+        dataset.id = "foo"
+        plotter = MyPlotter()
+        message = "MyPlotter not applicable to dataset with id foo"
+        with self.assertRaisesRegex(
+                aspecd.exceptions.NotApplicableToDatasetError, message):
+            dataset.plot(plotter)
+
 
 class TestSinglePlotter1D(unittest.TestCase):
     def setUp(self):
@@ -253,7 +280,7 @@ class TestSinglePlotter1D(unittest.TestCase):
         dataset_ = dataset.Dataset()
         dataset_.data.data = np.random.rand(3, 2)
         with self.assertRaises(
-                aspecd.exceptions.PlotNotApplicableToDatasetError):
+                aspecd.exceptions.NotApplicableToDatasetError):
             self.plotter.plot(dataset_)
 
     def test_set_line_colour_from_dict(self):
@@ -346,7 +373,7 @@ class TestSinglePlotter2D(unittest.TestCase):
         dataset_ = aspecd.dataset.CalculatedDataset()
         dataset_.data.data = np.random.random([5])
         with self.assertRaises(
-                aspecd.exceptions.PlotNotApplicableToDatasetError):
+                aspecd.exceptions.NotApplicableToDatasetError):
             dataset_.plot(self.plotter)
 
     def test_has_type_property(self):
@@ -576,7 +603,7 @@ class TestSinglePlotter2DStacked(unittest.TestCase):
         dataset_ = aspecd.dataset.CalculatedDataset()
         dataset_.data.data = np.random.random([5])
         with self.assertRaises(
-                aspecd.exceptions.PlotNotApplicableToDatasetError):
+                aspecd.exceptions.NotApplicableToDatasetError):
             dataset_.plot(self.plotter)
 
     def test_parameters_have_stacking_dimension_key(self):
@@ -846,6 +873,38 @@ class TestMultiPlotter(unittest.TestCase):
         self.assertEqual(self.plotter.properties.axes.ylabel,
                          self.plotter.axes.get_ylabel())
 
+    def test_plot_checks_applicability(self):
+        class MyPlotter(aspecd.plotting.MultiPlotter):
+
+            @staticmethod
+            def applicable(dataset):
+                return False
+
+        dataset1 = aspecd.dataset.Dataset()
+        dataset2 = aspecd.dataset.Dataset()
+        plotter = MyPlotter()
+        plotter.datasets.append(dataset1)
+        plotter.datasets.append(dataset2)
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            plotter.plot()
+
+    def test_plot_checks_applicability_and_prints_helpful_message(self):
+        class MyPlotter(aspecd.plotting.MultiPlotter):
+
+            @staticmethod
+            def applicable(dataset):
+                return False
+
+        dataset1 = aspecd.dataset.Dataset()
+        dataset2 = aspecd.dataset.Dataset()
+        plotter = MyPlotter()
+        plotter.datasets.append(dataset1)
+        plotter.datasets.append(dataset2)
+        message = "MyPlotter not applicable to one or more datasets"
+        with self.assertRaisesRegex(
+                aspecd.exceptions.NotApplicableToDatasetError, message):
+            plotter.plot()
+
 
 class TestMultiPlotter1D(unittest.TestCase):
     def setUp(self):
@@ -882,7 +941,7 @@ class TestMultiPlotter1D(unittest.TestCase):
         dataset_.data.data = np.random.rand(3, 2)
         self.plotter.datasets.append(dataset_)
         with self.assertRaises(
-                aspecd.exceptions.PlotNotApplicableToDatasetError):
+                aspecd.exceptions.NotApplicableToDatasetError):
             self.plotter.plot()
 
     def test_plot_with_datasets(self):
@@ -1118,6 +1177,33 @@ class TestSingleCompositePlotter(unittest.TestCase):
         test_dataset = dataset.Dataset()
         self.plotter.plot(dataset=test_dataset)
         self.assertGreater(len(test_dataset.representations), 0)
+
+    def test_plot_checks_applicability(self):
+        class MyPlotter(aspecd.plotting.SingleCompositePlotter):
+
+            @staticmethod
+            def applicable(dataset):
+                return False
+
+        dataset = aspecd.dataset.Dataset()
+        plotter = MyPlotter()
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            dataset.plot(plotter)
+
+    def test_plot_check_applicability_prints_helpful_message(self):
+        class MyPlotter(aspecd.plotting.SingleCompositePlotter):
+
+            @staticmethod
+            def applicable(dataset):
+                return False
+
+        dataset = aspecd.dataset.Dataset()
+        dataset.id = "foo"
+        plotter = MyPlotter()
+        message = "MyPlotter not applicable to dataset with id foo"
+        with self.assertRaisesRegex(
+                aspecd.exceptions.NotApplicableToDatasetError, message):
+            dataset.plot(plotter)
 
 
 class TestSaver(unittest.TestCase):

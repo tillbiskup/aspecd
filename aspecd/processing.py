@@ -541,7 +541,9 @@ class SingleProcessingStep(ProcessingStep):
 
     def _check_applicability(self):
         if not self.applicable(self.dataset):
-            raise aspecd.exceptions.NotApplicableToDatasetError
+            message = "%s not applicable to dataset with id %s" \
+                      % (self.name, self.dataset.id)
+            raise aspecd.exceptions.NotApplicableToDatasetError(message=message)
 
     def create_history_record(self):
         """
@@ -652,7 +654,10 @@ class MultiProcessingStep(ProcessingStep):
     def _check_applicability(self):
         for dataset in self.datasets:
             if not self.applicable(dataset):
-                raise aspecd.exceptions.NotApplicableToDatasetError
+                message = "%s not applicable to dataset with id %s" \
+                          % (self.name, dataset.id)
+                raise aspecd.exceptions.NotApplicableToDatasetError(
+                    message=message)
 
     def create_history_record(self):
         """

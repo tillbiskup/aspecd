@@ -116,6 +116,33 @@ class TestSingleAnalysisStep(unittest.TestCase):
         self.assertTrue(isinstance(history_record,
                                    aspecd.history.AnalysisHistoryRecord))
 
+    def test_analyse_checks_applicability(self):
+        class MyAnalysisStep(aspecd.analysis.SingleAnalysisStep):
+
+            @staticmethod
+            def applicable(dataset):
+                return False
+
+        dataset = aspecd.dataset.Dataset()
+        analysis = MyAnalysisStep()
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            dataset.analyse(analysis)
+
+    def test_analyse_checks_applicability_prints_helpful_message(self):
+        class MyAnalysisStep(aspecd.analysis.SingleAnalysisStep):
+
+            @staticmethod
+            def applicable(dataset):
+                return False
+
+        dataset = aspecd.dataset.Dataset()
+        dataset.id = "foo"
+        analysis = MyAnalysisStep()
+        message = "MyAnalysisStep not applicable to dataset with id foo"
+        with self.assertRaisesRegex(
+                aspecd.exceptions.NotApplicableToDatasetError, message):
+            dataset.analyse(analysis)
+
 
 class TestMultiAnalysisStep(unittest.TestCase):
     def setUp(self):
@@ -137,6 +164,44 @@ class TestMultiAnalysisStep(unittest.TestCase):
     def test_analyse_with_datasets(self):
         self.analysisstep.datasets.append(aspecd.dataset.Dataset())
         self.analysisstep.analyse()
+
+    def test_analyse_checks_applicability(self):
+        dataset1 = aspecd.dataset.Dataset()
+        dataset1.data.data = np.random.random([5, 5])
+        dataset2 = aspecd.dataset.Dataset()
+        dataset2.data.data = np.random.random(5)
+
+        class MyAnalysisStep(aspecd.analysis.MultiAnalysisStep):
+            @staticmethod
+            def applicable(dataset):
+                return len(dataset.data.axes) == 2
+
+        analysis_step = MyAnalysisStep()
+        analysis_step.datasets.append(dataset1)
+        analysis_step.datasets.append(dataset2)
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            analysis_step.analyse()
+
+    def test_analyse_checks_applicability_prints_helpful_message(self):
+        dataset1 = aspecd.dataset.Dataset()
+        dataset1.data.data = np.random.random([5, 5])
+        dataset1.id = "foo"
+        dataset2 = aspecd.dataset.Dataset()
+        dataset2.data.data = np.random.random(5)
+        dataset2.id = "bar"
+
+        class MyAnalysisStep(aspecd.analysis.MultiAnalysisStep):
+            @staticmethod
+            def applicable(dataset):
+                return len(dataset.data.axes) == 2
+
+        analysis_step = MyAnalysisStep()
+        analysis_step.datasets.append(dataset1)
+        analysis_step.datasets.append(dataset2)
+        message = "MyAnalysisStep not applicable to dataset with id foo"
+        with self.assertRaisesRegex(
+                aspecd.exceptions.NotApplicableToDatasetError, message):
+            analysis_step.analyse()
 
 
 class TestPreprocessing(unittest.TestCase):
