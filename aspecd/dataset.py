@@ -893,7 +893,7 @@ class DatasetFactory:
     def __init__(self):
         self.importer_factory = None
 
-    def get_dataset(self, source=''):
+    def get_dataset(self, source='', importer='', parameters=None):
         """
         Return dataset object for dataset specified by its source.
 
@@ -931,7 +931,9 @@ class DatasetFactory:
             raise aspecd.exceptions.MissingImporterFactoryError(
                 'An ImporterFactory is required to return a dataset')
         dataset_ = self._create_dataset(source=source)
-        importer = self.importer_factory.get_importer(source=source)
+        importer = self.importer_factory.get_importer(source=source,
+                                                      importer=importer,
+                                                      parameters=parameters)
         dataset_.import_from(importer)
         return dataset_
 

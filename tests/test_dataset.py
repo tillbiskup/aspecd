@@ -898,6 +898,11 @@ class TestDatasetFactory(unittest.TestCase):
     def setUp(self):
         self.factory = dataset.DatasetFactory()
         self.source = '/foo'
+        self.filename = 'foo'
+
+    def tearDown(self):
+        if os.path.exists(self.filename):
+            os.remove(self.filename)
 
     def test_instantiate_class(self):
         pass
@@ -922,6 +927,24 @@ class TestDatasetFactory(unittest.TestCase):
         self.factory.importer_factory = io.DatasetImporterFactory()
         dataset_ = self.factory.get_dataset(source=self.source)
         self.assertEqual(self.source, dataset_.id)
+
+    def test_get_dataset_with_importer(self):
+        data = np.random.random(1)
+        np.savetxt(self.filename, data)
+        self.factory.importer_factory = io.DatasetImporterFactory()
+        dataset_ = self.factory.get_dataset(source=self.filename,
+                                            importer='TxtImporter')
+        self.assertEqual(data, dataset_.data.data)
+
+    def test_get_dataset_with_importer_and_parameters(self):
+        parameters = {'skiprows': 1}
+        data = np.random.random(1)
+        np.savetxt(self.filename, data, header="This is a header")
+        self.factory.importer_factory = io.DatasetImporterFactory()
+        dataset_ = self.factory.get_dataset(source=self.filename,
+                                            importer='TxtImporter',
+                                            parameters=parameters)
+        self.assertEqual(data, dataset_.data.data)
 
 
 class TestData(unittest.TestCase):

@@ -514,6 +514,7 @@ class DatasetImporterFactory:
             package_name = aspecd.utils.package_name(self)
             full_class_name = '.'.join([package_name, 'io', importer])
             importer = aspecd.utils.object_from_class_name(full_class_name)
+            importer.source = self.source
         if not importer:
             importer = self._get_importer()
         if not importer:
@@ -1068,6 +1069,7 @@ class AsdfImporter(DatasetImporter):
 
 
 class TxtImporter(DatasetImporter):
+    # noinspection PyUnresolvedReferences
     """
     Dataset importer for importing from plain text files (TXT).
 
@@ -1088,14 +1090,24 @@ class TxtImporter(DatasetImporter):
     interpreted as the *x* axis. In all other cases, data will be read as is
     and no axes values explicitly written.
 
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        Parameters controlling the import
+
+        skiprows : :class:`int`
+            Number of rows to skip in text file (*e.g.*, header lines)
+
     """
 
     def __init__(self, source=None):
         super().__init__(source=source)
         self.extension = '.txt'
+        self.parameters["skiprows"] = 0
 
     def _import(self):
-        data = np.loadtxt(self.source)
+        data = np.loadtxt(self.source, **self.parameters)
         if len(np.shape(data)) > 1 and np.shape(data)[1] == 2:
             self.dataset.data.axes[0].values = data[:, 0]
             data = data[:, 1]
