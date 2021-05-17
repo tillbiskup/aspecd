@@ -911,6 +911,16 @@ class DatasetFactory:
 
             May be a filename or path, a URL/URI, a LOI, or similar
 
+        importer : :class:`str`
+            Name of the importer to use for importing the dataset
+
+            Default: ''
+
+        parameters : :class:`dict`
+            Additional parameters for controlling the import
+
+            Default: None
+
         Returns
         -------
         dataset : :class:`aspecd.dataset.Dataset`

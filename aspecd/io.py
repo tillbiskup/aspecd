@@ -495,6 +495,16 @@ class DatasetImporterFactory:
 
             May be a filename or path, a URL/URI, a LOI, or similar
 
+        importer : :class:`str`
+            Name of the importer to use for importing the dataset
+
+            Default: ''
+
+        parameters : :class:`dict`
+            Additional parameters for controlling the import
+
+            Default: None
+
         Returns
         -------
         importer : :class:`aspecd.io.DatasetImporter`
@@ -519,10 +529,12 @@ class DatasetImporterFactory:
             importer = self._get_importer()
         if not importer:
             importer = self._get_aspecd_importer()
-        importer.parameters = parameters
+        if parameters:
+            importer.parameters = parameters
         return importer
 
     # noinspection PyMethodMayBeStatic
+    # pylint: disable=no-self-use
     def _get_importer(self):
         """Choose appropriate importer for a dataset.
 
