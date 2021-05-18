@@ -10,8 +10,6 @@ For version 0.2
 
 * Add Zenodo badge to start page of documentation in release
 
-* Plot task: default filename for saved figure
-
 
 For version 0.3
 ===============
@@ -56,7 +54,7 @@ For later versions
 
 * Tabular representations of characteristics extracted from datasets
 
-* Plotter: Factory to create single plots of each given dataset. Probably needs a way to create default filenames (e.g. label + date?).
+* Plotter: Factory to create single plots of each given dataset.
 
 
 Todos

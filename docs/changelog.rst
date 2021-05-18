@@ -14,6 +14,8 @@ Not yet released
 New features
 ------------
 
+* Singleplot and multiplot tasks automatically save results to generic file(s) when no filename is provided
+
 * Importer and importer parameters can be set in recipe
 
 * DatasetImporterFactory: importer can be set explicitly, parameters can be passed to importers

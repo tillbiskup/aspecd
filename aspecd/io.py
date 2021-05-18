@@ -341,6 +341,8 @@ class DatasetImporter:
         Useful in case of, *e.g.*, CSV importers where the user may want to
         set things such as the delimiter
 
+        .. versionadded:: 0.2
+
     Raises
     ------
     aspecd.io.MissingDatasetError
@@ -500,10 +502,14 @@ class DatasetImporterFactory:
 
             Default: ''
 
+            .. versionadded:: 0.2
+
         parameters : :class:`dict`
             Additional parameters for controlling the import
 
             Default: None
+
+            .. versionadded:: 0.2
 
         Returns
         -------

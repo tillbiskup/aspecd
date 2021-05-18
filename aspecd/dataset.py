@@ -916,10 +916,14 @@ class DatasetFactory:
 
             Default: ''
 
+            .. versionadded:: 0.2
+
         parameters : :class:`dict`
             Additional parameters for controlling the import
 
             Default: None
+
+            .. versionadded:: 0.2
 
         Returns
         -------

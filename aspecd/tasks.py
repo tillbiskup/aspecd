@@ -878,6 +878,8 @@ class Recipe:
 
         Default: True
 
+        .. versionadded:: 0.2
+
     filename : :class:`str`
         Name of the (YAML) file the recipe was loaded from.
 
