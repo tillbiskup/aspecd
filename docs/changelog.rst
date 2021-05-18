@@ -14,6 +14,8 @@ Not yet released
 New features
 ------------
 
+* Importer and importer parameters can be set in recipe
+
 * DatasetImporterFactory: importer can be set explicitly, parameters can be passed to importers
 
 * DatasetImporter with parameters property

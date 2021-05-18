@@ -21,6 +21,7 @@ class TestRecipe(unittest.TestCase):
         self.filename = 'test.yaml'
         self.dataset = '/foo'
         self.datasets = ['/foo', '/bar']
+        self.dataset_filename = 'foo'
         self.task = {'kind': 'processing', 'type': 'SingleProcessingStep'}
         self.dataset_factory = dataset.DatasetFactory()
         self.dataset_factory.importer_factory = io.DatasetImporterFactory()
@@ -28,6 +29,8 @@ class TestRecipe(unittest.TestCase):
     def tearDown(self):
         if os.path.exists(self.filename):
             os.remove(self.filename)
+        if os.path.exists(self.dataset_filename):
+            os.remove(self.dataset_filename)
 
     def test_instantiate_class(self):
         pass
@@ -172,12 +175,58 @@ class TestRecipe(unittest.TestCase):
         self.recipe.from_dict(dict_)
         self.assertEqual(label, self.recipe.datasets[self.dataset].label)
 
+    def test_from_dict_with_dataset_as_dict_and_importer(self):
+        data = np.random.random(1)
+        np.savetxt(self.dataset_filename, data)
+        dict_ = {'datasets': [{'source': self.dataset_filename,
+                               'importer': 'TxtImporter'}]}
+        self.recipe.dataset_factory = self.dataset_factory
+        self.recipe.from_dict(dict_)
+        self.assertEqual(data,
+                         self.recipe.datasets[self.dataset_filename].data.data)
+
+    def test_from_dict_with_dataset_as_dict_and_importer_parameters(self):
+        data = np.random.random(2)
+        parameters = {'skiprows': 1}
+        np.savetxt(self.dataset_filename, data)
+        dict_ = {'datasets': [{'source': self.dataset_filename,
+                               'importer': 'TxtImporter',
+                               'importer_parameters': parameters}]}
+        self.recipe.dataset_factory = self.dataset_factory
+        self.recipe.from_dict(dict_)
+        self.assertEqual(data[1],
+                         self.recipe.datasets[self.dataset_filename].data.data)
+
     def test_from_dict_with_dataset_as_dict_and_package_sets_dataset(self):
         dict_ = {'datasets': [{'source': self.dataset, 'package': 'aspecd'}]}
         self.recipe.dataset_factory = 'foo'
         self.recipe.from_dict(dict_)
         self.assertTrue(isinstance(self.recipe.datasets[self.dataset],
                                    dataset.Dataset))
+
+    def test_from_dict_with_dataset_as_dict_and_package_and_importer(self):
+        data = np.random.random(1)
+        np.savetxt(self.dataset_filename, data)
+        dict_ = {'datasets': [{'source': self.dataset_filename,
+                               'importer': 'TxtImporter',
+                               'package': 'aspecd'}]}
+        self.recipe.dataset_factory = self.dataset_factory
+        self.recipe.from_dict(dict_)
+        self.assertEqual(data,
+                         self.recipe.datasets[self.dataset_filename].data.data)
+
+    def test_from_dict_with_dataset_dict_package_and_importer_parameters(self):
+        data = np.random.random(2)
+        parameters = {'skiprows': 1}
+        np.savetxt(self.dataset_filename, data)
+        dict_ = {'datasets': [{'source': self.dataset_filename,
+                               'importer': 'TxtImporter',
+                               'importer_parameters': parameters,
+                               'package': 'aspecd'}]}
+        self.recipe.dataset_factory = self.dataset_factory
+        self.recipe.from_dict(dict_)
+        self.assertEqual(data[1],
+                         self.recipe.datasets[self.dataset_filename].data.data)
 
     def test_from_dict_with_tasks_without_task_factory_raises(self):
         dict_ = {'tasks': [self.task]}

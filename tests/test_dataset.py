@@ -938,13 +938,13 @@ class TestDatasetFactory(unittest.TestCase):
 
     def test_get_dataset_with_importer_and_parameters(self):
         parameters = {'skiprows': 1}
-        data = np.random.random(1)
-        np.savetxt(self.filename, data, header="This is a header")
+        data = np.random.random(2)
+        np.savetxt(self.filename, data)
         self.factory.importer_factory = io.DatasetImporterFactory()
         dataset_ = self.factory.get_dataset(source=self.filename,
                                             importer='TxtImporter',
                                             parameters=parameters)
-        self.assertEqual(data, dataset_.data.data)
+        self.assertEqual(data[1], dataset_.data.data)
 
 
 class TestData(unittest.TestCase):

@@ -10,8 +10,6 @@ For version 0.2
 
 * Add Zenodo badge to start page of documentation in release
 
-* Importer with parameters in recipe (*e.g.*, for CSV importer)
-
 * Plot task: default filename for saved figure
 
 

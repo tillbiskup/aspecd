@@ -334,6 +334,65 @@ classes need to reside in the same modules as in the ASpecD framework,
 dataset importer factory in the "io" module.
 
 
+Specify importer for datasets
+-----------------------------
+
+Sometimes it may be necessary to explicitly provide the importer class that
+shall be used to import a dataset. In this case, you can explicitly say
+which importer to use:
+
+.. code-block:: yaml
+
+    datasets:
+      - source: /lengthly/path/to/dataset1
+      - source: /lengthly/path/to/dataset2
+        importer: TxtImporter
+
+However, be careful to match data format and importer, as you are overriding
+the automatic importer determination of the
+:class:`aspecd.io.DatasetImporterFactory` this way. Furthermore, make sure
+the respective importer class exists. Of course, this works as
+well with providing an alternative package:
+
+.. code-block:: yaml
+
+    datasets:
+      - source: /lengthly/path/to/dataset1
+      - source: /lengthly/path/to/dataset2
+        package: other_package
+        importer: TxtImporter
+
+In this particular example, the importer located in
+``other_package.io.TxtImporter`` would be used to import your dataset. The
+parameters will be directly passed to the importer without further checking,
+and it is the sole responsibility of the importer class to make sense of the
+parameters provided. Have a look at the documentation of the actual importer
+class you intend to use for parameters you can set (if any). Note that many
+parameters will not recognise additional parameters.
+
+
+Specify importer parameters for datasets
+----------------------------------------
+
+Furthermore, sometimes you may want to provide parameters for an importer,
+*e.g.* in case of importing text files with headers, and you can do this as
+well:
+
+.. code-block:: yaml
+
+    datasets:
+      - source: /lengthly/path/to/dataset1
+      - source: /lengthly/path/to/dataset2
+        importer: TxtImporter
+        importer_parameters:
+          skiprows: 3
+
+You can even provide ``importer_parameters`` without explicitly specifying
+an importer to use, although this may lead to hard to detect behaviour,
+as you rely on the automatism of choosing the importer class implemented in
+the :class:`aspecd.io.DatasetImporterFactory` in this case.
+
+
 Referring to other datasets and results
 ---------------------------------------
 
@@ -607,9 +666,55 @@ general handling of recipes. The former is implemented within each
 respective package built upon the ASpecD framework, the latter is taken care
 of fully by the ASpecD framework itself. You might want to implement a simple
 proxy within a derived package to prevent the user from having to call out to
-functionality provided directly by the ASpecD framework (what might be
+functionality provided directly by the ASpecD framework. The latter might be
 confusing for those unfamiliar with the underlying details, *i.e.*,
-most common users).
+most common users. More explicit, you may want to create proxy classes in
+the processing and analysis modules of your package, subclassing all the
+concrete processing and analysis steps already provided with the ASpecD
+framework.
+
+
+Notes for developers
+====================
+
+.. note::
+
+    This section is only relevant for those further developing the ASpecD
+    framework. Users of recipe-driven data analysis as well as developers of
+    packages derived from the ASpecD framework usually need not bother about
+    these details (as others did for them already).
+
+Recipe-driven data analysis introduces another level of abstraction and
+indirection with its use of recipes in YAML format. Based on this analogy,
+we have a :class:`aspecd.tasks.Recipe` consisting of a list of datasets and a
+list of :class:`aspecd.tasks.Task` to be performed on the datasets. Such recipe
+gets "cooked" by a :class:`aspecd.tasks.Chef`, and for the convenience of
+the user of recipe-driven data analysis, the result gets "served" by the
+:class:`aspecd.tasks.ChefDeService`. An actual user will not see any of
+this, but simply call ``serve <recipe-name.yaml>`` from the command line.
+
+Internally, recipes are represented by an instance of
+:class:`aspecd.tasks.Recipe`, and this representation takes care already to
+import the datasets specified in the ``datasets`` block of a recipe.
+Therefore, all handling of data import needs to be done here. Similarly,
+upon populating a recipe (from dict or by importing), the tasks will already
+be created using a :class:`aspecd.tasks.TaskFactory`.
+
+The actual tasks are represented by instances of
+subclasses of :class:`aspecd.tasks.Task`, and they in turn create an
+instance of the actual object internally, applying this to the dataset(s).
+
+"Cooking" a recipe is done by :class:`aspecd.tasks.Chef`, and this class
+takes care of writing a history in form of an executable recipe, thus ensuring
+reproducibility and good scientific practice.
+
+"Serving" the results of a cooked recipe is eventually the responsibility of
+the :class:`aspecd.tasks.ChefDeService`, and it is this class calling out to
+the :class:`aspecd.tasks.Chef` and writing the history to an actual file
+that can be used as recipe again. For the convenience of the user, an entry
+point (console script) is included in the ``setup.py`` file calling
+:func:`aspecd.tasks.serve` that in turn takes care of loading the recipe and
+instantiating a :class:`aspecd.tasks.ChefDeService`.
 
 
 Module documentation
@@ -850,6 +955,8 @@ class Recipe:
 
     def _append_dataset(self, key):
         properties = dict()
+        importer = None
+        importer_parameters = None
         if isinstance(key, dict):
             properties = copy.copy(key)
             source = key['source']
@@ -859,6 +966,12 @@ class Recipe:
                 properties.pop('id')
             else:
                 label = key['source']
+            if 'importer' in key:
+                importer = key['importer']
+                properties.pop('importer')
+            if 'importer_parameters' in key:
+                importer_parameters = key['importer_parameters']
+                properties.pop('importer_parameters')
         else:
             source = key
             label = key
@@ -868,9 +981,15 @@ class Recipe:
             dataset_factory = \
                 self._get_dataset_factory(package=properties['package'])
             # noinspection PyUnresolvedReferences
-            dataset = dataset_factory.get_dataset(source=source)
+            dataset = \
+                dataset_factory.get_dataset(source=source,
+                                            importer=importer,
+                                            parameters=importer_parameters)
         else:
-            dataset = self.dataset_factory.get_dataset(source=source)
+            dataset = \
+                self.dataset_factory.get_dataset(source=source,
+                                                 importer=importer,
+                                                 parameters=importer_parameters)
         for property_key, value in properties.items():
             if hasattr(dataset, property_key):
                 setattr(dataset, property_key, value)
