@@ -381,6 +381,33 @@ Of course, you can provide a full path to each output file for plots and reports
 In the above example, an absolute path has been provided for the output, and of course you can provide relative paths for the filenames of the plot. Similar to the absolute path set using ``output_directory``, you can set relative paths that are interpreted relative to the path the recipe is cooked from.
 
 
+Automatically saving plots
+--------------------------
+
+Sometimes, particularly when trying to get an overview of a large series of datasets, it is tedious to provide filenames for each single dataset to save the resulting plot to. Therefore, in case you do not provide filename(s) for a plotting task, and as long as the top-level directive ``autosave_plots`` is set to True, your plots will automatically be saved. The name consists of the basename of the dataset source (excluding path and file extension) and the class name of the plotter used.
+
+.. note::
+
+    Not providing filenames for plotters may be convenient when you use every plotter only once per dataset, as otherwise, later plots will overwrite the results of previous plots. On the other hand, the autosave feature may lead to your output directory being populated with a lot of files. Therefore, usually it is best to be more explicit and provide filenames to save your plots to.
+
+
+Just to show an example of how to switch off the autosaving of plots:
+
+.. code-block:: yaml
+
+    autosave_plots: False
+
+    datasets:
+      - dataset
+
+    tasks:
+      - kind: singleplot
+        type: SinglePlotter
+
+
+In this particular case, the result of the singleplot task will not be saved to a file, and unless you add a label and use the resulting plotter in a compositeplotter task, you will not see the results, as recipe-driven data analysis works fully unattended and non-interactive.
+
+
 .. todo::
 
     Things to add:

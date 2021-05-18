@@ -868,6 +868,16 @@ class Recipe:
         Make sure the path actually exists. Otherwise, you may run into
         trouble when tasks try to save their output.
 
+    autosave_plots: :class:`bool`
+        Whether to save plots automatically even if no filename is provided.
+
+        If true, each :class:`aspecd.tasks.SingleplotTask` and
+        :class:`aspecd.tasks.MultiplotTask` will save the plots to default
+        file names. For details, see the documentation of the respective
+        classes.
+
+        Default: True
+
     filename : :class:`str`
         Name of the (YAML) file the recipe was loaded from.
 
@@ -905,6 +915,7 @@ class Recipe:
         self.default_package = ''
         self.datasets_source_directory = ''
         self.output_directory = ''
+        self.autosave_plots = True
         self.filename = ''
 
     def from_dict(self, dict_=None):  # noqa: MC0001
@@ -936,7 +947,7 @@ class Recipe:
         if not self.task_factory:
             raise aspecd.exceptions.MissingTaskFactoryError
         for keyword in ["default_package", "datasets_source_directory",
-                        "output_directory"]:
+                        "output_directory", "autosave_plots"]:
             if keyword in dict_:
                 setattr(self, keyword, dict_[keyword])
         if self.output_directory and not self.output_directory.startswith('/'):
@@ -1306,7 +1317,7 @@ class Chef:
         system_info = aspecd.system.SystemInfo(self.recipe.default_package)
         self.history["system_info"] = system_info.to_dict()
         for key in ['default_package', 'datasets_source_directory',
-                    'output_directory']:
+                    'output_directory', 'autosave_plots']:
             if getattr(self.recipe, key):
                 self.history[key] = getattr(self.recipe, key)
         recipe_dict = self.recipe.to_dict()
@@ -2282,6 +2293,14 @@ class SingleplotTask(PlotTask):
         If the recipe contains the ``output_directory`` key on the top
         level, the figure(s) will be saved to this directory.
 
+    As long as ``autosave_plots`` in the recipe is set to True, the plots
+    will be saved automatically, even if no filename is provided. These
+    automatically generated filenames consist of the last part of the
+    dataset source (excluding a potential file extension) and the name of
+    the plotter used. To prevent the plotters in a recipe from automatically
+    saving the plots, include the ``autosave_plots`` directive on the top
+    level of your recipe and set it to False.
+
     """
 
     def _perform(self):
@@ -2295,6 +2314,14 @@ class SingleplotTask(PlotTask):
             self._task = self.get_object()
             if filenames:
                 self._task.filename = filenames[number]
+            elif "filename" not in self.properties \
+                    and self.recipe.autosave_plots:
+                dataset_basename = \
+                    os.path.splitext(os.path.split(dataset.id)[-1])[0]
+                # noinspection PyUnresolvedReferences
+                plotter_name = self._task.name.split(".")[-1]
+                self._task.filename = \
+                    "".join([dataset_basename, "_", plotter_name, ".pdf"])
             dataset.plot(plotter=self._task)
             # noinspection PyTypeChecker
             self.save_plot(plot=self._task)
@@ -2365,6 +2392,14 @@ class MultiplotTask(PlotTask):
         If the recipe contains the ``output_directory`` key on the top
         level, the figure(s) will be saved to this directory.
 
+    As long as ``autosave_plots`` in the recipe is set to True, the plots
+    will be saved automatically, even if no filename is provided. These
+    automatically generated filenames consist of the last part of the
+    dataset sources (excluding a potential file extension) joint by underscores
+    and the name of the plotter used. To prevent the plotters in a recipe
+    from automatically saving the plots, include the ``autosave_plots``
+    directive on the top level of your recipe and set it to False.
+
     """
 
     def _perform(self):
@@ -2372,6 +2407,16 @@ class MultiplotTask(PlotTask):
         self._task.datasets = self.recipe.get_datasets(self.apply_to)
         # noinspection PyUnresolvedReferences
         self._task.plot()
+        if "filename" not in self.properties and self.recipe.autosave_plots:
+            basenames = []
+            for dataset in self._task.datasets:
+                basenames.append(os.path.splitext(os.path.split(dataset.id)[
+                                                      -1])[0])
+            # noinspection PyUnresolvedReferences
+            plotter_name = self._task.name.split(".")[-1]
+            self._task.filename = \
+                "".join(["_".join(basenames), "_", plotter_name, ".pdf"])
+            self.properties["filename"] = self._task.filename
         # noinspection PyTypeChecker
         self.save_plot(plot=self._task)
         # noinspection PyUnresolvedReferences
