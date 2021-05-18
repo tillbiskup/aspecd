@@ -30,9 +30,9 @@ New features
 
 * BlindSNREstimation (currently only with simplest method)
 
-* BasicStatistics
+* BasicStatistics (mean, median, std, var)
 
-* BasicCharacteristics
+* BasicCharacteristics (min, max, amplitude, area)
 
 * ProcessingStep provides non-public method ``_set_defaults()`` for setting default parameters before sanitising parameters.
 

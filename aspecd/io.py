@@ -526,6 +526,8 @@ class DatasetImporterFactory:
             raise aspecd.exceptions.MissingSourceError(
                 'A source is required to return an appropriate importer')
         self.source = source
+        if not self.source.startswith(os.pathsep):
+            self.source = os.path.join(os.path.abspath(os.curdir), self.source)
         if importer:
             package_name = aspecd.utils.package_name(self)
             full_class_name = '.'.join([package_name, 'io', importer])
@@ -561,8 +563,6 @@ class DatasetImporterFactory:
         return importer
 
     def _get_aspecd_importer(self):
-        if not self.source.startswith(os.pathsep):
-            self.source = os.path.join(os.path.abspath(os.curdir), self.source)
         _, file_extension = os.path.splitext(self.source)
         if file_extension == '.adf':
             return AdfImporter(source=self.source)

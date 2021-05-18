@@ -552,6 +552,7 @@ Currently, the following subclasses are implemented:
 
      * :class:`aspecd.tasks.SingleplotTask`
      * :class:`aspecd.tasks.MultiplotTask`
+     * :class:`aspecd.tasks.CompositeplotTask`
 
   * :class:`aspecd.tasks.ReportTask`
   * :class:`aspecd.tasks.ModelTask`
@@ -981,10 +982,8 @@ class Recipe:
                 label = key['source']
             if 'importer' in key:
                 importer = key['importer']
-                properties.pop('importer')
             if 'importer_parameters' in key:
                 importer_parameters = key['importer_parameters']
-                properties.pop('importer_parameters')
         else:
             source = key
             label = key
@@ -2412,8 +2411,8 @@ class MultiplotTask(PlotTask):
         if "filename" not in self.properties and self.recipe.autosave_plots:
             basenames = []
             for dataset in self._task.datasets:
-                basenames.append(os.path.splitext(os.path.split(dataset.id)[
-                                                      -1])[0])
+                basenames.append(
+                    os.path.splitext(os.path.split(dataset.id)[-1])[0])
             # noinspection PyUnresolvedReferences
             plotter_name = self._task.name.split(".")[-1]
             self._task.filename = \
@@ -2442,29 +2441,29 @@ class CompositeplotTask(PlotTask):
 
     .. code-block:: yaml
 
-        kind: singleplot
-        type: SinglePlotter1D
-        apply_to:
-          - dataset1
-        result: 1D_plot
+        - kind: singleplot
+          type: SinglePlotter1D
+          apply_to:
+            - dataset1
+          result: 1D_plot
 
-        kind: singleplot
-        type: SinglePlotter2D
-        apply_to:
-          - dataset2
-        result: 2D_plot
+        - kind: singleplot
+          type: SinglePlotter2D
+          apply_to:
+            - dataset2
+          result: 2D_plot
 
-        kind: compositeplot
-        type: CompositePlotter
-        properties:
-          grid_dimensions: [1, 2]
-          subplot_locations:
-            - [0, 0, 1, 1]
-            - [0, 1, 1, 1]
-          plotter:
-            - 1D_plot
-            - 2D_plot
-          filename: composed_plot.pdf
+        - kind: compositeplot
+          type: CompositePlotter
+          properties:
+            grid_dimensions: [1, 2]
+            subplot_locations:
+              - [0, 0, 1, 1]
+              - [0, 1, 1, 1]
+            plotter:
+              - 1D_plot
+              - 2D_plot
+            filename: composed_plot.pdf
 
     The crucial aspect here is to first define the individual plotters that
     get used for the respective panels of the CompositePlotter. In this
@@ -2472,6 +2471,12 @@ class CompositeplotTask(PlotTask):
     created and afterwards combined into the CompositePlotter. Furthermore,
     for a CompositePlot you need to specify both, grid dimensions and
     subplot locations, as they will be set to one single axis by default.
+
+    .. note::
+        As long as the ``autosave_plots`` directive at the top level of the
+        recipe is set to True, the results of the individual plotters
+        combined in the CompositePlotter will be saved to generic filenames.
+        To prevent this from happening, set ``autosave_plots`` to false.
 
     """
 
