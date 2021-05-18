@@ -1216,21 +1216,3 @@ class PeakFinding(SingleAnalysisStep):
             self.result = (peaks, properties)
         else:
             self.result = self.dataset.data.axes[0].values[peaks]
-
-
-class SignalToNoiseRatio(SingleAnalysisStep):
-    """
-    Determine the signal-to-noise ratio of a dataset.
-
-    Needs perhaps to be moved to another module, if it turns out that
-    analysis and processing steps depend on each other sometimes.
-
-    One possibility would be to create two modules complex_processing and
-    complex_analysis that both import processing and analysis and that are
-    searched for by the respective analysis and processing task (to have an
-    easier user interface).
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.description = 'Determine signal-to-noise ratio'

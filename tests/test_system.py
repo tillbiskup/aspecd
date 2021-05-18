@@ -67,7 +67,6 @@ class TestSystemInfo(unittest.TestCase):
     def test_instantiate_class_with_package_name_adds_its_dependencies(self):
         package_name = "sphinx"
         sysinfo = system.SystemInfo(package=package_name)
-        print("foo!")
         requirements = [requirement.name for requirement in
                         pkg_resources.get_distribution(package_name).requires()]
         for requirement in requirements:

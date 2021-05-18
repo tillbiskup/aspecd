@@ -1037,8 +1037,8 @@ class SinglePlotter2D(SinglePlotter):
         else:
             self.drawing = plot_function(data, extent=self._get_extent())
         if self.type == 'contourf' and self.parameters['show_contour_lines']:
-            self.axes.contour(data, levels=self.drawing.levels, colors='k',
-                              linewidths=0.5, linestyles='-')
+            self.axes.contour(self.drawing, colors='k', linewidths=0.5,
+                              linestyles='-')
 
     def _shape_data(self):
         if self.parameters['switch_axes']:

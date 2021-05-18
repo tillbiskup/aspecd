@@ -123,10 +123,10 @@ class TestSingleAnalysisStep(unittest.TestCase):
             def applicable(dataset):
                 return False
 
-        dataset = aspecd.dataset.Dataset()
+        dataset_ = aspecd.dataset.Dataset()
         analysis = MyAnalysisStep()
         with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
-            dataset.analyse(analysis)
+            dataset_.analyse(analysis)
 
     def test_analyse_checks_applicability_prints_helpful_message(self):
         class MyAnalysisStep(aspecd.analysis.SingleAnalysisStep):
@@ -135,13 +135,13 @@ class TestSingleAnalysisStep(unittest.TestCase):
             def applicable(dataset):
                 return False
 
-        dataset = aspecd.dataset.Dataset()
-        dataset.id = "foo"
+        dataset_ = aspecd.dataset.Dataset()
+        dataset_.id = "foo"
         analysis = MyAnalysisStep()
         message = "MyAnalysisStep not applicable to dataset with id foo"
         with self.assertRaisesRegex(
                 aspecd.exceptions.NotApplicableToDatasetError, message):
-            dataset.analyse(analysis)
+            dataset_.analyse(analysis)
 
 
 class TestMultiAnalysisStep(unittest.TestCase):
@@ -678,15 +678,3 @@ class TestPeakFinding(unittest.TestCase):
             width=self.analysis.parameters["width"])
         result = np.sort(np.concatenate((positive, negative)))
         self.assertListEqual(list(result), list(analysis.result))
-
-
-class TestSignalToNoiseRatio(unittest.TestCase):
-    def setUp(self):
-        self.analysis = aspecd.analysis.SignalToNoiseRatio()
-
-    def test_instantiate_class(self):
-        pass
-
-    def test_has_appropriate_description(self):
-        self.assertIn('signal-to-noise ratio',
-                      self.analysis.description.lower())
