@@ -982,6 +982,34 @@ class TestTask(unittest.TestCase):
         dict_ = self.task.to_dict()
         self.assertEqual(dict_["properties"]["foo"], "foo")
 
+    def test_to_dict_with_figure_in_properties_replaces_it_with_label(self):
+        kind = 'processing'
+        type_ = 'SingleProcessingStep'
+        self.task.kind = kind
+        self.task.type = type_
+        figure_record = tasks.FigureRecord()
+        recipe = tasks.Recipe()
+        recipe.figures["foo"] = figure_record
+        self.task.recipe = recipe
+        self.task.properties["foo"] = figure_record
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(dict_["properties"]["foo"], "foo")
+
+    def test_to_dict_with_plotter_in_properties_replaces_it_with_label(self):
+        kind = 'processing'
+        type_ = 'SingleProcessingStep'
+        self.task.kind = kind
+        self.task.type = type_
+        plotter = aspecd.plotting.Plotter()
+        recipe = tasks.Recipe()
+        recipe.plotters["foo"] = plotter
+        self.task.recipe = recipe
+        self.task.properties["foo"] = plotter
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(dict_["properties"]["foo"], "foo")
+
 
 class TestProcessingTask(unittest.TestCase):
     def setUp(self):

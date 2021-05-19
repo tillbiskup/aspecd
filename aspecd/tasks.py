@@ -1474,8 +1474,9 @@ class Task(aspecd.utils.ToDictMixin):
         """
         Create dictionary containing public attributes of an object.
 
-        Furthermore, replace certain objects (currently datasets) with their
-        respective labels provided in the recipe.
+        Furthermore, replace certain objects with their respective labels
+        provided in the recipe. These objects currently include datasets,
+        results, figures (*i.e.* figure records), and plotters.
 
         Returns
         -------
@@ -1492,6 +1493,12 @@ class Task(aspecd.utils.ToDictMixin):
             for dataset_key, dataset_value in self.recipe.results.items():
                 if property_value is dataset_value:
                     self.properties[property_key] = dataset_key
+            for figure_key, figure_value in self.recipe.figures.items():
+                if property_value is figure_value:
+                    self.properties[property_key] = figure_key
+            for plotter_key, plotter_value in self.recipe.plotters.items():
+                if property_value is plotter_value:
+                    self.properties[property_key] = plotter_key
         return super().to_dict()
 
     def perform(self):
