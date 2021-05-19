@@ -1489,6 +1489,9 @@ class Task(aspecd.utils.ToDictMixin):
             for dataset_key, dataset_value in self.recipe.datasets.items():
                 if property_value is dataset_value:
                     self.properties[property_key] = dataset_key
+            for dataset_key, dataset_value in self.recipe.results.items():
+                if property_value is dataset_value:
+                    self.properties[property_key] = dataset_key
         return super().to_dict()
 
     def perform(self):

@@ -432,7 +432,12 @@ class Yaml:
             elif isinstance(dict_[key], np.ndarray):
                 if dict_[key].size > self.numpy_array_size_threshold:
                     self._create_binary_directory()
-                    filename = hashlib.sha256(dict_[key]).hexdigest() + '.npy'
+                    try:
+                        filename = \
+                            hashlib.sha256(dict_[key]).hexdigest() + '.npy'
+                    except ValueError:
+                        filename = hashlib.sha256(
+                            dict_[key].copy()).hexdigest() + '.npy'
                     np.save(os.path.join(self.binary_directory, filename),
                             dict_[key], allow_pickle=False)
                     dict_[key] = {'type': 'numpy.ndarray',
