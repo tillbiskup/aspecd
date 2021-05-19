@@ -17,6 +17,8 @@ import getpass
 import platform
 import sys
 
+import pkg_resources
+
 import aspecd.utils
 
 
@@ -59,9 +61,18 @@ class SystemInfo(aspecd.utils.ToDictMixin):
     def _set_values(self, package):
         self.python["version"] = sys.version
         self.packages["aspecd"] = aspecd.utils.get_aspecd_version()
+        self._add_requirements_to_packages(package="aspecd")
         if package and package != "aspecd":
             self.packages[package] = aspecd.utils.package_version(package)
+            self._add_requirements_to_packages(package=package)
         self.user["login"] = getpass.getuser()
+
+    def _add_requirements_to_packages(self, package="aspecd"):
+        requirements = [requirement.name for requirement in
+                        pkg_resources.get_distribution(package).requires()]
+        for requirement in requirements:
+            self.packages[requirement] = \
+                pkg_resources.get_distribution(requirement).version
 
     def from_dict(self, dict_=None):
         """

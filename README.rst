@@ -1,6 +1,10 @@
 ASpecD
 ======
 
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.4717937.svg
+   :target: https://doi.org/10.5281/zenodo.4717937
+   :align: right
+
 ASpecD is a **framework for handling spectroscopic data** focussing on **reproducibility**. In short: Each and every processing step applied to your data will be recorded and can be traced back, and additionally, for each representation of your data (e.g., figures, tables) you can easily follow how the data shown have been processed and where they originate from.
 
 What is even better: Actual data processing and analysis **no longer requires programming skills**, but is as simple as writing a text file summarising all the steps you want to have been performed on your dataset(s) in an organised way. Curious? Here is an example::

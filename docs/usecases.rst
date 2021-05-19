@@ -224,12 +224,40 @@ Some tasks return results, and you usually want to refer to these results later 
 
 You can refer to these results in the same way as you can refer to datasets, even using the labels in the ``apply_to`` field of a following task.
 
+Storing the result becomes particularly important if the task is not a processing step, but an analysis step, as the latter does not result in an altered dataset. A simple example would be determining the signal-to-noise ratio of the data:
 
-.. todo::
+.. code-block:: yaml
 
-    Things to add:
+    tasks:
+      - kind: singleanalysis
+        type: BlindSNREstimation
+        result: SNR
 
-      * example for an analysis step
+
+Note that in case of analysis steps, you need to explicitly tell whether you use an analysis step operating on individual datasets (as in this example, kind: ``singleanalysis``) or an analysis step operating on a list of datasets at once (kind: ``multianalysis``). In case of processing steps, as long as you want to operate on individual datasets, giving ``processing`` as kind will always work.
+
+The type of the result returned by an analysis step depends on the particular analysis step performed and possibly the parameters given. Some analysis steps can return either a (calculated) dataset or some other type. One example would be peak finding:
+
+.. code-block:: yaml
+
+    tasks:
+      - kind: singleanalysis
+        type: PeakFinding
+        result: peaks
+
+In this case, the result is a list of peaks. If, however, you would like to get a calculated dataset, provide the appropriate parameter:
+
+.. code-block:: yaml
+
+    tasks:
+      - kind: singleanalysis
+        type: PeakFinding
+        properties:
+          parameters:
+            return_dataset: True
+        result: peaks
+
+Now, the result will be a calculated dataset, and in this particular case, this can be quite helpful for plotting both, the original data and the detected peaks highlighted on top. As peak finding is often rather tricky, visual inspection of the results is usually necessary.
 
 
 Can we see something?
@@ -351,6 +379,33 @@ Of course, you can provide a full path to each output file for plots and reports
 
 
 In the above example, an absolute path has been provided for the output, and of course you can provide relative paths for the filenames of the plot. Similar to the absolute path set using ``output_directory``, you can set relative paths that are interpreted relative to the path the recipe is cooked from.
+
+
+Automatically saving plots
+--------------------------
+
+Sometimes, particularly when trying to get an overview of a large series of datasets, it is tedious to provide filenames for each single dataset to save the resulting plot to. Therefore, in case you do not provide filename(s) for a plotting task, and as long as the top-level directive ``autosave_plots`` is set to True, your plots will automatically be saved. The name consists of the basename of the dataset source (excluding path and file extension) and the class name of the plotter used.
+
+.. note::
+
+    Not providing filenames for plotters may be convenient when you use every plotter only once per dataset, as otherwise, later plots will overwrite the results of previous plots. On the other hand, the autosave feature may lead to your output directory being populated with a lot of files. Therefore, usually it is best to be more explicit and provide filenames to save your plots to.
+
+
+Just to show an example of how to switch off the autosaving of plots:
+
+.. code-block:: yaml
+
+    autosave_plots: False
+
+    datasets:
+      - dataset
+
+    tasks:
+      - kind: singleplot
+        type: SinglePlotter
+
+
+In this particular case, the result of the singleplot task will not be saved to a file, and unless you add a label and use the resulting plotter in a compositeplotter task, you will not see the results, as recipe-driven data analysis works fully unattended and non-interactive.
 
 
 .. todo::

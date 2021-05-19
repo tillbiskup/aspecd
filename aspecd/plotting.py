@@ -177,6 +177,8 @@ import copy
 import os
 
 import matplotlib as mpl
+# pylint: disable=unused-import
+import matplotlib.collections
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
@@ -531,7 +533,7 @@ class SinglePlotter(Plotter):
     aspecd.exceptions.MissingDatasetError
         Raised when no dataset exists to act on
 
-    aspecd.exceptions.PlotNotApplicableToDatasetError
+    aspecd.exceptions.NotApplicableToDatasetError
         Raised when processing step is not applicable to dataset
 
     """
@@ -579,7 +581,7 @@ class SinglePlotter(Plotter):
 
         Raises
         ------
-        aspecd.exceptions.PlotNotApplicableToDatasetError
+        aspecd.exceptions.NotApplicableToDatasetError
             Raised when plotting is not applicable to dataset
         aspecd.exceptions.MissingDatasetError
             Raised when no dataset exists to act on
@@ -629,7 +631,9 @@ class SinglePlotter(Plotter):
 
     def _check_applicability(self):
         if not self.applicable(self.dataset):
-            raise aspecd.exceptions.PlotNotApplicableToDatasetError
+            message = "%s not applicable to dataset with id %s" \
+                      % (self.name, self.dataset.id)
+            raise aspecd.exceptions.NotApplicableToDatasetError(message=message)
 
     def _set_axes_labels(self):
         """Set axes labels from axes in dataset.
@@ -646,6 +650,7 @@ class SinglePlotter(Plotter):
 
 
 class SinglePlotter1D(SinglePlotter):
+    # noinspection PyUnresolvedReferences
     """1D plots of single datasets.
 
     Convenience class taking care of 1D plots of single datasets. The type
@@ -842,6 +847,9 @@ class SinglePlotter2D(SinglePlotter):
 
             Default: None
 
+        show_contour_lines : :class:`bool`
+            Whether to show contour lines in case of contourf plot
+
     properties : :class:`aspecd.plotting.SinglePlot2DProperties`
         Properties of the plot, defining its appearance
 
@@ -915,6 +923,27 @@ class SinglePlotter2D(SinglePlotter):
              drawing:
                cmap: RdGy
 
+    To plot both, filled contours and contour lines, setting the appearance
+    of the contour lines as well:
+
+    .. code-block:: yaml
+
+       - kind: singleplot
+         type: SinglePlotter2D
+         properties:
+           type: contourf
+           filename: output.pdf
+           parameters:
+             show_contour_lines: True
+           properties:
+             drawing:
+               cmap: RdGy
+               linewidths: 0.5
+               linestyles: '-'
+               colors: k
+
+    In this particular case, the contour lines are thin black solid lines.
+
     Make sure to check the documentation for further parameters that can be
     set.
 
@@ -924,7 +953,9 @@ class SinglePlotter2D(SinglePlotter):
         super().__init__()
         self.description = '2D plotting step for single dataset'
         self.parameters['switch_axes'] = False
+        # noinspection PyTypeChecker
         self.parameters['levels'] = None
+        self.parameters['show_contour_lines'] = False
         self.properties = SinglePlot2DProperties()
         self._type = 'imshow'
         self._allowed_types = ['contour', 'contourf', 'imshow']
@@ -999,11 +1030,15 @@ class SinglePlotter2D(SinglePlotter):
         if self.type == 'imshow':
             self.drawing = plot_function(data, extent=self._get_extent(),
                                          aspect='auto')
-        elif self.parameters['levels']:
+            return
+        if self.parameters['levels']:
             self.drawing = plot_function(data, extent=self._get_extent(),
                                          levels=self.parameters['levels'])
         else:
             self.drawing = plot_function(data, extent=self._get_extent())
+        if self.type == 'contourf' and self.parameters['show_contour_lines']:
+            self.axes.contour(self.drawing, colors='k', linewidths=0.5,
+                              linestyles='-')
 
     def _shape_data(self):
         if self.parameters['switch_axes']:
@@ -1300,7 +1335,7 @@ class MultiPlotter(Plotter):
     ------
     aspecd.exceptions.MissingDatasetError
         Raised when no dataset exists to act on
-    aspecd.exceptions.PlotNotApplicableToDatasetError
+    aspecd.exceptions.NotApplicableToDatasetError
         Raised when processing step is not applicable to dataset
 
     """
@@ -1336,7 +1371,7 @@ class MultiPlotter(Plotter):
 
         Raises
         ------
-        aspecd.exceptions.PlotNotApplicableToDatasetError
+        aspecd.exceptions.NotApplicableToDatasetError
             Raised when plotting is not applicable to at least one of the
             datasets listed in :attr:`datasets`
         aspecd.exceptions.MissingDatasetError
@@ -1353,8 +1388,8 @@ class MultiPlotter(Plotter):
         if not self.datasets:
             raise aspecd.exceptions.MissingDatasetError
         if not all([self.applicable(dataset) for dataset in self.datasets]):
-            raise aspecd.exceptions.PlotNotApplicableToDatasetError(
-                'Plot not applicable to one or more datasets')
+            raise aspecd.exceptions.NotApplicableToDatasetError(
+                '%s not applicable to one or more datasets' % self.name)
 
     def _set_drawing_properties(self):
         if len(self.properties.drawings) < len(self.datasets):
@@ -1648,6 +1683,7 @@ class MultiPlotter1DStacked(MultiPlotter1D):
         super().__init__()
         self.description = '1D plotter for stacked display of multiple datasets'
         self.parameters["show_zero_lines"] = False
+        # noinspection PyTypeChecker
         self.parameters["offset"] = None
 
     def _create_plot(self):
@@ -1741,14 +1777,14 @@ class CompositePlotter(Plotter):
 
         Each axes position is a list with four numeric elements:
         [left_scale, bottom_scale, width_scale, height_scale] that are
-        applied in the following way to the position of the individual axes:
+        applied in the following way to the position of the individual axes::
 
-        [left, bottom, width, height] = ax[idx].get_position().bounds
-        new_position = [
-            left + left_scale * width, bottom + bottom_scale * height,
-            width * width_scale, height * height_scale
-        ]
-        ax[idx].set_position(new_position)
+            [left, bottom, width, height] = ax[idx].get_position().bounds
+            new_position = [
+                left + left_scale * width, bottom + bottom_scale * height,
+                width * width_scale, height * height_scale
+            ]
+            ax[idx].set_position(new_position)
 
         Values can be both, positive and negative floats. Note, however,
         that negative values for the width and height parameter will mirror
@@ -1844,7 +1880,7 @@ class SingleCompositePlotter(CompositePlotter):
     aspecd.exceptions.MissingDatasetError
         Raised when no dataset exists to act on
 
-    aspecd.exceptions.PlotNotApplicableToDatasetError
+    aspecd.exceptions.NotApplicableToDatasetError
         Raised when processing step is not applicable to dataset
 
     """
@@ -1885,7 +1921,7 @@ class SingleCompositePlotter(CompositePlotter):
 
         Raises
         ------
-        aspecd.exceptions.PlotNotApplicableToDatasetError
+        aspecd.exceptions.NotApplicableToDatasetError
             Raised when plotting is not applicable to dataset
         aspecd.exceptions.MissingDatasetError
             Raised when no dataset exists to act on
@@ -1935,7 +1971,9 @@ class SingleCompositePlotter(CompositePlotter):
 
     def _check_applicability(self):
         if not self.applicable(self.dataset):
-            raise aspecd.exceptions.PlotNotApplicableToDatasetError
+            message = "%s not applicable to dataset with id %s" \
+                      % (self.name, self.dataset.id)
+            raise aspecd.exceptions.NotApplicableToDatasetError(message=message)
 
 
 class Saver:
@@ -2920,16 +2958,55 @@ class SurfaceProperties(DrawingProperties):
 
     Attributes
     ----------
-    cmap: :class:`str`
+    cmap : :class:`str`
         name of the colormap to use
 
         For details see :class:`matplotlib.colors.Colormap`
+
+    linewidths : :class:`float`
+        Width of the contour lines (if present)
+
+    linestyles : :class:`str`
+        Style of the contour lines (if present)
+
+    colors : :class:`str`
+        Colour of the contour lines (if present)
 
     """
 
     def __init__(self):
         super().__init__()
         self.cmap = 'viridis'
+        self.linewidths = None
+        self.linestyles = None
+        self.colors = None
+
+    def apply(self, drawing=None):
+        """
+        Apply properties to drawing.
+
+        Parameters
+        ----------
+        drawing:
+            matplotlib object to set properties for
+
+        """
+        super().apply(drawing=drawing)
+        # Note: Since Python 3.6 and compatible matplotlib versions,
+        #       all drawings have an attribute "axes", hence when dropping
+        #       Python 3.5 support, testing can be removed
+        if hasattr(drawing, 'axes'):
+            children = drawing.axes.get_children()
+        else:
+            children = drawing.ax.get_children()
+        for child in children:
+            if isinstance(child, mpl.collections.LineCollection):
+                if self.linewidths:
+                    child.set_linewidths(self.linewidths)
+                if self.linestyles:
+                    child.set_linestyles(self.linestyles)
+                if self.colors:
+                    child.set_color(self.colors)
 
 
 class GridProperties(aspecd.utils.Properties):

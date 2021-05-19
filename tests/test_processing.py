@@ -1,8 +1,9 @@
 """Tests for processing."""
-
 import unittest
 
 import numpy as np
+import scipy.ndimage
+import scipy.signal
 
 import aspecd.dataset
 import aspecd.exceptions
@@ -43,8 +44,8 @@ class TestProcessingStep(unittest.TestCase):
     def test_has_description_property(self):
         self.assertTrue(hasattr(self.processing, 'description'))
 
-    def test_description_property_is_string(self):
-        self.assertTrue(isinstance(self.processing.description, str))
+    def test_description_property_is_sensible(self):
+        self.assertIn(self.processing.description, 'Abstract processing step')
 
     def test_has_comment_property(self):
         self.assertTrue(hasattr(self.processing, 'comment'))
@@ -55,6 +56,116 @@ class TestProcessingStep(unittest.TestCase):
     def test_has_process_method(self):
         self.assertTrue(hasattr(self.processing, 'process'))
         self.assertTrue(callable(self.processing.process))
+
+
+class TestSingleProcessingStep(unittest.TestCase):
+    def setUp(self):
+        self.processing = aspecd.processing.SingleProcessingStep()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_is_processingstep(self):
+        self.assertTrue(isinstance(self.processing,
+                                   aspecd.processing.ProcessingStep))
+
+    def test_description_property_is_sensible(self):
+        self.assertIn(self.processing.description,
+                      'Abstract singleprocessing step')
+
+    def test_process_checks_applicability(self):
+        class MyProcessingStep(aspecd.processing.SingleProcessingStep):
+
+            @staticmethod
+            def applicable(dataset):
+                return False
+
+        dataset = aspecd.dataset.Dataset()
+        processing = MyProcessingStep()
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            dataset.process(processing)
+
+    def test_process_checks_applicability_prints_helpful_message(self):
+        class MyProcessingStep(aspecd.processing.SingleProcessingStep):
+
+            @staticmethod
+            def applicable(dataset):
+                return False
+
+        dataset = aspecd.dataset.Dataset()
+        dataset.id = "foo"
+        processing = MyProcessingStep()
+        message = "MyProcessingStep not applicable to dataset with id foo"
+        with self.assertRaisesRegex(
+                aspecd.exceptions.NotApplicableToDatasetError, message):
+            dataset.process(processing)
+
+    def test_process_sets_default_parameters(self):
+        class MyProcessingStep(aspecd.processing.SingleProcessingStep):
+
+            def __init__(self):
+                super().__init__()
+                self.parameters["test"] = None
+
+            def _set_defaults(self):
+                if not self.parameters["test"]:
+                    self.parameters["test"] = "It works!"
+
+        dataset = aspecd.dataset.Dataset()
+        processing = MyProcessingStep()
+        processing = dataset.process(processing)
+        self.assertEqual("It works!", processing.parameters["test"])
+
+    def test_process_sets_default_parameters_before_sanitising(self):
+        class MyProcessingStep(aspecd.processing.SingleProcessingStep):
+
+            def __init__(self):
+                super().__init__()
+                self.parameters["test"] = None
+
+            def _set_defaults(self):
+                if not self.parameters["test"]:
+                    self.parameters["test"] = "It works!"
+
+            def _sanitise_parameters(self):
+                if not self.parameters["test"]:
+                    raise ValueError("No parameter test")
+
+        dataset = aspecd.dataset.Dataset()
+        processing = MyProcessingStep()
+        processing = dataset.process(processing)
+        self.assertEqual("It works!", processing.parameters["test"])
+
+    def test_process_sanitises_parameters(self):
+        class MyProcessingStep(aspecd.processing.SingleProcessingStep):
+
+            def __init__(self):
+                super().__init__()
+                self.parameters["test"] = None
+
+            def _sanitise_parameters(self):
+                if not self.parameters["test"]:
+                    raise ValueError("No parameter test")
+
+        dataset = aspecd.dataset.Dataset()
+        processing = MyProcessingStep()
+        with self.assertRaisesRegex(ValueError, "No parameter test"):
+            dataset.process(processing)
+
+    def test_process_performs_task(self):
+        class MyProcessingStep(aspecd.processing.SingleProcessingStep):
+
+            def __init__(self):
+                super().__init__()
+                self.parameters["test"] = None
+
+            def _perform_task(self):
+                self.parameters["test"] = "It works!"
+
+        dataset = aspecd.dataset.Dataset()
+        processing = MyProcessingStep()
+        processing = dataset.process(processing)
+        self.assertEqual("It works!", processing.parameters["test"])
 
     def test_process_without_processingstep_and_with_dataset(self):
         self.processing.dataset = aspecd.dataset.Dataset()
@@ -93,6 +204,92 @@ class TestProcessingStep(unittest.TestCase):
         history_record = self.processing.create_history_record()
         self.assertTrue(isinstance(history_record,
                                    aspecd.history.ProcessingHistoryRecord))
+
+
+class TestMultiProcessingStep(unittest.TestCase):
+    def setUp(self):
+        self.processing = aspecd.processing.MultiProcessingStep()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_is_processingstep(self):
+        self.assertTrue(isinstance(self.processing,
+                                   aspecd.processing.ProcessingStep))
+
+    def test_description_property_is_sensible(self):
+        self.assertIn(self.processing.description,
+                      'Abstract multiprocessing step')
+
+    def test_has_datasets_property(self):
+        self.assertTrue(hasattr(self.processing, 'datasets'))
+
+    def test_datasets_property_is_list(self):
+        self.assertTrue(isinstance(self.processing.datasets, list))
+
+    def test_process_without_datasets_raises(self):
+        with self.assertRaises(aspecd.exceptions.MissingDatasetError):
+            self.processing.process()
+
+    def test_process_with_datasets(self):
+        self.processing.datasets.append(aspecd.dataset.Dataset())
+        self.processing.process()
+
+    def test_process_checks_applicability(self):
+        dataset1 = aspecd.dataset.Dataset()
+        dataset1.data.data = np.random.random([5, 5])
+        dataset2 = aspecd.dataset.Dataset()
+        dataset2.data.data = np.random.random(5)
+
+        class MyProcessingStep(aspecd.processing.MultiProcessingStep):
+            @staticmethod
+            def applicable(dataset):
+                return len(dataset.data.axes) == 2
+
+        processing_step = MyProcessingStep()
+        processing_step.datasets.append(dataset1)
+        processing_step.datasets.append(dataset2)
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            processing_step.process()
+
+    def test_process_checks_applicability_prints_helpful_message(self):
+        dataset1 = aspecd.dataset.Dataset()
+        dataset1.data.data = np.random.random([5, 5])
+        dataset1.id = "foo"
+        dataset2 = aspecd.dataset.Dataset()
+        dataset2.data.data = np.random.random(5)
+        dataset2.id = "bar"
+
+        class MyProcessingStep(aspecd.processing.MultiProcessingStep):
+            @staticmethod
+            def applicable(dataset):
+                return len(dataset.data.axes) == 2
+
+        processing_step = MyProcessingStep()
+        processing_step.datasets.append(dataset1)
+        processing_step.datasets.append(dataset2)
+        message = "MyProcessingStep not applicable to dataset with id foo"
+        with self.assertRaisesRegex(
+                aspecd.exceptions.NotApplicableToDatasetError, message):
+            processing_step.process()
+
+    def test_process_with_datasets_appends_history_record(self):
+        dataset1 = aspecd.dataset.Dataset()
+        dataset2 = aspecd.dataset.Dataset()
+        self.processing.datasets.append(dataset1)
+        self.processing.datasets.append(dataset2)
+        self.processing.process()
+        self.assertTrue(dataset1.history)
+        self.assertTrue(dataset2.history)
+
+    def test_process_with_datasets_increments_history_pointer(self):
+        dataset1 = aspecd.dataset.Dataset()
+        dataset2 = aspecd.dataset.Dataset()
+        self.processing.datasets.append(dataset1)
+        self.processing.datasets.append(dataset2)
+        self.processing.process()
+        self.assertEqual(len(dataset1.history)-1, dataset1._history_pointer)
+        self.assertEqual(len(dataset2.history)-1, dataset2._history_pointer)
 
 
 class TestNormalisation(unittest.TestCase):
@@ -164,7 +361,7 @@ class TestNormalisation(unittest.TestCase):
         self.dataset.data.data \
             += (np.random.random(len(self.dataset.data.data))-0.5) * 0.5
         self.processing.parameters["kind"] = 'maximum'
-        self.processing.parameters["noise_range"] = 10
+        self.processing.parameters["noise_range"] = [0, 10]
         self.dataset.process(self.processing)
         self.assertGreaterEqual(1.25, self.dataset.data.data.max(), 1)
 
@@ -174,7 +371,7 @@ class TestNormalisation(unittest.TestCase):
         self.dataset.data.data \
             += (np.random.random(len(self.dataset.data.data))-0.5) * 0.5
         self.processing.parameters["kind"] = 'minimum'
-        self.processing.parameters["noise_range"] = 10
+        self.processing.parameters["noise_range"] = [0, 10]
         self.dataset.process(self.processing)
         self.assertLessEqual(-1.25, self.dataset.data.data.min(), 1)
 
@@ -184,10 +381,61 @@ class TestNormalisation(unittest.TestCase):
         self.dataset.data.data \
             += (np.random.random(len(self.dataset.data.data))-0.5) * 0.5
         self.processing.parameters["kind"] = 'amplitude'
-        self.processing.parameters["noise_range"] = 10
+        self.processing.parameters["noise_range"] = [0, 10]
         self.dataset.process(self.processing)
         self.assertGreaterEqual(1.25, self.dataset.data.data.max() -
                                 self.dataset.data.data.min())
+
+    def test_normalise_to_maximum_with_noisy_2d_data(self):
+        data = \
+            np.concatenate((np.zeros(50), self.dataset.data.data, np.zeros(50)))
+        self.dataset.data.data = np.reshape(np.tile(data, 100), (100, 600))
+        self.dataset.data.data \
+            += (np.random.random(self.dataset.data.data.shape)-0.5) * 0.5
+        self.processing.parameters["kind"] = 'maximum'
+        self.processing.parameters["noise_range"] = [[0, 10], [0, 10]]
+        self.dataset.process(self.processing)
+        self.assertGreaterEqual(1.25, self.dataset.data.data.max(), 1)
+
+    def test_normalise_to_maximum_with_noisy_2d_data_and_axis_units(self):
+        data = \
+            np.concatenate((np.zeros(50), self.dataset.data.data, np.zeros(50)))
+        self.dataset.data.data = np.reshape(np.tile(data, 100), (100, 600))
+        self.dataset.data.data \
+            += (np.random.random(self.dataset.data.data.shape)-0.5) * 0.5
+        self.dataset.data.axes[0].values = np.linspace(21, 42, 100)
+        self.dataset.data.axes[1].values = np.linspace(340, 350, 600)
+        self.processing.parameters["kind"] = 'maximum'
+        self.processing.parameters["noise_range"] = [[21, 25], [340, 341]]
+        self.processing.parameters["noise_range_unit"] = "axis"
+        self.dataset.process(self.processing)
+        self.assertGreaterEqual(1.25, self.dataset.data.data.max(), 1)
+
+    def test_normalise_to_maximum_over_range(self):
+        self.dataset.data.data = np.append(self.dataset.data.data,
+                                           self.dataset.data.data * 0.5)
+        self.processing.parameters["kind"] = 'maximum'
+        self.processing.parameters["range"] = [501, 1000]
+        self.dataset.process(self.processing)
+        self.assertEqual(2.0, self.dataset.data.data.max())
+
+    def test_normalise_to_maximum_over_range_with_axis_units(self):
+        self.dataset.data.data = np.append(self.dataset.data.data,
+                                           self.dataset.data.data * 0.5)
+        self.dataset.data.axes[0].values = np.linspace(0, 6 * np.pi, 1000)
+        self.processing.parameters["kind"] = 'maximum'
+        self.processing.parameters["range"] = [3*np.pi, 6*np.pi]
+        self.processing.parameters["range_unit"] = "axis"
+        self.dataset.process(self.processing)
+        self.assertEqual(2.0, self.dataset.data.data.max())
+
+    def test_normalise_to_maximum_2d_with_range(self):
+        self.processing.parameters["kind"] = 'maximum'
+        self.processing.parameters["range"] = [[50, 150], [50, 150]]
+        self.dataset.data.data = np.random.random([200, 200])
+        self.dataset.data.data[50:150, 50:150] *= 0.5
+        self.dataset.process(self.processing)
+        self.assertAlmostEqual(2, self.dataset.data.data.max(), 2)
 
 
 class TestIntegration(unittest.TestCase):
@@ -457,29 +705,29 @@ class TestSliceExtraction(unittest.TestCase):
             self.dataset.process(self.processing)
 
     def test_with_index_exceeding_dimension_raises(self):
-        self.processing.parameters['index'] = 10
-        with self.assertRaisesRegex(IndexError, "Index [0-9]+ out of bounds"):
+        self.processing.parameters['position'] = 10
+        with self.assertRaisesRegex(ValueError, "Position out of axis range."):
             self.dataset.process(self.processing)
 
     def test_extract_slice(self):
         origdata = self.dataset.data.data
-        self.processing.parameters['index'] = 3
+        self.processing.parameters['position'] = 3
         self.dataset.process(self.processing)
         np.testing.assert_allclose(origdata[3, :], self.dataset.data.data)
 
     def test_extract_slice_with_index_zero(self):
         origdata = self.dataset.data.data
-        self.processing.parameters['index'] = 0
+        self.processing.parameters['position'] = 0
         self.dataset.process(self.processing)
         np.testing.assert_allclose(origdata[0, :], self.dataset.data.data)
 
     def test_extract_slice_removes_axis(self):
-        self.processing.parameters['index'] = 3
+        self.processing.parameters['position'] = 3
         self.dataset.process(self.processing)
         self.assertEqual(2, len(self.dataset.data.axes))
 
     def test_extract_slice_removes_correct_axis(self):
-        self.processing.parameters['index'] = 3
+        self.processing.parameters['position'] = 3
         self.dataset.data.axes[0].quantity = 'foo'
         self.dataset.data.axes[1].quantity = 'bar'
         self.dataset.data.axes[2].quantity = 'intensity'
@@ -488,7 +736,7 @@ class TestSliceExtraction(unittest.TestCase):
         self.assertEqual('intensity', self.dataset.data.axes[-1].quantity)
 
     def test_extract_slice_removes_correct_axis_with_axis_one(self):
-        self.processing.parameters['index'] = 3
+        self.processing.parameters['position'] = 3
         self.processing.parameters['axis'] = 1
         self.dataset.data.axes[0].quantity = 'foo'
         self.dataset.data.axes[1].quantity = 'bar'
@@ -499,22 +747,220 @@ class TestSliceExtraction(unittest.TestCase):
 
     def test_extract_slice_operates_along_first_axis_by_default(self):
         origdata = self.dataset.data.data
-        self.processing.parameters['index'] = 3
+        self.processing.parameters['position'] = 3
         self.dataset.process(self.processing)
         np.testing.assert_allclose(origdata[3, :], self.dataset.data.data)
 
     def test_extract_slice_along_second_axis(self):
         origdata = self.dataset.data.data
-        self.processing.parameters['index'] = 3
+        self.processing.parameters['position'] = 3
         self.processing.parameters['axis'] = 1
         self.dataset.process(self.processing)
         np.testing.assert_allclose(origdata[:, 3], self.dataset.data.data)
 
     def test_extract_slice_along_non_existing_axis_raises(self):
         with self.assertRaisesRegex(IndexError, "Axis [0-9]+ out of bounds"):
-            self.processing.parameters['index'] = 3
+            self.processing.parameters['position'] = 3
             self.processing.parameters['axis'] = 2
             self.dataset.process(self.processing)
+
+    def test_extract_slice_with_wrong_unit_raises(self):
+        self.processing.parameters["unit"] = "foo"
+        self.processing.parameters["position"] = 3
+        with self.assertRaises(ValueError):
+            self.dataset.process(self.processing)
+
+    def test_extract_slice_with_axis_units(self):
+        self.processing.parameters["unit"] = "axis"
+        self.dataset.data.axes[0].values = \
+            np.linspace(30, 70, len(self.dataset.data.axes[0].values))
+        self.processing.parameters["position"] = 40
+        data = self.dataset.data.data[1, :]
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(data, self.dataset.data.data)
+
+    def test_unit_is_case_insensitive(self):
+        self.processing.parameters["unit"] = "aXis"
+        self.dataset.data.axes[0].values = \
+            np.linspace(30, 70, len(self.dataset.data.axes[0].values))
+        self.processing.parameters["position"] = 40
+        data = self.dataset.data.data[1, :]
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(data, self.dataset.data.data)
+
+    def test_extract_slice_with_axis_units_out_of_range_raises(self):
+        self.processing.parameters["unit"] = "axis"
+        self.dataset.data.axes[0].values = \
+            np.linspace(30, 70, len(self.dataset.data.axes[0].values))
+        self.processing.parameters["position"] = 300
+        with self.assertRaises(ValueError):
+            self.dataset.process(self.processing)
+
+    def test_extract_2d_slice_from_3d_dataset(self):
+        self.dataset.data.data = np.random.random([5, 5, 5])
+        origdata = self.dataset.data.data
+        self.processing.parameters['position'] = 3
+        self.processing.parameters['axis'] = 0
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(origdata[3, :, :], self.dataset.data.data)
+
+    def test_extract_2d_slice_from_3d_dataset_along_third_dimension(self):
+        self.dataset.data.data = np.random.random([5, 5, 5])
+        origdata = self.dataset.data.data
+        self.processing.parameters['position'] = 3
+        self.processing.parameters['axis'] = 2
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(origdata[:, :, 3], self.dataset.data.data)
+
+    def test_extract_1d_slice_from_3d_dataset(self):
+        self.dataset.data.data = np.random.random([5, 5, 5])
+        origdata = self.dataset.data.data
+        self.processing.parameters['position'] = [3, 3]
+        self.processing.parameters['axis'] = [0, 1]
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(origdata[3, 3, :], self.dataset.data.data)
+
+    def test_extract_slice_from_3d_dataset_with_3_axes_raises(self):
+        self.dataset.data.data = np.random.random([5, 5, 5])
+        self.processing.parameters['position'] = [3, 3, 3]
+        self.processing.parameters['axis'] = [0, 1, 2]
+        with self.assertRaisesRegex(ValueError, 'Too many axes'):
+            self.dataset.process(self.processing)
+
+    def test_extract_slice_with_uneven_axes_and_positions_count_raises(self):
+        self.dataset.data.data = np.random.random([5, 5, 5])
+        self.processing.parameters['position'] = [3]
+        self.processing.parameters['axis'] = [0, 1]
+        message = 'Need same number of values for position and axis'
+        with self.assertRaisesRegex(ValueError, message):
+            self.dataset.process(self.processing)
+
+
+class TestRangeExtraction(unittest.TestCase):
+    def setUp(self):
+        self.processing = aspecd.processing.RangeExtraction()
+        self.dataset = aspecd.dataset.Dataset()
+        self.dataset.data.data = np.random.random(10)
+        self.dataset2d = aspecd.dataset.Dataset()
+        self.dataset2d.data.data = np.random.random([10, 8])
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('extract range', self.processing.description.lower())
+
+    def test_is_undoable(self):
+        self.assertTrue(self.processing.undoable)
+
+    def test_without_range_raises(self):
+        with self.assertRaisesRegex(IndexError, "for range extraction"):
+            self.dataset.process(self.processing)
+
+    def test_range_exceeding_dimension_raises(self):
+        self.processing.parameters['range'] = [3, 20]
+        with self.assertRaisesRegex(ValueError, "Range out of axis range"):
+            self.dataset.process(self.processing)
+
+    def test_range_exceeding_dimension_of_2nd_axis_raises(self):
+        self.processing.parameters['range'] = [[3, 5], [3, 10]]
+        with self.assertRaisesRegex(ValueError, "Range out of axis range"):
+            self.dataset2d.process(self.processing)
+
+    def test_range_exceeding_dimension_with_axis_units_raises(self):
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 10)
+        self.processing.parameters['range'] = [3, 8]
+        self.processing.parameters['unit'] = 'axis'
+        with self.assertRaisesRegex(ValueError, "Range out of axis range"):
+            self.dataset.process(self.processing)
+
+    def test_range_exceeding_dimension_of_2nd_axis_with_axis_units_raises(self):
+        self.dataset2d.data.axes[0].values = np.linspace(0, 5, 10)
+        self.dataset2d.data.axes[1].values = np.linspace(0, 5, 10)
+        self.processing.parameters['range'] = [[2, 4], [3, 20]]
+        self.processing.parameters['unit'] = 'axis'
+        with self.assertRaisesRegex(ValueError, "Range out of axis range"):
+            self.dataset2d.process(self.processing)
+
+    def test_range_exceeding_dimension_with_percentage_unit_raises(self):
+        self.dataset.data.data = np.random.random(200)
+        self.dataset.data.axes[0].values = np.linspace(0, 200, 200)
+        self.processing.parameters['range'] = [3, 101]
+        self.processing.parameters['unit'] = 'percentage'
+        with self.assertRaisesRegex(ValueError, "Range out of axis range"):
+            self.dataset.process(self.processing)
+
+    def test_extract_range(self):
+        origdata = self.dataset.data.data
+        self.processing.parameters['range'] = [3, 6]
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(origdata[3:6], self.dataset.data.data)
+
+    def test_extract_range_adjusts_axis(self):
+        self.dataset.data.axes[0].values = np.linspace(10, 20, 10)
+        origaxis = self.dataset.data.axes[0].values
+        self.processing.parameters['range'] = [3, 6]
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(origaxis[3:6],
+                                   self.dataset.data.axes[0].values)
+
+    def test_extract_range_with_step(self):
+        origdata = self.dataset.data.data
+        self.processing.parameters['range'] = [3, 6, 2]
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(origdata[3:6:2], self.dataset.data.data)
+
+    def test_extract_range_with_step_adjusts_axis(self):
+        self.dataset.data.axes[0].values = np.linspace(10, 20, 10)
+        origaxis = self.dataset.data.axes[0].values
+        self.processing.parameters['range'] = [3, 6, 2]
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(origaxis[3:6:2],
+                                   self.dataset.data.axes[0].values)
+
+    def test_extract_range_with_2d_data_with_only_one_range_raises(self):
+        self.processing.parameters['range'] = [3, 6]
+        with self.assertRaisesRegex(IndexError, 'Got only 1 range for 2D data'):
+            self.dataset2d.process(self.processing)
+
+    def test_extract_range_with_2d_data(self):
+        origdata = self.dataset2d.data.data
+        self.processing.parameters['range'] = [[3, 6], [2, 5]]
+        self.dataset2d.process(self.processing)
+        np.testing.assert_allclose(origdata[3:6, 2:5], self.dataset2d.data.data)
+
+    def test_extract_range_with_2d_data_adjusts_axis(self):
+        self.dataset2d.data.axes[0].values = np.linspace(10, 20, 10)
+        self.dataset2d.data.axes[1].values = np.linspace(20, 30, 8)
+        origaxis0 = self.dataset2d.data.axes[0].values
+        origaxis1 = self.dataset2d.data.axes[1].values
+        self.processing.parameters['range'] = [[3, 6], [2, 5]]
+        self.dataset2d.process(self.processing)
+        np.testing.assert_allclose(origaxis0[3:6],
+                                   self.dataset2d.data.axes[0].values)
+        np.testing.assert_allclose(origaxis1[2:5],
+                                   self.dataset2d.data.axes[1].values)
+
+    def test_extract_range_with_wrong_unit_raises(self):
+        self.processing.parameters['range'] = [3, 6]
+        self.processing.parameters['unit'] = 'foo'
+        with self.assertRaisesRegex(ValueError, 'Wrong unit'):
+            self.dataset.process(self.processing)
+
+    def test_extract_range_with_axis_units(self):
+        origdata = self.dataset.data.data
+        self.dataset.data.axes[0].values = np.linspace(0, 18, 10)
+        self.processing.parameters['range'] = [6, 12]
+        self.processing.parameters['unit'] = 'axis'
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(origdata[3:6], self.dataset.data.data)
+
+    def test_extract_range_with_percentage_units(self):
+        origdata = self.dataset.data.data
+        self.processing.parameters['range'] = [10, 80]
+        self.processing.parameters['unit'] = 'percentage'
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(origdata[1:9], self.dataset.data.data)
 
 
 class TestBaselineCorrection(unittest.TestCase):
@@ -751,3 +1197,776 @@ class TestAveraging(unittest.TestCase):
         self.processing.parameters["range"] = [300, 400]
         with self.assertRaises(ValueError):
             self.dataset.process(self.processing)
+
+
+class TestDatasetAlgebra(unittest.TestCase):
+    def setUp(self):
+        self.processing = aspecd.processing.DatasetAlgebra()
+        self.dataset1 = aspecd.dataset.Dataset()
+        self.dataset2 = aspecd.dataset.Dataset()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('algebra', self.processing.description.lower())
+        self.assertIn('datasets', self.processing.description.lower())
+
+    def test_is_singleprocessing_step(self):
+        self.assertTrue(isinstance(self.processing,
+                                   aspecd.processing.SingleProcessingStep))
+
+    def test_process_without_parameter_dataset_raises(self):
+        with self.assertRaises(aspecd.exceptions.MissingDatasetError):
+            self.dataset1.process(self.processing)
+
+    @unittest.skip
+    def test_is_not_undoable(self):
+        self.assertFalse(self.processing.undoable)
+
+    def test_process_without_kind_raises(self):
+        self.processing.parameters["dataset"] = self.dataset2
+        with self.assertRaises(ValueError):
+            self.dataset1.process(self.processing)
+
+    def test_process_with_wrong_kind_raises(self):
+        self.processing.parameters["dataset"] = self.dataset2
+        self.processing.parameters["kind"] = 'foo'
+        with self.assertRaises(ValueError):
+            self.dataset1.process(self.processing)
+
+    def test_process_with_differing_shapes_raises(self):
+        self.dataset1.data.data = np.random.random(5)
+        self.dataset2.data.data = np.random.random(6)
+        self.processing.parameters["dataset"] = self.dataset2
+        self.processing.parameters["kind"] = "add"
+        with self.assertRaisesRegex(ValueError, "different shapes"):
+            self.dataset1.process(self.processing)
+
+    def test_add_with_1d_datasets(self):
+        self.dataset1.data.data = np.ones(5)
+        self.dataset2.data.data = np.ones(5)
+        self.processing.parameters["dataset"] = self.dataset2
+        self.processing.parameters["kind"] = "add"
+        self.dataset1.process(self.processing)
+        self.assertTrue(np.all(self.dataset1.data.data == 2))
+
+    def test_add_with_1d_datasets_with_history(self):
+        self.dataset1.data.data = np.ones(5)
+        self.dataset2.data.data = np.ones(5)
+        preprocessing = aspecd.processing.Normalisation()
+        preprocessing.parameters["kind"] = "max"
+        self.dataset1.process(preprocessing)
+        self.dataset2.process(preprocessing)
+        self.processing.parameters["dataset"] = self.dataset2
+        self.processing.parameters["kind"] = "add"
+        self.dataset1.process(self.processing)
+        self.assertTrue(np.all(self.dataset1.data.data == 2))
+
+    def test_subtract_with_1d_datasets(self):
+        self.dataset1.data.data = np.ones(5) * 2
+        self.dataset2.data.data = np.ones(5)
+        self.processing.parameters["dataset"] = self.dataset2
+        self.processing.parameters["kind"] = "subtract"
+        self.dataset1.process(self.processing)
+        self.assertTrue(np.all(self.dataset1.data.data == 1))
+
+    def test_add_with_2d_datasets(self):
+        self.dataset1.data.data = np.ones([5, 5])
+        self.dataset2.data.data = np.ones([5, 5])
+        self.processing.parameters["dataset"] = self.dataset2
+        self.processing.parameters["kind"] = "add"
+        self.dataset1.process(self.processing)
+        self.assertTrue(np.all(self.dataset1.data.data == 2))
+
+    def test_subtract_with_2d_datasets(self):
+        self.dataset1.data.data = np.ones([5, 5]) * 2
+        self.dataset2.data.data = np.ones([5, 5])
+        self.processing.parameters["dataset"] = self.dataset2
+        self.processing.parameters["kind"] = "subtract"
+        self.dataset1.process(self.processing)
+        self.assertTrue(np.all(self.dataset1.data.data == 1))
+
+    def test_process_replaces_dataset_parameter_with_dataset_id(self):
+        self.dataset1.data.data = np.ones(5)
+        self.dataset2.data.data = np.ones(5)
+        self.dataset2.id = '12345'
+        self.processing.parameters["dataset"] = self.dataset2
+        self.processing.parameters["kind"] = "add"
+        processing = self.dataset1.process(self.processing)
+        self.assertEqual(self.dataset2.id,
+                         processing.parameters["dataset"])
+
+    def test_process_writes_dataset_id_in_history(self):
+        self.dataset1.data.data = np.ones(5)
+        self.dataset2.data.data = np.ones(5)
+        self.dataset2.id = '12345'
+        self.processing.parameters["dataset"] = self.dataset2
+        self.processing.parameters["kind"] = "add"
+        self.dataset1.process(self.processing)
+        self.assertEqual(self.dataset2.id,
+                         self.dataset1.history[-1].processing.parameters[
+                             "dataset"])
+
+
+class TestScalarAxisAlgebra(unittest.TestCase):
+    def setUp(self):
+        self.processing = aspecd.processing.ScalarAxisAlgebra()
+        self.dataset = aspecd.dataset.Dataset()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('scalar algebra on the axis',
+                      self.processing.description.lower())
+
+    def test_is_singleprocessing_step(self):
+        self.assertTrue(isinstance(self.processing,
+                                   aspecd.processing.SingleProcessingStep))
+
+    def test_is_undoable(self):
+        self.assertTrue(self.processing.undoable)
+
+    def test_process_without_kind_raises(self):
+        with self.assertRaises(ValueError):
+            self.dataset.process(self.processing)
+
+    def test_process_with_wrong_kind_raises(self):
+        self.processing.parameters["kind"] = 'foo'
+        with self.assertRaises(ValueError):
+            self.dataset.process(self.processing)
+
+    def test_add(self):
+        self.processing.parameters["kind"] = 'add'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)+3
+                               == self.dataset.data.axes[0].values))
+
+    def test_plus(self):
+        self.processing.parameters["kind"] = 'plus'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)+3
+                               == self.dataset.data.axes[0].values))
+
+    def test_add_specified_by_sign(self):
+        self.processing.parameters["kind"] = '+'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)+3
+                               == self.dataset.data.axes[0].values))
+
+    def test_add_with_2D_dataset_and_second_axis(self):
+        self.processing.parameters["kind"] = 'plus'
+        self.processing.parameters["axis"] = 1
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random([5, 5])
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.data.axes[1].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)
+                               == self.dataset.data.axes[0].values))
+        self.assertTrue(np.all(np.linspace(0, 5, 5)+3
+                               == self.dataset.data.axes[1].values))
+
+    def test_subtract(self):
+        self.processing.parameters["kind"] = 'subtract'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)-3
+                               == self.dataset.data.axes[0].values))
+
+    def test_minus(self):
+        self.processing.parameters["kind"] = 'minus'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)-3
+                               == self.dataset.data.axes[0].values))
+
+    def test_subtract_specified_by_sign(self):
+        self.processing.parameters["kind"] = '-'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)-3
+                               == self.dataset.data.axes[0].values))
+
+    def test_multiply(self):
+        self.processing.parameters["kind"] = 'multiply'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)*3
+                               == self.dataset.data.axes[0].values))
+
+    def test_times(self):
+        self.processing.parameters["kind"] = 'times'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)*3
+                               == self.dataset.data.axes[0].values))
+
+    def test_multiply_specified_by_sign(self):
+        self.processing.parameters["kind"] = '*'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)*3
+                               == self.dataset.data.axes[0].values))
+
+    def test_divide(self):
+        self.processing.parameters["kind"] = 'divide'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)/3
+                               == self.dataset.data.axes[0].values))
+
+    def test_by(self):
+        self.processing.parameters["kind"] = 'by'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)/3
+                               == self.dataset.data.axes[0].values))
+
+    def test_divide_specified_by_sign(self):
+        self.processing.parameters["kind"] = '/'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)/3
+                               == self.dataset.data.axes[0].values))
+
+    def test_power(self):
+        self.processing.parameters["kind"] = 'power'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)**3
+                               == self.dataset.data.axes[0].values))
+
+    def test_pow(self):
+        self.processing.parameters["kind"] = 'pow'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)**3
+                               == self.dataset.data.axes[0].values))
+
+    def test_power_specified_by_sign(self):
+        self.processing.parameters["kind"] = '**'
+        self.processing.parameters["value"] = 3
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].values = np.linspace(0, 5, 5)
+        self.dataset.process(self.processing)
+        self.assertTrue(np.all(np.linspace(0, 5, 5)**3
+                               == self.dataset.data.axes[0].values))
+
+
+class TestInterpolation(unittest.TestCase):
+    
+    def setUp(self):
+        self.processing = aspecd.processing.Interpolation()
+        self.dataset = aspecd.dataset.Dataset()
+        self.dataset.data.data = np.linspace(10, 20, 11)
+        self.dataset.data.axes[0].values = np.linspace(5, 15, 11)
+        self.dataset2d = aspecd.dataset.Dataset()
+        self.dataset2d.data.data = \
+            np.reshape(np.tile(np.linspace(0, 5, 11), 21), (21, 11))
+        self.dataset2d.data.axes[0].values = np.linspace(30, 40, 21)
+        self.dataset2d.data.axes[1].values = np.linspace(5, 15, 11)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('interpolate', self.processing.description.lower())
+
+    def test_is_undoable(self):
+        self.assertTrue(self.processing.undoable)
+
+    def test_with_dataset_with_more_than_2d_raises(self):
+        dataset = aspecd.dataset.Dataset()
+        dataset.data.data = np.random.random([11, 11, 11])
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            dataset.process(self.processing)
+
+    def test_interpolate_without_range_raises(self):
+        self.processing.parameters["npoints"] = 21
+        with self.assertRaisesRegex(ValueError, 'No range provided'):
+            self.dataset.process(self.processing)
+
+    def test_interpolate_without_npoints_raises(self):
+        self.processing.parameters["range"] = [0, 10]
+        with self.assertRaisesRegex(ValueError, 'No number of points provided'):
+            self.dataset.process(self.processing)
+
+    def test_interpolate_1d_data_with_range_outside_data_raises(self):
+        self.processing.parameters["range"] = [15, 15]
+        self.processing.parameters["npoints"] = 21
+        with self.assertRaisesRegex(IndexError, 'out of range'):
+            self.dataset.process(self.processing)
+
+    def test_interpolate_1d_data_interpolates_data(self):
+        self.processing.parameters["range"] = [0, 10]
+        self.processing.parameters["npoints"] = 21
+        self.dataset.process(self.processing)
+        self.assertListEqual(list(np.linspace(10, 20, 21)),
+                             list(self.dataset.data.data))
+
+    def test_interpolate_1d_data_interpolates_axis(self):
+        self.processing.parameters["range"] = [0, 10]
+        self.processing.parameters["npoints"] = 21
+        self.dataset.process(self.processing)
+        self.assertListEqual(list(np.linspace(5, 15, 21)),
+                             list(self.dataset.data.axes[0].values))
+
+    def test_interpolate_with_wrong_unit_raises(self):
+        self.processing.parameters["range"] = [5, 15]
+        self.processing.parameters["npoints"] = 21
+        self.processing.parameters["unit"] = "foo"
+        with self.assertRaisesRegex(ValueError, "Unknown unit foo"):
+            self.dataset.process(self.processing)
+
+    def test_interpolate_1d_data_with_axis_unit_outside_range_raises(self):
+        self.processing.parameters["range"] = [0, 10]
+        self.processing.parameters["npoints"] = 21
+        self.processing.parameters["unit"] = "axis"
+        with self.assertRaisesRegex(IndexError, 'out of range'):
+            self.dataset.process(self.processing)
+
+    def test_interpolate_1d_data_with_axis_unit_interpolates_data(self):
+        self.processing.parameters["range"] = [5, 15]
+        self.processing.parameters["npoints"] = 21
+        self.processing.parameters["unit"] = "axis"
+        self.dataset.process(self.processing)
+        self.assertListEqual(list(np.linspace(10, 20, 21)),
+                             list(self.dataset.data.data))
+
+    def test_interpolate_1d_data_with_axis_unit_interpolates_axis(self):
+        self.processing.parameters["range"] = [5, 15]
+        self.processing.parameters["npoints"] = 21
+        self.processing.parameters["unit"] = "axis"
+        self.dataset.process(self.processing)
+        self.assertListEqual(list(np.linspace(5, 15, 21)),
+                             list(self.dataset.data.axes[0].values))
+
+    def test_interpolate_2d_data_with_missing_range_raises(self):
+        self.processing.parameters["range"] = [0, 10]
+        self.processing.parameters["npoints"] = [41, 21]
+        with self.assertRaisesRegex(IndexError, 'List of ranges does not fit '
+                                                'data dimensions'):
+            self.dataset2d.process(self.processing)
+
+    def test_interpolate_2d_data_with_missing_npoints_raises(self):
+        self.processing.parameters["range"] = [[0, 20], [0, 10]]
+        self.processing.parameters["npoints"] = 41
+        with self.assertRaisesRegex(IndexError, 'List of npoints does not fit '
+                                                'data dimensions'):
+            self.dataset2d.process(self.processing)
+
+    def test_interpolate_2d_data_outside_range_raises(self):
+        self.processing.parameters["range"] = [[30, 320], [0, 10]]
+        self.processing.parameters["npoints"] = [41, 21]
+        with self.assertRaisesRegex(IndexError, 'out of range'):
+            self.dataset2d.process(self.processing)
+
+    def test_interpolate_2d_data_outside_range_with_axis_values_raises(self):
+        self.processing.parameters["range"] = [[30, 320], [0, 10]]
+        self.processing.parameters["npoints"] = [41, 21]
+        self.processing.parameters["unit"] = "axis"
+        with self.assertRaisesRegex(IndexError, 'out of range'):
+            self.dataset2d.process(self.processing)
+
+    def test_interpolate_2d_data_interpolates_data(self):
+        self.processing.parameters["range"] = [[0, 20], [0, 10]]
+        self.processing.parameters["npoints"] = [41, 21]
+        self.dataset2d.process(self.processing)
+        self.assertListEqual(list(np.linspace(0, 5, 21)),
+                             list(self.dataset2d.data.data[1, :]))
+
+    def test_interpolate_2d_data_interpolates_axis(self):
+        self.processing.parameters["range"] = [[0, 20], [0, 10]]
+        self.processing.parameters["npoints"] = [41, 21]
+        self.dataset2d.process(self.processing)
+        self.assertListEqual(list(np.linspace(30, 40, 41)),
+                             list(self.dataset2d.data.axes[0].values))
+
+
+class TestFiltering(unittest.TestCase):
+
+    def setUp(self):
+        self.processing = aspecd.processing.Filtering()
+        self.dataset = aspecd.dataset.Dataset()
+        self.dataset.data.data = np.linspace(10, 20, 11)
+        self.dataset2d = aspecd.dataset.Dataset()
+        self.dataset2d.data.data = \
+            np.reshape(np.tile(np.linspace(0, 5, 21), 11), (11, 21))
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('filter', self.processing.description.lower())
+
+    def test_is_undoable(self):
+        self.assertTrue(self.processing.undoable)
+
+    def test_process_without_type_raises(self):
+        with self.assertRaisesRegex(ValueError, 'Missing filter type'):
+            self.dataset.process(self.processing)
+
+    def test_process_with_wrong_type_raises(self):
+        self.processing.parameters["type"] = "foo"
+        with self.assertRaisesRegex(ValueError, 'Wrong filter type foo'):
+            self.dataset.process(self.processing)
+
+    def test_process_without_window_length_raises(self):
+        self.processing.parameters["type"] = "uniform"
+        with self.assertRaisesRegex(ValueError, 'Missing filter window length'):
+            self.dataset.process(self.processing)
+
+    def test_process_with_window_outside_data_range_raises(self):
+        self.processing.parameters["type"] = "uniform"
+        self.processing.parameters["window_length"] = \
+            min(self.dataset2d.data.data.shape) + 1
+        with self.assertRaisesRegex(ValueError, 'Filter window outside data '
+                                                'range'):
+            self.dataset2d.process(self.processing)
+
+    def test_process_with_window_outside_data_range_with_2d_data_raises(self):
+        self.processing.parameters["type"] = "uniform"
+        self.processing.parameters["window_length"] = \
+            self.dataset.data.data.size + 1
+        with self.assertRaisesRegex(ValueError, 'Filter window outside data '
+                                                'range'):
+            self.dataset.process(self.processing)
+
+    def test_uniform_filter_with_1d_data(self):
+        self.processing.parameters["type"] = "uniform"
+        self.processing.parameters["window_length"] = 3
+        filtered_data = scipy.ndimage.uniform_filter(self.dataset.data.data, 3)
+        self.dataset.process(self.processing)
+        self.assertTrue(all(filtered_data == self.dataset.data.data))
+
+    def test_uniform_filter_with_1d_data_preserves_shape(self):
+        self.processing.parameters["type"] = "uniform"
+        self.processing.parameters["window_length"] = 3
+        orig_shape = self.dataset.data.data.shape
+        self.dataset.process(self.processing)
+        self.assertEqual(orig_shape, self.dataset.data.data.shape)
+
+    def test_gaussian_filter_with_1d_data(self):
+        self.processing.parameters["type"] = "gaussian"
+        self.processing.parameters["window_length"] = 3
+        filtered_data = \
+            scipy.ndimage.gaussian_filter(self.dataset.data.data,
+                                          self.processing.parameters[
+                                              "window_length"])
+        self.dataset.process(self.processing)
+        self.assertTrue(all(filtered_data == self.dataset.data.data))
+
+    def test_gaussian_filter_with_1d_data_preserves_shape(self):
+        self.processing.parameters["type"] = "gaussian"
+        self.processing.parameters["window_length"] = 3
+        orig_shape = self.dataset.data.data.shape
+        self.dataset.process(self.processing)
+        self.assertEqual(orig_shape, self.dataset.data.data.shape)
+
+    def test_savitzky_golay_filter_without_order_raises(self):
+        self.processing.parameters["type"] = "savitzky-golay"
+        self.processing.parameters["window_length"] = 3
+        with self.assertRaisesRegex(ValueError, "Missing order for this "
+                                                "filter"):
+            self.dataset.process(self.processing)
+
+    def test_savitzky_golay_filter_with_1d_data(self):
+        self.processing.parameters["type"] = "savitzky-golay"
+        self.processing.parameters["window_length"] = 3
+        self.processing.parameters["order"] = 2
+        filtered_data = \
+            scipy.signal.savgol_filter(self.dataset.data.data,
+                                       self.processing.parameters[
+                                           "window_length"],
+                                       self.processing.parameters["order"])
+        self.dataset.process(self.processing)
+        self.assertTrue(all(filtered_data == self.dataset.data.data))
+
+    def test_savitzky_golay__filter_with_1d_data_preserves_shape(self):
+        self.processing.parameters["type"] = "savitzky-golay"
+        self.processing.parameters["window_length"] = 3
+        self.processing.parameters["order"] = 2
+        orig_shape = self.dataset.data.data.shape
+        self.dataset.process(self.processing)
+        self.assertEqual(orig_shape, self.dataset.data.data.shape)
+
+    def test_uniform_filter_with_1d_data_with_alternative_names(self):
+        alternative_names = ['box', 'boxcar', 'moving-average', 'car']
+        self.processing.parameters["window_length"] = 3
+        for filter_name in alternative_names:
+            with self.subTest(filter_name = filter_name):
+                filtered_data = \
+                    scipy.ndimage.uniform_filter(self.dataset.data.data,
+                                                 self.processing.parameters[
+                                                     "window_length"])
+                self.processing.parameters["type"] = filter_name
+                self.dataset.process(self.processing)
+                self.assertTrue(all(filtered_data == self.dataset.data.data))
+
+    def test_gaussian_filter_with_1d_data_with_alternative_names(self):
+        alternative_names = ['binom', 'binomial']
+        self.processing.parameters["window_length"] = 3
+        for filter_name in alternative_names:
+            with self.subTest(filter_name = filter_name):
+                filtered_data = \
+                    scipy.ndimage.gaussian_filter(self.dataset.data.data,
+                                                 self.processing.parameters[
+                                                     "window_length"])
+                self.processing.parameters["type"] = filter_name
+                self.dataset.process(self.processing)
+                self.assertTrue(all(filtered_data == self.dataset.data.data))
+
+    def test_savitzky_golay_filter_with_1d_data_with_alternative_names(self):
+        alternative_names = ['savitzky_golay', 'savitzky golay', 'savgol',
+                             'savitzky']
+        self.processing.parameters["window_length"] = 3
+        self.processing.parameters["order"] = 2
+        for filter_name in alternative_names:
+            with self.subTest(filter_name = filter_name):
+                filtered_data = \
+                    scipy.signal.savgol_filter(self.dataset.data.data,
+                                               self.processing.parameters[
+                                                   "window_length"],
+                                               self.processing.parameters[
+                                                   "order"])
+                self.processing.parameters["type"] = filter_name
+                self.dataset.process(self.processing)
+                self.assertTrue(all(filtered_data == self.dataset.data.data))
+
+    def test_filter_with_alternative_names_sets_generic_filter_type(self):
+        alternative_names = ['box', 'boxcar', 'moving-average', 'car']
+        self.processing.parameters["window_length"] = 3
+        for filter_name in alternative_names:
+            with self.subTest(filter_name = filter_name):
+                self.processing.parameters["type"] = filter_name
+                processing = self.dataset.process(self.processing)
+                self.assertEqual("uniform", processing.parameters["type"])
+
+    def test_uniform_filter_with_2d_data(self):
+        self.processing.parameters["type"] = "uniform"
+        self.processing.parameters["window_length"] = 3
+        filtered_data = scipy.ndimage.uniform_filter(
+            self.dataset2d.data.data,
+            self.processing.parameters["window_length"]
+        )
+        self.dataset2d.process(self.processing)
+        self.assertTrue((filtered_data == self.dataset2d.data.data).all())
+
+
+class TestCommonRangeExtraction(unittest.TestCase):
+    def setUp(self):
+        self.processing = aspecd.processing.CommonRangeExtraction()
+        self.dataset1 = aspecd.dataset.Dataset()
+        self.dataset2 = aspecd.dataset.Dataset()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('common data range', self.processing.description.lower())
+
+    def test_is_multiprocessing_step(self):
+        self.assertTrue(isinstance(self.processing,
+                                   aspecd.processing.MultiProcessingStep))
+
+    def test_is_undoable(self):
+        self.assertTrue(self.processing.undoable)
+
+    def test_with_only_one_dataset_raises(self):
+        self.processing.datasets.append(self.dataset1)
+        with self.assertRaisesRegex(IndexError, "Need more than one dataset"):
+            self.processing.process()
+
+    def test_with_datasets_with_more_than_2d_raises(self):
+        self.dataset1.data.data = np.random.random([10, 10, 10])
+        self.dataset2.data.data = np.random.random([10, 10, 10])
+        self.processing.datasets.append(self.dataset1)
+        self.processing.datasets.append(self.dataset2)
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            self.processing.process()
+
+    def test_process_with_datasets_with_different_dimensions_raises(self):
+        self.dataset1.data.data = np.random.random(10)
+        self.dataset2.data.data = np.random.random([10, 10])
+        self.processing.datasets.append(self.dataset1)
+        self.processing.datasets.append(self.dataset2)
+        with self.assertRaisesRegex(ValueError, "different dimensions"):
+            self.processing.process()
+
+    def test_process_1D_datasets_with_disjoint_axes_values_raises(self):
+        self.dataset1.data.data = np.random.random(10)
+        self.dataset1.data.axes[0].values = np.linspace(0, 5, 10)
+        self.dataset2.data.data = np.random.random(15)
+        self.dataset2.data.axes[0].values = np.linspace(10, 15, 15)
+        self.processing.datasets.append(self.dataset1)
+        self.processing.datasets.append(self.dataset2)
+        with self.assertRaisesRegex(ValueError, "disjoint axes values"):
+            self.processing.process()
+
+    def test_process_2D_datasets_with_disjoint_axes_values_raises(self):
+        self.dataset1.data.data = np.random.random([10, 10])
+        self.dataset1.data.axes[0].values = np.linspace(0, 5, 10)
+        self.dataset1.data.axes[1].values = np.linspace(0, 5, 10)
+        self.dataset2.data.data = np.random.random([15, 15])
+        self.dataset2.data.axes[0].values = np.linspace(0, 5, 15)
+        self.dataset2.data.axes[1].values = np.linspace(10, 15, 15)
+        self.processing.datasets.append(self.dataset1)
+        self.processing.datasets.append(self.dataset2)
+        with self.assertRaisesRegex(ValueError, "disjoint axes values"):
+            self.processing.process()
+
+    def test_process_datasets_with_different_axes_units_raises(self):
+        self.dataset1.data.data = np.random.random([10, 10])
+        self.dataset1.data.axes[0].values = np.linspace(0, 5, 10)
+        self.dataset1.data.axes[1].values = np.linspace(0, 5, 10)
+        self.dataset1.data.axes[0].unit = 'foo'
+        self.dataset1.data.axes[1].unit = 'bar'
+        self.dataset2.data.data = np.random.random([10, 10])
+        self.dataset2.data.axes[0].values = np.linspace(0, 5, 10)
+        self.dataset2.data.axes[1].values = np.linspace(0, 5, 10)
+        self.dataset2.data.axes[0].unit = 'foobar'
+        self.dataset2.data.axes[1].unit = 'bar'
+        self.processing.datasets.append(self.dataset1)
+        self.processing.datasets.append(self.dataset2)
+        with self.assertRaisesRegex(ValueError, "different units"):
+            self.processing.process()
+
+    def test_process_ignores_different_axes_units_if_told_so(self):
+        self.dataset1.data.data = np.random.random([10, 10])
+        self.dataset1.data.axes[0].values = np.linspace(0, 5, 10)
+        self.dataset1.data.axes[1].values = np.linspace(0, 5, 10)
+        self.dataset1.data.axes[0].unit = 'foo'
+        self.dataset1.data.axes[1].unit = 'bar'
+        self.dataset2.data.data = np.random.random([10, 10])
+        self.dataset2.data.axes[0].values = np.linspace(0, 5, 10)
+        self.dataset2.data.axes[1].values = np.linspace(0, 5, 10)
+        self.dataset2.data.axes[0].unit = 'foobar'
+        self.dataset2.data.axes[1].unit = 'bar'
+        self.processing.datasets.append(self.dataset1)
+        self.processing.datasets.append(self.dataset2)
+        self.processing.parameters["ignore_units"] = True
+        self.processing.process()
+
+    def test_process_sets_common_range_for_1d_datasets(self):
+        self.dataset1.data.data = np.random.random([10])
+        self.dataset1.data.axes[0].values = np.linspace(0, 5, 10)
+        self.dataset2.data.data = np.random.random([10])
+        self.dataset2.data.axes[0].values = np.linspace(1, 4, 10)
+        self.processing.datasets.append(self.dataset1)
+        self.processing.datasets.append(self.dataset2)
+        self.processing.process()
+        self.assertListEqual(self.processing.parameters["common_range"],
+                             [[1., 4.]])
+
+    def test_process_sets_common_range_for_2d_datasets(self):
+        self.dataset1.data.data = np.random.random([10, 10])
+        self.dataset1.data.axes[0].values = np.linspace(0, 5, 10)
+        self.dataset1.data.axes[1].values = np.linspace(10, 15, 10)
+        self.dataset2.data.data = np.random.random([10, 10])
+        self.dataset2.data.axes[0].values = np.linspace(1, 4, 10)
+        self.dataset2.data.axes[1].values = np.linspace(11, 14, 10)
+        self.processing.datasets.append(self.dataset1)
+        self.processing.datasets.append(self.dataset2)
+        self.processing.process()
+        self.assertListEqual(self.processing.parameters["common_range"],
+                             [[1., 4.], [11., 14.]])
+
+    def test_process_sets_npoints_for_1d_datasets(self):
+        self.dataset1.data.data = np.random.random([11])
+        self.dataset1.data.axes[0].values = np.linspace(0, 5, 11)
+        self.dataset2.data.data = np.random.random([11])
+        self.dataset2.data.axes[0].values = np.linspace(1, 4, 11)
+        self.processing.datasets.append(self.dataset1)
+        self.processing.datasets.append(self.dataset2)
+        self.processing.process()
+        self.assertEqual([7], self.processing.parameters["npoints"])
+
+    def test_process_sets_npoints_for_2d_datasets(self):
+        self.dataset1.data.data = np.random.random([11, 11])
+        self.dataset1.data.axes[0].values = np.linspace(0, 5, 11)
+        self.dataset1.data.axes[1].values = np.linspace(10, 15, 11)
+        self.dataset2.data.data = np.random.random([11, 11])
+        self.dataset2.data.axes[0].values = np.linspace(1, 4, 11)
+        self.dataset2.data.axes[1].values = np.linspace(11, 14, 11)
+        self.processing.datasets.append(self.dataset1)
+        self.processing.datasets.append(self.dataset2)
+        self.processing.process()
+        self.assertEqual([7, 7], self.processing.parameters["npoints"])
+
+    def test_process_interpolates_axes_for_1d_datasets(self):
+        self.dataset1.data.data = np.linspace(10, 15, 11)
+        self.dataset1.data.axes[0].values = np.linspace(0, 5, 11)
+        self.dataset2.data.data = np.linspace(11, 14, 11)
+        self.dataset2.data.axes[0].values = np.linspace(1, 4, 11)
+        self.processing.datasets.append(self.dataset1)
+        self.processing.datasets.append(self.dataset2)
+        self.processing.process()
+        self.assertListEqual(list(np.linspace(1, 4, 7)),
+                             list(self.dataset1.data.axes[0].values))
+        self.assertListEqual(list(np.linspace(1, 4, 7)),
+                             list(self.dataset2.data.axes[0].values))
+
+    def test_process_interpolates_data_for_1d_datasets(self):
+        self.dataset1.data.data = np.linspace(10, 15, 11)
+        self.dataset1.data.axes[0].values = np.linspace(0, 5, 11)
+        self.dataset2.data.data = np.linspace(11, 14, 11)
+        self.dataset2.data.axes[0].values = np.linspace(1, 4, 11)
+        self.processing.datasets.append(self.dataset1)
+        self.processing.datasets.append(self.dataset2)
+        self.processing.process()
+        self.assertListEqual(list(np.linspace(11, 14, 7)),
+                             list(self.dataset1.data.data))
+        self.assertListEqual(list(np.linspace(11, 14, 7)),
+                             list(self.dataset2.data.data))
+
+    def test_process_interpolates_data_for_2d_datasets(self):
+        axis0 = np.linspace(0,5,11)
+        axis1 = np.linspace(0,5,11)
+        rows, cols = np.meshgrid(axis0, axis1, indexing='ij')
+        self.dataset1.data.data = np.sin(rows**2+cols**2)
+        self.dataset1.data.axes[0].values = axis0
+        self.dataset1.data.axes[1].values = axis1
+        axis0 = np.linspace(2,4,5)
+        axis1 = np.linspace(2,4,5)
+        rows, cols = np.meshgrid(axis0, axis1, indexing='ij')
+        self.dataset2.data.data = np.sin(rows**2+cols**2)
+        self.dataset2.data.axes[0].values = axis0
+        self.dataset2.data.axes[1].values = axis1
+        self.processing.datasets.append(self.dataset1)
+        self.processing.datasets.append(self.dataset2)
+        self.processing.process()
+        self.assertTrue(np.all(self.dataset2.data.data
+                               == self.dataset1.data.data))

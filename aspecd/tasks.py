@@ -52,7 +52,7 @@ To give a first impression of how such a recipe may look like:
 
     tasks:
       - kind: processing
-        type: ProcessingStep
+        type: SingleProcessingStep
         properties:
           parameters:
             param1: bar
@@ -74,7 +74,7 @@ determines which kind of task should be performed. For each kind, a class
 subclassing :class:`aspecd.tasks.Task` needs to exist. For details,
 see below. The key ``type`` stores the name of the actual class, such as a
 concrete processing step derived from
-:class:`aspecd.processing.ProcessingStep`. The dictionary ``properties``
+:class:`aspecd.processing.SingleProcessingStep`. The dictionary ``properties``
 contains keys corresponding to the attributes of the respective class.
 Depending on the type of task, additional keys can be used, such as
 ``apply_to`` to determine the datasets this task should be applied to,
@@ -111,7 +111,7 @@ for datasets:
 
     tasks:
       - kind: processing
-        type: ProcessingStep
+        type: SingleProcessingStep
 
 
 In this case, all dataset names will be treated relative to the source
@@ -130,7 +130,7 @@ example below.
 
     tasks:
       - kind: processing
-        type: ProcessingStep
+        type: SingleProcessingStep
 
 Here, paths have been given for unixoid file systems, using ``/`` as a
 separator. Adjust to your needs if necessary.
@@ -200,7 +200,7 @@ name like so:
 
     tasks:
       - kind: processing
-        type: ProcessingStep
+        type: SingleProcessingStep
 
 
 If you would like to use a class from a different package for only one task,
@@ -210,7 +210,7 @@ feel free to prefix the "kind" attribute of the respective task, as shown:
 
     tasks:
       - kind: some_other_package.processing
-        type: ProcessingStep
+        type: SingleProcessingStep
 
 
 Of course, in order to work, this package termed here "some_other_package"
@@ -232,7 +232,7 @@ a default package and overriding this for a particular task:
 
     tasks:
       - kind: some_other_package.processing
-        type: ProcessingStep
+        type: SingleProcessingStep
 
 
 Setting own labels (and properties) for datasets
@@ -332,6 +332,65 @@ both, a dataset factory and dataset importer factory. Furthermore, these two
 classes need to reside in the same modules as in the ASpecD framework,
 *i.e.*, the dataset factory needs to reside in the "dataset" module and the
 dataset importer factory in the "io" module.
+
+
+Specify importer for datasets
+-----------------------------
+
+Sometimes it may be necessary to explicitly provide the importer class that
+shall be used to import a dataset. In this case, you can explicitly say
+which importer to use:
+
+.. code-block:: yaml
+
+    datasets:
+      - source: /lengthly/path/to/dataset1
+      - source: /lengthly/path/to/dataset2
+        importer: TxtImporter
+
+However, be careful to match data format and importer, as you are overriding
+the automatic importer determination of the
+:class:`aspecd.io.DatasetImporterFactory` this way. Furthermore, make sure
+the respective importer class exists. Of course, this works as
+well with providing an alternative package:
+
+.. code-block:: yaml
+
+    datasets:
+      - source: /lengthly/path/to/dataset1
+      - source: /lengthly/path/to/dataset2
+        package: other_package
+        importer: TxtImporter
+
+In this particular example, the importer located in
+``other_package.io.TxtImporter`` would be used to import your dataset. The
+parameters will be directly passed to the importer without further checking,
+and it is the sole responsibility of the importer class to make sense of the
+parameters provided. Have a look at the documentation of the actual importer
+class you intend to use for parameters you can set (if any). Note that many
+parameters will not recognise additional parameters.
+
+
+Specify importer parameters for datasets
+----------------------------------------
+
+Furthermore, sometimes you may want to provide parameters for an importer,
+*e.g.* in case of importing text files with headers, and you can do this as
+well:
+
+.. code-block:: yaml
+
+    datasets:
+      - source: /lengthly/path/to/dataset1
+      - source: /lengthly/path/to/dataset2
+        importer: TxtImporter
+        importer_parameters:
+          skiprows: 3
+
+You can even provide ``importer_parameters`` without explicitly specifying
+an importer to use, although this may lead to hard to detect behaviour,
+as you rely on the automatism of choosing the importer class implemented in
+the :class:`aspecd.io.DatasetImporterFactory` in this case.
 
 
 Referring to other datasets and results
@@ -493,6 +552,7 @@ Currently, the following subclasses are implemented:
 
      * :class:`aspecd.tasks.SingleplotTask`
      * :class:`aspecd.tasks.MultiplotTask`
+     * :class:`aspecd.tasks.CompositeplotTask`
 
   * :class:`aspecd.tasks.ReportTask`
   * :class:`aspecd.tasks.ModelTask`
@@ -511,7 +571,7 @@ is true for plots. To make this a bit easier to follow, see the example below.
 
     tasks:
       - kind: processing
-        type: ProcessingStep
+        type: SingleProcessingStep
 
       - kind: singleanalysis
         type: AnalysisStep
@@ -585,7 +645,7 @@ ASpecD framework, a series of prerequisites needs to be met, *i.e.*, classes
 implemented. Besides the usual suspects such as
 :class:`aspecd.dataset.Dataset` and its constituents as well as the
 different processing and analysis steps based on
-:class:`aspecd.processing.ProcessingStep` and
+:class:`aspecd.processing.SingleProcessingStep` and
 :class:`aspecd.analysis.SingleAnalysisStep`, two different factory
 classes need to be implemented in particular, subclassing
 
@@ -607,9 +667,55 @@ general handling of recipes. The former is implemented within each
 respective package built upon the ASpecD framework, the latter is taken care
 of fully by the ASpecD framework itself. You might want to implement a simple
 proxy within a derived package to prevent the user from having to call out to
-functionality provided directly by the ASpecD framework (what might be
+functionality provided directly by the ASpecD framework. The latter might be
 confusing for those unfamiliar with the underlying details, *i.e.*,
-most common users).
+most common users. More explicit, you may want to create proxy classes in
+the processing and analysis modules of your package, subclassing all the
+concrete processing and analysis steps already provided with the ASpecD
+framework.
+
+
+Notes for developers
+====================
+
+.. note::
+
+    This section is only relevant for those further developing the ASpecD
+    framework. Users of recipe-driven data analysis as well as developers of
+    packages derived from the ASpecD framework usually need not bother about
+    these details (as others did for them already).
+
+Recipe-driven data analysis introduces another level of abstraction and
+indirection with its use of recipes in YAML format. Based on this analogy,
+we have a :class:`aspecd.tasks.Recipe` consisting of a list of datasets and a
+list of :class:`aspecd.tasks.Task` to be performed on the datasets. Such recipe
+gets "cooked" by a :class:`aspecd.tasks.Chef`, and for the convenience of
+the user of recipe-driven data analysis, the result gets "served" by the
+:class:`aspecd.tasks.ChefDeService`. An actual user will not see any of
+this, but simply call ``serve <recipe-name.yaml>`` from the command line.
+
+Internally, recipes are represented by an instance of
+:class:`aspecd.tasks.Recipe`, and this representation takes care already to
+import the datasets specified in the ``datasets`` block of a recipe.
+Therefore, all handling of data import needs to be done here. Similarly,
+upon populating a recipe (from dict or by importing), the tasks will already
+be created using a :class:`aspecd.tasks.TaskFactory`.
+
+The actual tasks are represented by instances of
+subclasses of :class:`aspecd.tasks.Task`, and they in turn create an
+instance of the actual object internally, applying this to the dataset(s).
+
+"Cooking" a recipe is done by :class:`aspecd.tasks.Chef`, and this class
+takes care of writing a history in form of an executable recipe, thus ensuring
+reproducibility and good scientific practice.
+
+"Serving" the results of a cooked recipe is eventually the responsibility of
+the :class:`aspecd.tasks.ChefDeService`, and it is this class calling out to
+the :class:`aspecd.tasks.Chef` and writing the history to an actual file
+that can be used as recipe again. For the convenience of the user, an entry
+point (console script) is included in the ``setup.py`` file calling
+:func:`aspecd.tasks.serve` that in turn takes care of loading the recipe and
+instantiating a :class:`aspecd.tasks.ChefDeService`.
 
 
 Module documentation
@@ -763,6 +869,18 @@ class Recipe:
         Make sure the path actually exists. Otherwise, you may run into
         trouble when tasks try to save their output.
 
+    autosave_plots: :class:`bool`
+        Whether to save plots automatically even if no filename is provided.
+
+        If true, each :class:`aspecd.tasks.SingleplotTask` and
+        :class:`aspecd.tasks.MultiplotTask` will save the plots to default
+        file names. For details, see the documentation of the respective
+        classes.
+
+        Default: True
+
+        .. versionadded:: 0.2
+
     filename : :class:`str`
         Name of the (YAML) file the recipe was loaded from.
 
@@ -800,6 +918,7 @@ class Recipe:
         self.default_package = ''
         self.datasets_source_directory = ''
         self.output_directory = ''
+        self.autosave_plots = True
         self.filename = ''
 
     def from_dict(self, dict_=None):  # noqa: MC0001
@@ -831,7 +950,7 @@ class Recipe:
         if not self.task_factory:
             raise aspecd.exceptions.MissingTaskFactoryError
         for keyword in ["default_package", "datasets_source_directory",
-                        "output_directory"]:
+                        "output_directory", "autosave_plots"]:
             if keyword in dict_:
                 setattr(self, keyword, dict_[keyword])
         if self.output_directory and not self.output_directory.startswith('/'):
@@ -850,6 +969,8 @@ class Recipe:
 
     def _append_dataset(self, key):
         properties = dict()
+        importer = None
+        importer_parameters = None
         if isinstance(key, dict):
             properties = copy.copy(key)
             source = key['source']
@@ -859,6 +980,10 @@ class Recipe:
                 properties.pop('id')
             else:
                 label = key['source']
+            if 'importer' in key:
+                importer = key['importer']
+            if 'importer_parameters' in key:
+                importer_parameters = key['importer_parameters']
         else:
             source = key
             label = key
@@ -868,9 +993,15 @@ class Recipe:
             dataset_factory = \
                 self._get_dataset_factory(package=properties['package'])
             # noinspection PyUnresolvedReferences
-            dataset = dataset_factory.get_dataset(source=source)
+            dataset = \
+                dataset_factory.get_dataset(source=source,
+                                            importer=importer,
+                                            parameters=importer_parameters)
         else:
-            dataset = self.dataset_factory.get_dataset(source=source)
+            dataset = \
+                self.dataset_factory.get_dataset(source=source,
+                                                 importer=importer,
+                                                 parameters=importer_parameters)
         for property_key, value in properties.items():
             if hasattr(dataset, property_key):
                 setattr(dataset, property_key, value)
@@ -1187,7 +1318,7 @@ class Chef:
         system_info = aspecd.system.SystemInfo(self.recipe.default_package)
         self.history["system_info"] = system_info.to_dict()
         for key in ['default_package', 'datasets_source_directory',
-                    'output_directory']:
+                    'output_directory', 'autosave_plots']:
             if getattr(self.recipe, key):
                 self.history[key] = getattr(self.recipe, key)
         recipe_dict = self.recipe.to_dict()
@@ -1339,6 +1470,42 @@ class Task(aspecd.utils.ToDictMixin):
                 else:
                     setattr(self, key, value)
 
+    def to_dict(self):
+        """
+        Create dictionary containing public attributes of an object.
+
+        Furthermore, replace certain objects with their respective labels
+        provided in the recipe. These objects currently include datasets,
+        results, figures (*i.e.* figure records), and plotters.
+
+        Returns
+        -------
+        public_attributes : :class:`collections.OrderedDict`
+            Ordered dictionary containing the public attributes of the object
+
+            The order of attribute definition is preserved
+
+        """
+        if 'parameters' in self.properties:
+            self._replace_objects_with_labels(self.properties["parameters"])
+        self._replace_objects_with_labels(self.properties)
+        return super().to_dict()
+
+    def _replace_objects_with_labels(self, dict_=None):
+        for property_key, property_value in dict_.items():
+            for dataset_key, dataset_value in self.recipe.datasets.items():
+                if property_value is dataset_value:
+                    dict_[property_key] = dataset_key
+            for dataset_key, dataset_value in self.recipe.results.items():
+                if property_value is dataset_value:
+                    dict_[property_key] = dataset_key
+            for figure_key, figure_value in self.recipe.figures.items():
+                if property_value is figure_value:
+                    dict_[property_key] = figure_key
+            for plotter_key, plotter_value in self.recipe.plotters.items():
+                if property_value is plotter_value:
+                    dict_[property_key] = plotter_key
+
     def perform(self):
         """
         Call the appropriate method of the underlying object.
@@ -1381,6 +1548,7 @@ class Task(aspecd.utils.ToDictMixin):
         this method and provide the actual implementation.
 
         """
+        self._task = self.get_object()
 
     def get_object(self):
         """
@@ -1572,7 +1740,7 @@ class ProcessingTask(Task):
     Processing steps will always be performed individually for each dataset.
 
     For more information on the underlying general class,
-    see :class:`aspecd.processing.ProcessingStep`.
+    see :class:`aspecd.processing.SingleProcessingStep`.
 
     For an example of how such a processing task may be included into a
     recipe, see the YAML listing below:
@@ -1580,7 +1748,7 @@ class ProcessingTask(Task):
     .. code-block:: yaml
 
         kind: processing
-        type: ProcessingStep
+        type: SingleProcessingStep
         properties:
           parameters:
             param1: bar
@@ -1605,7 +1773,7 @@ class ProcessingTask(Task):
     .. code-block:: yaml
 
         kind: processing
-        type: ProcessingStep
+        type: SingleProcessingStep
         result: label
 
 
@@ -1617,7 +1785,7 @@ class ProcessingTask(Task):
     .. code-block:: yaml
 
         kind: processing
-        type: ProcessingStep
+        type: SingleProcessingStep
         apply_to:
           - loi:xxx
           - loi:yyy
@@ -1629,12 +1797,12 @@ class ProcessingTask(Task):
     Attributes
     ----------
     result : :class:`str`
-        Label for the result of a processing step.
+        Label for the results of a processing step.
 
         Processing steps always operate on datasets. However, sometimes it
         is useful to have a processing task return a copy of the processed
         dataset, in order to compare different processings afterwards.
-        Therefore, you can specify a ``results`` label. In this case,
+        Therefore, you can specify a ``result`` label. In this case,
         the dataset will be copied first, the processing step performed on
         it, and afterwards the result returned as a *new* dataset that is
         accessible throughout the rest of the recipe with the label provided.
@@ -1670,6 +1838,117 @@ class ProcessingTask(Task):
                     self.recipe.results[self.result] = dataset_copy
             else:
                 dataset.process(processing_step=self._task)
+
+
+class SingleprocessingTask(ProcessingTask):
+    """
+    Singleprocessing step defined as task in recipe-driven data analysis.
+
+    This is a convenience alias class for :class:`ProcessingTask`.
+    Therefore, the following two tasks are identical:
+
+    .. code-block:: yaml
+
+        - kind: processing
+          type: SingleProcessingStep
+
+        - kind: singleprocessing
+          type: SingleProcessingStep
+
+    """
+
+    def __init__(self, recipe=None):
+        super().__init__(recipe=recipe)
+        self._module = 'processing'
+
+
+class MultiprocessingTask(Task):
+    """
+    Multiprocessing step defined as task in recipe-driven data analysis.
+
+    Processing steps will always be performed individually for each dataset.
+    Nevertheless, in this particular case, the processing depends on the
+    list of datasets provided in the ``apply_to`` field
+
+    For more information on the underlying general class,
+    see :class:`aspecd.processing.MultiProcessingStep`.
+
+    For an example of how such a processing task may be included into a
+    recipe, see the YAML listing below:
+
+    .. code-block:: yaml
+
+        kind: multiprocessing
+        type: MultiProcessingStep
+        properties:
+          parameters:
+            param1: bar
+            param2: foo
+        apply_to:
+          - loi:xxx
+          - loi:yyy
+
+    Note that you can refer to datasets and results created during cooking
+    of a recipe using their respective labels. Those labels will
+    automatically be replaced by the actual dataset/result prior to
+    performing the task.
+
+    Sometimes it can come in quite handy to compare different processing
+    steps on the same original dataset, *e.g.* a series of different
+    parameters. Here, what you are interested in is to work on *copies* of
+    the original dataset and get the results stored additionally. Here you go:
+
+    .. code-block:: yaml
+
+        kind: multiprocessing
+        type: MultiProcessingStep
+        apply_to:
+          - loi:xxx
+          - loi:yyy
+        result:
+          - label1
+          - label2
+
+
+    Attributes
+    ----------
+    result : :class:`list`
+        Labels for the results of a processing step.
+
+        Processing steps always operate on datasets. However, sometimes it
+        is useful to have a processing task return a copy of the processed
+        dataset, in order to compare different processings afterwards.
+        Therefore, you can specify a ``result`` label. In this case,
+        the dataset will be copied first, the processing step performed on
+        it, and afterwards the result returned as a *new* dataset that is
+        accessible throughout the rest of the recipe with the label provided.
+
+        In case you perform the processing on several datasets, you may want
+        to provide as many result labels as there are datasets. Otherwise,
+        no result will be assigned.
+
+    """
+
+    def __init__(self, recipe=None):
+        super().__init__(recipe=recipe)
+        self._module = 'processing'
+        self.result = ''
+
+    def _perform(self):
+        self._task = self.get_object()
+        if self.result:
+            datasets = []
+            for dataset in self.recipe.get_datasets(self.apply_to):
+                datasets.append(copy.deepcopy(dataset))
+            self._task.datasets = datasets
+            # noinspection PyUnresolvedReferences
+            self._task.process()
+            for number, dataset in enumerate(self._task.datasets):
+                self.recipe.results[self.result[number]] = dataset
+        else:
+            self._task.datasets = self.recipe.get_datasets(self.apply_to)
+            # noinspection PyUnresolvedReferences
+            self._task.process()
 
 
 class AnalysisTask(Task):
@@ -1744,18 +2023,50 @@ class SingleanalysisTask(AnalysisTask):
     automatically be replaced by the actual dataset/result prior to
     performing the task.
 
+    And if you now want to do that for multiple datasets, you can do that as
+    well. However, make sure to provide as many result labels as you have
+    datasets to perform the analysis step on, as otherwise no result will
+    be stored:
+
+    .. code-block:: yaml
+
+        kind: singleanalysis
+        type: SingleAnalysisStep
+        apply_to:
+          - loi:xxx
+          - loi:yyy
+        result:
+          - label1
+          - label2
+
+    In case you perform the analysis on several datasets, you may want to
+    provide as many result labels as there are datasets. Otherwise,
+    no result will be assigned.
+
     """
 
     # noinspection PyUnresolvedReferences
     def _perform(self):
-        for dataset_id in self.apply_to:
+        result_labels = None
+        if self.result and isinstance(self.result, list):
+            if len(self.result) == len(self.apply_to):
+                result_labels = self.result
+            else:
+                self.result = None
+        for number, dataset_id in enumerate(self.apply_to):
             dataset = self.recipe.get_dataset(dataset_id)
             self._task = self.get_object()
             self._task = dataset.analyse(analysis_step=self._task)
             if self.result:
-                if isinstance(self._task.result, aspecd.dataset.Dataset):
-                    self._task.result.id = self.result
-                self.recipe.results[self.result] = self._task.result
+                if result_labels:
+                    if isinstance(self._task.result, aspecd.dataset.Dataset):
+                        self._task.result.id = self.result[number]
+                    self.recipe.results[self.result[number]] = \
+                        self._task.result
+                else:
+                    if isinstance(self._task.result, aspecd.dataset.Dataset):
+                        self._task.result.id = self.result
+                    self.recipe.results[self.result] = self._task.result
 
 
 class MultianalysisTask(AnalysisTask):
@@ -2020,6 +2331,14 @@ class SingleplotTask(PlotTask):
         If the recipe contains the ``output_directory`` key on the top
         level, the figure(s) will be saved to this directory.
 
+    As long as ``autosave_plots`` in the recipe is set to True, the plots
+    will be saved automatically, even if no filename is provided. These
+    automatically generated filenames consist of the last part of the
+    dataset source (excluding a potential file extension) and the name of
+    the plotter used. To prevent the plotters in a recipe from automatically
+    saving the plots, include the ``autosave_plots`` directive on the top
+    level of your recipe and set it to False.
+
     """
 
     def _perform(self):
@@ -2033,6 +2352,14 @@ class SingleplotTask(PlotTask):
             self._task = self.get_object()
             if filenames:
                 self._task.filename = filenames[number]
+            elif "filename" not in self.properties \
+                    and self.recipe.autosave_plots:
+                dataset_basename = \
+                    os.path.splitext(os.path.split(dataset.id)[-1])[0]
+                # noinspection PyUnresolvedReferences
+                plotter_name = self._task.name.split(".")[-1]
+                self._task.filename = \
+                    "".join([dataset_basename, "_", plotter_name, ".pdf"])
             dataset.plot(plotter=self._task)
             # noinspection PyTypeChecker
             self.save_plot(plot=self._task)
@@ -2103,6 +2430,14 @@ class MultiplotTask(PlotTask):
         If the recipe contains the ``output_directory`` key on the top
         level, the figure(s) will be saved to this directory.
 
+    As long as ``autosave_plots`` in the recipe is set to True, the plots
+    will be saved automatically, even if no filename is provided. These
+    automatically generated filenames consist of the last part of the
+    dataset sources (excluding a potential file extension) joint by underscores
+    and the name of the plotter used. To prevent the plotters in a recipe
+    from automatically saving the plots, include the ``autosave_plots``
+    directive on the top level of your recipe and set it to False.
+
     """
 
     def _perform(self):
@@ -2110,6 +2445,16 @@ class MultiplotTask(PlotTask):
         self._task.datasets = self.recipe.get_datasets(self.apply_to)
         # noinspection PyUnresolvedReferences
         self._task.plot()
+        if "filename" not in self.properties and self.recipe.autosave_plots:
+            basenames = []
+            for dataset in self._task.datasets:
+                basenames.append(
+                    os.path.splitext(os.path.split(dataset.id)[-1])[0])
+            # noinspection PyUnresolvedReferences
+            plotter_name = self._task.name.split(".")[-1]
+            self._task.filename = \
+                "".join(["_".join(basenames), "_", plotter_name, ".pdf"])
+            self.properties["filename"] = self._task.filename
         # noinspection PyTypeChecker
         self.save_plot(plot=self._task)
         # noinspection PyUnresolvedReferences
@@ -2133,29 +2478,29 @@ class CompositeplotTask(PlotTask):
 
     .. code-block:: yaml
 
-        kind: singleplot
-        type: SinglePlotter1D
-        apply_to:
-          - dataset1
-        result: 1D_plot
+        - kind: singleplot
+          type: SinglePlotter1D
+          apply_to:
+            - dataset1
+          result: 1D_plot
 
-        kind: singleplot
-        type: SinglePlotter2D
-        apply_to:
-          - dataset2
-        result: 2D_plot
+        - kind: singleplot
+          type: SinglePlotter2D
+          apply_to:
+            - dataset2
+          result: 2D_plot
 
-        kind: compositeplot
-        type: CompositePlotter
-        properties:
-          grid_dimensions: [1, 2]
-          subplot_locations:
-            - [0, 0, 1, 1]
-            - [0, 1, 1, 1]
-          plotter:
-            - 1D_plot
-            - 2D_plot
-          filename: composed_plot.pdf
+        - kind: compositeplot
+          type: CompositePlotter
+          properties:
+            grid_dimensions: [1, 2]
+            subplot_locations:
+              - [0, 0, 1, 1]
+              - [0, 1, 1, 1]
+            plotter:
+              - 1D_plot
+              - 2D_plot
+            filename: composed_plot.pdf
 
     The crucial aspect here is to first define the individual plotters that
     get used for the respective panels of the CompositePlotter. In this
@@ -2163,6 +2508,12 @@ class CompositeplotTask(PlotTask):
     created and afterwards combined into the CompositePlotter. Furthermore,
     for a CompositePlot you need to specify both, grid dimensions and
     subplot locations, as they will be set to one single axis by default.
+
+    .. note::
+        As long as the ``autosave_plots`` directive at the top level of the
+        recipe is set to True, the results of the individual plotters
+        combined in the CompositePlotter will be saved to generic filenames.
+        To prevent this from happening, set ``autosave_plots`` to false.
 
     """
 
@@ -2801,7 +3152,7 @@ class ChefDeService:
         self._create_history_filename()
         yaml = aspecd.utils.Yaml()
         yaml.dict = self._chef.history
-        yaml.serialize_numpy_arrays()
+        yaml.serialise_numpy_arrays()
         yaml.write_to(self._history_filename)
 
     def _create_history_filename(self):

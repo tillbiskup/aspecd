@@ -3,6 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.4717937.svg
+   :target: https://doi.org/10.5281/zenodo.4717937
+   :align: right
+
 ASpecD documentation
 ====================
 
@@ -71,6 +75,20 @@ And to make it even more convenient for users and future-proof:
 
 .. warning::
   The ASpecD framework is currently under active development and still considered in Beta development state. Therefore, expect changes in features and public APIs that may break your own code. Nevertheless, feedback as well as feature requests are highly welcome.
+
+.. _sec-how_to_cite:
+
+How to cite
+-----------
+
+ASpecD is free software. However, if you use ASpecD for your own research, please cite it appropriately:
+
+Till Biskup. ASpecD (2021). `doi:10.5281/zenodo.4717937 <https://doi.org/10.5281/zenodo.4717937>`_
+
+To make things easier, ASpecD has a `DOI <https://doi.org/10.5281/zenodo.4717937>`_ provided by `Zenodo <https://zenodo.org/>`_, and you may click on the badge below to directly access the record associated with it. Note that this DOI refers to the package as such and always forwards to the most current version.
+
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.4717937.svg
+   :target: https://doi.org/10.5281/zenodo.4717937
 
 
 Where to start
@@ -143,7 +161,7 @@ Finally, don't forget to check out the website on `reproducible research <https:
 License
 -------
 
-This program is free software: you can redistribute it and/or modify it under the terms of the **BSD License**.
+This program is free software: you can redistribute it and/or modify it under the terms of the **BSD License**. However, if you use ASpecD for your own research, please cite it appropriately. See :ref:`How to cite <sec-how_to_cite>` for details.
 
 
 A note on the logo

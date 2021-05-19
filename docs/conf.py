@@ -95,7 +95,8 @@ autodoc_default_options = {
 
 # Multiversion configuration
 smv_branch_whitelist = r'^master.*$'
-smv_released_pattern = r'^refs/tags/v\d+\.\d+\.\d+$'
+smv_tag_whitelist = r'^v\d+\.\d+$'
+smv_released_pattern = r'^refs/tags/v\d+\.\d+$'
 
 tag = subprocess.run("git describe --tags `git rev-list --tags "
                      "--max-count=1`", shell=True, capture_output=True)
@@ -215,4 +216,5 @@ intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
     'matplotlib': ('https://matplotlib.org/stable/', None),
     'numpy': ('https://numpy.org/doc/stable/', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
 }

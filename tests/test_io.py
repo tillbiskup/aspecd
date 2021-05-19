@@ -116,6 +116,19 @@ class TestDatasetImporterFactory(unittest.TestCase):
         importer = self.factory.get_importer(source=source)
         self.assertTrue(isinstance(importer, io.TxtImporter))
 
+    def test_get_importer_with_importer_returns_specific_importer(self):
+        source = '/foo'
+        importer = 'TxtImporter'
+        importer = self.factory.get_importer(source=source, importer=importer)
+        self.assertTrue(isinstance(importer, io.TxtImporter))
+
+    def test_get_importer_with_parameters_sets_parameters(self):
+        source = '/foo'
+        parameters = {'foo': 'bla', 'bar': 'blub'}
+        importer = self.factory.get_importer(source=source,
+                                             parameters=parameters)
+        self.assertDictEqual(parameters, importer.parameters)
+
 
 class TestRecipeImporter(unittest.TestCase):
     def setUp(self):
@@ -307,7 +320,7 @@ class TestAdfImporter(unittest.TestCase):
 
     def test_import_sets_history(self):
         dataset_ = dataset.ExperimentalDataset()
-        processing_step = aspecd.processing.ProcessingStep()
+        processing_step = aspecd.processing.SingleProcessingStep()
         processing_step.comment = 'foo'
         dataset_.process(processing_step)
         dataset_.export_to(self.exporter)
@@ -388,7 +401,7 @@ class TestAsdfImporter(unittest.TestCase):
 
     def test_import_sets_history(self):
         dataset_ = dataset.ExperimentalDataset()
-        processing_step = aspecd.processing.ProcessingStep()
+        processing_step = aspecd.processing.SingleProcessingStep()
         processing_step.comment = 'foo'
         dataset_.process(processing_step)
         dataset_.export_to(self.exporter)

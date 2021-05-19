@@ -342,6 +342,16 @@ class TestYaml(unittest.TestCase):
         self.assertTrue(self.yaml.binary_files)
         os.remove(filename)
 
+    def test_serialise_large_non_c_contiguous_numpy_array(self):
+        array = np.random.random([6, 8])
+        self.yaml.numpy_array_size_threshold = 5
+        self.yaml.dict = {'foo': array.T}
+        self.yaml.serialise_numpy_arrays()
+        # Necessary as the true filename will be generated
+        filename = self.yaml.dict["foo"]["file"]
+        self.assertTrue(self.yaml.binary_files)
+        os.remove(filename)
+
     def test_serialise_large_numpy_array_with_binary_directory(self):
         array = np.random.rand(self.yaml.numpy_array_size_threshold + 1)
         resulting_dict = {'foo': {'type': 'numpy.ndarray',

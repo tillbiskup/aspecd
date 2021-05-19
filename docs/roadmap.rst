@@ -8,23 +8,35 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.2
 ===============
 
-* Report task: Add figure captions to context if available
+* Add Zenodo badge to start page of documentation in release
 
-* Remaining basic processing and analysis steps, such as algebra with datasets, slice extraction for >2D datasets, peak finding, SNR determination, denoising, filtering, noise, cut dataset and axis (to common range)
 
-* Normalising over parts of a dataset
+For version 0.3
+===============
 
-* :meth:`aspecd.processing.ProcessingStep._set_defaults()` method called before :meth:`aspecd.processing.ProcessingStep._sanitise_parameters`
+* Remaining basic processing and analysis steps:
 
-* Importer with parameters in recipe (*e.g.*, for CSV importer)
+  * denoising
+  * adding noise
+  * ? AxisAlgebra: provide a function that gets evaluated on the values of an axis
+  * Interpolation
 
-* Expand use cases
+    * for ND with N>2
+    * different types of interpolation
 
-* Plot task: default filename for saved figure
+  * BlindSNREstimation with alternative methods
+  * SNREstimation with explicitly providing noise (using both, processing and analysis)
+
+* Expand use cases: reports
+
 
 
 For later versions
 ==================
+
+* Recipes: Subrecipes that can be included in recipes
+
+* Report task: Add figure captions to context if available
 
 * Reporter: Method for adding dict representations of datasets to context
 
@@ -42,7 +54,7 @@ For later versions
 
 * Tabular representations of characteristics extracted from datasets
 
-* Plotter: Factory to create single plots of each given dataset. Probably needs a way to create default filenames (e.g. label + date?).
+* Plotter: Factory to create single plots of each given dataset.
 
 
 Todos

@@ -60,7 +60,7 @@ series of classes for storing history records:
     Generic base class for all kinds of history records.
 
     For all classes operating on datasets, such as
-    :class:`aspecd.processing.ProcessingStep`,
+    :class:`aspecd.processing.SingleProcessingStep`,
     :class:`aspecd.analysis.SingleAnalysisStep` and others, there exist at
     least two "representations": (i) the generic one not (necessarily) tied
     to any concrete dataset, thus portable, and (ii) a concrete one having
@@ -227,8 +227,8 @@ class Dataset(aspecd.utils.ToDictMixin):
         """Apply processing step to dataset.
 
         Every processing step is an object of type
-        :class:`aspecd.processing.ProcessingStep` and is passed as argument
-        to :meth:`process`.
+        :class:`aspecd.processing.SingleProcessingStep` and is passed as
+        argument to :meth:`process`.
 
         Calling this function ensures that the history record is added to the
         dataset as well as a few basic checks are performed such as for leading
@@ -243,12 +243,12 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         Parameters
         ----------
-        processing_step : :obj:`aspecd.processing.ProcessingStep`
+        processing_step : :obj:`aspecd.processing.SingleProcessingStep`
             processing step to apply to the dataset
 
         Returns
         -------
-        processing_step : :obj:`aspecd.processing.ProcessingStep`
+        processing_step : :obj:`aspecd.processing.SingleProcessingStep`
             processing step applied to the dataset
 
         Raises
@@ -262,7 +262,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         processing_step = copy.deepcopy(processing_step)
         processing_step.process(self, from_dataset=True)
         history_record = processing_step.create_history_record()
-        self._append_processing_history_record(history_record)
+        self.append_history_record(history_record)
         self._append_task(kind='processing', task=history_record)
         self._handle_not_undoable(processing_step=processing_step)
         return processing_step
@@ -330,7 +330,24 @@ class Dataset(aspecd.utils.ToDictMixin):
     def _has_leading_history(self):
         return len(self.history) - 1 > self._history_pointer
 
-    def _append_processing_history_record(self, history_record):
+    def append_history_record(self, history_record):
+        """Append history record to dataset history.
+
+        This method should never be called manually, but only from within
+        classes of the ASpecD framework, at least as long as you are not
+        interested in Orwellian History.
+
+        Parameters
+        ----------
+        history_record : :class:`aspecd.history.HistoryRecord`
+            History record (of a processing step) to be appended.
+
+
+        .. versionchanged:: 0.2
+            Converted into a public method, due to needs of
+            :class:`aspecd.processing.MultiProcessingStep`
+
+        """
         self.history.append(history_record)
         self._increment_history_pointer()
 
@@ -682,6 +699,7 @@ class Dataset(aspecd.utils.ToDictMixin):
                                 + element["kind"].capitalize() + 'HistoryRecord'
                         record = aspecd.utils.object_from_class_name(
                             record_class_name)
+                        # noinspection PyUnresolvedReferences
                         record.from_dict(element["task"])
                         self.tasks.append({'kind': element["kind"],
                                            'task': record})
@@ -875,7 +893,7 @@ class DatasetFactory:
     def __init__(self):
         self.importer_factory = None
 
-    def get_dataset(self, source=''):
+    def get_dataset(self, source='', importer='', parameters=None):
         """
         Return dataset object for dataset specified by its source.
 
@@ -892,6 +910,20 @@ class DatasetFactory:
             string describing the source of the dataset
 
             May be a filename or path, a URL/URI, a LOI, or similar
+
+        importer : :class:`str`
+            Name of the importer to use for importing the dataset
+
+            Default: ''
+
+            .. versionadded:: 0.2
+
+        parameters : :class:`dict`
+            Additional parameters for controlling the import
+
+            Default: None
+
+            .. versionadded:: 0.2
 
         Returns
         -------
@@ -913,7 +945,9 @@ class DatasetFactory:
             raise aspecd.exceptions.MissingImporterFactoryError(
                 'An ImporterFactory is required to return a dataset')
         dataset_ = self._create_dataset(source=source)
-        importer = self.importer_factory.get_importer(source=source)
+        importer = self.importer_factory.get_importer(source=source,
+                                                      importer=importer,
+                                                      parameters=parameters)
         dataset_.import_from(importer)
         return dataset_
 

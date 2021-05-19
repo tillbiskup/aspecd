@@ -5,10 +5,108 @@ Changelog
 This page contains a summary of changes between the official ASpecD releases. Only the biggest changes are listed here. A complete and detailed log of all changes is available through the `GitHub Repository Browser <https://github.com/tillbiskup/aspecd/commits/master>`_.
 
 
+Version 0.2.0
+=============
+
+Not yet released
+
+
+New features
+------------
+
+* Singleplot and multiplot tasks automatically save results to generic file(s) when no filename is provided
+
+* Importer and importer parameters can be set in recipe
+
+* DatasetImporterFactory: importer can be set explicitly, parameters can be passed to importers
+
+* DatasetImporter with parameters property
+
+* Meaningful error messages for exceptions in ProcessingSteps, AnalysisSteps, Plotters
+
+* Method ``create_dataset()`` in AnalysisStep
+
+* PeakFinding (for 1D data)
+
+* BlindSNREstimation (currently only with simplest method)
+
+* BasicStatistics (mean, median, std, var)
+
+* BasicCharacteristics (min, max, amplitude, area)
+
+* ProcessingStep provides non-public method ``_set_defaults()`` for setting default parameters before sanitising parameters.
+
+* Filtering (with uniform, Gaussian, and Savitzky-Golay filter)
+
+* Interpolation (at least for 1D and 2D datasets)
+
+* Normalisation:
+
+  * Act on parts of the data of a dataset
+
+  * Handle noise for ND data with N>1
+
+* RangeExtraction: extract range of data from dataset (using slice notation)
+
+* MultiprocessingTask (and SingleprocessingTask aliasing ProcessingTask)
+
+* ScalarAxisAlgebra: perform scalar algebra on axis values
+
+* DatasetAlgebra: add and subtract data of second dataset to/from dataset
+
+* CommonRangeExtraction for 1D and 2D datasets
+
+* SinglePlotter2D:
+
+  * Filled contour plot with additional contour lines that can be styled
+
+  * Lines of contour plot can be styled
+
+* SliceExtraction now handles both, axis indices and axis values
+
+
+Changes
+-------
+
+* Removed parameter ``source`` from method ``_get_importer`` in DatasetImporterFactory, importer factories of derived packages now handle ASpecD-implemented importers by default.
+
+* Dataset: method :meth:`aspecd.dataset.append_history_record` made public
+
+* SystemInfo: Packages contain now full list of dependencies with version numbers of currently installed packages
+
+* SliceExtraction:
+
+  * parameter "index" renamed to "position"
+
+  * works for ND datasets with N>1
+
+* ProcessingStep split into SingleProcessingStep and MultiProcessingStep
+
+  All processing steps previously inheriting from aspecd.ProcessingStep need to inherit now from aspecd.SingleProcessingStep to continue working as expected.
+
+* Plots throw "NotApplicableToDataset" exceptions rather than "PlotNotApplicableToDataset"
+
+
+Fixes
+-----
+
+* SingleanalysisTask assigns results of multiple (individual) datasets
+
+* Exceptions print messages
+
+
+New dependencies
+----------------
+
+* scipy (for interpolation in ExtractCommonRange and various analysis steps)
+
+
 Version 0.1.1
 =============
 
 Released 2021-05-03
+
+The following bugs have been fixed:
 
 * MetadataMapper: Fix sequence of mapping operations performed
 
@@ -22,7 +120,7 @@ Released 2021-05-03
 
 * SliceExtraction: fix problem extracting slice with index zero
 
-* CompositePlotter: more intuitive axes_positions (7b83f36c70)
+* CompositePlotter: more intuitive axes_positions
 
 * Fix bug with aspect ratio of 2D plots using imshow
 
