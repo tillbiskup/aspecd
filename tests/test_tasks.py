@@ -954,6 +954,20 @@ class TestTask(unittest.TestCase):
         self.task.perform()
         self.task.to_dict()
 
+    def test_to_dict_with_dataset_in_properties_replaces_it_with_label(self):
+        kind = 'processing'
+        type_ = 'SingleProcessingStep'
+        self.task.kind = kind
+        self.task.type = type_
+        dataset = aspecd.dataset.Dataset()
+        recipe = tasks.Recipe()
+        recipe.datasets["foo"] = dataset
+        self.task.recipe = recipe
+        self.task.properties["foo"] = dataset
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(dict_["properties"]["foo"], "foo")
+
 
 class TestProcessingTask(unittest.TestCase):
     def setUp(self):

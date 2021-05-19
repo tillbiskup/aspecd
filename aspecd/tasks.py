@@ -1470,6 +1470,27 @@ class Task(aspecd.utils.ToDictMixin):
                 else:
                     setattr(self, key, value)
 
+    def to_dict(self):
+        """
+        Create dictionary containing public attributes of an object.
+
+        Furthermore, replace certain objects (currently datasets) with their
+        respective labels provided in the recipe.
+
+        Returns
+        -------
+        public_attributes : :class:`collections.OrderedDict`
+            Ordered dictionary containing the public attributes of the object
+
+            The order of attribute definition is preserved
+
+        """
+        for property_key, property_value in self.properties.items():
+            for dataset_key, dataset_value in self.recipe.datasets.items():
+                if property_value is dataset_value:
+                    self.properties[property_key] = dataset_key
+        return super().to_dict()
+
     def perform(self):
         """
         Call the appropriate method of the underlying object.
