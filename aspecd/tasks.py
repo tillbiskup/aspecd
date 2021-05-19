@@ -1486,20 +1486,25 @@ class Task(aspecd.utils.ToDictMixin):
             The order of attribute definition is preserved
 
         """
-        for property_key, property_value in self.properties.items():
+        if 'parameters' in self.properties:
+            self._replace_objects_with_labels(self.properties["parameters"])
+        self._replace_objects_with_labels(self.properties)
+        return super().to_dict()
+
+    def _replace_objects_with_labels(self, dict_=None):
+        for property_key, property_value in dict_.items():
             for dataset_key, dataset_value in self.recipe.datasets.items():
                 if property_value is dataset_value:
-                    self.properties[property_key] = dataset_key
+                    dict_[property_key] = dataset_key
             for dataset_key, dataset_value in self.recipe.results.items():
                 if property_value is dataset_value:
-                    self.properties[property_key] = dataset_key
+                    dict_[property_key] = dataset_key
             for figure_key, figure_value in self.recipe.figures.items():
                 if property_value is figure_value:
-                    self.properties[property_key] = figure_key
+                    dict_[property_key] = figure_key
             for plotter_key, plotter_value in self.recipe.plotters.items():
                 if property_value is plotter_value:
-                    self.properties[property_key] = plotter_key
-        return super().to_dict()
+                    dict_[property_key] = plotter_key
 
     def perform(self):
         """
@@ -1543,6 +1548,7 @@ class Task(aspecd.utils.ToDictMixin):
         this method and provide the actual implementation.
 
         """
+        self._task = self.get_object()
 
     def get_object(self):
         """
@@ -3146,7 +3152,7 @@ class ChefDeService:
         self._create_history_filename()
         yaml = aspecd.utils.Yaml()
         yaml.dict = self._chef.history
-        yaml.serialize_numpy_arrays()
+        yaml.serialise_numpy_arrays()
         yaml.write_to(self._history_filename)
 
     def _create_history_filename(self):

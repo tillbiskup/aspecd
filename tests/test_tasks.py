@@ -1010,6 +1010,63 @@ class TestTask(unittest.TestCase):
         dict_ = self.task.to_dict()
         self.assertEqual(dict_["properties"]["foo"], "foo")
 
+    def test_to_dict_with_dataset_in_parameters_replaces_it_with_label(self):
+        dataset = aspecd.dataset.Dataset()
+        recipe = tasks.Recipe()
+        recipe.datasets["foo"] = dataset
+        task_dict = {
+            'kind': 'processing',
+            'type': 'SingleProcessingStep',
+            'properties': {'parameters': {'foo': dataset}}
+        }
+        self.task.from_dict(task_dict)
+        self.task.recipe = recipe
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(dict_["properties"]["parameters"]["foo"], "foo")
+
+    def test_to_dict_with_result_in_parameters_replaces_it_with_label(self):
+        kind = 'processing'
+        type_ = 'SingleProcessingStep'
+        self.task.kind = kind
+        self.task.type = type_
+        dataset = aspecd.dataset.Dataset()
+        recipe = tasks.Recipe()
+        recipe.results["foo"] = dataset
+        self.task.recipe = recipe
+        self.task.properties["parameters"] = {"foo": dataset}
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(dict_["properties"]["parameters"]["foo"], "foo")
+
+    def test_to_dict_with_figure_in_parameters_replaces_it_with_label(self):
+        kind = 'processing'
+        type_ = 'SingleProcessingStep'
+        self.task.kind = kind
+        self.task.type = type_
+        figure_record = tasks.FigureRecord()
+        recipe = tasks.Recipe()
+        recipe.figures["foo"] = figure_record
+        self.task.recipe = recipe
+        self.task.properties["parameters"] = {"foo": figure_record}
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(dict_["properties"]["parameters"]["foo"], "foo")
+
+    def test_to_dict_with_plotter_in_parameters_replaces_it_with_label(self):
+        kind = 'processing'
+        type_ = 'SingleProcessingStep'
+        self.task.kind = kind
+        self.task.type = type_
+        plotter = aspecd.plotting.Plotter()
+        recipe = tasks.Recipe()
+        recipe.plotters["foo"] = plotter
+        self.task.recipe = recipe
+        self.task.properties["parameters"] = {"foo": plotter}
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(dict_["properties"]["parameters"]["foo"], "foo")
+
 
 class TestProcessingTask(unittest.TestCase):
     def setUp(self):
@@ -2237,7 +2294,7 @@ class TestChefDeService(unittest.TestCase):
         }
         yaml = utils.Yaml()
         yaml.dict = recipe_dict
-        yaml.serialize_numpy_arrays()
+        yaml.serialise_numpy_arrays()
         yaml.write_to(self.recipe_filename)
 
     def test_instantiate_class(self):
