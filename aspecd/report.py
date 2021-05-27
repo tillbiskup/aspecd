@@ -155,10 +155,10 @@ class Reporter:
             Raised if the template file provided does not exist.
 
         """
-        self.template = os.path.realpath(self.template)
         if not self.template or not os.path.exists(self.template):
             message = ' '.join(['Cannot find template file', self.template])
             raise FileNotFoundError(message)
+        self.template = os.path.realpath(self.template)
         self._render()
 
     def _render(self):
