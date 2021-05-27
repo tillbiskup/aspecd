@@ -22,6 +22,16 @@ Fixes
 -----
 
 
+Version 0.2.1
+=============
+
+Not yet released
+
+The following bugs have been fixed:
+
+* Report: template can have ".." in its path ()
+
+
 Version 0.2.0
 =============
 
