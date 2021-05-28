@@ -1666,7 +1666,8 @@ class MultiPlotter1DStacked(MultiPlotter1D):
     Sometimes you want to have horizontal "zero lines" appear for each
     individual trace of the stacked plot. This can be achieved explicitly
     setting the "show_zero_lines" parameter to "True" that is set to "False"
-    by default:
+    by default. The offset is automatically set that spectra don't overlap
+    but can also be chosen freely (in units of the intensity):
 
     .. code-block:: yaml
 
@@ -1676,6 +1677,7 @@ class MultiPlotter1DStacked(MultiPlotter1D):
            filename: output.pdf
            parameters:
              show_zero_lines: True
+             offset: 0.3
 
     """
 
