@@ -29,13 +29,13 @@ Not yet released
 
 The following bugs have been fixed:
 
-* :func:`aspecd.utils.copy_values_between_dicts` cascades through source dict (501a7da1dd)
 * Report: template can have ".." in its path (cc6fab5a77)
+* :func:`aspecd.utils.copy_values_between_dicts` cascades through source dict (501a7da1dd)
 
 Additionally, the following new helper functions appeared:
 
 * :func:`aspecd.utils.remove_empty_values_from_dict` (13bcc37a9e)
-* :func:`aspecd.utils.convert_keys_to_variable_names` ()
+* :func:`aspecd.utils.convert_keys_to_variable_names` (e1edef51c7)
 
 
 Version 0.2.0
