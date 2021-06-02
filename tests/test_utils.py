@@ -660,6 +660,33 @@ class TestRemoveEmptyValuesFromDicts(unittest.TestCase):
         self.assertEqual(target_dict, {'foo': {'bla': 'blub'}})
 
 
+class TestConvertKeysToVariableNames(unittest.TestCase):
+
+    def test_convert_keys_returns_dict(self):
+        target_dict = utils.convert_keys_to_variable_names(dict())
+        self.assertTrue(isinstance(target_dict, dict))
+
+    def test_convert_keys_converts_to_lower_case(self):
+        dict_ = {'Foo': 'bar'}
+        target_dict = utils.convert_keys_to_variable_names(dict_)
+        self.assertDictEqual({'foo': 'bar'}, target_dict)
+
+    def test_convert_keys_converts_space_to_underscore(self):
+        dict_ = {'foo bar': 'bar'}
+        target_dict = utils.convert_keys_to_variable_names(dict_)
+        self.assertDictEqual({'foo_bar': 'bar'}, target_dict)
+
+    def test_convert_keys_recursively_converts_to_lower_case(self):
+        dict_ = {'Foo': {'Bar': 'bla'}}
+        target_dict = utils.convert_keys_to_variable_names(dict_)
+        self.assertDictEqual({'foo': {'bar': 'bla'}}, target_dict)
+
+    def test_convert_keys_recursively_converts_space_to_underscore(self):
+        dict_ = {'foo bar': {'bar bla': 'blub'}}
+        target_dict = utils.convert_keys_to_variable_names(dict_)
+        self.assertDictEqual({'foo_bar': {'bar_bla': 'blub'}}, target_dict)
+
+
 class TestAllEqual(unittest.TestCase):
 
     def test_equal_elements_of_list_return_true(self):
