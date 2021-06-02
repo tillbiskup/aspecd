@@ -574,7 +574,12 @@ def copy_values_between_dicts(source=None, target=None):
     """
     for key in target:
         if isinstance(target[key], dict):
-            target[key] = copy_values_between_dicts(source, target[key])
+            if key in source and isinstance(source[key], dict):
+                target[key] = \
+                    copy_values_between_dicts(source[key], target[key])
+            else:
+                target[key] = copy_values_between_dicts(source, target[key])
+
         elif key in source:
             target[key] = source[key]
     return target
@@ -607,6 +612,16 @@ def copy_keys_between_dicts(source=None, target=None):
         else:
             target[key] = source[key]
     return target
+
+
+def remove_empty_values_from_dict(dict_):
+    """Remove empty values and their keys from dict recursively."""
+    if type(dict_) in (dict, collections.OrderedDict):
+        return dict((key, remove_empty_values_from_dict(value)) for
+                    key, value in dict_.items() if
+                    value and remove_empty_values_from_dict(value))
+    else:
+        return dict_
 
 
 def all_equal(list_=None):
