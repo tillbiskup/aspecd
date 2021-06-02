@@ -589,6 +589,12 @@ class TestCopyValuesBetweenDicts(unittest.TestCase):
         target = utils.copy_values_between_dicts(source, target)
         self.assertEqual(source['kbar'], target['kfoo']['kbar'])
 
+    def test_copy_values_copies_existing_value_in_cascaded_dicts(self):
+        source = {'kfoo': {'kbar': 'vfoo'}}
+        target = {'kfoo': {'kbar': 'vbar'}}
+        target = utils.copy_values_between_dicts(source, target)
+        self.assertEqual(source['kfoo']['kbar'], target['kfoo']['kbar'])
+
 
 class TestCopyKeysBetweenDicts(unittest.TestCase):
 
@@ -625,6 +631,33 @@ class TestCopyKeysBetweenDicts(unittest.TestCase):
         target = {'kfoo': [{'kbar': 'vbar', 'kfoobar': 'vfoobar'}]}
         target = utils.copy_keys_between_dicts(source, target)
         self.assertEqual('vfoo', target["kfoo"][0]["kbar"])
+
+
+class TestRemoveEmptyValuesFromDicts(unittest.TestCase):
+
+    def test_remove_empty_values_returns_dict(self):
+        target_dict = utils.remove_empty_values_from_dict(dict())
+        self.assertTrue(isinstance(target_dict, dict))
+
+    def test_remove_empty_values_removes_keys_with_empty_values(self):
+        dict_ = {'foo': ''}
+        target_dict = utils.remove_empty_values_from_dict(dict_)
+        self.assertEqual(target_dict, dict())
+
+    def test_remove_empty_values_only_removes_keys_with_empty_values(self):
+        dict_ = {'foo': '', 'bar': 'bla'}
+        target_dict = utils.remove_empty_values_from_dict(dict_)
+        self.assertEqual(target_dict, {'bar': 'bla'})
+
+    def test_remove_empty_values_recursively_removes_keys(self):
+        dict_ = {'foo': {'bar': ''}}
+        target_dict = utils.remove_empty_values_from_dict(dict_)
+        self.assertEqual(target_dict, dict())
+
+    def test_remove_empty_values_removes_deep_keys(self):
+        dict_ = {'foo': {'bar': '', 'bla': 'blub'}}
+        target_dict = utils.remove_empty_values_from_dict(dict_)
+        self.assertEqual(target_dict, {'foo': {'bla': 'blub'}})
 
 
 class TestAllEqual(unittest.TestCase):

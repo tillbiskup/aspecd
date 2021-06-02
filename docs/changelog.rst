@@ -29,7 +29,12 @@ Not yet released
 
 The following bugs have been fixed:
 
-* Report: template can have ".." in its path ()
+* :func:`aspecd.utils.copy_values_between_dicts` cascades through source dict (501a7da1dd)
+* Report: template can have ".." in its path (cc6fab5a77)
+
+Additionally, the following new helper function appeared:
+
+* :func:`aspecd.utils.remove_empty_values_from_dict` ()
 
 
 Version 0.2.0
