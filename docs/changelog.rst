@@ -25,18 +25,18 @@ Fixes
 Version 0.2.1
 =============
 
-Not yet released
+Released 2021-06-03
 
 The following bugs have been fixed:
 
-* Report: template can have ".." in its path (cc6fab5a77)
-* :func:`aspecd.utils.copy_values_between_dicts` cascades through source dict (501a7da1dd)
-* Add missing template files for sphinx multiversion (e5971f000b)
+* Report: template can have ".." in its path
+* :func:`aspecd.utils.copy_values_between_dicts` cascades through source dict
+* Add missing template files for sphinx multiversion
 
 Additionally, the following new helper functions appeared:
 
-* :func:`aspecd.utils.remove_empty_values_from_dict` (13bcc37a9e)
-* :func:`aspecd.utils.convert_keys_to_variable_names` (e1edef51c7)
+* :func:`aspecd.utils.remove_empty_values_from_dict`
+* :func:`aspecd.utils.convert_keys_to_variable_names`
 
 
 Version 0.2.0
