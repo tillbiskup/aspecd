@@ -635,11 +635,10 @@ def remove_empty_values_from_dict(dict_):
 
     """
     if isinstance(dict_, dict):
-        return dict((key, remove_empty_values_from_dict(value)) for
-                    key, value in dict_.items() if
-                    value and remove_empty_values_from_dict(value))
-    else:
-        return dict_
+        dict_ = dict((key, remove_empty_values_from_dict(value)) for
+                     key, value in dict_.items() if
+                     value and remove_empty_values_from_dict(value))
+    return dict_
 
 
 def convert_keys_to_variable_names(dict_):
