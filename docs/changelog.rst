@@ -31,6 +31,7 @@ The following bugs have been fixed:
 
 * Report: template can have ".." in its path (cc6fab5a77)
 * :func:`aspecd.utils.copy_values_between_dicts` cascades through source dict (501a7da1dd)
+* Add missing template files for sphinx multiversion (e5971f000b)
 
 Additionally, the following new helper functions appeared:
 
