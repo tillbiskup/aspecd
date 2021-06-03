@@ -5,38 +5,21 @@ Changelog
 This page contains a summary of changes between the official ASpecD releases. Only the biggest changes are listed here. A complete and detailed log of all changes is available through the `GitHub Repository Browser <https://github.com/tillbiskup/aspecd/commits/master>`_.
 
 
-Version 0.3.0
-=============
-
-Not yet released
-
-New features
-------------
-
-
-Changes
--------
-
-
-Fixes
------
-
-
 Version 0.2.1
 =============
 
-Released 2021-05-19
+Released 2021-06-03
 
 The following bugs have been fixed:
 
-* Report: template can have ".." in its path (cc6fab5a77)
-* :func:`aspecd.utils.copy_values_between_dicts` cascades through source dict (501a7da1dd)
-* Add missing template files for sphinx multiversion (e5971f000b)
+* Report: template can have ".." in its path
+* :func:`aspecd.utils.copy_values_between_dicts` cascades through source dict
+* Add missing template files for sphinx multiversion
 
 Additionally, the following new helper functions appeared:
 
-* :func:`aspecd.utils.remove_empty_values_from_dict` (13bcc37a9e)
-* :func:`aspecd.utils.convert_keys_to_variable_names` (e1edef51c7)
+* :func:`aspecd.utils.remove_empty_values_from_dict`
+* :func:`aspecd.utils.convert_keys_to_variable_names`
 
 
 Version 0.2.0
