@@ -382,8 +382,7 @@ class Metadata(aspecd.utils.ToDictMixin):
         for key in dict_:
             attribute_name = key.replace(' ', '_').lower()
             if hasattr(self, attribute_name):
-                if isinstance(getattr(self, attribute_name),
-                              type(PhysicalQuantity())):
+                if isinstance(getattr(self, attribute_name), PhysicalQuantity):
                     if isinstance(dict_[key], dict):
                         getattr(self, attribute_name).from_dict(dict_[key])
                     else:

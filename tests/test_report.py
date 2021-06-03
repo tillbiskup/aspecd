@@ -81,6 +81,12 @@ class TestReporter(unittest.TestCase):
         self.report.template = self.template2
         self.report.render()
 
+    def test_render_with_template_with_relative_path(self):
+        with open(self.template, 'w+') as f:
+            f.write('')
+        self.report.template = '../tests/' + self.template
+        self.report.render()
+
     def test_render_with_template_provided_at_initialisation(self):
         with open(self.template, 'w+') as f:
             f.write('')

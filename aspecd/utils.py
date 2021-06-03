@@ -559,6 +559,9 @@ def copy_values_between_dicts(source=None, target=None):
     keys in a recursive manner. Non-matching keys in ``source`` are
     silently ignored.
 
+    Both, source and target are parallel recursively traversed in case of
+    identical overall structure.
+
     Parameters
     ----------
     source : :class:`dict`
@@ -574,7 +577,11 @@ def copy_values_between_dicts(source=None, target=None):
     """
     for key in target:
         if isinstance(target[key], dict):
-            target[key] = copy_values_between_dicts(source, target[key])
+            if key in source and isinstance(source[key], dict):
+                target[key] = copy_values_between_dicts(source[key],
+                                                        target[key])
+            else:
+                target[key] = copy_values_between_dicts(source, target[key])
         elif key in source:
             target[key] = source[key]
     return target
@@ -607,6 +614,61 @@ def copy_keys_between_dicts(source=None, target=None):
         else:
             target[key] = source[key]
     return target
+
+
+def remove_empty_values_from_dict(dict_):
+    """
+    Remove empty values and their keys from dict recursively.
+
+    Parameters
+    ----------
+    dict_ : :class:`dict`
+        Dictionary the keys with empty values should be removed from
+
+    Returns
+    -------
+    dict_ : :class:`dict`
+        Dictionary the keys with empty values have been removed from
+
+
+    .. versionadded:: 0.2.1
+
+    """
+    if isinstance(dict_, dict):
+        dict_ = dict((key, remove_empty_values_from_dict(value)) for
+                     key, value in dict_.items() if
+                     value and remove_empty_values_from_dict(value))
+    return dict_
+
+
+def convert_keys_to_variable_names(dict_):
+    """
+    Change keys in dict to comply with PEP8 for variable names.
+
+    Keys are converted to all lower case and spaces replaced with underscores.
+
+    Parameters
+    ----------
+    dict_ : :class:`dict`
+        Dictionary the keys should be renamed in
+
+    Returns
+    -------
+    new_dict : :class:`dict`
+        Dictionary the keys have been renamed in
+
+
+    .. versionadded:: 0.2.1
+
+    """
+    new_dict = dict()
+    for key, value in dict_.items():
+        new_key = key.replace(' ', '_').lower()
+        if isinstance(value, dict):
+            new_dict[new_key] = convert_keys_to_variable_names(dict_[key])
+        else:
+            new_dict[new_key] = dict_[key]
+    return new_dict
 
 
 def all_equal(list_=None):

@@ -21,10 +21,9 @@
 /*.egg-info
 /*.egg
 
-# Sphinx templates and build
+# Sphinx build
 docs/_build
 docs/_static
-docs/_templates
 
 # tox venvs
 .tox
