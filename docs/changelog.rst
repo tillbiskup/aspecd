@@ -29,7 +29,9 @@ Not yet released
 
 The following bugs have been fixed:
 
-* Normalisation to minimum now divides by absolute value of minimum
+* Normalisation to minimum now divides by absolute value of minimum (f4fe0998)
+
+* Normalisation raises ValueError in case of unknown kind ()
 
 
 Version 0.2.1

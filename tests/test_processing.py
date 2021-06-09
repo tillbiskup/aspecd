@@ -307,6 +307,11 @@ class TestNormalisation(unittest.TestCase):
     def test_is_undoable(self):
         self.assertTrue(self.processing.undoable)
 
+    def test_with_unknown_kind_raises(self):
+        self.processing.parameters["kind"] = 'foo'
+        with self.assertRaisesRegex(ValueError, 'not recognised'):
+            self.dataset.process(self.processing)
+
     def test_normalise_to_maximum(self):
         self.processing.parameters["kind"] = 'maximum'
         self.dataset.process(self.processing)
