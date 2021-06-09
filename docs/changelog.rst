@@ -22,6 +22,16 @@ Fixes
 -----
 
 
+Version 0.2.2
+=============
+
+Not yet released
+
+The following bugs have been fixed:
+
+* Normalisation to minimum now divides by absolute value of minimum
+
+
 Version 0.2.1
 =============
 

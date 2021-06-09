@@ -313,6 +313,9 @@ class TestNormalisation(unittest.TestCase):
         self.assertEqual(1, self.dataset.data.data.max())
 
     def test_normalise_to_minimum(self):
+        # Asymmetric data with maximum < minimum
+        self.dataset.data.data = \
+            np.sin(np.linspace(0.6*np.pi, 2.4*np.pi, num=500))*2
         self.processing.parameters["kind"] = 'minimum'
         self.dataset.process(self.processing)
         self.assertAlmostEqual(-1, self.dataset.data.data.min(), 4)

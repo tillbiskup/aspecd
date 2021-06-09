@@ -882,7 +882,8 @@ class Normalisation(SingleProcessingStep):
         if "max" in self.parameters["kind"].lower():
             self.dataset.data.data /= (data.max() - self._noise_amplitude / 2)
         elif "min" in self.parameters["kind"].lower():
-            self.dataset.data.data /= (data.min() - self._noise_amplitude / 2)
+            self.dataset.data.data /= (abs(data.min())
+                                       - self._noise_amplitude / 2)
         elif "amp" in self.parameters["kind"].lower():
             self.dataset.data.data /= ((data.max() - data.min()) -
                                        self._noise_amplitude)
