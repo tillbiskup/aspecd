@@ -33,7 +33,9 @@ The following bugs have been fixed:
 
 * Normalisation raises ValueError in case of unknown kind (216300fa)
 
-* Import with explicit importer when importer resides in (sub)package ()
+* Import with explicit importer when importer resides in (sub)package (41ceca90)
+
+* Recipe history shortens dataset source if dataset_source_directory has trailing slash ()
 
 
 Version 0.2.1
