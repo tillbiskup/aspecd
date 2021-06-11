@@ -31,7 +31,9 @@ The following bugs have been fixed:
 
 * Normalisation to minimum now divides by absolute value of minimum (f4fe0998)
 
-* Normalisation raises ValueError in case of unknown kind ()
+* Normalisation raises ValueError in case of unknown kind (216300fa)
+
+* Import with explicit importer when importer resides in (sub)package ()
 
 
 Version 0.2.1
