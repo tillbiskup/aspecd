@@ -25,17 +25,17 @@ Fixes
 Version 0.2.2
 =============
 
-Not yet released
+Released 2021-06-19
 
 The following bugs have been fixed:
 
-* Normalisation to minimum now divides by absolute value of minimum (f4fe0998)
+* Normalisation to minimum now divides by absolute value of minimum
 
-* Normalisation raises ValueError in case of unknown kind (216300fa)
+* Normalisation raises ValueError in case of unknown kind
 
-* Import with explicit importer when importer resides in (sub)package (41ceca90)
+* Import with explicit importer when importer resides in (sub)package
 
-* Recipe history shortens dataset source if dataset_source_directory has trailing slash ()
+* Recipe history shortens dataset source if dataset_source_directory has trailing slash
 
 
 Version 0.2.1
