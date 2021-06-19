@@ -775,6 +775,12 @@ class Normalisation(SingleProcessingStep):
             Default: percentage
 
 
+    Raises
+    ------
+    ValueError :
+        Raised if unknown kind is provided
+
+
     Examples
     --------
     For convenience, a series of examples in recipe style (for details of
@@ -845,6 +851,13 @@ class Normalisation(SingleProcessingStep):
     Here as well, the range can be given in indices or axis units,
     but defaults to indices if no unit is explicitly given.
 
+    .. note::
+        A note for developers: If you inherit from this class and plan to
+        implement further kinds of normalisation, first test for your
+        specific kind of normalisation, and in the ``else`` block add a call
+        to ``super()._perform_task()``. This way, you ensure the
+        :class:`ValueError` will still be raised in case of an unknown kind.
+
 
     .. versionadded:: 0.2
        Normalising over range of data
@@ -882,12 +895,18 @@ class Normalisation(SingleProcessingStep):
         if "max" in self.parameters["kind"].lower():
             self.dataset.data.data /= (data.max() - self._noise_amplitude / 2)
         elif "min" in self.parameters["kind"].lower():
-            self.dataset.data.data /= (data.min() - self._noise_amplitude / 2)
+            self.dataset.data.data /= (abs(data.min())
+                                       - self._noise_amplitude / 2)
         elif "amp" in self.parameters["kind"].lower():
             self.dataset.data.data /= ((data.max() - data.min()) -
                                        self._noise_amplitude)
         elif "area" in self.parameters["kind"].lower():
             self.dataset.data.data /= np.sum(np.abs(data))
+        else:
+            # todo: If only python >=3.6: Use first version
+            # raise ValueError(f'Kind {self.parameters["kind"]} not recognised.')
+            raise ValueError('Kind "%s" not recognised.'
+                             % self.parameters["kind"])
 
     def _determine_noise_amplitude(self):
         if self.parameters["noise_range"]:

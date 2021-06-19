@@ -5,6 +5,39 @@ Changelog
 This page contains a summary of changes between the official ASpecD releases. Only the biggest changes are listed here. A complete and detailed log of all changes is available through the `GitHub Repository Browser <https://github.com/tillbiskup/aspecd/commits/master>`_.
 
 
+Version 0.3.0
+=============
+
+Not yet released
+
+New features
+------------
+
+
+Changes
+-------
+
+
+Fixes
+-----
+
+
+Version 0.2.2
+=============
+
+Released 2021-06-03
+
+The following bugs have been fixed:
+
+* Normalisation to minimum now divides by absolute value of minimum (f4fe0998)
+
+* Normalisation raises ValueError in case of unknown kind (216300fa)
+
+* Import with explicit importer when importer resides in (sub)package (41ceca90)
+
+* Recipe history shortens dataset source if dataset_source_directory has trailing slash ()
+
+
 Version 0.2.1
 =============
 

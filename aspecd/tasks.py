@@ -1324,7 +1324,9 @@ class Chef:
         recipe_dict = self.recipe.to_dict()
         self.history["datasets"] = recipe_dict['datasets']
         if self.recipe.datasets_source_directory:
-            source_dir = self.recipe.datasets_source_directory + "/"
+            source_dir = self.recipe.datasets_source_directory
+            if not source_dir.endswith('/'):
+                source_dir += "/"
             for dataset in self.history["datasets"]:
                 if isinstance(dataset, dict):
                     dataset["source"] = \

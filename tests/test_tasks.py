@@ -565,6 +565,15 @@ class TestChef(unittest.TestCase):
         self.chef.cook(recipe=recipe)
         self.assertEqual('bar', self.chef.history["datasets"][0]["source"])
 
+    def test_cook_w_datasets_source_dir_w_slash_shortens_dataset_paths(self):
+        recipe = self.recipe
+        recipe_dict = {'datasets': ['bar'],
+                       'tasks': [self.analysis_task],
+                       'datasets_source_directory': '/foo/'}
+        recipe.from_dict(recipe_dict)
+        self.chef.cook(recipe=recipe)
+        self.assertEqual('bar', self.chef.history["datasets"][0]["source"])
+
     def test_cook_adds_output_directory_to_history(self):
         recipe = self.recipe
         recipe_dict = {'datasets': [self.dataset],

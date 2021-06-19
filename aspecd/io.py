@@ -530,7 +530,10 @@ class DatasetImporterFactory:
             self.source = os.path.join(os.path.abspath(os.curdir), self.source)
         if importer:
             package_name = aspecd.utils.package_name(self)
-            full_class_name = '.'.join([package_name, 'io', importer])
+            # Currently untested
+            if not package_name.endswith('io'):
+                package_name = '.'.join([package_name, 'io'])
+            full_class_name = '.'.join([package_name, importer])
             importer = aspecd.utils.object_from_class_name(full_class_name)
             importer.source = self.source
         if not importer:
