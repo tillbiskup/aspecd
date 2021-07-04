@@ -2035,7 +2035,7 @@ class TestNoise(unittest.TestCase):
     def test_normalised_noise_has_amplitude_of_one(self):
         self.processing.parameters['normalise'] = True
         self.dataset.process(self.processing)
-        self.assertEqual(1, max(self.dataset.data.data)-min(
+        self.assertAlmostEqual(1, max(self.dataset.data.data)-min(
             self.dataset.data.data))
 
     def test_standard_is_pink_noise(self):

@@ -125,17 +125,17 @@ independently.
 
   Average data over given range along given axis.
 
-* :class:`aspecd.processing.Integration`
+* :class:`aspecd.processing.Interpolation`
 
-  Interpolate data
+  Interpolate data.
 
 * :class:`aspecd.processing.Filtering`
 
-  Filter data
+  Filter data.
 
 * :class:`aspecd.processing.Noise`
 
-  Add (coloured) noise to data
+  Add (coloured) noise to data.
 
 
 Processing steps operating on multiple datasets at once
@@ -971,19 +971,14 @@ class Differentiation(SingleProcessingStep):
     """
     Differentiate data, *i.e.*, return discrete first derivative
 
-    Currently, the data are differentiated using the :func:`numpy.diff`
+    Currently, the data are differentiated using the :func:`numpy.gradient`
     function. This may change in the future, and you may be able to choose
     between different algorithms. A potential candidate would be using FFT/IFFT
     and performing the operation in Fourier space.
 
-    .. important::
-        As using :func:`numpy.diff` results in a vector being one element
-        shorter than the original vector, here, the last element of the
-        resulting vector is appended to the result, thus being doubled.
-
     .. note::
-        N-D arrays can be integrated as well. In this case,
-        :func:`np.diff` will operate on the last axis.
+        N-D arrays can be differentiated as well. In this case,
+        differentiation will operate on the last axis.
 
 
     Examples
@@ -1001,6 +996,10 @@ class Differentiation(SingleProcessingStep):
        - kind: processing
          type: Differentiation
 
+
+    .. versionchanged:: 0.3
+       Method changed from :func:`numpy.diff` to :func:`numpy.gradient`
+
     """
 
     def __init__(self):
@@ -1009,15 +1008,10 @@ class Differentiation(SingleProcessingStep):
         self.description = 'Differentiate data'
 
     def _perform_task(self):
-        self.dataset.data.data = np.diff(self.dataset.data.data)
         if self.dataset.data.data.ndim == 1:
-            self.dataset.data.data = \
-                np.concatenate((self.dataset.data.data,
-                                self.dataset.data.data[-1]), axis=None)
+            self.dataset.data.data = np.gradient(self.dataset.data.data)
         else:
-            self.dataset.data.data = \
-                np.concatenate((self.dataset.data.data,
-                                self.dataset.data.data[:, [-1]]), axis=1)
+            self.dataset.data.data = np.gradient(self.dataset.data.data)[-1]
 
 
 class ScalarAlgebra(SingleProcessingStep):
