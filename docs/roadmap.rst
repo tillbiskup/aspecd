@@ -11,7 +11,6 @@ For version 0.3
 * Remaining basic processing and analysis steps:
 
   * denoising
-  * adding noise
   * ? AxisAlgebra: provide a function that gets evaluated on the values of an axis
   * Interpolation
 

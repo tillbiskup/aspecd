@@ -2953,6 +2953,14 @@ class Noise(SingleProcessingStep):
         of naturally occurring "blue noise" with the density proportional to
         *f* is the Cherenkov radiation.
 
+    .. note::
+        In case of ND data, the coloured noise is calculated along the
+        *first* dimension only, all other dimensions will exhibit (close to)
+        white (Gaussian) noise.
+
+
+    .. versionadded:: 0.3
+
     """
 
     def __init__(self):
@@ -2969,22 +2977,27 @@ class Noise(SingleProcessingStep):
         self.dataset.data.data += noise
 
     def _generate_noise(self):
-        length = self.dataset.data.data.size
-        frequencies = np.fft.rfftfreq(length)
-        frequencies[0] = 1/length
+        size = list(self.dataset.data.data.shape)
+        samples = size[0]
+        frequencies = np.fft.rfftfreq(samples)
+        frequencies[0] = 1/samples
         amplitudes = frequencies ** (self.parameters["exponent"] / 2)
 
-        power = np.random.normal(scale=amplitudes, size=len(frequencies))
-        phase = np.random.normal(scale=amplitudes, size=len(frequencies))
+        # Add dimensions to broadcast shape
+        amplitudes = amplitudes[(Ellipsis,) + (np.newaxis,) * (len(size) - 1)]
+        size[0] = len(frequencies)
+
+        power = np.random.normal(scale=amplitudes, size=size)
+        phase = np.random.normal(scale=amplitudes, size=size)
 
         # Nyquist frequency is real if length is even
-        if not (length % 2):
-            phase[-1] = 0
+        if not (samples % 2):
+            phase[-1, ...] = 0
 
         # DC component is real
-        phase[0] = 0
+        phase[0, ...] = 0
 
         components = power + 1J * phase
 
-        noise = np.fft.irfft(components, n=length)
+        noise = np.fft.irfft(components, n=samples, axis=0)
         return noise

@@ -1987,7 +1987,9 @@ class TestNoise(unittest.TestCase):
         self.dataset = aspecd.dataset.Dataset()
         self.dataset.data.data = np.zeros(2**12)
         self.dataset2d = aspecd.dataset.Dataset()
-        self.dataset2d.data.data = np.zeros([2**12, 2**12])
+        self.dataset2d.data.data = np.zeros([2**10, 2**10])
+        self.dataset3d = aspecd.dataset.Dataset()
+        self.dataset3d.data.data = np.zeros([2**10, 2**5, 2**5])
 
     @staticmethod
     def slope_of_power_spectral_density(noise):
@@ -2045,16 +2047,18 @@ class TestNoise(unittest.TestCase):
         self.assertAlmostEqual(-1., self.slope_of_power_spectral_density(
             self.dataset.data.data), delta=0.1)
 
-    @unittest.skip
     def test_2d_dataset(self):
         self.dataset2d.process(self.processing)
         self.assertTrue(self.dataset2d.data.data.all())
 
-    @unittest.skip
     def test_2d_dataset_with_pink_noise_is_pink_in_first_dimension_only(self):
         self.processing.parameters['exponent'] = -1
         self.dataset2d.process(self.processing)
         self.assertAlmostEqual(-1., self.slope_of_power_spectral_density(
-            self.dataset2d.data.data[0, :]), delta=0.1)
-        self.assertAlmostEqual(0., self.slope_of_power_spectral_density(
             self.dataset2d.data.data[:, 0]), delta=0.1)
+        self.assertAlmostEqual(0., self.slope_of_power_spectral_density(
+            self.dataset2d.data.data[0, :]), delta=0.15)
+
+    def test_3d_dataset(self):
+        self.dataset3d.process(self.processing)
+        self.assertTrue(self.dataset3d.data.data.all())
