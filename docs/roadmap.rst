@@ -10,15 +10,19 @@ For version 0.3
 
 * Remaining basic processing and analysis steps:
 
+  * noise analysis (loglog of power vs. frequency, linear fit for power noise)
   * denoising
   * ? AxisAlgebra: provide a function that gets evaluated on the values of an axis
-  * Interpolation
-
-    * for ND with N>2
-    * different types of interpolation
 
   * BlindSNREstimation with alternative methods
   * SNREstimation with explicitly providing noise (using both, processing and analysis)
+
+* Models
+
+  * Implement basic models (Gaussian, Lorentzian, ...)
+  * Models with multiple Gaussians, Lorentzians, ...
+  * ND datasets? ND datasets with varying model parameter(s)?
+  * Recipe-driven model creation
 
 * Expand use cases: reports
 
@@ -40,6 +44,11 @@ For later versions
 * Default report templates for each type of processing/analysis task
 
   Includes deciding where to store these templates, whether to have them stored in different directories for different languages, and alike. Ideally, templates should be copied to a user-accessible directory for modifying there.
+
+* Interpolation
+
+  * for ND with N>2
+  * different types of interpolation
 
 * Templates for creating derived packages
 
