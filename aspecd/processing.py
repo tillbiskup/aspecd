@@ -2929,7 +2929,7 @@ class Noise(SingleProcessingStep):
     parameters : :class:`dict`
         All parameters necessary for this step.
 
-        exponent : :class:`str`
+        exponent : :class:`float`
             The exponent used for scaling the power of the frequency components
 
             0 -- white (Gaussian) noise
@@ -2943,6 +2943,15 @@ class Noise(SingleProcessingStep):
             data.
 
             In this case, the *amplitude* is normalised to 1.
+
+
+    .. note::
+        The exponent for the noise is not restricted to integer values,
+        nor to negative values. While for spectroscopic data, pink (1/*f*)
+        noise usually prevails (exponent = -1), the opposite effect with
+        high frequencies dominating can occur as well. A prominent example
+        of naturally occurring "blue noise" with the density proportional to
+        *f* is the Cherenkov radiation.
 
     """
 
@@ -2965,8 +2974,8 @@ class Noise(SingleProcessingStep):
         frequencies[0] = 1/length
         amplitudes = frequencies ** (self.parameters["exponent"] / 2)
 
-        power = np.random.randn(len(frequencies))
-        phase = np.random.randn(len(frequencies))
+        power = np.random.normal(scale=amplitudes, size=len(frequencies))
+        phase = np.random.normal(scale=amplitudes, size=len(frequencies))
 
         # Nyquist frequency is real if length is even
         if not (length % 2):
@@ -2976,7 +2985,6 @@ class Noise(SingleProcessingStep):
         phase[0] = 0
 
         components = power + 1J * phase
-        scaled_components = amplitudes * components
 
-        noise = np.fft.irfft(scaled_components, n=length)
+        noise = np.fft.irfft(components, n=length)
         return noise

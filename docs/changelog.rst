@@ -13,9 +13,13 @@ Not yet released
 New features
 ------------
 
+* Adding (coloured) noise to datasets (:class:`aspecd.processing.Noise`)
+
 
 Changes
 -------
+
+* :class:`aspecd.processing.Differentiation` uses :func:`numpy.gradient` instead of :func:`numpy.diff`
 
 
 Fixes
