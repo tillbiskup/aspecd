@@ -40,7 +40,7 @@ In the second case, the processing step is handled using the :meth:`processing`
 method of the :obj:`aspecd.processing.ProcessingStep` object, and the datasets
 are stored as a list within the processing step. As these processing steps span
 several datasets. Processing steps handling multiple datasets should
-always inherit from the :class:`aaspecd.processing.MultiProcessingStep` class.
+always inherit from the :class:`aspecd.processing.MultiProcessingStep` class.
 
 The module contains both, base classes for processing steps (as detailed
 above) as well as a series of generally applicable processing steps for all
@@ -132,6 +132,10 @@ independently.
 * :class:`aspecd.processing.Filtering`
 
   Filter data
+
+* :class:`aspecd.processing.Noise`
+
+  Add (coloured) noise to data
 
 
 Processing steps operating on multiple datasets at once
@@ -2881,3 +2885,104 @@ class CommonRangeExtraction(MultiProcessingStep):
             interpolation.parameters["npoints"] = self.parameters["npoints"]
             interpolation.parameters["unit"] = "axis"
             dataset.process(interpolation)
+
+
+class Noise(SingleProcessingStep):
+    # noinspection PyUnresolvedReferences
+    """
+    Add (coloured) noise to data.
+
+    Particularly for testing algorithms and hence creating test data, adding
+    noise to these test data is crucial. Furthermore, the naive approach of
+    adding white (Gaussian, normally distributed) noise often does not
+    reflect the physical reality, as "real" noise often has a different
+    power spectral density (PSD).
+
+    Probably the kind of noise most often encountered in spectroscopy is 1/f
+    noise or pink noise, with the PSD decreasing by 3 dB per octave or 10 dB
+    per decade. For more details on the different kinds of noise,
+    the following sources may be a good starting point:
+
+    * https://en.wikipedia.org/wiki/Colors_of_noise
+    * https://en.wikipedia.org/wiki/Pink_noise
+    * https://en.wikipedia.org/wiki/Flicker_noise
+
+    Different strategies exist to create coloured noise, and the
+    implementation used here follows basically the ideas published by Timmer
+    and König:
+
+    * J. Timmer and M. König: On generating power law noise.
+      Astronomy and Astrophysics 300, 707--710 (1995)
+
+    In short: In the Fourier space, normally distributed random numbers are
+    drawn for power and phase of each frequency component, and the power scaled
+    by the appropriate power law. Afterwards, the resulting frequency
+    spectrum is back transformed using iFFT and ensuring real data.
+
+    Further inspiration came from the following two sources:
+
+    * https://gist.github.com/j-faria/7961488
+    * https://github.com/felixpatzelt/colorednoise
+
+    Note: The first is based on a MATLAB(R) code by Max Little and contains a
+    number of errors in its Python translation that are *not* present in the
+    original code.
+
+    The added noise has always a mean of (close to) zero.
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        exponent : :class:`str`
+            The exponent used for scaling the power of the frequency components
+
+            0 -- white (Gaussian) noise
+            -1 -- pink (1/f) noise
+            -2 -- Brownian (1/f**2) noise
+
+            Default: -1 (pink noise)
+
+        normalise : :class:`bool`
+            Whether to normalise the noise amplitude prior to adding to the
+            data.
+
+            In this case, the *amplitude* is normalised to 1.
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = 'Add (coloured) noise to data'
+        self.undoable = True
+        self.parameters["exponent"] = -1
+        self.parameters["normalise"] = False
+
+    def _perform_task(self):
+        noise = self._generate_noise()
+        if self.parameters["normalise"]:
+            noise /= (max(noise) - min(noise))
+        self.dataset.data.data += noise
+
+    def _generate_noise(self):
+        length = self.dataset.data.data.size
+        frequencies = np.fft.rfftfreq(length)
+        frequencies[0] = 1/length
+        amplitudes = frequencies ** (self.parameters["exponent"] / 2)
+
+        power = np.random.randn(len(frequencies))
+        phase = np.random.randn(len(frequencies))
+
+        # Nyquist frequency is real if length is even
+        if not (length % 2):
+            phase[-1] = 0
+
+        # DC component is real
+        phase[0] = 0
+
+        components = power + 1J * phase
+        scaled_components = amplitudes * components
+
+        noise = np.fft.irfft(scaled_components, n=length)
+        return noise

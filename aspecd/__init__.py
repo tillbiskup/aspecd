@@ -26,7 +26,7 @@ Available modules
     General facilities for generating reports
 :mod:`aspecd.tasks`
     Recipe-driven data analysis
-:mod:`aspecd.models`
+:mod:`aspecd.model`
     Numerical models
 
 Utilities

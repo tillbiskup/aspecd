@@ -1735,7 +1735,7 @@ class TestFiltering(unittest.TestCase):
         alternative_names = ['box', 'boxcar', 'moving-average', 'car']
         self.processing.parameters["window_length"] = 3
         for filter_name in alternative_names:
-            with self.subTest(filter_name = filter_name):
+            with self.subTest(filter_name=filter_name):
                 filtered_data = \
                     scipy.ndimage.uniform_filter(self.dataset.data.data,
                                                  self.processing.parameters[
@@ -1748,11 +1748,11 @@ class TestFiltering(unittest.TestCase):
         alternative_names = ['binom', 'binomial']
         self.processing.parameters["window_length"] = 3
         for filter_name in alternative_names:
-            with self.subTest(filter_name = filter_name):
+            with self.subTest(filter_name=filter_name):
                 filtered_data = \
                     scipy.ndimage.gaussian_filter(self.dataset.data.data,
-                                                 self.processing.parameters[
-                                                     "window_length"])
+                                                  self.processing.parameters[
+                                                      "window_length"])
                 self.processing.parameters["type"] = filter_name
                 self.dataset.process(self.processing)
                 self.assertTrue(all(filtered_data == self.dataset.data.data))
@@ -1763,7 +1763,7 @@ class TestFiltering(unittest.TestCase):
         self.processing.parameters["window_length"] = 3
         self.processing.parameters["order"] = 2
         for filter_name in alternative_names:
-            with self.subTest(filter_name = filter_name):
+            with self.subTest(filter_name=filter_name):
                 filtered_data = \
                     scipy.signal.savgol_filter(self.dataset.data.data,
                                                self.processing.parameters[
@@ -1778,7 +1778,7 @@ class TestFiltering(unittest.TestCase):
         alternative_names = ['box', 'boxcar', 'moving-average', 'car']
         self.processing.parameters["window_length"] = 3
         for filter_name in alternative_names:
-            with self.subTest(filter_name = filter_name):
+            with self.subTest(filter_name=filter_name):
                 self.processing.parameters["type"] = filter_name
                 processing = self.dataset.process(self.processing)
                 self.assertEqual("uniform", processing.parameters["type"])
@@ -1961,16 +1961,16 @@ class TestCommonRangeExtraction(unittest.TestCase):
                              list(self.dataset2.data.data))
 
     def test_process_interpolates_data_for_2d_datasets(self):
-        axis0 = np.linspace(0,5,11)
-        axis1 = np.linspace(0,5,11)
+        axis0 = np.linspace(0, 5, 11)
+        axis1 = np.linspace(0, 5, 11)
         rows, cols = np.meshgrid(axis0, axis1, indexing='ij')
-        self.dataset1.data.data = np.sin(rows**2+cols**2)
+        self.dataset1.data.data = np.sin(rows**2 + cols**2)
         self.dataset1.data.axes[0].values = axis0
         self.dataset1.data.axes[1].values = axis1
-        axis0 = np.linspace(2,4,5)
-        axis1 = np.linspace(2,4,5)
+        axis0 = np.linspace(2, 4, 5)
+        axis1 = np.linspace(2, 4, 5)
         rows, cols = np.meshgrid(axis0, axis1, indexing='ij')
-        self.dataset2.data.data = np.sin(rows**2+cols**2)
+        self.dataset2.data.data = np.sin(rows**2 + cols**2)
         self.dataset2.data.axes[0].values = axis0
         self.dataset2.data.axes[1].values = axis1
         self.processing.datasets.append(self.dataset1)
@@ -1978,3 +1978,67 @@ class TestCommonRangeExtraction(unittest.TestCase):
         self.processing.process()
         self.assertTrue(np.all(self.dataset2.data.data
                                == self.dataset1.data.data))
+
+
+class TestNoise(unittest.TestCase):
+
+    def setUp(self):
+        self.processing = aspecd.processing.Noise()
+        self.dataset = aspecd.dataset.Dataset()
+        self.dataset.data.data = np.zeros(2**12)
+
+    @staticmethod
+    def slope_of_power_spectral_density(noise):
+        frequencies, psd = scipy.signal.welch(noise)
+        log_frequencies = np.log10(frequencies[2:-1])
+        log_psd = np.log10(psd[2:-1])
+        coefficients = np.polyfit(log_frequencies, log_psd, 1)
+        return float(coefficients[0])
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('noise', self.processing.description.lower())
+
+    def test_is_undoable(self):
+        self.assertTrue(self.processing.undoable)
+
+    def test_process_adds_noise(self):
+        self.dataset.process(self.processing)
+        self.assertTrue(all(self.dataset.data.data))
+
+    def test_white_noise_has_psd_slope_zero(self):
+        self.processing.parameters['exponent'] = 0
+        self.dataset.process(self.processing)
+        self.assertAlmostEqual(0., self.slope_of_power_spectral_density(
+            self.dataset.data.data), delta=0.1)
+
+    def test_white_nose_has_mean_of_zero(self):
+        self.processing.parameters['exponent'] = 0
+        self.dataset.process(self.processing)
+        self.assertAlmostEqual(0., float(np.mean(self.dataset.data.data)),
+                               delta=0.1)
+
+    def test_pink_noise_has_psd_slope_minus_one(self):
+        self.processing.parameters['exponent'] = -1
+        self.dataset.process(self.processing)
+        self.assertAlmostEqual(-1., self.slope_of_power_spectral_density(
+            self.dataset.data.data), delta=0.1)
+
+    def test_brownian_noise_has_psd_slope_minus_two(self):
+        self.processing.parameters['exponent'] = -2
+        self.dataset.process(self.processing)
+        self.assertAlmostEqual(-2., self.slope_of_power_spectral_density(
+            self.dataset.data.data), delta=0.1)
+
+    def test_normalised_noise_has_amplitude_of_one(self):
+        self.processing.parameters['normalise'] = True
+        self.dataset.process(self.processing)
+        self.assertEqual(1, max(self.dataset.data.data)-min(
+            self.dataset.data.data))
+
+    def test_standard_is_pink_noise(self):
+        self.dataset.process(self.processing)
+        self.assertAlmostEqual(-1., self.slope_of_power_spectral_density(
+            self.dataset.data.data), delta=0.1)
