@@ -1862,7 +1862,7 @@ class BaselineCorrection(SingleProcessingStep):
         polynomial = np.polynomial.Polynomial.fit(self._axis_values,
                                                   self._intensity_values,
                                                   self.parameters['order'])
-        self.parameters['coefficients'] = polynomial.coef
+        self.parameters['coefficients'] = polynomial.convert().coef
         axis = self.parameters["axis"]
         return polynomial(self.dataset.data.axes[axis].values)
 

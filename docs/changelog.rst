@@ -22,6 +22,7 @@ Changes
 -------
 
 * :class:`aspecd.processing.Differentiation` uses :func:`numpy.gradient` instead of :func:`numpy.diff`
+* :class:`aspecd.processing.BaselineCorrection` returns polynomial coefficients in unscaled data domain
 
 
 Fixes

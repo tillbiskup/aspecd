@@ -1012,6 +1012,14 @@ class TestBaselineCorrection(unittest.TestCase):
         processing_step = self.dataset.process(self.processing)
         self.assertTrue(processing_step.parameters['coefficients'])
 
+    def test_coefficients_are_in_data_domain(self):
+        self.processing.parameters['order'] = 1
+        slope = max(self.dataset.data.data) / (len(self.dataset.data.data) - 1)
+        processing_step = self.dataset.process(self.processing)
+        self.assertAlmostEqual(0, processing_step.parameters['coefficients'][0])
+        self.assertAlmostEqual(slope,
+                               processing_step.parameters['coefficients'][1])
+
     def test_baseline_correction_without_area(self):
         self.dataset.data.data = np.ones(100) + 10
         self.dataset.data.axes[0].values = np.linspace(1, 100, num=100)
