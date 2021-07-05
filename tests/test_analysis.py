@@ -731,3 +731,38 @@ class TestPowerDensitySpectrum(unittest.TestCase):
 
     def test_method_defaults_to_periodogram(self):
         self.assertEqual("periodogram", self.analysis.parameters["method"])
+
+
+class TestPolynomialFit(unittest.TestCase):
+    def setUp(self):
+        self.analysis = aspecd.analysis.PolynomialFit()
+        self.dataset = aspecd.dataset.Dataset()
+        self.dataset.data.data = np.linspace(0, 49)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('polynomial fit', self.analysis.description.lower())
+
+    def test_with_nd_dataset_raises(self):
+        self.dataset.data.data = np.random.random([5, 5])
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            self.dataset.analyse(self.analysis)
+
+    def test_default_is_first_order(self):
+        self.assertEqual(1, self.analysis.parameters["order"])
+
+    def test_first_order_returns_two_coefficients_as_result(self):
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertEqual(2, len(analysis.result))
+
+    def test_first_order_returns_correct_coefficients(self):
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertAlmostEqual(0, analysis.result[0])
+        self.assertAlmostEqual(1, analysis.result[1])
+
+    def test_zeroth_order_returns_correct_coefficients(self):
+        self.analysis.parameters["order"] = 0
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertAlmostEqual(24.5, analysis.result[0])

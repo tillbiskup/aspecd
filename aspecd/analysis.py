@@ -95,6 +95,10 @@ independently.
   Calculate power density spectrum of 1D dataset, useful, *e.g.* for
   analysing the statistics of noise (*i.e.*, its colour)
 
+* :class:`PolynomialFit`
+
+  Perform polynomial fit on 1D data
+
 
 Writing own analysis steps
 ==========================
@@ -1353,3 +1357,108 @@ class PowerDensitySpectrum(SingleAnalysisStep):
         self.result.data.axes[0].values = np.log10(frequencies[1:])
         self.result.data.axes[0].quantity = 'log frequency'
         self.result.data.axes[1].quantity = 'log power'
+
+
+class PolynomialFit(SingleAnalysisStep):
+    # noinspection PyUnresolvedReferences
+    """
+    Perform polynomial fit on 1D data.
+
+    Attributes
+    ----------
+    result : :class:`list`
+        coefficients of the fitted polynomial in *increasing* order
+
+        As the new :mod:`numpy.polynomial` package is used, particularly the
+        :class:`numpy.polynomial.polynomial.Polynomial` class,
+        the coefficients are given in increasing order, with the first
+        element corresponding to x**0. Furthermore, the coefficients are
+        given in the unscaled data domain (using the
+        :meth:`numpy.polynomial.polynomial.Polynomial.convert` method).
+
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        order : :class:`int`
+            Order (degree) of the polynomial to be fitted to the data
+
+            Default: 1
+
+
+    Raises
+    ------
+    aspecd.exceptions.NotApplicableToDatasetError
+        Raised if applied to a ND dataset (with N>1)
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Fitting a polynomial of first order to your 1D dataset is quite simple:
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: PolynomialFit
+         result: polynomial_coefficients_1st_order
+
+    This would simply return the polynomial coefficients (in *increasing*
+    order) as a list in the result assigned to the recipe-internal variable
+    ``polynomial_coefficients_1st_order``.
+
+    If you would like to fit a polynomial of different order, simply provide
+    the desired order as an additional parameter:
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: PolynomialFit
+         properties:
+           parameters:
+             order: 3
+         result: polynomial_coefficients_3rd_order
+
+    In this case, the result will contain a list of four coefficients of the
+    fitted polynomial of third order, again in *increasing* order.
+
+
+    .. versionadded:: 0.3
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = 'Polynomial fit'
+        self.parameters["order"] = 1
+
+    @staticmethod
+    def applicable(dataset):
+        """
+        Check whether analysis step is applicable to the given dataset.
+
+        Polynomial fits can (currently) only be applied to 1D datasets.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            Dataset to check
+
+        Returns
+        -------
+        applicable : :class:`bool`
+            Whether dataset is applicable
+
+        """
+        return dataset.data.data.ndim == 1
+
+    def _perform_task(self):
+        polynomial = np.polynomial.Polynomial.fit(
+            self.dataset.data.axes[0].values,
+            self.dataset.data.data,
+            deg=self.parameters['order'])
+        # noinspection PyUnresolvedReferences
+        self.result = list(polynomial.convert().coef)
