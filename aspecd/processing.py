@@ -2956,7 +2956,10 @@ class Noise(SingleProcessingStep):
     .. note::
         In case of ND data, the coloured noise is calculated along the
         *first* dimension only, all other dimensions will exhibit (close to)
-        white (Gaussian) noise.
+        white (Gaussian) noise. Generally, this should not be a problem in
+        spectroscopy, as usually, data are recorded over time in one
+        dimension only, and only in this (implicit) time dimension coloured
+        noise will be relevant.
 
 
     .. versionadded:: 0.3
@@ -2980,7 +2983,7 @@ class Noise(SingleProcessingStep):
         size = list(self.dataset.data.data.shape)
         samples = size[0]
         frequencies = np.fft.rfftfreq(samples)
-        frequencies[0] = 1/samples
+        frequencies[0] = 1 / samples
         amplitudes = frequencies ** (self.parameters["exponent"] / 2)
 
         # Add dimensions to broadcast shape
@@ -2991,7 +2994,7 @@ class Noise(SingleProcessingStep):
         phase = np.random.normal(scale=amplitudes, size=size)
 
         # Nyquist frequency is real if length is even
-        if not (samples % 2):
+        if not samples % 2:
             phase[-1, ...] = 0
 
         # DC component is real
