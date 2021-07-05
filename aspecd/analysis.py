@@ -1305,6 +1305,38 @@ class PowerDensitySpectrum(SingleAnalysisStep):
             filename: power_density_spectrum.pdf
           apply_to: power_density_spectrum
 
+    You may even want to calculate the power density spectrum, perform a
+    polynomial fit (of first order), evaluate the polynomial for the
+    coefficients obtained by the fit, and plot both together in one figure:
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: PowerDensitySpectrum
+         result: power_density_spectrum
+
+       - kind: singleanalysis
+         type: PolynomialFit
+         result: coefficients
+         apply_to: power_density_spectrum
+
+       - kind: model
+         type: Polynomial
+         properties:
+           parameters:
+             coefficients: coefficients
+         from_dataset: power_density_spectrum
+         result: linear_fit
+
+       - kind: multiplot
+         type: MultiPlotter1D
+         properties:
+           filename: power_density_spectrum.pdf
+         apply_to:
+           - power_density_spectrum
+           - linear_fit
+
+
     To have more control over the method used to calculate the power density
     spectrum, you can explicitly provide a method name here:
 
@@ -1363,6 +1395,10 @@ class PolynomialFit(SingleAnalysisStep):
     # noinspection PyUnresolvedReferences
     """
     Perform polynomial fit on 1D data.
+
+    The coefficients obtained can be used to evaluate a model that can be
+    plotted together with the data the polynomial has been fitted to
+    originally. At the same time, you can tabulate the coefficients.
 
     Attributes
     ----------

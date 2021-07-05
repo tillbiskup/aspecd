@@ -37,9 +37,22 @@ variables :
 Models provided within this module
 ==================================
 
+Besides providing the basis for models for the ASpecD framework, this module
+comes with a (growing) number of general-purpose models useful for basically
+all kinds of spectroscopic data.
+
+Here is a list as a first overview. For details, see the detailed
+documentation of each of the classes, readily accessible by the link.
+
+* :class:`aspecd.model.Polynomial`
+
+  Polynomial (of arbitrary degree/order, depending on the number of
+  coefficients)
+
+
 .. todo::
-    There will be a number of models provided here, including, but probably
-    not limited to: polynomials, exponentials, sine, Gaussian, Lorentzian
+    Implement further models, including, but probably not limited to:
+    exponentials, sine, Gaussian, Lorentzian
 
 
 Writing your own models
@@ -67,13 +80,12 @@ Furthermore, they should conform to a series of requirements:
   variables set for the model. Think of the variables as being the axes
   values of the resulting dataset.
 
-  Make sure to set the ``_origdata`` property of the dataset accordingly,
-  usually simply by copying the ``data`` property over there after it has
-  been filled with content. This is crucially important to have the
-  resulting dataset work as expected, including undo and redo functionality
-  within the ASpecD framework. Remember: A calculated dataset is a regular
-  dataset, and you can perform all the tasks with you would do with other
-  datasets, including processing, analysis and alike.
+  The ``_origdata`` property of the dataset is automatically set accordingly
+  (see below for details). This is crucially important to have the resulting
+  dataset work as expected, including undo and redo functionality within the
+  ASpecD framework. Remember: A calculated dataset is a regular dataset,
+  and you can perform all the tasks with you would do with other datasets,
+  including processing, analysis and alike.
 
 * Model creation takes place entirely in the non-public ``_perform_task``
   method of the model.
@@ -104,11 +116,20 @@ for you:
   In case you used :meth:`aspecd.model.Model.from_dataset`, the axes from
   the dataset will be copied over from there.
 
+* The ``_origdata`` property of the dataset is automatically set accordingly
+  (see below for details). This is crucially important to have the resulting
+  dataset work as expected, including undo and redo functionality within the
+  ASpecD framework.
+
 
 Module documentation
 ====================
 
 """
+
+import copy
+
+import numpy as np
 
 import aspecd.dataset
 import aspecd.exceptions
@@ -150,12 +171,23 @@ class Model:
 
        The variables will become the values of the respective axes.
 
+    description : :class:`str`
+        Short description, to be set in class definition
+
+
+    .. versionchanged:: 0.3
+        New attribute :attr:`description`
+
+    .. versionchanged:: 0.3
+        New non-public method :meth:`_sanitise_parameters`
+
     """
 
     def __init__(self):
         self.name = aspecd.utils.full_class_name(self)
-        self.parameters = None
+        self.parameters = dict()
         self.variables = []
+        self.description = 'Abstract model'
         self._dataset = aspecd.dataset.CalculatedDataset()
         self._axes_from_dataset = []
 
@@ -191,8 +223,10 @@ class Model:
         """
         self._check_prerequisites()
         self._set_dataset_metadata()
+        self._sanitise_parameters()
         self._perform_task()
         self._set_dataset_axes()
+        self._set_dataset_origdata()
         return self._dataset
 
     def from_dataset(self, dataset=None):
@@ -256,6 +290,16 @@ class Model:
             raise aspecd.exceptions.MissingParameterError(
                 'No variables to evaluate model for provided')
 
+    def _sanitise_parameters(self):
+        """Ensure parameters provided for model are correct.
+
+        Needs to be implemented in classes inheriting from Model
+        according to their needs. Most probably, you want to check for
+        correct types of all parameters as well as values within sensible
+        borders.
+
+        """
+
     def _perform_task(self):
         """Create the actual model and evaluate it for the given values.
 
@@ -276,9 +320,11 @@ class Model:
         """
         if self._axes_from_dataset:
             self._dataset.data.axes = self._axes_from_dataset
-        else:
+        elif isinstance(self.variables[0], (list, np.ndarray)):
             for index in range(len(self.variables)):
                 self._dataset.data.axes[index].values = self.variables[index]
+        else:
+            self._dataset.data.axes[0].values = self.variables
 
     def _set_dataset_metadata(self):
         """
@@ -289,3 +335,64 @@ class Model:
         """
         self._dataset.metadata.calculation.type = self.name
         self._dataset.metadata.calculation.parameters = self.parameters
+
+    def _set_dataset_origdata(self):
+        self._dataset._origdata = copy.deepcopy(self._dataset.data)
+
+
+class Polynomial(Model):
+    # noinspection PyUnresolvedReferences
+    """
+    Polynomial.
+
+    Evaluate a polynomial with given coefficients for the data provided in
+    :attr:`aspecd.model.Model.variables`.
+
+    .. note::
+        As the new :mod:`numpy.polynomial` package is used, particularly
+        the :class:`numpy.polynomial.polynomial.Polynomial` class,
+        the coefficients are given in increasing order, with the first
+        element corresponding to x**0.
+
+        Furthermore, the coefficients are assumed to be provided in the
+        unscaled data domain (by using the
+        :meth:`numpy.polynomial.polynomial.Polynomial.convert` method).
+
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        coefficients : :class:`list`
+            coefficients of the polynomial to be evaluated
+
+            The number of coefficients determines the order (degree) of the
+            polynomial. The coefficients have to be given in *increasing*
+            order (see note above). Furthermore, you need to provide the
+            coefficients in the unscaled data domain (using the
+            :meth:`numpy.polynomial.polynomial.Polynomial.convert` method).
+
+    Raises
+    ------
+    aspecd.exceptions.MissingParameterError
+        Raised if no coefficients are given
+
+
+    .. versionadded:: 0.3
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = "Polynomial"
+        self.parameters["coefficients"] = None
+
+    def _sanitise_parameters(self):
+        if not self.parameters["coefficients"]:
+            raise aspecd.exceptions.MissingParameterError(
+                message="Parameter 'coefficients' missing")
+
+    def _perform_task(self):
+        polynomial = np.polynomial.Polynomial(self.parameters["coefficients"])
+        self._dataset.data.data = polynomial(self.variables)

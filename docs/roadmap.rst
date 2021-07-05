@@ -10,7 +10,7 @@ For version 0.3
 
 * Remaining basic processing and analysis steps:
 
-  * noise analysis (loglog of power vs. frequency, linear fit for power noise)
+  * noise analysis (linear fit for power noise)
   * denoising
   * ? AxisAlgebra: provide a function that gets evaluated on the values of an axis
 

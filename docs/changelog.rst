@@ -16,6 +16,12 @@ New features
 * Adding (coloured) noise to datasets (:class:`aspecd.processing.Noise`)
 * Power spectral density of 1D dataset (:class:`aspecd.analysis.PowerSpectralDensity`), *e.g.*, for analysing noise
 * Polynomial fit of 1D data (:class:`aspecd.analysis.PolynomialFit`)
+* Class :class:`aspecd.model.Model`
+
+  * New attribute :attr:`aspecd.model.Model.description`
+  * New non-public method ``_sanitise_parameters``
+
+* New model :class:`aspecd.model.Polynomial` for evaluating polynomials (*e.g.*, as obtained using :class:`aspecd.analysis.PolynomialFit`)
 
 
 Changes

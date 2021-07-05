@@ -1769,6 +1769,10 @@ class BaselineCorrection(SingleProcessingStep):
 
     Of course, you can combine the different options.
 
+
+    .. versionchanged:: 0.3
+        Coefficients are returned in unscaled data domain
+
     """
 
     def __init__(self):

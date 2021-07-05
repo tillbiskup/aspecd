@@ -28,6 +28,12 @@ class TestModel(unittest.TestCase):
     def test_has_variables_property(self):
         self.assertTrue(hasattr(self.model, 'variables'))
 
+    def test_has_description_property(self):
+        self.assertTrue(hasattr(self.model, 'description'))
+
+    def test_description_property_describes_abstract_model(self):
+        self.assertIn('abstract model', self.model.description.lower())
+
     def test_has_create_method(self):
         self.assertTrue(hasattr(self.model, 'create'))
         self.assertTrue(callable(self.model.create))
@@ -41,6 +47,20 @@ class TestModel(unittest.TestCase):
         with self.assertRaises(aspecd.exceptions.MissingParameterError):
             self.model.create()
 
+    def test_create_with_missing_parameter_raises(self):
+        class MyModel(aspecd.model.Model):
+            def _sanitise_parameters(self):
+                if "coefficient" not in self.parameters:
+                    raise aspecd.exceptions.MissingParameterError(
+                        message="Parameter 'coefficient' missing")
+
+        model = MyModel()
+        model.parameters["foo"] = "bar"
+        model.variables = [np.linspace(0, 1)]
+        with self.assertRaisesRegex(aspecd.exceptions.MissingParameterError,
+                                    "coefficient"):
+            model.create()
+
     def test_create_returns_calculated_dataset(self):
         self.model.parameters = [0]
         self.model.variables = [np.linspace(0, 1)]
@@ -52,6 +72,13 @@ class TestModel(unittest.TestCase):
         self.model.variables = [np.linspace(0, 1)]
         dataset = self.model.create()
         np.testing.assert_allclose(dataset.data.axes[0].values,
+                                   self.model.variables[0])
+
+    def test_create_sets_calculated_dataset_origdata_axis_values(self):
+        self.model.parameters = [0]
+        self.model.variables = [np.linspace(0, 1)]
+        dataset = self.model.create()
+        np.testing.assert_allclose(dataset._origdata.axes[0].values,
                                    self.model.variables[0])
 
     def test_create_with_2d_sets_calculated_dataset_axis_values(self):
@@ -133,3 +160,29 @@ class TestModel(unittest.TestCase):
         dict_ = {'foo': 42}
         self.model.from_dict(dict_)
         self.assertFalse(hasattr(self.model, 'foo'))
+
+
+class TestPolynomial(unittest.TestCase):
+    def setUp(self):
+        self.model = aspecd.model.Polynomial()
+        self.dataset = aspecd.dataset.Dataset()
+        self.dataset.data.data = np.linspace(0, 49)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('polynomial', self.model.description.lower())
+
+    def test_create_returns_polynomial(self):
+        self.model.parameters["coefficients"] = [0, 1]
+        self.model.variables = np.linspace(0, 5, 6)
+        dataset = self.model.create()
+        self.assertEqual(0, dataset.data.data[0])
+        self.assertEqual(5, dataset.data.data[-1])
+
+    def test_create_without_coefficients_raises(self):
+        self.model.variables = np.linspace(0, 5, 6)
+        with self.assertRaisesRegex(aspecd.exceptions.MissingParameterError,
+                                    "coefficient"):
+            self.model.create()
