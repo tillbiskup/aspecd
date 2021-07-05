@@ -10,8 +10,9 @@ For version 0.3
 
 * Remaining basic processing and analysis steps:
 
-  * noise analysis (linear fit for power noise)
   * denoising
+  * ChangeAxisValues: provide a new range of axis values for a dataset (for correction)
+  * LinearFitWithFixedIntercept
   * ? AxisAlgebra: provide a function that gets evaluated on the values of an axis
 
   * BlindSNREstimation with alternative methods
@@ -22,7 +23,6 @@ For version 0.3
   * Implement basic models (Gaussian, Lorentzian, ...)
   * Models with multiple Gaussians, Lorentzians, ...
   * ND datasets? ND datasets with varying model parameter(s)?
-  * Recipe-driven model creation
 
 * Expand use cases: reports
 

@@ -162,11 +162,91 @@ class TestModel(unittest.TestCase):
         self.assertFalse(hasattr(self.model, 'foo'))
 
 
+class TestZeros(unittest.TestCase):
+    def setUp(self):
+        self.model = aspecd.model.Zeros()
+        self.dataset = aspecd.dataset.CalculatedDataset()
+        self.dataset.data.data = np.random.randn(10)
+        self.dataset3d = aspecd.dataset.CalculatedDataset()
+        self.dataset3d.data.data = np.random.randn(10, 10, 10)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('containing only zeros', self.model.description.lower())
+
+    def test_create_without_coefficients_raises(self):
+        with self.assertRaisesRegex(aspecd.exceptions.MissingParameterError,
+                                    "shape"):
+            self.model.create()
+
+    def test_create_returns_zeros_of_given_shape(self):
+        self.model.parameters["shape"] = 5
+        dataset = self.model.create()
+        self.assertListEqual(list(np.zeros(5)), list(dataset.data.data))
+
+    def test_create_returns_zeros_of_given_3d_shape(self):
+        self.model.parameters["shape"] = [5, 5, 5]
+        dataset = self.model.create()
+        self.assertFalse(all(dataset.data.data.flatten()))
+        self.assertEqual((5, 5, 5), dataset.data.data.shape)
+
+    def test_create_from_1d_dataset_returns_zeros_with_correct_shape(self):
+        self.model.from_dataset(self.dataset)
+        dataset = self.model.create()
+        self.assertEqual(len(self.dataset.data.data), len(dataset.data.data))
+
+    def test_create_from_3d_dataset_returns_zeros_with_correct_shape(self):
+        self.model.from_dataset(self.dataset3d)
+        dataset = self.model.create()
+        self.assertEqual(len(self.dataset3d.data.data), len(dataset.data.data))
+
+
+class TestOnes(unittest.TestCase):
+    def setUp(self):
+        self.model = aspecd.model.Ones()
+        self.dataset = aspecd.dataset.CalculatedDataset()
+        self.dataset.data.data = np.random.randn(10)
+        self.dataset3d = aspecd.dataset.CalculatedDataset()
+        self.dataset3d.data.data = np.random.randn(10, 10, 10)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('containing only ones', self.model.description.lower())
+
+    def test_create_without_coefficients_raises(self):
+        with self.assertRaisesRegex(aspecd.exceptions.MissingParameterError,
+                                    "shape"):
+            self.model.create()
+
+    def test_create_returns_ones_of_given_shape(self):
+        self.model.parameters["shape"] = 5
+        dataset = self.model.create()
+        self.assertListEqual(list(np.ones(5)), list(dataset.data.data))
+
+    def test_create_returns_ones_of_given_3d_shape(self):
+        self.model.parameters["shape"] = [5, 5, 5]
+        dataset = self.model.create()
+        self.assertFalse(all(dataset.data.data.flatten()-1))
+        self.assertEqual((5, 5, 5), dataset.data.data.shape)
+
+    def test_create_from_1d_dataset_returns_zeros_with_correct_shape(self):
+        self.model.from_dataset(self.dataset)
+        dataset = self.model.create()
+        self.assertEqual(len(self.dataset.data.data), len(dataset.data.data))
+
+    def test_create_from_3d_dataset_returns_zeros_with_correct_shape(self):
+        self.model.from_dataset(self.dataset3d)
+        dataset = self.model.create()
+        self.assertEqual(len(self.dataset3d.data.data), len(dataset.data.data))
+
+
 class TestPolynomial(unittest.TestCase):
     def setUp(self):
         self.model = aspecd.model.Polynomial()
-        self.dataset = aspecd.dataset.Dataset()
-        self.dataset.data.data = np.linspace(0, 49)
 
     def test_instantiate_class(self):
         pass

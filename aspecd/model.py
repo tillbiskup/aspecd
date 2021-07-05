@@ -44,6 +44,42 @@ all kinds of spectroscopic data.
 Here is a list as a first overview. For details, see the detailed
 documentation of each of the classes, readily accessible by the link.
 
+
+Primitive models
+----------------
+
+Primitive models are mainly used to create test datasets that can be
+operated on afterwards. The particular strength and beauty of wrapping
+essential one-liners of code with a full-fledged model class is twofold:
+These classes return ASpecD datasets, and you can work completely in context
+of recipe-driven data analysis, requiring no actual programming skills.
+
+If nothing else, these primitive models can serve as a way to create
+datasets with fixed data dimensions. Those datasets may be used as templates
+for more advanced models, by using the :meth:`aspecd.model.Model.from_dataset`
+method.
+
+Having that said, here you go with a list of primitive models:
+
+
+* :class:`aspecd.model.Zeros`
+
+  Dataset consisting entirely of zeros (in N dimensions)
+
+* :class:`aspecd.model.Ones`
+
+  Dataset consisting entirely of ones (in N dimensions)
+
+
+Mathematical models
+-------------------
+
+Besides the primitive models listed above, there is a growing number of
+mathematical models implementing comparably simple mathematical equations
+that are often used. Packages derived from the ASpecD framework may well
+define more specific models as well.
+
+
 * :class:`aspecd.model.Polynomial`
 
   Polynomial (of arbitrary degree/order, depending on the number of
@@ -221,9 +257,9 @@ class Model:
             Raised if either parameters or values are not set
 
         """
+        self._sanitise_parameters()
         self._check_prerequisites()
         self._set_dataset_metadata()
-        self._sanitise_parameters()
         self._perform_task()
         self._set_dataset_axes()
         self._set_dataset_origdata()
@@ -338,6 +374,250 @@ class Model:
 
     def _set_dataset_origdata(self):
         self._dataset._origdata = copy.deepcopy(self._dataset.data)
+
+
+class Zeros(Model):
+    # noinspection PyUnresolvedReferences
+    """
+    Zeros of given shape.
+
+    One of the most primitive models: zeros in N dimensions.
+
+    This model is quite helpful for creating test datasets, *e.g.* with
+    added noise (of different colour). Basically, it can be thought of as a
+    wrapper for :func:`numpy.zeros`. Its particular strength is that using
+    this model, creating test datasets becomes straight-forward in context
+    of recipe-driven data analysis.
+
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        shape : :class:`list`
+            shape of the data
+
+            Have in mind that ND datasets get huge very fast. Therefore,
+            it is *not* the best idea to create an 3D dataset with zeros
+            with 2**12 elements along each dimension.
+
+    Raises
+    ------
+    aspecd.exceptions.MissingParameterError
+        Raised if no shape is given
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Creating a dataset consisting of 2**10 zeros is quite simple:
+
+    .. code-block:: yaml
+
+       - kind: model
+         type: Zeros
+         properties:
+           parameters:
+             shape: 1024
+         result: 1d_zeros
+
+    Of course, you are not limited to 1D datasets, and you can easily create
+    ND datasets as well:
+
+    .. code-block:: yaml
+
+       - kind: model
+         type: Zeros
+         properties:
+           parameters:
+             shape: [1024, 256, 256]
+         result: 3d_zeros
+
+    Please have in mind that the memory of your computer is usually limited
+    and that ND datasets become huge very fast. Hence, creating a 3D array
+    with 2**10 elements along each dimension is most probably *not* the best
+    idea.
+
+    Now, let's assume that you would want to play around with the different
+    types of (coloured) noise. Therefore, you would want to first create a
+    dataset and afterwards add noise to it:
+
+    .. code-block:: yaml
+
+       - kind: model
+         type: Zeros
+         properties:
+           parameters:
+             shape: 8192
+         result: 1d_zeros
+
+       - kind: processing
+         type: Noise
+         properties:
+           parameters:
+             normalise: True
+
+    This would create a dataset consisting of 2**14 zeros and add pink
+    (1/*f*) noise to it that is normalised (has an amplitude of 1). To check
+    that the noise is really 1/*f* noise, you may look at its power density.
+    See :class:`aspecd.analysis.PowerDensitySpectrum` for details, including
+    how to even plot both, the power density spectrum and a linear fit
+    together in one figure.
+
+
+    .. versionadded:: 0.3
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = "Model containing only zeros"
+        self.parameters["shape"] = None
+
+    def _sanitise_parameters(self):
+        if not self.variables:
+            self.variables = [0]
+            if not self.parameters["shape"]:
+                raise aspecd.exceptions.MissingParameterError(
+                    message="Parameter 'shape' missing")
+        if not self.parameters["shape"]:
+            self.parameters["shape"] = []
+            if isinstance(self.variables[0], (list, np.ndarray)):
+                for index in range(len(self.variables)):
+                    # noinspection PyTypeChecker
+                    self.parameters["shape"].append(len(self.variables[index]))
+            else:
+                self.parameters["shape"] = len(self.variables)
+
+    def _perform_task(self):
+        self._dataset.data.data = np.zeros(self.parameters["shape"])
+
+
+class Ones(Model):
+    # noinspection PyUnresolvedReferences
+    """
+    Ones of given shape.
+
+    One of the most primitive models: ones in N dimensions.
+
+    This model is quite helpful for creating test datasets, *e.g.* with
+    added noise (of different colour). Basically, it can be thought of as a
+    wrapper for :func:`numpy.ones`. Its particular strength is that using
+    this model, creating test datasets becomes straight-forward in context
+    of recipe-driven data analysis.
+
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        shape : :class:`list`
+            shape of the data
+
+            Have in mind that ND datasets get huge very fast. Therefore,
+            it is *not* the best idea to create an 3D dataset with ones
+            with 2**12 elements along each dimension.
+
+    Raises
+    ------
+    aspecd.exceptions.MissingParameterError
+        Raised if no shape is given
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Creating a dataset consisting of 2**10 ones is quite simple:
+
+    .. code-block:: yaml
+
+       - kind: model
+         type: Ones
+         properties:
+           parameters:
+             shape: 1024
+         result: 1d_ones
+
+    Of course, you are not limited to 1D datasets, and you can easily create
+    ND datasets as well:
+
+    .. code-block:: yaml
+
+       - kind: model
+         type: Ones
+         properties:
+           parameters:
+             shape: [1024, 256, 256]
+         result: 3d_ones
+
+    Please have in mind that the memory of your computer is usually limited
+    and that ND datasets become huge very fast. Hence, creating a 3D array
+    with 2**10 elements along each dimension is most probably *not* the best
+    idea.
+
+    Now, let's assume that you would want to play around with the different
+    types of (coloured) noise. Therefore, you would want to first create a
+    dataset and afterwards add noise to it:
+
+    .. code-block:: yaml
+
+       - kind: model
+         type: Ones
+         properties:
+           parameters:
+             shape: 8192
+         result: 1d_ones
+
+       - kind: processing
+         type: Noise
+         properties:
+           parameters:
+             normalise: True
+
+    This would create a dataset consisting of 2**14 ones and add pink
+    (1/*f*) noise to it that is normalised (has an amplitude of 1). To check
+    that the noise is really 1/*f* noise, you may look at its power density.
+    See :class:`aspecd.analysis.PowerDensitySpectrum` for details, including
+    how to even plot both, the power density spectrum and a linear fit
+    together in one figure.
+
+
+    .. versionadded:: 0.3
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = "Model containing only ones"
+        self.parameters["shape"] = None
+
+    def _sanitise_parameters(self):
+        if not self.variables:
+            self.variables = [0]
+            if not self.parameters["shape"]:
+                raise aspecd.exceptions.MissingParameterError(
+                    message="Parameter 'shape' missing")
+        if not self.parameters["shape"]:
+            self.parameters["shape"] = []
+            if isinstance(self.variables[0], (list, np.ndarray)):
+                for index in range(len(self.variables)):
+                    # noinspection PyTypeChecker
+                    self.parameters["shape"].append(len(self.variables[index]))
+            else:
+                self.parameters["shape"] = len(self.variables)
+
+    def _perform_task(self):
+        self._dataset.data.data = np.ones(self.parameters["shape"])
 
 
 class Polynomial(Model):

@@ -21,7 +21,11 @@ New features
   * New attribute :attr:`aspecd.model.Model.description`
   * New non-public method ``_sanitise_parameters``
 
-* New model :class:`aspecd.model.Polynomial` for evaluating polynomials (*e.g.*, as obtained using :class:`aspecd.analysis.PolynomialFit`)
+* New models
+
+  * :class:`aspecd.model.Polynomial` for evaluating polynomials (*e.g.*, as obtained using :class:`aspecd.analysis.PolynomialFit`)
+  * :class:`aspecd.model.Zeros`
+  * :class:`aspecd.model.Ones`
 
 
 Changes
