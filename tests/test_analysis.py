@@ -678,3 +678,56 @@ class TestPeakFinding(unittest.TestCase):
             width=self.analysis.parameters["width"])
         result = np.sort(np.concatenate((positive, negative)))
         self.assertListEqual(list(result), list(analysis.result))
+
+
+class TestPowerDensitySpectrum(unittest.TestCase):
+    def setUp(self):
+        self.analysis = aspecd.analysis.PowerDensitySpectrum()
+        self.dataset = aspecd.dataset.Dataset()
+        self.dataset.data.data = np.zeros(2**12)
+        noise = aspecd.processing.Noise()
+        self.dataset.process(noise)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('power density spectrum',
+                      self.analysis.description.lower())
+
+    def test_with_nd_dataset_raises(self):
+        self.dataset.data.data = np.random.random([5, 5])
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            self.dataset.analyse(self.analysis)
+
+    def test_returns_calculated_dataset(self):
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertIsInstance(analysis.result, aspecd.dataset.CalculatedDataset)
+
+    def test_returned_data_are_log_of_psd(self):
+        frequencies, psd = scipy.signal.periodogram(self.dataset.data.data)
+        log_psd = np.log10(psd[1:])
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertListEqual(list(log_psd), list(analysis.result.data.data))
+
+    def test_returned_axes_values_are_log_of_frequency(self):
+        frequencies, psd = scipy.signal.periodogram(self.dataset.data.data)
+        log_frequencies = np.log10(frequencies[1:])
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertListEqual(list(log_frequencies),
+                             list(analysis.result.data.axes[0].values))
+
+    def test_axes_quantities_are_sensible(self):
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertEqual('log frequency', analysis.result.data.axes[0].quantity)
+        self.assertEqual('log power', analysis.result.data.axes[1].quantity)
+
+    def test_method_settable_via_parameter(self):
+        self.analysis.parameters["method"] = "welch"
+        frequencies, psd = scipy.signal.welch(self.dataset.data.data)
+        log_psd = np.log10(psd[1:])
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertListEqual(list(log_psd), list(analysis.result.data.data))
+
+    def test_method_defaults_to_periodogram(self):
+        self.assertEqual("periodogram", self.analysis.parameters["method"])

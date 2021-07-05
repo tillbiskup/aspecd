@@ -2983,7 +2983,7 @@ class Noise(SingleProcessingStep):
         size = list(self.dataset.data.data.shape)
         samples = size[0]
         frequencies = np.fft.rfftfreq(samples)
-        frequencies[0] = 1 / samples
+        frequencies[0] = 1 / len(frequencies)
         amplitudes = frequencies ** (self.parameters["exponent"] / 2)
 
         # Add dimensions to broadcast shape

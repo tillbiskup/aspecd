@@ -90,6 +90,11 @@ independently.
 
   Find peaks in 1D datasets
 
+* :class:`PowerDensitySpectrum`
+
+  Calculate power density spectrum of 1D dataset, useful, *e.g.* for
+  analysing the statistics of noise (*i.e.*, its colour)
+
 
 Writing own analysis steps
 ==========================
@@ -1216,3 +1221,135 @@ class PeakFinding(SingleAnalysisStep):
             self.result = (peaks, properties)
         else:
             self.result = self.dataset.data.axes[0].values[peaks]
+
+
+class PowerDensitySpectrum(SingleAnalysisStep):
+    # noinspection PyUnresolvedReferences
+    """
+    Calculate power density spectrum of given 1D dataset.
+
+    The power density spectrum is the log10 of the power for each frequency
+    component as function of the log10 of the frequency. For mathematical
+    reasons, the power of the DC component (*f* = 0) is omitted.
+
+    The power density spectrum (sometimes called power spectral density,
+    PSD) can be used to analyse the nature of noise, *e.g.* whether it is
+    Gaussian (white, normally distributed) noise or "coloured" noise with
+    the frequencies of the noise components differently weighted.
+
+    In spectroscopy, often coloured noise (most frequently pink or 1/*f* noise)
+    rather than white noise is encountered. The characteristics of white
+    noise is an equal distribution of all frequencies, related to a constant
+    in the power density spectrum. Pink or 1/*f* noise, in contrast, exhibits a
+    linear damping of higher frequencies with a slope of -1 in the power
+    density spectrum. For more details regarding noise in spectroscopy,
+    the interested reader is referred to the documentation of the
+    :class:`aspecd.processing.Noise` class.
+
+    Attributes
+    ----------
+    result : :class:`aspecd.dataset.CalculatedDataset`
+        power density spectrum of the corresponding 1D dataset analysed
+
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        method : :class:`str`
+            Method to use to calculate the power density spectrum
+
+            Possible methods must exist in the :mod:`scipy.signal` module.
+            Currently, you can choose between "periodogram" and "welch". See
+            their respective documentation, *i.e.*
+            :func:`scipy.signal.periodogram` and :func:`scipy.signal.welch`
+            for details.
+
+            Default: periodogram
+
+    Raises
+    ------
+    aspecd.exceptions.NotApplicableToDatasetError
+        Raised if applied to a ND dataset (with N>1)
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Computing the power density spectrum of a 1D dataset (let's assume you
+    use a trace of pure noise for this) is quite simple:
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: PowerDensitySpectrum
+         result: power_density_spectrum
+
+    This would simply return the power density spectrum of the data of a given
+    dataset in the result assigned to the recipe-internal variable
+    ``power_density_spectrum``. Note that the result is itself a calculated
+    dataset, hence you can easily plot it for graphical representation and
+    manual inspection:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            filename: power_density_spectrum.pdf
+          apply_to: power_density_spectrum
+
+    To have more control over the method used to calculate the power density
+    spectrum, you can explicitly provide a method name here:
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: PowerDensitySpectrum
+         properties:
+           parameters:
+             method: welch
+         result: power_density_spectrum
+
+    Note that the methods need to reside in the :mod:`scipy.signal` module.
+
+
+    .. versionadded:: 0.3
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = 'Calculate power density spectrum'
+        self.result = aspecd.dataset.CalculatedDataset()
+        self.parameters["method"] = "periodogram"
+
+    @staticmethod
+    def applicable(dataset):
+        """
+        Check whether analysis step is applicable to the given dataset.
+
+        Power density spectrum calculation can only be applied to 1D datasets.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            Dataset to check
+
+        Returns
+        -------
+        applicable : :class:`bool`
+            Whether dataset is applicable
+
+        """
+        return dataset.data.data.ndim == 1
+
+    def _perform_task(self):
+        method = getattr(scipy.signal, self.parameters["method"])
+        frequencies, psd = method(self.dataset.data.data)
+        self.result.data.data = np.log10(psd[1:])
+        self.result.data.axes[0].values = np.log10(frequencies[1:])
+        self.result.data.axes[0].quantity = 'log frequency'
+        self.result.data.axes[1].quantity = 'log power'
