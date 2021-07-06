@@ -11,7 +11,6 @@ For version 0.3
 * Remaining basic processing and analysis steps:
 
   * denoising
-  * ChangeAxisValues: provide a new range of axis values for a dataset (for correction)
   * ? AxisAlgebra: provide a function that gets evaluated on the values of an axis
 
   * BlindSNREstimation with alternative methods
@@ -23,26 +22,31 @@ For version 0.3
   * Models with multiple Gaussians, Lorentzians, ...
   * ND datasets? ND datasets with varying model parameter(s)?
 
-* Expand use cases: reports
 
-
-
-For later versions
-==================
-
-* Recipes: Subrecipes that can be included in recipes
-
-* Report task: Add figure captions to context if available
+For version 0.4
+===============
 
 * Reporter: Method for adding dict representations of datasets to context
 
-* Report task: Operating on recipes, *i.e.* report on all tasks in a recipe
+* Report task:
 
-* Report task: Adding arbitrary dict representations of properties of datasets/results to context
+  * Add figure captions to context if available
+  * Operating on recipes, *i.e.* report on all tasks in a recipe
+  * Adding arbitrary dict representations of properties of datasets/results to context
 
 * Default report templates for each type of processing/analysis task
 
   Includes deciding where to store these templates, whether to have them stored in different directories for different languages, and alike. Ideally, templates should be copied to a user-accessible directory for modifying there.
+
+* Expand use cases: reports
+
+* Recipes: Subrecipes that can be included in recipes
+
+* Interfacing towards fitting/simulation frameworks
+
+
+For later versions
+==================
 
 * Interpolation
 

@@ -2070,3 +2070,81 @@ class TestNoise(unittest.TestCase):
     def test_3d_dataset(self):
         self.dataset3d.process(self.processing)
         self.assertTrue(self.dataset3d.data.data.all())
+
+
+class TestChangeAxesValues(unittest.TestCase):
+
+    def setUp(self):
+        self.processing = aspecd.processing.ChangeAxesValues()
+        self.dataset = aspecd.dataset.Dataset()
+        self.dataset.data.data = np.zeros(2**5)
+        self.dataset2d = aspecd.dataset.Dataset()
+        self.dataset2d.data.data = np.zeros([2**5, 2**5])
+        self.dataset3d = aspecd.dataset.Dataset()
+        self.dataset3d.data.data = np.zeros([2**5, 2**5, 2**5])
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('change axis values',
+                      self.processing.description.lower())
+
+    def test_is_undoable(self):
+        self.assertTrue(self.processing.undoable)
+
+    def test_change_axis_of_1d_dataset_to_given_range(self):
+        new_range = [35, 42]
+        self.processing.parameters["range"] = new_range
+        self.dataset.process(self.processing)
+        self.assertEqual(new_range[0], self.dataset.data.axes[0].values[0])
+        self.assertEqual(new_range[1], self.dataset.data.axes[0].values[-1])
+        self.assertEqual(len(self.dataset.data.data),
+                         len(self.dataset.data.axes[0].values))
+
+    def test_change_2nd_axis_of_1d_dataset_to_given_range(self):
+        new_range = [35, 42]
+        self.processing.parameters["range"] = new_range
+        self.processing.parameters["axes"] = 1
+        self.dataset2d.process(self.processing)
+        self.assertEqual(new_range[0], self.dataset2d.data.axes[1].values[0])
+        self.assertEqual(new_range[1], self.dataset2d.data.axes[1].values[-1])
+        self.assertEqual(len(self.dataset2d.data.data),
+                         len(self.dataset2d.data.axes[1].values))
+
+    def test_change_2nd_axis_of_1d_dataset_leaves_1st_axis_alone(self):
+        new_range = [35, 42]
+        self.processing.parameters["range"] = new_range
+        self.processing.parameters["axes"] = 1
+        old_axes_values = self.dataset2d.data.axes[0].values
+        self.dataset2d.process(self.processing)
+        self.assertListEqual(list(old_axes_values),
+                             list(self.dataset2d.data.axes[0].values))
+
+    def test_change_2nd_axis_of_1d_dataset_raises(self):
+        new_range = [35, 42]
+        self.processing.parameters["range"] = new_range
+        self.processing.parameters["axes"] = 1
+        with self.assertRaisesRegex(IndexError, 'Index out of range for axes'):
+            self.dataset.process(self.processing)
+
+    def test_change_both_axes_of_2d_dataset(self):
+        new_range = [[35, 42], [17.5, 21]]
+        self.processing.parameters["range"] = new_range
+        self.dataset2d.process(self.processing)
+        self.assertEqual(new_range[0][0],
+                         self.dataset2d.data.axes[0].values[0])
+        self.assertEqual(new_range[0][1],
+                         self.dataset2d.data.axes[0].values[-1])
+        self.assertEqual(new_range[1][0],
+                         self.dataset2d.data.axes[1].values[0])
+        self.assertEqual(new_range[1][1],
+                         self.dataset2d.data.axes[1].values[-1])
+
+    def test_incompatible_number_of_ranges_and_axes_raises(self):
+        new_range = [[35, 42], [17.5, 21]]
+        self.processing.parameters["range"] = new_range
+        self.processing.parameters["axes"] = 1
+        with self.assertRaisesRegex(IndexError,
+                                    'Axes and ranges must be compatible'):
+            self.dataset2d.process(self.processing)

@@ -99,7 +99,7 @@ independently.
 
   Perform polynomial fit on 1D data
 
-* :class:`LinearRegressionWithFixedIntercept
+* :class:`LinearRegressionWithFixedIntercept`
 
   Perform linear regression without fitting the intercept on 1D data. Note
   that this is mathematically different from a polynomial fit of first order.
