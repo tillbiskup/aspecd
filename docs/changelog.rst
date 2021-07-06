@@ -35,6 +35,10 @@ New features
   * :class:`aspecd.model.Zeros`
   * :class:`aspecd.model.Ones`
 
+* Utils
+
+  * :func:`aspecd.utils.not_zero` ensuring a float not to cause DivisionByZero errors
+
 
 Changes
 -------

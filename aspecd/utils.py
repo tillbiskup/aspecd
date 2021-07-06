@@ -785,3 +785,36 @@ def path(filename):
 
     """
     return os.path.split(filename)[:-1][0] + os.sep
+
+
+def not_zero(value):
+    """
+    Return a value that is not zero to prevent DivisionByZero errors.
+
+    Dividing by zero results in NaN values and often hinders evaluating
+    mathematical models. A solution adopted from the lmfit Python package
+    (https://doi.org/10.5281/zenodo.598352) returns a value equivalent to
+    the resolution of a numpy float.
+
+    .. note::
+
+        If you use this function excessively within a module, mostly within
+        rather complicated mathematical equations, it might be a good idea
+        to import this function explicitly, to shorten the code, such as:
+        ``from aspecd.utils import not_zero``. As usual, readability is king.
+
+    Parameters
+    ----------
+    value : :class:`float`
+        Value that can become (too close to) zero to trigger NaN values
+
+    Returns
+    -------
+    value : :class:`float`
+        Value guaranteed not to be zero
+
+
+    .. versionadded:: 0.3
+
+    """
+    return np.copysign(max(abs(value), np.finfo(np.float64).resolution), value)

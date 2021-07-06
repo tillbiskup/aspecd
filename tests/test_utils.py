@@ -813,3 +813,23 @@ class TestPath(unittest.TestCase):
 
     def test_path_works_with_relative_path(self):
         self.assertEqual('./foo/', utils.path('./foo/bar.bla'))
+
+
+class TestNotZero(unittest.TestCase):
+
+    def test_not_zero_of_zero_returns_nonzero_value(self):
+        self.assertGreater(utils.not_zero(0), 0)
+
+    def test_not_zero_of_zero_returns_np_float_resolution(self):
+        self.assertEqual(np.finfo(np.float64).resolution,
+                         utils.not_zero(0))
+
+    def test_not_zero_of_positive_value_preserves_sign(self):
+        self.assertGreater(utils.not_zero(1e-20), 0)
+
+    def test_not_zero_of_negative_value_preserves_sign(self):
+        self.assertLess(utils.not_zero(-1e-20), 0)
+
+    def test_not_zero_of_negative_value_closer_than_limit_returns_limit(self):
+        self.assertEqual(-np.finfo(np.float64).resolution,
+                         utils.not_zero(-1e-20))
