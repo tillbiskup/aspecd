@@ -766,3 +766,41 @@ class TestPolynomialFit(unittest.TestCase):
         self.analysis.parameters["order"] = 0
         analysis = self.dataset.analyse(self.analysis)
         self.assertAlmostEqual(24.5, analysis.result[0])
+
+
+class TestLinearRegressionWithFixedIntercept(unittest.TestCase):
+    def setUp(self):
+        self.analysis = aspecd.analysis.LinearRegressionWithFixedIntercept()
+        self.dataset = aspecd.dataset.Dataset()
+        self.dataset.data.data = np.linspace(1, 50)
+        self.dataset.data.axes[0].values = np.linspace(0.5, 25)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('linear regression without intercept',
+                      self.analysis.description.lower())
+
+    def test_with_nd_dataset_raises(self):
+        self.dataset.data.data = np.random.random([5, 5])
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            self.dataset.analyse(self.analysis)
+
+    def test_analysis_returns_correct_coefficient_as_result(self):
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertAlmostEqual(2., analysis.result)
+
+    def test_regression_with_constant_offset(self):
+        self.dataset.data.data += np.pi
+        self.analysis.parameters["offset"] = np.pi
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertAlmostEqual(2., analysis.result)
+
+    def test_polynomial_compatible_coefficients(self):
+        self.dataset.data.data += np.pi
+        self.analysis.parameters["offset"] = np.pi
+        self.analysis.parameters["polynomial_coefficients"] = True
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertAlmostEqual(np.pi, analysis.result[0])
+        self.assertAlmostEqual(2., analysis.result[1])

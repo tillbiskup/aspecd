@@ -12,7 +12,6 @@ For version 0.3
 
   * denoising
   * ChangeAxisValues: provide a new range of axis values for a dataset (for correction)
-  * LinearFitWithFixedIntercept
   * ? AxisAlgebra: provide a function that gets evaluated on the values of an axis
 
   * BlindSNREstimation with alternative methods

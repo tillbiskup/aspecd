@@ -16,6 +16,7 @@ New features
 * Adding (coloured) noise to datasets (:class:`aspecd.processing.Noise`)
 * Power spectral density of 1D dataset (:class:`aspecd.analysis.PowerSpectralDensity`), *e.g.*, for analysing noise
 * Polynomial fit of 1D data (:class:`aspecd.analysis.PolynomialFit`)
+* Linear regression of 1D data without fitting the intercept (:class:`aspecd.analysis.LinearRegressionWithoutIntercept`)
 * Class :class:`aspecd.model.Model`
 
   * New attribute :attr:`aspecd.model.Model.description`

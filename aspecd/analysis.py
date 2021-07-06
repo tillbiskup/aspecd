@@ -99,6 +99,11 @@ independently.
 
   Perform polynomial fit on 1D data
 
+* :class:`LinearRegressionWithFixedIntercept
+
+  Perform linear regression without fitting the intercept on 1D data. Note
+  that this is mathematically different from a polynomial fit of first order.
+
 
 Writing own analysis steps
 ==========================
@@ -1498,3 +1503,178 @@ class PolynomialFit(SingleAnalysisStep):
             deg=self.parameters['order'])
         # noinspection PyUnresolvedReferences
         self.result = list(polynomial.convert().coef)
+
+
+class LinearRegressionWithFixedIntercept(SingleAnalysisStep):
+    # noinspection PyUnresolvedReferences
+    """
+    Perform linear regression with fixed intercept on 1D data
+
+    In contrast to a regular polynomial fit of first order, where two
+    parameters (slope and intercept) are fitted, there are mathematical
+    models where the intercept is fixed, *i.e.* not to be fitted as well. In
+    these cases, using a polynomial fit of first order is simply wrong. Of
+    course, which of these approaches is valid depends on the underlying
+    model and the physical reality to be modelled.
+
+    .. note::
+
+        A prime example of a linear model with only a slope and no intercept
+        is Hooke's law stating that the force *F* needed to extend or
+        compress a spring by some distance *x* scales linearly with respect
+        to that distance, *i.e.*, *F* = *kx*. Here, *k* is the
+        characteristic of the spring, sometimes called "spring constant".
+
+    The approach taken here is to use linear algebra and solve the system
+    of equations by calling :func:`numpy.linalg.lstsq`. In case of a
+    vertical offset (*i.e.*, intercept not zero), the offset is first
+    subtracted from the function values and afterwards the regression
+    performed.
+
+    Attributes
+    ----------
+    result : :class:`float`
+        slope of the linear regression
+
+        If you set the parameter ``polynomial_coefficients`` to True, a list
+        with (fixed) intercept and (fitted) slope will be returned (see below).
+
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        offset : :class:`float`
+            Vertical offset of the data, *i.e.* f(0)
+
+            Useful in cases where the model defines an intercept f(0) != 0.
+
+            Default: 0
+
+        polynomial_coefficients : :class:`bool`
+            Whether to return both, intercept and slope for compatibility
+            with polynomial model, :class:`aspecd.model.Polynomial`
+
+            Default: False
+
+    Raises
+    ------
+    aspecd.exceptions.NotApplicableToDatasetError
+        Raised if applied to a ND dataset (with N>1)
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Performing a linear regression without intercept to your 1D dataset is
+    quite simple:
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: LinearRegressionWithFixedIntercept
+         result: slope
+
+    Sometimes, you may have the situation that the (fixed) intercept is not
+    zero, hence your data are "offset" by a scalar value. To account for
+    that, provide a value for this offset, here 3.14:
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: LinearRegressionWithFixedIntercept
+         properties:
+           parameters:
+             offset: 3.14
+         result: slope
+
+    As you sometimes want to graphically display both, data and the
+    resulting linear regression, you may use the
+    :class:`aspecd.model.Polynomial` model to do just that. However,
+    for this to work, you would need to get the (fixed) intercept returned
+    as first coefficient as well. Here you go:
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: LinearRegressionWithFixedIntercept
+         properties:
+           parameters:
+             polynomial_coefficients: True
+         result: regression_coefficients
+
+    The full story may look something like that, with "experimental_data"
+    referring to the actual dataset to be analysed:
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: LinearRegressionWithFixedIntercept
+         properties:
+           parameters:
+             polynomial_coefficients: True
+         result: coefficients
+         apply_to:
+           - experimental_data
+
+       - kind: model
+         type: Polynomial
+         properties:
+           parameters:
+             coefficients: coefficients
+         from_dataset: experimental_data
+         result: linear_regression_without_intercept
+
+       - kind: multiplot
+         type: MultiPlotter1D
+         properties:
+           filename: linear_regression_without_intercept.pdf
+         apply_to:
+           - experimental_data
+           - linear_regression_without_intercept
+
+    With this, you should have your plot with data and linear regression
+    together saved in the file ``linear_regression_without_intercept.pdf``.
+
+
+    .. versionadded:: 0.3
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = 'Linear regression without intercept'
+        self.parameters["offset"] = 0
+        self.parameters["polynomial_coefficients"] = False
+
+    @staticmethod
+    def applicable(dataset):
+        """
+        Check whether analysis step is applicable to the given dataset.
+
+        Polynomial fits can (currently) only be applied to 1D datasets.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            Dataset to check
+
+        Returns
+        -------
+        applicable : :class:`bool`
+            Whether dataset is applicable
+
+        """
+        return dataset.data.data.ndim == 1
+
+    def _perform_task(self):
+        x = self.dataset.data.axes[0].values
+        x = x[:, None]
+        y = self.dataset.data.data - self.parameters["offset"]
+        results = np.linalg.lstsq(x, y, rcond=None)
+        if self.parameters["polynomial_coefficients"]:
+            self.result = [self.parameters["offset"], float(results[0])]
+        else:
+            self.result = float(results[0])
