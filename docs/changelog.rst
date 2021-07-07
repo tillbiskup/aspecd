@@ -35,6 +35,9 @@ New features
   * :class:`aspecd.model.Zeros`
   * :class:`aspecd.model.Ones`
   * :class:`aspecd.model.Gaussian`
+  * :class:`aspecd.model.NormalisedGaussian`
+  * :class:`aspecd.model.Lorentzian`
+  * :class:`aspecd.model.NormalisedLorentzian`
 
 * Utils
 

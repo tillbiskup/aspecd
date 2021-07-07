@@ -326,27 +326,27 @@ class TestPolynomial(unittest.TestCase):
             self.model.create()
 
 
+def get_fwhm(dataset):
+    xdata = dataset.data.axes[0].values
+    ydata = dataset.data.data
+    max_value = np.max(ydata)
+    max_pos = np.argmax(ydata)
+    halfmax_pos_left = np.argmin(abs(ydata[:max_pos] - (max_value/2)))
+    halfmax_pos_right = \
+        np.argmin(abs(ydata[max_pos:] - (max_value/2))) + max_pos
+    fwhm = xdata[halfmax_pos_right] - xdata[halfmax_pos_left]
+    return fwhm
+
+
 class TestGaussian(unittest.TestCase):
     def setUp(self):
         self.model = aspecd.model.Gaussian()
-
-    @staticmethod
-    def get_fwhm(dataset):
-        xdata = dataset.data.axes[0].values
-        ydata = dataset.data.data
-        max_value = np.max(ydata)
-        max_pos = np.argmax(ydata)
-        halfmax_pos_left = np.argmin(abs(ydata[:max_pos] - (max_value/2)))
-        halfmax_pos_right = np.argmin(abs(ydata[max_pos:] - (max_value/2))) \
-                            + max_pos
-        fwhm = xdata[halfmax_pos_right] - xdata[halfmax_pos_left]
-        return fwhm
 
     def test_instantiate_class(self):
         pass
 
     def test_has_appropriate_description(self):
-        self.assertIn('gaussian', self.model.description.lower())
+        self.assertIn('generalised gaussian', self.model.description.lower())
 
     def test_amplitude_sets_maximum(self):
         amplitude = 0.5
@@ -369,7 +369,131 @@ class TestGaussian(unittest.TestCase):
         self.model.parameters["width"] = width
         dataset = self.model.create()
         fwhm_expected = 2*np.sqrt(2*np.log(2))*width
-        self.assertAlmostEqual(fwhm_expected, self.get_fwhm(dataset), 3)
+        self.assertAlmostEqual(fwhm_expected, get_fwhm(dataset), 3)
+
+    def test_zero_width_returns_finite_output(self):
+        width = 0
+        self.model.variables = np.linspace(-5, 5)
+        self.model.parameters["width"] = width
+        with np.errstate(divide='raise'):
+            dataset = self.model.create()
+        self.assertTrue(np.all(np.isfinite(dataset.data.data)))
+
+
+class TestNormalisedGaussian(unittest.TestCase):
+    def setUp(self):
+        self.model = aspecd.model.NormalisedGaussian()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('normalised gaussian', self.model.description.lower())
+
+    def test_amplitude_is_normalised(self):
+        self.model.variables = np.linspace(-5, 5, 2**10)
+        amplitude = 1 / (self.model.parameters["width"] * np.sqrt(2 * np.pi))
+        dataset = self.model.create()
+        self.assertAlmostEqual(amplitude, max(dataset.data.data), 4)
+
+    def test_position_set_position(self):
+        position = 0.5
+        self.model.variables = np.linspace(-5, 5, 1001)
+        self.model.parameters["position"] = position
+        dataset = self.model.create()
+        self.assertAlmostEqual(position, self.model.variables[np.argmax(
+            dataset.data.data)], 4)
+
+    def test_width_sets_width(self):
+        width = 2
+        self.model.variables = np.linspace(-5, 5, 10001)
+        self.model.parameters["width"] = width
+        dataset = self.model.create()
+        fwhm_expected = 2*np.sqrt(2*np.log(2))*width
+        self.assertAlmostEqual(fwhm_expected, get_fwhm(dataset), 3)
+
+    def test_zero_width_returns_finite_output(self):
+        width = 0
+        self.model.variables = np.linspace(-5, 5)
+        self.model.parameters["width"] = width
+        with np.errstate(divide='raise'):
+            dataset = self.model.create()
+        self.assertTrue(np.all(np.isfinite(dataset.data.data)))
+
+
+class TestLorentzian(unittest.TestCase):
+    def setUp(self):
+        self.model = aspecd.model.Lorentzian()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('generalised lorentzian', self.model.description.lower())
+
+    def test_amplitude_sets_maximum(self):
+        amplitude = 0.5
+        self.model.variables = np.linspace(-5, 5, 2**10)
+        self.model.parameters["amplitude"] = amplitude
+        dataset = self.model.create()
+        self.assertAlmostEqual(amplitude, max(dataset.data.data), 4)
+
+    def test_position_set_position(self):
+        position = 0.5
+        self.model.variables = np.linspace(-5, 5, 1001)
+        self.model.parameters["position"] = position
+        dataset = self.model.create()
+        self.assertAlmostEqual(position, self.model.variables[np.argmax(
+            dataset.data.data)], 4)
+
+    def test_width_sets_width(self):
+        width = 2
+        self.model.variables = np.linspace(-5, 5, 10001)
+        self.model.parameters["width"] = width
+        dataset = self.model.create()
+        fwhm_expected = 2*width
+        self.assertAlmostEqual(fwhm_expected, get_fwhm(dataset), 3)
+
+    def test_zero_width_returns_finite_output(self):
+        width = 0
+        self.model.variables = np.linspace(-5, 5)
+        self.model.parameters["width"] = width
+        with np.errstate(divide='raise'):
+            dataset = self.model.create()
+        self.assertTrue(np.all(np.isfinite(dataset.data.data)))
+
+
+class TestNormalisedLorentzian(unittest.TestCase):
+    def setUp(self):
+        self.model = aspecd.model.NormalisedLorentzian()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('normalised lorentzian', self.model.description.lower())
+
+    def test_amplitude_is_normalised(self):
+        self.model.variables = np.linspace(-5, 5, 2**10)
+        amplitude = 1 / (self.model.parameters["width"] * np.pi)
+        dataset = self.model.create()
+        self.assertAlmostEqual(amplitude, max(dataset.data.data), 4)
+
+    def test_position_set_position(self):
+        position = 0.5
+        self.model.variables = np.linspace(-5, 5, 1001)
+        self.model.parameters["position"] = position
+        dataset = self.model.create()
+        self.assertAlmostEqual(position, self.model.variables[np.argmax(
+            dataset.data.data)], 4)
+
+    def test_width_sets_width(self):
+        width = 2
+        self.model.variables = np.linspace(-5, 5, 10001)
+        self.model.parameters["width"] = width
+        dataset = self.model.create()
+        fwhm_expected = 2*width
+        self.assertAlmostEqual(fwhm_expected, get_fwhm(dataset), 3)
 
     def test_zero_width_returns_finite_output(self):
         width = 0

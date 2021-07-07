@@ -18,7 +18,7 @@ For version 0.3
 
 * Models
 
-  * Implement basic models (Gaussian, Lorentzian, ...)
+  * Implement basic models (sine, exp, ...)
   * Models with multiple Gaussians, Lorentzians, ...
   * ND datasets? ND datasets with varying model parameter(s)?
 

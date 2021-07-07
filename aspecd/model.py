@@ -91,10 +91,26 @@ define more specific models as well.
   set explicitly. Hence, this is usually *not* identical to the probability
   density function (PDF) of a normally distributed random variable.
 
+* :class:`aspecd.model.NormalisedGaussian`
+
+  Normalised Gaussian with an integral of one, identical to the probability
+  density function (PDF) of a normally distributed random variable.
+
+* :class:`aspecd.model.Lorentzian`
+
+  Generalised Lorentzian where amplitude, position, and width can be
+  set explicitly. Hence, this is usually *not* identical to the probability
+  density function (PDF) of the Cauchy distribution.
+
+* :class:`aspecd.model.NormalisedLorentzian`
+
+  Normalised Lorentzian with an integral of one, identical to the probability
+  density function (PDF) of the Cauchy distribution.
+
 
 .. todo::
     Implement further models, including, but probably not limited to:
-    exponentials, sine, Gaussian, Lorentzian
+    exponentials, sine
 
 
 Writing your own models
@@ -802,7 +818,8 @@ class Gaussian(Model):
         amplitude, position, and width independently. Hence, it is *not*
         normalised to an integral of one, and therefore *not* to be confused
         with the the probability density function (PDF) of a normally
-        distributed random variable.
+        distributed random variable. If you are interested in this, see the
+        :class:`aspecd.model.NormalisedGaussian` class.
 
 
     Attributes
@@ -897,3 +914,357 @@ class Gaussian(Model):
         gaussian = \
             amplitude * np.exp(-(x - position)**2 / not_zero(2 * width**2))
         self._dataset.data.data = gaussian
+
+
+class NormalisedGaussian(Model):
+    # noinspection PyUnresolvedReferences
+    r"""
+    Normalised Gaussian.
+
+    Creates a Gaussian function or Gaussian, with its characteristic
+    symmetric "bell curve" shape, normalised to an integral of one. Thus,
+    it is the probability density function (PDF) of a normally distributed
+    random variable.
+
+    The underlying mathematical equation may be written as follows:
+
+    .. math::
+
+        f(x) = \frac{1}{\sigma\sqrt{2\pi}} \exp\left(-\frac{(x-\mu)^2}{
+        2\sigma^2}\right)
+
+    with :math:`\mu` being the position and :math:`\sigma` the width of the
+    Gaussian, and :math:`\sigma^2` the variance.
+
+    .. note::
+
+        This class creates a normalised Gaussian, equivalent to the PDF of a
+        normally distributed random variable. If you are interested in a
+        Gaussian where you can set all three parameters (amplitude,
+        position, width) independently, see the
+        :class:`aspecd.model.Gaussian` class.
+
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        position : :class:`float`
+            Position (of the maximum) of the Gaussian
+
+            For a normally distributed random variable :math:`x`,
+            the position is identical to its expected value :math:`E(x)` or
+            mean :math:`\mu`. Other names include first moment and average.
+
+            Default: 0
+
+        width : :class:`float`
+            Width of the Gaussian
+
+            The full width at half maximum (FWHM) is related to the width
+            :math:`\sigma` by: :math:`2 \sqrt{2 \log(2)} \sigma`. The
+            squared value of the width is better known the variance
+            :math:`\sigma^2`.
+
+            Default: 1
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Suppose you would want to create a normalised Gaussian with standard values
+    (position=0, width=1). Starting from scratch, you need to create a dummy
+    dataset (using, *e.g.*, :class:`aspecd.model.Zeros`) of given length and
+    axes range. Based on that you can create your normalised Gaussian:
+
+    .. code-block:: yaml
+
+       - kind: model
+         type: Zeros
+         properties:
+           parameters:
+             shape: 1001
+             range: [-5, 5]
+         result: dummy
+
+       - kind: model
+         type: NormalisedGaussian
+         from_dataset: dummy
+         result: normalised_gaussian
+
+    Of course, if you start with an existing dataset (*e.g.*, loaded from
+    some real data), you could use the label to this dataset directly in
+    ``from_dataset``, without needing to create a dummy dataset first.
+
+    Of course, you can control position and width explicitly:
+
+    .. code-block:: yaml
+
+       - kind: model
+         type: NormalisedGaussian
+         properties:
+           parameters:
+             position: 1.5
+             width: 0.5
+         from_dataset: dummy
+         result: normalised_gaussian
+
+    This would create a normalised Gaussian with its maximum situated
+    at a value of 1.5 at the *x* axis, and with a width of 0.5.
+
+    .. versionadded:: 0.3
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = "Normalised Gaussian"
+        self.parameters["position"] = 0
+        self.parameters["width"] = 1
+
+    def _perform_task(self):
+        x = np.asarray(self.variables)  # pylint: disable=invalid-name
+        position = self.parameters["position"]
+        width = self.parameters["width"]
+        amplitude = 1 / not_zero(width * np.sqrt(2 * np.pi))
+        gaussian = \
+            amplitude * np.exp(-(x - position)**2 / not_zero(2 * width**2))
+        self._dataset.data.data = gaussian
+
+
+class Lorentzian(Model):
+    # noinspection PyUnresolvedReferences
+    r"""
+    Generalised Lorentzian.
+
+    Creates a Lorentzian function or Lorentzian often used in spectroscopy,
+    as the line shape of a purely lifetime-broadened spectral line is
+    identical to such a Lorentzian.
+
+    The underlying mathematical equation may be written as follows:
+
+    .. math::
+
+        f(x) = a \left[\frac{c^2}{(x-b)^2 + c^2}\right]
+
+    with :math:`a` being the amplitude, :math:`b` the position,
+    and :math:`c` the width of the Lorentzian.
+
+    .. important::
+        Note that this is a generalised Lorentzian where you can set
+        amplitude, position, and width independently. Hence, it is *not*
+        normalised to an integral of one, and therefore *not* to be confused
+        with the the probability density function (PDF) of the Cauchy
+        distribution. If you are interested in this, see the
+        :class:`aspecd.model.NormalisedLorentzian` class.
+
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        amplitude : :class:`float`
+            Amplitude or height of the Lorentzian
+
+            Default: 1
+
+        position : :class:`float`
+            Position (of the maximum) of the Lorentzian
+
+            Default: 0
+
+        width : :class:`float`
+            Width of the Lorentzian
+
+            The full width at half maximum (FWHM) is related to the width
+            :math:`b` by: :math:`2b`.
+
+            Default: 1
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Suppose you would want to create a Lorentzian with standard values
+    (amplitude=1, position=0, width=1). Starting from scratch, you need to
+    create a dummy dataset (using, *e.g.*, :class:`aspecd.model.Zeros`) of
+    given length and axes range. Based on that you can create your Lorentzian:
+
+    .. code-block:: yaml
+
+       - kind: model
+         type: Zeros
+         properties:
+           parameters:
+             shape: 1001
+             range: [-5, 5]
+         result: dummy
+
+       - kind: model
+         type: Lorentzian
+         from_dataset: dummy
+         result: lorentzian
+
+    Of course, if you start with an existing dataset (*e.g.*, loaded from
+    some real data), you could use the label to this dataset directly in
+    ``from_dataset``, without needing to create a dummy dataset first.
+
+    Of course, you can control all three parameters (amplitude, position,
+    width) explicitly:
+
+    .. code-block:: yaml
+
+       - kind: model
+         type: Lorentzian
+         properties:
+           parameters:
+             amplitude: 5
+             position: 1.5
+             width: 0.5
+         from_dataset: dummy
+         result: lorentzian
+
+    This would create a Lorentzian with an amplitude (height) of 5, situated
+    at a value of 1.5 at the *x* axis, and with a width of 0.5.
+
+    .. versionadded:: 0.3
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = "Generalised Lorentzian"
+        self.parameters["amplitude"] = 1
+        self.parameters["position"] = 0
+        self.parameters["width"] = 1
+
+    def _perform_task(self):
+        x = np.asarray(self.variables)  # pylint: disable=invalid-name
+        amplitude = self.parameters["amplitude"]
+        position = self.parameters["position"]
+        width = self.parameters["width"]
+        lorentzian = \
+            amplitude * (width**2 / ((x - position)**2 + not_zero(width**2)))
+        self._dataset.data.data = lorentzian
+
+
+class NormalisedLorentzian(Model):
+    # noinspection PyUnresolvedReferences
+    r"""
+    Normalised Lorentzian.
+
+    Creates a normalised Lorentzian function or Lorentzian with an integral
+    of one, *i.e.* the probability density function (PDF) of the Cauchy
+    distribution.
+
+    The underlying mathematical equation may be written as follows:
+
+    .. math::
+
+        f(x) = \frac{1}{\pi b} \left[\frac{c^2}{(x-b)^2 + c^2}\right]
+
+    with :math:`b` being the position and :math:`c` the width of the
+    Lorentzian.
+
+    .. note::
+
+        This class creates a normalised Lorentzian, equivalent to the PDF of
+        the Cauchy distribution. If you are interested in a Lorentzian where
+        you can set all three parameters (amplitude, position, width)
+        independently, see the :class:`aspecd.model.Lorentzian` class.
+
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        position : :class:`float`
+            Position (of the maximum) of the Lorentzian
+
+            Default: 0
+
+        width : :class:`float`
+            Width of the Lorentzian
+
+            The full width at half maximum (FWHM) is related to the width
+            :math:`b` by: :math:`2b`.
+
+            Default: 1
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Suppose you would want to create a normalised Lorentzian with standard
+    values (position=0, width=1). Starting from scratch, you need to create
+    a dummy dataset (using, *e.g.*, :class:`aspecd.model.Zeros`) of given
+    length and axes range. Based on that you can create your Lorentzian:
+
+    .. code-block:: yaml
+
+       - kind: model
+         type: Zeros
+         properties:
+           parameters:
+             shape: 1001
+             range: [-5, 5]
+         result: dummy
+
+       - kind: model
+         type: NormalisedLorentzian
+         from_dataset: dummy
+         result: normalised_lorentzian
+
+    Of course, if you start with an existing dataset (*e.g.*, loaded from
+    some real data), you could use the label to this dataset directly in
+    ``from_dataset``, without needing to create a dummy dataset first.
+
+    Of course, you can control position and width explicitly:
+
+    .. code-block:: yaml
+
+       - kind: model
+         type: NormalisedLorentzian
+         properties:
+           parameters:
+             position: 1.5
+             width: 0.5
+         from_dataset: dummy
+         result: normalised_lorentzian
+
+    This would create a normalised Lorentzian with its maximum situated at a
+    value of 1.5 at the *x* axis, and with a width of 0.5.
+
+    .. versionadded:: 0.3
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = "Normalised Lorentzian, PDF of a Cauchy distribution"
+        self.parameters["position"] = 0
+        self.parameters["width"] = 1
+
+    def _perform_task(self):
+        x = np.asarray(self.variables)  # pylint: disable=invalid-name
+        position = self.parameters["position"]
+        width = self.parameters["width"]
+        amplitude = 1 / (np.pi * not_zero(width))
+        lorentzian = \
+            amplitude * (width**2 / ((x - position)**2 + not_zero(width**2)))
+        self._dataset.data.data = lorentzian
