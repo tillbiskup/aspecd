@@ -374,6 +374,7 @@ class Model:
         self._dataset.metadata.calculation.parameters = self.parameters
 
     def _set_dataset_origdata(self):
+        # pylint: disable=protected-access
         self._dataset._origdata = copy.deepcopy(self._dataset.data)
 
 
@@ -681,7 +682,7 @@ class Polynomial(Model):
 
 class Gaussian(Model):
     # noinspection PyUnresolvedReferences
-    """
+    r"""
     Generalised Gaussian.
 
     Creates a Gaussian function or Gaussian, with its characteristic
@@ -713,8 +714,8 @@ class Gaussian(Model):
         width : :class:`float`
             Width of the Gaussian
 
-            The full width at half maximum (FWHM) is related to the width by:
-            2 * np.sqrt(2 * np.log(2)) * width
+            The full width at half maximum (FWHM) is related to the width
+            *b* by: :math:`2 \sqrt{2 \log(2)} b`.
 
             Default: 1
 
@@ -731,7 +732,7 @@ class Gaussian(Model):
         self.parameters["width"] = 1
 
     def _perform_task(self):
-        x = np.asarray(self.variables)
+        x = np.asarray(self.variables)  # pylint: disable=invalid-name
         amplitude = self.parameters["amplitude"]
         position = self.parameters["position"]
         width = self.parameters["width"]

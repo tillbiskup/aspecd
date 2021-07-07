@@ -1670,10 +1670,10 @@ class LinearRegressionWithFixedIntercept(SingleAnalysisStep):
         return dataset.data.data.ndim == 1
 
     def _perform_task(self):
-        x = self.dataset.data.axes[0].values
-        x = x[:, None]
-        y = self.dataset.data.data - self.parameters["offset"]
-        results = np.linalg.lstsq(x, y, rcond=None)
+        xdata = self.dataset.data.axes[0].values
+        xdata = xdata[:, None]
+        ydata = self.dataset.data.data - self.parameters["offset"]
+        results = np.linalg.lstsq(xdata, ydata, rcond=None)
         if self.parameters["polynomial_coefficients"]:
             self.result = [self.parameters["offset"], float(results[0])]
         else:

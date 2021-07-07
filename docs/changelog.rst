@@ -34,6 +34,7 @@ New features
   * :class:`aspecd.model.Polynomial` for evaluating polynomials (*e.g.*, as obtained using :class:`aspecd.analysis.PolynomialFit`)
   * :class:`aspecd.model.Zeros`
   * :class:`aspecd.model.Ones`
+  * :class:`aspecd.model.Gaussian`
 
 * Utils
 
