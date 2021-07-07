@@ -833,3 +833,21 @@ class TestNotZero(unittest.TestCase):
     def test_not_zero_of_negative_value_closer_than_limit_returns_limit(self):
         self.assertEqual(-np.finfo(np.float64).resolution,
                          utils.not_zero(-1e-20))
+
+
+class TestIterable(unittest.TestCase):
+
+    def test_iterable_returns_true_for_list(self):
+        self.assertTrue(utils.iterable([]))
+
+    def test_iterable_returns_true_for_tuple(self):
+        self.assertTrue(utils.iterable(tuple()))
+
+    def test_iterable_returns_true_for_nd_array(self):
+        self.assertTrue(utils.iterable(np.asarray([])))
+
+    def test_iterable_returns_true_for_string(self):
+        self.assertTrue(utils.iterable('foo'))
+
+    def test_iterable_returns_false_for_scalar(self):
+        self.assertFalse(utils.iterable(1))

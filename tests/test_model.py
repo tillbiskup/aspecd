@@ -202,6 +202,35 @@ class TestZeros(unittest.TestCase):
         dataset = self.model.create()
         self.assertEqual(len(self.dataset3d.data.data), len(dataset.data.data))
 
+    def test_create_1d_with_range_sets_axis_range(self):
+        self.model.parameters["shape"] = 5
+        self.model.parameters["range"] = [35, 42]
+        dataset = self.model.create()
+        self.assertEqual(self.model.parameters["range"][0][0],
+                         dataset.data.axes[0].values[0])
+        self.assertEqual(self.model.parameters["range"][0][-1],
+                         dataset.data.axes[0].values[-1])
+
+    def test_create_2d_with_range_sets_axis_range(self):
+        self.model.parameters["shape"] = [5, 5]
+        self.model.parameters["range"] = [[35, 42], [17.5, 21]]
+        dataset = self.model.create()
+        self.assertEqual(self.model.parameters["range"][0][0],
+                         dataset.data.axes[0].values[0])
+        self.assertEqual(self.model.parameters["range"][0][-1],
+                         dataset.data.axes[0].values[-1])
+        self.assertEqual(self.model.parameters["range"][1][0],
+                         dataset.data.axes[1].values[0])
+        self.assertEqual(self.model.parameters["range"][1][-1],
+                         dataset.data.axes[1].values[-1])
+
+    def test_range_incompatible_to_shape_raises(self):
+        self.model.parameters["shape"] = 5
+        self.model.parameters["range"] = [[35, 42], [17.5, 21]]
+        with self.assertRaisesRegex(IndexError,
+                                    'Shape and range must be compatible'):
+            self.model.create()
+
 
 class TestOnes(unittest.TestCase):
     def setUp(self):
@@ -242,6 +271,35 @@ class TestOnes(unittest.TestCase):
         self.model.from_dataset(self.dataset3d)
         dataset = self.model.create()
         self.assertEqual(len(self.dataset3d.data.data), len(dataset.data.data))
+
+    def test_create_1d_with_range_sets_axis_range(self):
+        self.model.parameters["shape"] = 5
+        self.model.parameters["range"] = [35, 42]
+        dataset = self.model.create()
+        self.assertEqual(self.model.parameters["range"][0][0],
+                         dataset.data.axes[0].values[0])
+        self.assertEqual(self.model.parameters["range"][0][-1],
+                         dataset.data.axes[0].values[-1])
+
+    def test_create_2d_with_range_sets_axis_range(self):
+        self.model.parameters["shape"] = [5, 5]
+        self.model.parameters["range"] = [[35, 42], [17.5, 21]]
+        dataset = self.model.create()
+        self.assertEqual(self.model.parameters["range"][0][0],
+                         dataset.data.axes[0].values[0])
+        self.assertEqual(self.model.parameters["range"][0][-1],
+                         dataset.data.axes[0].values[-1])
+        self.assertEqual(self.model.parameters["range"][1][0],
+                         dataset.data.axes[1].values[0])
+        self.assertEqual(self.model.parameters["range"][1][-1],
+                         dataset.data.axes[1].values[-1])
+
+    def test_range_incompatible_to_shape_raises(self):
+        self.model.parameters["shape"] = 5
+        self.model.parameters["range"] = [[35, 42], [17.5, 21]]
+        with self.assertRaisesRegex(IndexError,
+                                    'Shape and range must be compatible'):
+            self.model.create()
 
 
 class TestPolynomial(unittest.TestCase):

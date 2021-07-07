@@ -85,6 +85,12 @@ define more specific models as well.
   Polynomial (of arbitrary degree/order, depending on the number of
   coefficients)
 
+* :class:`aspecd.model.Gaussian`
+
+  Generalised Gaussian where amplitude, position, and width can be
+  set explicitly. Hence, this is usually *not* identical to the probability
+  density function (PDF) of a normally distributed random variable.
+
 
 .. todo::
     Implement further models, including, but probably not limited to:
@@ -170,7 +176,7 @@ import numpy as np
 import aspecd.dataset
 import aspecd.exceptions
 import aspecd.utils
-from aspecd.utils import not_zero
+from aspecd.utils import not_zero, iterable
 
 
 class Model:
@@ -361,7 +367,7 @@ class Model:
             for index in range(len(self.variables)):
                 self._dataset.data.axes[index].values = self.variables[index]
         else:
-            self._dataset.data.axes[0].values = self.variables
+            self._dataset.data.axes[0].values = np.asarray(self.variables)
 
     def _set_dataset_metadata(self):
         """
@@ -404,10 +410,21 @@ class Zeros(Model):
             it is *not* the best idea to create an 3D dataset with zeros
             with 2**12 elements along each dimension.
 
+        range : :class:`list`
+            range of each of the axes
+
+            Useful if you want to specify the axes values as well.
+
+            If the data are multidimensional, one range for each axis needs
+            to be provided.
+
     Raises
     ------
     aspecd.exceptions.MissingParameterError
         Raised if no shape is given
+
+    IndexError
+        Raised if elements in shape and range are incompatible
 
 
     Examples
@@ -445,6 +462,23 @@ class Zeros(Model):
     with 2**10 elements along each dimension is most probably *not* the best
     idea.
 
+    Suppose you not only want to create a dataset with a given shape,
+    but set the axes values (*i.e.*, their range) as well:
+
+    .. code-block:: yaml
+
+       - kind: model
+         type: Zeros
+         properties:
+           parameters:
+             shape: 1024
+             range: [35, 42]
+         result: 1d_zeros
+
+    This would create a 1D dataset with 1024 values, with the axes
+    values spanning a range from 35 to 42. Of course, the same can be done
+    with ND datasets.
+
     Now, let's assume that you would want to play around with the different
     types of (coloured) noise. Therefore, you would want to first create a
     dataset and afterwards add noise to it:
@@ -480,6 +514,7 @@ class Zeros(Model):
         super().__init__()
         self.description = "Model containing only zeros"
         self.parameters["shape"] = None
+        self.parameters["range"] = None
 
     def _sanitise_parameters(self):
         if not self.variables:
@@ -489,15 +524,33 @@ class Zeros(Model):
                     message="Parameter 'shape' missing")
         if not self.parameters["shape"]:
             self.parameters["shape"] = []
-            if isinstance(self.variables[0], (list, np.ndarray)):
+            if iterable(self.variables[0]):
                 for index in range(len(self.variables)):
                     # noinspection PyTypeChecker
                     self.parameters["shape"].append(len(self.variables[index]))
             else:
                 self.parameters["shape"] = len(self.variables)
+        if not iterable(self.parameters["shape"]):
+            self.parameters["shape"] = [self.parameters["shape"]]
+        if self.parameters["range"]:
+            if not iterable(self.parameters["range"][0]):
+                self.parameters["range"] = [self.parameters["range"]]
+            if len(self.parameters["shape"]) != len(self.parameters["range"]):
+                raise IndexError('Shape and range must be compatible')
 
     def _perform_task(self):
         self._dataset.data.data = np.zeros(self.parameters["shape"])
+        if self.parameters["range"]:
+            self._set_variables()
+
+    def _set_variables(self):
+        self.variables = []
+        shape = self.parameters["shape"]
+        range_ = self.parameters["range"]
+        for dim in range(self._dataset.data.data.ndim):
+            axis_values = \
+                np.linspace(range_[dim][0], range_[dim][1], shape[dim])
+            self.variables.append(axis_values)
 
 
 class Ones(Model):
@@ -526,10 +579,21 @@ class Ones(Model):
             it is *not* the best idea to create an 3D dataset with ones
             with 2**12 elements along each dimension.
 
+        range : :class:`list`
+            range of each of the axes
+
+            Useful if you want to specify the axes values as well.
+
+            If the data are multidimensional, one range for each axis needs
+            to be provided.
+
     Raises
     ------
     aspecd.exceptions.MissingParameterError
         Raised if no shape is given
+
+    IndexError
+        Raised if elements in shape and range are incompatible
 
 
     Examples
@@ -567,6 +631,23 @@ class Ones(Model):
     with 2**10 elements along each dimension is most probably *not* the best
     idea.
 
+    Suppose you not only want to create a dataset with a given shape,
+    but set the axes values (*i.e.*, their range) as well:
+
+    .. code-block:: yaml
+
+       - kind: model
+         type: Ones
+         properties:
+           parameters:
+             shape: 1024
+             range: [35, 42]
+         result: 1d_zeros
+
+    This would create a 1D dataset with 1024 values, with the axes
+    values spanning a range from 35 to 42. Of course, the same can be done
+    with ND datasets.
+
     Now, let's assume that you would want to play around with the different
     types of (coloured) noise. Therefore, you would want to first create a
     dataset and afterwards add noise to it:
@@ -602,6 +683,7 @@ class Ones(Model):
         super().__init__()
         self.description = "Model containing only ones"
         self.parameters["shape"] = None
+        self.parameters["range"] = None
 
     def _sanitise_parameters(self):
         if not self.variables:
@@ -611,15 +693,33 @@ class Ones(Model):
                     message="Parameter 'shape' missing")
         if not self.parameters["shape"]:
             self.parameters["shape"] = []
-            if isinstance(self.variables[0], (list, np.ndarray)):
+            if iterable(self.variables[0]):
                 for index in range(len(self.variables)):
                     # noinspection PyTypeChecker
                     self.parameters["shape"].append(len(self.variables[index]))
             else:
                 self.parameters["shape"] = len(self.variables)
+        if not iterable(self.parameters["shape"]):
+            self.parameters["shape"] = [self.parameters["shape"]]
+        if self.parameters["range"]:
+            if not iterable(self.parameters["range"][0]):
+                self.parameters["range"] = [self.parameters["range"]]
+            if len(self.parameters["shape"]) != len(self.parameters["range"]):
+                raise IndexError('Shape and range must be compatible')
 
     def _perform_task(self):
         self._dataset.data.data = np.ones(self.parameters["shape"])
+        if self.parameters["range"]:
+            self._set_variables()
+
+    def _set_variables(self):
+        self.variables = []
+        shape = self.parameters["shape"]
+        range_ = self.parameters["range"]
+        for dim in range(self._dataset.data.data.ndim):
+            axis_values = \
+                np.linspace(range_[dim][0], range_[dim][1], shape[dim])
+            self.variables.append(axis_values)
 
 
 class Polynomial(Model):
@@ -688,6 +788,15 @@ class Gaussian(Model):
     Creates a Gaussian function or Gaussian, with its characteristic
     symmetric "bell curve" shape.
 
+    The underlying mathematical equation may be written as follows:
+
+    .. math::
+
+        f(x) = a \exp\left(-\frac{(x-b)^2}{2c^2}\right)
+
+    with :math:`a` being the amplitude, :math:`b` the position,
+    and :math:`c` the width of the Gaussian.
+
     .. important::
         Note that this is a generalised Gaussian where you can set
         amplitude, position, and width independently. Hence, it is *not*
@@ -719,6 +828,55 @@ class Gaussian(Model):
 
             Default: 1
 
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Suppose you would want to create a Gaussian with standard values
+    (amplitude=1, position=0, width=1). Starting from scratch, you need to
+    create a dummy dataset (using, *e.g.*, :class:`aspecd.model.Zeros`) of
+    given length and axes range. Based on that you can create your Gaussian:
+
+    .. code-block:: yaml
+
+       - kind: model
+         type: Zeros
+         properties:
+           parameters:
+             shape: 1001
+             range: [-5, 5]
+         result: dummy
+
+       - kind: model
+         type: Gaussian
+         from_dataset: dummy
+         result: gaussian
+
+    Of course, if you start with an existing dataset (*e.g.*, loaded from
+    some real data), you could use the label to this dataset directly in
+    ``from_dataset``, without needing to create a dummy dataset first.
+
+    Of course, you can control all three parameters (amplitude, position,
+    width) explicitly:
+
+    .. code-block:: yaml
+
+       - kind: model
+         type: Gaussian
+         properties:
+           parameters:
+             amplitude: 5
+             position: 1.5
+             width: 0.5
+         from_dataset: dummy
+         result: gaussian
+
+    This would create a Gaussian with an amplitude (height) of 5, situated
+    at a value of 1.5 at the *x* axis, and with a width of 0.5.
 
     .. versionadded:: 0.3
 

@@ -818,3 +818,29 @@ def not_zero(value):
 
     """
     return np.copysign(max(abs(value), np.finfo(np.float64).resolution), value)
+
+
+def iterable(variable):
+    """
+    Check whether the given variable is iterable.
+
+    Lists, tuples, NumPy arrays, but strings as well are iterable. Integers,
+    however, are not.
+
+    Parameters
+    ----------
+    variable :
+        variable to check for being iterable
+
+    Returns
+    -------
+    answer : :class:`bool`
+        Whether the given variable is iterable
+
+    """
+    try:
+        iter(variable)
+        answer = True
+    except TypeError:
+        answer = False
+    return answer
