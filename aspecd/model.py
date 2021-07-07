@@ -170,6 +170,7 @@ import numpy as np
 import aspecd.dataset
 import aspecd.exceptions
 import aspecd.utils
+from aspecd.utils import not_zero
 
 
 class Model:
@@ -676,3 +677,64 @@ class Polynomial(Model):
     def _perform_task(self):
         polynomial = np.polynomial.Polynomial(self.parameters["coefficients"])
         self._dataset.data.data = polynomial(self.variables)
+
+
+class Gaussian(Model):
+    # noinspection PyUnresolvedReferences
+    """
+    Generalised Gaussian.
+
+    Creates a Gaussian function or Gaussian, with its characteristic
+    symmetric "bell curve" shape.
+
+    .. important::
+        Note that this is a generalised Gaussian where you can set
+        amplitude, position, and width independently. Hence, it is *not*
+        normalised to an integral of one, and therefore *not* to be confused
+        with the the probability density function (PDF) of a normally
+        distributed random variable.
+
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        amplitude : :class:`float`
+            Amplitude or height of the Gaussian
+
+            Default: 1
+
+        position : :class:`float`
+            Position (of the maximum) of the Gaussian
+
+            Default: 0
+
+        width : :class:`float`
+            Width of the Gaussian
+
+            The full width at half maximum (FWHM) is related to the width by:
+            2 * np.sqrt(2 * np.log(2)) * width
+
+            Default: 1
+
+
+    .. versionadded:: 0.3
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = "Generalised Gaussian"
+        self.parameters["amplitude"] = 1
+        self.parameters["position"] = 0
+        self.parameters["width"] = 1
+
+    def _perform_task(self):
+        x = np.asarray(self.variables)
+        amplitude = self.parameters["amplitude"]
+        position = self.parameters["position"]
+        width = self.parameters["width"]
+        gaussian = \
+            amplitude * np.exp(-(x - position)**2 / not_zero(2 * width**2))
+        self._dataset.data.data = gaussian
