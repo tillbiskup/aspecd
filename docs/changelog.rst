@@ -44,6 +44,10 @@ New features
   * :class:`aspecd.model.CompositeModel` for models consisting of a (weighted) sum of individual models
   * :class:`aspecd.model.FamilyOfCurves` for inspecting systematic variations of one parameter of a given model
 
+* Tasks
+
+  * Comments can be added easily to processing and analysis steps using the top-level key ``comment`` of the respective task.
+
 
 * Utils
 

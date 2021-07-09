@@ -8,10 +8,6 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.3
 ===============
 
-* Tasks
-
-  * Easily adding comments for processing and analysis steps (additional top-level key "comment")
-
 * Remaining basic processing and analysis steps:
 
   * denoising

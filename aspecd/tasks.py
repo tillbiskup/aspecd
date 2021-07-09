@@ -542,6 +542,11 @@ class performing the respective task.
 Currently, the following subclasses are implemented:
 
   * :class:`aspecd.tasks.ProcessingTask`
+
+     * :class:`aspecd.tasks.SingleprocessingTask`
+       (alias of :class:`aspecd.tasks.ProcessingTask`)
+     * :class:`aspecd.tasks.MultiprocessingTask`
+
   * :class:`aspecd.tasks.AnalysisTask`
 
      * :class:`aspecd.tasks.SingleanalysisTask`
@@ -1796,6 +1801,23 @@ class ProcessingTask(Task):
           - label2
 
 
+    Another thing that can be very useful for data processing is to add a
+    comment to an individual step, *e.g.* with an explanation why this step
+    has been performed:
+
+    .. code-block:: yaml
+
+        kind: processing
+        type: SingleProcessingStep
+        comment: >
+          Lorem ipsum dolor sit amet,
+          consectetur adipiscing elit.
+
+
+    Note that using the ``>`` sign will replace newline characters with
+    spaces. If you want to preserve the newline characters, use ``|`` instead.
+
+
     Attributes
     ----------
     result : :class:`str`
@@ -1813,11 +1835,19 @@ class ProcessingTask(Task):
         to provide as many result labels as there are datasets. Otherwise,
         no result will be assigned.
 
+    comment : :class:`str`
+        Textual comment regarding the processing step
+
+
+    .. versionchanged: 0.3
+        New attribute :attr:`comment`
+
     """
 
     def __init__(self, recipe=None):
         super().__init__(recipe=recipe)
         self.result = ''
+        self.comment = ''
 
     def _perform(self):
         result_labels = None
@@ -1829,6 +1859,8 @@ class ProcessingTask(Task):
         for number, dataset_id in enumerate(self.apply_to):
             dataset = self.recipe.get_dataset(dataset_id)
             self._task = self.get_object()
+            if self.comment:
+                self._task.comment = self.comment
             if self.result:
                 dataset_copy = copy.deepcopy(dataset)
                 dataset_copy.process(processing_step=self._task)
@@ -1984,11 +2016,19 @@ class AnalysisTask(Task):
         This label will be used to refer to the result later on when
         further processing the recipe.
 
+    comment : :class:`str`
+        Textual comment regarding the analysis step
+
+
+    .. versionchanged: 0.3
+        New attribute :attr:`comment`
+
     """
 
     def __init__(self, recipe=None):
         super().__init__(recipe=recipe)
         self.result = ''
+        self.comment = ''
         self._module = 'analysis'
 
 
@@ -2045,6 +2085,23 @@ class SingleanalysisTask(AnalysisTask):
     provide as many result labels as there are datasets. Otherwise,
     no result will be assigned.
 
+
+    Another thing that can be very useful for data analysis is to add a
+    comment to an individual step, *e.g.* with an explanation why this step
+    has been performed:
+
+    .. code-block:: yaml
+
+        kind: singleanalysis
+        type: SingleAnalysisStep
+        comment: >
+          Lorem ipsum dolor sit amet,
+          consectetur adipiscing elit.
+
+
+    Note that using the ``>`` sign will replace newline characters with
+    spaces. If you want to preserve the newline characters, use ``|`` instead.
+
     """
 
     # noinspection PyUnresolvedReferences
@@ -2058,6 +2115,8 @@ class SingleanalysisTask(AnalysisTask):
         for number, dataset_id in enumerate(self.apply_to):
             dataset = self.recipe.get_dataset(dataset_id)
             self._task = self.get_object()
+            if self.comment:
+                self._task.comment = self.comment
             self._task = dataset.analyse(analysis_step=self._task)
             if self.result:
                 if result_labels:
