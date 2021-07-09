@@ -216,7 +216,7 @@ class TestCompositeModel(unittest.TestCase):
         self.assertListEqual(list(single_model_result.data.data * weights[0]),
                              list(composite_model_result.data.data))
 
-    def test_create_with_multiple_model_equivalent_to_sum_of_models(self):
+    def test_create_with_multiple_models_equivalent_to_sum_of_models(self):
         variables = np.linspace(0, 5)
         models = ['Sine', 'Exponential']
         parameters = [{'amplitude': 10}, {'rate': -4}]
@@ -239,6 +239,34 @@ class TestCompositeModel(unittest.TestCase):
         composite_model_result = self.model.create()
         self.assertListEqual(list(data), list(composite_model_result.data.data))
 
+    def test_create_with_operator(self):
+        variables = np.linspace(0, 5)
+        models = ['Sine', 'Exponential']
+        parameters = [{'amplitude': 10}, {'rate': -4}]
+        operators = ['*']
+        # Create individual models
+        data = np.zeros(len(variables))
+        for idx, model_name in enumerate(models):
+            model = aspecd.utils.object_from_class_name('aspecd.model.' +
+                                                        model_name)
+            for key in parameters[idx]:
+                # noinspection PyUnresolvedReferences
+                model.parameters[key] = parameters[idx][key]
+            model.variables = variables
+            # noinspection PyUnresolvedReferences
+            model_result = model.create()
+            if not idx:
+                data += model_result.data.data
+            else:
+                data *= model_result.data.data
+        # Create composite model
+        self.model.models = models
+        self.model.parameters = parameters
+        self.model.variables = variables
+        self.model.operators = operators
+        composite_model_result = self.model.create()
+        self.assertListEqual(list(data), list(composite_model_result.data.data))
+
     def test_create_with_incompatible_no_of_models_and_parameters_raises(self):
         self.model.models = ['Sine', 'Exponential']
         self.model.parameters = [{'amplitude': 10}]
@@ -254,6 +282,16 @@ class TestCompositeModel(unittest.TestCase):
         self.model.variables = np.linspace(0, 5)
         with self.assertRaisesRegex(IndexError,
                                     'Models and weights count differs'):
+            self.model.create()
+
+    def test_create_with_incompatible_no_of_operators(self):
+        self.model.models = ['Sine', 'Exponential', 'Sine']
+        self.model.parameters = \
+            [{'amplitude': 10}, {'rate': -4}, {'frequency': 0.5}]
+        self.model.operators = ['*']
+        self.model.variables = np.linspace(0, 5)
+        with self.assertRaisesRegex(IndexError,
+                                    'Models and operators count differs'):
             self.model.create()
 
 

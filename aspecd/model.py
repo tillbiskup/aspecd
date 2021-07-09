@@ -436,7 +436,14 @@ class Model:
 
 class CompositeModel(Model):
     """
-    Composite model consisting of a weighted sum of individual models.
+    Composite model consisting of a weighted contributions of individual models.
+
+    Individual models can either be added up (default) or multiplied,
+    depending on which operators are provided. Both situations occur
+    frequently. If you would like to describe a spectrum as sum of Gaussian
+    or Lorentzian lines, you need to add the individual contributions. If
+    you would like to model a damped oscillation, you would need to multiply
+    the exponential decay onto the oscillation.
 
     Attributes
     ----------
@@ -457,11 +464,22 @@ class CompositeModel(Model):
 
         Default: no weighting
 
+    operators : :class:`list`
+        Operators to be used for the individual models.
+
+        Addition ("+", "add", "plus") and multiplication ("*", "multiply",
+        "times") are supported.
+
+        Note that one operator less than models needs to be provided.
+
+        Default: add
+
 
     Raises
     ------
     IndexError
-        Raised if number of models, parameter sets, and weights are incompatible
+        Raised if number of models, parameter sets, operators, and weights are
+        incompatible
 
 
     Examples
@@ -471,6 +489,43 @@ class CompositeModel(Model):
     for how to make use of this class. The examples focus each on a single
     aspect.
 
+    Suppose you would want to describe your data with a model consisting of
+    two Lorentzian line shapes. Starting from scratch, you need to create a
+    dummy dataset (using, *e.g.*, :class:`aspecd.model.Zeros`) of given
+    length and axes range. Based on that you can create your model:
+
+    .. code-block:: yaml
+
+       - kind: model
+         type: Zeros
+         properties:
+           parameters:
+             shape: 1001
+             range: [0, 20]
+         result: dummy
+
+       - kind: model
+         type: CompositeModel
+         from_dataset: dummy
+         properties:
+           models:
+             - Lorentzian
+             - Lorentzian
+           parameters:
+             - position: 3
+             - position: 5
+         result: multiple_lorentzians
+
+    Note that you need to provide parameters for each of the individual
+    models, even if the class for a model would work without explicitly
+    providing parameters.
+
+    Of course, if you start with an existing dataset (*e.g.*, loaded from
+    some real data), you could use the label to this dataset directly in
+    ``from_dataset``, without needing to create a dummy dataset first.
+
+    While adding up the contributions of the individual components works
+    well for describing spectra, sometimes you need to multiply contributions.
     Suppose you would want to create a damped oscillation consisting of a
     sine and an exponential. Starting from scratch, you need to create a
     dummy dataset (using, *e.g.*, :class:`aspecd.model.Zeros`) of given
@@ -495,16 +550,15 @@ class CompositeModel(Model):
              - Exponential
            parameters:
              - frequency: 1
+               phase: 1.57
              - rate: -1
+           operators:
+             - multiply
          result: damped_oscillation
 
-    Note that you need to provide parameters for each of the individual
+    Again, you need to provide parameters for each of the individual
     models, even if the class for a model would work without explicitly
     providing parameters.
-
-    Of course, if you start with an existing dataset (*e.g.*, loaded from
-    some real data), you could use the label to this dataset directly in
-    ``from_dataset``, without needing to create a dummy dataset first.
 
 
     .. versionadded:: 0.3
@@ -518,14 +572,22 @@ class CompositeModel(Model):
         self.models = []
         self.parameters = []
         self.weights = []
+        self.operators = []
 
     def _sanitise_parameters(self):
         if not self.weights:
             self.weights = np.ones(len(self.models))
+        if not self.operators:
+            for _ in self.models:
+                self.operators.append('+')
+        else:
+            self.operators.insert(0, '+')
         if len(self.parameters) != len(self.models):
             raise IndexError('Models and parameters count differs')
         if len(self.weights) != len(self.models):
             raise IndexError('Models and weights count differs')
+        if len(self.operators) != len(self.models):
+            raise IndexError('Models and operators count differs')
 
     def _perform_task(self):
         data = np.zeros(len(self.variables))
@@ -537,7 +599,10 @@ class CompositeModel(Model):
             model.variables = self.variables
             # noinspection PyUnresolvedReferences
             dataset = model.create()
-            data += dataset.data.data * self.weights[idx]
+            if self.operators[idx] in ('+', 'plus', 'add'):
+                data += dataset.data.data * self.weights[idx]
+            if self.operators[idx] in ('*', 'times', 'multiply'):
+                data *= dataset.data.data * self.weights[idx]
         self._dataset.data.data = data
 
     @staticmethod
