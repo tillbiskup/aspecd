@@ -542,3 +542,34 @@ class TestSine(unittest.TestCase):
         dataset = self.model.create()
         for index in [250, 750]:
             self.assertAlmostEqual(0, dataset.data.data[index])
+
+
+class TestExponential(unittest.TestCase):
+    def setUp(self):
+        self.model = aspecd.model.Exponential()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('exponential', self.model.description.lower())
+
+    def test_only_positive_values(self):
+        self.model.variables = np.linspace(-1, 2, 101)
+        dataset = self.model.create()
+        self.assertTrue(np.all(dataset.data.data > 0))
+
+    def test_prefactor_sets_intercept(self):
+        prefactor = 42.
+        self.model.variables = np.linspace(0, 2, 101)
+        self.model.parameters["prefactor"] = prefactor
+        dataset = self.model.create()
+        self.assertAlmostEqual(prefactor, dataset.data.data[0])
+
+    def test_rate_sets_rate(self):
+        rate = 4.2
+        self.model.variables = np.linspace(0, 2, 101)
+        self.model.parameters["rate"] = rate
+        dataset = self.model.create()
+        self.assertAlmostEqual(np.exp(rate * self.model.variables[-1]),
+                               dataset.data.data[-1])

@@ -111,10 +111,13 @@ define more specific models as well.
 
   Sine wave with adjustable amplitude, frequency, and phase.
 
+* :class:`aspecd.model.Exponential`
+
+  Exponential function with adjustable prefactor and rate.
+
 
 .. todo::
-    Implement further models, including, but probably not limited to:
-    exponentials
+    Implement composite models consisting of a sum of simple models.
 
 
 Writing your own models
@@ -1386,3 +1389,101 @@ class Sine(Model):
         phase = self.parameters["phase"]
         sine = amplitude * np.sin(frequency * x + phase)
         self._dataset.data.data = sine
+
+
+class Exponential(Model):
+    # noinspection PyUnresolvedReferences
+    r"""
+    Exponential function.
+
+    Creates an exponential with given prefactor and rate.
+
+    The underlying mathematical equation may be written as follows:
+
+    .. math::
+
+        f(x) = a \exp(bx)
+
+    with :math:`a` being the prefactor and :math:`b` the rate of the
+    exponential.
+
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        prefactor : :class:`float`
+            Intercept of the exponential.
+
+            Default: 1
+
+        rate : :class:`float`
+            Rate of the exponential.
+
+            Default: 1
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Suppose you would want to create an exponential with standard values
+    (prefactor=1, rate=1). Starting from scratch, you need to create
+    a dummy dataset (using, *e.g.*, :class:`aspecd.model.Zeros`) of given
+    length and axes range. Based on that you can create your exponential:
+
+    .. code-block:: yaml
+
+       - kind: model
+         type: Zeros
+         properties:
+           parameters:
+             shape: 1001
+             range: [-5, 5]
+         result: dummy
+
+       - kind: model
+         type: Exponential
+         from_dataset: dummy
+         result: exponential
+
+    Of course, if you start with an existing dataset (*e.g.*, loaded from
+    some real data), you could use the label to this dataset directly in
+    ``from_dataset``, without needing to create a dummy dataset first.
+
+    Of course, you can control all parameters (prefactor, rate) explicitly:
+
+    .. code-block:: yaml
+
+       - kind: model
+         type: Exponential
+         properties:
+           parameters:
+             prefactor: 42
+             rate: 4.2
+         from_dataset: dummy
+         result: exponential
+
+    This would create an exponential with a prefactor of 42 (*i.e.* the
+    intercept) and a rate of 4.2.
+
+    .. versionadded:: 0.3
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = 'Exponential function'
+        self.parameters["prefactor"] = 1
+        self.parameters["rate"] = 1
+
+    def _perform_task(self):
+        x = np.asarray(self.variables)  # pylint: disable=invalid-name
+        prefactor = self.parameters["prefactor"]
+        rate = self.parameters["rate"]
+        exponential = prefactor * np.exp(rate * x)
+        self._dataset.data.data = exponential

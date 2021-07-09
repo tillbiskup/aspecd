@@ -39,6 +39,7 @@ New features
   * :class:`aspecd.model.Lorentzian`
   * :class:`aspecd.model.NormalisedLorentzian`
   * :class:`aspecd.model.Sine`
+  * :class:`aspecd.model.Exponential`
 
 * Utils
 
