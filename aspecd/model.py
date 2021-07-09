@@ -107,10 +107,14 @@ define more specific models as well.
   Normalised Lorentzian with an integral of one, identical to the probability
   density function (PDF) of the Cauchy distribution.
 
+* :class:`aspecd.model.Sine`
+
+  Sine wave with adjustable amplitude, frequency, and phase.
+
 
 .. todo::
     Implement further models, including, but probably not limited to:
-    exponentials, sine
+    exponentials
 
 
 Writing your own models
@@ -1268,3 +1272,117 @@ class NormalisedLorentzian(Model):
         lorentzian = \
             amplitude * (width**2 / ((x - position)**2 + not_zero(width**2)))
         self._dataset.data.data = lorentzian
+
+
+class Sine(Model):
+    # noinspection PyUnresolvedReferences
+    r"""
+    Sine wave.
+
+    Creates a sine function with given amplitude, frequency, and phase.
+
+    The underlying mathematical equation may be written as follows:
+
+    .. math::
+
+        f(x) = a \sin(fx + \phi)
+
+    with :math:`a` being the amplitude, :math:`f` the frequency,
+    and :math:`\phi` the phase of the sine.
+
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        amplitude : :class:`float`
+            Amplitude of the sine.
+
+            Note that the real amplitude (max-min) is twice the value given
+            here. Nevertheless, calling this factor "amplitude" seems to be
+            common.
+
+            Default: 1
+
+        frequency : :class:`float`
+            Frequency of the sine (in radians).
+
+            Default: 1
+
+        phase : :class:`float`
+            Phase (*i.e.*, shift) of the sine (in radians).
+
+            Setting the phase to :math:`\pi/2` would result in a cosine.
+
+            Default: 0
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Suppose you would want to create a sine with standard values (amplitude=1,
+    frequency=1, shift=0). Starting from scratch, you need to create
+    a dummy dataset (using, *e.g.*, :class:`aspecd.model.Zeros`) of given
+    length and axes range. Based on that you can create your sine:
+
+    .. code-block:: yaml
+
+       - kind: model
+         type: Zeros
+         properties:
+           parameters:
+             shape: 1001
+             range: [-5, 5]
+         result: dummy
+
+       - kind: model
+         type: Sine
+         from_dataset: dummy
+         result: sine
+
+    Of course, if you start with an existing dataset (*e.g.*, loaded from
+    some real data), you could use the label to this dataset directly in
+    ``from_dataset``, without needing to create a dummy dataset first.
+
+    Of course, you can control all three parameters (amplitude, frequency,
+    and shift) explicitly:
+
+    .. code-block:: yaml
+
+       - kind: model
+         type: Sine
+         properties:
+           parameters:
+             amplitude: 42
+             frequency: 4.2
+             shift: 1.57
+         from_dataset: dummy
+         result: sine
+
+    This would create a sine with an amplitude of 42 (the actual amplitude,
+    defined as max-min, would be twice this value), a frequency of 4.2 and a
+    shift of about pi/2.
+
+    .. versionadded:: 0.3
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = 'Sine function'
+        self.parameters['amplitude'] = 1
+        self.parameters['frequency'] = 1
+        self.parameters['phase'] = 0
+
+    def _perform_task(self):
+        x = np.asarray(self.variables)  # pylint: disable=invalid-name
+        amplitude = self.parameters["amplitude"]
+        frequency = self.parameters["frequency"]
+        phase = self.parameters["phase"]
+        sine = amplitude * np.sin(frequency * x + phase)
+        self._dataset.data.data = sine

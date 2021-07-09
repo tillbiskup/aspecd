@@ -38,6 +38,7 @@ New features
   * :class:`aspecd.model.NormalisedGaussian`
   * :class:`aspecd.model.Lorentzian`
   * :class:`aspecd.model.NormalisedLorentzian`
+  * :class:`aspecd.model.Sine`
 
 * Utils
 

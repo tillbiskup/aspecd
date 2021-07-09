@@ -502,3 +502,43 @@ class TestNormalisedLorentzian(unittest.TestCase):
         with np.errstate(divide='raise'):
             dataset = self.model.create()
         self.assertTrue(np.all(np.isfinite(dataset.data.data)))
+
+
+class TestSine(unittest.TestCase):
+    def setUp(self):
+        self.model = aspecd.model.Sine()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('sine', self.model.description.lower())
+
+    def test_roots_at_correct_place(self):
+        self.model.variables = np.linspace(0, 2*np.pi, 1001)
+        dataset = self.model.create()
+        for index in [0, 500, 1000]:
+            self.assertAlmostEqual(0, dataset.data.data[index])
+        self.assertTrue(np.all(dataset.data.data[1:499]))
+        self.assertTrue(np.all(dataset.data.data[501:1000]))
+
+    def test_amplitude_sets_amplitude(self):
+        amplitude = 42.
+        self.model.variables = np.linspace(0, 2*np.pi, 1001)
+        self.model.parameters["amplitude"] = amplitude
+        dataset = self.model.create()
+        self.assertAlmostEqual(amplitude, max(dataset.data.data))
+
+    def test_frequency_sets_frequency(self):
+        self.model.variables = np.linspace(0, 2*np.pi, 1001)
+        self.model.parameters["frequency"] = 2
+        dataset = self.model.create()
+        for index in [0, 250, 500, 750, 1000]:
+            self.assertAlmostEqual(0, dataset.data.data[index])
+
+    def test_phase_shifts_roots(self):
+        self.model.variables = np.linspace(0, 2*np.pi, 1001)
+        self.model.parameters["phase"] = 0.5 * np.pi
+        dataset = self.model.create()
+        for index in [250, 750]:
+            self.assertAlmostEqual(0, dataset.data.data[index])
