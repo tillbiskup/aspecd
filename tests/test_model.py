@@ -1,3 +1,4 @@
+import copy
 import unittest
 
 import numpy as np
@@ -254,6 +255,69 @@ class TestCompositeModel(unittest.TestCase):
         with self.assertRaisesRegex(IndexError,
                                     'Models and weights count differs'):
             self.model.create()
+
+
+class TestFamilyOfCurves(unittest.TestCase):
+    def setUp(self):
+        self.model = aspecd.model.FamilyOfCurves()
+        self.variables = np.linspace(0, 6*np.pi)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('family of curves for a model with one parameter varied',
+                      self.model.description.lower())
+
+    def test_has_model_property(self):
+        self.assertTrue(hasattr(self.model, 'model'))
+
+    def test_has_vary_property(self):
+        self.assertTrue(hasattr(self.model, 'vary'))
+
+    def test_create_without_model_raises(self):
+        with self.assertRaisesRegex(ValueError, 'Missing a model'):
+            self.model.create()
+
+    def test_create_model_with_scalar_varied_parameter_value(self):
+        self.model.model = "Sine"
+        self.model.vary["parameter"] = "amplitude"
+        self.model.vary["values"] = 4
+        self.model.variables = self.variables
+        simple_model = aspecd.model.Sine()
+        simple_model.variables = self.variables
+        simple_model.parameters["amplitude"] = self.model.vary["values"]
+        simple_dataset = simple_model.create()
+        family_of_curves = self.model.create()
+        self.assertListEqual(list(simple_dataset.data.data),
+                             list(family_of_curves.data.data))
+
+    def test_create_model_with_actually_varied_parameter_value(self):
+        self.model.model = "Sine"
+        self.model.vary["parameter"] = "amplitude"
+        self.model.vary["values"] = [2, 4]
+        self.model.variables = self.variables
+        simple_model1 = aspecd.model.Sine()
+        simple_model1.variables = self.variables
+        simple_model1.parameters["amplitude"] = self.model.vary["values"][0]
+        simple_dataset1 = simple_model1.create()
+        simple_model2 = copy.deepcopy(simple_model1)
+        simple_model2.parameters["amplitude"] = self.model.vary["values"][1]
+        simple_dataset2 = simple_model2.create()
+        family_of_curves = self.model.create()
+        self.assertListEqual(list(simple_dataset1.data.data),
+                             list(family_of_curves.data.data[:, 0]))
+        self.assertListEqual(list(simple_dataset2.data.data),
+                             list(family_of_curves.data.data[:, 1]))
+
+    def test_create_model_sets_quantity_of_additional_axis(self):
+        self.model.model = "Sine"
+        self.model.vary["parameter"] = "amplitude"
+        self.model.vary["values"] = [2, 4]
+        self.model.variables = self.variables
+        family_of_curves = self.model.create()
+        self.assertEqual(self.model.vary["parameter"],
+                         family_of_curves.data.axes[-1].quantity)
 
 
 class TestZeros(unittest.TestCase):

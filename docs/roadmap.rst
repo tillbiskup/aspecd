@@ -20,10 +20,6 @@ For version 0.3
   * BlindSNREstimation with alternative methods
   * SNREstimation with explicitly providing noise (using both, processing and analysis)
 
-* Models
-
-  * ND datasets? ND datasets with varying model parameter(s) -- *i.e.* family of curves?
-
 
 For version 0.4
 ===============

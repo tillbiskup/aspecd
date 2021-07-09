@@ -42,6 +42,7 @@ New features
   * :class:`aspecd.model.Exponential`
 
   * :class:`aspecd.model.CompositeModel` for models consisting of a (weighted) sum of individual models
+  * :class:`aspecd.model.FamilyOfCurves` for inspecting systematic variations of one parameter of a given model
 
 
 * Utils

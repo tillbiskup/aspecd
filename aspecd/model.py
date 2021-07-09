@@ -129,6 +129,19 @@ class that lets you conveniently specify a list of models, their individual
 parameters, and optional weights.
 
 
+Family of curves
+----------------
+
+Systematically varying one parameter at a time for a given model is key
+to understanding the impact this parameter has. Therefore, automatically
+creating a family of curves with one parameter varied is quite convenient.
+
+To achieve this, use the class :class:`aspecd.model.FamilyOfCurves` that will
+take the name of a model (needs to be the name of an existing model class)
+and create a family of curves for this model, adding the name of the
+parameter as quantity to the additional axis.
+
+
 Writing your own models
 =======================
 
@@ -432,11 +445,6 @@ class CompositeModel(Model):
 
         Each name needs to be the name of an existing model class.
 
-        .. todo::
-            Make it work with models not contained in the ASpecD framework,
-            but packages derived from it (hence, contained in the model
-            module of such package).
-
     parameters : :class:`list`
         Constant parameters characterising each individual model
 
@@ -522,8 +530,7 @@ class CompositeModel(Model):
     def _perform_task(self):
         data = np.zeros(len(self.variables))
         for idx, model_name in enumerate(self.models):
-            model = aspecd.utils.object_from_class_name('aspecd.model.' +
-                                                        model_name)
+            model = self._get_model(model_name)
             for key in self.parameters[idx]:
                 # noinspection PyUnresolvedReferences
                 model.parameters[key] = self.parameters[idx][key]
@@ -532,6 +539,156 @@ class CompositeModel(Model):
             dataset = model.create()
             data += dataset.data.data * self.weights[idx]
         self._dataset.data.data = data
+
+    @staticmethod
+    def _get_model(model_name):
+        try:
+            model = aspecd.utils.object_from_class_name(model_name)
+        except (ValueError, AttributeError):
+            model = aspecd.utils.object_from_class_name('aspecd.model.' +
+                                                        model_name)
+        return model
+
+
+class FamilyOfCurves(Model):
+    """
+    Create a family of curves for a model, varying a single parameter.
+
+    Systematically varying one parameter at a time for a given model is key
+    to understanding the impact this parameter has. Therefore, automatically
+    creating a family of curves with one parameter varied is quite convenient.
+
+    This class will take the name of a model (needs to be the name of an
+    existing model class) and create a family of curves for this model,
+    adding the name of the parameter as quantity to the additional axis.
+
+
+    Attributes
+    ----------
+    model : :class:`str`
+        Name of the model the family of curves should be calculated for
+
+        Needs to be the name of an existing model class.
+
+    vary : :class:`dict`
+        Name and values of the parameter to be varied
+
+        parameter : :class:`str`
+            Name of the parameter that should be varied
+
+        values : :class:`list`
+            Values of the parameter to be varied
+
+
+    Raises
+    ------
+    ValueError
+        Raised if no model is provided
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Suppose you would want to create a family of curves of a Gaussian with
+    varying the width. Starting from scratch, you need to create a
+    dummy dataset (using, *e.g.*, :class:`aspecd.model.Zeros`) of given
+    length and axes range. Based on that you can create your family of curves:
+
+    .. code-block:: yaml
+
+       - kind: model
+         type: Zeros
+         properties:
+           parameters:
+             shape: 1001
+             range: [0, 20]
+         result: dummy
+
+       - kind: model
+         type: FamilyOfCurves
+         from_dataset: dummy
+         properties:
+           model: Gaussian
+           vary:
+             parameter: width
+             values: [1., 1.5, 2., 2.5, 3]
+         result: gaussian_with_varied_width
+
+    This would create a 2D dataset with a Gaussian with standard values for
+    amplitude and position and the value for the width varied as given.
+
+    Of course, if you start with an existing dataset (*e.g.*, loaded from
+    some real data), you could use the label to this dataset directly in
+    ``from_dataset``, without needing to create a dummy dataset first.
+
+    If you would like to control additional parameters of the Gaussian,
+    you can do that as well:
+
+    .. code-block:: yaml
+
+       - kind: model
+         type: FamilyOfCurves
+         from_dataset: dummy
+         properties:
+           model: Gaussian
+           parameters:
+             amplitude: 3.
+             position: -1
+           vary:
+             parameter: width
+             values: [1., 1.5, 2., 2.5, 3]
+         result: gaussian_with_varied_width
+
+    Note that if you provide a value for the parameter to be varied in the
+    list of parameters, it will be silently overwritten by the values
+    provided with ``vary``.
+
+
+    .. versionadded:: 0.3
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = 'Family of curves for a model with one parameter ' \
+                           'varied'
+        self.model = None
+        self.vary = dict()
+
+    def _sanitise_parameters(self):
+        if not self.model:
+            raise ValueError('Missing a model')
+        if not iterable(self.vary["values"]):
+            self.vary["values"] = [self.vary["values"]]
+        if not self.parameters:
+            self.parameters[self.vary["parameter"]] = self.vary["values"][0]
+
+    # noinspection PyUnresolvedReferences
+    def _perform_task(self):
+        self._dataset.data.data = \
+            np.zeros([len(self.variables), len(self.vary["values"])])
+        model = self._get_model(self.model)
+        model.variables = self.variables
+        for key in self.parameters:
+            model.parameters[key] = self.parameters[key]
+        for idx, value in enumerate(self.vary["values"]):
+            model.parameters[self.vary["parameter"]] = value
+            dataset = model.create()
+            self._dataset.data.data[:, idx] = dataset.data.data
+        self._dataset.data.axes[-1].quantity = self.vary["parameter"]
+
+    @staticmethod
+    def _get_model(model_name):
+        try:
+            model = aspecd.utils.object_from_class_name(model_name)
+        except (ValueError, AttributeError):
+            model = aspecd.utils.object_from_class_name('aspecd.model.' +
+                                                        model_name)
+        return model
 
 
 class Zeros(Model):
