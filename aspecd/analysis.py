@@ -893,7 +893,7 @@ class BasicStatistics(SingleAnalysisStep):
 
 class BlindSNREstimation(SingleAnalysisStep):
     # noinspection PyUnresolvedReferences
-    """
+    r"""
     Blind, *i.e.* parameter-free, estimation of the signal-to-noise ratio.
 
     In spectroscopy, the signal-to-noise ratio (SNR) is usually defined as the
@@ -905,21 +905,65 @@ class BlindSNREstimation(SingleAnalysisStep):
     signal. As this is not always possible, there are different ways to make
     a blind estimate of the SNR, *i.e.* without additional parameters.
 
-    The simplest possible of all blind estimates is the ratio of mean to
-    standard deviation of the whole signal.
+    The simplest possible approach of a blind estimate is the ratio of mean to
+    standard deviation of the whole signal (method ``simple``):
 
-    .. important::
-        Currently, only the simplest of all possible ways to blindly
-        estimate the SNR is supported. This will, however, most probably
-        change in the future.
+    .. math::
 
-    For more information, the following resources may be useful:
+        \mbox{SNR} = \frac{\mu}{\sigma}
+
+    An alternative version sometimes used is to take the suqare of both,
+    mean and standard deviation (method ``simple_squared``):
+
+    .. math::
+
+        \mbox{SNR} = \frac{\mu^2}{\sigma^2}
+
+    This is equivalent to the more common definition using the ratio of the
+    (average) power of signal and noise.
+
+    Yet another algorithm, the "DER_SNR" algorithm proposed by Stoehr et al.
+    for use in astronomic data (for details see Czesla et al., 2018, details
+    below) makes use of the median and a numeric second derivative (method
+    ``der_snr``):
+
+    .. math::
+
+        \mbox{SNR} &= \mbox{med} / \sigma
+
+        \sigma &=\frac{1.482602}{\sqrt{6}}\mbox{med}_i(|-x_{i-2}+2x_i-x_{ i+2}|)
+
+
+    Other options would be to fit a polynomial to the data, subtract the
+    fitted polynomial and estimate the noise this way. A Savitzky-Golay
+    filter could be used for this.
+
+    An article dealing with SNR estimation for (astronomic) spectral data
+    that provides a lot of details is:
+
+    * S. Czesla, T. Molle, and J. H. M. M. Schmitt: A posteriori noise
+      estimation in variable data sets. With applications to spectra and
+      light curves. Astronomy and Astrophysics 609(2018):A39.
+      `<https://doi.org/10.1051/0004-6361/201730618>`_
+
+    For more information, the following resources may as well be useful:
+
+    * `<https://en.wikipedia.org/wiki/Signal-to-noise_ratio>`_
 
     * `<http://nipy.org/nitime/examples/snr_example.html>`_
 
     * `<https://github.com/hrtlacek/SNR>`_
 
     * `<https://arxiv.org/abs/2011.05113>`_
+
+
+    .. important::
+
+        While all methods currently implemented are "parameter-free",
+        the estimates are based on a number of assumptions, the most
+        important being normally distributed noise. Furthermore, your data
+        need to be sampled appropriately, with the highest frequency
+        component of your signal being well resolved.
 
 
     Attributes
@@ -930,7 +974,7 @@ class BlindSNREstimation(SingleAnalysisStep):
         method : :class:`str`
             Method used to blindly estimate the SNR
 
-            Valid values are "simple".
+            Valid values are "simple", "simple_squared", "der_snr".
 
             Default: "simple"
 
@@ -962,12 +1006,15 @@ class BlindSNREstimation(SingleAnalysisStep):
          type: BlindSNREstimation
          properties:
            parameters:
-             method: simple
+             method: der_snr
          result: SNR_of_dataset
 
-    Note that currently, only "simple" is supported as a method (see above).
+    This would use the DER_SNR method as described above.
 
     .. versionadded:: 0.2
+
+    .. versionchanged:: 0.3
+        Added methods: "simple_squared", "der_snr"
 
     """
 
@@ -979,11 +1026,23 @@ class BlindSNREstimation(SingleAnalysisStep):
     def _sanitise_parameters(self):
         if not self.parameters["method"]:
             self.parameters["method"] = "simple"
+        if self.parameters["method"] == "der_snr" \
+                and len(self.dataset.data.data) < 4:
+            raise ValueError("Too few samples")
 
     def _perform_task(self):
         if self.parameters["method"] == "simple":
             self.result = \
                 self.dataset.data.data.mean() / self.dataset.data.data.std()
+        if self.parameters["method"] == "simple_squared":
+            self.result = self.dataset.data.data.mean()**2 \
+                          / self.dataset.data.data.std()**2
+        if self.parameters["method"] == "der_snr":
+            data = self.dataset.data.data
+            signal = np.median(data)
+            noise = 1.482602 / np.sqrt(6) \
+                    * np.median(np.abs(2 * data[2:-2] - data[0:-4] - data[4:]))
+            self.result = signal / noise
 
 
 class PeakFinding(SingleAnalysisStep):

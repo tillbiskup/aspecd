@@ -11,9 +11,7 @@ For version 0.3
 * Remaining basic processing and analysis steps:
 
   * denoising
-  * ? AxisAlgebra: provide a function that gets evaluated on the values of an axis
 
-  * BlindSNREstimation with alternative methods
   * SNREstimation with explicitly providing noise (using both, processing and analysis)
 
 

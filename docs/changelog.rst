@@ -23,6 +23,7 @@ New features
   * Power spectral density of 1D dataset (:class:`aspecd.analysis.PowerDensitySpectrum`), *e.g.*, for analysing noise
   * Polynomial fit of 1D data (:class:`aspecd.analysis.PolynomialFit`)
   * Linear regression of 1D data without fitting the intercept (:class:`aspecd.analysis.LinearRegressionWithFixedIntercept`)
+  * Additional methods in :class:`aspecd.analysis.BlindSNREstimation`
 
 * Class :class:`aspecd.model.Model`
 

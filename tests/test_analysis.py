@@ -483,8 +483,6 @@ class TestBlindSNREstimation(unittest.TestCase):
         self.analysis = aspecd.analysis.BlindSNREstimation()
         self.dataset = aspecd.dataset.Dataset()
         self.dataset.data.data = np.random.random(10)
-        self.dataset3d = aspecd.dataset.Dataset()
-        self.dataset3d.data.data = np.random.random([10, 10, 10])
 
     def test_instantiate_class(self):
         pass
@@ -501,6 +499,24 @@ class TestBlindSNREstimation(unittest.TestCase):
         analysis = self.dataset.analyse(self.analysis)
         result = self.dataset.data.data.mean()/self.dataset.data.data.std()
         self.assertEqual(result, analysis.result)
+
+    def test_simple_squared_method(self):
+        self.analysis.parameters["method"] = "simple_squared"
+        analysis = self.dataset.analyse(self.analysis)
+        result = \
+            self.dataset.data.data.mean()**2/self.dataset.data.data.std()**2
+        self.assertEqual(result, analysis.result)
+
+    def test_der_snr_method_with_too_small_sample_raises(self):
+        self.dataset.data.data = np.random.random(3)
+        self.analysis.parameters["method"] = "der_snr"
+        with self.assertRaisesRegex(ValueError, "Too few samples"):
+            self.dataset.analyse(self.analysis)
+
+    def test_der_snr_method(self):
+        self.analysis.parameters["method"] = "der_snr"
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertGreater(analysis.result, 0)
 
 
 class TestPeakFinding(unittest.TestCase):
