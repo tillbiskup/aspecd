@@ -41,6 +41,9 @@ New features
   * :class:`aspecd.model.Sine`
   * :class:`aspecd.model.Exponential`
 
+  * :class:`aspecd.model.CompositeModel` for models consisting of a (weighted) sum of individual models
+
+
 * Utils
 
   * :func:`aspecd.utils.not_zero` ensuring a float not to cause DivisionByZero errors

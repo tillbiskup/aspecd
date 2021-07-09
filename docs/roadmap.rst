@@ -8,6 +8,10 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.3
 ===============
 
+* Tasks
+
+  * Easily adding comments for processing and analysis steps (additional top-level key "comment")
+
 * Remaining basic processing and analysis steps:
 
   * denoising
@@ -18,9 +22,7 @@ For version 0.3
 
 * Models
 
-  * Implement basic models (sine, exp, ...)
-  * Models with multiple Gaussians, Lorentzians, ...
-  * ND datasets? ND datasets with varying model parameter(s)?
+  * ND datasets? ND datasets with varying model parameter(s) -- *i.e.* family of curves?
 
 
 For version 0.4
@@ -43,6 +45,10 @@ For version 0.4
 * Recipes: Subrecipes that can be included in recipes
 
 * Interfacing towards fitting/simulation frameworks
+
+* Basic maths in values of recipes (ranges, basic numpy functions)?
+
+  May impair the platform-independence of the recipe (*i.e.*, tying it to Python/NumPy)
 
 
 For later versions

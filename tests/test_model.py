@@ -162,6 +162,100 @@ class TestModel(unittest.TestCase):
         self.assertFalse(hasattr(self.model, 'foo'))
 
 
+class TestCompositeModel(unittest.TestCase):
+    def setUp(self):
+        self.model = aspecd.model.CompositeModel()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('composite model consisting of several weighted models',
+                      self.model.description.lower())
+
+    def test_has_models_property(self):
+        self.assertTrue(hasattr(self.model, 'models'))
+
+    def test_has_weights_property(self):
+        self.assertTrue(hasattr(self.model, 'weights'))
+
+    def test_create_with_single_model_equivalent_to_single_model(self):
+        variables = np.linspace(0, 5)
+        models = ['Polynomial']
+        parameters = {'coefficients': [1]}
+        # Create single model
+        single_model = aspecd.model.Polynomial()
+        single_model.parameters = parameters
+        single_model.variables = variables
+        single_model_result = single_model.create()
+        # Create composite model
+        self.model.models = models
+        self.model.parameters = [parameters]
+        self.model.variables = variables
+        composite_model_result = self.model.create()
+        self.assertListEqual(list(single_model_result.data.data),
+                             list(composite_model_result.data.data))
+
+    def test_weighting_with_single_model(self):
+        variables = np.linspace(0, 5)
+        models = ['Polynomial']
+        parameters = {'coefficients': [1]}
+        weights = [2]
+        # Create single model
+        single_model = aspecd.model.Polynomial()
+        single_model.parameters = parameters
+        single_model.variables = variables
+        single_model_result = single_model.create()
+        # Create composite model
+        self.model.models = models
+        self.model.parameters = [parameters]
+        self.model.weights = weights
+        self.model.variables = variables
+        composite_model_result = self.model.create()
+        self.assertListEqual(list(single_model_result.data.data * weights[0]),
+                             list(composite_model_result.data.data))
+
+    def test_create_with_multiple_model_equivalent_to_sum_of_models(self):
+        variables = np.linspace(0, 5)
+        models = ['Sine', 'Exponential']
+        parameters = [{'amplitude': 10}, {'rate': -4}]
+        # Create individual models
+        data = np.zeros(len(variables))
+        for idx, model_name in enumerate(models):
+            model = aspecd.utils.object_from_class_name('aspecd.model.' +
+                                                        model_name)
+            for key in parameters[idx]:
+                # noinspection PyUnresolvedReferences
+                model.parameters[key] = parameters[idx][key]
+            model.variables = variables
+            # noinspection PyUnresolvedReferences
+            model_result = model.create()
+            data += model_result.data.data
+        # Create composite model
+        self.model.models = models
+        self.model.parameters = parameters
+        self.model.variables = variables
+        composite_model_result = self.model.create()
+        self.assertListEqual(list(data), list(composite_model_result.data.data))
+
+    def test_create_with_incompatible_no_of_models_and_parameters_raises(self):
+        self.model.models = ['Sine', 'Exponential']
+        self.model.parameters = [{'amplitude': 10}]
+        self.model.variables = np.linspace(0, 5)
+        with self.assertRaisesRegex(IndexError,
+                                    'Models and parameters count differs'):
+            self.model.create()
+
+    def test_create_with_incompatible_no_of_weights(self):
+        self.model.models = ['Sine', 'Exponential']
+        self.model.parameters = [{'amplitude': 10}, {'rate': -4}]
+        self.model.weights = [2]
+        self.model.variables = np.linspace(0, 5)
+        with self.assertRaisesRegex(IndexError,
+                                    'Models and weights count differs'):
+            self.model.create()
+
+
 class TestZeros(unittest.TestCase):
     def setUp(self):
         self.model = aspecd.model.Zeros()

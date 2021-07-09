@@ -116,8 +116,17 @@ define more specific models as well.
   Exponential function with adjustable prefactor and rate.
 
 
-.. todo::
-    Implement composite models consisting of a sum of simple models.
+Composite models consisting of a sum of individual models
+---------------------------------------------------------
+
+Often you encounter situations where a model consists of a (weighted) sum of
+individual models. A simple example would be a damped oscillation. Or think
+of a spectral line consisting of several overlapping individual lines
+(Lorentzian or Gaussian).
+
+All this can be easily set up using the :class:`aspecd.model.CompositeModel`
+class that lets you conveniently specify a list of models, their individual
+parameters, and optional weights.
 
 
 Writing your own models
@@ -181,10 +190,15 @@ for you:
   In case you used :meth:`aspecd.model.Model.from_dataset`, the axes from
   the dataset will be copied over from there.
 
-* The ``_origdata`` property of the dataset is automatically set accordingly
-  (see below for details). This is crucially important to have the resulting
-  dataset work as expected, including undo and redo functionality within the
-  ASpecD framework.
+* The ``_origdata`` property of the dataset is automatically set accordingly.
+  This is crucially important to have the resulting dataset work as
+  expected, including undo and redo functionality within the ASpecD framework.
+
+
+Make sure your models do not raise errors such as :class:`ZeroDivisionError`
+depending on the parameters set. Use the :func:`aspecd.utils.not_zero`
+function where appropriate. This is particularly important in light of using
+models in the context of automated fitting.
 
 
 Module documentation
@@ -405,6 +419,119 @@ class Model:
     def _set_dataset_origdata(self):
         # pylint: disable=protected-access
         self._dataset._origdata = copy.deepcopy(self._dataset.data)
+
+
+class CompositeModel(Model):
+    """
+    Composite model consisting of a weighted sum of individual models.
+
+    Attributes
+    ----------
+    models : :class:`list`
+        Names of the models the composite model consists of
+
+        Each name needs to be the name of an existing model class.
+
+        .. todo::
+            Make it work with models not contained in the ASpecD framework,
+            but packages derived from it (hence, contained in the model
+            module of such package).
+
+    parameters : :class:`list`
+        Constant parameters characterising each individual model
+
+        For the parameters that can (and need to) be set, consult the
+        documentation of each of the respective model classes specified in
+        the :attr:`models` attribute.
+
+    weights : :class:`list`
+        Factors used to weight the individual models.
+
+        Default: no weighting
+
+
+    Raises
+    ------
+    IndexError
+        Raised if number of models, parameter sets, and weights are incompatible
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Suppose you would want to create a damped oscillation consisting of a
+    sine and an exponential. Starting from scratch, you need to create a
+    dummy dataset (using, *e.g.*, :class:`aspecd.model.Zeros`) of given
+    length and axes range. Based on that you can create your model:
+
+    .. code-block:: yaml
+
+       - kind: model
+         type: Zeros
+         properties:
+           parameters:
+             shape: 1001
+             range: [0, 20]
+         result: dummy
+
+       - kind: model
+         type: CompositeModel
+         from_dataset: dummy
+         properties:
+           models:
+             - Sine
+             - Exponential
+           parameters:
+             - frequency: 1
+             - rate: -1
+         result: damped_oscillation
+
+    Note that you need to provide parameters for each of the individual
+    models, even if the class for a model would work without explicitly
+    providing parameters.
+
+    Of course, if you start with an existing dataset (*e.g.*, loaded from
+    some real data), you could use the label to this dataset directly in
+    ``from_dataset``, without needing to create a dummy dataset first.
+
+
+    .. versionadded:: 0.3
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = \
+            'Composite model consisting of several weighted models'
+        self.models = []
+        self.parameters = []
+        self.weights = []
+
+    def _sanitise_parameters(self):
+        if not self.weights:
+            self.weights = np.ones(len(self.models))
+        if len(self.parameters) != len(self.models):
+            raise IndexError('Models and parameters count differs')
+        if len(self.weights) != len(self.models):
+            raise IndexError('Models and weights count differs')
+
+    def _perform_task(self):
+        data = np.zeros(len(self.variables))
+        for idx, model_name in enumerate(self.models):
+            model = aspecd.utils.object_from_class_name('aspecd.model.' +
+                                                        model_name)
+            for key in self.parameters[idx]:
+                # noinspection PyUnresolvedReferences
+                model.parameters[key] = self.parameters[idx][key]
+            model.variables = self.variables
+            # noinspection PyUnresolvedReferences
+            dataset = model.create()
+            data += dataset.data.data * self.weights[idx]
+        self._dataset.data.data = data
 
 
 class Zeros(Model):
@@ -782,6 +909,44 @@ class Polynomial(Model):
     ------
     aspecd.exceptions.MissingParameterError
         Raised if no coefficients are given
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Suppose you would want to create a Polynomial of first order with a
+    slope of 42 and an intercept of -3. Starting from scratch, you need to
+    create a dummy dataset (using, *e.g.*, :class:`aspecd.model.Zeros`) of
+    given length and axes range. Based on that you can create your Polynomial:
+
+    .. code-block:: yaml
+
+       - kind: model
+         type: Zeros
+         properties:
+           parameters:
+             shape: 1001
+             range: [-5, 5]
+         result: dummy
+
+       - kind: model
+         type: Polynomial
+         from_dataset: dummy
+         properties:
+           parameters:
+             coefficients: [-3, 42]
+         result: polynomial
+
+    Note that the coefficients are given in *increasing* order of the
+    exponent, here intercept first, followed by the slope.
+
+    Of course, if you start with an existing dataset (*e.g.*, loaded from
+    some real data), you could use the label to this dataset directly in
+    ``from_dataset``, without needing to create a dummy dataset first.
 
 
     .. versionadded:: 0.3
@@ -1422,6 +1587,12 @@ class Exponential(Model):
             Rate of the exponential.
 
             Default: 1
+
+
+    .. note::
+        In case of modelling exponential decays, the rate constant will
+        become negative. This rate constant (decay rate) is the inverse of the
+        lifetime. Lifetime and half-life are related by a factor of ln(2).
 
 
     Examples
