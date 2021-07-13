@@ -14,6 +14,11 @@ For version 0.3
 
   * SNREstimation with explicitly providing noise (using both, processing and analysis)
 
+* References in processing and analysis steps?
+
+  * May be useful to automatically create a list of references to cite (report) depending on the methods actually used.
+  * May need an implementation of some kind of bibliographic record
+
 
 For version 0.4
 ===============

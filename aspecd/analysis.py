@@ -732,7 +732,7 @@ class BasicCharacteristics(SingleAnalysisStep):
          properties:
            parameters:
              type: all
-         result: min_of_dataset
+         result: characteristics_of_dataset
 
     Make sure to understand the different types the result has depending on
     the characteristic and output type chosen. For details, see the table
