@@ -2341,11 +2341,12 @@ class TestChefDeService(unittest.TestCase):
     def test_serve_with_preset_recipe(self):
         self.create_recipe()
         self.chef_de_service.recipe_filename = self.recipe_filename
-        self.chef_de_service.serve()
+        self.history_filename = self.chef_de_service.serve()
 
     def test_serve_with_recipe_cooks_recipe(self):
         self.create_recipe()
-        self.chef_de_service.serve(recipe_filename=self.recipe_filename)
+        self.history_filename = \
+            self.chef_de_service.serve(recipe_filename=self.recipe_filename)
         self.assertTrue(os.path.exists(self.figure_filename))
 
     def test_serve_returns_history_filename(self):
