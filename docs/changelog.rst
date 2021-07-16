@@ -66,6 +66,7 @@ Fixes
 -----
 
 * Axis labels without "/" if no unit is present
+* :class:`aspecd.metadata.Measurement` handles dates imported from YAML (implicitly converted into datetime.date object)
 
 
 Version 0.2.2
