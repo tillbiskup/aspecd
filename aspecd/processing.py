@@ -2302,8 +2302,7 @@ class DatasetAlgebra(SingleProcessingStep):
 
 class Interpolation(SingleProcessingStep):
     # noinspection PyUnresolvedReferences
-    """
-    Interpolate data
+    """Interpolate data.
 
     As soon as data of different datasets should be arithmetically combined,
     they need to have an identical grid. Often, this can only be achieved by
@@ -2510,8 +2509,7 @@ class Interpolation(SingleProcessingStep):
 
 class Filtering(SingleProcessingStep):
     # noinspection PyUnresolvedReferences
-    """
-    Filter data.
+    """Filter data.
 
     Generally, filtering is a large field of (digital) signal processing,
     and currently, this class only implements a very small subset of filters
