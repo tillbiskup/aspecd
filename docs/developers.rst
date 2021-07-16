@@ -84,12 +84,19 @@ To install the necessary Python dependencies, create a virtual environment, e.g.
 
     pip install sphinx
     pip install sphinx-rtd-theme
+    pip install sphinx-multiversion
 
 
 To build the documentation:
 
     * Activate the virtual environment where the necessary dependencies are installed in.
     * ``cd`` to ``docs/``, then run ``make html``. (To clean previously built documentation, run ``make clean`` first).
+
+
+To build the documentation for all releases and the current master branch:
+
+  * Activate the virtual environment where the necessary dependencies are installed in.
+  * ``cd`` to ``docs/``, then run ``make multiversion``. (To clean previously built documentation, run ``make clean`` first).
 
 
 Static code analysis with Prospector

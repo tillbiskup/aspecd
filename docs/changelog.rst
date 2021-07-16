@@ -65,6 +65,8 @@ Changes
 Fixes
 -----
 
+* Axis labels without "/" if no unit is present
+
 
 Version 0.2.2
 =============
