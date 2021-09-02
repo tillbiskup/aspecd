@@ -1,6 +1,7 @@
 """Tests for metadata."""
 
 import collections
+import datetime
 import os
 import unittest
 
@@ -329,6 +330,15 @@ class TestMeasurement(unittest.TestCase):
 
     def test_instantiate_start_end_from_dict(self):
         dict_ = {"start": {"date": "2017-01-02", "time": "11:00:00"},
+                 "end": {"date": "2017-01-02", "time": "11:01:00"}}
+        measurement = metadata.Measurement(dict_)
+        fmt = "%Y%m%dT%H%M%S"
+        self.assertEqual(measurement.start.strftime(fmt), "20170102T110000")
+        self.assertEqual(measurement.end.strftime(fmt), "20170102T110100")
+
+    def test_instantiate_start_end_from_dict_with_datetime(self):
+        dict_ = {"start": {"date": datetime.date(2017, 1, 2),
+                           "time": "11:00:00"},
                  "end": {"date": "2017-01-02", "time": "11:01:00"}}
         measurement = metadata.Measurement(dict_)
         fmt = "%Y%m%dT%H%M%S"

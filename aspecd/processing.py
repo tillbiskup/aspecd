@@ -40,7 +40,7 @@ In the second case, the processing step is handled using the :meth:`processing`
 method of the :obj:`aspecd.processing.ProcessingStep` object, and the datasets
 are stored as a list within the processing step. As these processing steps span
 several datasets. Processing steps handling multiple datasets should
-always inherit from the :class:`aaspecd.processing.MultiProcessingStep` class.
+always inherit from the :class:`aspecd.processing.MultiProcessingStep` class.
 
 The module contains both, base classes for processing steps (as detailed
 above) as well as a series of generally applicable processing steps for all
@@ -125,13 +125,17 @@ independently.
 
   Average data over given range along given axis.
 
-* :class:`aspecd.processing.Integration`
+* :class:`aspecd.processing.Interpolation`
 
-  Interpolate data
+  Interpolate data.
 
 * :class:`aspecd.processing.Filtering`
 
-  Filter data
+  Filter data.
+
+* :class:`aspecd.processing.Noise`
+
+  Add (coloured) noise to data.
 
 
 Processing steps operating on multiple datasets at once
@@ -967,19 +971,14 @@ class Differentiation(SingleProcessingStep):
     """
     Differentiate data, *i.e.*, return discrete first derivative
 
-    Currently, the data are differentiated using the :func:`numpy.diff`
+    Currently, the data are differentiated using the :func:`numpy.gradient`
     function. This may change in the future, and you may be able to choose
     between different algorithms. A potential candidate would be using FFT/IFFT
     and performing the operation in Fourier space.
 
-    .. important::
-        As using :func:`numpy.diff` results in a vector being one element
-        shorter than the original vector, here, the last element of the
-        resulting vector is appended to the result, thus being doubled.
-
     .. note::
-        N-D arrays can be integrated as well. In this case,
-        :func:`np.diff` will operate on the last axis.
+        N-D arrays can be differentiated as well. In this case,
+        differentiation will operate on the last axis.
 
 
     Examples
@@ -997,6 +996,10 @@ class Differentiation(SingleProcessingStep):
        - kind: processing
          type: Differentiation
 
+
+    .. versionchanged:: 0.3
+       Method changed from :func:`numpy.diff` to :func:`numpy.gradient`
+
     """
 
     def __init__(self):
@@ -1005,15 +1008,10 @@ class Differentiation(SingleProcessingStep):
         self.description = 'Differentiate data'
 
     def _perform_task(self):
-        self.dataset.data.data = np.diff(self.dataset.data.data)
         if self.dataset.data.data.ndim == 1:
-            self.dataset.data.data = \
-                np.concatenate((self.dataset.data.data,
-                                self.dataset.data.data[-1]), axis=None)
+            self.dataset.data.data = np.gradient(self.dataset.data.data)
         else:
-            self.dataset.data.data = \
-                np.concatenate((self.dataset.data.data,
-                                self.dataset.data.data[:, [-1]]), axis=1)
+            self.dataset.data.data = np.gradient(self.dataset.data.data)[-1]
 
 
 class ScalarAlgebra(SingleProcessingStep):
@@ -1771,6 +1769,10 @@ class BaselineCorrection(SingleProcessingStep):
 
     Of course, you can combine the different options.
 
+
+    .. versionchanged:: 0.3
+        Coefficients are returned in unscaled data domain
+
     """
 
     def __init__(self):
@@ -1864,7 +1866,7 @@ class BaselineCorrection(SingleProcessingStep):
         polynomial = np.polynomial.Polynomial.fit(self._axis_values,
                                                   self._intensity_values,
                                                   self.parameters['order'])
-        self.parameters['coefficients'] = polynomial.coef
+        self.parameters['coefficients'] = polynomial.convert().coef
         axis = self.parameters["axis"]
         return polynomial(self.dataset.data.axes[axis].values)
 
@@ -2300,8 +2302,7 @@ class DatasetAlgebra(SingleProcessingStep):
 
 class Interpolation(SingleProcessingStep):
     # noinspection PyUnresolvedReferences
-    """
-    Interpolate data
+    """Interpolate data.
 
     As soon as data of different datasets should be arithmetically combined,
     they need to have an identical grid. Often, this can only be achieved by
@@ -2508,8 +2509,7 @@ class Interpolation(SingleProcessingStep):
 
 class Filtering(SingleProcessingStep):
     # noinspection PyUnresolvedReferences
-    """
-    Filter data.
+    """Filter data.
 
     Generally, filtering is a large field of (digital) signal processing,
     and currently, this class only implements a very small subset of filters
@@ -2881,3 +2881,262 @@ class CommonRangeExtraction(MultiProcessingStep):
             interpolation.parameters["npoints"] = self.parameters["npoints"]
             interpolation.parameters["unit"] = "axis"
             dataset.process(interpolation)
+
+
+class Noise(SingleProcessingStep):
+    # noinspection PyUnresolvedReferences
+    """
+    Add (coloured) noise to data.
+
+    Particularly for testing algorithms and hence creating test data, adding
+    noise to these test data is crucial. Furthermore, the naive approach of
+    adding white (Gaussian, normally distributed) noise often does not
+    reflect the physical reality, as "real" noise often has a different
+    power spectral density (PSD).
+
+    Probably the kind of noise most often encountered in spectroscopy is 1/f
+    noise or pink noise, with the PSD decreasing by 3 dB per octave or 10 dB
+    per decade. For more details on the different kinds of noise,
+    the following sources may be a good starting point:
+
+    * https://en.wikipedia.org/wiki/Colors_of_noise
+    * https://en.wikipedia.org/wiki/Pink_noise
+    * https://en.wikipedia.org/wiki/Flicker_noise
+
+    Different strategies exist to create coloured noise, and the
+    implementation used here follows basically the ideas published by Timmer
+    and König:
+
+    * J. Timmer and M. König: On generating power law noise.
+      Astronomy and Astrophysics 300, 707--710 (1995)
+
+    In short: In the Fourier space, normally distributed random numbers are
+    drawn for power and phase of each frequency component, and the power scaled
+    by the appropriate power law. Afterwards, the resulting frequency
+    spectrum is back transformed using iFFT and ensuring real data.
+
+    Further inspiration came from the following two sources:
+
+    * https://gist.github.com/j-faria/7961488
+    * https://github.com/felixpatzelt/colorednoise
+
+    Note: The first is based on a MATLAB(R) code by Max Little and contains a
+    number of errors in its Python translation that are *not* present in the
+    original code.
+
+    The added noise has always a mean of (close to) zero.
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        exponent : :class:`float`
+            The exponent used for scaling the power of the frequency components
+
+            0 -- white (Gaussian) noise
+            -1 -- pink (1/f) noise
+            -2 -- Brownian (1/f**2) noise
+
+            Default: -1 (pink noise)
+
+        normalise : :class:`bool`
+            Whether to normalise the noise amplitude prior to adding to the
+            data.
+
+            In this case, the *amplitude* is normalised to 1.
+
+
+    .. note::
+        The exponent for the noise is not restricted to integer values,
+        nor to negative values. While for spectroscopic data, pink (1/*f*)
+        noise usually prevails (exponent = -1), the opposite effect with
+        high frequencies dominating can occur as well. A prominent example
+        of naturally occurring "blue noise" with the density proportional to
+        *f* is the Cherenkov radiation.
+
+    .. note::
+        In case of ND data, the coloured noise is calculated along the
+        *first* dimension only, all other dimensions will exhibit (close to)
+        white (Gaussian) noise. Generally, this should not be a problem in
+        spectroscopy, as usually, data are recorded over time in one
+        dimension only, and only in this (implicit) time dimension coloured
+        noise will be relevant.
+
+
+    .. versionadded:: 0.3
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = 'Add (coloured) noise to data'
+        self.undoable = True
+        self.parameters["exponent"] = -1
+        self.parameters["normalise"] = False
+
+    def _perform_task(self):
+        noise = self._generate_noise()
+        if self.parameters["normalise"]:
+            noise /= (max(noise) - min(noise))
+        self.dataset.data.data += noise
+
+    def _generate_noise(self):
+        size = list(self.dataset.data.data.shape)
+        samples = size[0]
+        frequencies = np.fft.rfftfreq(samples)
+        frequencies[0] = 1 / len(frequencies)
+        amplitudes = frequencies ** (self.parameters["exponent"] / 2)
+
+        # Add dimensions to broadcast shape
+        amplitudes = amplitudes[(Ellipsis,) + (np.newaxis,) * (len(size) - 1)]
+        size[0] = len(frequencies)
+
+        power = np.random.normal(scale=amplitudes, size=size)
+        phase = np.random.normal(scale=amplitudes, size=size)
+
+        # Nyquist frequency is real if length is even
+        if not samples % 2:
+            phase[-1, ...] = 0
+
+        # DC component is real
+        phase[0, ...] = 0
+
+        components = power + 1J * phase
+
+        noise = np.fft.irfft(components, n=samples, axis=0)
+        return noise
+
+
+class ChangeAxesValues(SingleProcessingStep):
+    # noinspection PyUnresolvedReferences
+    """
+    Change values of individual axes.
+
+    What sounds pretty much like data manipulation is sometimes a necessity
+    due to the shortcoming of vendor file formats. Let's face it,
+    but sometimes values read from raw data simply are wrong, due to wrong
+    readout or wrong processing of these parameters within the device.
+    Therefore, it seems much better to *transparently* change the respective
+    axis values rather than having to modify raw data by hand. Using a
+    processing step has two crucial advantages: (i) it allows for full
+    reproducibility and traceability, and (ii) it can be done in context of
+    recipe-driven data analysis, *i.e.* not requiring any programming skills.
+
+    .. note::
+
+        A real-world example: angular-dependent measurements recorded wrong
+        angles in the raw data file, while the actual positions were correct.
+        Assuming measurements from 0° to 180° in 10° steps, it is pretty
+        straight-forward how to fix this problem: Assign equidistant values
+        from 0° to 180° and use the information about the actual axis length.
+
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        range : :class:`list`
+            The range of the axis, *i.e.* start and end value
+
+        axes : :class:`list`
+            The axes to set the new values for
+
+            Can be an integer in case of a single axis, otherwise a list of
+            integers. If omitted, all axes with values will be assumed
+            (*i.e.*, one per data dimension).
+
+
+    Raises
+    ------
+    IndexError
+        Raised if index is out of range for axes or given number of axes and
+        ranges is incompatible
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    In case you would like to change the axis range of a 1D dataset, things
+    are as simple as:
+
+    .. code-block:: yaml
+
+       - kind: singleprocessing
+         type: ChangeAxesValues
+         properties:
+           parameters:
+             range: [35, 42]
+
+    This would take the first axis (index 0) and set the range to linearly
+    spaced data ranging from 35 to 42, of course with the same number of
+    values as before.
+
+    If you would want to change both axes in a 2D dataset, same here:
+
+    .. code-block:: yaml
+
+       - kind: singleprocessing
+         type: ChangeAxesValues
+         properties:
+           parameters:
+             range:
+               - [35, 42]
+               - [17.5, 21]
+
+    This would set the range of the first axis (index 0) to the interval
+    [35, 42], and the range of the second axis (index 1) to the interval
+    [17.5, 21].
+
+    More often, you may have a 2D dataset where you intend to change the
+    values of only one axis. Suppose the example from above with
+    angular-dependent measurements and the angles in the second dimension:
+
+    .. code-block:: yaml
+
+       - kind: singleprocessing
+         type: ChangeAxesValues
+         properties:
+           parameters:
+             range: [0, 180]
+             axes: 1
+
+    Here, the second axis (index 1) will be set accordingly.
+
+
+    .. versionadded:: 0.3
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = 'Change axis values to given range'
+        self.undoable = True
+        self.parameters["range"] = None
+        self.parameters["axes"] = None
+
+    def _sanitise_parameters(self):
+        if not isinstance(self.parameters["range"][0], list):
+            self.parameters["range"] = [self.parameters["range"]]
+        if self.parameters["axes"] is None:
+            self.parameters["axes"] = list(range(len(self.parameters["range"])))
+        if not isinstance(self.parameters["axes"], list):
+            self.parameters["axes"] = [self.parameters["axes"]]
+        if max(self.parameters["axes"]) > (len(self.dataset.data.axes) - 2):
+            # Note the -2 here: -1 for axes, -1 for zero-based indexing
+            raise IndexError("Index out of range for axes")
+        if len(self.parameters["axes"]) != len(self.parameters["range"]):
+            raise IndexError("Axes and ranges must be compatible")
+
+    def _perform_task(self):
+        for idx in range(len(self.parameters["range"])):
+            axis = self.parameters["axes"][idx]
+            self.dataset.data.axes[axis].values = \
+                np.linspace(self.parameters["range"][idx][0],
+                            self.parameters["range"][idx][1],
+                            len(self.dataset.data.axes[axis].values))

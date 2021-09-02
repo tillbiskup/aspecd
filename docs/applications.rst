@@ -35,7 +35,7 @@ Generally, you will probably start off with deciding about a name for your appli
 
 .. hint::
 
-    For the sake of argument, we will choose the name "**spectro**" for the hypothetic new package here. Of course, you will never choose this name for an actual package, as it is pretty meaningless. Hence, a good choice here...
+    For the sake of argument, we will choose the name "**spectro**" for the hypothetical new package here. Of course, you will never choose this name for an actual package, as it is pretty meaningless. Hence, a good choice here...
 
 
 Having decided upon a name for your new package, continue by creating a basic directory structure and a Python virtual environment for your package, and installing the ASpecD framework [#aspecd_availability]_ (and your package) within this virtual environment. The basic directory structure of your new package may look like follows:
@@ -96,7 +96,7 @@ Datasets
 
 Probably the most fundamental unit of the ASpecD framework is the dataset. Hence, you should first create a dataset class of your own that inherits from the dataset class of the ASpecD framework. Here, we assume that you start with experimental datasets, as opposed to datasets containing calculated data. Therefore, create a module named ``dataset`` and include the following code::
 
-    import aspecd
+    import aspecd.dataset
 
     class ExperimentalDataset(aspecd.dataset.ExperimentalDataset):
 
@@ -113,7 +113,7 @@ Importer
 
 To actually be able to work on (numeric) data and to store them together with their accompanying metadata in a dataset, you need to write importer classes specific for each type of raw data. To do so, create a module named ``io`` and include the following code::
 
-    import aspecd
+    import aspecd.io
 
     class DatasetImporter(aspecd.io.DatasetImporter):
 
@@ -125,16 +125,21 @@ To actually be able to work on (numeric) data and to store them together with th
 
 Of course, you need to add appropriate code to the non-public function ``_import`` of the importer class you just created. And if you have more than one type of raw data, make sure to give your classes better names than just "DatasetImporter". Even if you start with one type of raw data, naming the importer class closer to the actual file format is always helpful. This prevents you from having to change your depending code later on.
 
-The importer should make sure not only to import the numeric data appropriately into the dataset object (they go into its ``data.data`` attribute), but to also create appropriate axes and to read the metadata accompanying the (raw) data. For the necessary structures within the dataset's ``metadata`` attribute and how to eventually fill the metadata into this hierachy of objects, see the `metadata`_ section.
+The importer should make sure not only to import the numeric data appropriately into the dataset object (they go into its ``data.data`` attribute), but to also create appropriate axes and to read the metadata accompanying the (raw) data. For the necessary structures within the dataset's ``metadata`` attribute and how to eventually fill the metadata into this hierarchy of objects, see the `metadata`_ section.
 
 In the (usual) case where you have more than one raw format data are stored in, you would like to create a single class that takes care of returning the correct importer, given a string specifying the source of the data. This is what factories are good for: Returning different subtypes of a common basetype depending on the particular needs. To achieve this for the importers of your application, create a class ``DatasetImporterFactory`` that inherits from :class:`aspecd.io.DatasetImporterFactory`::
 
-    import aspecd
+    import aspecd.io
 
     class DatasetImporterFactory(aspecd.io.DatasetImporterFactory):
 
         def _get_importer(self, source):
             # And here goes your code actually choosing the correct importer
+
+
+.. important::
+
+    Note that in order for recipe-driven data analysis to work, you will need to implement a ``DatasetImporterFactory`` class, even if you only implement a single importer for now.
 
 
 Metadata
@@ -144,7 +149,7 @@ The ``metadata`` attribute of the (experimental) dataset is actually an instance
 
 In order to store all the metadata usually contained in files written at the time of data acquisition, you will need to create additional metadata classes and extend :class:`aspecd.metadata.ExperimentalDatasetMetadata` by writing your own "ExperimentalDatasetMetadata" class subclassing the one from the ASpecD framework::
 
-    import aspecd
+    import aspecd.metadata
 
     class ExperimentalDatasetMetadata(aspecd.metadata.ExperimentalDatasetMetadata):
 
@@ -156,7 +161,7 @@ Your metadata classes should be based on the generic :class:`aspecd.metadata.Met
 
 Eventually, you will need to extend your ``Dataset`` class that you have defined as described in the `corresponding section <#datasets>`_ accordingly::
 
-    import aspecd
+    import aspecd.dataset
 
     class ExperimentalDataset(aspecd.dataset.ExperimentalDataset):
 
@@ -186,7 +191,7 @@ Comments are often found (for good reason) in metadata files that accompany raw 
 
 To add a comment to a dataset, you will need to instantiate an object of class :class:`aspecd.annotation.Comment`, assign the comment to it, and finally annotate your dataset::
 
-    import aspecd
+    import aspecd.annotation
 
     comment = aspecd.annotation.Comment()
     comment.comment = metadata_dict["comment"]
@@ -255,7 +260,7 @@ If you need to sanitise the parameters before applying the actual processing ste
 
 As processing steps tend to become complex, at least from a programmer's perspective if parameters need to be checked, and easily if you need to deal with different cases such as 1D and ND with N>1 separately, developing these classes test-first (*i.e.*, applying test-driven development, TDD) is a good idea and will help you and your users being confident in the correct functioning of your code.
 
-From own experience implementing a list of concrete processing steps in the ASpecD framework, the following steps provided useful and may serve as a starting point for own developments::
+From own experience implementing a list of concrete processing steps in the ASpecD framework, the following steps proved useful and may serve as a starting point for own developments::
 
     import unittest
 
@@ -290,7 +295,7 @@ A few comments on this code stub:
 
 * Always test for the appropriate description in the parameter ``description`` and for the correct setting of the flag ``undoable``.
 
-Of course, this only gets you started, and until now, we have not tested a single line of code actually processing your data. The latter of course highly depends on your actual processing step. But there are usually a few more things to test before you start implementing the actual processing step. This includes applicability to a certain type of datasets, mostly this is a check for the dimensions of your data, and the corresponing code needs to be implemented in :meth:`aspecd.processing.ProcessingStep.applicable`. Other things contain tests for correct parameters, with the corresponding code being implemented in :meth:`aspecd.processing.ProcessingStep._sanitise_parameters`. The latter can involve quite a number of tests, and the better you test here, the better the user experience will become. Taking into account the same aspects as shown above in the second example for implementing a processing step, your additional tests may be::
+Of course, this only gets you started, and until now, we have not tested a single line of code actually processing your data. The latter of course highly depends on your actual processing step. But there are usually a few more things to test before you start implementing the actual processing step. This includes applicability to a certain type of datasets, mostly this is a check for the dimensions of your data, and the corresponding code needs to be implemented in :meth:`aspecd.processing.ProcessingStep.applicable`. Other things contain tests for correct parameters, with the corresponding code being implemented in :meth:`aspecd.processing.ProcessingStep._sanitise_parameters`. The latter can involve quite a number of tests, and the better you test here, the better the user experience will become. Taking into account the same aspects as shown above in the second example for implementing a processing step, your additional tests may be::
 
     import unittest
 

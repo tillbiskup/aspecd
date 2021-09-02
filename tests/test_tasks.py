@@ -1082,11 +1082,12 @@ class TestProcessingTask(unittest.TestCase):
         self.task = tasks.ProcessingTask()
         self.recipe = tasks.Recipe()
         self.dataset = ['foo']
-
-    def prepare_recipe(self):
         self.processing_task = {'kind': 'processing',
                                 'type': 'SingleProcessingStep',
                                 'apply_to': self.dataset}
+
+    def prepare_recipe(self):
+        self.processing_task['apply_to'] = self.dataset
         dataset_factory = dataset.DatasetFactory()
         dataset_factory.importer_factory = io.DatasetImporterFactory()
         self.recipe.dataset_factory = dataset_factory
@@ -1144,6 +1145,16 @@ class TestProcessingTask(unittest.TestCase):
         self.task.recipe = self.recipe
         self.task.perform()
         self.assertEqual(len(result), len(self.recipe.results))
+
+    def test_perform_task_with_comment_adds_comment(self):
+        self.processing_task["comment"] = "Lorem ipsum dolor sit amet"
+        self.prepare_recipe()
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertEqual(self.processing_task["comment"],
+                         self.recipe.datasets[self.dataset[0]].history[
+                             0].processing.comment)
 
 
 class TestSingleProcessingTask(unittest.TestCase):
@@ -1342,6 +1353,16 @@ class TestSingleAnalysisTask(unittest.TestCase):
         self.task.recipe = self.recipe
         self.task.perform()
         self.assertEqual(len(result), len(self.recipe.results))
+
+    def test_perform_task_with_comment_adds_comment(self):
+        self.prepare_recipe()
+        self.analysis_task["comment"] = "Lorem ipsum dolor sit amet"
+        self.task.from_dict(self.analysis_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertEqual(self.analysis_task["comment"],
+                         self.recipe.datasets[self.dataset[0]].analyses[
+                             0].analysis.comment)
 
 
 class TestMultiAnalysisTask(unittest.TestCase):
@@ -2320,11 +2341,12 @@ class TestChefDeService(unittest.TestCase):
     def test_serve_with_preset_recipe(self):
         self.create_recipe()
         self.chef_de_service.recipe_filename = self.recipe_filename
-        self.chef_de_service.serve()
+        self.history_filename = self.chef_de_service.serve()
 
     def test_serve_with_recipe_cooks_recipe(self):
         self.create_recipe()
-        self.chef_de_service.serve(recipe_filename=self.recipe_filename)
+        self.history_filename = \
+            self.chef_de_service.serve(recipe_filename=self.recipe_filename)
         self.assertTrue(os.path.exists(self.figure_filename))
 
     def test_serve_returns_history_filename(self):

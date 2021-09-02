@@ -48,7 +48,7 @@ this could be the metadata of an :class:`aspecd.dataset.Dataset`.
 import collections
 import os
 import shutil
-import subprocess
+import subprocess  # nosec
 import tempfile
 
 import jinja2
@@ -364,7 +364,8 @@ class LaTeXReporter(Reporter):
         """
         os.chdir(self._temp_dir)
         _, filename_wo_path = os.path.split(self.filename)
-        subprocess.run([self.latex_executable,
+        # Path to filename stripped, there should be no security implications.
+        subprocess.run([self.latex_executable,  # nosec
                         '-output-directory', self._temp_dir,
                         '-interaction=nonstopmode',
                         filename_wo_path], check=False)

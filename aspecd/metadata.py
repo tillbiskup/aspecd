@@ -554,6 +554,8 @@ class Measurement(Metadata):
             Dictionary with fields "date" and "time"
 
         """
+        if isinstance(dict_["date"], datetime.date):
+            dict_["date"] = dict_["date"].isoformat()
         datetime_string = " ".join([dict_["date"], dict_["time"]])
         self._set_datetime_from_string(key=key, string=datetime_string)
 

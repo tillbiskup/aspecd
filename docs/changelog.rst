@@ -5,6 +5,72 @@ Changelog
 This page contains a summary of changes between the official ASpecD releases. Only the biggest changes are listed here. A complete and detailed log of all changes is available through the `GitHub Repository Browser <https://github.com/tillbiskup/aspecd/commits/master>`_.
 
 
+Version 0.3.0
+=============
+
+Not yet released
+
+**Note**: This is the last ASpecD release with explicit support for Python 3.5.
+
+New features
+------------
+
+* Processing steps
+
+  * Adding (coloured) noise to datasets (:class:`aspecd.processing.Noise`)
+  * Provide a new range of axis values for a dataset for correction (:class:`aspecd.processing.ChangeAxesValues`)
+
+* Analysis steps
+
+  * Power spectral density of 1D dataset (:class:`aspecd.analysis.PowerDensitySpectrum`), *e.g.*, for analysing noise
+  * Polynomial fit of 1D data (:class:`aspecd.analysis.PolynomialFit`)
+  * Linear regression of 1D data without fitting the intercept (:class:`aspecd.analysis.LinearRegressionWithFixedIntercept`)
+  * Additional methods in :class:`aspecd.analysis.BlindSNREstimation`
+
+* Class :class:`aspecd.model.Model`
+
+  * New attribute :attr:`aspecd.model.Model.description`
+  * New non-public method ``_sanitise_parameters``
+
+* New models
+
+  * :class:`aspecd.model.Polynomial` for evaluating polynomials (*e.g.*, as obtained using :class:`aspecd.analysis.PolynomialFit`)
+  * :class:`aspecd.model.Zeros`
+  * :class:`aspecd.model.Ones`
+  * :class:`aspecd.model.Gaussian`
+  * :class:`aspecd.model.NormalisedGaussian`
+  * :class:`aspecd.model.Lorentzian`
+  * :class:`aspecd.model.NormalisedLorentzian`
+  * :class:`aspecd.model.Sine`
+  * :class:`aspecd.model.Exponential`
+
+  * :class:`aspecd.model.CompositeModel` for models consisting of a (weighted) sum of individual models
+  * :class:`aspecd.model.FamilyOfCurves` for inspecting systematic variations of one parameter of a given model
+
+* Tasks
+
+  * Comments can be added easily to processing and analysis steps using the top-level key ``comment`` of the respective task.
+
+
+* Utils
+
+  * :func:`aspecd.utils.not_zero` ensuring a float not to cause DivisionByZero errors
+
+
+Changes
+-------
+
+* :class:`aspecd.processing.Differentiation` uses :func:`numpy.gradient` instead of :func:`numpy.diff`
+* :class:`aspecd.processing.BaselineCorrection` returns polynomial coefficients in unscaled data domain
+
+
+Fixes
+-----
+
+* Axis labels without "/" if no unit is present
+* :class:`aspecd.metadata.Measurement` handles dates imported from YAML (implicitly converted into datetime.date object)
+
+
 Version 0.2.2
 =============
 

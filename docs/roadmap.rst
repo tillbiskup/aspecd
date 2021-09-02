@@ -5,42 +5,50 @@ Roadmap
 A few ideas how to develop the project further, currently a list as a reminder for the main developers themselves, in no particular order, though with a tendency to list more important aspects first:
 
 
-For version 0.3
+For version 0.4
 ===============
 
 * Remaining basic processing and analysis steps:
 
-  * denoising
-  * adding noise
-  * ? AxisAlgebra: provide a function that gets evaluated on the values of an axis
-  * Interpolation
+  * denoising (via SVD or similar)
 
-    * for ND with N>2
-    * different types of interpolation
-
-  * BlindSNREstimation with alternative methods
   * SNREstimation with explicitly providing noise (using both, processing and analysis)
+
+* References in processing and analysis steps?
+
+  * May be useful to automatically create a list of references to cite (report) depending on the methods actually used.
+  * May need an implementation of some kind of bibliographic record
+
+* Reporter: Method for adding dict representations of datasets to context
+
+* Report task:
+
+  * Add figure captions to context if available
+  * Operating on recipes, *i.e.* report on all tasks in a recipe
+  * Adding arbitrary dict representations of properties of datasets/results to context
+
+* Default report templates for each type of processing/analysis task
+
+  Includes deciding where to store these templates, whether to have them stored in different directories for different languages, and alike. Ideally, templates should be copied to a user-accessible directory for modifying there.
 
 * Expand use cases: reports
 
+* Recipes: Subrecipes that can be included in recipes
+
+* Interfacing towards fitting/simulation frameworks
+
+* Basic maths in values of recipes (ranges, basic numpy functions)?
+
+  May impair the platform-independence of the recipe (*i.e.*, tying it to Python/NumPy)
 
 
 For later versions
 ==================
 
-* Recipes: Subrecipes that can be included in recipes
+* Interpolation
 
-* Report task: Add figure captions to context if available
-
-* Reporter: Method for adding dict representations of datasets to context
-
-* Report task: Operating on recipes, *i.e.* report on all tasks in a recipe
-
-* Report task: Adding arbitrary dict representations of properties of datasets/results to context
-
-* Default report templates for each type of processing/analysis task
-
-  Includes deciding where to store these templates, whether to have them stored in different directories for different languages, and alike. Ideally, templates should be copied to a user-accessible directory for modifying there.
+  * for ND with N>2
+  * different types of interpolation
 
 * Templates for creating derived packages
 

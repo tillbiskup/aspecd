@@ -32,7 +32,7 @@ What is even better: Actual data processing and analysis **no longer requires pr
             kind: polynomial
             order: 0
       - kind: singleplot
-        type: SinglePlotter
+        type: SinglePlotter1D
         properties:
           filename:
             - first-dataset.pdf

@@ -217,6 +217,18 @@ class TestSinglePlotter(unittest.TestCase):
         self.assertEqual(xlabel, plotter.axes.get_xlabel())
         self.assertEqual(ylabel, plotter.axes.get_ylabel())
 
+    def test_axes_labels_with_empty_unit_without_slash(self):
+        test_dataset = dataset.Dataset()
+        test_dataset.data.axes[0].quantity = 'foo'
+        test_dataset.data.axes[0].unit = ''
+        test_dataset.data.axes[1].quantity = 'foo'
+        test_dataset.data.axes[1].unit = ''
+        xlabel = '$' + test_dataset.data.axes[0].quantity + '$'
+        ylabel = '$' + test_dataset.data.axes[1].quantity + '$'
+        plotter = test_dataset.plot(self.plotter)
+        self.assertEqual(xlabel, plotter.axes.get_xlabel())
+        self.assertEqual(ylabel, plotter.axes.get_ylabel())
+
     def test_plot_returns_dataset(self):
         test_dataset = self.plotter.plot(dataset=dataset.Dataset())
         self.assertTrue(isinstance(test_dataset, dataset.Dataset))

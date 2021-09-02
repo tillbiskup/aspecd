@@ -90,6 +90,20 @@ independently.
 
   Find peaks in 1D datasets
 
+* :class:`PowerDensitySpectrum`
+
+  Calculate power density spectrum of 1D dataset, useful, *e.g.* for
+  analysing the statistics of noise (*i.e.*, its colour)
+
+* :class:`PolynomialFit`
+
+  Perform polynomial fit on 1D data
+
+* :class:`LinearRegressionWithFixedIntercept`
+
+  Perform linear regression without fitting the intercept on 1D data. Note
+  that this is mathematically different from a polynomial fit of first order.
+
 
 Writing own analysis steps
 ==========================
@@ -718,7 +732,7 @@ class BasicCharacteristics(SingleAnalysisStep):
          properties:
            parameters:
              type: all
-         result: min_of_dataset
+         result: characteristics_of_dataset
 
     Make sure to understand the different types the result has depending on
     the characteristic and output type chosen. For details, see the table
@@ -879,7 +893,7 @@ class BasicStatistics(SingleAnalysisStep):
 
 class BlindSNREstimation(SingleAnalysisStep):
     # noinspection PyUnresolvedReferences
-    """
+    r"""
     Blind, *i.e.* parameter-free, estimation of the signal-to-noise ratio.
 
     In spectroscopy, the signal-to-noise ratio (SNR) is usually defined as the
@@ -891,21 +905,65 @@ class BlindSNREstimation(SingleAnalysisStep):
     signal. As this is not always possible, there are different ways to make
     a blind estimate of the SNR, *i.e.* without additional parameters.
 
-    The simplest possible of all blind estimates is the ratio of mean to
-    standard deviation of the whole signal.
+    The simplest possible approach of a blind estimate is the ratio of mean to
+    standard deviation of the whole signal (method ``simple``):
 
-    .. important::
-        Currently, only the simplest of all possible ways to blindly
-        estimate the SNR is supported. This will, however, most probably
-        change in the future.
+    .. math::
 
-    For more information, the following resources may be useful:
+        \mbox{SNR} = \frac{\mu}{\sigma}
+
+    An alternative version sometimes used is to take the suqare of both,
+    mean and standard deviation (method ``simple_squared``):
+
+    .. math::
+
+        \mbox{SNR} = \frac{\mu^2}{\sigma^2}
+
+    This is equivalent to the more common definition using the ratio of the
+    (average) power of signal and noise.
+
+    Yet another algorithm, the "DER_SNR" algorithm proposed by Stoehr et al.
+    for use in astronomic data (for details see Czesla et al., 2018, details
+    below) makes use of the median and a numeric second derivative (method
+    ``der_snr``):
+
+    .. math::
+
+        \mbox{SNR} &= \mbox{med} / \sigma
+
+        \sigma &=\frac{1.482602}{\sqrt{6}}\mbox{med}_i(|-x_{i-2}+2x_i-x_{ i+2}|)
+
+
+    Other options would be to fit a polynomial to the data, subtract the
+    fitted polynomial and estimate the noise this way. A Savitzky-Golay
+    filter could be used for this.
+
+    An article dealing with SNR estimation for (astronomic) spectral data
+    that provides a lot of details is:
+
+    * S. Czesla, T. Molle, and J. H. M. M. Schmitt: A posteriori noise
+      estimation in variable data sets. With applications to spectra and
+      light curves. Astronomy and Astrophysics 609(2018):A39.
+      `<https://doi.org/10.1051/0004-6361/201730618>`_
+
+    For more information, the following resources may as well be useful:
+
+    * `<https://en.wikipedia.org/wiki/Signal-to-noise_ratio>`_
 
     * `<http://nipy.org/nitime/examples/snr_example.html>`_
 
     * `<https://github.com/hrtlacek/SNR>`_
 
     * `<https://arxiv.org/abs/2011.05113>`_
+
+
+    .. important::
+
+        While all methods currently implemented are "parameter-free",
+        the estimates are based on a number of assumptions, the most
+        important being normally distributed noise. Furthermore, your data
+        need to be sampled appropriately, with the highest frequency
+        component of your signal being well resolved.
 
 
     Attributes
@@ -916,7 +974,7 @@ class BlindSNREstimation(SingleAnalysisStep):
         method : :class:`str`
             Method used to blindly estimate the SNR
 
-            Valid values are "simple".
+            Valid values are "simple", "simple_squared", "der_snr".
 
             Default: "simple"
 
@@ -948,12 +1006,15 @@ class BlindSNREstimation(SingleAnalysisStep):
          type: BlindSNREstimation
          properties:
            parameters:
-             method: simple
+             method: der_snr
          result: SNR_of_dataset
 
-    Note that currently, only "simple" is supported as a method (see above).
+    This would use the DER_SNR method as described above.
 
     .. versionadded:: 0.2
+
+    .. versionchanged:: 0.3
+        Added methods: "simple_squared", "der_snr"
 
     """
 
@@ -965,11 +1026,23 @@ class BlindSNREstimation(SingleAnalysisStep):
     def _sanitise_parameters(self):
         if not self.parameters["method"]:
             self.parameters["method"] = "simple"
+        if self.parameters["method"] == "der_snr" \
+                and len(self.dataset.data.data) < 4:
+            raise ValueError("Too few samples")
 
     def _perform_task(self):
         if self.parameters["method"] == "simple":
             self.result = \
                 self.dataset.data.data.mean() / self.dataset.data.data.std()
+        if self.parameters["method"] == "simple_squared":
+            self.result = self.dataset.data.data.mean()**2 \
+                / self.dataset.data.data.std()**2
+        if self.parameters["method"] == "der_snr":
+            data = self.dataset.data.data
+            signal = np.median(data)
+            noise = 1.482602 / np.sqrt(6) \
+                * np.median(np.abs(2 * data[2:-2] - data[0:-4] - data[4:]))
+            self.result = signal / noise
 
 
 class PeakFinding(SingleAnalysisStep):
@@ -1216,3 +1289,451 @@ class PeakFinding(SingleAnalysisStep):
             self.result = (peaks, properties)
         else:
             self.result = self.dataset.data.axes[0].values[peaks]
+
+
+class PowerDensitySpectrum(SingleAnalysisStep):
+    # noinspection PyUnresolvedReferences
+    """
+    Calculate power density spectrum of given 1D dataset.
+
+    The power density spectrum is the log10 of the power for each frequency
+    component as function of the log10 of the frequency. For mathematical
+    reasons, the power of the DC component (*f* = 0) is omitted.
+
+    The power density spectrum (sometimes called power spectral density,
+    PSD) can be used to analyse the nature of noise, *e.g.* whether it is
+    Gaussian (white, normally distributed) noise or "coloured" noise with
+    the frequencies of the noise components differently weighted.
+
+    In spectroscopy, often coloured noise (most frequently pink or 1/*f* noise)
+    rather than white noise is encountered. The characteristics of white
+    noise is an equal distribution of all frequencies, related to a constant
+    in the power density spectrum. Pink or 1/*f* noise, in contrast, exhibits a
+    linear damping of higher frequencies with a slope of -1 in the power
+    density spectrum. For more details regarding noise in spectroscopy,
+    the interested reader is referred to the documentation of the
+    :class:`aspecd.processing.Noise` class.
+
+    Attributes
+    ----------
+    result : :class:`aspecd.dataset.CalculatedDataset`
+        power density spectrum of the corresponding 1D dataset analysed
+
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        method : :class:`str`
+            Method to use to calculate the power density spectrum
+
+            Possible methods must exist in the :mod:`scipy.signal` module.
+            Currently, you can choose between "periodogram" and "welch". See
+            their respective documentation, *i.e.*
+            :func:`scipy.signal.periodogram` and :func:`scipy.signal.welch`
+            for details.
+
+            Default: periodogram
+
+    Raises
+    ------
+    aspecd.exceptions.NotApplicableToDatasetError
+        Raised if applied to a ND dataset (with N>1)
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Computing the power density spectrum of a 1D dataset (let's assume you
+    use a trace of pure noise for this) is quite simple:
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: PowerDensitySpectrum
+         result: power_density_spectrum
+
+    This would simply return the power density spectrum of the data of a given
+    dataset in the result assigned to the recipe-internal variable
+    ``power_density_spectrum``. Note that the result is itself a calculated
+    dataset, hence you can easily plot it for graphical representation and
+    manual inspection:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            filename: power_density_spectrum.pdf
+          apply_to: power_density_spectrum
+
+    You may even want to calculate the power density spectrum, perform a
+    polynomial fit (of first order), evaluate the polynomial for the
+    coefficients obtained by the fit, and plot both together in one figure:
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: PowerDensitySpectrum
+         result: power_density_spectrum
+
+       - kind: singleanalysis
+         type: PolynomialFit
+         result: coefficients
+         apply_to: power_density_spectrum
+
+       - kind: model
+         type: Polynomial
+         properties:
+           parameters:
+             coefficients: coefficients
+         from_dataset: power_density_spectrum
+         result: linear_fit
+
+       - kind: multiplot
+         type: MultiPlotter1D
+         properties:
+           filename: power_density_spectrum.pdf
+         apply_to:
+           - power_density_spectrum
+           - linear_fit
+
+
+    To have more control over the method used to calculate the power density
+    spectrum, you can explicitly provide a method name here:
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: PowerDensitySpectrum
+         properties:
+           parameters:
+             method: welch
+         result: power_density_spectrum
+
+    Note that the methods need to reside in the :mod:`scipy.signal` module.
+
+
+    .. versionadded:: 0.3
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = 'Calculate power density spectrum'
+        self.result = aspecd.dataset.CalculatedDataset()
+        self.parameters["method"] = "periodogram"
+
+    @staticmethod
+    def applicable(dataset):
+        """
+        Check whether analysis step is applicable to the given dataset.
+
+        Power density spectrum calculation can only be applied to 1D datasets.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            Dataset to check
+
+        Returns
+        -------
+        applicable : :class:`bool`
+            Whether dataset is applicable
+
+        """
+        return dataset.data.data.ndim == 1
+
+    def _perform_task(self):
+        method = getattr(scipy.signal, self.parameters["method"])
+        frequencies, psd = method(self.dataset.data.data)
+        self.result.data.data = np.log10(psd[1:])
+        self.result.data.axes[0].values = np.log10(frequencies[1:])
+        self.result.data.axes[0].quantity = 'log frequency'
+        self.result.data.axes[1].quantity = 'log power'
+
+
+class PolynomialFit(SingleAnalysisStep):
+    # noinspection PyUnresolvedReferences
+    """
+    Perform polynomial fit on 1D data.
+
+    The coefficients obtained can be used to evaluate a model that can be
+    plotted together with the data the polynomial has been fitted to
+    originally. At the same time, you can tabulate the coefficients.
+
+    Attributes
+    ----------
+    result : :class:`list`
+        coefficients of the fitted polynomial in *increasing* order
+
+        As the new :mod:`numpy.polynomial` package is used, particularly the
+        :class:`numpy.polynomial.polynomial.Polynomial` class,
+        the coefficients are given in increasing order, with the first
+        element corresponding to x**0. Furthermore, the coefficients are
+        given in the unscaled data domain (using the
+        :meth:`numpy.polynomial.polynomial.Polynomial.convert` method).
+
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        order : :class:`int`
+            Order (degree) of the polynomial to be fitted to the data
+
+            Default: 1
+
+
+    Raises
+    ------
+    aspecd.exceptions.NotApplicableToDatasetError
+        Raised if applied to a ND dataset (with N>1)
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Fitting a polynomial of first order to your 1D dataset is quite simple:
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: PolynomialFit
+         result: polynomial_coefficients_1st_order
+
+    This would simply return the polynomial coefficients (in *increasing*
+    order) as a list in the result assigned to the recipe-internal variable
+    ``polynomial_coefficients_1st_order``.
+
+    If you would like to fit a polynomial of different order, simply provide
+    the desired order as an additional parameter:
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: PolynomialFit
+         properties:
+           parameters:
+             order: 3
+         result: polynomial_coefficients_3rd_order
+
+    In this case, the result will contain a list of four coefficients of the
+    fitted polynomial of third order, again in *increasing* order.
+
+
+    .. versionadded:: 0.3
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = 'Polynomial fit'
+        self.parameters["order"] = 1
+
+    @staticmethod
+    def applicable(dataset):
+        """
+        Check whether analysis step is applicable to the given dataset.
+
+        Polynomial fits can (currently) only be applied to 1D datasets.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            Dataset to check
+
+        Returns
+        -------
+        applicable : :class:`bool`
+            Whether dataset is applicable
+
+        """
+        return dataset.data.data.ndim == 1
+
+    def _perform_task(self):
+        polynomial = np.polynomial.Polynomial.fit(
+            self.dataset.data.axes[0].values,
+            self.dataset.data.data,
+            deg=self.parameters['order'])
+        # noinspection PyUnresolvedReferences
+        self.result = list(polynomial.convert().coef)
+
+
+class LinearRegressionWithFixedIntercept(SingleAnalysisStep):
+    # noinspection PyUnresolvedReferences
+    """
+    Perform linear regression with fixed intercept on 1D data
+
+    In contrast to a regular polynomial fit of first order, where two
+    parameters (slope and intercept) are fitted, there are mathematical
+    models where the intercept is fixed, *i.e.* not to be fitted as well. In
+    these cases, using a polynomial fit of first order is simply wrong. Of
+    course, which of these approaches is valid depends on the underlying
+    model and the physical reality to be modelled.
+
+    .. note::
+
+        A prime example of a linear model with only a slope and no intercept
+        is Hooke's law stating that the force *F* needed to extend or
+        compress a spring by some distance *x* scales linearly with respect
+        to that distance, *i.e.*, *F* = *kx*. Here, *k* is the
+        characteristic of the spring, sometimes called "spring constant".
+
+    The approach taken here is to use linear algebra and solve the system
+    of equations by calling :func:`numpy.linalg.lstsq`. In case of a
+    vertical offset (*i.e.*, intercept not zero), the offset is first
+    subtracted from the function values and afterwards the regression
+    performed.
+
+    Attributes
+    ----------
+    result : :class:`float`
+        slope of the linear regression
+
+        If you set the parameter ``polynomial_coefficients`` to True, a list
+        with (fixed) intercept and (fitted) slope will be returned (see below).
+
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        offset : :class:`float`
+            Vertical offset of the data, *i.e.* f(0)
+
+            Useful in cases where the model defines an intercept f(0) != 0.
+
+            Default: 0
+
+        polynomial_coefficients : :class:`bool`
+            Whether to return both, intercept and slope for compatibility
+            with polynomial model, :class:`aspecd.model.Polynomial`
+
+            Default: False
+
+    Raises
+    ------
+    aspecd.exceptions.NotApplicableToDatasetError
+        Raised if applied to a ND dataset (with N>1)
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Performing a linear regression without intercept to your 1D dataset is
+    quite simple:
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: LinearRegressionWithFixedIntercept
+         result: slope
+
+    Sometimes, you may have the situation that the (fixed) intercept is not
+    zero, hence your data are "offset" by a scalar value. To account for
+    that, provide a value for this offset, here 3.14:
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: LinearRegressionWithFixedIntercept
+         properties:
+           parameters:
+             offset: 3.14
+         result: slope
+
+    As you sometimes want to graphically display both, data and the
+    resulting linear regression, you may use the
+    :class:`aspecd.model.Polynomial` model to do just that. However,
+    for this to work, you would need to get the (fixed) intercept returned
+    as first coefficient as well. Here you go:
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: LinearRegressionWithFixedIntercept
+         properties:
+           parameters:
+             polynomial_coefficients: True
+         result: regression_coefficients
+
+    The full story may look something like that, with "experimental_data"
+    referring to the actual dataset to be analysed:
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: LinearRegressionWithFixedIntercept
+         properties:
+           parameters:
+             polynomial_coefficients: True
+         result: coefficients
+         apply_to:
+           - experimental_data
+
+       - kind: model
+         type: Polynomial
+         properties:
+           parameters:
+             coefficients: coefficients
+         from_dataset: experimental_data
+         result: linear_regression_without_intercept
+
+       - kind: multiplot
+         type: MultiPlotter1D
+         properties:
+           filename: linear_regression_without_intercept.pdf
+         apply_to:
+           - experimental_data
+           - linear_regression_without_intercept
+
+    With this, you should have your plot with data and linear regression
+    together saved in the file ``linear_regression_without_intercept.pdf``.
+
+
+    .. versionadded:: 0.3
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = 'Linear regression without intercept'
+        self.parameters["offset"] = 0
+        self.parameters["polynomial_coefficients"] = False
+
+    @staticmethod
+    def applicable(dataset):
+        """
+        Check whether analysis step is applicable to the given dataset.
+
+        Polynomial fits can (currently) only be applied to 1D datasets.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            Dataset to check
+
+        Returns
+        -------
+        applicable : :class:`bool`
+            Whether dataset is applicable
+
+        """
+        return dataset.data.data.ndim == 1
+
+    def _perform_task(self):
+        xdata = self.dataset.data.axes[0].values
+        xdata = xdata[:, None]
+        ydata = self.dataset.data.data - self.parameters["offset"]
+        results = np.linalg.lstsq(xdata, ydata, rcond=None)
+        if self.parameters["polynomial_coefficients"]:
+            self.result = [self.parameters["offset"], float(results[0])]
+        else:
+            self.result = float(results[0])

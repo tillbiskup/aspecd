@@ -483,8 +483,6 @@ class TestBlindSNREstimation(unittest.TestCase):
         self.analysis = aspecd.analysis.BlindSNREstimation()
         self.dataset = aspecd.dataset.Dataset()
         self.dataset.data.data = np.random.random(10)
-        self.dataset3d = aspecd.dataset.Dataset()
-        self.dataset3d.data.data = np.random.random([10, 10, 10])
 
     def test_instantiate_class(self):
         pass
@@ -501,6 +499,24 @@ class TestBlindSNREstimation(unittest.TestCase):
         analysis = self.dataset.analyse(self.analysis)
         result = self.dataset.data.data.mean()/self.dataset.data.data.std()
         self.assertEqual(result, analysis.result)
+
+    def test_simple_squared_method(self):
+        self.analysis.parameters["method"] = "simple_squared"
+        analysis = self.dataset.analyse(self.analysis)
+        result = \
+            self.dataset.data.data.mean()**2/self.dataset.data.data.std()**2
+        self.assertEqual(result, analysis.result)
+
+    def test_der_snr_method_with_too_small_sample_raises(self):
+        self.dataset.data.data = np.random.random(3)
+        self.analysis.parameters["method"] = "der_snr"
+        with self.assertRaisesRegex(ValueError, "Too few samples"):
+            self.dataset.analyse(self.analysis)
+
+    def test_der_snr_method(self):
+        self.analysis.parameters["method"] = "der_snr"
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertGreater(analysis.result, 0)
 
 
 class TestPeakFinding(unittest.TestCase):
@@ -678,3 +694,129 @@ class TestPeakFinding(unittest.TestCase):
             width=self.analysis.parameters["width"])
         result = np.sort(np.concatenate((positive, negative)))
         self.assertListEqual(list(result), list(analysis.result))
+
+
+class TestPowerDensitySpectrum(unittest.TestCase):
+    def setUp(self):
+        self.analysis = aspecd.analysis.PowerDensitySpectrum()
+        self.dataset = aspecd.dataset.Dataset()
+        self.dataset.data.data = np.zeros(2**12)
+        noise = aspecd.processing.Noise()
+        self.dataset.process(noise)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('power density spectrum',
+                      self.analysis.description.lower())
+
+    def test_with_nd_dataset_raises(self):
+        self.dataset.data.data = np.random.random([5, 5])
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            self.dataset.analyse(self.analysis)
+
+    def test_returns_calculated_dataset(self):
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertIsInstance(analysis.result, aspecd.dataset.CalculatedDataset)
+
+    def test_returned_data_are_log_of_psd(self):
+        frequencies, psd = scipy.signal.periodogram(self.dataset.data.data)
+        log_psd = np.log10(psd[1:])
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertListEqual(list(log_psd), list(analysis.result.data.data))
+
+    def test_returned_axes_values_are_log_of_frequency(self):
+        frequencies, psd = scipy.signal.periodogram(self.dataset.data.data)
+        log_frequencies = np.log10(frequencies[1:])
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertListEqual(list(log_frequencies),
+                             list(analysis.result.data.axes[0].values))
+
+    def test_axes_quantities_are_sensible(self):
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertEqual('log frequency', analysis.result.data.axes[0].quantity)
+        self.assertEqual('log power', analysis.result.data.axes[1].quantity)
+
+    def test_method_settable_via_parameter(self):
+        self.analysis.parameters["method"] = "welch"
+        frequencies, psd = scipy.signal.welch(self.dataset.data.data)
+        log_psd = np.log10(psd[1:])
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertListEqual(list(log_psd), list(analysis.result.data.data))
+
+    def test_method_defaults_to_periodogram(self):
+        self.assertEqual("periodogram", self.analysis.parameters["method"])
+
+
+class TestPolynomialFit(unittest.TestCase):
+    def setUp(self):
+        self.analysis = aspecd.analysis.PolynomialFit()
+        self.dataset = aspecd.dataset.Dataset()
+        self.dataset.data.data = np.linspace(0, 49)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('polynomial fit', self.analysis.description.lower())
+
+    def test_with_nd_dataset_raises(self):
+        self.dataset.data.data = np.random.random([5, 5])
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            self.dataset.analyse(self.analysis)
+
+    def test_default_is_first_order(self):
+        self.assertEqual(1, self.analysis.parameters["order"])
+
+    def test_first_order_returns_two_coefficients_as_result(self):
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertEqual(2, len(analysis.result))
+
+    def test_first_order_returns_correct_coefficients(self):
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertAlmostEqual(0, analysis.result[0])
+        self.assertAlmostEqual(1, analysis.result[1])
+
+    def test_zeroth_order_returns_correct_coefficients(self):
+        self.analysis.parameters["order"] = 0
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertAlmostEqual(24.5, analysis.result[0])
+
+
+class TestLinearRegressionWithFixedIntercept(unittest.TestCase):
+    def setUp(self):
+        self.analysis = aspecd.analysis.LinearRegressionWithFixedIntercept()
+        self.dataset = aspecd.dataset.Dataset()
+        self.dataset.data.data = np.linspace(1, 50)
+        self.dataset.data.axes[0].values = np.linspace(0.5, 25)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('linear regression without intercept',
+                      self.analysis.description.lower())
+
+    def test_with_nd_dataset_raises(self):
+        self.dataset.data.data = np.random.random([5, 5])
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            self.dataset.analyse(self.analysis)
+
+    def test_analysis_returns_correct_coefficient_as_result(self):
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertAlmostEqual(2., analysis.result)
+
+    def test_regression_with_constant_offset(self):
+        self.dataset.data.data += np.pi
+        self.analysis.parameters["offset"] = np.pi
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertAlmostEqual(2., analysis.result)
+
+    def test_polynomial_compatible_coefficients(self):
+        self.dataset.data.data += np.pi
+        self.analysis.parameters["offset"] = np.pi
+        self.analysis.parameters["polynomial_coefficients"] = True
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertAlmostEqual(np.pi, analysis.result[0])
+        self.assertAlmostEqual(2., analysis.result[1])

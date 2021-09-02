@@ -153,6 +153,8 @@ html_static_path = ['_static']
 #
 # html_sidebars = {}
 
+# Path to mathjax
+mathjax_path = 'mathjax/tex-chtml.js'
 
 # -- Options for HTMLHelp output ---------------------------------------------
 
