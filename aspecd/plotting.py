@@ -460,7 +460,7 @@ class Plotter:
         if axis.quantity:
             label = '$' + axis.quantity.replace(' ', '\\ ') + '$'
             if axis.unit:
-                label +=  ' / ' + axis.unit
+                label += ' / ' + axis.unit
         return label
 
     def _set_legend(self):

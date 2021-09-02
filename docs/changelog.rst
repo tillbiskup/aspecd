@@ -10,6 +10,8 @@ Version 0.3.0
 
 Not yet released
 
+**Note**: This is the last ASpecD release with explicit support for Python 3.5.
+
 New features
 ------------
 

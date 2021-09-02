@@ -5,12 +5,12 @@ Roadmap
 A few ideas how to develop the project further, currently a list as a reminder for the main developers themselves, in no particular order, though with a tendency to list more important aspects first:
 
 
-For version 0.3
+For version 0.4
 ===============
 
 * Remaining basic processing and analysis steps:
 
-  * denoising
+  * denoising (via SVD or similar)
 
   * SNREstimation with explicitly providing noise (using both, processing and analysis)
 
@@ -18,10 +18,6 @@ For version 0.3
 
   * May be useful to automatically create a list of references to cite (report) depending on the methods actually used.
   * May need an implementation of some kind of bibliographic record
-
-
-For version 0.4
-===============
 
 * Reporter: Method for adding dict representations of datasets to context
 

@@ -1036,12 +1036,12 @@ class BlindSNREstimation(SingleAnalysisStep):
                 self.dataset.data.data.mean() / self.dataset.data.data.std()
         if self.parameters["method"] == "simple_squared":
             self.result = self.dataset.data.data.mean()**2 \
-                          / self.dataset.data.data.std()**2
+                / self.dataset.data.data.std()**2
         if self.parameters["method"] == "der_snr":
             data = self.dataset.data.data
             signal = np.median(data)
             noise = 1.482602 / np.sqrt(6) \
-                    * np.median(np.abs(2 * data[2:-2] - data[0:-4] - data[4:]))
+                * np.median(np.abs(2 * data[2:-2] - data[0:-4] - data[4:]))
             self.result = signal / noise
 
 
