@@ -8,7 +8,7 @@ This page contains a summary of changes between the official ASpecD releases. On
 Version 0.3.0
 =============
 
-Not yet released
+Released 2021-09-02
 
 **Note**: This is the last ASpecD release with explicit support for Python 3.5.
 
