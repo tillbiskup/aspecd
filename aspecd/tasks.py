@@ -1652,7 +1652,7 @@ class Task(aspecd.utils.ToDictMixin):
                 if isinstance(target[key], dict):
                     target[key] = self._set_attributes_in_dict(
                         source[key], target[key])
-                elif isinstance(target[key], list):
+                elif isinstance(target[key], list) and target[key]:
                     for idx, element in enumerate(target[key]):
                         if len(source[key]) >= idx + 1:
                             if hasattr(element, 'from_dict'):

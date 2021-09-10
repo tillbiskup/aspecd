@@ -833,6 +833,15 @@ class TestTask(unittest.TestCase):
         self.assertEqual(metadata['parameters']['foo'][1]['unit'],
                          processing_step.parameters['foo'][1].unit)
 
+    def test_set_object_attributes_sets_fields_in_empty_list(self):
+        processing_step = processing.SingleProcessingStep()
+        processing_step.parameters = {'foo': []}
+        metadata = {'parameters': {'foo': [35, 42]}}
+        self.task.properties = metadata
+        self.task._set_object_attributes(processing_step)
+        self.assertEqual(metadata['parameters']['foo'][0],
+                         processing_step.parameters['foo'][0])
+
     def test_set_object_attributes_does_not_override_dict(self):
         processing_step = processing.SingleProcessingStep()
         processing_step.parameters = {'foo': 'a', 'bar': 'b'}
