@@ -11,6 +11,16 @@ Version 0.4.0
 Not yet released
 
 
+Version 0.3.1
+=============
+
+Not yet released
+
+The following bugs have been fixed:
+
+* Handling of lists as properties in recipes (4aaba581ff)
+
+
 Version 0.3.0
 =============
 

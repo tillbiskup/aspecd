@@ -426,8 +426,8 @@ class Plotter:
         self.filename = saver.filename
         return saver
 
-    @staticmethod
-    def _create_axis_label_string(axis):
+    # @staticmethod
+    def _create_axis_label_string(self, axis):
         """Create axis label conforming to conventions used in science
 
         Here, the quantity is set in italics, and the unit in upright font,
@@ -458,7 +458,10 @@ class Plotter:
         """
         label = ''
         if axis.quantity:
-            label = '$' + axis.quantity.replace(' ', '\\ ') + '$'
+            if self.style == 'xkcd':
+                label = axis.quantity
+            else:
+                label = '$' + axis.quantity.replace(' ', '\\ ') + '$'
             if axis.unit:
                 label += ' / ' + axis.unit
         return label
