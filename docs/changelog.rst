@@ -20,6 +20,8 @@ The following bugs have been fixed:
 
 * Handling of lists as properties in recipes (4aaba581ff)
 
+* Offset in SinglePlotter2DStacked can be set to zero
+
 
 Version 0.3.0
 =============

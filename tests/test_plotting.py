@@ -641,6 +641,13 @@ class TestSinglePlotter2DStacked(unittest.TestCase):
         self.assertGreater(max(plotter.axes.get_lines()[5].get_ydata()),
                            max(plotter.axes.get_lines()[0].get_ydata())*3)
 
+    def test_plot_with_zero_offset_preserves_offset(self):
+        self.plotter.parameters['offset'] = 0
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.random.random([5, 10]) - 0.5
+        plotter = dataset_.plot(self.plotter)
+        self.assertEqual(0, plotter.parameters['offset'])
+
     def test_plot_along_zero_dim_stacks_plots(self):
         self.plotter.parameters['stacking_dimension'] = 0
         dataset_ = aspecd.dataset.CalculatedDataset()
