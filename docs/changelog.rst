@@ -10,6 +10,13 @@ Version 0.4.0
 
 Not yet released
 
+New features
+------------
+
+* Tasks/Recipe-driven data analysis
+
+  * New attribute :attr:`aspecd.tasks.PlotTask.target` allows adding a plot to an already existing plot.
+
 
 Version 0.3.1
 =============
@@ -19,8 +26,8 @@ Not yet released
 The following bugs have been fixed:
 
 * Handling of lists as properties in recipes (4aaba581ff)
-
-* Offset in SinglePlotter2DStacked can be set to zero
+* Improved handling of axes labels with xkcd style (7edc5ee431)
+* Offset in SinglePlotter2DStacked can be set to zero (d13bd2d573)
 
 
 Version 0.3.0

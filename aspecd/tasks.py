@@ -2251,12 +2251,30 @@ class PlotTask(Task):
         This is useful in case of CompositePlotters, where different
         plotters need to be defined for each of the panels.
 
+    target : :class:`str`
+        Label of an existing previous plotter the plot should be added to.
+
+        Sometimes it is desirable to add something to an already existing
+        plot after this original plot has been created. Programmatically,
+        this would be equivalent to setting the
+        :attr:`aspecd.plotting.Plotter.figure` and
+        :attr:`aspecd.plotting.Plotter.axes` attributes of the underlying
+        plotter object.
+
+        The result: Your plot will be a new figure window, but with the
+        original plot contained and the new plot added on top of it.
+
+
+    .. versionadded:: 0.4.0
+        Attribute :attr:`target`
+
     """
 
     def __init__(self):
         super().__init__()
         self.label = ''
         self.result = ''
+        self.target = ''
         self._module = 'plotting'
 
     def perform(self):
@@ -2411,6 +2429,9 @@ class SingleplotTask(PlotTask):
         for number, dataset_id in enumerate(self.apply_to):
             dataset = self.recipe.get_dataset(dataset_id)
             self._task = self.get_object()
+            if self.target:
+                self._task.figure = self.recipe.plotters[self.target].figure
+                self._task.axes = self.recipe.plotters[self.target].axes
             if filenames:
                 self._task.filename = filenames[number]
             elif "filename" not in self.properties \
@@ -2424,8 +2445,9 @@ class SingleplotTask(PlotTask):
             dataset.plot(plotter=self._task)
             # noinspection PyTypeChecker
             self.save_plot(plot=self._task)
-            # noinspection PyUnresolvedReferences
-            plt.close(self._task.figure)
+            if not self.result:
+                # noinspection PyUnresolvedReferences
+                plt.close(self._task.figure)
 
 
 class MultiplotTask(PlotTask):
@@ -2503,6 +2525,9 @@ class MultiplotTask(PlotTask):
 
     def _perform(self):
         self._task = self.get_object()
+        if self.target:
+            self._task.figure = self.recipe.plotters[self.target].figure
+            self._task.axes = self.recipe.plotters[self.target].axes
         self._task.datasets = self.recipe.get_datasets(self.apply_to)
         # noinspection PyUnresolvedReferences
         self._task.plot()
@@ -2518,8 +2543,9 @@ class MultiplotTask(PlotTask):
             self.properties["filename"] = self._task.filename
         # noinspection PyTypeChecker
         self.save_plot(plot=self._task)
-        # noinspection PyUnresolvedReferences
-        plt.close(self._task.figure)
+        if not self.result:
+            # noinspection PyUnresolvedReferences
+            plt.close(self._task.figure)
 
 
 class CompositeplotTask(PlotTask):

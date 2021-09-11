@@ -1563,6 +1563,9 @@ class TestPlotTask(unittest.TestCase):
         self.task.perform()
         self.assertTrue(len(self.recipe.plotters))
 
+    def test_has_target_property(self):
+        self.assertTrue(hasattr(self.task, 'target'))
+
 
 class TestSinglePlotTask(unittest.TestCase):
     def setUp(self):
@@ -1682,6 +1685,31 @@ class TestSinglePlotTask(unittest.TestCase):
         self.task.perform()
         self.assertFalse(plt.fignum_exists(self.task._task.figure.number))
 
+    def test_perform_task_with_result_does_not_close_figure(self):
+        self.prepare_recipe()
+        self.plotting_task["result"] = 'foo'
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(plt.fignum_exists(self.task._task.figure.number))
+
+    def test_perform_task_with_target_sets_figure_and_axes(self):
+        self.prepare_recipe()
+        plotting_task2 = copy.copy(self.plotting_task)
+        plotting_task2["result"] = 'bar'
+        plotting_task2["target"] = 'foo'
+        self.recipe.tasks.append(plotting_task2)
+        task2 = copy.copy(self.task)
+        self.plotting_task["result"] = plotting_task2["target"]
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        task2.from_dict(plotting_task2)
+        task2.recipe = self.recipe
+        task2.perform()
+        self.assertEqual(self.task._task.figure.number,
+                         task2._task.figure.number)
+
 
 class TestMultiPlotTask(unittest.TestCase):
     def setUp(self):
@@ -1771,6 +1799,31 @@ class TestMultiPlotTask(unittest.TestCase):
         self.task.recipe = self.recipe
         self.task.perform()
         self.assertFalse(plt.fignum_exists(self.task._task.figure.number))
+
+    def test_perform_task_with_result_does_not_close_figure(self):
+        self.prepare_recipe()
+        self.plotting_task["result"] = 'foo'
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(plt.fignum_exists(self.task._task.figure.number))
+
+    def test_perform_task_with_target_sets_figure_and_axes(self):
+        self.prepare_recipe()
+        plotting_task2 = copy.copy(self.plotting_task)
+        plotting_task2["result"] = 'bar'
+        plotting_task2["target"] = 'foo'
+        self.recipe.tasks.append(plotting_task2)
+        task2 = copy.copy(self.task)
+        self.plotting_task["result"] = plotting_task2["target"]
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        task2.from_dict(plotting_task2)
+        task2.recipe = self.recipe
+        task2.perform()
+        self.assertEqual(self.task._task.figure.number,
+                         task2._task.figure.number)
 
 
 class TestCompositePlotTask(unittest.TestCase):
