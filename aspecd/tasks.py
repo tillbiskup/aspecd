@@ -1492,7 +1492,16 @@ class Task(aspecd.utils.ToDictMixin):
 
             The order of attribute definition is preserved
 
+
+        .. versionchanged:: 0.4
+            (Implicit) parameters of underlying task object are added
+
         """
+        if hasattr(self._task, 'parameters'):
+            if 'parameters' not in self.properties:
+                self.properties["parameters"] = dict()
+            for key, value in self._task.parameters.items():
+                self.properties["parameters"][key] = value
         if 'parameters' in self.properties:
             self._replace_objects_with_labels(self.properties["parameters"])
         self._replace_objects_with_labels(self.properties)

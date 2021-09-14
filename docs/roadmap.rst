@@ -8,6 +8,10 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.4
 ===============
 
+* Recipe history:
+
+  * Add all parameters of processing and analysis steps (assigning back task object) - needs serialising of (small) NumPy arrays in YAML as list
+
 * Remaining basic processing and analysis steps:
 
   * denoising (via SVD or similar)

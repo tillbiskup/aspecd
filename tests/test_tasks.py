@@ -972,6 +972,16 @@ class TestTask(unittest.TestCase):
         self.task.perform()
         self.task.to_dict()
 
+    def test_to_dict_adds_implicit_parameters_of_task_object(self):
+        kind = 'processing'
+        type_ = 'Normalisation'
+        self.task.kind = kind
+        self.task.type = type_
+        self.task.recipe = tasks.Recipe()
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertTrue(dict_["properties"]["parameters"]["kind"])
+
     def test_to_dict_with_dataset_in_properties_replaces_it_with_label(self):
         kind = 'processing'
         type_ = 'SingleProcessingStep'

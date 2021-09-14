@@ -16,6 +16,7 @@ New features
 * Tasks/Recipe-driven data analysis
 
   * New attribute :attr:`aspecd.tasks.PlotTask.target` allows adding a plot to an already existing plot.
+  * :meth:`aspecd.tasks.Task.to_dict` adds (implicit) parameters of underlying task object
 
 
 Version 0.3.1
