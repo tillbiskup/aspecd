@@ -3248,6 +3248,7 @@ class ChefDeService:
         self._create_history_filename()
         yaml = aspecd.utils.Yaml()
         yaml.dict = self._chef.history
+        yaml.numpy_array_to_list = True
         yaml.serialise_numpy_arrays()
         yaml.write_to(self._history_filename)
 

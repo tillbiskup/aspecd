@@ -301,10 +301,19 @@ class Yaml:
 
         Default: 100 -- *i.e.*, arrays with >100 elements are stored in files.
 
+    numpy_array_to_list : class:`bool`
+        Whether to convert (small) NumPy arrays to a list or to a dict
+
+        Default: False
+
     Raises
     ------
     aspecd.utils.MissingFilenameError
         Raised if no filename is given to read from/write to
+
+
+    .. versionchanged:: 0.4
+        Added :attr:`numpy_array_to_list`
 
     """
 
@@ -313,6 +322,7 @@ class Yaml:
         self.binary_directory = ''
         self.dict = collections.OrderedDict()
         self.numpy_array_size_threshold = 100
+        self.numpy_array_to_list = False
         self.loader = yaml.SafeLoader
         self.loader.add_implicit_resolver(
             u'tag:yaml.org,2002:float',
@@ -444,6 +454,8 @@ class Yaml:
                                   'dtype': str(dict_[key].dtype),
                                   'file': filename}
                     self.binary_files.append(filename)
+                elif self.numpy_array_to_list:
+                    dict_[key] = dict_[key].tolist()
                 else:
                     dict_[key] = {'type': 'numpy.ndarray',
                                   'dtype': str(dict_[key].dtype),

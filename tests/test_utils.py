@@ -319,6 +319,14 @@ class TestYaml(unittest.TestCase):
         self.yaml.serialise_numpy_arrays()
         self.assertDictEqual(resulting_dict, self.yaml.dict)
 
+    def test_serialise_numpy_array_creates_list(self):
+        array = np.asarray([[0., 1., 2.], [1., 2., 3.]])
+        resulting_dict = {'foo': array.tolist()}
+        self.yaml.dict = {'foo': array}
+        self.yaml.numpy_array_to_list = True
+        self.yaml.serialise_numpy_arrays()
+        self.assertDictEqual(resulting_dict, self.yaml.dict)
+
     def test_serialise_large_numpy_array_creates_dict_and_file(self):
         array = np.random.rand(self.yaml.numpy_array_size_threshold + 1)
         resulting_dict = {'foo': {'type': 'numpy.ndarray',
