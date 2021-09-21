@@ -22,13 +22,13 @@ New features
 Version 0.3.1
 =============
 
-Not yet released
+Released 2021-09-21
 
 The following bugs have been fixed:
 
-* Handling of lists as properties in recipes (4aaba581ff)
-* Improved handling of axes labels with xkcd style (7edc5ee431)
-* Offset in SinglePlotter2DStacked can be set to zero (d13bd2d573)
+* Handling of lists as properties in recipes
+* Improved handling of axes labels with xkcd style
+* Offset in SinglePlotter2DStacked can be set to zero
 
 
 Version 0.3.0
