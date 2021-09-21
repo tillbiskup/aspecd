@@ -426,8 +426,8 @@ class Plotter:
         self.filename = saver.filename
         return saver
 
-    @staticmethod
-    def _create_axis_label_string(axis):
+    # @staticmethod
+    def _create_axis_label_string(self, axis):
         """Create axis label conforming to conventions used in science
 
         Here, the quantity is set in italics, and the unit in upright font,
@@ -458,7 +458,10 @@ class Plotter:
         """
         label = ''
         if axis.quantity:
-            label = '$' + axis.quantity.replace(' ', '\\ ') + '$'
+            if self.style == 'xkcd':
+                label = axis.quantity
+            else:
+                label = '$' + axis.quantity.replace(' ', '\\ ') + '$'
             if axis.unit:
                 label += ' / ' + axis.unit
         return label
@@ -1221,7 +1224,7 @@ class SinglePlotter2DStacked(SinglePlotter):
             'show_legend': False,
             'show_zero_lines': False,
             'stacking_dimension': 1,
-            'offset': 0,
+            'offset': None,
             'yticklabelformat': None,
         }
         self.drawing = []
@@ -1244,31 +1247,38 @@ class SinglePlotter2DStacked(SinglePlotter):
         return dataset.data.data.ndim == 2
 
     def _create_plot(self):
-        if not self.parameters['offset']:
+        if self.parameters['offset'] is None:
             self.parameters['offset'] = self.dataset.data.data.max() * 1.05
         yticks = []
         if self.parameters['stacking_dimension'] == 0:
             for idx in range(self.dataset.data.data.shape[0]):
+                # noinspection PyTypeChecker
                 handle = self.axes.plot(self.dataset.data.axes[1].values,
                                         self.dataset.data.data[idx, :]
                                         + idx * self.parameters['offset'])
                 self.drawing.append(handle[0])
+                # noinspection PyTypeChecker
                 yticks.append(idx * self.parameters['offset'])
             yticklabels = self.dataset.data.axes[0].values.astype(float)
         else:
             for idx in range(self.dataset.data.data.shape[1]):
+                # noinspection PyTypeChecker
                 handle = self.axes.plot(self.dataset.data.axes[0].values,
                                         self.dataset.data.data[:, idx]
                                         + idx * self.parameters['offset'])
                 self.drawing.append(handle[0])
+                # noinspection PyTypeChecker
                 yticks.append(idx * self.parameters['offset'])
             yticklabels = self.dataset.data.axes[1].values.astype(float)
-        self.properties.axes.yticks = yticks
-        self.properties.axes.yticklabels = self._format_yticklabels(yticklabels)
+        if self.parameters['offset']:
+            self.properties.axes.yticks = yticks
+            self.properties.axes.yticklabels = \
+                self._format_yticklabels(yticklabels)
 
     def _format_yticklabels(self, yticklabels):
         if self.parameters['yticklabelformat']:
             formatting = self.parameters['yticklabelformat']
+            # noinspection PyUnresolvedReferences
             yticklabels = [formatting % label for label in yticklabels]
         return yticklabels
 
@@ -1301,6 +1311,7 @@ class SinglePlotter2DStacked(SinglePlotter):
         if self.parameters['show_zero_lines']:
             dimension = self.parameters['stacking_dimension']
             for idx in range(self.dataset.data.data.shape[dimension]):
+                # noinspection PyTypeChecker
                 offset = idx * self.parameters['offset']
                 self.axes.axhline(
                     y=offset,

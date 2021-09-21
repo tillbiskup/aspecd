@@ -5,6 +5,20 @@ Changelog
 This page contains a summary of changes between the official ASpecD releases. Only the biggest changes are listed here. A complete and detailed log of all changes is available through the `GitHub Repository Browser <https://github.com/tillbiskup/aspecd/commits/master>`_.
 
 
+Version 0.3.1
+=============
+
+Released 2021-09-21
+
+The following bugs have been fixed:
+
+* Handling of lists as properties in recipes
+
+* Improved handling of axes labels with xkcd style
+
+* Offset in SinglePlotter2DStacked can be set to zero
+
+
 Version 0.3.0
 =============
 
