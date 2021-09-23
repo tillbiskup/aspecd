@@ -18,6 +18,7 @@ New features
   * New attribute :attr:`aspecd.tasks.PlotTask.target` allows adding a plot to an already existing plot.
   * :meth:`aspecd.tasks.Task.to_dict` adds (implicit) parameters of underlying task object
   * Classes from the ASpecD framework can be used without prefixing them with "aspecd" in recipes with "default_package" set to a package based on the ASpecD framework.
+  * ``serve`` command outputs log messages for each task
 
 
 Version 0.3.1

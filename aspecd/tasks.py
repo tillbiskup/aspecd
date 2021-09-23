@@ -741,9 +741,11 @@ Module documentation
 import collections
 import copy
 import datetime
+import logging
 import os
 import re
 import sys
+import warnings
 
 import matplotlib.pyplot as plt
 
@@ -753,6 +755,10 @@ import aspecd.io
 import aspecd.plotting
 import aspecd.system
 import aspecd.utils
+
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 
 class Recipe:
@@ -1011,6 +1017,7 @@ class Recipe:
             if hasattr(dataset, property_key):
                 setattr(dataset, property_key, value)
         self.datasets[label] = dataset
+        logger.info("Import dataset '%s' as '%s'", source, label)
 
     @staticmethod
     def _get_dataset_factory(package=''):
@@ -1859,7 +1866,7 @@ class ProcessingTask(Task):
         Textual comment regarding the processing step
 
 
-    .. versionchanged: 0.3
+    .. versionchanged:: 0.3
         New attribute :attr:`comment`
 
     """
@@ -1882,6 +1889,8 @@ class ProcessingTask(Task):
             if self.comment:
                 self._task.comment = self.comment
             if self.result:
+                logger.info('Perform "%s" on dataset "%s" resulting in "%s"',
+                            self.type, dataset_id, self.result)
                 dataset_copy = copy.deepcopy(dataset)
                 dataset_copy.process(processing_step=self._task)
                 if result_labels:
@@ -1891,6 +1900,8 @@ class ProcessingTask(Task):
                     dataset_copy.id = self.result
                     self.recipe.results[self.result] = dataset_copy
             else:
+                logger.info('Perform "%s" on dataset "%s"', self.type,
+                            dataset_id)
                 dataset.process(processing_step=self._task)
 
 
@@ -1995,12 +2006,17 @@ class MultiprocessingTask(Task):
             for dataset in self.recipe.get_datasets(self.apply_to):
                 datasets.append(copy.deepcopy(dataset))
             self._task.datasets = datasets
+            logger.info('Perform "%s" on datasets "%s" resulting in "%s"',
+                        self.type, ', '.join(self.apply_to),
+                        ', '.join(self.result))
             # noinspection PyUnresolvedReferences
             self._task.process()
             for number, dataset in enumerate(self._task.datasets):
                 self.recipe.results[self.result[number]] = dataset
         else:
             self._task.datasets = self.recipe.get_datasets(self.apply_to)
+            logger.info('Perform "%s" on datasets "%s"', self.type,
+                        ', '.join(self.apply_to))
             # noinspection PyUnresolvedReferences
             self._task.process()
 
@@ -2040,8 +2056,11 @@ class AnalysisTask(Task):
         Textual comment regarding the analysis step
 
 
-    .. versionchanged: 0.3
+    .. versionchanged:: 0.3
         New attribute :attr:`comment`
+
+    .. versionchanged:: 0.4
+        Raises warning if :meth:`perform` is called
 
     """
 
@@ -2050,6 +2069,11 @@ class AnalysisTask(Task):
         self.result = ''
         self.comment = ''
         self._module = 'analysis'
+
+    def _perform(self):
+        message = "Don't use AnalysisTask directly, but rather " \
+                  "'SingleanalysisTask' or 'MultianalysisTask'"
+        warnings.warn(message=message)
 
 
 class SingleanalysisTask(AnalysisTask):
@@ -2137,6 +2161,7 @@ class SingleanalysisTask(AnalysisTask):
             self._task = self.get_object()
             if self.comment:
                 self._task.comment = self.comment
+            logger.info('Perform "%s" on dataset "%s"', self.type, dataset_id)
             self._task = dataset.analyse(analysis_step=self._task)
             if self.result:
                 if result_labels:
@@ -2199,6 +2224,8 @@ class MultianalysisTask(AnalysisTask):
     def _perform(self):
         self._task = self.get_object()
         self._task.datasets = self.recipe.get_datasets(self.apply_to)
+        logger.info('Perform "%s" on datasets "%s"', self.type,
+                    ', '.join(self.apply_to))
         self._task.analyse()
         if self.result:
             # NOTE: This code is currently widely untested due to lack of
@@ -2234,6 +2261,7 @@ class AnnotationTask(Task):
         for dataset_id in self.apply_to:
             dataset = self.recipe.get_dataset(dataset_id)
             self._task = self.get_object()
+            logger.info('Perform "%s" on dataset "%s"', self.type, dataset_id)
             dataset.annotate(annotation_=self._task)
 
 
@@ -2344,6 +2372,8 @@ class PlotTask(Task):
             if self.recipe.output_directory:
                 filename = os.path.join(self.recipe.output_directory, filename)
             saver = aspecd.plotting.Saver(filename=filename)
+            logger.info('Save figure from "%s" to file "%s"', self.type,
+                        filename)
             plot.save(saver)
 
 
@@ -2462,6 +2492,7 @@ class SingleplotTask(PlotTask):
                 plotter_name = self._task.name.split(".")[-1]
                 self._task.filename = \
                     "".join([dataset_basename, "_", plotter_name, ".pdf"])
+            logger.info('Perform "%s" on dataset "%s"', self.type, dataset_id)
             dataset.plot(plotter=self._task)
             # noinspection PyTypeChecker
             self.save_plot(plot=self._task)
@@ -2549,6 +2580,8 @@ class MultiplotTask(PlotTask):
             self._task.figure = self.recipe.plotters[self.target].figure
             self._task.axes = self.recipe.plotters[self.target].axes
         self._task.datasets = self.recipe.get_datasets(self.apply_to)
+        logger.info('Perform "%s" on datasets "%s"', self.type,
+                    ', '.join(self.apply_to))
         # noinspection PyUnresolvedReferences
         self._task.plot()
         if "filename" not in self.properties and self.recipe.autosave_plots:
@@ -2645,6 +2678,7 @@ class CompositeplotTask(PlotTask):
 
     def _perform(self):
         self._task = self.get_object()
+        logger.info('Perform "%s"', self.type)
         # noinspection PyUnresolvedReferences
         self._task.plot()
         # noinspection PyTypeChecker
@@ -2760,6 +2794,7 @@ class ReportTask(Task):
             if self.recipe.output_directory:
                 task.filename = os.path.join(self.recipe.output_directory,
                                              task.filename)
+            logger.info('Perform "%s" on dataset "%s"', self.type, dataset_id)
             task.create()
             if self.compile and hasattr(task, 'compile'):
                 task.compile()
@@ -2843,6 +2878,7 @@ class ModelTask(Task):
         task = self.get_object()
         if self.from_dataset:
             task.from_dataset(self.recipe.get_dataset(self.from_dataset))
+        logger.info('Create model "%s"', self.type)
         result = task.create()
         if self.result:
             self.recipe.results[self.result] = result
@@ -2920,6 +2956,7 @@ class ExportTask(Task):
             if self.recipe.output_directory:
                 task.target = os.path.join(self.recipe.output_directory,
                                            task.target)
+            logger.info('Export "%s" to file "%s"', dataset_id, task.target)
             dataset.export_to(task)
 
 
@@ -3303,5 +3340,7 @@ def serve(recipe_filename=''):
             message = "You need to specify a recipe to serve."
             raise aspecd.exceptions.MissingRecipeError(message=message)
         recipe_filename = sys.argv[1]
+    logger.setLevel(logging.INFO)
+    logger.addHandler(logging.StreamHandler(stream=sys.stdout))
     chef_de_service = ChefDeService()
     chef_de_service.serve(recipe_filename=recipe_filename)

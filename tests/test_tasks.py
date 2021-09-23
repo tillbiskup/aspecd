@@ -127,6 +127,15 @@ class TestRecipe(unittest.TestCase):
         self.assertTrue(isinstance(self.recipe.datasets[self.dataset],
                                    dataset.Dataset))
 
+    def test_from_dict_with_dataset_issues_log_message(self):
+        id_ = 'foobar'
+        dict_ = {'datasets': [{'source': self.dataset, 'id': id_}]}
+        self.recipe.dataset_factory = self.dataset_factory
+        with self.assertLogs(__package__, level='INFO') as cm:
+            self.recipe.from_dict(dict_)
+        self.assertIn("Import dataset '{}' as '{}'".format(self.dataset, id_),
+                      cm.output[0])
+
     def test_from_dict_with_dataset_sets_dataset_id(self):
         dict_ = {'datasets': [self.dataset]}
         self.recipe.dataset_factory = self.dataset_factory
@@ -163,7 +172,7 @@ class TestRecipe(unittest.TestCase):
 
     def test_from_dict_with_dataset_as_dict_sets_dataset_label(self):
         id_ = 'foobar'
-        dict_ = {'datasets': [{'source': self.dataset}, 'id', id_]}
+        dict_ = {'datasets': [{'source': self.dataset, 'id': id_}]}
         self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         self.assertTrue(isinstance(self.recipe.datasets[id_],
@@ -1133,6 +1142,15 @@ class TestProcessingTask(unittest.TestCase):
         self.task.perform()
         self.assertTrue(self.recipe.datasets[self.dataset[0]].history)
 
+    def test_perform_task_issues_log_message(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        with self.assertLogs(__package__, level='INFO') as cm:
+            self.task.perform()
+        self.assertIn('Perform "{}" on dataset "{}"'.format(
+            self.processing_task['type'], self.dataset[0]), cm.output[0])
+
     def test_perform_task_on_multiple_datasets(self):
         self.dataset = ['foo', 'bar']
         self.prepare_recipe()
@@ -1160,6 +1178,18 @@ class TestProcessingTask(unittest.TestCase):
         self.task.recipe = self.recipe
         self.task.perform()
         self.assertTrue(len(self.recipe.results))
+
+    def test_perform_task_with_result_issues_log_message(self):
+        self.prepare_recipe()
+        result = 'foo'
+        self.processing_task['result'] = result
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        with self.assertLogs(__package__, level='INFO') as cm:
+            self.task.perform()
+        self.assertIn('Perform "{}" on dataset "{}" resulting in "{}"'.format(
+            self.processing_task['type'], self.dataset[0], result),
+            cm.output[0])
 
     def test_perform_task_with_result_and_multiple_datasets_adds_results(self):
         self.prepare_recipe()
@@ -1240,6 +1270,15 @@ class TestMultiProcessingTask(unittest.TestCase):
         self.task.perform()
         self.assertTrue(self.recipe.datasets[self.dataset[0]].history)
 
+    def test_perform_task_issues_log_message(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        with self.assertLogs(__package__, level='INFO') as cm:
+            self.task.perform()
+        self.assertIn('Perform "{}" on datasets "{}"'.format(
+            self.processing_task['type'], self.dataset[0]), cm.output[0])
+
     def test_perform_task_on_multiple_datasets(self):
         self.dataset = ['foo', 'bar']
         self.prepare_recipe()
@@ -1248,6 +1287,17 @@ class TestMultiProcessingTask(unittest.TestCase):
         self.task.perform()
         for dataset_ in self.recipe.datasets:
             self.assertTrue(self.recipe.datasets[dataset_].history)
+
+    def test_perform_task_on_multiple_datasets_issues_log_message(self):
+        self.dataset = ['foo', 'bar']
+        self.prepare_recipe()
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        with self.assertLogs(__package__, level='INFO') as cm:
+            self.task.perform()
+        self.assertIn('Perform "{}" on datasets "{}"'.format(
+            self.processing_task['type'], ', '.join(self.dataset)),
+            cm.output[0])
 
     def test_has_result_property(self):
         self.assertTrue(hasattr(self.task, 'result'))
@@ -1277,6 +1327,18 @@ class TestMultiProcessingTask(unittest.TestCase):
         self.task.perform()
         self.assertNotEqual(self.recipe.results[result[0]],
                             self.recipe.datasets[self.dataset[0]])
+
+    def test_perform_task_with_result_issues_log_message(self):
+        self.prepare_recipe()
+        result = ['foo']
+        self.processing_task['result'] = result
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        with self.assertLogs(__package__, level='INFO') as cm:
+            self.task.perform()
+        self.assertIn('Perform "{}" on datasets "{}" resulting in "{}"'.format(
+            self.processing_task['type'], self.dataset[0], result[0]),
+            cm.output[0])
 
     def test_perform_task_with_result_and_multiple_datasets_adds_results(self):
         self.prepare_recipe()
@@ -1315,6 +1377,14 @@ class TestAnalysisTask(unittest.TestCase):
     def test_has_result_property(self):
         self.assertTrue(hasattr(self.task, 'result'))
 
+    def test_perform_issues_warning(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.analysis_task)
+        self.task.recipe = self.recipe
+        message = "Don't use AnalysisTask directly, but rather"
+        with self.assertWarnsRegex(UserWarning, message):
+            self.task.perform()
+
 
 class TestSingleAnalysisTask(unittest.TestCase):
     def setUp(self):
@@ -1342,6 +1412,15 @@ class TestSingleAnalysisTask(unittest.TestCase):
         self.task.recipe = self.recipe
         self.task.perform()
         self.assertTrue(self.recipe.datasets[self.dataset[0]].analyses)
+
+    def test_perform_task_issues_log_message(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.analysis_task)
+        self.task.recipe = self.recipe
+        with self.assertLogs(__package__, level='INFO') as cm:
+            self.task.perform()
+        self.assertIn('Perform "{}" on dataset "{}"'.format(
+            self.analysis_task['type'], self.dataset[0]), cm.output[0])
 
     def test_result_attribute_gets_set_from_dict(self):
         self.prepare_recipe()
@@ -1419,6 +1498,15 @@ class TestMultiAnalysisTask(unittest.TestCase):
         self.task.recipe = self.recipe
         self.task.perform()
 
+    def test_perform_task_issues_log_message(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.analysis_task)
+        self.task.recipe = self.recipe
+        with self.assertLogs(__package__, level='INFO') as cm:
+            self.task.perform()
+        self.assertIn('Perform "{}" on datasets "{}"'.format(
+            self.analysis_task['type'], ', '.join(self.dataset)), cm.output[0])
+
     def test_result_attribute_gets_set_from_dict(self):
         self.prepare_recipe()
         result = 'foo'
@@ -1482,6 +1570,15 @@ class TestAnnotationTask(unittest.TestCase):
         self.task.recipe = self.recipe
         self.task.perform()
         self.assertTrue(self.recipe.datasets[self.dataset[0]].annotations)
+
+    def test_perform_task_issues_log_message(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.annotation_task)
+        self.task.recipe = self.recipe
+        with self.assertLogs(__package__, level='INFO') as cm:
+            self.task.perform()
+        self.assertIn('Perform "{}" on dataset "{}"'.format(
+            self.annotation_task['type'], self.dataset[0]), cm.output[0])
 
 
 class TestPlotTask(unittest.TestCase):
@@ -1632,6 +1729,15 @@ class TestSinglePlotTask(unittest.TestCase):
         self.task.perform()
         self.assertTrue(self.recipe.datasets[self.dataset[0]].representations)
 
+    def test_perform_task_issues_log_message(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        with self.assertLogs(__package__, level='INFO') as cm:
+            self.task.perform()
+        self.assertIn('Perform "{}" on dataset "{}"'.format(
+            self.plotting_task['type'], self.dataset[0]), cm.output[0])
+
     def test_perform_task_with_filename_saves_plot(self):
         self.prepare_recipe()
         # noinspection PyTypeChecker
@@ -1640,6 +1746,17 @@ class TestSinglePlotTask(unittest.TestCase):
         self.task.recipe = self.recipe
         self.task.perform()
         self.assertTrue(os.path.exists(self.figure_filename))
+
+    def test_perform_task_with_filename_issues_log_message(self):
+        self.prepare_recipe()
+        # noinspection PyTypeChecker
+        self.plotting_task['properties'] = {'filename': self.figure_filename}
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        with self.assertLogs(__package__, level='INFO') as cm:
+            self.task.perform()
+        self.assertIn('Save figure from "{}" to file "{}"'.format(
+            self.plotting_task['type'], self.figure_filename), cm.output[1])
 
     def test_perform_task_with_list_of_filenames_saves_plots(self):
         self.plotting_task = {'kind': 'singleplot',
@@ -1763,6 +1880,15 @@ class TestMultiPlotTask(unittest.TestCase):
         self.task.from_dict(self.plotting_task)
         self.task.recipe = self.recipe
         self.task.perform()
+
+    def test_perform_task_issues_log_message(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        with self.assertLogs(__package__, level='INFO') as cm:
+            self.task.perform()
+        self.assertIn('Perform "{}" on datasets "{}"'.format(
+            self.plotting_task['type'], ', '.join(self.dataset)), cm.output[0])
 
     def test_perform_task_with_filename_saves_plot(self):
         self.prepare_recipe()
@@ -1900,6 +2026,18 @@ class TestCompositePlotTask(unittest.TestCase):
         self.assertTrue(isinstance(self.task._task.plotter[0],
                                    aspecd.plotting.Plotter))
 
+    def test_perform_task_issues_log_message(self):
+        self.prepare_recipe()
+        self.pretask.from_dict(self.singleplotting_task)
+        self.pretask.recipe = self.recipe
+        self.pretask.perform()
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        with self.assertLogs(__package__, level='INFO') as cm:
+            self.task.perform()
+        self.assertIn('Perform "{}"'.format(self.plotting_task['type']),
+            cm.output[0])
+
     def test_perform_task_with_multiplotter(self):
         self.pretask = tasks.MultiplotTask()
         self.plotting_task['properties']['plotter'] = ['multiplotter']
@@ -1990,6 +2128,17 @@ class TestReportTask(unittest.TestCase):
         self.task.recipe = self.recipe
         self.task.perform()
         self.assertTrue(os.path.exists(self.filename))
+
+    def test_perform_task_issues_log_message(self):
+        self.prepare_recipe()
+        template_content = "{@dataset['id']}"
+        self.prepare_template(template_content)
+        self.task.from_dict(self.report_task)
+        self.task.recipe = self.recipe
+        with self.assertLogs(__package__, level='INFO') as cm:
+            self.task.perform()
+        self.assertIn('Perform "{}" on dataset "{}"'.format(
+            self.report_task['type'], self.dataset), cm.output[0])
 
     def test_perform_task_adds_dataset_to_context(self):
         self.prepare_recipe()
@@ -2141,6 +2290,15 @@ class TestModelTask(unittest.TestCase):
         self.task.recipe = self.recipe
         self.task.perform()
 
+    def test_perform_task_issues_log_message(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.model_task)
+        self.task.recipe = self.recipe
+        with self.assertLogs(__package__, level='INFO') as cm:
+            self.task.perform()
+        self.assertIn('Create model "{}"'.format(self.model_task['type']),
+                      cm.output[0])
+
     def test_result_attribute_gets_set_from_dict(self):
         self.prepare_recipe()
         result = 'foo'
@@ -2221,6 +2379,16 @@ class TestExportTask(unittest.TestCase):
         self.task.from_dict(self.export_task)
         self.task.recipe = self.recipe
         self.task.perform()
+
+    def test_perform_task_issues_log_message(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.export_task)
+        self.task.recipe = self.recipe
+        with self.assertLogs(__package__, level='INFO') as cm:
+            self.task.perform()
+        self.assertIn('Export "{}" to file "{}"'.format(self.dataset,
+                                                        self.filename),
+                      cm.output[0])
 
     def test_perform_task_writes_file(self):
         self.prepare_recipe()
@@ -2504,3 +2672,9 @@ class TestServe(unittest.TestCase):
         self.create_recipe()
         with self.assertRaises(subprocess.CalledProcessError):
             subprocess.run(["serve"], check=True)
+
+    def test_serve_console_entry_point_prints_log_info(self):
+        self.create_recipe()
+        result = subprocess.run(["serve", self.recipe_filename],
+                                capture_output=True, text=True)
+        self.assertIn('Import dataset', result.stdout)

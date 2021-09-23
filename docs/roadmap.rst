@@ -8,6 +8,32 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.4
 ===============
 
+* Recipe-driven data analysis:
+
+  * Logging with sensible defaults, telling the user what's going on per task and per dataset.
+  * Catching of errors, excluding the stack trace and only showing the error message (perhaps in debug mode showing the stack trace as well)
+  * Command-line options for ``serve`` setting the log level/verbosity
+
+* Report task:
+
+  * Add figure captions to context if available
+  * Operating on recipes, *i.e.* report on all tasks in a recipe
+  * Adding arbitrary dict representations of properties of datasets/results to context
+
+* Default report templates for each type of processing/analysis task
+
+  Includes deciding where to store these templates, whether to have them stored in different directories for different languages, and alike. Ideally, templates should be copied to a user-accessible directory for modifying there. (See experience gained implementing pymetacode)
+
+* Expand use cases: reports
+
+* Recipes: Subrecipes that can be included in recipes
+
+* Interfacing towards fitting/simulation frameworks
+
+
+For later versions
+==================
+
 * Remaining basic processing and analysis steps:
 
   * denoising (via SVD or similar)
@@ -18,32 +44,6 @@ For version 0.4
 
   * May be useful to automatically create a list of references to cite (report) depending on the methods actually used.
   * May need an implementation of some kind of bibliographic record
-
-* Reporter: Method for adding dict representations of datasets to context
-
-* Report task:
-
-  * Add figure captions to context if available
-  * Operating on recipes, *i.e.* report on all tasks in a recipe
-  * Adding arbitrary dict representations of properties of datasets/results to context
-
-* Default report templates for each type of processing/analysis task
-
-  Includes deciding where to store these templates, whether to have them stored in different directories for different languages, and alike. Ideally, templates should be copied to a user-accessible directory for modifying there.
-
-* Expand use cases: reports
-
-* Recipes: Subrecipes that can be included in recipes
-
-* Interfacing towards fitting/simulation frameworks
-
-* Basic maths in values of recipes (ranges, basic numpy functions)?
-
-  May impair the platform-independence of the recipe (*i.e.*, tying it to Python/NumPy)
-
-
-For later versions
-==================
 
 * Interpolation
 
@@ -57,6 +57,10 @@ For later versions
 * Tabular representations of characteristics extracted from datasets
 
 * Plotter: Factory to create single plots of each given dataset.
+
+* Basic maths in values of recipes (ranges, basic numpy functions)?
+
+  May impair the platform-independence of the recipe (*i.e.*, tying it to Python/NumPy)
 
 
 Todos
