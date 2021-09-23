@@ -1590,24 +1590,35 @@ class Task(aspecd.utils.ToDictMixin):
         specifying explicit class names including packages, but at the same
         time to omit the package name for classes from the current package.
 
+        Furthermore, if a package different than aspecd is provided in
+        :attr:`package` and the class cannot be found in there, the class is
+        searched in the aspecd package instead. This allows for using all of
+        the classes provided with the ASpecD framework without needing to
+        prefix them in a recipe and therefore greatly enhances the user
+        experience.
+
         Returns
         -------
         obj : `object`
             Object of a class defined in the :attr:`type` attribute of a task
 
         """
-        if self._module:
-            class_name = '.'.join([self._module, self.type])
+        if '.' in self.kind:
+            package_name, self.kind = self.kind.split('.')
+        elif self.package:
+            package_name = self.package
         else:
-            class_name = '.'.join([self.kind, self.type])
+            package_name = aspecd.utils.package_name(self)
+        if self._module:
+            class_name = '.'.join([package_name, self._module, self.type])
+        else:
+            class_name = '.'.join([package_name, self.kind, self.type])
         try:
             obj = aspecd.utils.object_from_class_name(class_name)
-        except (ImportError, AttributeError):
-            if self.package:
-                package_name = self.package
-            else:
-                package_name = aspecd.utils.package_name(self)
-            class_name = '.'.join([package_name, class_name])
+        except (AttributeError, ModuleNotFoundError):
+            # Fall back to loading the class from the ASpecD package
+            class_name = '.'.join(['aspecd',
+                                   '.'.join(class_name.split('.')[1:])])
             obj = aspecd.utils.object_from_class_name(class_name)
         return obj
 

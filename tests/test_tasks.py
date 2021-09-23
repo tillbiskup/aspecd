@@ -770,6 +770,15 @@ class TestTask(unittest.TestCase):
         obj = self.task.get_object()
         self.assertTrue(isinstance(obj, processing.SingleProcessingStep))
 
+    def test_get_object_existing_in_aspecd_but_not_in_current_package(self):
+        kind = 'processing'
+        type_ = 'SingleProcessingStep'
+        self.task.kind = kind
+        self.task.type = type_
+        self.task.package = 'foobar'
+        obj = self.task.get_object()
+        self.assertTrue(isinstance(obj, processing.SingleProcessingStep))
+
     def test_get_object_sets_object_attributes(self):
         kind = 'processing'
         type_ = 'SingleProcessingStep'
