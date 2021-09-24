@@ -14,6 +14,8 @@ For version 0.4
   * Catching of errors, excluding the stack trace and only showing the error message (perhaps in debug mode showing the stack trace as well)
   * Command-line options for ``serve`` setting the log level/verbosity
 
+* References in processing and analysis steps (using bibrecord package)
+
 * Report task:
 
   * Add figure captions to context if available
@@ -39,11 +41,6 @@ For later versions
   * denoising (via SVD or similar)
 
   * SNREstimation with explicitly providing noise (using both, processing and analysis)
-
-* References in processing and analysis steps?
-
-  * May be useful to automatically create a list of references to cite (report) depending on the methods actually used.
-  * May need an implementation of some kind of bibliographic record
 
 * Interpolation
 
