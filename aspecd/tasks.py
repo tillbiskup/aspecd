@@ -1000,6 +1000,7 @@ class Recipe:
             label = key
         if self.datasets_source_directory:
             source = os.path.join(self.datasets_source_directory, source)
+        logger.info('Import dataset "%s" as "%s"', source, label)
         if 'package' in properties:
             dataset_factory = \
                 self._get_dataset_factory(package=properties['package'])
@@ -1017,7 +1018,6 @@ class Recipe:
             if hasattr(dataset, property_key):
                 setattr(dataset, property_key, value)
         self.datasets[label] = dataset
-        logger.info("Import dataset '%s' as '%s'", source, label)
 
     @staticmethod
     def _get_dataset_factory(package=''):

@@ -133,7 +133,7 @@ class TestRecipe(unittest.TestCase):
         self.recipe.dataset_factory = self.dataset_factory
         with self.assertLogs(__package__, level='INFO') as cm:
             self.recipe.from_dict(dict_)
-        self.assertIn("Import dataset '{}' as '{}'".format(self.dataset, id_),
+        self.assertIn('Import dataset "{}" as "{}"'.format(self.dataset, id_),
                       cm.output[0])
 
     def test_from_dict_with_dataset_sets_dataset_id(self):
