@@ -10,6 +10,8 @@ Version 0.4.0
 
 Not yet released
 
+**Note**: Starting with this release ASpecD requires Python >= 3.6.
+
 New features
 ------------
 
@@ -19,6 +21,8 @@ New features
   * :meth:`aspecd.tasks.Task.to_dict` adds (implicit) parameters of underlying task object
   * Classes from the ASpecD framework can be used without prefixing them with "aspecd" in recipes with "default_package" set to a package based on the ASpecD framework.
   * ``serve`` command outputs log messages for each task
+
+* References in processing and analysis steps and models (using bibrecord package)
 
 
 Version 0.3.1

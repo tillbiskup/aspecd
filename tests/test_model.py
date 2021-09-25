@@ -35,6 +35,12 @@ class TestModel(unittest.TestCase):
     def test_description_property_describes_abstract_model(self):
         self.assertIn('abstract model', self.model.description.lower())
 
+    def test_has_references_property(self):
+        self.assertTrue(hasattr(self.model, 'references'))
+
+    def test_description_references_is_list(self):
+        self.assertTrue(isinstance(self.model.references, list))
+
     def test_has_create_method(self):
         self.assertTrue(hasattr(self.model, 'create'))
         self.assertTrue(callable(self.model.create))

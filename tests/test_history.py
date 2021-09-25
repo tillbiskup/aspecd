@@ -141,6 +141,9 @@ class TestProcessingStepRecord(unittest.TestCase):
     def test_has_comment_property(self):
         self.assertTrue(hasattr(self.processing_record, 'comment'))
 
+    def test_has_references_property(self):
+        self.assertTrue(hasattr(self.processing_record, 'references'))
+
     def test_processing_object_gets_correct_parameters_value(self):
         test_dictionary = dict(bla='blub', foo='bar')
         self.processing_step.parameters = test_dictionary
@@ -161,6 +164,13 @@ class TestProcessingStepRecord(unittest.TestCase):
             aspecd.history.ProcessingStepRecord(self.processing_step)
         test_object = self.processing_record.create_processing_step()
         self.assertEqual(test_object.comment, test_comment)
+
+    def test_processing_object_gets_correct_references_value(self):
+        self.processing_step.references = ['foo']
+        self.processing_record = \
+            aspecd.history.ProcessingStepRecord(self.processing_step)
+        test_object = self.processing_record.create_processing_step()
+        self.assertEqual(test_object.references, ['foo'])
 
     def test_has_to_dict_method(self):
         self.assertTrue(hasattr(self.processing_record, 'to_dict'))
@@ -278,6 +288,9 @@ class TestAnalysisStepRecord(unittest.TestCase):
     def test_has_comment_property(self):
         self.assertTrue(hasattr(self.analysis_record, 'comment'))
 
+    def test_has_references_property(self):
+        self.assertTrue(hasattr(self.analysis_record, 'references'))
+
     def test_analysis_object_gets_correct_parameters_value(self):
         test_dictionary = dict(bla='blub', foo='bar')
         self.analysis_step.parameters = test_dictionary
@@ -293,6 +306,13 @@ class TestAnalysisStepRecord(unittest.TestCase):
             aspecd.history.AnalysisStepRecord(self.analysis_step)
         test_object = self.analysis_record.create_analysis_step()
         self.assertEqual(test_object.comment, test_comment)
+
+    def test_analysissteprecord_gets_correct_references_value(self):
+        self.analysis_step.references = ['foo']
+        self.analysis_record = \
+            aspecd.history.AnalysisStepRecord(self.analysis_step)
+        test_object = self.analysis_record.create_analysis_step()
+        self.assertEqual(['foo'], test_object.references)
 
     def test_analysissteprecord_gets_result_from_analysisstep(self):
         test_result = ['foo']

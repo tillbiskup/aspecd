@@ -117,16 +117,28 @@ class ProcessingStepRecord(aspecd.utils.ToDictMixin):
     ----------
     undoable : :class:`bool`
         Can this processing step be reverted?
+
     description : :class:`str`
         Short description, to be set in class definition
+
     parameters : :class:`dict`
         Parameters required for performing the processing step
 
         All parameters, implicit and explicit.
+
     comment : :class:`str`
         User-supplied comment describing intent, purpose, reason, ...
+
+    references : :class:`list`
+        List of references with relevance for the implementation of the
+        processing step.
+
+        Use appropriate record types from the `bibrecord package
+        <https://bibrecord.docs.till-biskup.de/>`_.
+
     class_name : :class:`str`
         Fully qualified name of the class of the corresponding processing step
+
 
     Parameters
     ----------
@@ -146,9 +158,10 @@ class ProcessingStepRecord(aspecd.utils.ToDictMixin):
         self.description = ''
         self.parameters = dict()
         self.comment = ''
+        self.references = []
         self.class_name = ''
         self._attributes_to_copy = ['description', 'parameters', 'undoable',
-                                    'comment']
+                                    'comment', 'references']
         if processing_step:
             self.from_processing_step(processing_step)
 
@@ -259,10 +272,12 @@ class AnalysisStepRecord(aspecd.utils.ToDictMixin):
     ----------
     description : :class:`str`
         Short description, to be set in class definition
+
     parameters : :class:`dict`
         Parameters required for performing the analysis step
 
         All parameters, implicit and explicit.
+
     result
         Results of the analysis step
 
@@ -271,8 +286,17 @@ class AnalysisStepRecord(aspecd.utils.ToDictMixin):
 
         In case of a dataset, it is a calculated dataset
         (:class:`aspecd.dataset.CalculatedDataset`)
+
     comment : :class:`str`
         User-supplied comment describing intent, purpose, reason, ...
+
+    references : :class:`list`
+        List of references with relevance for the implementation of the
+        processing step.
+
+        Use appropriate record types from the `bibrecord package
+        <https://bibrecord.docs.till-biskup.de/>`_.
+
     class_name : :class:`str`
         Fully qualified name of the class of the corresponding analysis step
 
@@ -293,10 +317,11 @@ class AnalysisStepRecord(aspecd.utils.ToDictMixin):
         self.description = ''
         self.parameters = dict()
         self.comment = ''
+        self.references = []
         self.class_name = ''
         self.result = None
         self._attributes_to_copy = ['description', 'parameters', 'comment',
-                                    'result']
+                                    'references', 'result']
         if analysis_step:
             self.from_analysis_step(analysis_step)
 
@@ -323,9 +348,9 @@ class AnalysisStepRecord(aspecd.utils.ToDictMixin):
 
         """
         analysis_step = aspecd.utils.object_from_class_name(self.class_name)
-        analysis_step.comment = self.comment
-        analysis_step.parameters = self.parameters
-        analysis_step.description = self.description
+        for attribute in self._attributes_to_copy:
+            setattr(analysis_step, attribute, getattr(self, attribute))
+        analysis_step.result = None
         return analysis_step
 
     def from_dict(self, dict_=None):

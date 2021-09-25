@@ -10,11 +10,8 @@ For version 0.4
 
 * Recipe-driven data analysis:
 
-  * Logging with sensible defaults, telling the user what's going on per task and per dataset.
   * Catching of errors, excluding the stack trace and only showing the error message (perhaps in debug mode showing the stack trace as well)
   * Command-line options for ``serve`` setting the log level/verbosity
-
-* References in processing and analysis steps (using bibrecord package)
 
 * Report task:
 

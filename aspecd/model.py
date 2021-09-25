@@ -267,12 +267,22 @@ class Model:
     description : :class:`str`
         Short description, to be set in class definition
 
+    references : :class:`list`
+        List of references with relevance for the implementation of the
+        processing step.
+
+        Use appropriate record types from the `bibrecord package
+        <https://bibrecord.docs.till-biskup.de/>`_.
+
 
     .. versionchanged:: 0.3
         New attribute :attr:`description`
 
     .. versionchanged:: 0.3
         New non-public method :meth:`_sanitise_parameters`
+
+    .. versionchanged:: 0.4
+        New attribute :attr:`references`
 
     """
 
@@ -281,6 +291,7 @@ class Model:
         self.parameters = dict()
         self.variables = []
         self.description = 'Abstract model'
+        self.references = []
         self._dataset = aspecd.dataset.CalculatedDataset()
         self._axes_from_dataset = []
 
