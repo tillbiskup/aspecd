@@ -22,6 +22,8 @@ New features
   * Classes from the ASpecD framework can be used without prefixing them with "aspecd" in recipes with "default_package" set to a package based on the ASpecD framework.
   * ``serve`` command outputs log messages for each task
   * Command-line options for ``serve`` setting the log level/verbosity
+  * Catching of errors, excluding the stack trace and only showing the error message (but full stack trace in verbose mode)
+
 
 * References in processing and analysis steps and models (using bibrecord package)
 

@@ -2641,6 +2641,11 @@ class TestServe(unittest.TestCase):
         self.chef_de_service = tasks.ChefDeService()
         self.recipe_filename = 'foo.yaml'
         self.figure_filename = 'foo.pdf'
+        self.recipe_dict = {
+            'datasets': ['foo'],
+            'tasks': [{'kind': 'singleplot', 'type': 'SinglePlotter',
+                       'properties': {'filename': self.figure_filename}}],
+        }
 
     def tearDown(self):
         if os.path.exists(self.recipe_filename):
@@ -2651,13 +2656,8 @@ class TestServe(unittest.TestCase):
             os.remove(file)
 
     def create_recipe(self):
-        recipe_dict = {
-            'datasets': ['foo'],
-            'tasks': [{'kind': 'singleplot', 'type': 'SinglePlotter',
-                       'properties': {'filename': self.figure_filename}}],
-        }
         yaml = utils.Yaml()
-        yaml.dict = recipe_dict
+        yaml.dict = self.recipe_dict
         yaml.write_to(self.recipe_filename)
 
     def test_call_without_recipe_prints_help(self):
@@ -2720,3 +2720,18 @@ class TestServe(unittest.TestCase):
         result = subprocess.run(["serve", "-q", self.recipe_filename],
                                 capture_output=True, text=True)
         self.assertNotIn('Import dataset', result.stdout)
+
+    def test_serve_catches_exceptions(self):
+        self.recipe_dict["tasks"][0]["kind"] = "foo"
+        self.create_recipe()
+        result = subprocess.run(["serve", self.recipe_filename],
+                                capture_output=True, text=True)
+        self.assertNotIn("Traceback (most recent call last):",
+                         [result.stderr, result.stdout])
+
+    def test_serve_shows_stack_trace_of_exception_in_verbose_mode(self):
+        self.recipe_dict["tasks"][0]["kind"] = "foo"
+        self.create_recipe()
+        result = subprocess.run(["serve", "-v", self.recipe_filename],
+                                capture_output=True, text=True)
+        self.assertIn("Traceback (most recent call last):", result.stdout)

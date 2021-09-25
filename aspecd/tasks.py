@@ -3348,4 +3348,10 @@ def serve():
             logger.setLevel(logging.INFO)
         logger.addHandler(logging.StreamHandler(stream=sys.stdout))
     chef_de_service = ChefDeService()
-    chef_de_service.serve(recipe_filename=args.recipe)
+    try:
+        chef_de_service.serve(recipe_filename=args.recipe)
+    except Exception as e:
+        if args.verbose:
+            logger.exception(e)
+        else:
+            logger.error(f"ERROR: {str(e)}")
