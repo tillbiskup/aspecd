@@ -2634,23 +2634,20 @@ class TestChefDeService(unittest.TestCase):
         os.remove(history_filename)
 
 
-@unittest.skip
+#@unittest.skip
 class TestServe(unittest.TestCase):
 
     def setUp(self):
         self.chef_de_service = tasks.ChefDeService()
         self.recipe_filename = 'foo.yaml'
         self.figure_filename = 'foo.pdf'
-        self.history_filename = ''
 
     def tearDown(self):
         if os.path.exists(self.recipe_filename):
             os.remove(self.recipe_filename)
         if os.path.exists(self.figure_filename):
             os.remove(self.figure_filename)
-        if self.history_filename and os.path.exists(self.history_filename):
-            os.remove(self.history_filename)
-        for file in glob.glob('*.yaml'):
+        for file in glob.glob(f'{self.recipe_filename.split(".")[0]}-*.yaml'):
             os.remove(file)
 
     def create_recipe(self):
@@ -2662,6 +2659,45 @@ class TestServe(unittest.TestCase):
         yaml = utils.Yaml()
         yaml.dict = recipe_dict
         yaml.write_to(self.recipe_filename)
+
+    def test_call_without_recipe_prints_help(self):
+        result = subprocess.run(["serve"], capture_output=True, text=True)
+        self.assertIn('error: the following arguments are required',
+                      result.stderr)
+
+    def test_help_contains_program_name(self):
+        result = subprocess.run(["serve", "-h"], capture_output=True, text=True)
+        self.assertIn('usage: serve [', result.stdout)
+
+    def test_help_contains_program_description(self):
+        result = subprocess.run(["serve", "-h"], capture_output=True, text=True)
+        self.assertIn('Process a recipe in context of recipe-driven data '
+                      'analysis', result.stdout)
+
+    def test_help_contains_description_of_recipe_argument(self):
+        result = subprocess.run(["serve", "-h"], capture_output=True, text=True)
+        self.assertIn('YAML file containing recipe', result.stdout)
+
+    def test_has_quiet_argument(self):
+        result = subprocess.run(["serve", "-h"], capture_output=True, text=True)
+        self.assertIn('-q, --quiet', result.stdout)
+
+    def test_quiet_argument_has_description(self):
+        result = subprocess.run(["serve", "-h"], capture_output=True, text=True)
+        self.assertIn("-q, --quiet    don't show any output", result.stdout)
+
+    def test_has_verbose_argument(self):
+        result = subprocess.run(["serve", "-h"], capture_output=True, text=True)
+        self.assertIn('-v, --verbose', result.stdout)
+
+    def test_verbose_argument_has_description(self):
+        result = subprocess.run(["serve", "-h"], capture_output=True, text=True)
+        print(result.stdout)
+        self.assertIn("-v, --verbose  show debug output", result.stdout)
+
+    def test_verbose_and_quite_arguments_are_mutually_exclusive(self):
+        result = subprocess.run(["serve", "-h"], capture_output=True, text=True)
+        self.assertIn("[-v | -q]", result.stdout)
 
     def test_serve_console_entry_point_cooks_recipe(self):
         self.create_recipe()
@@ -2678,3 +2714,9 @@ class TestServe(unittest.TestCase):
         result = subprocess.run(["serve", self.recipe_filename],
                                 capture_output=True, text=True)
         self.assertIn('Import dataset', result.stdout)
+
+    def test_call_with_quiet_option_does_not_print_log_info(self):
+        self.create_recipe()
+        result = subprocess.run(["serve", "-q", self.recipe_filename],
+                                capture_output=True, text=True)
+        self.assertNotIn('Import dataset', result.stdout)

@@ -737,7 +737,7 @@ Module documentation
         Useful particularly for larger datasets and/or longer lists of tasks.
 
 """
-
+import argparse
 import collections
 import copy
 import datetime
@@ -3306,7 +3306,7 @@ class ChefDeService:
         self._history_filename = basename + '-' + timestamp + extension
 
 
-def serve(recipe_filename=''):
+def serve():
     """
     Serve the results of cooking a recipe
 
@@ -3324,23 +3324,28 @@ def serve(recipe_filename=''):
     recipes that rely on functionality of ASpecD-derived packages for their
     being cooked and served.
 
-    Parameters
-    ----------
-    recipe_filename : :class:`str`
-        Name of the recipe YAML file to cook
-
     Raises
     ------
     aspecd.exceptions.MissingRecipeError
         Raised if no recipe filename is provided upon trying to serve
 
     """
-    if not recipe_filename:
-        if len(sys.argv) < 2:
-            message = "You need to specify a recipe to serve."
-            raise aspecd.exceptions.MissingRecipeError(message=message)
-        recipe_filename = sys.argv[1]
-    logger.setLevel(logging.INFO)
-    logger.addHandler(logging.StreamHandler(stream=sys.stdout))
+    parser = argparse.ArgumentParser(
+        description="Process a recipe in context of recipe-driven data analysis"
+    )
+    parser.add_argument("recipe", help="YAML file containing recipe")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("-v", "--verbose", action="store_true",
+                       help="show debug output")
+    group.add_argument("-q", "--quiet", action="store_true",
+                       help="don't show any output")
+    args = parser.parse_args()
+
+    if not args.quiet:
+        if args.verbose:
+            logger.setLevel(logging.DEBUG)
+        else:
+            logger.setLevel(logging.INFO)
+        logger.addHandler(logging.StreamHandler(stream=sys.stdout))
     chef_de_service = ChefDeService()
-    chef_de_service.serve(recipe_filename=recipe_filename)
+    chef_de_service.serve(recipe_filename=args.recipe)

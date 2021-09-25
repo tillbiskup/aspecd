@@ -11,7 +11,6 @@ For version 0.4
 * Recipe-driven data analysis:
 
   * Catching of errors, excluding the stack trace and only showing the error message (perhaps in debug mode showing the stack trace as well)
-  * Command-line options for ``serve`` setting the log level/verbosity
 
 * Report task:
 
