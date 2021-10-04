@@ -92,7 +92,8 @@ class ToDictMixin:
 
         Usually, the reason to exclude public attributes from being added to
         the dictionary is to avoid infinite loops, as sometimes an object
-        may contain a reference to another object that in turn references back.
+        may contain a reference to another object that in turn references
+        back.
 
     _include_in_to_dict : :class:`list`
         Names of (public) attributes to include into dictionary
@@ -405,10 +406,10 @@ class Yaml:
 
         Background: The PyYAML package cannot easily handle NumPy arrays out
         of the box. However, datasets and alike should sometimes be
-        serialised in form of YAML files. Hence the need for a simple method of
-        serialising NumPy arrays. Furthermore, larger NumPy arrays should
-        not be serialised in text form in YAML directly, but rather be
-        stored in binary form, probably in a separate file.
+        serialised in form of YAML files. Hence the need for a simple
+        method of serialising NumPy arrays. Furthermore, larger NumPy
+        arrays should not be serialised in text form in YAML directly,
+        but rather be stored in binary form, probably in a separate file.
 
         The reason for saving (larger) NumPy arrays in binary rather than
         text form is twofold: The size of a binary file is much smaller,
@@ -513,7 +514,8 @@ class Yaml:
         self.deserialise_numpy_arrays()
 
     def _create_binary_directory(self):
-        if self.binary_directory and not os.path.exists(self.binary_directory):
+        if self.binary_directory and not os.path.exists(
+                self.binary_directory):
             os.mkdir(self.binary_directory)
 
 
@@ -552,7 +554,8 @@ def replace_value_in_dict(replacement=None, target=None):  # noqa: MC0001
                     if isinstance(list_element, dict):
                         target[key][list_index] = \
                             replace_value_in_dict(replacement, list_element)
-                    elif list_element.__hash__ and list_element in replacement:
+                    elif list_element.__hash__ and list_element in \
+                            replacement:
                         target[key][list_index] = replacement[list_element]
                     else:
                         target[key][list_index] = list_element
@@ -767,8 +770,8 @@ def basename(filename):
     Parameters
     ----------
     filename : :class:`str`
-        Name of the file (may contain absolute path and extension) the basename
-        should be returned for.
+        Name of the file (may contain absolute path and extension) the
+        basename should be returned for.
 
     Returns
     -------
@@ -829,7 +832,8 @@ def not_zero(value):
     .. versionadded:: 0.3
 
     """
-    return np.copysign(max(abs(value), np.finfo(np.float64).resolution), value)
+    return np.copysign(max(abs(value), np.finfo(np.float64).resolution),
+                       value)
 
 
 def isiterable(variable):

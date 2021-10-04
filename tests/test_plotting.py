@@ -1,10 +1,11 @@
 """Tests for plotting."""
 import warnings
 
+import matplotlib.axes
 import matplotlib.collections
 import matplotlib.figure
-import matplotlib.axes
 import matplotlib.legend
+import matplotlib.lines
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -1389,7 +1390,6 @@ class TestDrawingProperties(unittest.TestCase):
 
     def test_apply_sets_properties(self):
         self.drawing_properties.label = 'foo'
-        # noinspection PyUnresolvedReferences
         line = matplotlib.lines.Line2D([0, 1], [0, 0])
         self.drawing_properties.apply(drawing=line)
         self.assertEqual(self.drawing_properties.label, line.get_label())
