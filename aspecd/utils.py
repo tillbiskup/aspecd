@@ -832,7 +832,7 @@ def not_zero(value):
     return np.copysign(max(abs(value), np.finfo(np.float64).resolution), value)
 
 
-def iterable(variable):
+def isiterable(variable):
     """
     Check whether the given variable is iterable.
 

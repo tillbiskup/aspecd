@@ -846,16 +846,16 @@ class TestNotZero(unittest.TestCase):
 class TestIterable(unittest.TestCase):
 
     def test_iterable_returns_true_for_list(self):
-        self.assertTrue(utils.iterable([]))
+        self.assertTrue(utils.isiterable([]))
 
     def test_iterable_returns_true_for_tuple(self):
-        self.assertTrue(utils.iterable(tuple()))
+        self.assertTrue(utils.isiterable(tuple()))
 
     def test_iterable_returns_true_for_nd_array(self):
-        self.assertTrue(utils.iterable(np.asarray([])))
+        self.assertTrue(utils.isiterable(np.asarray([])))
 
     def test_iterable_returns_true_for_string(self):
-        self.assertTrue(utils.iterable('foo'))
+        self.assertTrue(utils.isiterable('foo'))
 
     def test_iterable_returns_false_for_scalar(self):
-        self.assertFalse(utils.iterable(1))
+        self.assertFalse(utils.isiterable(1))

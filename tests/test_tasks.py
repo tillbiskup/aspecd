@@ -4,7 +4,6 @@ import copy
 import datetime
 import glob
 import os
-import platform
 import shutil
 import subprocess
 import unittest
@@ -2634,7 +2633,7 @@ class TestChefDeService(unittest.TestCase):
         os.remove(history_filename)
 
 
-#@unittest.skip
+@unittest.skip
 class TestServe(unittest.TestCase):
 
     def setUp(self):

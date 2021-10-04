@@ -174,6 +174,7 @@ Module API documentation
 """
 
 import copy
+import logging
 import os
 
 import matplotlib as mpl
@@ -187,6 +188,10 @@ import aspecd.dataset
 import aspecd.exceptions
 import aspecd.history
 import aspecd.utils
+
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 
 class Plotter:
@@ -2869,20 +2874,16 @@ class DrawingProperties(aspecd.utils.Properties):
         for prop in self.get_properties():
             if isinstance(drawing, list):
                 for element in drawing:
-                    self._save_set_drawing_property(element, prop)
+                    self._safe_set_drawing_property(element, prop)
             else:
-                self._save_set_drawing_property(drawing, prop)
+                self._safe_set_drawing_property(drawing, prop)
 
-    def _save_set_drawing_property(self, drawing=None, prop=None):
-        """Save setting of drawing properties.
+    def _safe_set_drawing_property(self, drawing=None, prop=None):
+        """Safe setting of drawing properties.
 
         The method first checks whether the corresponding setter for the
         property exists and only in this case sets the property.
 
-        .. todo::
-            Currently, the situation of no setter existing will be silently
-            ignored. This should change in the future with the advent of
-            logging.
 
         Parameters
         ----------
@@ -2895,6 +2896,9 @@ class DrawingProperties(aspecd.utils.Properties):
         """
         if hasattr(drawing, ''.join(['set_', prop])):
             getattr(drawing, ''.join(['set_', prop]))(getattr(self, prop))
+        else:
+            logger.debug('"%s" has no setter for attribute "%s", hence not '
+                         'set', drawing.__class__, prop)
 
 
 class LineProperties(DrawingProperties):

@@ -226,7 +226,7 @@ import numpy as np
 import aspecd.dataset
 import aspecd.exceptions
 import aspecd.utils
-from aspecd.utils import not_zero, iterable
+from aspecd.utils import not_zero, isiterable
 
 
 class Model:
@@ -738,7 +738,7 @@ class FamilyOfCurves(Model):
     def _sanitise_parameters(self):
         if not self.model:
             raise ValueError('Missing a model')
-        if not iterable(self.vary["values"]):
+        if not isiterable(self.vary["values"]):
             self.vary["values"] = [self.vary["values"]]
         if not self.parameters:
             self.parameters[self.vary["parameter"]] = self.vary["values"][0]
@@ -907,16 +907,16 @@ class Zeros(Model):
                     message="Parameter 'shape' missing")
         if not self.parameters["shape"]:
             self.parameters["shape"] = []
-            if iterable(self.variables[0]):
+            if isiterable(self.variables[0]):
                 for index in range(len(self.variables)):
                     # noinspection PyTypeChecker
                     self.parameters["shape"].append(len(self.variables[index]))
             else:
                 self.parameters["shape"] = len(self.variables)
-        if not iterable(self.parameters["shape"]):
+        if not isiterable(self.parameters["shape"]):
             self.parameters["shape"] = [self.parameters["shape"]]
         if self.parameters["range"]:
-            if not iterable(self.parameters["range"][0]):
+            if not isiterable(self.parameters["range"][0]):
                 self.parameters["range"] = [self.parameters["range"]]
             if len(self.parameters["shape"]) != len(self.parameters["range"]):
                 raise IndexError('Shape and range must be compatible')
@@ -1076,16 +1076,16 @@ class Ones(Model):
                     message="Parameter 'shape' missing")
         if not self.parameters["shape"]:
             self.parameters["shape"] = []
-            if iterable(self.variables[0]):
+            if isiterable(self.variables[0]):
                 for index in range(len(self.variables)):
                     # noinspection PyTypeChecker
                     self.parameters["shape"].append(len(self.variables[index]))
             else:
                 self.parameters["shape"] = len(self.variables)
-        if not iterable(self.parameters["shape"]):
+        if not isiterable(self.parameters["shape"]):
             self.parameters["shape"] = [self.parameters["shape"]]
         if self.parameters["range"]:
-            if not iterable(self.parameters["range"][0]):
+            if not isiterable(self.parameters["range"][0]):
                 self.parameters["range"] = [self.parameters["range"]]
             if len(self.parameters["shape"]) != len(self.parameters["range"]):
                 raise IndexError('Shape and range must be compatible')

@@ -1394,6 +1394,14 @@ class TestDrawingProperties(unittest.TestCase):
         self.drawing_properties.apply(drawing=line)
         self.assertEqual(self.drawing_properties.label, line.get_label())
 
+    def test_apply_with_nonexisting_property_issues_log_message(self):
+        self.drawing_properties.foobar = 'foo'
+        line = matplotlib.lines.Line2D([0, 1], [0, 0])
+        with self.assertLogs(__package__, level='DEBUG') as cm:
+            self.drawing_properties.apply(drawing=line)
+        self.assertIn('"{}" has no setter for attribute "{}", hence not '
+                      'set'.format(line.__class__, "foobar"), cm.output[0])
+
 
 class TestLineProperties(unittest.TestCase):
     def setUp(self):
