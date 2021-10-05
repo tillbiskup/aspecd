@@ -8,6 +8,10 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.4
 ===============
 
+* Recipe-driven data analysis
+
+  * Switch in recipe to suppress writing history (for development, issuing warning on the command line via logging)
+
 * Report task:
 
   * Add figure captions to context if available

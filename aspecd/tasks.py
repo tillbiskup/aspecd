@@ -1902,7 +1902,7 @@ class ProcessingTask(Task):
             else:
                 logger.info('Perform "%s" on dataset "%s"', self.type,
                             dataset_id)
-                dataset.process(processing_step=self._task)
+                self._task = dataset.process(processing_step=self._task)
 
 
 class SingleprocessingTask(ProcessingTask):

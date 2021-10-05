@@ -21,7 +21,7 @@ develop and adapt.
 Two concepts used by Jinja2 the user of the report facilities of the ASpecD
 framework should be familiar with are "environment" and "context". The
 former is a list of settings determining the type of delimiters used within
-a certein template for the control structures that are understood by
+a certain template for the control structures that are understood by
 Jinja2. As Jinja2 is developed with web applications (and hence HTML) in
 mind, those delimiters may not be feasible for other types of languages a
 template may be written in, such as LaTeX. Currently, the :mod:`aspecd.report`
@@ -304,7 +304,8 @@ class LaTeXReporter(Reporter):
             if isinstance(value, dict):
                 dict_[key] = self._change_keys_in_dict_recursively(value)
             if '_' in key:
-                tmp_key = ''.join([x.capitalize() for x in key.split(sep='_')])
+                tmp_key = \
+                    ''.join([x.capitalize() for x in key.split(sep='_')])
                 tmp_key = ''.join([tmp_key[0].lower(), tmp_key[1:]])
             else:
                 tmp_key = key

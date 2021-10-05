@@ -1213,6 +1213,16 @@ class TestProcessingTask(unittest.TestCase):
                          self.recipe.datasets[self.dataset[0]].history[
                              0].processing.comment)
 
+    def test_to_dict_adds_params_from_processing_of_task_object(self):
+        self.processing_task["type"] = 'BaselineCorrection'
+        self.prepare_recipe()
+        self.recipe.datasets['foo'].data.data = np.random.random(10)+5
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertTrue(dict_["properties"]["parameters"]["coefficients"])
+
 
 class TestSingleProcessingTask(unittest.TestCase):
     def setUp(self):
