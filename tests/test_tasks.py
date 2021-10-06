@@ -7,6 +7,7 @@ import os
 import shutil
 import subprocess
 import unittest
+from unittest.mock import patch
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -807,6 +808,18 @@ class TestTask(unittest.TestCase):
         obj = self.task.get_object()
         self.assertFalse(hasattr(obj, 'foo'))
 
+    def test_get_object_with_not_existing_object_attributes_logs_message(self):
+        kind = 'processing'
+        type_ = 'SingleProcessingStep'
+        metadata = {'foo': {'foo': 'bar'}}
+        self.task.kind = kind
+        self.task.type = type_
+        self.task.properties = metadata
+        with self.assertLogs(__package__, level='DEBUG') as cm:
+            self.task.get_object()
+        self.assertIn('"{}" has no property "{}".'.format(type_, "foo"),
+                      cm.output[0])
+
     # ATTENTION: The following tests access protected methods - due to not
     # knowing better how to do it properly for the time being...
     def test_set_object_attributes_sets_field_in_dict(self):
@@ -1447,15 +1460,18 @@ class TestSingleAnalysisTask(unittest.TestCase):
         self.task.perform()
         self.assertTrue(len(self.recipe.results))
 
-    @unittest.skip
     def test_perform_task_with_result_sets_resulting_dataset_id(self):
         self.prepare_recipe()
         result = 'foo'
         self.analysis_task['result'] = result
         self.task.from_dict(self.analysis_task)
         self.task.recipe = self.recipe
-        self.task.perform()
-        self.assertEqual(self.recipe.results[result].id, result)
+        with patch('aspecd.analysis.SingleAnalysisStep',
+                   result=aspecd.dataset.Dataset()) as mock_obj:
+            with patch('aspecd.tasks.Task._create_object',
+                       return_value=mock_obj):
+                self.task.perform()
+        self.assertEqual(result, self.recipe.results[result].id)
 
     def test_perform_task_with_result_and_multiple_datasets_adds_results(self):
         self.prepare_recipe()

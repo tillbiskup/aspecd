@@ -11,6 +11,10 @@ For version 0.4
 * Recipe-driven data analysis
 
   * Switch in recipe to suppress writing history (for development, issuing warning on the command line via logging)
+  * Properly handle history of single processing steps for multiple datasets when parameters are written during processing
+  * Move all settings currently in base of recipe yaml to new dict ``settings``, such as ``default_package``
+  * Add version dict to recipe
+  * Functionality to create recipe structure/structure for tasks as YAML
 
 * Report task:
 

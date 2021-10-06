@@ -1647,12 +1647,6 @@ class Task(aspecd.utils.ToDictMixin):
         and will be replaced by the actual :obj:`aspecd.tasks.FigureRecord`
         objects.
 
-        .. todo::
-            Eventually, with the advent of logging in the ASpecD framework,
-            it might be sensible to at least add a log message if a key
-            gets ignored, such that it is no longer silently ignored. This
-            might be helpful for debugging purposes.
-
         Parameters
         ----------
         obj : `object`
@@ -1671,6 +1665,8 @@ class Task(aspecd.utils.ToDictMixin):
                     setattr(obj, key, prop)
                 else:
                     setattr(obj, key, properties[key])
+            else:
+                logger.debug('"%s" has no property "%s".', self.type, key)
 
     def _set_attributes_in_dict(self, source=None, target=None):
         # pylint: disable=too-many-nested-blocks
