@@ -434,7 +434,7 @@ class Yaml:
         """
         self._traverse_serialise_numpy_arrays(dict_=self.dict)
 
-    def _traverse_serialise_numpy_arrays(self, dict_=None):
+    def _traverse_serialise_numpy_arrays(self, dict_=None):  # noqa: MC0001
         for key in dict_.keys():
             if isinstance(dict_[key], list):
                 for element in dict_[key]:

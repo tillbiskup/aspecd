@@ -115,14 +115,18 @@ class TestRecipe(unittest.TestCase):
         with self.assertRaises(aspecd.exceptions.MissingDictError):
             self.recipe.from_dict()
 
-    def test_from_dict_with_dataset_without_importer_factory_raises(self):
+    def test_from_dict_with_dataset_without_dataset_factory_sets_factory(self):
         dict_ = {'datasets': [self.dataset]}
-        with self.assertRaises(aspecd.exceptions.MissingDatasetFactoryError):
+        self.recipe.from_dict(dict_)
+        self.assertTrue(self.recipe.dataset_factory)
+
+    def test_from_dict_with_default_package_wo_dataset_factory_raises(self):
+        dict_ = {'default_package': 'foo'}
+        with self.assertRaisesRegex(ModuleNotFoundError, 'No module named'):
             self.recipe.from_dict(dict_)
 
     def test_from_dict_with_dataset_sets_dataset(self):
         dict_ = {'datasets': [self.dataset]}
-        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         self.assertTrue(isinstance(self.recipe.datasets[self.dataset],
                                    dataset.Dataset))
@@ -130,7 +134,6 @@ class TestRecipe(unittest.TestCase):
     def test_from_dict_with_dataset_issues_log_message(self):
         id_ = 'foobar'
         dict_ = {'datasets': [{'source': self.dataset, 'id': id_}]}
-        self.recipe.dataset_factory = self.dataset_factory
         with self.assertLogs(__package__, level='INFO') as cm:
             self.recipe.from_dict(dict_)
         self.assertIn('Import dataset "{}" as "{}"'.format(self.dataset, id_),
@@ -138,26 +141,22 @@ class TestRecipe(unittest.TestCase):
 
     def test_from_dict_with_dataset_sets_dataset_id(self):
         dict_ = {'datasets': [self.dataset]}
-        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         self.assertEqual(self.dataset, self.recipe.datasets[self.dataset].id)
 
     def test_from_dict_with_dataset_and_source_dir_sets_dataset_id(self):
         dict_ = {'datasets': ['foo'], 'datasets_source_directory': '/bla'}
-        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         self.assertEqual('/bla/foo', self.recipe.datasets['foo'].id)
 
     def test_from_dict_with_dataset_and_rel_source_dir_sets_dataset_id(self):
         dict_ = {'datasets': ['foo'], 'datasets_source_directory': 'bla'}
-        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         abspath = os.path.join(os.path.abspath(os.path.curdir), 'bla', 'foo')
         self.assertEqual(abspath, self.recipe.datasets['foo'].id)
 
     def test_from_dict_with_multiple_datasets_sets_datasets(self):
         dict_ = {'datasets': self.datasets}
-        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         for dataset_ in self.recipe.datasets:
             self.assertTrue(isinstance(self.recipe.datasets[dataset_],
@@ -165,7 +164,6 @@ class TestRecipe(unittest.TestCase):
 
     def test_from_dict_with_dataset_as_dict_sets_dataset(self):
         dict_ = {'datasets': [{'source': self.dataset}]}
-        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         self.assertTrue(isinstance(self.recipe.datasets[self.dataset],
                                    dataset.Dataset))
@@ -173,7 +171,6 @@ class TestRecipe(unittest.TestCase):
     def test_from_dict_with_dataset_as_dict_sets_dataset_label(self):
         id_ = 'foobar'
         dict_ = {'datasets': [{'source': self.dataset, 'id': id_}]}
-        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         self.assertTrue(isinstance(self.recipe.datasets[id_],
                                    dataset.Dataset))
@@ -181,7 +178,6 @@ class TestRecipe(unittest.TestCase):
     def test_from_dict_with_dataset_as_dict_sets_dataset_property(self):
         label = 'foobar'
         dict_ = {'datasets': [{'source': self.dataset, 'label': label}]}
-        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         self.assertEqual(label, self.recipe.datasets[self.dataset].label)
 
@@ -190,7 +186,6 @@ class TestRecipe(unittest.TestCase):
         np.savetxt(self.dataset_filename, data)
         dict_ = {'datasets': [{'source': self.dataset_filename,
                                'importer': 'TxtImporter'}]}
-        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         self.assertEqual(data,
                          self.recipe.datasets[self.dataset_filename].data.data)
@@ -202,7 +197,6 @@ class TestRecipe(unittest.TestCase):
         dict_ = {'datasets': [{'source': self.dataset_filename,
                                'importer': 'TxtImporter',
                                'importer_parameters': parameters}]}
-        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         self.assertEqual(data[1],
                          self.recipe.datasets[self.dataset_filename].data.data)
@@ -220,7 +214,6 @@ class TestRecipe(unittest.TestCase):
         dict_ = {'datasets': [{'source': self.dataset_filename,
                                'importer': 'TxtImporter',
                                'package': 'aspecd'}]}
-        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         self.assertEqual(data,
                          self.recipe.datasets[self.dataset_filename].data.data)
@@ -233,21 +226,12 @@ class TestRecipe(unittest.TestCase):
                                'importer': 'TxtImporter',
                                'importer_parameters': parameters,
                                'package': 'aspecd'}]}
-        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         self.assertEqual(data[1],
                          self.recipe.datasets[self.dataset_filename].data.data)
 
-    def test_from_dict_with_tasks_without_task_factory_raises(self):
-        dict_ = {'tasks': [self.task]}
-        self.recipe.dataset_factory = self.dataset_factory
-        self.recipe.task_factory = None
-        with self.assertRaises(aspecd.exceptions.MissingTaskFactoryError):
-            self.recipe.from_dict(dict_)
-
     def test_from_dict_with_task_adds_task(self):
         dict_ = {'tasks': [self.task]}
-        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         self.assertTrue(isinstance(self.recipe.tasks[0], tasks.Task))
         for key in self.task:
@@ -256,7 +240,6 @@ class TestRecipe(unittest.TestCase):
 
     def test_from_dict_with_task_adds_task_with_correct_type(self):
         dict_ = {'tasks': [self.task]}
-        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         self.assertTrue(isinstance(self.recipe.tasks[0],
                                    tasks.ProcessingTask))
@@ -353,14 +336,12 @@ class TestRecipe(unittest.TestCase):
 
     def test_get_dataset_with_valid_identifier_returns_dataset(self):
         dict_ = {'datasets': [self.dataset]}
-        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         dataset_ = self.recipe.get_dataset(identifier=self.dataset)
         self.assertTrue(isinstance(dataset_, dataset.Dataset))
 
     def test_get_dataset_with_invalid_identifier_returns_nothing(self):
         dict_ = {'datasets': [self.dataset]}
-        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         dataset_ = self.recipe.get_dataset(identifier='invalid')
         self.assertFalse(dataset_)
@@ -382,7 +363,6 @@ class TestRecipe(unittest.TestCase):
 
     def test_get_datasets_with_valid_identifier_returns_dataset(self):
         dict_ = {'datasets': self.datasets}
-        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         datasets = self.recipe.get_datasets(identifiers=self.datasets)
         for dataset_ in datasets:
@@ -390,7 +370,6 @@ class TestRecipe(unittest.TestCase):
 
     def test_get_datasets_with_invalid_identifier_returns_nothing(self):
         dict_ = {'datasets': self.datasets}
-        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         datasets = self.recipe.get_datasets(
             identifiers=['invalid', 'invalid2'])
@@ -410,20 +389,17 @@ class TestRecipe(unittest.TestCase):
 
     def test_from_dict_with_output_directory_sets_output_directory(self):
         dict_ = {'output_directory': '/foo'}
-        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         self.assertEqual('/foo', self.recipe.output_directory)
 
     def test_from_dict_makes_output_directory_absolute_path(self):
         dict_ = {'output_directory': 'foo'}
-        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         self.assertEqual(os.path.join(os.path.abspath(os.path.curdir), 'foo'),
                          self.recipe.output_directory)
 
     def test_from_dict_sets_autosave_plots(self):
         dict_ = {'autosave_plots': False}
-        self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         self.assertFalse(self.recipe.autosave_plots)
 

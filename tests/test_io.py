@@ -1,5 +1,5 @@
 """Tests for input and output (IO)."""
-
+import copy
 import os
 import unittest
 import zipfile
@@ -8,7 +8,7 @@ import numpy as np
 
 import aspecd.exceptions
 import aspecd.processing
-from aspecd import io, dataset, tasks
+from aspecd import io, dataset, tasks, utils
 
 
 class TestDatasetImporter(unittest.TestCase):
@@ -198,7 +198,33 @@ class TestRecipeExporter(unittest.TestCase):
 class TestRecipeYamlImporter(unittest.TestCase):
     def setUp(self):
         self.importer = io.RecipeYamlImporter()
-        self.source = 'filename'
+        self.recipe_filename = 'filename'
+        self.recipe_dict = dict()
+
+    def tearDown(self):
+        if os.path.exists(self.recipe_filename):
+            os.remove(self.recipe_filename)
+
+    def create_recipe(self):
+        self.recipe_dict = {
+            'datasets': ['foo'],
+            'tasks': [{'kind': 'singleplot', 'type': 'SinglePlotter',
+                       'properties': {'filename': 'foo'}}],
+        }
+        yaml = utils.Yaml()
+        yaml.dict = self.recipe_dict
+        yaml.write_to(self.recipe_filename)
+
+    def create_recipe_with_numpy_array(self):
+        self.recipe_dict = {
+            'datasets': ['foo'],
+            'tasks': [{'kind': 'processing', 'type': 'ScalarAlgebra',
+                       'properties': {'value': np.random.random(1)}}],
+        }
+        yaml = utils.Yaml()
+        yaml.dict = copy.deepcopy(self.recipe_dict)
+        yaml.serialise_numpy_arrays()
+        yaml.write_to(self.recipe_filename)
 
     def test_instantiate_class(self):
         pass
@@ -206,11 +232,25 @@ class TestRecipeYamlImporter(unittest.TestCase):
     def test_is_recipe_importer(self):
         self.assertTrue(isinstance(self.importer, io.RecipeImporter))
 
+    def test_import_sets_task_in_recipe(self):
+        self.create_recipe()
+        self.importer.source = self.recipe_filename
+        recipe = tasks.Recipe()
+        recipe.import_from(self.importer)
+        self.assertTrue(recipe.tasks[0])
+
+    def test_import_with_numpy_array_sets_task_in_recipe(self):
+        self.create_recipe_with_numpy_array()
+        self.importer.source = self.recipe_filename
+        recipe = tasks.Recipe()
+        recipe.import_from(self.importer)
+        self.assertEqual(self.recipe_dict['tasks'][0]['properties']['value'],
+                         recipe.tasks[0].properties['value'])
+
 
 class TestRecipeYamlExporter(unittest.TestCase):
     def setUp(self):
         self.exporter = io.RecipeYamlExporter()
-        self.source = 'filename'
 
     def test_instantiate_class(self):
         pass

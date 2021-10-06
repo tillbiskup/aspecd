@@ -950,20 +950,17 @@ class Recipe:
             Raised if no dict is provided.
         aspecd.tasks.MissingDatasetFactoryError
             Raised if :attr:`importer_factory` is invalid.
-        aspecd.tasks.MissingTaskFactoryError
-            Raised if :attr:`task_factory` is invalid.
 
         """
         if not dict_:
             raise aspecd.exceptions.MissingDictError
-        if not self.dataset_factory:
-            raise aspecd.exceptions.MissingDatasetFactoryError
-        if not self.task_factory:
-            raise aspecd.exceptions.MissingTaskFactoryError
         for keyword in ["default_package", "datasets_source_directory",
                         "output_directory", "autosave_plots"]:
             if keyword in dict_:
                 setattr(self, keyword, dict_[keyword])
+        if not self.dataset_factory:
+            package = self.default_package if self.default_package else 'aspecd'
+            self.dataset_factory = self._get_dataset_factory(package=package)
         if self.output_directory and not self.output_directory.startswith('/'):
             self.output_directory = \
                 self._get_absolute_path(self.output_directory)
@@ -3213,7 +3210,6 @@ class ChefDeService:
         self._recipe = aspecd.tasks.Recipe()
         self._chef = aspecd.tasks.Chef()
         self._recipe_dict = None
-        self._dataset_factory = aspecd.dataset.DatasetFactory()
 
     def serve(self, recipe_filename=''):
         """
@@ -3250,43 +3246,8 @@ class ChefDeService:
         self._chef.cook()
 
     def _create_recipe(self):
-        """
-        Create recipe from imported YAML file with correct DatasetFactory.
-
-        Simply loading the recipe using the
-        :class:`aspecd.io.RecipeYamlImporter` class does *not* work,
-        as we first need to obtain the recipe dict and parse for the
-        ``default_package`` key to get the correct DatasetFactory class.
-        """
-        self._load_recipe_yaml()
-        self._get_dataset_factory()
-        self._recipe.dataset_factory = self._dataset_factory
-        self._recipe.from_dict(self._recipe_dict)
-
-    def _load_recipe_yaml(self):
-        """Obtain dict from recipe YAML file."""
-        yaml_importer = aspecd.utils.Yaml()
-        yaml_importer.read_from(self.recipe_filename)
-        yaml_importer.deserialise_numpy_arrays()
-        self._recipe_dict = yaml_importer.dict
-
-    def _get_dataset_factory(self):
-        """
-        Obtain correct DatasetFactory instance depending on default package.
-
-        The default package can be set as key in the recipe. If no such key
-        is found, the default :class:`aspecd.dataset.DatasetFactory` class
-        is used. Otherwise, an instance of a class with the same name and
-        location, but in the package specified in the recipe, is created.
-        """
-        if "default_package" in self._recipe_dict.keys():
-            class_name = self._recipe_dict["default_package"] \
-                + '.dataset.DatasetFactory'
-            self._dataset_factory = aspecd.utils.object_from_class_name(
-                class_name)
-        else:
-            self._dataset_factory.importer_factory = \
-                aspecd.io.DatasetImporterFactory()
+        importer = aspecd.io.RecipeYamlImporter(source=self.recipe_filename)
+        self._recipe.import_from(importer)
 
     def _write_history(self):
         self._create_history_filename()
@@ -3346,8 +3307,9 @@ def serve():
     chef_de_service = ChefDeService()
     try:
         chef_de_service.serve(recipe_filename=args.recipe)
-    except Exception as e:
+    # pylint: disable=broad-except
+    except Exception as exception:
         if args.verbose:
-            logger.exception(e)
+            logger.exception(exception)
         else:
-            logger.error(f"ERROR: {str(e)}")
+            logger.error("ERROR: %s", str(exception))

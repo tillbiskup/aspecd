@@ -871,6 +871,7 @@ class RecipeYamlImporter(RecipeImporter):
     def _import(self):
         yaml = aspecd.utils.Yaml()
         yaml.read_from(filename=self.source)
+        yaml.deserialise_numpy_arrays()
         self.recipe.from_dict(yaml.dict)
 
 
