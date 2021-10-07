@@ -291,6 +291,7 @@ Module documentation
 """
 import copy
 import os
+import pkgutil
 import tempfile
 import zipfile
 
@@ -298,6 +299,7 @@ import asdf
 import numpy as np
 
 import aspecd.exceptions
+import aspecd.metadata
 import aspecd.utils
 
 
@@ -866,13 +868,63 @@ class RecipeYamlImporter(RecipeImporter):
     """
 
     def __init__(self, source=''):
+        self.recipe_version = ''
+        self._recipe_dict = None
         super().__init__(source=source)
 
     def _import(self):
+        self._load_from_yaml()
+        self._convert()
+        self.recipe.from_dict(self._recipe_dict)
+
+    def _load_from_yaml(self):
         yaml = aspecd.utils.Yaml()
         yaml.read_from(filename=self.source)
         yaml.deserialise_numpy_arrays()
-        self.recipe.from_dict(yaml.dict)
+        self._recipe_dict = yaml.dict
+
+    def _convert(self):
+        self._get_recipe_version()
+        self._map_recipe_structure()
+
+    def _get_recipe_version(self):
+        self.recipe_version = self.recipe.format['version']
+        if 'format' in self._recipe_dict \
+                and 'version' in self._recipe_dict['format']:
+            self.recipe_version = self._recipe_dict['format']['version']
+        deprecated_keys = ['default_package', 'autosave_plots',
+                           'output_directory', 'datasets_source_directory']
+        if any([key in self._recipe_dict for key in deprecated_keys]):
+            self.recipe_version = '0.1'
+
+    def _map_recipe_structure(self):
+        """
+        Map recipe structure to current version.
+
+        This mapping should later be done using the class
+        :class:`aspecd.metadata.MetadataMapper`, but currently moving keys
+        from the root of a dict to a subdict is not possible.
+        """
+        if self.recipe_version == '0.1':
+            move_keys = {
+                'default_package': 'settings',
+                'autosave_plots': 'settings',
+            }
+            for key, target in move_keys.items():
+                if target not in self._recipe_dict:
+                    self._recipe_dict[target] = dict()
+                if key in self._recipe_dict:
+                    self._recipe_dict[target][key] = self._recipe_dict.pop(key)
+            directories = {
+                'output_directory': 'output',
+                'datasets_source_directory': 'datasets_source',
+            }
+            for old_key, new_key in directories.items():
+                if 'directories' not in self._recipe_dict:
+                    self._recipe_dict['directories'] = dict()
+                if old_key in self._recipe_dict:
+                    self._recipe_dict['directories'][new_key] = \
+                        self._recipe_dict.pop(old_key)
 
 
 class RecipeYamlExporter(RecipeExporter):

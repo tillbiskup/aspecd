@@ -1,0 +1,17 @@
+---
+
+format:
+  type: metadata mapper cwepr
+  version: 0.1
+
+map 1:
+  metadata file versions:
+    - '0.1'
+  move item:
+    - key: default_package
+      source:
+      target: settings
+
+map2:
+  metadata file versions:
+    - '0.2'

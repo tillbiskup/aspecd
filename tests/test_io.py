@@ -226,6 +226,11 @@ class TestRecipeYamlImporter(unittest.TestCase):
         yaml.serialise_numpy_arrays()
         yaml.write_to(self.recipe_filename)
 
+    def create_recipe_from_dict(self):
+        yaml = utils.Yaml()
+        yaml.dict = self.recipe_dict
+        yaml.write_to(self.recipe_filename)
+
     def test_instantiate_class(self):
         pass
 
@@ -246,6 +251,67 @@ class TestRecipeYamlImporter(unittest.TestCase):
         recipe.import_from(self.importer)
         self.assertEqual(self.recipe_dict['tasks'][0]['properties']['value'],
                          recipe.tasks[0].properties['value'])
+
+    def test_import_sets_recipe_version(self):
+        self.create_recipe()
+        self.importer.source = self.recipe_filename
+        recipe = tasks.Recipe()
+        self.importer.import_into(recipe)
+        self.assertTrue(self.importer.recipe_version)
+
+    def test_import_old_version_detects_old_version(self):
+        old_keys = ['default_package', 'autosave_plots', 'output_directory',
+                    'datasets_source_directory']
+        for key in old_keys:
+            with self.subTest(key=key):
+                self.recipe_dict = {
+                    key: '',
+                    'datasets': ['foo'],
+                    'tasks': [{'kind': 'singleplot', 'type': 'SinglePlotter',
+                               'properties': {'filename': 'foo'}}],
+                }
+                self.create_recipe_from_dict()
+                self.importer.source = self.recipe_filename
+                recipe = tasks.Recipe()
+                self.importer.import_into(recipe)
+                self.assertEqual('0.1', self.importer.recipe_version)
+
+    def test_import_with_explicit_version_sets_recipe_version(self):
+        self.recipe_dict = {
+            'format': {'version': '0.1'},
+            'datasets': ['foo'],
+            'tasks': [{'kind': 'singleplot', 'type': 'SinglePlotter',
+                       'properties': {'filename': 'foo'}}],
+        }
+        self.create_recipe_from_dict()
+        self.importer.source = self.recipe_filename
+        recipe = tasks.Recipe()
+        self.importer.import_into(recipe)
+        self.assertEqual(self.recipe_dict['format']['version'],
+                         self.importer.recipe_version)
+
+    def test_import_version_0_1_converts_to_current_version(self):
+        self.recipe_dict = {
+            'default_package': 'aspecd',
+            'autosave_plots': False,
+            'output_directory': '/bar',
+            'datasets_source_directory': '/foobar',
+            'datasets': ['foo'],
+            'tasks': [{'kind': 'singleplot', 'type': 'SinglePlotter',
+                       'properties': {'filename': 'foo'}}],
+        }
+        self.create_recipe_from_dict()
+        self.importer.source = self.recipe_filename
+        recipe = tasks.Recipe()
+        recipe.import_from(self.importer)
+        self.assertEqual(self.recipe_dict['default_package'],
+                         recipe.settings['default_package'])
+        self.assertEqual(self.recipe_dict['autosave_plots'],
+                         recipe.settings['autosave_plots'])
+        self.assertEqual(self.recipe_dict['output_directory'],
+                         recipe.directories['output'])
+        self.assertEqual(self.recipe_dict['datasets_source_directory'],
+                         recipe.directories['datasets_source'])
 
 
 class TestRecipeYamlExporter(unittest.TestCase):
