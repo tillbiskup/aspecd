@@ -103,11 +103,12 @@ for datasets:
 
 .. code-block:: yaml
 
-    datasets_source_directory: /path/to/my/datasets/
+    directories:
+      datasets_source: /path/to/my/datasets/
 
     datasets:
-        - dataset1
-        - dataset2
+      - dataset1
+      - dataset2
 
     tasks:
       - kind: processing
@@ -122,11 +123,12 @@ example below.
 
 .. code-block:: yaml
 
-    datasets_source_directory: relative/path/to/my/datasets/
+    directories:
+      datasets_source: relative/path/to/my/datasets/
 
     datasets:
-        - dataset1
-        - dataset2
+      - dataset1
+      - dataset2
 
     tasks:
       - kind: processing
@@ -149,10 +151,11 @@ recipe:
 
 .. code-block:: yaml
 
-    output_directory: /absolute/path/for/the/outputs
+    directories:
+      output: /absolute/path/for/the/outputs
 
     datasets:
-        - dataset
+      - dataset
 
     tasks:
       - kind: singleplot
@@ -166,7 +169,8 @@ directory you cook your recipes from:
 
 .. code-block:: yaml
 
-    output_directory: relative/path/for/the/outputs
+    directories:
+      output: relative/path/for/the/outputs
 
     datasets:
         - dataset
@@ -192,7 +196,8 @@ name like so:
 
 .. code-block:: yaml
 
-    default_package: my_package
+    settings:
+      default_package: my_package
 
     datasets:
       - loi:xxx
@@ -224,7 +229,8 @@ a default package and overriding this for a particular task:
 
 .. code-block:: yaml
 
-    default_package: my_package
+    settings:
+      default_package: my_package
 
     datasets:
       - loi:xxx
@@ -517,6 +523,30 @@ free. That's what the ASpecD framework is all about. Care about the results
 of your data analysis and what this means in terms of answering the
 scientific questions that originally triggered obtaining and analysing the
 data. Reproducibility is been taken care of for you.
+
+
+Suppress automatically writing history
+--------------------------------------
+
+.. warning::
+
+    Not having a history of each individual step of your data analysis is
+    considered bad practice and not consistent with reproducible research.
+    Therefore, use the following only in debugging/development settings,
+    never in real life applications.
+
+In some particular cases, namely debugging and development, writing a
+history for each individual cooking of a recipe might be inconvenient.
+Therefore, you can tell ASpecD not to automatically write a history.
+However, *use with extreme caution*!
+
+.. code-block:: yaml
+
+    settings:
+        write_history: false
+
+To remind you of what you are doing, this will issue a warning on the
+command line if using ``serve``.
 
 
 Kinds of tasks

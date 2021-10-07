@@ -65,7 +65,84 @@ Anatomy of a recipe
 
 Recipes always consist of two major parts: A list of datasets to operate on, and a list of tasks to be performed on the datasets. Of course, you can specify for each task on which datasets it should be performed, and if possible, whether it should be performed on each dataset separately or combined. The latter is particularly interesting for representations (e.g., plots) consisting of multiple datasets, or analysis steps spanning multiple datasets.
 
-Therefore, in a recipe that is basically a YAML file, you will always find two keys on the highest level: ``datasets`` and ``tasks``. There are, however, a few additional (optional) keys that may appear on the highest level, setting such things as the :ref:`default package to use <specific_packages>` (for packages derived from ASpecD), the default source directory for datasets and the default output directory for figures and reports. A recipe written as history from cooking another recipe will additionally automatically contain information on the system and versions of the software packages used.
+Therefore, in a recipe that is basically a YAML file, you will always find two keys on the highest level: ``datasets`` and ``tasks``.
+
+
+.. code-block:: yaml
+
+    datasets:
+      - ...
+
+    tasks:
+      - ...
+
+
+There are, however, a few additional (optional) keys that may appear on the highest level, setting such things as the :ref:`default package to use <specific_packages>` (for packages derived from ASpecD), the default source directory for datasets and the default output directory for figures and reports.
+
+
+.. code-block:: yaml
+
+    settings:
+      default_package:
+      autosave_plots: true
+      write_history: true
+
+    directories:
+      output:
+      datasets_source:
+
+    datasets:
+      - ...
+
+    tasks:
+      - ...
+
+
+A recipe written as history from cooking another recipe will additionally automatically contain information on the system and versions of the software packages used. Note that this additional information is automatically obtained. Below is a slightly modified output from a real recipe history:
+
+
+.. code-block:: yaml
+
+    info:
+      start: 'YYYY-MM-DDThh:mm:ss'
+      end: 'YYYY-MM-DDThh:mm:ss'
+
+    system_info:
+      python:
+        version: "3.7.3 (default, Jan 22 2021, 20:04:44) \n[GCC 8.3.0]"
+      packages:
+        aspecd: 0.4.0
+        jinja2: 2.11.2
+        matplotlib: 3.3.3
+        numpy: 1.19.5
+        scipy: 1.5.4
+        oyaml: '1.0'
+        asdf: 2.7.1
+        bibrecord: 0.1.0
+      platform: Linux-4.19.0-17-amd64-x86_64-with-debian-10.10
+      user:
+        login: <username>
+
+    format:
+      type: ASpecD recipe
+      version: '0.2'
+
+    settings:
+      default_package:
+      autosave_plots: true
+      write_history: true
+
+    directories:
+      output:
+      datasets_source:
+
+    datasets:
+      - ...
+
+    tasks:
+      - ...
+
+Such a recipe history can directly be used as a new recipe, hence you get full reproducibility and always know what exactly you have done with your data.
 
 
 Importing datasets
@@ -142,7 +219,8 @@ Having a place for all your data is often a rather good idea. Usually, this plac
 
 .. code-block:: yaml
 
-    datasets_source_directory: /path/to/all/my/datasets/
+    directories:
+      datasets_source: /path/to/all/my/datasets/
 
     datasets:
       - first-dataset
@@ -365,7 +443,8 @@ Of course, you can provide a full path to each output file for plots and reports
 
 .. code-block:: yaml
 
-    output_directory: /absolute/path/for/the/output
+    directories:
+      output: /absolute/path/for/the/output
 
     datasets:
       - dataset
@@ -395,7 +474,8 @@ Just to show an example of how to switch off the autosaving of plots:
 
 .. code-block:: yaml
 
-    autosave_plots: False
+    settings:
+      autosave_plots: False
 
     datasets:
       - dataset
@@ -426,7 +506,8 @@ To make it possible to use the ``serve`` command on the terminal provided by the
 
 .. code-block:: yaml
 
-    default_package: cwepr
+    settings:
+      default_package: cwepr
 
 In this case, the ``cwepr`` package will be used for importing datasets and performing all tasks, as long as you don't specify other package for a particular dataset or task. Of course, you need to make sure that the Python package specified here exists and is installed locally when serving such a recipe. Furthermore, the Python package needs to fulfil all the requirements of an ASpecD-derived package to allow for recipe-driven data analysis.
 
