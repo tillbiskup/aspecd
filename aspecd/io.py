@@ -895,6 +895,8 @@ class RecipeYamlExporter(RecipeExporter):
     def _export(self):
         yaml = aspecd.utils.Yaml()
         yaml.dict = self.recipe.to_dict()
+        yaml.numpy_array_to_list = True
+        yaml.serialise_numpy_arrays()
         yaml.write_to(filename=self.target)
 
 

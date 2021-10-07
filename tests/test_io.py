@@ -251,12 +251,62 @@ class TestRecipeYamlImporter(unittest.TestCase):
 class TestRecipeYamlExporter(unittest.TestCase):
     def setUp(self):
         self.exporter = io.RecipeYamlExporter()
+        self.recipe_filename = 'filename'
+
+    def tearDown(self):
+        if os.path.exists(self.recipe_filename):
+            os.remove(self.recipe_filename)
 
     def test_instantiate_class(self):
         pass
 
     def test_is_recipe_exporter(self):
         self.assertTrue(isinstance(self.exporter, io.RecipeExporter))
+
+    def test_export_can_be_reimported(self):
+        recipe_dict = {
+            'datasets': ['foo'],
+            'tasks': [{'kind': 'singleplot', 'type': 'SinglePlotter',
+                       'properties': {'filename': 'foo'}}],
+        }
+        recipe = tasks.Recipe()
+        recipe.from_dict(recipe_dict)
+        self.exporter.target = self.recipe_filename
+        recipe.export_to(self.exporter)
+        new_recipe = tasks.Recipe()
+        importer = io.RecipeYamlImporter(source=self.recipe_filename)
+        new_recipe.import_from(importer)
+        self.assertTrue(new_recipe.to_dict())
+
+    def test_export_with_numpy_array_can_be_reimported(self):
+        recipe_dict = {
+            'datasets': ['foo'],
+            'tasks': [{'kind': 'processing', 'type': 'ScalarAlgebra',
+                       'properties': {'value': np.random.random(1)}}],
+        }
+        recipe = tasks.Recipe()
+        recipe.from_dict(recipe_dict)
+        self.exporter.target = self.recipe_filename
+        recipe.export_to(self.exporter)
+        new_recipe = tasks.Recipe()
+        importer = io.RecipeYamlImporter(source=self.recipe_filename)
+        new_recipe.import_from(importer)
+        self.assertTrue(new_recipe.to_dict())
+
+    def test_export_with_small_numpy_array_converts_array_to_list(self):
+        recipe_dict = {
+            'datasets': ['foo'],
+            'tasks': [{'kind': 'processing', 'type': 'ScalarAlgebra',
+                       'properties': {'value': np.random.random(1)}}],
+        }
+        recipe = tasks.Recipe()
+        recipe.from_dict(recipe_dict)
+        self.exporter.target = self.recipe_filename
+        recipe.export_to(self.exporter)
+        yaml = utils.Yaml()
+        yaml.read_from(self.recipe_filename)
+        self.assertIsInstance(yaml.dict['tasks'][0]['properties']['value'],
+                              list)
 
 
 class TestAdfExporter(unittest.TestCase):
