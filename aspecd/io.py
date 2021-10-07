@@ -291,7 +291,6 @@ Module documentation
 """
 import copy
 import os
-import pkgutil
 import tempfile
 import zipfile
 
@@ -898,33 +897,12 @@ class RecipeYamlImporter(RecipeImporter):
             self.recipe_version = '0.1'
 
     def _map_recipe_structure(self):
-        """
-        Map recipe structure to current version.
-
-        This mapping should later be done using the class
-        :class:`aspecd.metadata.MetadataMapper`, but currently moving keys
-        from the root of a dict to a subdict is not possible.
-        """
-        if self.recipe_version == '0.1':
-            move_keys = {
-                'default_package': 'settings',
-                'autosave_plots': 'settings',
-            }
-            for key, target in move_keys.items():
-                if target not in self._recipe_dict:
-                    self._recipe_dict[target] = dict()
-                if key in self._recipe_dict:
-                    self._recipe_dict[target][key] = self._recipe_dict.pop(key)
-            directories = {
-                'output_directory': 'output',
-                'datasets_source_directory': 'datasets_source',
-            }
-            for old_key, new_key in directories.items():
-                if 'directories' not in self._recipe_dict:
-                    self._recipe_dict['directories'] = dict()
-                if old_key in self._recipe_dict:
-                    self._recipe_dict['directories'][new_key] = \
-                        self._recipe_dict.pop(old_key)
+        mapper = aspecd.metadata.MetadataMapper()
+        mapper.version = self.recipe_version
+        mapper.metadata = self._recipe_dict
+        mapper.recipe_filename = 'recipe_mapper.yaml'
+        mapper.map()
+        self._recipe_dict = mapper.metadata
 
 
 class RecipeYamlExporter(RecipeExporter):

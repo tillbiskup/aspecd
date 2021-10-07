@@ -10,7 +10,7 @@ Version 0.4.0
 
 Not yet released
 
-**Note**: Starting with this release ASpecD requires Python >= 3.6.
+**Note**: Starting with this release ASpecD requires **Python >= 3.6**.
 
 New features
 ------------
@@ -23,6 +23,10 @@ New features
   * ``serve`` command outputs log messages for each task
   * Command-line options for ``serve`` setting the log level/verbosity
   * Catching of errors, excluding the stack trace and only showing the error message (but full stack trace in verbose mode)
+  * Switch in recipe to suppress writing history (for development/debugging, issuing warning on the command line via logging)
+  * New structure of recipes: Move ``default_package`` and ``autosave_plots`` to new dict ``settings``; ``output_directory`` and ``datasets_source_directory`` to new dict ``directories``
+  * Add ``format`` dict to recipe with fields ``type`` and ``version``
+  * Automatically convert old recipe formats within :class:`aspecd.io.RecipeYamlImporter`
 
 
 * References in processing and analysis steps and models (using bibrecord package)
