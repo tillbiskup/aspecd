@@ -856,41 +856,95 @@ class Recipe:
         If no factory is set, but a recipe imported from a file or set from
         a dictionary, an exception will be raised.
 
-    default_package: :class:`str`
-        Name of the package the task objects are obtained from
+    format : :class:`dict`
+        Information on the format of the recipe
 
-        If no name for a default package is supplied, "aspecd" is used.
+        This information is used to automatically convert recipes to the
+        current format.
 
-    datasets_source_directory: :class:`str`
-        Root directory for the datasets.
+        Dictionary with the following fields:
 
-        Interpreted as absolute path if starting with the system-specific file
-        separator. Otherwise, interpreted as relative to the current
-        directory. If provided, all output resulting from cooking a recipe
-        will be saved to this path.
+        type : :class:`str`
+            Information on the type of file
 
-    output_directory: :class:`str`
-        Directory to save output (plots, reports, ...) to.
+            Shall never be changed.
 
-        Interpreted as absolute path if starting with the system-specific file
-        separator. Otherwise, interpreted as relative to the current
-        directory. If provided, all output resulting from cooking a recipe
-        will be saved to this path.
+            Default: ASpecD recipe
 
-        Make sure the path actually exists. Otherwise, you may run into
-        trouble when tasks try to save their output.
+        version : :class:`str`
+            Version of the recipe structure (in form X.Y)
 
-    autosave_plots: :class:`bool`
-        Whether to save plots automatically even if no filename is provided.
+            This information is used to automatically convert recipes to the
+            current format.
 
-        If true, each :class:`aspecd.tasks.SingleplotTask` and
-        :class:`aspecd.tasks.MultiplotTask` will save the plots to default
-        file names. For details, see the documentation of the respective
-        classes.
+            Defaults to the latest version.
 
-        Default: True
+        .. versionadded:: 0.4
 
-        .. versionadded:: 0.2
+    settings : :class:`dict`
+        General settings relevant for cooking the recipe.
+
+        Dictionary with the following fields:
+
+        default_package: :class:`str`
+           Name of the package the task objects are obtained from
+
+           If no name for a default package is supplied, "aspecd" is used.
+
+        autosave_plots: :class:`bool`
+            Whether to save plots automatically even if no filename is provided.
+
+            If true, each :class:`aspecd.tasks.SingleplotTask` and
+            :class:`aspecd.tasks.MultiplotTask` will save the plots to default
+            file names. For details, see the documentation of the respective
+            classes.
+
+            Default: True
+
+           .. versionadded:: 0.2
+
+        write_history: :class:`bool`
+           Whether to write a history when serving the recipe.
+
+           If true, for each serving of a recipe, a history will be written
+           into a file with same base name and timestamp appended. In terms
+           of reproducible research, it is *highly recommended* to always
+           write a history. However, when debugging, you may set this to
+           "False".
+
+           Default: True
+
+           .. versionadded:: 0.4
+
+        .. versionchanged:: 0.4
+            Moved properties to keys in this dictionary
+
+    directories : :class:`dict`
+        Optional control of different directories.
+
+        Dictionary with the following fields:
+
+        datasets_source: :class:`str`
+            Root directory for the datasets.
+
+            Interpreted as absolute path if starting with the
+            system-specific file separator. Otherwise, interpreted as
+            relative to the current directory. If provided, all output
+            resulting from cooking a recipe will be saved to this path.
+
+        output: :class:`str`
+            Directory to save output (plots, reports, ...) to.
+
+            Interpreted as absolute path if starting with the
+            system-specific file separator. Otherwise, interpreted as
+            relative to the current directory. If provided, all output
+            resulting from cooking a recipe will be saved to this path.
+
+            Make sure the path actually exists. Otherwise, you may run into
+            trouble when tasks try to save their output.
+
+        .. versionchanged:: 0.4
+            Moved properties to keys in this dictionary
 
     filename : :class:`str`
         Name of the (YAML) file the recipe was loaded from.
@@ -910,10 +964,14 @@ class Recipe:
         Raised if no importer is provided.
     aspecd.tasks.MissingExporterError
         Raised if no exporter is provided.
-    aspecd.tasks.MissingDatasetFactoryError
-        Raised if :attr:`dataset_factory` is invalid.
     aspecd.tasks.MissingTaskFactoryError
         Raised if :attr:`task_factory` is invalid.
+
+
+    .. versionchanged:: 0.4
+        Move properties "default_package" and "autosave_plots" to new
+        property "settings"; move properties "output_directory" and
+        "datasets_source" to new property "directories".
 
     """
 
@@ -924,6 +982,19 @@ class Recipe:
         self.figures = collections.OrderedDict()
         self.plotters = collections.OrderedDict()
         self.tasks = list()
+        self.format = {
+            'type': 'ASpecD recipe',
+            'version': '0.2',
+        }
+        self.settings = {
+            'default_package': '',
+            'autosave_plots': True,
+            'write_history': True,
+        }
+        self.directories = {
+            'output': '',
+            'datasets_source': '',
+        }
         self.dataset_factory = None
         self.task_factory = TaskFactory()
         self.default_package = ''
@@ -954,16 +1025,18 @@ class Recipe:
         """
         if not dict_:
             raise aspecd.exceptions.MissingDictError
-        for keyword in ["default_package", "datasets_source_directory",
-                        "output_directory", "autosave_plots"]:
-            if keyword in dict_:
-                setattr(self, keyword, dict_[keyword])
+        for key in ["settings", "directories"]:
+            if key in dict_:
+                for subkey, value in dict_[key].items():
+                    getattr(self, key)[subkey] = value
         if not self.dataset_factory:
-            package = self.default_package if self.default_package else 'aspecd'
+            package = self.settings['default_package'] \
+                if self.settings['default_package'] else 'aspecd'
             self.dataset_factory = self._get_dataset_factory(package=package)
-        if self.output_directory and not self.output_directory.startswith('/'):
-            self.output_directory = \
-                self._get_absolute_path(self.output_directory)
+        if self.directories['output'] \
+                and not self.directories['output'].startswith('/'):
+            self.directories['output'] = \
+                self._get_absolute_path(self.directories['output'])
         if 'datasets' in dict_:
             for key in dict_['datasets']:
                 self._append_dataset(key)
@@ -995,8 +1068,8 @@ class Recipe:
         else:
             source = key
             label = key
-        if self.datasets_source_directory:
-            source = os.path.join(self.datasets_source_directory, source)
+        if self.directories['datasets_source']:
+            source = os.path.join(self.directories['datasets_source'], source)
         logger.info('Import dataset "%s" as "%s"', source, label)
         if 'package' in properties:
             dataset_factory = \
@@ -1032,8 +1105,8 @@ class Recipe:
         task = self.task_factory.get_task_from_dict(key)
         task.from_dict(key)
         task.recipe = self
-        if self.default_package and not task.package:
-            task.package = self.default_package
+        if self.settings['default_package'] and not task.package:
+            task.package = self.settings['default_package']
         self.tasks.append(task)
 
     def to_dict(self):
@@ -1046,7 +1119,13 @@ class Recipe:
             Dictionary with fields "datasets" and "tasks"
 
         """
-        dict_ = {'datasets': [], 'tasks': []}
+        dict_ = {
+            'format': self.format,
+            'settings': self.settings,
+            'directories': self.directories,
+            'datasets': [],
+            'tasks': [],
+        }
         for dataset in self.datasets:
             dataset_dict = {}
             if not self.datasets[dataset].id == dataset:
@@ -1326,14 +1405,11 @@ class Chef:
         self.history["info"] = {'start': timestamp, 'end': ''}
         system_info = aspecd.system.SystemInfo(self.recipe.default_package)
         self.history["system_info"] = system_info.to_dict()
-        for key in ['default_package', 'datasets_source_directory',
-                    'output_directory', 'autosave_plots']:
-            if getattr(self.recipe, key):
-                self.history[key] = getattr(self.recipe, key)
         recipe_dict = self.recipe.to_dict()
-        self.history["datasets"] = recipe_dict['datasets']
-        if self.recipe.datasets_source_directory:
-            source_dir = self.recipe.datasets_source_directory
+        for key in ["format", "settings", "directories", "datasets"]:
+            self.history[key] = recipe_dict[key]
+        if self.recipe.directories['datasets_source']:
+            source_dir = self.recipe.directories['datasets_source']
             if not source_dir.endswith('/'):
                 source_dir += "/"
             for dataset in self.history["datasets"]:
@@ -2362,8 +2438,9 @@ class PlotTask(Task):
         elif 'filename' in self.properties and self.properties['filename']:
             filename = self.properties['filename']
         if filename:
-            if self.recipe.output_directory:
-                filename = os.path.join(self.recipe.output_directory, filename)
+            if self.recipe.directories['output']:
+                filename = os.path.join(self.recipe.directories['output'],
+                                        filename)
             saver = aspecd.plotting.Saver(filename=filename)
             logger.info('Save figure from "%s" to file "%s"', self.type,
                         filename)
@@ -2478,7 +2555,7 @@ class SingleplotTask(PlotTask):
             if filenames:
                 self._task.filename = filenames[number]
             elif "filename" not in self.properties \
-                    and self.recipe.autosave_plots:
+                    and self.recipe.settings['autosave_plots']:
                 dataset_basename = \
                     os.path.splitext(os.path.split(dataset.id)[-1])[0]
                 # noinspection PyUnresolvedReferences
@@ -2577,7 +2654,8 @@ class MultiplotTask(PlotTask):
                     ', '.join(self.apply_to))
         # noinspection PyUnresolvedReferences
         self._task.plot()
-        if "filename" not in self.properties and self.recipe.autosave_plots:
+        if "filename" not in self.properties \
+                and self.recipe.settings['autosave_plots']:
             basenames = []
             for dataset in self._task.datasets:
                 basenames.append(
@@ -2784,8 +2862,8 @@ class ReportTask(Task):
             task.context['dataset'] = dataset.to_dict()
             if isinstance(self.properties["filename"], list):
                 task.filename = self.properties["filename"][idx]
-            if self.recipe.output_directory:
-                task.filename = os.path.join(self.recipe.output_directory,
+            if self.recipe.directories['output']:
+                task.filename = os.path.join(self.recipe.directories['output'],
                                              task.filename)
             logger.info('Perform "%s" on dataset "%s"', self.type, dataset_id)
             task.create()
@@ -2946,8 +3024,8 @@ class ExportTask(Task):
             task = self.get_object()
             if targets:
                 task.target = targets[idx]
-            if self.recipe.output_directory:
-                task.target = os.path.join(self.recipe.output_directory,
+            if self.recipe.directories['output']:
+                task.target = os.path.join(self.recipe.directories['output'],
                                            task.target)
             logger.info('Export "%s" to file "%s"', dataset_id, task.target)
             dataset.export_to(task)
@@ -3255,7 +3333,11 @@ class ChefDeService:
         yaml.dict = self._chef.history
         yaml.numpy_array_to_list = True
         yaml.serialise_numpy_arrays()
-        yaml.write_to(self._history_filename)
+        if self._recipe.settings['write_history']:
+            yaml.write_to(self._history_filename)
+        else:
+            logger.warning('No history has been written. This is considered '
+                           'bad practice in terms of reproducible research')
 
     def _create_history_filename(self):
         timestamp = datetime.datetime.now().strftime('%Y%m%dT%H%M%S')

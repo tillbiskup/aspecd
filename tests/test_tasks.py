@@ -63,6 +63,22 @@ class TestRecipe(unittest.TestCase):
     def test_has_output_directory_property(self):
         self.assertTrue(hasattr(self.recipe, 'output_directory'))
 
+    def test_has_format_and_settings_and_directories_properties(self):
+        self.assertTrue(hasattr(self.recipe, 'format'))
+        self.assertTrue(hasattr(self.recipe, 'settings'))
+        self.assertTrue(hasattr(self.recipe, 'directories'))
+
+    def test_format_property_is_dict_with_fields(self):
+        self.assertEqual(['type', 'version'], list(self.recipe.format.keys()))
+
+    def test_settings_property_is_dict_with_fields(self):
+        self.assertEqual(['default_package', 'autosave_plots', 'write_history'],
+                         list(self.recipe.settings.keys()))
+
+    def test_directories_property_is_dict_with_fields(self):
+        self.assertEqual(['output', 'datasets_source'],
+                         list(self.recipe.directories.keys()))
+
     def test_import_from_without_importer_raises(self):
         with self.assertRaises(aspecd.exceptions.MissingImporterError):
             self.recipe.import_from()
@@ -121,7 +137,7 @@ class TestRecipe(unittest.TestCase):
         self.assertTrue(self.recipe.dataset_factory)
 
     def test_from_dict_with_default_package_wo_dataset_factory_raises(self):
-        dict_ = {'default_package': 'foo'}
+        dict_ = {'settings': {'default_package': 'foo'}}
         with self.assertRaisesRegex(ModuleNotFoundError, 'No module named'):
             self.recipe.from_dict(dict_)
 
@@ -145,12 +161,14 @@ class TestRecipe(unittest.TestCase):
         self.assertEqual(self.dataset, self.recipe.datasets[self.dataset].id)
 
     def test_from_dict_with_dataset_and_source_dir_sets_dataset_id(self):
-        dict_ = {'datasets': ['foo'], 'datasets_source_directory': '/bla'}
+        dict_ = {'datasets': ['foo'],
+                 'directories': {'datasets_source': '/bla'}}
         self.recipe.from_dict(dict_)
         self.assertEqual('/bla/foo', self.recipe.datasets['foo'].id)
 
     def test_from_dict_with_dataset_and_rel_source_dir_sets_dataset_id(self):
-        dict_ = {'datasets': ['foo'], 'datasets_source_directory': 'bla'}
+        dict_ = {'datasets': ['foo'],
+                 'directories': {'datasets_source': 'bla'}}
         self.recipe.from_dict(dict_)
         abspath = os.path.join(os.path.abspath(os.path.curdir), 'bla', 'foo')
         self.assertEqual(abspath, self.recipe.datasets['foo'].id)
@@ -245,19 +263,19 @@ class TestRecipe(unittest.TestCase):
                                    tasks.ProcessingTask))
 
     def test_from_dict_with_default_package_sets_package(self):
-        dict_ = {'default_package': 'foo'}
+        dict_ = {'settings': {'default_package': 'foo'}}
         self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
-        self.assertEqual('foo', self.recipe.default_package)
+        self.assertEqual('foo', self.recipe.settings['default_package'])
 
     def test_from_dict_with_default_package_adds_package_to_task(self):
-        dict_ = {'default_package': 'foo', 'tasks': [self.task]}
+        dict_ = {'settings': {'default_package': 'foo'}, 'tasks': [self.task]}
         self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         self.assertEqual('foo', self.recipe.tasks[0].package)
 
     def test_from_dict_with_default_pkg_and_task_pkg_sets_correct_pkg(self):
-        dict_ = {'default_package': 'foo', 'tasks': [self.task]}
+        dict_ = {'settings': {'default_package': 'foo'}, 'tasks': [self.task]}
         dict_["tasks"][0]["kind"] = 'bar' + '.' + dict_["tasks"][0]["kind"]
         self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
@@ -266,6 +284,19 @@ class TestRecipe(unittest.TestCase):
     def test_has_to_dict_method(self):
         self.assertTrue(hasattr(self.recipe, 'to_dict'))
         self.assertTrue(callable(self.recipe.to_dict))
+
+    def test_to_dict_contains_format_dict(self):
+        recipe_dict = self.recipe.to_dict()
+        self.assertDictEqual(self.recipe.format, recipe_dict['format'])
+
+    def test_to_dict_contains_settings_dict(self):
+        recipe_dict = self.recipe.to_dict()
+        self.assertDictEqual(self.recipe.settings, recipe_dict['settings'])
+
+    def test_to_dict_contains_directories_dict(self):
+        recipe_dict = self.recipe.to_dict()
+        self.assertDictEqual(self.recipe.directories,
+                             recipe_dict['directories'])
 
     def test_to_dict_with_datasets_returns_dataset_sources(self):
         for dataset_ in self.datasets:
@@ -388,20 +419,20 @@ class TestRecipe(unittest.TestCase):
             self.assertTrue(isinstance(dataset_, dataset.Dataset))
 
     def test_from_dict_with_output_directory_sets_output_directory(self):
-        dict_ = {'output_directory': '/foo'}
+        dict_ = {'directories': {'output': '/foo'}}
         self.recipe.from_dict(dict_)
-        self.assertEqual('/foo', self.recipe.output_directory)
+        self.assertEqual('/foo', self.recipe.directories['output'])
 
     def test_from_dict_makes_output_directory_absolute_path(self):
-        dict_ = {'output_directory': 'foo'}
+        dict_ = {'directories': {'output': 'foo'}}
         self.recipe.from_dict(dict_)
         self.assertEqual(os.path.join(os.path.abspath(os.path.curdir), 'foo'),
-                         self.recipe.output_directory)
+                         self.recipe.directories['output'])
 
     def test_from_dict_sets_autosave_plots(self):
-        dict_ = {'autosave_plots': False}
+        dict_ = {'settings': {'autosave_plots': False}}
         self.recipe.from_dict(dict_)
-        self.assertFalse(self.recipe.autosave_plots)
+        self.assertFalse(self.recipe.settings['autosave_plots'])
 
 
 class TestChef(unittest.TestCase):
@@ -508,6 +539,7 @@ class TestChef(unittest.TestCase):
         recipe_dict = {'datasets': [self.dataset],
                        'tasks': [self.plotting_task]}
         recipe.from_dict(recipe_dict)
+        recipe.settings["autosave_plots"] = False
         self.chef.cook(recipe=recipe)
         self.assertTrue(self.chef.recipe.datasets[
                             self.dataset].representations)
@@ -527,25 +559,25 @@ class TestChef(unittest.TestCase):
         recipe = self.recipe
         recipe_dict = {'datasets': [self.dataset],
                        'tasks': [self.analysis_task],
-                       'default_package': 'aspecd'}
+                       'settings': {'default_package': 'aspecd'}}
         recipe.from_dict(recipe_dict)
         self.chef.cook(recipe=recipe)
-        self.assertIn('default_package', self.chef.history)
+        self.assertIn('default_package', self.chef.history["settings"])
 
     def test_cook_adds_datasets_source_directory_to_history(self):
         recipe = self.recipe
         recipe_dict = {'datasets': [self.dataset],
                        'tasks': [self.analysis_task],
-                       'datasets_source_directory': 'foo'}
+                       'directories': {'datasets_source': 'foo'}}
         recipe.from_dict(recipe_dict)
         self.chef.cook(recipe=recipe)
-        self.assertIn('datasets_source_directory', self.chef.history)
+        self.assertIn('datasets_source', self.chef.history["directories"])
 
     def test_cook_with_datasets_source_directory_shortens_dataset_paths(self):
         recipe = self.recipe
         recipe_dict = {'datasets': ['bar'],
                        'tasks': [self.analysis_task],
-                       'datasets_source_directory': '/foo'}
+                       'directories': {'datasets_source': '/foo'}}
         recipe.from_dict(recipe_dict)
         self.chef.cook(recipe=recipe)
         self.assertEqual('bar', self.chef.history["datasets"][0]["source"])
@@ -554,7 +586,7 @@ class TestChef(unittest.TestCase):
         recipe = self.recipe
         recipe_dict = {'datasets': ['bar'],
                        'tasks': [self.analysis_task],
-                       'datasets_source_directory': '/foo/'}
+                       'directories': {'datasets_source': '/foo/'}}
         recipe.from_dict(recipe_dict)
         self.chef.cook(recipe=recipe)
         self.assertEqual('bar', self.chef.history["datasets"][0]["source"])
@@ -563,10 +595,10 @@ class TestChef(unittest.TestCase):
         recipe = self.recipe
         recipe_dict = {'datasets': [self.dataset],
                        'tasks': [self.analysis_task],
-                       'output_directory': 'foo'}
+                       'directories': {'output': 'foo'}}
         recipe.from_dict(recipe_dict)
         self.chef.cook(recipe=recipe)
-        self.assertIn('output_directory', self.chef.history)
+        self.assertIn('output', self.chef.history["directories"])
 
     def test_system_info_value_in_history_is_ordered_dict(self):
         recipe = self.recipe
@@ -650,8 +682,8 @@ class TestChef(unittest.TestCase):
                        'tasks': [self.analysis_task]}
         recipe.from_dict(recipe_dict)
         self.chef.cook(recipe=recipe)
-        self.assertIn('autosave_plots', self.chef.history)
-        self.assertTrue(self.chef.history["autosave_plots"])
+        self.assertIn('autosave_plots', self.chef.history["settings"])
+        self.assertTrue(self.chef.history["settings"]["autosave_plots"])
 
 
 class TestTask(unittest.TestCase):
@@ -1790,7 +1822,7 @@ class TestSinglePlotTask(unittest.TestCase):
         self.figure_filename = \
             "".join([self.dataset[0], "_", self.plotting_task["type"], ".pdf"])
         self.prepare_recipe()
-        self.recipe.autosave_plots = False
+        self.recipe.settings['autosave_plots'] = False
         self.task.from_dict(self.plotting_task)
         self.task.recipe = self.recipe
         self.task.perform()
@@ -1806,7 +1838,7 @@ class TestSinglePlotTask(unittest.TestCase):
 
     def test_perform_task_with_filename_and_output_directory_saves_plot(self):
         self.prepare_recipe()
-        self.recipe.output_directory = self.output_directory
+        self.recipe.directories['output'] = self.output_directory
         # noinspection PyTypeChecker
         self.plotting_task['properties'] = {'filename': self.figure_filename}
         self.task.from_dict(self.plotting_task)
@@ -1933,7 +1965,7 @@ class TestMultiPlotTask(unittest.TestCase):
             "".join(["_".join(self.plotting_task["apply_to"]), "_",
                      self.plotting_task["type"], ".pdf"])
         self.prepare_recipe()
-        self.recipe.autosave_plots = False
+        self.recipe.settings['autosave_plots'] = False
         self.task.from_dict(self.plotting_task)
         self.task.recipe = self.recipe
         self.task.perform()
@@ -2253,7 +2285,7 @@ class TestReportTask(unittest.TestCase):
         template_content = "{@dataset['id']}"
         self.prepare_template(template_content)
         self.task.from_dict(self.report_task)
-        self.recipe.output_directory = self.output_directory
+        self.recipe.directories['output'] = self.output_directory
         self.task.recipe = self.recipe
         self.task.perform()
         self.assertTrue(os.path.exists(os.path.join(self.output_directory,
@@ -2413,7 +2445,7 @@ class TestExportTask(unittest.TestCase):
 
     def test_perform_task_with_output_directory_writes_file(self):
         self.prepare_recipe()
-        self.recipe.output_directory = self.output_directory
+        self.recipe.directories['output'] = self.output_directory
         self.task.from_dict(self.export_task)
         self.task.recipe = self.recipe
         self.task.perform()
@@ -2577,6 +2609,17 @@ class TestChefDeService(unittest.TestCase):
         yaml.serialise_numpy_arrays()
         yaml.write_to(self.recipe_filename)
 
+    def create_recipe_with_no_history(self):
+        recipe_dict = {
+            'settings': {'write_history': False},
+            'datasets': ['foo'],
+            'tasks': [{'kind': 'singleplot', 'type': 'SinglePlotter',
+                       'properties': {'filename': self.figure_filename}}],
+        }
+        yaml = utils.Yaml()
+        yaml.dict = recipe_dict
+        yaml.write_to(self.recipe_filename)
+
     def test_instantiate_class(self):
         pass
 
@@ -2617,6 +2660,20 @@ class TestChefDeService(unittest.TestCase):
         self.history_filename = \
             self.chef_de_service.serve(recipe_filename=self.recipe_filename)
         self.assertTrue(os.path.exists(self.history_filename))
+
+    def test_serve_does_not_write_history_to_file_if_told_so(self):
+        self.create_recipe_with_no_history()
+        self.history_filename = \
+            self.chef_de_service.serve(recipe_filename=self.recipe_filename)
+        self.assertFalse(os.path.exists(self.history_filename))
+
+    def test_serve_issues_warning_if_told_to_not_write_history(self):
+        self.create_recipe_with_no_history()
+        with self.assertLogs(__package__, level='WARNING') as cm:
+            self.chef_de_service.serve(recipe_filename=self.recipe_filename)
+        self.assertIn('No history has been written. This is considered bad '
+                      'practice in terms of reproducible research',
+                      cm.output[0])
 
     def test_written_history_can_be_used_as_recipe(self):
         self.create_recipe()
