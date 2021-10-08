@@ -737,6 +737,10 @@ class TestTask(unittest.TestCase):
         self.assertTrue(hasattr(self.task, 'to_dict'))
         self.assertTrue(callable(self.task.to_dict))
 
+    def test_to_dict_does_not_contain_package_key(self):
+        dict_ = self.task.to_dict()
+        self.assertNotIn('package', dict_)
+
     def test_has_from_dict_method(self):
         self.assertTrue(hasattr(self.task, 'from_dict'))
         self.assertTrue(callable(self.task.from_dict))
@@ -2801,7 +2805,6 @@ class TestServe(unittest.TestCase):
 
     def test_verbose_argument_has_description(self):
         result = subprocess.run(["serve", "-h"], capture_output=True, text=True)
-        print(result.stdout)
         self.assertIn("-v, --verbose  show debug output", result.stdout)
 
     def test_verbose_and_quite_arguments_are_mutually_exclusive(self):

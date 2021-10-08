@@ -1560,7 +1560,7 @@ class Task(aspecd.utils.ToDictMixin):
         self.apply_to = []
         self.recipe = recipe
         self._module = ''
-        self._exclude_from_to_dict = ['recipe']
+        self._exclude_from_to_dict = ['recipe', 'package']
         self._task = None
 
     def from_dict(self, dict_=None):

@@ -308,7 +308,6 @@ class TestRecipeYamlImporter(unittest.TestCase):
                          recipe.settings['default_package'])
         self.assertEqual(self.recipe_dict['autosave_plots'],
                          recipe.settings['autosave_plots'])
-        print(recipe.directories)
         self.assertEqual(self.recipe_dict['output_directory'],
                          recipe.directories['output'])
         self.assertEqual(self.recipe_dict['datasets_source_directory'],

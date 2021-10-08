@@ -10,7 +10,7 @@ Version 0.4.0
 
 Not yet released
 
-**Note**: Starting with this release ASpecD requires **Python >= 3.6**.
+**Note**: Starting with this release ASpecD requires **Python >= 3.7**.
 
 New features
 ------------

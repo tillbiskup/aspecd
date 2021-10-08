@@ -8,9 +8,7 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.4
 ===============
 
-* Recipe-driven data analysis
-
-  * Properly handle history of single processing steps for multiple datasets when parameters are written during processing
+* Handling of mapper recipe (from package source, not from directory)
 
 
 For version 0.5
