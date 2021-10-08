@@ -1411,7 +1411,11 @@ class Chef:
         self._prepare_history()
         for task in self.recipe.tasks:
             task.perform()
-            self.history["tasks"].append(task.to_dict())
+            task_history = task.to_dict()
+            if isinstance(task_history, list):
+                self.history["tasks"].extend(task_history)
+            else:
+                self.history["tasks"].append(task_history)
         try:
             self.history["info"]["end"] = \
                 datetime.datetime.now().isoformat(timespec=self._timespec)
@@ -1974,6 +1978,14 @@ class ProcessingTask(Task):
         super().__init__(recipe=recipe)
         self.result = ''
         self.comment = ''
+        self._dict_representations = []
+        self._internal = False
+
+    def to_dict(self):
+        if self._dict_representations and not self._internal:
+            return self._dict_representations
+        else:
+            return super().to_dict()
 
     def _perform(self):
         result_labels = None
@@ -1983,6 +1995,7 @@ class ProcessingTask(Task):
             else:
                 self.result = None
         for number, dataset_id in enumerate(self.apply_to):
+            dict_pre = self.to_dict()
             dataset = self.recipe.get_dataset(dataset_id)
             self._task = self.get_object()
             if self.comment:
@@ -2002,6 +2015,14 @@ class ProcessingTask(Task):
                 logger.info('Perform "%s" on dataset "%s"', self.type,
                             dataset_id)
                 self._task = dataset.process(processing_step=self._task)
+            self._internal = True
+            dict_post = self.to_dict()
+            self._internal = False
+            if dict_post != dict_pre and len(self.apply_to) > 1:
+                dict_post['apply_to'] = [dataset_id]
+                if dict_post['result']:
+                    dict_post['result'] = self.result[number]
+                self._dict_representations.append(dict_post)
 
 
 class SingleprocessingTask(ProcessingTask):

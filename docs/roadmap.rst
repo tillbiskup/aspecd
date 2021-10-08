@@ -11,7 +11,6 @@ For version 0.4
 * Recipe-driven data analysis
 
   * Properly handle history of single processing steps for multiple datasets when parameters are written during processing
-  * Functionality to create recipe structure/structure for tasks as YAML
 
 
 For version 0.5
@@ -36,6 +35,10 @@ For version 0.5
 
 For later versions
 ==================
+
+* Recipe-driven data analysis
+
+  * Functionality to create recipe structure/structure for tasks as YAML (for use either with CLI or with web interface)
 
 * Remaining basic processing and analysis steps:
 

@@ -518,6 +518,20 @@ class TestChef(unittest.TestCase):
         self.chef.cook(recipe=recipe)
         self.assertTrue(self.chef.recipe.datasets[self.dataset].history)
 
+    def test_cook_recipe_with_processing_params_with_multiple_datasets(self):
+        recipe = self.recipe
+        self.dataset = ['foo', 'bar']
+        self.processing_task["type"] = 'BaselineCorrection'
+        self.processing_task['apply_to'] = self.dataset
+        recipe_dict = {'datasets': self.dataset,
+                       'tasks': [self.processing_task]}
+        recipe.from_dict(recipe_dict)
+        recipe.datasets['foo'].data.data = np.random.random(10)+5
+        recipe.datasets['bar'].data.data = np.random.random(10)+3
+        self.chef.cook(recipe=recipe)
+        self.assertIsInstance(self.chef.history['tasks'][0], dict)
+        self.assertEqual(2, len(self.chef.history['tasks']))
+
     def test_cook_recipe_with_analysis_task_performs_task(self):
         recipe = self.recipe
         recipe_dict = {'datasets': [self.dataset],
@@ -1243,6 +1257,43 @@ class TestProcessingTask(unittest.TestCase):
         self.task.perform()
         dict_ = self.task.to_dict()
         self.assertTrue(dict_["properties"]["parameters"]["coefficients"])
+
+    def test_to_dict_with_multiple_datasets_and_params_returns_list(self):
+        self.dataset = ['foo', 'bar']
+        self.processing_task["type"] = 'BaselineCorrection'
+        self.prepare_recipe()
+        self.recipe.datasets['foo'].data.data = np.random.random(10)+5
+        self.recipe.datasets['bar'].data.data = np.random.random(10)+3
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertIsInstance(dict_, list)
+
+    def test_to_dict_with_multiple_datasets_and_params_adjusts_apply_to(self):
+        self.dataset = ['foo', 'bar']
+        self.processing_task["type"] = 'BaselineCorrection'
+        self.prepare_recipe()
+        self.recipe.datasets['foo'].data.data = np.random.random(10)+5
+        self.recipe.datasets['bar'].data.data = np.random.random(10)+3
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(dict_[0]['apply_to'], [self.dataset[0]])
+
+    def test_to_dict_with_multiple_datasets_and_params_adjusts_result(self):
+        self.dataset = ['foo', 'bar']
+        self.processing_task["type"] = 'BaselineCorrection'
+        self.processing_task["result"] = ['result1', 'result2']
+        self.prepare_recipe()
+        self.recipe.datasets['foo'].data.data = np.random.random(10)+5
+        self.recipe.datasets['bar'].data.data = np.random.random(10)+3
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(dict_[0]['result'], 'result1')
 
 
 class TestSingleProcessingTask(unittest.TestCase):
