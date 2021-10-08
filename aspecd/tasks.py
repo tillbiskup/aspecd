@@ -103,11 +103,12 @@ for datasets:
 
 .. code-block:: yaml
 
-    datasets_source_directory: /path/to/my/datasets/
+    directories:
+      datasets_source: /path/to/my/datasets/
 
     datasets:
-        - dataset1
-        - dataset2
+      - dataset1
+      - dataset2
 
     tasks:
       - kind: processing
@@ -122,11 +123,12 @@ example below.
 
 .. code-block:: yaml
 
-    datasets_source_directory: relative/path/to/my/datasets/
+    directories:
+      datasets_source: relative/path/to/my/datasets/
 
     datasets:
-        - dataset1
-        - dataset2
+      - dataset1
+      - dataset2
 
     tasks:
       - kind: processing
@@ -149,10 +151,11 @@ recipe:
 
 .. code-block:: yaml
 
-    output_directory: /absolute/path/for/the/outputs
+    directories:
+      output: /absolute/path/for/the/outputs
 
     datasets:
-        - dataset
+      - dataset
 
     tasks:
       - kind: singleplot
@@ -166,7 +169,8 @@ directory you cook your recipes from:
 
 .. code-block:: yaml
 
-    output_directory: relative/path/for/the/outputs
+    directories:
+      output: relative/path/for/the/outputs
 
     datasets:
         - dataset
@@ -192,7 +196,8 @@ name like so:
 
 .. code-block:: yaml
 
-    default_package: my_package
+    settings:
+      default_package: my_package
 
     datasets:
       - loi:xxx
@@ -224,7 +229,8 @@ a default package and overriding this for a particular task:
 
 .. code-block:: yaml
 
-    default_package: my_package
+    settings:
+      default_package: my_package
 
     datasets:
       - loi:xxx
@@ -519,6 +525,30 @@ scientific questions that originally triggered obtaining and analysing the
 data. Reproducibility is been taken care of for you.
 
 
+Suppress automatically writing history
+--------------------------------------
+
+.. warning::
+
+    Not having a history of each individual step of your data analysis is
+    considered bad practice and not consistent with reproducible research.
+    Therefore, use the following only in debugging/development settings,
+    never in real life applications.
+
+In some particular cases, namely debugging and development, writing a
+history for each individual cooking of a recipe might be inconvenient.
+Therefore, you can tell ASpecD not to automatically write a history.
+However, *use with extreme caution*!
+
+.. code-block:: yaml
+
+    settings:
+        write_history: false
+
+To remind you of what you are doing, this will issue a warning on the
+command line if using ``serve``.
+
+
 Kinds of tasks
 ==============
 
@@ -737,13 +767,15 @@ Module documentation
         Useful particularly for larger datasets and/or longer lists of tasks.
 
 """
-
+import argparse
 import collections
 import copy
 import datetime
+import logging
 import os
 import re
 import sys
+import warnings
 
 import matplotlib.pyplot as plt
 
@@ -753,6 +785,10 @@ import aspecd.io
 import aspecd.plotting
 import aspecd.system
 import aspecd.utils
+
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 
 class Recipe:
@@ -850,41 +886,95 @@ class Recipe:
         If no factory is set, but a recipe imported from a file or set from
         a dictionary, an exception will be raised.
 
-    default_package: :class:`str`
-        Name of the package the task objects are obtained from
+    format : :class:`dict`
+        Information on the format of the recipe
 
-        If no name for a default package is supplied, "aspecd" is used.
+        This information is used to automatically convert recipes to the
+        current format.
 
-    datasets_source_directory: :class:`str`
-        Root directory for the datasets.
+        Dictionary with the following fields:
 
-        Interpreted as absolute path if starting with the system-specific file
-        separator. Otherwise, interpreted as relative to the current
-        directory. If provided, all output resulting from cooking a recipe
-        will be saved to this path.
+        type : :class:`str`
+            Information on the type of file
 
-    output_directory: :class:`str`
-        Directory to save output (plots, reports, ...) to.
+            Shall never be changed.
 
-        Interpreted as absolute path if starting with the system-specific file
-        separator. Otherwise, interpreted as relative to the current
-        directory. If provided, all output resulting from cooking a recipe
-        will be saved to this path.
+            Default: ASpecD recipe
 
-        Make sure the path actually exists. Otherwise, you may run into
-        trouble when tasks try to save their output.
+        version : :class:`str`
+            Version of the recipe structure (in form X.Y)
 
-    autosave_plots: :class:`bool`
-        Whether to save plots automatically even if no filename is provided.
+            This information is used to automatically convert recipes to the
+            current format.
 
-        If true, each :class:`aspecd.tasks.SingleplotTask` and
-        :class:`aspecd.tasks.MultiplotTask` will save the plots to default
-        file names. For details, see the documentation of the respective
-        classes.
+            Defaults to the latest version.
 
-        Default: True
+        .. versionadded:: 0.4
 
-        .. versionadded:: 0.2
+    settings : :class:`dict`
+        General settings relevant for cooking the recipe.
+
+        Dictionary with the following fields:
+
+        default_package: :class:`str`
+           Name of the package the task objects are obtained from
+
+           If no name for a default package is supplied, "aspecd" is used.
+
+        autosave_plots: :class:`bool`
+            Whether to save plots automatically even if no filename is provided.
+
+            If true, each :class:`aspecd.tasks.SingleplotTask` and
+            :class:`aspecd.tasks.MultiplotTask` will save the plots to default
+            file names. For details, see the documentation of the respective
+            classes.
+
+            Default: True
+
+           .. versionadded:: 0.2
+
+        write_history: :class:`bool`
+           Whether to write a history when serving the recipe.
+
+           If true, for each serving of a recipe, a history will be written
+           into a file with same base name and timestamp appended. In terms
+           of reproducible research, it is *highly recommended* to always
+           write a history. However, when debugging, you may set this to
+           "False".
+
+           Default: True
+
+           .. versionadded:: 0.4
+
+        .. versionchanged:: 0.4
+            Moved properties to keys in this dictionary
+
+    directories : :class:`dict`
+        Optional control of different directories.
+
+        Dictionary with the following fields:
+
+        datasets_source: :class:`str`
+            Root directory for the datasets.
+
+            Interpreted as absolute path if starting with the
+            system-specific file separator. Otherwise, interpreted as
+            relative to the current directory. If provided, all output
+            resulting from cooking a recipe will be saved to this path.
+
+        output: :class:`str`
+            Directory to save output (plots, reports, ...) to.
+
+            Interpreted as absolute path if starting with the
+            system-specific file separator. Otherwise, interpreted as
+            relative to the current directory. If provided, all output
+            resulting from cooking a recipe will be saved to this path.
+
+            Make sure the path actually exists. Otherwise, you may run into
+            trouble when tasks try to save their output.
+
+        .. versionchanged:: 0.4
+            Moved properties to keys in this dictionary
 
     filename : :class:`str`
         Name of the (YAML) file the recipe was loaded from.
@@ -904,10 +994,14 @@ class Recipe:
         Raised if no importer is provided.
     aspecd.tasks.MissingExporterError
         Raised if no exporter is provided.
-    aspecd.tasks.MissingDatasetFactoryError
-        Raised if :attr:`dataset_factory` is invalid.
     aspecd.tasks.MissingTaskFactoryError
         Raised if :attr:`task_factory` is invalid.
+
+
+    .. versionchanged:: 0.4
+        Move properties "default_package" and "autosave_plots" to new
+        property "settings"; move properties "output_directory" and
+        "datasets_source" to new property "directories".
 
     """
 
@@ -918,6 +1012,19 @@ class Recipe:
         self.figures = collections.OrderedDict()
         self.plotters = collections.OrderedDict()
         self.tasks = list()
+        self.format = {
+            'type': 'ASpecD recipe',
+            'version': '0.2',
+        }
+        self.settings = {
+            'default_package': '',
+            'autosave_plots': True,
+            'write_history': True,
+        }
+        self.directories = {
+            'output': '',
+            'datasets_source': '',
+        }
         self.dataset_factory = None
         self.task_factory = TaskFactory()
         self.default_package = ''
@@ -944,23 +1051,22 @@ class Recipe:
             Raised if no dict is provided.
         aspecd.tasks.MissingDatasetFactoryError
             Raised if :attr:`importer_factory` is invalid.
-        aspecd.tasks.MissingTaskFactoryError
-            Raised if :attr:`task_factory` is invalid.
 
         """
         if not dict_:
             raise aspecd.exceptions.MissingDictError
+        for key in ["settings", "directories"]:
+            if key in dict_:
+                for subkey, value in dict_[key].items():
+                    getattr(self, key)[subkey] = value
         if not self.dataset_factory:
-            raise aspecd.exceptions.MissingDatasetFactoryError
-        if not self.task_factory:
-            raise aspecd.exceptions.MissingTaskFactoryError
-        for keyword in ["default_package", "datasets_source_directory",
-                        "output_directory", "autosave_plots"]:
-            if keyword in dict_:
-                setattr(self, keyword, dict_[keyword])
-        if self.output_directory and not self.output_directory.startswith('/'):
-            self.output_directory = \
-                self._get_absolute_path(self.output_directory)
+            package = self.settings['default_package'] \
+                if self.settings['default_package'] else 'aspecd'
+            self.dataset_factory = self._get_dataset_factory(package=package)
+        if self.directories['output'] \
+                and not self.directories['output'].startswith('/'):
+            self.directories['output'] = \
+                self._get_absolute_path(self.directories['output'])
         if 'datasets' in dict_:
             for key in dict_['datasets']:
                 self._append_dataset(key)
@@ -992,8 +1098,9 @@ class Recipe:
         else:
             source = key
             label = key
-        if self.datasets_source_directory:
-            source = os.path.join(self.datasets_source_directory, source)
+        if self.directories['datasets_source']:
+            source = os.path.join(self.directories['datasets_source'], source)
+        logger.info('Import dataset "%s" as "%s"', source, label)
         if 'package' in properties:
             dataset_factory = \
                 self._get_dataset_factory(package=properties['package'])
@@ -1028,8 +1135,8 @@ class Recipe:
         task = self.task_factory.get_task_from_dict(key)
         task.from_dict(key)
         task.recipe = self
-        if self.default_package and not task.package:
-            task.package = self.default_package
+        if self.settings['default_package'] and not task.package:
+            task.package = self.settings['default_package']
         self.tasks.append(task)
 
     def to_dict(self):
@@ -1042,7 +1149,13 @@ class Recipe:
             Dictionary with fields "datasets" and "tasks"
 
         """
-        dict_ = {'datasets': [], 'tasks': []}
+        dict_ = {
+            'format': self.format,
+            'settings': self.settings,
+            'directories': self.directories,
+            'datasets': [],
+            'tasks': [],
+        }
         for dataset in self.datasets:
             dataset_dict = {}
             if not self.datasets[dataset].id == dataset:
@@ -1298,7 +1411,11 @@ class Chef:
         self._prepare_history()
         for task in self.recipe.tasks:
             task.perform()
-            self.history["tasks"].append(task.to_dict())
+            task_history = task.to_dict()
+            if isinstance(task_history, list):
+                self.history["tasks"].extend(task_history)
+            else:
+                self.history["tasks"].append(task_history)
         try:
             self.history["info"]["end"] = \
                 datetime.datetime.now().isoformat(timespec=self._timespec)
@@ -1322,14 +1439,11 @@ class Chef:
         self.history["info"] = {'start': timestamp, 'end': ''}
         system_info = aspecd.system.SystemInfo(self.recipe.default_package)
         self.history["system_info"] = system_info.to_dict()
-        for key in ['default_package', 'datasets_source_directory',
-                    'output_directory', 'autosave_plots']:
-            if getattr(self.recipe, key):
-                self.history[key] = getattr(self.recipe, key)
         recipe_dict = self.recipe.to_dict()
-        self.history["datasets"] = recipe_dict['datasets']
-        if self.recipe.datasets_source_directory:
-            source_dir = self.recipe.datasets_source_directory
+        for key in ["format", "settings", "directories", "datasets"]:
+            self.history[key] = recipe_dict[key]
+        if self.recipe.directories['datasets_source']:
+            source_dir = self.recipe.directories['datasets_source']
             if not source_dir.endswith('/'):
                 source_dir += "/"
             for dataset in self.history["datasets"]:
@@ -1446,7 +1560,7 @@ class Task(aspecd.utils.ToDictMixin):
         self.apply_to = []
         self.recipe = recipe
         self._module = ''
-        self._exclude_from_to_dict = ['recipe']
+        self._exclude_from_to_dict = ['recipe', 'package']
         self._task = None
 
     def from_dict(self, dict_=None):
@@ -1492,7 +1606,16 @@ class Task(aspecd.utils.ToDictMixin):
 
             The order of attribute definition is preserved
 
+
+        .. versionchanged:: 0.4
+            (Implicit) parameters of underlying task object are added
+
         """
+        if hasattr(self._task, 'parameters'):
+            if 'parameters' not in self.properties:
+                self.properties["parameters"] = dict()
+            for key, value in self._task.parameters.items():
+                self.properties["parameters"][key] = value
         if 'parameters' in self.properties:
             self._replace_objects_with_labels(self.properties["parameters"])
         self._replace_objects_with_labels(self.properties)
@@ -1581,24 +1704,35 @@ class Task(aspecd.utils.ToDictMixin):
         specifying explicit class names including packages, but at the same
         time to omit the package name for classes from the current package.
 
+        Furthermore, if a package different than aspecd is provided in
+        :attr:`package` and the class cannot be found in there, the class is
+        searched in the aspecd package instead. This allows for using all of
+        the classes provided with the ASpecD framework without needing to
+        prefix them in a recipe and therefore greatly enhances the user
+        experience.
+
         Returns
         -------
         obj : `object`
             Object of a class defined in the :attr:`type` attribute of a task
 
         """
-        if self._module:
-            class_name = '.'.join([self._module, self.type])
+        if '.' in self.kind:
+            package_name, self.kind = self.kind.split('.')
+        elif self.package:
+            package_name = self.package
         else:
-            class_name = '.'.join([self.kind, self.type])
+            package_name = aspecd.utils.package_name(self)
+        if self._module:
+            class_name = '.'.join([package_name, self._module, self.type])
+        else:
+            class_name = '.'.join([package_name, self.kind, self.type])
         try:
             obj = aspecd.utils.object_from_class_name(class_name)
-        except (ImportError, AttributeError):
-            if self.package:
-                package_name = self.package
-            else:
-                package_name = aspecd.utils.package_name(self)
-            class_name = '.'.join([package_name, class_name])
+        except (AttributeError, ModuleNotFoundError):
+            # Fall back to loading the class from the ASpecD package
+            class_name = '.'.join(['aspecd',
+                                   '.'.join(class_name.split('.')[1:])])
             obj = aspecd.utils.object_from_class_name(class_name)
         return obj
 
@@ -1620,12 +1754,6 @@ class Task(aspecd.utils.ToDictMixin):
         and will be replaced by the actual :obj:`aspecd.tasks.FigureRecord`
         objects.
 
-        .. todo::
-            Eventually, with the advent of logging in the ASpecD framework,
-            it might be sensible to at least add a log message if a key
-            gets ignored, such that it is no longer silently ignored. This
-            might be helpful for debugging purposes.
-
         Parameters
         ----------
         obj : `object`
@@ -1644,6 +1772,8 @@ class Task(aspecd.utils.ToDictMixin):
                     setattr(obj, key, prop)
                 else:
                     setattr(obj, key, properties[key])
+            else:
+                logger.debug('"%s" has no property "%s".', self.type, key)
 
     def _set_attributes_in_dict(self, source=None, target=None):
         # pylint: disable=too-many-nested-blocks
@@ -1839,7 +1969,7 @@ class ProcessingTask(Task):
         Textual comment regarding the processing step
 
 
-    .. versionchanged: 0.3
+    .. versionchanged:: 0.3
         New attribute :attr:`comment`
 
     """
@@ -1848,6 +1978,37 @@ class ProcessingTask(Task):
         super().__init__(recipe=recipe)
         self.result = ''
         self.comment = ''
+        self._dict_representations = []
+        self._internal = False
+
+    def to_dict(self):
+        """
+        Create dictionary containing public attributes of an object.
+
+        Furthermore, replace certain objects with their respective labels
+        provided in the recipe. These objects currently include datasets,
+        results, figures (*i.e.* figure records), and plotters.
+
+        Returns
+        -------
+        public_attributes : :class:`collections.OrderedDict` | :class:`list`
+            (List of) ordered dictionary/ies containing the public attributes of
+            the object
+
+            In case of multiple datasets and added parameters during
+            execution of the task, a list of dicts (one dict for each dataset).
+
+            The order of attribute definition is preserved
+
+
+        .. versionchanged:: 0.4
+            Return list of dicts in case of multiple datasets and added
+            parameters during execution of the task
+
+        """
+        return self._dict_representations \
+            if self._dict_representations and not self._internal \
+            else super().to_dict()
 
     def _perform(self):
         result_labels = None
@@ -1857,11 +2018,14 @@ class ProcessingTask(Task):
             else:
                 self.result = None
         for number, dataset_id in enumerate(self.apply_to):
+            dict_pre = self.to_dict()
             dataset = self.recipe.get_dataset(dataset_id)
             self._task = self.get_object()
             if self.comment:
                 self._task.comment = self.comment
             if self.result:
+                logger.info('Perform "%s" on dataset "%s" resulting in "%s"',
+                            self.type, dataset_id, self.result)
                 dataset_copy = copy.deepcopy(dataset)
                 dataset_copy.process(processing_step=self._task)
                 if result_labels:
@@ -1871,7 +2035,17 @@ class ProcessingTask(Task):
                     dataset_copy.id = self.result
                     self.recipe.results[self.result] = dataset_copy
             else:
-                dataset.process(processing_step=self._task)
+                logger.info('Perform "%s" on dataset "%s"', self.type,
+                            dataset_id)
+                self._task = dataset.process(processing_step=self._task)
+            self._internal = True
+            dict_post = self.to_dict()
+            self._internal = False
+            if dict_post != dict_pre and len(self.apply_to) > 1:
+                dict_post['apply_to'] = [dataset_id]
+                if dict_post['result']:
+                    dict_post['result'] = self.result[number]
+                self._dict_representations.append(dict_post)
 
 
 class SingleprocessingTask(ProcessingTask):
@@ -1975,12 +2149,17 @@ class MultiprocessingTask(Task):
             for dataset in self.recipe.get_datasets(self.apply_to):
                 datasets.append(copy.deepcopy(dataset))
             self._task.datasets = datasets
+            logger.info('Perform "%s" on datasets "%s" resulting in "%s"',
+                        self.type, ', '.join(self.apply_to),
+                        ', '.join(self.result))
             # noinspection PyUnresolvedReferences
             self._task.process()
             for number, dataset in enumerate(self._task.datasets):
                 self.recipe.results[self.result[number]] = dataset
         else:
             self._task.datasets = self.recipe.get_datasets(self.apply_to)
+            logger.info('Perform "%s" on datasets "%s"', self.type,
+                        ', '.join(self.apply_to))
             # noinspection PyUnresolvedReferences
             self._task.process()
 
@@ -2020,8 +2199,11 @@ class AnalysisTask(Task):
         Textual comment regarding the analysis step
 
 
-    .. versionchanged: 0.3
+    .. versionchanged:: 0.3
         New attribute :attr:`comment`
+
+    .. versionchanged:: 0.4
+        Raises warning if :meth:`perform` is called
 
     """
 
@@ -2030,6 +2212,11 @@ class AnalysisTask(Task):
         self.result = ''
         self.comment = ''
         self._module = 'analysis'
+
+    def _perform(self):
+        message = "Don't use AnalysisTask directly, but rather " \
+                  "'SingleanalysisTask' or 'MultianalysisTask'"
+        warnings.warn(message=message)
 
 
 class SingleanalysisTask(AnalysisTask):
@@ -2117,6 +2304,7 @@ class SingleanalysisTask(AnalysisTask):
             self._task = self.get_object()
             if self.comment:
                 self._task.comment = self.comment
+            logger.info('Perform "%s" on dataset "%s"', self.type, dataset_id)
             self._task = dataset.analyse(analysis_step=self._task)
             if self.result:
                 if result_labels:
@@ -2179,6 +2367,8 @@ class MultianalysisTask(AnalysisTask):
     def _perform(self):
         self._task = self.get_object()
         self._task.datasets = self.recipe.get_datasets(self.apply_to)
+        logger.info('Perform "%s" on datasets "%s"', self.type,
+                    ', '.join(self.apply_to))
         self._task.analyse()
         if self.result:
             # NOTE: This code is currently widely untested due to lack of
@@ -2214,6 +2404,7 @@ class AnnotationTask(Task):
         for dataset_id in self.apply_to:
             dataset = self.recipe.get_dataset(dataset_id)
             self._task = self.get_object()
+            logger.info('Perform "%s" on dataset "%s"', self.type, dataset_id)
             dataset.annotate(annotation_=self._task)
 
 
@@ -2251,12 +2442,30 @@ class PlotTask(Task):
         This is useful in case of CompositePlotters, where different
         plotters need to be defined for each of the panels.
 
+    target : :class:`str`
+        Label of an existing previous plotter the plot should be added to.
+
+        Sometimes it is desirable to add something to an already existing
+        plot after this original plot has been created. Programmatically,
+        this would be equivalent to setting the
+        :attr:`aspecd.plotting.Plotter.figure` and
+        :attr:`aspecd.plotting.Plotter.axes` attributes of the underlying
+        plotter object.
+
+        The result: Your plot will be a new figure window, but with the
+        original plot contained and the new plot added on top of it.
+
+
+    .. versionadded:: 0.4.0
+        Attribute :attr:`target`
+
     """
 
     def __init__(self):
         super().__init__()
         self.label = ''
         self.result = ''
+        self.target = ''
         self._module = 'plotting'
 
     def perform(self):
@@ -2303,9 +2512,12 @@ class PlotTask(Task):
         elif 'filename' in self.properties and self.properties['filename']:
             filename = self.properties['filename']
         if filename:
-            if self.recipe.output_directory:
-                filename = os.path.join(self.recipe.output_directory, filename)
+            if self.recipe.directories['output']:
+                filename = os.path.join(self.recipe.directories['output'],
+                                        filename)
             saver = aspecd.plotting.Saver(filename=filename)
+            logger.info('Save figure from "%s" to file "%s"', self.type,
+                        filename)
             plot.save(saver)
 
 
@@ -2411,21 +2623,26 @@ class SingleplotTask(PlotTask):
         for number, dataset_id in enumerate(self.apply_to):
             dataset = self.recipe.get_dataset(dataset_id)
             self._task = self.get_object()
+            if self.target:
+                self._task.figure = self.recipe.plotters[self.target].figure
+                self._task.axes = self.recipe.plotters[self.target].axes
             if filenames:
                 self._task.filename = filenames[number]
             elif "filename" not in self.properties \
-                    and self.recipe.autosave_plots:
+                    and self.recipe.settings['autosave_plots']:
                 dataset_basename = \
                     os.path.splitext(os.path.split(dataset.id)[-1])[0]
                 # noinspection PyUnresolvedReferences
                 plotter_name = self._task.name.split(".")[-1]
                 self._task.filename = \
                     "".join([dataset_basename, "_", plotter_name, ".pdf"])
+            logger.info('Perform "%s" on dataset "%s"', self.type, dataset_id)
             dataset.plot(plotter=self._task)
             # noinspection PyTypeChecker
             self.save_plot(plot=self._task)
-            # noinspection PyUnresolvedReferences
-            plt.close(self._task.figure)
+            if not self.result:
+                # noinspection PyUnresolvedReferences
+                plt.close(self._task.figure)
 
 
 class MultiplotTask(PlotTask):
@@ -2503,10 +2720,16 @@ class MultiplotTask(PlotTask):
 
     def _perform(self):
         self._task = self.get_object()
+        if self.target:
+            self._task.figure = self.recipe.plotters[self.target].figure
+            self._task.axes = self.recipe.plotters[self.target].axes
         self._task.datasets = self.recipe.get_datasets(self.apply_to)
+        logger.info('Perform "%s" on datasets "%s"', self.type,
+                    ', '.join(self.apply_to))
         # noinspection PyUnresolvedReferences
         self._task.plot()
-        if "filename" not in self.properties and self.recipe.autosave_plots:
+        if "filename" not in self.properties \
+                and self.recipe.settings['autosave_plots']:
             basenames = []
             for dataset in self._task.datasets:
                 basenames.append(
@@ -2518,8 +2741,9 @@ class MultiplotTask(PlotTask):
             self.properties["filename"] = self._task.filename
         # noinspection PyTypeChecker
         self.save_plot(plot=self._task)
-        # noinspection PyUnresolvedReferences
-        plt.close(self._task.figure)
+        if not self.result:
+            # noinspection PyUnresolvedReferences
+            plt.close(self._task.figure)
 
 
 class CompositeplotTask(PlotTask):
@@ -2599,6 +2823,7 @@ class CompositeplotTask(PlotTask):
 
     def _perform(self):
         self._task = self.get_object()
+        logger.info('Perform "%s"', self.type)
         # noinspection PyUnresolvedReferences
         self._task.plot()
         # noinspection PyTypeChecker
@@ -2711,9 +2936,10 @@ class ReportTask(Task):
             task.context['dataset'] = dataset.to_dict()
             if isinstance(self.properties["filename"], list):
                 task.filename = self.properties["filename"][idx]
-            if self.recipe.output_directory:
-                task.filename = os.path.join(self.recipe.output_directory,
+            if self.recipe.directories['output']:
+                task.filename = os.path.join(self.recipe.directories['output'],
                                              task.filename)
+            logger.info('Perform "%s" on dataset "%s"', self.type, dataset_id)
             task.create()
             if self.compile and hasattr(task, 'compile'):
                 task.compile()
@@ -2797,6 +3023,7 @@ class ModelTask(Task):
         task = self.get_object()
         if self.from_dataset:
             task.from_dataset(self.recipe.get_dataset(self.from_dataset))
+        logger.info('Create model "%s"', self.type)
         result = task.create()
         if self.result:
             self.recipe.results[self.result] = result
@@ -2871,9 +3098,10 @@ class ExportTask(Task):
             task = self.get_object()
             if targets:
                 task.target = targets[idx]
-            if self.recipe.output_directory:
-                task.target = os.path.join(self.recipe.output_directory,
+            if self.recipe.directories['output']:
+                task.target = os.path.join(self.recipe.directories['output'],
                                            task.target)
+            logger.info('Export "%s" to file "%s"', dataset_id, task.target)
             dataset.export_to(task)
 
 
@@ -3134,7 +3362,6 @@ class ChefDeService:
         self._recipe = aspecd.tasks.Recipe()
         self._chef = aspecd.tasks.Chef()
         self._recipe_dict = None
-        self._dataset_factory = aspecd.dataset.DatasetFactory()
 
     def serve(self, recipe_filename=''):
         """
@@ -3171,50 +3398,20 @@ class ChefDeService:
         self._chef.cook()
 
     def _create_recipe(self):
-        """
-        Create recipe from imported YAML file with correct DatasetFactory.
-
-        Simply loading the recipe using the
-        :class:`aspecd.io.RecipeYamlImporter` class does *not* work,
-        as we first need to obtain the recipe dict and parse for the
-        ``default_package`` key to get the correct DatasetFactory class.
-        """
-        self._load_recipe_yaml()
-        self._get_dataset_factory()
-        self._recipe.dataset_factory = self._dataset_factory
-        self._recipe.from_dict(self._recipe_dict)
-
-    def _load_recipe_yaml(self):
-        """Obtain dict from recipe YAML file."""
-        yaml_importer = aspecd.utils.Yaml()
-        yaml_importer.read_from(self.recipe_filename)
-        yaml_importer.deserialise_numpy_arrays()
-        self._recipe_dict = yaml_importer.dict
-
-    def _get_dataset_factory(self):
-        """
-        Obtain correct DatasetFactory instance depending on default package.
-
-        The default package can be set as key in the recipe. If no such key
-        is found, the default :class:`aspecd.dataset.DatasetFactory` class
-        is used. Otherwise, an instance of a class with the same name and
-        location, but in the package specified in the recipe, is created.
-        """
-        if "default_package" in self._recipe_dict.keys():
-            class_name = self._recipe_dict["default_package"] \
-                + '.dataset.DatasetFactory'
-            self._dataset_factory = aspecd.utils.object_from_class_name(
-                class_name)
-        else:
-            self._dataset_factory.importer_factory = \
-                aspecd.io.DatasetImporterFactory()
+        importer = aspecd.io.RecipeYamlImporter(source=self.recipe_filename)
+        self._recipe.import_from(importer)
 
     def _write_history(self):
         self._create_history_filename()
         yaml = aspecd.utils.Yaml()
         yaml.dict = self._chef.history
+        yaml.numpy_array_to_list = True
         yaml.serialise_numpy_arrays()
-        yaml.write_to(self._history_filename)
+        if self._recipe.settings['write_history']:
+            yaml.write_to(self._history_filename)
+        else:
+            logger.warning('No history has been written. This is considered '
+                           'bad practice in terms of reproducible research')
 
     def _create_history_filename(self):
         timestamp = datetime.datetime.now().strftime('%Y%m%dT%H%M%S')
@@ -3222,7 +3419,7 @@ class ChefDeService:
         self._history_filename = basename + '-' + timestamp + extension
 
 
-def serve(recipe_filename=''):
+def serve():
     """
     Serve the results of cooking a recipe
 
@@ -3240,21 +3437,35 @@ def serve(recipe_filename=''):
     recipes that rely on functionality of ASpecD-derived packages for their
     being cooked and served.
 
-    Parameters
-    ----------
-    recipe_filename : :class:`str`
-        Name of the recipe YAML file to cook
-
     Raises
     ------
     aspecd.exceptions.MissingRecipeError
         Raised if no recipe filename is provided upon trying to serve
 
     """
-    if not recipe_filename:
-        if len(sys.argv) < 2:
-            message = "You need to specify a recipe to serve."
-            raise aspecd.exceptions.MissingRecipeError(message=message)
-        recipe_filename = sys.argv[1]
+    parser = argparse.ArgumentParser(
+        description="Process a recipe in context of recipe-driven data analysis"
+    )
+    parser.add_argument("recipe", help="YAML file containing recipe")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("-v", "--verbose", action="store_true",
+                       help="show debug output")
+    group.add_argument("-q", "--quiet", action="store_true",
+                       help="don't show any output")
+    args = parser.parse_args()
+
+    if not args.quiet:
+        if args.verbose:
+            logger.setLevel(logging.DEBUG)
+        else:
+            logger.setLevel(logging.INFO)
+        logger.addHandler(logging.StreamHandler(stream=sys.stdout))
     chef_de_service = ChefDeService()
-    chef_de_service.serve(recipe_filename=recipe_filename)
+    try:
+        chef_de_service.serve(recipe_filename=args.recipe)
+    # pylint: disable=broad-except
+    except Exception as exception:
+        if args.verbose:
+            logger.exception(exception)
+        else:
+            logger.error("ERROR: %s", str(exception))

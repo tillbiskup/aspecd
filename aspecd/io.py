@@ -298,6 +298,7 @@ import asdf
 import numpy as np
 
 import aspecd.exceptions
+import aspecd.metadata
 import aspecd.utils
 
 
@@ -866,12 +867,42 @@ class RecipeYamlImporter(RecipeImporter):
     """
 
     def __init__(self, source=''):
+        self.recipe_version = ''
+        self._recipe_dict = None
         super().__init__(source=source)
 
     def _import(self):
+        self._load_from_yaml()
+        self._convert()
+        self.recipe.from_dict(self._recipe_dict)
+
+    def _load_from_yaml(self):
         yaml = aspecd.utils.Yaml()
         yaml.read_from(filename=self.source)
-        self.recipe.from_dict(yaml.dict)
+        yaml.deserialise_numpy_arrays()
+        self._recipe_dict = yaml.dict
+
+    def _convert(self):
+        self._get_recipe_version()
+        self._map_recipe_structure()
+
+    def _get_recipe_version(self):
+        self.recipe_version = self.recipe.format['version']
+        if 'format' in self._recipe_dict \
+                and 'version' in self._recipe_dict['format']:
+            self.recipe_version = self._recipe_dict['format']['version']
+        deprecated_keys = ['default_package', 'autosave_plots',
+                           'output_directory', 'datasets_source_directory']
+        if any([key in self._recipe_dict for key in deprecated_keys]):
+            self.recipe_version = '0.1'
+
+    def _map_recipe_structure(self):
+        mapper = aspecd.metadata.MetadataMapper()
+        mapper.version = self.recipe_version
+        mapper.metadata = self._recipe_dict
+        mapper.recipe_filename = 'recipe_mapper.yaml'
+        mapper.map()
+        self._recipe_dict = mapper.metadata
 
 
 class RecipeYamlExporter(RecipeExporter):
@@ -894,6 +925,8 @@ class RecipeYamlExporter(RecipeExporter):
     def _export(self):
         yaml = aspecd.utils.Yaml()
         yaml.dict = self.recipe.to_dict()
+        yaml.numpy_array_to_list = True
+        yaml.serialise_numpy_arrays()
         yaml.write_to(filename=self.target)
 
 

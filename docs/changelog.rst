@@ -5,6 +5,34 @@ Changelog
 This page contains a summary of changes between the official ASpecD releases. Only the biggest changes are listed here. A complete and detailed log of all changes is available through the `GitHub Repository Browser <https://github.com/tillbiskup/aspecd/commits/master>`_.
 
 
+Version 0.4.0
+=============
+
+Released 2021-10-08
+
+**Note**: Starting with this release ASpecD requires **Python >= 3.7**.
+
+New features
+------------
+
+* Tasks/Recipe-driven data analysis
+
+  * New attribute :attr:`aspecd.tasks.PlotTask.target` allows adding a plot to an already existing plot.
+  * :meth:`aspecd.tasks.Task.to_dict` adds (implicit) parameters of underlying task object
+  * Classes from the ASpecD framework can be used without prefixing them with "aspecd" in recipes with "default_package" set to a package based on the ASpecD framework.
+  * ``serve`` command outputs log messages for each task
+  * Command-line options for ``serve`` setting the log level/verbosity
+  * Catching of errors, excluding the stack trace and only showing the error message (but full stack trace in verbose mode)
+  * Switch in recipe to suppress writing history (for development/debugging, issuing warning on the command line via logging)
+  * New structure of recipes: Move ``default_package`` and ``autosave_plots`` to new dict ``settings``; ``output_directory`` and ``datasets_source_directory`` to new dict ``directories``
+  * Add ``format`` dict to recipe with fields ``type`` and ``version``
+  * Automatically convert old recipe formats within :class:`aspecd.io.RecipeYamlImporter`
+  * Processing steps writing parameters during execution and applied to multiple datasetes are unpacked in the recipe history if these parameters change for each dataset
+
+
+* References in processing and analysis steps and models (using bibrecord package)
+
+
 Version 0.3.1
 =============
 
@@ -13,9 +41,7 @@ Released 2021-09-21
 The following bugs have been fixed:
 
 * Handling of lists as properties in recipes
-
 * Improved handling of axes labels with xkcd style
-
 * Offset in SinglePlotter2DStacked can be set to zero
 
 

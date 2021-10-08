@@ -1,0 +1,37 @@
+---
+
+format:
+  type: metadata mapper cwepr
+  version: 0.1
+
+map 1:
+  metadata file versions:
+    - '0.1'
+  rename key:
+    - old key: output_directory
+      new key: output
+      in dict:
+    - old key: datasets_source_directory
+      new key: datasets_source
+      in dict:
+  move item:
+    - key: default_package
+      source dict:
+      target dict: settings
+      create target: True
+    - key: autosave_plots
+      source dict:
+      target dict: settings
+      create target: True
+    - key: output
+      source dict:
+      target dict: directories
+      create target: True
+    - key: datasets_source
+      source dict:
+      target dict: directories
+      create target: True
+
+map2:
+  metadata file versions:
+    - '0.2'

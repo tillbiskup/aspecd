@@ -518,6 +518,20 @@ class TestMetadataMapper(unittest.TestCase):
         self.assertTrue(new_key in self.metadata_mapper.metadata.keys())
         self.assertFalse(old_key in self.metadata_mapper.metadata.keys())
 
+    def test_rename_key_with_not_existing_key_ignores(self):
+        new_key = 'foobar'
+        old_key = 'baz'
+        self.metadata_mapper.metadata = {'foo': 'baz', 'bar': {}}
+        self.metadata_mapper.rename_key(old_key, new_key)
+
+    def test_rename_key_with_not_existing_key_logs(self):
+        new_key = 'foobar'
+        old_key = 'baz'
+        self.metadata_mapper.metadata = {'foo': 'baz', 'bar': {}}
+        with self.assertLogs(__package__, level='DEBUG') as cm:
+            self.metadata_mapper.rename_key(old_key, new_key)
+        self.assertIn('Key "{}" not found'.format(old_key), cm.output[0])
+
     def test_has_method_combine_items(self):
         self.assertTrue(callable(self.metadata_mapper.combine_items))
 
@@ -579,6 +593,20 @@ class TestMetadataMapper(unittest.TestCase):
         self.metadata_mapper.map()
         self.assertTrue('new' in self.metadata_mapper.metadata['test'].keys())
         self.assertFalse('old' in self.metadata_mapper.metadata['test'].keys())
+
+    def test_rename_key_with_not_existing_dict_ignores(self):
+        self.metadata_mapper.metadata['old'] = 'foo'
+        mapping = [['test', 'rename_key', ['old', 'new']]]
+        self.metadata_mapper.mappings = mapping
+        self.metadata_mapper.map()
+
+    def test_rename_key_with_not_existing_dict_logs(self):
+        self.metadata_mapper.metadata['old'] = 'foo'
+        mapping = [['test', 'rename_key', ['old', 'new']]]
+        self.metadata_mapper.mappings = mapping
+        with self.assertLogs(__package__, level='DEBUG') as cm:
+            self.metadata_mapper.map()
+        self.assertIn('Key "{}" not found'.format('test'), cm.output[0])
 
     def test_combine_items_via_mapping(self):
         old_keys = {'key1': 'bla', 'key2': 'blub'}
@@ -664,6 +692,32 @@ class TestMetadataMapper(unittest.TestCase):
         self.metadata_mapper.move_item(key, source, target)
         self.assertTrue(key in self.metadata_mapper.metadata[target].keys())
         self.assertFalse(key in self.metadata_mapper.metadata[source].keys())
+
+    def test_move_item_without_source(self):
+        key = 'foobar'
+        source = ''
+        target = 'bar'
+        self.metadata_mapper.metadata = {'foobar': 'baz', 'bar': {}}
+        self.metadata_mapper.move_item(key, source, target)
+        self.assertTrue(key in self.metadata_mapper.metadata[target].keys())
+        self.assertFalse(key in self.metadata_mapper.metadata.keys())
+
+    def test_move_item_with_not_existing_key_ignores(self):
+        key = 'foobar'
+        source = ''
+        target = 'bar'
+        self.metadata_mapper.metadata = {'foo': 'baz', 'bar': {}}
+        self.metadata_mapper.move_item(key, source, target)
+
+    def test_move_item_with_not_existing_key_logs(self):
+        key = 'foobar'
+        source = ''
+        target = 'bar'
+        self.metadata_mapper.metadata = {'foo': 'baz', 'bar': {}}
+        with self.assertLogs(__package__, level='DEBUG') as cm:
+            self.metadata_mapper.move_item(key, source, target)
+        self.assertIn('Key "{}" not found in "{}"'.format(key, source),
+                      cm.output[0])
 
     def test_move_item_via_mapping(self):
         key = 'foobar'

@@ -1,5 +1,5 @@
 """Tests for input and output (IO)."""
-
+import copy
 import os
 import unittest
 import zipfile
@@ -8,7 +8,7 @@ import numpy as np
 
 import aspecd.exceptions
 import aspecd.processing
-from aspecd import io, dataset, tasks
+from aspecd import io, dataset, tasks, utils
 
 
 class TestDatasetImporter(unittest.TestCase):
@@ -198,7 +198,38 @@ class TestRecipeExporter(unittest.TestCase):
 class TestRecipeYamlImporter(unittest.TestCase):
     def setUp(self):
         self.importer = io.RecipeYamlImporter()
-        self.source = 'filename'
+        self.recipe_filename = 'filename'
+        self.recipe_dict = dict()
+
+    def tearDown(self):
+        if os.path.exists(self.recipe_filename):
+            os.remove(self.recipe_filename)
+
+    def create_recipe(self):
+        self.recipe_dict = {
+            'datasets': ['foo'],
+            'tasks': [{'kind': 'singleplot', 'type': 'SinglePlotter',
+                       'properties': {'filename': 'foo'}}],
+        }
+        yaml = utils.Yaml()
+        yaml.dict = self.recipe_dict
+        yaml.write_to(self.recipe_filename)
+
+    def create_recipe_with_numpy_array(self):
+        self.recipe_dict = {
+            'datasets': ['foo'],
+            'tasks': [{'kind': 'processing', 'type': 'ScalarAlgebra',
+                       'properties': {'value': np.random.random(1)}}],
+        }
+        yaml = utils.Yaml()
+        yaml.dict = copy.deepcopy(self.recipe_dict)
+        yaml.serialise_numpy_arrays()
+        yaml.write_to(self.recipe_filename)
+
+    def create_recipe_from_dict(self):
+        yaml = utils.Yaml()
+        yaml.dict = self.recipe_dict
+        yaml.write_to(self.recipe_filename)
 
     def test_instantiate_class(self):
         pass
@@ -206,17 +237,142 @@ class TestRecipeYamlImporter(unittest.TestCase):
     def test_is_recipe_importer(self):
         self.assertTrue(isinstance(self.importer, io.RecipeImporter))
 
+    def test_import_sets_task_in_recipe(self):
+        self.create_recipe()
+        self.importer.source = self.recipe_filename
+        recipe = tasks.Recipe()
+        recipe.import_from(self.importer)
+        self.assertTrue(recipe.tasks[0])
+
+    def test_import_with_numpy_array_sets_task_in_recipe(self):
+        self.create_recipe_with_numpy_array()
+        self.importer.source = self.recipe_filename
+        recipe = tasks.Recipe()
+        recipe.import_from(self.importer)
+        self.assertEqual(self.recipe_dict['tasks'][0]['properties']['value'],
+                         recipe.tasks[0].properties['value'])
+
+    def test_import_sets_recipe_version(self):
+        self.create_recipe()
+        self.importer.source = self.recipe_filename
+        recipe = tasks.Recipe()
+        self.importer.import_into(recipe)
+        self.assertTrue(self.importer.recipe_version)
+
+    def test_import_old_version_detects_old_version(self):
+        old_keys = ['default_package', 'autosave_plots', 'output_directory',
+                    'datasets_source_directory']
+        for key in old_keys:
+            with self.subTest(key=key):
+                self.recipe_dict = {
+                    key: '',
+                    'datasets': ['foo'],
+                    'tasks': [{'kind': 'singleplot', 'type': 'SinglePlotter',
+                               'properties': {'filename': 'foo'}}],
+                }
+                self.create_recipe_from_dict()
+                self.importer.source = self.recipe_filename
+                recipe = tasks.Recipe()
+                self.importer.import_into(recipe)
+                self.assertEqual('0.1', self.importer.recipe_version)
+
+    def test_import_with_explicit_version_sets_recipe_version(self):
+        self.recipe_dict = {
+            'format': {'version': '0.1'},
+            'datasets': ['foo'],
+            'tasks': [{'kind': 'singleplot', 'type': 'SinglePlotter',
+                       'properties': {'filename': 'foo'}}],
+        }
+        self.create_recipe_from_dict()
+        self.importer.source = self.recipe_filename
+        recipe = tasks.Recipe()
+        self.importer.import_into(recipe)
+        self.assertEqual(self.recipe_dict['format']['version'],
+                         self.importer.recipe_version)
+
+    def test_import_version_0_1_converts_to_current_version(self):
+        self.recipe_dict = {
+            'default_package': 'aspecd',
+            'autosave_plots': False,
+            'output_directory': '/bar',
+            'datasets_source_directory': '/foobar',
+            'datasets': ['foo'],
+            'tasks': [{'kind': 'singleplot', 'type': 'SinglePlotter',
+                       'properties': {'filename': 'foo'}}],
+        }
+        self.create_recipe_from_dict()
+        self.importer.source = self.recipe_filename
+        recipe = tasks.Recipe()
+        recipe.import_from(self.importer)
+        self.assertEqual(self.recipe_dict['default_package'],
+                         recipe.settings['default_package'])
+        self.assertEqual(self.recipe_dict['autosave_plots'],
+                         recipe.settings['autosave_plots'])
+        self.assertEqual(self.recipe_dict['output_directory'],
+                         recipe.directories['output'])
+        self.assertEqual(self.recipe_dict['datasets_source_directory'],
+                         recipe.directories['datasets_source'])
+
 
 class TestRecipeYamlExporter(unittest.TestCase):
     def setUp(self):
         self.exporter = io.RecipeYamlExporter()
-        self.source = 'filename'
+        self.recipe_filename = 'filename'
+
+    def tearDown(self):
+        if os.path.exists(self.recipe_filename):
+            os.remove(self.recipe_filename)
 
     def test_instantiate_class(self):
         pass
 
     def test_is_recipe_exporter(self):
         self.assertTrue(isinstance(self.exporter, io.RecipeExporter))
+
+    def test_export_can_be_reimported(self):
+        recipe_dict = {
+            'datasets': ['foo'],
+            'tasks': [{'kind': 'singleplot', 'type': 'SinglePlotter',
+                       'properties': {'filename': 'foo'}}],
+        }
+        recipe = tasks.Recipe()
+        recipe.from_dict(recipe_dict)
+        self.exporter.target = self.recipe_filename
+        recipe.export_to(self.exporter)
+        new_recipe = tasks.Recipe()
+        importer = io.RecipeYamlImporter(source=self.recipe_filename)
+        new_recipe.import_from(importer)
+        self.assertTrue(new_recipe.to_dict())
+
+    def test_export_with_numpy_array_can_be_reimported(self):
+        recipe_dict = {
+            'datasets': ['foo'],
+            'tasks': [{'kind': 'processing', 'type': 'ScalarAlgebra',
+                       'properties': {'value': np.random.random(1)}}],
+        }
+        recipe = tasks.Recipe()
+        recipe.from_dict(recipe_dict)
+        self.exporter.target = self.recipe_filename
+        recipe.export_to(self.exporter)
+        new_recipe = tasks.Recipe()
+        importer = io.RecipeYamlImporter(source=self.recipe_filename)
+        new_recipe.import_from(importer)
+        self.assertTrue(new_recipe.to_dict())
+
+    def test_export_with_small_numpy_array_converts_array_to_list(self):
+        recipe_dict = {
+            'datasets': ['foo'],
+            'tasks': [{'kind': 'processing', 'type': 'ScalarAlgebra',
+                       'properties': {'value': np.random.random(1)}}],
+        }
+        recipe = tasks.Recipe()
+        recipe.from_dict(recipe_dict)
+        self.exporter.target = self.recipe_filename
+        recipe.export_to(self.exporter)
+        yaml = utils.Yaml()
+        yaml.read_from(self.recipe_filename)
+        self.assertIsInstance(yaml.dict['tasks'][0]['properties']['value'],
+                              list)
 
 
 class TestAdfExporter(unittest.TestCase):

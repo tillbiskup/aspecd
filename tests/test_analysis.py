@@ -47,6 +47,12 @@ class TestAnalysisStep(unittest.TestCase):
     def test_description_comment_is_string(self):
         self.assertTrue(isinstance(self.analysisstep.comment, str))
 
+    def test_has_references_property(self):
+        self.assertTrue(hasattr(self.analysisstep, 'references'))
+
+    def test_description_references_is_list(self):
+        self.assertTrue(isinstance(self.analysisstep.references, list))
+
     def test_has_analyse_method(self):
         self.assertTrue(hasattr(self.analysisstep, 'analyse'))
         self.assertTrue(callable(self.analysisstep.analyse))

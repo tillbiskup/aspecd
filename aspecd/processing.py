@@ -248,6 +248,8 @@ import scipy.ndimage
 import scipy.signal
 from scipy import interpolate
 
+import bibrecord.record as bib
+
 import aspecd.exceptions
 import aspecd.history
 import aspecd.utils
@@ -316,12 +318,23 @@ class ProcessingStep:
     comment : :class:`str`
         User-supplied comment describing intent, purpose, reason, ...
 
+    references : :class:`list`
+        List of references with relevance for the implementation of the
+        processing step.
+
+        Use appropriate record types from the `bibrecord package
+        <https://bibrecord.docs.till-biskup.de/>`_.
+
     Raises
     ------
     aspecd.exceptions.NotApplicableToDatasetError
         Raised when processing step is not applicable to dataset
     aspecd.exceptions.MissingDatasetError
         Raised when no dataset exists to act on
+
+
+    .. versionchanged:: 0.4
+        New attribute :attr:`references`
 
     """
 
@@ -332,6 +345,7 @@ class ProcessingStep:
         self.info = dict()
         self.description = 'Abstract processing step'
         self.comment = ''
+        self.references = []
 
     def process(self):
         """Perform the actual processing step.
@@ -907,10 +921,7 @@ class Normalisation(SingleProcessingStep):
         elif "area" in self.parameters["kind"].lower():
             self.dataset.data.data /= np.sum(np.abs(data))
         else:
-            # todo: If only python >=3.6: Use first version
-            # raise ValueError(f'Kind {self.parameters["kind"]} not recognised.')
-            raise ValueError('Kind "%s" not recognised.'
-                             % self.parameters["kind"])
+            raise ValueError(f'Kind {self.parameters["kind"]} not recognised.')
 
     def _determine_noise_amplitude(self):
         if self.parameters["noise_range"]:
@@ -2966,6 +2977,9 @@ class Noise(SingleProcessingStep):
 
     .. versionadded:: 0.3
 
+    .. versionchanged:: 0.4
+        Added reference to :attr:`references`
+
     """
 
     def __init__(self):
@@ -2974,6 +2988,16 @@ class Noise(SingleProcessingStep):
         self.undoable = True
         self.parameters["exponent"] = -1
         self.parameters["normalise"] = False
+        self.references = [
+            bib.Article(
+                author=['J. Timmer', 'M. König'],
+                title="On generating power law noise",
+                journal="Astronomy and Astrophysics",
+                volume="300",
+                pages="707--710",
+                year="1995"
+            )
+        ]
 
     def _perform_task(self):
         noise = self._generate_noise()

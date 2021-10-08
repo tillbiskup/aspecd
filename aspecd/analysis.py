@@ -271,10 +271,21 @@ class AnalysisStep:
     comment : :class:`str`
         User-supplied comment describing intent, purpose, reason, ...
 
+    references : :class:`list`
+        List of references with relevance for the implementation of the
+        processing step.
+
+        Use appropriate record types from the `bibrecord package
+        <https://bibrecord.docs.till-biskup.de/>`_.
+
     Raises
     ------
     aspecd.exceptions.MissingDatasetError
         Raised when no dataset exists to act on
+
+
+    .. versionchanged:: 0.4
+        New attribute :attr:`references`
 
     """
 
@@ -284,6 +295,7 @@ class AnalysisStep:
         self.result = None
         self.description = 'Abstract analysis step'
         self.comment = ''
+        self.references = []
 
     def analyse(self):
         """Perform the actual analysis step on the given dataset.

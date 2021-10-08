@@ -5,21 +5,8 @@ Roadmap
 A few ideas how to develop the project further, currently a list as a reminder for the main developers themselves, in no particular order, though with a tendency to list more important aspects first:
 
 
-For version 0.4
+For version 0.5
 ===============
-
-* Remaining basic processing and analysis steps:
-
-  * denoising (via SVD or similar)
-
-  * SNREstimation with explicitly providing noise (using both, processing and analysis)
-
-* References in processing and analysis steps?
-
-  * May be useful to automatically create a list of references to cite (report) depending on the methods actually used.
-  * May need an implementation of some kind of bibliographic record
-
-* Reporter: Method for adding dict representations of datasets to context
 
 * Report task:
 
@@ -29,21 +16,27 @@ For version 0.4
 
 * Default report templates for each type of processing/analysis task
 
-  Includes deciding where to store these templates, whether to have them stored in different directories for different languages, and alike. Ideally, templates should be copied to a user-accessible directory for modifying there.
+  Includes deciding where to store these templates, whether to have them stored in different directories for different languages, and alike. Ideally, templates should be copied to a user-accessible directory for modifying there. (See experience gained implementing pymetacode)
 
 * Expand use cases: reports
 
 * Recipes: Subrecipes that can be included in recipes
 
-* Interfacing towards fitting/simulation frameworks
-
-* Basic maths in values of recipes (ranges, basic numpy functions)?
-
-  May impair the platform-independence of the recipe (*i.e.*, tying it to Python/NumPy)
+* Handling of mapper recipe (from package source, not from directory)
 
 
 For later versions
 ==================
+
+* Recipe-driven data analysis
+
+  * Functionality to create recipe structure/structure for tasks as YAML (for use either with CLI or with web interface)
+
+* Remaining basic processing and analysis steps:
+
+  * denoising (via SVD or similar)
+
+  * SNREstimation with explicitly providing noise (using both, processing and analysis)
 
 * Interpolation
 
@@ -52,11 +45,13 @@ For later versions
 
 * Templates for creating derived packages
 
-* Logging
-
 * Tabular representations of characteristics extracted from datasets
 
 * Plotter: Factory to create single plots of each given dataset.
+
+* Basic maths in values of recipes (ranges, basic numpy functions)?
+
+  May impair the platform-independence of the recipe (*i.e.*, tying it to Python/NumPy)
 
 
 Todos

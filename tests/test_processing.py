@@ -53,6 +53,12 @@ class TestProcessingStep(unittest.TestCase):
     def test_description_comment_is_string(self):
         self.assertTrue(isinstance(self.processing.comment, str))
 
+    def test_has_references_property(self):
+        self.assertTrue(hasattr(self.processing, 'references'))
+
+    def test_description_references_is_list(self):
+        self.assertTrue(isinstance(self.processing.references, list))
+
     def test_has_process_method(self):
         self.assertTrue(hasattr(self.processing, 'process'))
         self.assertTrue(callable(self.processing.process))
@@ -2012,6 +2018,10 @@ class TestNoise(unittest.TestCase):
 
     def test_has_appropriate_description(self):
         self.assertIn('noise', self.processing.description.lower())
+
+    def test_has_appropriate_reference(self):
+        self.assertTrue(self.processing.references)
+        self.assertIn('power law noise', self.processing.references[0].title)
 
     def test_is_undoable(self):
         self.assertTrue(self.processing.undoable)

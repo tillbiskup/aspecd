@@ -319,6 +319,14 @@ class TestYaml(unittest.TestCase):
         self.yaml.serialise_numpy_arrays()
         self.assertDictEqual(resulting_dict, self.yaml.dict)
 
+    def test_serialise_numpy_array_creates_list(self):
+        array = np.asarray([[0., 1., 2.], [1., 2., 3.]])
+        resulting_dict = {'foo': array.tolist()}
+        self.yaml.dict = {'foo': array}
+        self.yaml.numpy_array_to_list = True
+        self.yaml.serialise_numpy_arrays()
+        self.assertDictEqual(resulting_dict, self.yaml.dict)
+
     def test_serialise_large_numpy_array_creates_dict_and_file(self):
         array = np.random.rand(self.yaml.numpy_array_size_threshold + 1)
         resulting_dict = {'foo': {'type': 'numpy.ndarray',
@@ -838,16 +846,16 @@ class TestNotZero(unittest.TestCase):
 class TestIterable(unittest.TestCase):
 
     def test_iterable_returns_true_for_list(self):
-        self.assertTrue(utils.iterable([]))
+        self.assertTrue(utils.isiterable([]))
 
     def test_iterable_returns_true_for_tuple(self):
-        self.assertTrue(utils.iterable(tuple()))
+        self.assertTrue(utils.isiterable(tuple()))
 
     def test_iterable_returns_true_for_nd_array(self):
-        self.assertTrue(utils.iterable(np.asarray([])))
+        self.assertTrue(utils.isiterable(np.asarray([])))
 
     def test_iterable_returns_true_for_string(self):
-        self.assertTrue(utils.iterable('foo'))
+        self.assertTrue(utils.isiterable('foo'))
 
     def test_iterable_returns_false_for_scalar(self):
-        self.assertFalse(utils.iterable(1))
+        self.assertFalse(utils.isiterable(1))
