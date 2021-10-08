@@ -1982,10 +1982,33 @@ class ProcessingTask(Task):
         self._internal = False
 
     def to_dict(self):
-        if self._dict_representations and not self._internal:
-            return self._dict_representations
-        else:
-            return super().to_dict()
+        """
+        Create dictionary containing public attributes of an object.
+
+        Furthermore, replace certain objects with their respective labels
+        provided in the recipe. These objects currently include datasets,
+        results, figures (*i.e.* figure records), and plotters.
+
+        Returns
+        -------
+        public_attributes : :class:`collections.OrderedDict` | :class:`list`
+            (List of) ordered dictionary/ies containing the public attributes of
+            the object
+
+            In case of multiple datasets and added parameters during
+            execution of the task, a list of dicts (one dict for each dataset).
+
+            The order of attribute definition is preserved
+
+
+        .. versionchanged:: 0.4
+            Return list of dicts in case of multiple datasets and added
+            parameters during execution of the task
+
+        """
+        return self._dict_representations \
+            if self._dict_representations and not self._internal \
+            else super().to_dict()
 
     def _perform(self):
         result_labels = None

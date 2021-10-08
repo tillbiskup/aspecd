@@ -5,12 +5,6 @@ Roadmap
 A few ideas how to develop the project further, currently a list as a reminder for the main developers themselves, in no particular order, though with a tendency to list more important aspects first:
 
 
-For version 0.4
-===============
-
-* Handling of mapper recipe (from package source, not from directory)
-
-
 For version 0.5
 ===============
 
@@ -28,7 +22,7 @@ For version 0.5
 
 * Recipes: Subrecipes that can be included in recipes
 
-* Interfacing towards fitting/simulation frameworks
+* Handling of mapper recipe (from package source, not from directory)
 
 
 For later versions
@@ -50,8 +44,6 @@ For later versions
   * different types of interpolation
 
 * Templates for creating derived packages
-
-* Logging
 
 * Tabular representations of characteristics extracted from datasets
 

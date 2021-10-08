@@ -27,6 +27,7 @@ New features
   * New structure of recipes: Move ``default_package`` and ``autosave_plots`` to new dict ``settings``; ``output_directory`` and ``datasets_source_directory`` to new dict ``directories``
   * Add ``format`` dict to recipe with fields ``type`` and ``version``
   * Automatically convert old recipe formats within :class:`aspecd.io.RecipeYamlImporter`
+  * Processing steps writing parameters during execution and applied to multiple datasetes are unpacked in the recipe history if these parameters change for each dataset
 
 
 * References in processing and analysis steps and models (using bibrecord package)
