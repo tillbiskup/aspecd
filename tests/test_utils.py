@@ -4,7 +4,9 @@ import collections
 import copy
 import datetime
 import os
+import shutil
 import unittest
+from unittest.mock import patch
 
 import numpy as np
 import oyaml as yaml
@@ -865,3 +867,37 @@ class TestIterable(unittest.TestCase):
 
     def test_iterable_returns_false_for_scalar(self):
         self.assertFalse(utils.isiterable(1))
+
+
+class TestGetPackageData(unittest.TestCase):
+    def setUp(self):
+        self.filename = 'bar'
+        self.data_dir = 'foo'
+
+    def tearDown(self):
+        if os.path.exists(self.data_dir):
+            shutil.rmtree(self.data_dir)
+
+    def create_data_dir_and_contents(self):
+        data_dir = os.path.join(self.data_dir, 'aspecd')
+        os.makedirs(data_dir)
+        with open(os.path.join(data_dir, self.filename),
+                  'w+', encoding='utf8') as file:
+            file.write('foo')
+
+    def test_get_package_data_without_name_raises(self):
+        with self.assertRaises(ValueError):
+            utils.get_package_data()
+
+    def test_get_package_data_returns_content(self):
+        with patch('pkgutil.get_data', return_value="foo".encode()):
+            content = utils.get_package_data(self.filename)
+        self.assertTrue(content)
+
+    def test_get_package_data_with_prefixed_package_returns_content(self):
+        content = utils.get_package_data('aspecd@utils.py')
+        self.assertTrue(content)
+
+    def test_get_package_data_with_foreign_package_returns_content(self):
+        content = utils.get_package_data('pip@__main__.py', directory='')
+        self.assertTrue(content)

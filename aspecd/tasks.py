@@ -1673,7 +1673,7 @@ class Task(aspecd.utils.ToDictMixin):
             self.kind = self.__class__.__name__[:-4].lower()
         return super().to_dict()
 
-    def _replace_objects_with_labels(self, dict_=None):
+    def _replace_objects_with_labels(self, dict_=None):  # noqa: MC0001
         if not self.recipe:
             return
         for property_key, property_value in dict_.items():
@@ -2586,6 +2586,25 @@ class PlotTask(Task):
         self._module = 'plotting'
 
     def to_dict(self):
+        """
+        Create dictionary containing public attributes of an object.
+
+        Furthermore, replace certain objects with their respective labels
+        provided in the recipe. These objects currently include datasets,
+        results, figures (*i.e.* figure records), and plotters.
+
+        Returns
+        -------
+        public_attributes : :class:`collections.OrderedDict`
+            Ordered dictionary containing the public attributes of the object
+
+            The order of attribute definition is preserved
+
+
+        .. versionchanged:: 0.5
+            Properties of underlying task object are added
+
+        """
         if 'properties' not in self.properties \
                 and hasattr(self._task, 'properties'):
             self.properties["properties"] = self._task.properties.to_dict()

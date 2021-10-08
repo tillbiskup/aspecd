@@ -18,6 +18,11 @@ New features
   * YAML representation of tasks and recipes using :meth:`aspecd.tasks.Task.to_yaml` and :meth:`aspecd.tasks.Recipe.to_yaml` - convenience methods for later use in guided recipe generation
 
 
+* Utils
+
+  * :func:`aspecd.utils.get_package_data` for obtaining package data (*i.e.*, non-code files contained in distribution)
+
+
 Version 0.4.0
 =============
 
