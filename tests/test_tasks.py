@@ -2860,7 +2860,7 @@ class TestServe(unittest.TestCase):
         self.create_recipe()
         result = subprocess.run(["serve", self.recipe_filename],
                                 capture_output=True, text=True)
-        self.assertIn('Import dataset', result.stdout)
+        self.assertIn('INFO - Import dataset', result.stdout)
 
     def test_call_with_quiet_option_does_not_print_log_info(self):
         self.create_recipe()

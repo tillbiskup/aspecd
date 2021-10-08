@@ -3601,7 +3601,10 @@ def serve():
             logger.setLevel(logging.DEBUG)
         else:
             logger.setLevel(logging.INFO)
-        logger.addHandler(logging.StreamHandler(stream=sys.stdout))
+        handler = logging.StreamHandler(stream=sys.stdout)
+        formatter = logging.Formatter('%(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
     chef_de_service = ChefDeService()
     try:
         chef_de_service.serve(recipe_filename=args.recipe)
