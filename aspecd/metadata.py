@@ -816,6 +816,27 @@ class MetadataMapper:
         Needs to be specified when you use :meth:`create_mappings` to
         create the mappings from mapping recipes stored in a YAML file.
 
+    Examples
+    --------
+    To actually use the mapper, you will usually create a file (in YAML
+    format) containing the mappings. For details how this file may look
+    like, see the :meth:`create_mappings` method. Suppose you have saved
+    your mappings to the file ``mappings.yaml``, with different mappings for
+    the different versions of your formats. In this case, using the mapper
+    may look similar to the following:
+
+    .. code-block::
+
+        mapper = aspecd.metadata.MetadataMapper()
+        mapper.version = version_string
+        mapper.metadata = dict_to_be_mapped
+        mapper.recipe_filename = 'mappings.yaml'
+        mapper.map()
+        modified_dict = mapper.metadata
+
+    As you can see, the ``modified_dict`` contains the dictionary where the
+    mappings from ``mappings.yaml`` have been applied to.
+
     """
 
     def __init__(self):
@@ -1066,7 +1087,7 @@ class MetadataMapper:
 
             format:
               type: metadata mapper
-              version: 0.0.1
+              version: '0.1'
 
             map 1:
               metadata file versions:
@@ -1103,6 +1124,13 @@ class MetadataMapper:
         dictionary will be created. Be careful with this option, as typos
         introduced in your mapping recipe will lead to hard-to-debug
         behaviour of your application. See :meth:`move_item` for details.
+
+        .. important::
+
+            If you have version numbers with only one dot, you need to
+            explicitly mark this as string in YAML, as otherwise, it will
+            automatically be converted into a float and hence your version
+            lookup will fail.
 
         Generally, the YAML file should be pretty self-explanatory. For
         details of the different mappings, see the documentation of the

@@ -28,6 +28,26 @@ This is what ASpecD is developed with and what it uses -- for good reasons.
 How to start
 ============
 
+Often, we assume that developing a package starts with actual coding. However,  more often than not this is a mistake. And it is probably a big mistake when starting to develop packages based on the ASpecD framework -- and a certain misunderstanding of what this framework is all about. Why that?
+
+At the core of the ASpecD framework and reproducibility is the dataset, the unit of actual (numerical) data and accompanying metadata. Datasets are a very powerful abstraction of the (vendor) data formats the raw data are usually initially stored in. Therefore, it is essential to **have a thorough understanding of the data and metadata** you are dealing with. Only with such thorough understanding you will be able to abstract from the number of different file formats and create a metadata structure that suits all your current needs. Furthermore, such a metadata structure should be designed to be easily extendible, without need to change existing parts (an application of the "open-closed principle" from software engineering). Therefore, before you start to think about programming, think about the information (metadata) that you need to be available to process and analyse your data.
+
+Therefore, some steps you may take before actually starting to code include:
+
+* Have a look at the (vendor) file formats of your raw data and see what metadata are stored therein (and whether there is any chance to extract this information)
+
+* Think about the metadata (information about measurements) you would like to have stored along with your data to gain reproducibility.
+
+* Take pencil and paper and draft a hierarchical structure of these metadata. Beware that it usually takes a few passes and quite a bit of thinking to converge to a reasonable solution.
+
+Actually implementing a package based on the ASpecD framework that handles your specific data is not that hard after all, as it is mostly straight-forward coding. Furthermore, ASpecD comes with a growing body of functionality for standard spectroscopic tasks already builtin. However, thinking about your particular kind of data and the structure of their accompanying metadata is the actual intellectual and creative task you cannot pass on to a computer.
+
+Eventually, it is all about **finding good abstractions** that help you understand and describe and finally handle the complex reality. This is what science (and programming) is all about, as Edsger W. Dijkstra kept insisting on.
+
+
+Package structure
+=================
+
 Applications based on the ASpecD framework should be Python packages following the standards laid out by the `Python Packaging Authority (PyPA) <https://www.pypa.io/>`_ in their `Python Packaging User Guide <https://python-packaging-user-guide.readthedocs.io/>`_.
 
 Generally, you will probably start off with deciding about a name for your application. Names, particularly for programs and packages, need care in choosing. It is a good idea to check the `Python Package Index <https://pypi.org/>`_ for similar packages and possible name clashes, in case you plan to eventually publish your package there (always a good idea to keep in mind).
@@ -67,6 +87,14 @@ Having decided upon a name for your new package, continue by creating a basic di
 
 
 Directories and files should be pretty self-explaining. If in doubt, consult the `Python Packaging Authority (PyPA) <https://www.pypa.io/>`_ and their `Python Packaging User Guide <https://python-packaging-user-guide.readthedocs.io/>`_ or have a look at the `ASpecD source code <https://github.com/tillbiskup/aspecd/>`_.
+
+
+.. note::
+
+    If you are understandably not very keen on creating all these structures on your own, but fancy having a Python package that helps you creating and maintaining Python packages, have a look at the `pymetacode package <https://python.docs.meta-co.de/>`_.
+
+    There are even plans to incorporate/adapt this package to the specific use case of creating and maintaining packages based on the ASpecD framework.
+
 
 To create the virtual environment and install ASpecD and your package, open a terminal and type something like the following commands:
 
