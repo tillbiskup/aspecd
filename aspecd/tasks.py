@@ -1416,12 +1416,8 @@ class Chef:
                 self.history["tasks"].extend(task_history)
             else:
                 self.history["tasks"].append(task_history)
-        try:
-            self.history["info"]["end"] = \
-                datetime.datetime.now().isoformat(timespec=self._timespec)
-        except TypeError:
-            self.history["info"]["end"] = \
-                datetime.datetime.now().isoformat(sep='T')
+        self.history["info"]["end"] = \
+            datetime.datetime.now().isoformat(timespec=self._timespec)
 
     def _assign_recipe(self, recipe):
         if not recipe:
@@ -1431,11 +1427,7 @@ class Chef:
             self.recipe = recipe
 
     def _prepare_history(self):
-        try:
-            timestamp = datetime.datetime.now().isoformat(
-                timespec=self._timespec)
-        except TypeError:
-            timestamp = datetime.datetime.now().isoformat(sep='T')
+        timestamp = datetime.datetime.now().isoformat(timespec=self._timespec)
         self.history["info"] = {'start': timestamp, 'end': ''}
         system_info = aspecd.system.SystemInfo(self.recipe.default_package)
         self.history["system_info"] = system_info.to_dict()
