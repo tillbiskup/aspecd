@@ -307,6 +307,29 @@ class Yaml:
 
         Default: False
 
+    binary_files : :class:`list`
+        List of names of the binary files containing large arrays
+
+    binary_directory : :class:`str`
+        Directory the binary files should be stored in
+
+        Default: ''
+
+    loader : :class:`yaml.loader`
+        Type of loader used for loading the YAML file
+
+        The type of loader used is crucial for the safety of your
+        application. See the documentation of the PyYAML package for details.
+
+        Default: :class:`yaml.SafeLoader`
+
+    dumper : :class:`yaml.Dumper`
+        Type of dumper used for loading the YAML file
+
+        The type of dumper used is should be compatible to the type of loader.
+
+        Default: :class:`yaml.SafeDumper`
+
     Raises
     ------
     aspecd.utils.MissingFilenameError
@@ -315,6 +338,9 @@ class Yaml:
 
     .. versionchanged:: 0.4
         Added :attr:`numpy_array_to_list`
+
+    .. versionchanged:: 0.5
+        Added :attr:`dumper` and set dumper to SafeDumper
 
     """
 
@@ -325,6 +351,7 @@ class Yaml:
         self.numpy_array_size_threshold = 100
         self.numpy_array_to_list = False
         self.loader = yaml.SafeLoader
+        self.dumper = yaml.SafeDumper
         self.loader.add_implicit_resolver(
             u'tag:yaml.org,2002:float',
             re.compile(u'''^(?:
@@ -374,7 +401,7 @@ class Yaml:
         if not filename:
             raise aspecd.exceptions.MissingFilenameError
         with open(filename, 'w') as file:
-            yaml.dump(self.dict, file)
+            yaml.dump(self.dict, file, Dumper=self.dumper)
 
     def read_stream(self, stream=None):
         """
@@ -398,7 +425,7 @@ class Yaml:
             string representation of YAML file
 
         """
-        return yaml.dump(self.dict)
+        return yaml.dump(self.dict, Dumper=self.dumper)
 
     def serialise_numpy_arrays(self):
         """

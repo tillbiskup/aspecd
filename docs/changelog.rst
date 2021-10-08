@@ -10,6 +10,13 @@ Version 0.5.0
 
 Not yet released
 
+New features
+------------
+
+* Tasks/Recipe-driven data analysis
+
+  * YAML representation of tasks and recipes using :meth:`aspecd.tasks.Task.to_yaml` and :meth:`aspecd.tasks.Recipe.to_yaml` - convenience methods for later use in guided recipe generation
+
 
 Version 0.4.0
 =============

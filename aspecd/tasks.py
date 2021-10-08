@@ -1183,6 +1183,64 @@ class Recipe:
         return not aspecd.utils.full_class_name(dataset).startswith(tuple(
             package_names))
 
+    def to_yaml(self):
+        """
+        Create YAML representation of recipe.
+
+        As users will interact with recipes primarily in form of YAML files,
+        this method conveniently returns the YAML representation of an empty
+        recipe that can serve as a starting point for own recipes.
+
+        Returns
+        -------
+        yaml : :class:`str`
+            YAML representation of a recipe
+
+
+        Examples
+        --------
+        To get the YAML representation of an empty recipe, create a recipe
+        object and call this method:
+
+        .. code-block::
+
+            recipe = aspecd.tasks.Recipe()
+            print(recipe.to_yaml())
+
+        The result of the last line (the print statement from above) will
+        look as follows:
+
+        .. code-block:: yaml
+
+            format:
+              type: ASpecD recipe
+              version: '0.2'
+            settings:
+              default_package: ''
+              autosave_plots: true
+              write_history: true
+            directories:
+              output: ''
+              datasets_source: ''
+            datasets: []
+            tasks: []
+
+        As you can see, you will get the full set of settings currently
+        allowed within a recipe. Not all of them are strictly necessary,
+        and for details, you still need to look into the documentation.
+        But this can make it much easier to start with writing recipes.
+
+        Similarly, you can get YAML representations of tasks that you can
+        add to your recipe. For details, see the documentation of the
+        :meth:`Task.to_yaml` method.
+
+        .. versionadded:: 0.5
+
+        """
+        yaml = aspecd.utils.Yaml()
+        yaml.dict = self.to_dict()
+        return yaml.write_stream()
+
     def import_from(self, importer=None):
         """
         Import recipe using importer.
@@ -1611,9 +1669,13 @@ class Task(aspecd.utils.ToDictMixin):
         if 'parameters' in self.properties:
             self._replace_objects_with_labels(self.properties["parameters"])
         self._replace_objects_with_labels(self.properties)
+        if not self.kind:
+            self.kind = self.__class__.__name__[:-4].lower()
         return super().to_dict()
 
     def _replace_objects_with_labels(self, dict_=None):
+        if not self.recipe:
+            return
         for property_key, property_value in dict_.items():
             for dataset_key, dataset_value in self.recipe.datasets.items():
                 if property_value is dataset_value:
@@ -1627,6 +1689,69 @@ class Task(aspecd.utils.ToDictMixin):
             for plotter_key, plotter_value in self.recipe.plotters.items():
                 if property_value is plotter_value:
                     dict_[property_key] = plotter_key
+
+    def to_yaml(self):
+        """
+        Create YAML representation of task.
+
+        As users will use tasks primarily within recipes, *i.e.* in YAML
+        files, this method conveniently returns the YAML representation of a
+        task.
+
+        Returns
+        -------
+        yaml : :class:`str`
+            YAML representation of a task
+
+
+        Examples
+        --------
+        To get the YAML representation of a concrete task, you need to
+        create a task object of the appropriate class and assign a type to it:
+
+        .. code-block::
+
+            task = aspecd.tasks.ProcessingTask()
+            task.type = 'Normalisation'
+            print(task.to_yaml())
+
+        The result of the last line (the print statement from above) will
+        look as follows:
+
+        .. code-block:: yaml
+
+            kind: processing
+            type: Normalisation
+            properties:
+              parameters:
+                kind: maximum
+                range: null
+                range_unit: index
+                noise_range: null
+                noise_range_unit: percentage
+            apply_to: []
+            result: ''
+            comment: ''
+
+        As you can see, you will get the full set of settings for this
+        particular task. Not all of them are strictly necessary, and for
+        details, you still need to look into the respective documentation.
+        But this can make it much easier to add tasks to a recipe.
+
+        Similarly, you can get YAML representations of an empty recipe where
+        you can add to your tasks to. For details, see the documentation of the
+        :meth:`Recipe.to_yaml` method.
+
+        .. versionadded:: 0.5
+
+        """
+        if not self._task and self.type:
+            if not self.kind:
+                self.kind = self.__class__.__name__[:-4].lower()
+            self._task = self.get_object()
+        yaml = aspecd.utils.Yaml()
+        yaml.dict = self.to_dict()
+        return yaml.write_stream()
 
     def perform(self):
         """
@@ -2459,6 +2584,12 @@ class PlotTask(Task):
         self.result = ''
         self.target = ''
         self._module = 'plotting'
+
+    def to_dict(self):
+        if 'properties' not in self.properties \
+                and hasattr(self._task, 'properties'):
+            self.properties["properties"] = self._task.properties.to_dict()
+        return super().to_dict()
 
     def perform(self):
         """

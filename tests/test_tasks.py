@@ -434,6 +434,12 @@ class TestRecipe(unittest.TestCase):
         self.recipe.from_dict(dict_)
         self.assertFalse(self.recipe.settings['autosave_plots'])
 
+    def test_to_yaml_returns_string(self):
+        self.assertIsInstance(self.recipe.to_yaml(), str)
+
+    def test_to_yaml_contains_format(self):
+        self.assertIn('format:', self.recipe.to_yaml())
+
 
 class TestChef(unittest.TestCase):
     def setUp(self):
@@ -1151,6 +1157,17 @@ class TestTask(unittest.TestCase):
         dict_ = self.task.to_dict()
         self.assertEqual(dict_["properties"]["parameters"]["foo"], "foo")
 
+    def test_to_yaml_returns_string(self):
+        self.assertIsInstance(self.task.to_yaml(), str)
+
+    def test_to_yaml_contains_kind(self):
+        self.assertIn('kind: ', self.task.to_yaml())
+
+    def test_to_yaml_with_concrete_type_contains_parameters(self):
+        self.task.kind = 'processing'
+        self.task.type = 'ProcessingStep'
+        self.assertIn('parameters: ', self.task.to_yaml())
+
 
 class TestProcessingTask(unittest.TestCase):
     def setUp(self):
@@ -1298,6 +1315,18 @@ class TestProcessingTask(unittest.TestCase):
         self.task.perform()
         dict_ = self.task.to_dict()
         self.assertEqual(dict_[0]['result'], 'result1')
+        
+    def test_to_dict_sets_kind(self):
+        dict_ = self.task.to_dict()
+        self.assertEqual('processing', dict_['kind'])
+
+    def test_to_yaml_sets_kind(self):
+        self.task.to_yaml()
+        self.assertEqual('processing', self.task.kind)
+
+    def test_to_yaml_with_actual_type(self):
+        self.task.type = 'Normalisation'
+        self.task.to_yaml()
 
 
 class TestSingleProcessingTask(unittest.TestCase):
@@ -1674,11 +1703,11 @@ class TestPlotTask(unittest.TestCase):
         self.task = tasks.PlotTask()
         self.recipe = tasks.Recipe()
         self.dataset = ['foo']
-
-    def prepare_recipe(self):
         self.plotting_task = {'kind': 'plot',
                               'type': 'Plotter',
                               'apply_to': self.dataset}
+
+    def prepare_recipe(self):
         dataset_factory = dataset.DatasetFactory()
         dataset_factory.importer_factory = io.DatasetImporterFactory()
         self.recipe.dataset_factory = dataset_factory
@@ -1769,6 +1798,12 @@ class TestPlotTask(unittest.TestCase):
 
     def test_has_target_property(self):
         self.assertTrue(hasattr(self.task, 'target'))
+
+    def test_to_dict_adds_properties_to_properties(self):
+        self.task.from_dict(self.plotting_task)
+        self.task._task = self.task.get_object()
+        dict_ = self.task.to_dict()
+        self.assertIn('properties', dict_['properties'])
 
 
 class TestSinglePlotTask(unittest.TestCase):

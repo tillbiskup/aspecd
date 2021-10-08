@@ -513,6 +513,12 @@ class TestYaml(unittest.TestCase):
         yaml_object.read_stream(dump)
         self.assertEqual(1e3, yaml_object.dict['foo'])
 
+    def test_write_stream_converts_tuple_to_list(self):
+        yaml_dict = {'foo': (1, 2)}
+        self.yaml.dict = yaml_dict
+        dump = self.yaml.write_stream()
+        self.assertNotIn('!!python/tuple', dump)
+
 
 class TestReplaceValueInDict(unittest.TestCase):
 
