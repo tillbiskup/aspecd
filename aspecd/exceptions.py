@@ -225,6 +225,21 @@ class MissingProcessingStepError(Error):
         self.message = message
 
 
+class MissingAnalysisStepError(Error):
+    """Exception raised trying to analyse without analysis_step
+
+    Attributes
+    ----------
+    message : :class:`str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__(message)
+        self.message = message
+
+
 class UndoWithEmptyHistoryError(Error):
     """Exception raised trying to undo with empty history
 

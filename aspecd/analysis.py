@@ -22,7 +22,7 @@ parameters of the analysis step, in the
 :attr:`aspecd.dataset.Dataset.analyses` attribute of the dataset.
 
 
-Generally, two types of analysis steps can be distinguished:
+Generally, three types of analysis steps can be distinguished:
 
 * Analysis steps for handling single datasets
 
@@ -31,6 +31,11 @@ Generally, two types of analysis steps can be distinguished:
 * Analysis steps for handling multiple datasets
 
   Shall be derived from :class:`aspecd.analysis.MultiAnalysisStep`.
+
+* Analysis steps aggregating the results of a SingleAnalysisStep for multiple
+  datasets
+
+  Handled by class :class:`aspecd.analysis.AggregatedAnalysisStep`.
 
 In the first case, the analysis is usually handled using the
 :meth:`analyse` method of the respective :obj:`aspecd.dataset.Dataset`
@@ -42,7 +47,11 @@ In the second case, the analysis step is handled using the :meth:`analyse`
 method of the :obj:`aspecd.analysis.AnalysisStep` object, and the datasets
 are stored as a list within the analysis step. As these analysis steps span
 several datasets. Analysis steps handling multiple datasets should
-always inherit from the :class:`aaspecd.analysis.MultiAnalysisStep` class.
+always inherit from the :class:`aspecd.analysis.MultiAnalysisStep` class.
+
+Performing a SingleAnalysisStep on multiple datasets and aggregating the
+results in a :class:`aspecd.dataset.CalculatedDataset` is the realm of the
+third type of analysis steps, :class:`aspecd.analysis.AggregatedAnalysisStep`.
 
 The module contains both, base classes for analysis steps (as detailed
 above) as well as a series of generally applicable analysis steps for all
@@ -265,6 +274,16 @@ class AnalysisStep:
         In case of a dataset, it is a calculated dataset
         (:class:`aspecd.dataset.CalculatedDataset`)
 
+    index : :class:`list`
+        Label for each element in :attr:`result`
+
+        Should only be set if :attr:`result` is a scalar or list.
+
+        The index will be used, *e.g.*, by :class:`AggregatedAnalysisStep`
+        and in tabular representations of the results.
+
+        .. versionadded:: 0.5
+
     description : :class:`str`
         Short description, to be set in class definition
 
@@ -278,14 +297,12 @@ class AnalysisStep:
         Use appropriate record types from the `bibrecord package
         <https://bibrecord.docs.till-biskup.de/>`_.
 
+        .. versionadded:: 0.4
+
     Raises
     ------
     aspecd.exceptions.MissingDatasetError
         Raised when no dataset exists to act on
-
-
-    .. versionchanged:: 0.4
-        New attribute :attr:`references`
 
     """
 
@@ -293,6 +310,7 @@ class AnalysisStep:
         self.name = aspecd.utils.full_class_name(self)
         self.parameters = dict()
         self.result = None
+        self.index = []
         self.description = 'Abstract analysis step'
         self.comment = ''
         self.references = []
@@ -596,7 +614,7 @@ class MultiAnalysisStep(AnalysisStep):
     def __init__(self):
         super().__init__()
         self.datasets = []
-        self.description = 'Abstract analysis step for multiple dataset'
+        self.description = 'Abstract analysis step for multiple datasets'
 
     def analyse(self):
         """Perform the actual analysis on the given list of datasets.
@@ -625,7 +643,6 @@ class MultiAnalysisStep(AnalysisStep):
         """
         if not self.datasets:
             raise aspecd.exceptions.MissingDatasetError
-        super().analyse()
         self._check_applicability()
         self._sanitise_parameters()
         self._perform_task()
@@ -637,6 +654,122 @@ class MultiAnalysisStep(AnalysisStep):
                           % (self.name, dataset.id)
                 raise aspecd.exceptions.NotApplicableToDatasetError(
                     message=message)
+
+
+class AggregatedAnalysisStep(AnalysisStep):
+    """
+    Perform a SingleAnalysisStep on multiple datasets and aggregate results.
+
+    Data analysis often involves performing one and the same analysis step
+    on a series of datasets and aggregate the results in a single
+    (calculated) dataset for further display, be it graphically or tabularly.
+
+    Attributes
+    ----------
+    datasets : :class:`list`
+        List of dataset the analysis step should be performed for
+
+    analysis_step : :class:`str`
+        Name of the analysis step to perform on the datasets
+
+        Should be a class name of an analysis step. Can be either a full
+        class name including package and module, or only the class name. In
+        the latter case, it will be looked up in 'aspecd.analysis'.
+
+    result : :class:`aspecd.dataset.CalculatedDataset`
+        Result of the aggregated analysis
+
+    Raises
+    ------
+    aspecd.exceptions.MissingDatasetError
+        Raised if no datasets are given
+
+    aspecd.exceptions.MissingAnalysisStepError
+        Raised if no analysis_step is given
+
+    ValueError
+        Raised if the actual AnalysisStep returns a dataset
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Let's assume that you want to extract the minima of a series of datasets:
+
+    .. code-block:: yaml
+
+        - kind: aggregatedanalysis
+          type: BasicCharacteristics
+          properties:
+            parameters:
+              kind: min
+          apply_to:
+            - dataset1
+            - dataset2
+          result: basic_characteristics
+
+
+    .. versionadded:: 0.5
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.datasets = []
+        self.analysis_step = ''
+        self.description = 'Aggregated analysis step for multiple datasets'
+        self.result = self.create_dataset()
+        self._analysis_object = None
+
+    def analyse(self):
+        """
+        Perform the given analysis step on the list of datasets.
+
+        The name of the analysis step to be performed on the list of
+        datasets is provided in :attr:`analysis_step`. The analysis will
+        result in a :class:`aspecd.dataset.CalculatedDataset` with the
+        metadata regarding the calculation (type and parameters) set
+        accordingly to :attr:`analysis_step` and :attr:`parameters`.
+
+        """
+        self._check_and_prepare()
+        index = []
+        for dataset in self.datasets:
+            analysis_done = dataset.analyse(self._analysis_object)
+            self.result.data.data = np.append(self.result.data.data,
+                                              analysis_done.result)
+            index.append(dataset.label)
+        n_datasets = len(self.datasets)
+        # noinspection PyUnboundLocalVariable
+        if isinstance(analysis_done.result, list):
+            self.result.data.data = \
+                np.reshape(self.result.data.data, (n_datasets, -1))
+        self.result.data.axes[0].index = index
+
+    def _check_and_prepare(self):
+        if not self.datasets:
+            raise aspecd.exceptions.MissingDatasetError
+        if not self.analysis_step:
+            raise aspecd.exceptions.MissingAnalysisStepError
+        self._get_analysis_object()
+        if isinstance(self._analysis_object.result, aspecd.dataset.Dataset):
+            raise ValueError('Analysis step "%s" returns dataset' %
+                             self.analysis_step)
+
+    def _get_analysis_object(self):
+        try:
+            self._analysis_object = aspecd.utils.object_from_class_name(
+                self.analysis_step)
+        except ValueError:
+            self._analysis_object = aspecd.utils.object_from_class_name(
+                '.'.join(
+                    ['aspecd.analysis', self.analysis_step]))
+        for key, value in self.parameters.items():
+            # noinspection PyUnresolvedReferences
+            self._analysis_object.parameters[key] = value
 
 
 class BasicCharacteristics(SingleAnalysisStep):
@@ -710,7 +843,7 @@ class BasicCharacteristics(SingleAnalysisStep):
          type: BasicCharacteristics
          properties:
            parameters:
-             type: min
+             kind: min
          result: min_of_dataset
 
     This would simply return the minimum (value) of a given dataset in the
@@ -725,7 +858,7 @@ class BasicCharacteristics(SingleAnalysisStep):
          type: BasicCharacteristics
          properties:
            parameters:
-             type: min
+             kind: min
              output: axes
          result: min_of_dataset
 
@@ -743,7 +876,7 @@ class BasicCharacteristics(SingleAnalysisStep):
          type: BasicCharacteristics
          properties:
            parameters:
-             type: all
+             kind: all
          result: characteristics_of_dataset
 
     Make sure to understand the different types the result has depending on

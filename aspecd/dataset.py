@@ -1213,8 +1213,8 @@ class Axis(aspecd.utils.ToDictMixin):
             values = np.asarray(values)
             if not isinstance(values, type(self._values)) or \
                     values.dtype != self._values.dtype:
-                raise ValueError('Wrong type: expected %s, got %s',
-                                 self._values.dtype, values.dtype)
+                raise ValueError('Wrong type: expected %s, got %s' %
+                                 (self._values.dtype, values.dtype))
         if values.ndim > 1:
             raise IndexError('Values need to be one-dimensional')
         self._values = values

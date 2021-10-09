@@ -1510,9 +1510,6 @@ class TestSingleAnalysisTask(unittest.TestCase):
         self.analysis_task = {'kind': 'singleanalysis',
                               'type': 'SingleAnalysisStep',
                               'apply_to': self.dataset}
-        dataset_factory = dataset.DatasetFactory()
-        dataset_factory.importer_factory = io.DatasetImporterFactory()
-        self.recipe.dataset_factory = dataset_factory
         recipe_dict = {'datasets': self.dataset,
                        'tasks': [self.analysis_task]}
         self.recipe.from_dict(recipe_dict)
@@ -1659,6 +1656,73 @@ class TestMultiAnalysisTask(unittest.TestCase):
         self.assertEqual(len(self.recipe.results), len(results))
         for result in results:
             self.assertEqual(self.recipe.results[result].id, result)
+
+
+class TestAggregatedAnalysisTask(unittest.TestCase):
+    def setUp(self):
+        self.task = tasks.AggregatedanalysisTask()
+        self.recipe = tasks.Recipe()
+        self.dataset = ['foo', 'bar']
+        self.result = 'aggregated_result'
+        self.analysis_task = {'kind': 'aggregatedanalysis',
+                              'type': 'BasicCharacteristics',
+                              'properties': {'parameters': {'kind': 'min'}},
+                              'apply_to': self.dataset,
+                              'result': self.result}
+
+    def prepare_recipe(self):
+        recipe_dict = {'datasets': self.dataset,
+                       'tasks': [self.analysis_task]}
+        self.recipe.from_dict(recipe_dict)
+        self.recipe.datasets[self.dataset[0]].data.data = np.zeros(5)
+        self.recipe.datasets[self.dataset[1]].data.data = np.ones(5)
+        self.recipe.datasets[self.dataset[0]].label = self.dataset[0]
+        self.recipe.datasets[self.dataset[1]].label = self.dataset[1]
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_perform_task_returns_calculated_dataset_in_result(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.analysis_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertIsInstance(self.recipe.results[self.result],
+                              aspecd.dataset.CalculatedDataset)
+
+    def test_perform_task_sets_values_in_result(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.analysis_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertEqual(len(self.dataset),
+                         len(self.recipe.results[self.result].data.data))
+
+    def test_perform_task_sets_correct_values_in_result(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.analysis_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertEqual(0., self.recipe.results[self.result].data.data[0])
+        self.assertEqual(1., self.recipe.results[self.result].data.data[1])
+
+    def test_perform_task_sets_index_in_result(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.analysis_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertEqual(self.dataset,
+                         self.recipe.results[self.result].data.axes[0].index)
+
+    def test_perform_task_issues_log_message(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.analysis_task)
+        self.task.recipe = self.recipe
+        with self.assertLogs(__package__, level='INFO') as cm:
+            self.task.perform()
+        self.assertIn('Perform "{}" on datasets "{}" resulting in "{}"'.format(
+            self.analysis_task['type'], ', '.join(self.dataset), self.result),
+            cm.output[0])
 
 
 class TestAnnotationTask(unittest.TestCase):

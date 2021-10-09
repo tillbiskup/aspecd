@@ -16,10 +16,15 @@ New features
 * Tasks/Recipe-driven data analysis
 
   * YAML representation of tasks and recipes using :meth:`aspecd.tasks.Task.to_yaml` and :meth:`aspecd.tasks.Recipe.to_yaml` - convenience methods for later use in guided recipe generation
+  * :class:`aspecd.tasks.AggregatedanalysisTask` for performing a SingleAnalysisStep on a series of datasets, aggregating the result in a CalculatedDataset
 
 * Datasets
 
   * New attribute :attr:`aspecd.dataset.Axis.index` (for individual labels for each data point, similar to pandas and for tabular data)
+
+* Analysis steps
+
+  * New class :class:`aspecd.analysis.AggregatedAnalysisStep` for aggregating the results of a SingleAnalysisStep on multiple datasets in a CalculatedDataset
 
 * Utils
 

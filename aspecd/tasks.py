@@ -2506,6 +2506,51 @@ class MultianalysisTask(AnalysisTask):
         self.recipe.results[label] = result
 
 
+class AggregatedanalysisTask(AnalysisTask):
+    """
+    Analysis step defined as task in recipe-driven data analysis.
+
+    AggregatedAnalysis steps perform a given
+    :class:`aspecd.tasks.SingleanalysisTask` on a list of datasets and combine
+    the result in a :class:`aspecd.dataset.CalculatedDataset`.
+
+    For more information on the underlying general class,
+    see :class:`aspecd.analysis.AggregatedAnalysisStep`.
+
+    For an example of how such an analysis task may be included into a
+    recipe, see the YAML listing below:
+
+    .. code-block:: yaml
+
+        - kind: aggregatedanalysis
+          type: BasicCharacteristics
+          properties:
+            parameters:
+              kind: min
+          apply_to:
+            - dataset1
+            - dataset2
+          result: basic_characteristics
+
+
+    .. versionadded:: 0.5
+
+    """
+
+    # noinspection PyUnresolvedReferences
+    def _perform(self):
+        logger.info('Perform "%s" on datasets "%s" resulting in "%s"',
+                    self.type, ', '.join(self.apply_to), self.result)
+        analysis_step = self.type
+        self.type = 'AggregatedAnalysisStep'
+        self._task = self.get_object()
+        self._task.analysis_step = analysis_step
+        self._task.datasets = self.recipe.get_datasets(self.apply_to)
+        self._task.analyse()
+        if self.result:
+            self.recipe.results[self.result] = self._task.result
+
+
 class AnnotationTask(Task):
     """
     Annotation step defined as task in recipe-driven data analysis.

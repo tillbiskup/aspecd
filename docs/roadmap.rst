@@ -10,7 +10,6 @@ For version 0.5
 
 * Analysis and tabular representation of data
 
-  * AggregatedanalysisTask: performs the SingleanalysisStep on each dataset and aggregates the result in a CalculatedDataset with ``index`` of first axis set to dataset labels
   * tabular representation: tablib or similar?
 
 * Report task:
