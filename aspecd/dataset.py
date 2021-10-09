@@ -180,15 +180,15 @@ class Dataset(aspecd.utils.ToDictMixin):
 
     Raises
     ------
-    aspecd.dataset.UndoWithEmptyHistoryError
+    aspecd.exceptions.UndoWithEmptyHistoryError
         Raised when trying to undo with empty history
-    aspecd.dataset.UndoAtBeginningOfHistoryError
+    aspecd.exceptions.UndoAtBeginningOfHistoryError
         Raised when trying to undo with history pointer at zero
-    aspecd.dataset.UndoStepUndoableError
+    aspecd.exceptions.UndoStepUndoableError
         Raised when trying to undo an undoable step of history
-    aspecd.dataset.RedoAlreadyAtLatestChangeError
+    aspecd.exceptions.RedoAlreadyAtLatestChangeError
         Raised  when trying to redo with empty history
-    aspecd.dataset.ProcessingWithLeadingHistoryError
+    aspecd.exceptions.ProcessingWithLeadingHistoryError
         Raised  when trying to process with leading history
 
     """
@@ -253,7 +253,7 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         Raises
         ------
-        aspecd.dataset.ProcessingWithLeadingHistoryError
+        aspecd.exceptions.ProcessingWithLeadingHistoryError
             Raised when trying to process with leading history
 
         """
@@ -287,11 +287,11 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         Raises
         ------
-        aspecd.dataset.UndoWithEmptyHistoryError
+        aspecd.exceptions.UndoWithEmptyHistoryError
             Raised when trying to undo with empty history
-        aspecd.dataset.UndoAtBeginningOfHistoryError
+        aspecd.exceptions.UndoAtBeginningOfHistoryError
             Raised when trying to undo with history pointer at zero
-        aspecd.dataset.UndoStepUndoableError
+        aspecd.exceptions.UndoStepUndoableError
             Raised when trying to undo an undoable step of history
 
         """
@@ -312,7 +312,7 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         Raises
         ------
-        aspecd.dataset.RedoAlreadyAtLatestChangeError
+        aspecd.exceptions.RedoAlreadyAtLatestChangeError
             Raised when trying to redo with empty history
 
         """
@@ -490,7 +490,7 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         Raises
         ------
-        aspecd.dataset.MissingPlotterError
+        aspecd.exceptions.MissingPlotterError
             Raised when trying to plot without plotter
 
         """
@@ -604,7 +604,7 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         Raises
         ------
-        aspecd.dataset.MissingDatasetError
+        aspecd.exceptions.MissingDatasetError
             Raised if no dataset was provided
 
         """
@@ -629,7 +629,7 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         Raises
         ------
-        aspecd.dataset.MissingDatasetError
+        aspecd.exceptions.MissingDatasetError
             Raised if no dataset ID was provided
 
         """
@@ -787,7 +787,7 @@ class DatasetReference(aspecd.utils.ToDictMixin):
 
     Raises
     ------
-    aspecd.dataset.MissingDatasetError
+    aspecd.exceptions.MissingDatasetError
         Raised if no dataset was provided when calling :meth:`from_dataset`
 
     """
@@ -809,7 +809,7 @@ class DatasetReference(aspecd.utils.ToDictMixin):
 
         Raises
         ------
-        aspecd.dataset.MissingDatasetError
+        aspecd.exceptions.MissingDatasetError
             Raised if no dataset was provided
 
         """
@@ -883,9 +883,9 @@ class DatasetFactory:
 
     Raises
     ------
-    aspecd.dataset.MissingSourceError
+    aspecd.exceptions.MissingSourceError
         Raised if no source is provided
-    aspecd.dataset.MissingImporterFactoryError
+    aspecd.exceptions.MissingImporterFactoryError
         Raised if no ImporterFactory is available
 
     """
@@ -932,9 +932,9 @@ class DatasetFactory:
 
         Raises
         ------
-        aspecd.dataset.MissingSourceError
+        aspecd.exceptions.MissingSourceError
             Raised if no source is provided
-        aspecd.dataset.MissingImporterFactoryError
+        aspecd.exceptions.MissingImporterFactoryError
             Raised if no ImporterFactory is available
 
         """
@@ -1012,9 +1012,9 @@ class Data(aspecd.utils.ToDictMixin):
 
     Raises
     ------
-    aspecd.dataset.AxesCountError
+    aspecd.exceptions.AxesCountError
         Raised if number of axes is inconsistent with data dimensions
-    aspecd.dataset.AxesValuesInconsistentWithDataError
+    aspecd.exceptions.AxesValuesInconsistentWithDataError
         Raised if axes values are inconsistent with data
 
     """
@@ -1065,9 +1065,9 @@ class Data(aspecd.utils.ToDictMixin):
 
         Raises
         ------
-        aspecd.dataset.AxesCountError
+        aspecd.exceptions.AxesCountError
             Raised if number of axes is inconsistent with data dimensions
-        aspecd.dataset.AxesValuesInconsistentWithDataError
+        aspecd.exceptions.AxesValuesInconsistentWithDataError
             Raised if axes values are inconsistent with data dimensions
 
         """
@@ -1167,23 +1167,25 @@ class Axis(aspecd.utils.ToDictMixin):
 
     Raises
     ------
-    aspecd.dataset.AxisValuesTypeError
+    ValueError
         Raised when trying to set axis values to another type than numpy array
-    aspecd.dataset.AxisValuesDimensionError
+    IndexError
         Raised when trying to set axis values to an array with more than one
         dimension.
+        Raised if index does not have the same length as values.
 
     """
 
     def __init__(self):
         super().__init__()
         self._values = np.zeros(0)
+        self._index = []
         self._equidistant = None
         self.quantity = ''
         self.symbol = ''
         self.unit = ''
         self.label = ''
-        self._include_in_to_dict = ['values']
+        self._include_in_to_dict = ['values', 'index']
 
     @property
     def values(self):
@@ -1197,9 +1199,9 @@ class Axis(aspecd.utils.ToDictMixin):
 
         Raises
         ------
-        aspecd.dataset.AxisValuesTypeError
-            Raised of axis values are of wrong type
-        aspecd.dataset.AxisValuesDimensionError
+        ValueError
+            Raised if axis values are of wrong type
+        IndexError
             Raised if axis values are of wrong dimension, i.e. not a vector
 
         """
@@ -1211,11 +1213,47 @@ class Axis(aspecd.utils.ToDictMixin):
             values = np.asarray(values)
             if not isinstance(values, type(self._values)) or \
                     values.dtype != self._values.dtype:
-                raise aspecd.exceptions.AxisValuesTypeError
+                raise ValueError('Wrong type: expected %s, got %s',
+                                 self._values.dtype, values.dtype)
         if values.ndim > 1:
-            raise aspecd.exceptions.AxisValuesDimensionError
+            raise IndexError('Values need to be one-dimensional')
         self._values = values
         self._set_equidistant_property()
+        self._set_index()
+
+    @property
+    def index(self):
+        """
+        Get or set the index corresponding to the axis values.
+
+        The index is a list of data labels for each element in the axis
+        values, similar to the index in a :class:`pandas.Series`. However,
+        in contrast to pandas, usually the index is a list of empty strings.
+
+        The main reason for introducing the index is to allow for tabular
+        representation of (calculated) datasets, *e.g.* as a result of an
+        analysis, either including multiple values or spanning multiple
+        datasets.
+
+        Raises
+        ------
+        IndexError
+            Raised if index does not have the same length as values
+
+
+        .. versionadded:: 0.5
+
+        """
+        return self._index
+
+    @index.setter
+    def index(self, index):
+        if len(index) != len(self._values):
+            raise IndexError('index and values need to be of same length')
+        self._index = index
+
+    def _set_index(self):
+        self._index = ['' for _ in self.values]
 
     @property
     def equidistant(self):

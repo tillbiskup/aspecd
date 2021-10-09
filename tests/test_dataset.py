@@ -1053,6 +1053,8 @@ class TestData(unittest.TestCase):
         orig_dict['axes'][0]['values'] = np.arange(10)
         orig_dict['axes'][0]['label'] = 'foo'
         orig_dict['axes'][1]['label'] = 'bar'
+        orig_dict['axes'][0]['index'] = \
+            ['' for _ in orig_dict['axes'][0]['values']]
         self.data.from_dict(orig_dict)
         self.assertDictEqual(orig_dict, self.data.to_dict())
         # np.testing.assert_allclose(orig_dict["data"], self.data.data)
@@ -1203,6 +1205,24 @@ class TestAxis(unittest.TestCase):
         self.axis.values = np.asarray([0, 1, 2, 4, 8])
         self.assertFalse(self.axis.equidistant)
 
+    def test_has_index_property(self):
+        self.assertTrue(hasattr(self.axis, 'index'))
+
+    def test_index_is_list(self):
+        self.assertTrue(isinstance(self.axis.index, list))
+
+    def test_index_is_same_length_as_values(self):
+        length = 5
+        self.axis.values = np.zeros(length)
+        self.assertEqual(length, len(self.axis.index))
+
+    def test_setting_index_with_incompatible_length_to_values_raises(self):
+        self.axis.values = np.zeros(5)
+        indices = ['foo', 'bar']
+        with self.assertRaisesRegex(IndexError, 'index and values need to be '
+                                                'of same length'):
+            self.axis.index = indices
+
     def test_has_to_dict_method(self):
         self.assertTrue(hasattr(self.axis, 'to_dict'))
         self.assertTrue(callable(self.axis.to_dict))
@@ -1210,6 +1230,10 @@ class TestAxis(unittest.TestCase):
     def test_to_dict_includes_values(self):
         dict_ = self.axis.to_dict()
         self.assertIn('values', dict_)
+
+    def test_to_dict_includes_index(self):
+        dict_ = self.axis.to_dict()
+        self.assertIn('index', dict_)
 
     def test_has_from_dict_method(self):
         self.assertTrue(hasattr(self.axis, 'from_dict'))
@@ -1225,23 +1249,19 @@ class TestAxis(unittest.TestCase):
     def test_from_dict_sets_numeric_values(self):
         orig_dict = self.axis.to_dict()
         orig_dict['values'] = np.arange(10)
+        orig_dict['index'] = ['' for _ in orig_dict['values']]
         self.axis.from_dict(orig_dict)
         new_dict = self.axis.to_dict()
         self.assertDictEqual(orig_dict, new_dict)
-
-
-class TestAxisSettings(unittest.TestCase):
-
-    def setUp(self):
-        self.axis = dataset.Axis()
 
     def test_set_values(self):
         self.axis.values = np.zeros(0)
 
     def test_set_wrong_type_for_values_fails(self):
-        with self.assertRaises(aspecd.exceptions.AxisValuesTypeError):
+        with self.assertRaisesRegex(ValueError, 'Wrong type: expected'):
             self.axis.values = 'foo'
 
     def test_set_multidimensional_values_fails(self):
-        with self.assertRaises(aspecd.exceptions.AxisValuesDimensionError):
+        with self.assertRaisesRegex(IndexError, 'Values need to be '
+                                                'one-dimensional'):
             self.axis.values = np.zeros([0, 0])

@@ -345,36 +345,6 @@ class AxesValuesInconsistentWithDataError(Error):
         self.message = message
 
 
-class AxisValuesDimensionError(Error):
-    """Exception raised for wrong dimension of values
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__(message)
-        self.message = message
-
-
-class AxisValuesTypeError(Error):
-    """Exception raised for wrong type of values
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__(message)
-        self.message = message
-
-
 class MissingImporterError(Error):
     """Exception raised importing without :class:`aspecd.io.DatasetImporter`
 
