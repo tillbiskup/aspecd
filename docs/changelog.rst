@@ -26,6 +26,10 @@ New features
 
   * New class :class:`aspecd.analysis.AggregatedAnalysisStep` for aggregating the results of a SingleAnalysisStep on multiple datasets in a CalculatedDataset
 
+* Tabular representation of datasets
+
+  * New module :mod:`aspecd.table`
+
 * Utils
 
   * :func:`aspecd.utils.get_package_data` for obtaining package data (*i.e.*, non-code files contained in distribution)

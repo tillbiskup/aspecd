@@ -37,6 +37,25 @@ Currently, the module consists of two types of classes:
   A general class controlling the format of the tables created by :class:`Table`
 
 
+There is a list of formatters for different purposes:
+
+* :class:`TextFormat`
+
+  Grid layout for text output
+
+* :class:`RstFormat`
+
+  Simple layout for reStructuredText (rst)
+
+* :class:`DokuwikiFormat`
+
+  DokuWiki table syntax
+
+For simple output, you can use the basic formatter, :class:`Format`,
+as well. As this is the default in the :class:`Table` class, nothing needs
+to be done in this case.
+
+
 Basic usage
 ===========
 
@@ -108,7 +127,7 @@ dataset. So what is special with :class:`Table`? A few things: You have much
 more control on the output, and you can have column headers and row indices
 included automatically if these are present in your dataset.
 
-Let's look at a dataset with information on the different column set in the
+Let's look at a dataset with information on the different columns set in the
 second axis. A full example could look like this:
 
 .. code-block::
@@ -119,6 +138,7 @@ second axis. A full example could look like this:
 
     tab = table.Table()
     tab.dataset = ds
+    tab.column_format = ['8.6f']
     tab.tabulate()
 
     print(tab.table)
@@ -150,6 +170,7 @@ latter (admittedly again in an artificial example):
 
     tab = table.Table()
     tab.dataset = ds
+    tab.column_format = ['8.6f']
     tab.tabulate()
 
     print(tab.table)
@@ -233,6 +254,7 @@ class Table:
         self.column_format = []
         self._columns = []
         self._rows = []
+        self._column_widths = []
 
     def tabulate(self):
         """
@@ -245,19 +267,25 @@ class Table:
         if self.dataset.data.data.ndim > 2:
             raise aspecd.exceptions.NotApplicableToDatasetError(
                 message='Tables work only with 1D and 2D data')
-        self._columns = []
-        self._rows = []
         self._format_columns()
         self._format_rows()
+        self._add_rules()
         self.table = '\n'.join(self._rows)
 
     def _format_columns(self):
+        self._columns = []
         if any(self.dataset.data.axes[0].index):
-            self._columns.append(self._adjust_column_width(
-                self.dataset.data.axes[0].index))
+            row_indices = []
+            if any(self.dataset.data.axes[1].index):
+                row_indices.append('')
+            row_indices.extend(self.dataset.data.axes[0].index)
+            self._columns.append(self._adjust_column_width(row_indices))
         if self.dataset.data.data.ndim == 2:
             for column in range(self.dataset.data.data.shape[1]):
                 current_column = []
+                if any(self.dataset.data.axes[1].index):
+                    current_column.append(
+                        self.dataset.data.axes[1].index[column])
                 for row in self.dataset.data.data[:, column]:
                     current_column.append(self._format_number(row,
                                                               column=column))
@@ -269,47 +297,12 @@ class Table:
                 current_column.append(self._format_number(row))
             current_column = self._adjust_column_width(current_column)
             self._columns.append(current_column)
+        self._column_widths = [len(x[0]) for x in self._columns]
 
     @staticmethod
     def _adjust_column_width(current_column):
         width = max([len(x) for x in current_column])
         return [x.ljust(width) for x in current_column]
-
-    def _format_rows(self):
-        self._add_column_headers()
-        for row in range(self.dataset.data.data.shape[0]):
-            current_row = []
-            for column in self._columns:
-                current_row.append(column[row])
-            formatted_row = '{prefix}{row}{postfix}'.format(
-                prefix=self.format.column_prefix,
-                row=self.format.column_separator.join(current_row),
-                postfix=self.format.column_postfix
-            )
-            self._rows.append(formatted_row)
-
-    def _add_column_headers(self):
-        if any(self.dataset.data.axes[1].index):
-            current_row = []
-            if any(self.dataset.data.axes[0].index):
-                current_row.append(''.ljust(len(self._columns[0][0])))
-                for num, column in enumerate(self._columns[1:]):
-                    header = self.dataset.data.axes[1].index[num]
-                    width = max([len(column[0]), len(header)])
-                    current_row.append(header.ljust(width))
-                    self._columns[num + 1] = [x.ljust(width) for x in column]
-            else:
-                for num, column in enumerate(self._columns):
-                    header = self.dataset.data.axes[1].index[num]
-                    width = max([len(column[0]), len(header)])
-                    current_row.append(header.ljust(width))
-                    self._columns[num] = [x.ljust(width) for x in column]
-            formatted_row = '{prefix}{row}{postfix}'.format(
-                prefix=self.format.header_prefix,
-                row=self.format.header_separator.join(current_row),
-                postfix=self.format.header_postfix
-            )
-            self._rows.append(formatted_row)
 
     def _format_number(self, number, column=0):
         if self.column_format:
@@ -323,6 +316,58 @@ class Table:
             formatted_number = '{}'.format(number)
         return formatted_number
 
+    def _format_rows(self):
+        self._rows = []
+        for row in range(len(self._columns[0])):
+            current_row = []
+            padding = self.format.padding * ' '
+            for column in self._columns:
+                current_row.append(column[row])
+            if any(self.dataset.data.axes[1].index) and row == 0:
+                separator = '{padding}{separator}{padding}'.format(
+                    padding=padding, separator=self.format.header_separator
+                )
+                if any(self.dataset.data.axes[0].index):
+                    prefix = self.format.column_prefix
+                else:
+                    prefix = self.format.header_prefix
+                formatted_row = \
+                    '{prefix}{padding}{row}{padding}{postfix}'.format(
+                        prefix=prefix,
+                        padding=padding,
+                        row=separator.join(current_row),
+                        postfix=self.format.header_postfix
+                    )
+            else:
+                separator = '{padding}{separator}{padding}'.format(
+                    padding=padding, separator=self.format.column_separator
+                )
+                if any(self.dataset.data.axes[0].index):
+                    prefix = self.format.header_prefix
+                else:
+                    prefix = self.format.column_prefix
+                formatted_row = \
+                    '{prefix}{padding}{row}{padding}{postfix}'.format(
+                        prefix=prefix,
+                        padding=padding,
+                        row=separator.join(current_row),
+                        postfix=self.format.column_postfix
+                    )
+            self._rows.append(formatted_row)
+
+    def _add_rules(self):
+        top_rule = self.format.top_rule(column_widths=self._column_widths)
+        if top_rule:
+            self._rows.insert(0, top_rule)
+        if any(self.dataset.data.axes[1].index):
+            middle_rule = \
+                self.format.middle_rule(column_widths=self._column_widths)
+            if middle_rule:
+                self._rows.insert(2, middle_rule)
+        bottom_rule = self.format.bottom_rule(column_widths=self._column_widths)
+        if bottom_rule:
+            self._rows.append(bottom_rule)
+
 
 class Format:
     """
@@ -334,6 +379,9 @@ class Format:
 
     Attributes
     ----------
+    padding : :class:`int`
+        Number of spaces left and right of a field
+
     column_separator : :class:`str`
         String used to separate columns in a row
 
@@ -358,9 +406,286 @@ class Format:
     """
 
     def __init__(self):
+        self.padding = 0
         self.column_separator = ' '
         self.column_prefix = ''
         self.column_postfix = ''
         self.header_separator = ' '
         self.header_prefix = ''
         self.header_postfix = ''
+
+    # noinspection PyUnusedLocal,PyMethodMayBeStatic
+    # pylint: disable=no-self-use,unused-argument
+    def top_rule(self, column_widths=None):
+        """
+        Create top rule for table.
+
+        Tables usually have three types of rules: top rule, middle rule,
+        and bottom rule. The middle rule gets used to separate column
+        headers from the actual tabular data.
+
+        If your format in a class inheriting from :class:`Format` does not need
+        this rule, don't override this method, as it will by default return
+        the empty string, and hence no rule gets added to the table.
+
+        Parameters
+        ----------
+        column_widths : :class:`list`
+            (optional) list of column widths
+
+        Returns
+        -------
+        rule : class:`str`
+            Actual rule that gets added to the table output
+
+        """
+        return ''
+
+    # noinspection PyUnusedLocal,PyMethodMayBeStatic
+    def middle_rule(self, column_widths=None):
+        """
+        Create middle rule for table.
+
+        Tables usually have three types of rules: top rule, middle rule,
+        and bottom rule. The middle rule gets used to separate column
+        headers from the actual tabular data.
+
+        If your format in a class inheriting from :class:`Format` does not need
+        this rule, don't override this method, as it will by default return
+        the empty string, and hence no rule gets added to the table.
+
+        Parameters
+        ----------
+        column_widths : :class:`list`
+            (optional) list of column widths
+
+        Returns
+        -------
+        rule : class:`str`
+            Actual rule that gets added to the table output
+
+        """
+        return ''
+
+    # noinspection PyUnusedLocal,PyMethodMayBeStatic
+    def bottom_rule(self, column_widths=None):
+        """
+        Create bottom rule for table.
+
+        Tables usually have three types of rules: top rule, middle rule,
+        and bottom rule. The middle rule gets used to separate column
+        headers from the actual tabular data.
+
+        If your format in a class inheriting from :class:`Format` does not need
+        this rule, don't override this method, as it will by default return
+        the empty string, and hence no rule gets added to the table.
+
+        Parameters
+        ----------
+        column_widths : :class:`list`
+            (optional) list of column widths
+
+        Returns
+        -------
+        rule : class:`str`
+            Actual rule that gets added to the table output
+
+        """
+        return ''
+
+
+class TextFormat(Format):
+    """
+    Table formatter for textual output.
+
+    With its default settings, the table would be surrounded by a grid, such as:
+
+    .. code-block::
+
+        +-----+-----+-----+
+        | foo | bar | baz |
+        +-----+-----+-----+
+        | 1.0 | 1.1 | 1.2 |
+        | 2.0 | 2.1 | 2.2 |
+        +-----+-----+-----+
+
+
+    Attributes
+    ----------
+    rule_character : :class:`str`
+        Character used for drawing horizontal lines (rules)
+
+    rule_edge_character : :class:`str`
+        Character used for the edges of horizontal lines (rules)
+
+    rule_separator_character : :class:`str`
+        Character used for the column separators of horizontal lines (rules)
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.padding = 1
+        self.rule_character = '-'
+        self.rule_edge_character = '+'
+        self.rule_separator_character = '+'
+        self.column_separator = '|'
+        self.column_prefix = '|'
+        self.column_postfix = '|'
+        self.header_separator = '|'
+        self.header_prefix = '|'
+        self.header_postfix = '|'
+
+    def top_rule(self, column_widths=None):
+        """
+        Create top rule for table.
+
+        Tables usually have three types of rules: top rule, middle rule,
+        and bottom rule. The middle rule gets used to separate column
+        headers from the actual tabular data.
+
+        The rule gets constructed according to this overall scheme:
+
+        * Use the :attr:`rule_character` for the rule
+        * Use the :attr:`rule_separator_character` for the gaps between columns
+        * Use the :attr:`rule_edge_character` for beginning and end of the rule
+        * Use the :attr:`padding` information to add horizontal space in a cell
+
+        Parameters
+        ----------
+        column_widths : :class:`list`
+            List of column widths
+
+        Returns
+        -------
+        rule : class:`str`
+            Actual rule that gets added to the table output
+
+        """
+        segments = []
+        for width in column_widths:
+            segments.append((width + 2 * self.padding) * self.rule_character)
+        rule = self.rule_separator_character.join(segments)
+        return '{edge}{rule}{edge}'.format(edge=self.rule_edge_character,
+                                           rule=rule)
+
+    def middle_rule(self, column_widths=None):
+        """
+        Create middle rule for table.
+
+        Here, the middle rule is identical to the :meth:`top_rule`. See
+        there for details how the rule is constructed.
+
+        Parameters
+        ----------
+        column_widths : :class:`list`
+            List of column widths
+
+        Returns
+        -------
+        rule : class:`str`
+            Actual rule that gets added to the table output
+
+        """
+        return self.top_rule(column_widths=column_widths)
+
+    def bottom_rule(self, column_widths=None):
+        """
+        Create bottom rule for table.
+
+        Here, the middle rule is identical to the :meth:`top_rule`. See
+        there for details how the rule is constructed.
+
+        Parameters
+        ----------
+        column_widths : :class:`list`
+            List of column widths
+
+        Returns
+        -------
+        rule : class:`str`
+            Actual rule that gets added to the table output
+
+        """
+        return self.top_rule(column_widths=column_widths)
+
+
+class RstFormat(TextFormat):
+    """
+    Table formatter for reStructuredText (rst) output.
+
+    This formatter actually uses the simple format for rst tables, such as:
+
+    .. code-block:: rst
+
+        === === ===
+        foo bar baz
+        === === ===
+        1.0 1.1 1.2
+        2.0 2.1 2.2
+        === === ===
+
+
+    The above code would result in:
+
+    === === ===
+    foo bar baz
+    === === ===
+    1.0 1.1 1.2
+    2.0 2.1 2.2
+    === === ===
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.padding = 0
+        self.rule_character = '='
+        self.rule_edge_character = ''
+        self.rule_separator_character = ' '
+        self.column_separator = ' '
+        self.column_prefix = ''
+        self.column_postfix = ''
+        self.header_separator = ' '
+        self.header_prefix = ''
+        self.header_postfix = ''
+
+
+class DokuwikiFormat(Format):
+    """
+    Table formatter for DokuWiki output.
+
+    For details about the syntax, see
+    the `DokuWiki syntax <https://www.dokuwiki.org/wiki:syntax #tables>`_
+    documentation.
+
+    An example of a table in DokuWiki syntax could look like this:
+
+    .. code-block::
+
+        ^ foo ^ bar ^ baz ^
+        | 1.0 | 1.1 | 1.2 |
+        | 2.0 | 2.1 | 2.2 |
+
+    And in case of both, column headers and row indices, this would even
+    convert to:
+
+    .. code-block::
+
+        |     ^ foo ^ bar ^ baz ^
+        ^ foo | 1.0 | 1.0 | 1.0 |
+        ^ bar | 1.0 | 1.0 | 1.0 |
+        ^ baz | 1.0 | 1.0 | 1.0 |
+
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.padding = 1
+        self.column_separator = '|'
+        self.column_prefix = '|'
+        self.column_postfix = '|'
+        self.header_separator = '^'
+        self.header_prefix = '^'
+        self.header_postfix = '^'

@@ -221,6 +221,130 @@ class TestTable(unittest.TestCase):
                                                  postfix=format_.header_postfix)
         self.assertEqual(row, self.table.table.split('\n')[0])
 
+    def test_top_rule(self):
+        self.dataset.data.data = np.ones([1, 3])
+        self.table.dataset = self.dataset
+        format_ = table.TextFormat()
+        self.table.format = format_
+        self.table.tabulate()
+        row = format_.top_rule(column_widths=[3, 3, 3])
+        self.assertEqual(row, self.table.table.split('\n')[0])
+
+    def test_middle_rule(self):
+        self.dataset.data.data = np.ones([3, 3])
+        index = ['foo', 'bar', 'baz']
+        self.dataset.data.axes[1].index = index
+        self.table.dataset = self.dataset
+        format_ = table.TextFormat()
+        self.table.format = format_
+        self.table.tabulate()
+        row = format_.middle_rule(column_widths=[3, 3, 3])
+        self.assertEqual(row, self.table.table.split('\n')[2])
+
+    def test_bottom_rule(self):
+        self.dataset.data.data = np.ones([1, 3])
+        self.table.dataset = self.dataset
+        format_ = table.TextFormat()
+        self.table.format = format_
+        self.table.tabulate()
+        row = format_.bottom_rule(column_widths=[3, 3, 3])
+        self.assertEqual(row, self.table.table.split('\n')[-1])
+
+    def test_padding(self):
+        self.dataset.data.data = np.ones([1, 3])
+        self.table.dataset = self.dataset
+        format_ = table.TextFormat()
+        format_.padding = 1
+        self.table.format = format_
+        self.table.tabulate()
+        row = '{prefix} {} {sep} {} {sep} {} {postfix}'.format(
+            *self.dataset.data.data[0, :],
+            prefix=format_.column_prefix,
+            sep=format_.column_separator,
+            postfix=format_.column_postfix,
+        )
+        self.assertEqual(row, self.table.table.split('\n')[1])
+
+    def test_padding_with_header(self):
+        self.dataset.data.data = np.ones([1, 3])
+        index = ['foo', 'bar', 'baz']
+        self.dataset.data.axes[1].index = index
+        self.table.dataset = self.dataset
+        format_ = table.TextFormat()
+        format_.padding = 1
+        self.table.format = format_
+        self.table.tabulate()
+        row = '{prefix} {} {sep} {} {sep} {} {postfix}'.format(
+            *index,
+            prefix=format_.header_prefix,
+            sep=format_.header_separator,
+            postfix=format_.header_postfix,
+        )
+        self.assertEqual(row, self.table.table.split('\n')[1])
+
+    def test_dokuwiki_format(self):
+        self.dataset.data.data = np.ones([1, 3])
+        self.table.dataset = self.dataset
+        format_ = table.DokuwikiFormat()
+        self.table.format = format_
+        self.table.tabulate()
+        row = '{prefix} {} {sep} {} {sep} {} {postfix}'.format(
+            *self.dataset.data.data[0, :],
+            prefix=format_.column_prefix,
+            sep=format_.column_separator,
+            postfix=format_.column_postfix,
+        )
+        self.assertEqual(row, self.table.table.split('\n')[0])
+
+    def test_dokuwiki_format_header(self):
+        self.dataset.data.data = np.ones([1, 3])
+        index = ['foo', 'bar', 'baz']
+        self.dataset.data.axes[1].index = index
+        self.table.dataset = self.dataset
+        format_ = table.DokuwikiFormat()
+        self.table.format = format_
+        self.table.tabulate()
+        row = '{prefix} {} {sep} {} {sep} {} {postfix}'.format(
+            *index,
+            prefix=format_.header_prefix,
+            sep=format_.header_separator,
+            postfix=format_.header_postfix,
+        )
+        self.assertEqual(row, self.table.table.split('\n')[0])
+
+    def test_dokuwiki_format_row_index(self):
+        self.dataset.data.data = np.ones(3)
+        index = ['foo', 'bar', 'baz']
+        self.dataset.data.axes[0].index = index
+        self.table.dataset = self.dataset
+        format_ = table.DokuwikiFormat()
+        self.table.format = format_
+        self.table.tabulate()
+        row = '{prefix} {} {sep} {} {postfix}'.format(
+            *[index[0], self.dataset.data.data[0]],
+            prefix=format_.header_prefix,
+            sep=format_.column_separator,
+            postfix=format_.column_postfix,
+        )
+        self.assertEqual(row, self.table.table.split('\n')[0])
+
+    def test_dokuwiki_format_header_and_row_index(self):
+        self.dataset.data.data = np.ones([3, 3])
+        index = ['foo', 'bar', 'baz']
+        self.dataset.data.axes[0].index = index
+        self.dataset.data.axes[1].index = index
+        self.table.dataset = self.dataset
+        format_ = table.DokuwikiFormat()
+        self.table.format = format_
+        self.table.tabulate()
+        row = '{prefix} {} {sep} {} {sep} {} {sep} {} {postfix}'.format(
+            *['   ', *index],
+            prefix=format_.column_prefix,
+            sep=format_.header_separator,
+            postfix=format_.header_postfix,
+        )
+        self.assertEqual(row, self.table.table.split('\n')[0])
+
 
 class TestFormat(unittest.TestCase):
     def setUp(self):
@@ -237,3 +361,102 @@ class TestFormat(unittest.TestCase):
         for prop in properties:
             with self.subTest(property=prop):
                 self.assertTrue(hasattr(self.format, prop))
+
+    def test_has_top_rule_method(self):
+        self.assertTrue(hasattr(self.format, 'top_rule'))
+        self.assertTrue(callable(self.format.top_rule))
+
+    def test_top_rule_returns_string(self):
+        self.assertIsInstance(self.format.top_rule(), str)
+
+    def test_top_rule_with_column_widths(self):
+        self.format.top_rule(column_widths=[3, 3, 3])
+
+    def test_has_middle_rule_method(self):
+        self.assertTrue(hasattr(self.format, 'middle_rule'))
+        self.assertTrue(callable(self.format.middle_rule))
+
+    def test_midrule_returns_string(self):
+        self.assertIsInstance(self.format.middle_rule(), str)
+
+    def test_middle_rule_with_column_widths(self):
+        self.format.middle_rule(column_widths=[3, 3, 3])
+
+    def test_has_bottom_rule_method(self):
+        self.assertTrue(hasattr(self.format, 'bottom_rule'))
+        self.assertTrue(callable(self.format.bottom_rule))
+
+    def test_bottom_rule_returns_string(self):
+        self.assertIsInstance(self.format.bottom_rule(), str)
+
+    def test_bottom_rule_with_column_widths(self):
+        self.format.bottom_rule(column_widths=[3, 3, 3])
+
+
+class TestTextFormat(unittest.TestCase):
+    def setUp(self):
+        self.format = table.TextFormat()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_top_rule_returns_rule(self):
+        self.format.padding = 0
+        rule = '+---+---+---+'
+        self.assertEqual(rule, self.format.top_rule([3, 3, 3]))
+
+    def test_middle_rule_returns_rule(self):
+        self.format.padding = 0
+        rule = '+---+---+---+'
+        self.assertEqual(rule, self.format.middle_rule([3, 3, 3]))
+
+    def test_bottom_rule_returns_rule(self):
+        self.format.padding = 0
+        rule = '+---+---+---+'
+        self.assertEqual(rule, self.format.bottom_rule([3, 3, 3]))
+
+    def test_top_rule_with_padding(self):
+        self.format.padding = 2
+        rule = '+-------+-------+-------+'
+        self.assertEqual(rule, self.format.top_rule([3, 3, 3]))
+
+    def test_default_padding_is_one(self):
+        rule = '+-----+-----+-----+'
+        self.assertEqual(rule, self.format.top_rule([3, 3, 3]))
+
+
+class TestRstFormat(unittest.TestCase):
+    def setUp(self):
+        self.format = table.RstFormat()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_top_rule_returns_rule(self):
+        rule = '=== === ==='
+        self.assertEqual(rule, self.format.top_rule([3, 3, 3]))
+
+    def test_middle_rule_returns_rule(self):
+        rule = '=== === ==='
+        self.assertEqual(rule, self.format.middle_rule([3, 3, 3]))
+
+    def test_bottom_rule_returns_rule(self):
+        rule = '=== === ==='
+        self.assertEqual(rule, self.format.bottom_rule([3, 3, 3]))
+
+
+class TestDokuwikiFormat(unittest.TestCase):
+    def setUp(self):
+        self.format = table.DokuwikiFormat()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_top_rule_is_empty(self):
+        self.assertEqual('', self.format.top_rule())
+
+    def test_middle_rule_is_empty(self):
+        self.assertEqual('', self.format.middle_rule())
+
+    def test_bottom_rule_is_empty(self):
+        self.assertEqual('', self.format.bottom_rule())

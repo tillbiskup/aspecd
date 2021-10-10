@@ -10,7 +10,7 @@ For version 0.5
 
 * Analysis and tabular representation of data
 
-  * tabular representation: tablib or similar?
+  * Task for tabular representation
 
 * Report task:
 
