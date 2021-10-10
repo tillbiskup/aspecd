@@ -1080,7 +1080,7 @@ class Data(aspecd.utils.ToDictMixin):
 
     def _create_axes(self):
         self._axes = []
-        missing_axes = self.data.ndim + 1
+        missing_axes = self._data.ndim + 1
         # pylint: disable=unused-variable
         # pylint: disable=invalid-name
         for ax in range(missing_axes):
@@ -1098,6 +1098,8 @@ class Data(aspecd.utils.ToDictMixin):
             *correct* axis object from the list).
         """
         data_shape = self.data.shape
+        if len(self.axes) < self.data.ndim + 1:
+            self._axes.append(Axis())
         for index in range(self.data.ndim):
             if len(self.axes[index].values) != data_shape[index]:
                 self.axes[index].values = np.arange(data_shape[index])

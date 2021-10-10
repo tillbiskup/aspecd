@@ -1009,10 +1009,10 @@ class TestData(unittest.TestCase):
 
     def test_modify_data_with_higher_dimension_adds_axis(self):
         old_data = np.random.random([5, 1])
-        new_data = np.random.random([7, 3])
+        new_data = np.random.random([4, 3, 2])
         self.data.data = old_data
         self.data.data = new_data
-        self.assertEqual(3, len(self.data.axes))
+        self.assertEqual(4, len(self.data.axes))
 
     def test_setting_data_adjusts_axes_values(self):
         new_data = np.zeros([6, 1])

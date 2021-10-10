@@ -20,6 +20,7 @@ This is the definite source of information for developers, besides having a look
    aspecd.processing
    aspecd.report
    aspecd.system
+   aspecd.table
    aspecd.tasks
    aspecd.utils
 

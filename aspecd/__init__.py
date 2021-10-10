@@ -20,10 +20,12 @@ Available modules
     Annotate datasets
 :mod:`aspecd.plotting`
     Plot data in datasets
+:mod:`aspecd.table`
+    Tabulate data in datasets
 :mod:`aspecd.history`
-    Classes collecting information on what has been done to a dataset
+    Collect information on what has been done to a dataset
 :mod:`aspecd.report`
-    General facilities for generating reports
+    Reports textually presenting the information accumulated
 :mod:`aspecd.tasks`
     Recipe-driven data analysis
 :mod:`aspecd.model`
