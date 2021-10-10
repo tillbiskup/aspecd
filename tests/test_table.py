@@ -345,6 +345,47 @@ class TestTable(unittest.TestCase):
         )
         self.assertEqual(row, self.table.table.split('\n')[0])
 
+    def test_latex_format_opening(self):
+        self.dataset.data.data = np.ones([1, 3])
+        self.table.dataset = self.dataset
+        format_ = table.LatexFormat()
+        self.table.format = format_
+        self.table.tabulate()
+        row = r'\begin{tabular}{lll}'
+        self.assertEqual(row, self.table.table.split('\n')[0])
+
+    def test_latex_format_closing(self):
+        self.dataset.data.data = np.ones([1, 3])
+        self.table.dataset = self.dataset
+        format_ = table.LatexFormat()
+        self.table.format = format_
+        self.table.tabulate()
+        row = r'\end{tabular}'
+        self.assertEqual(row, self.table.table.split('\n')[-1])
+
+    def test_latex_format_of_numerical_data(self):
+        self.dataset.data.data = np.ones([1, 3])
+        self.table.dataset = self.dataset
+        format_ = table.LatexFormat()
+        self.table.format = format_
+        self.table.tabulate()
+        row = r'{}{sep}{}{sep}{} \\'.format(
+            *self.dataset.data.data[0, :],
+            sep=format_.column_separator,
+        )
+        self.assertEqual(row, self.table.table.split('\n')[2])
+
+    def test_latex_format_with_header(self):
+        self.dataset.data.data = np.ones([1, 3])
+        index = ['foo', 'bar', 'baz']
+        self.dataset.data.axes[1].index = index
+        self.table.dataset = self.dataset
+        format_ = table.LatexFormat()
+        self.table.format = format_
+        self.table.tabulate()
+        print(self.table.table)
+        self.assertEqual(r'\midrule', self.table.table.split('\n')[3])
+
 
 class TestFormat(unittest.TestCase):
     def setUp(self):
@@ -391,6 +432,23 @@ class TestFormat(unittest.TestCase):
 
     def test_bottom_rule_with_column_widths(self):
         self.format.bottom_rule(column_widths=[3, 3, 3])
+
+    def test_has_opening_method(self):
+        self.assertTrue(hasattr(self.format, 'opening'))
+        self.assertTrue(callable(self.format.opening))
+
+    def test_opening_returns_string(self):
+        self.assertIsInstance(self.format.opening(), str)
+
+    def test_opening_with_columns(self):
+        self.format.opening(columns=5)
+
+    def test_has_closing_method(self):
+        self.assertTrue(hasattr(self.format, 'closing'))
+        self.assertTrue(callable(self.format.closing))
+
+    def test_begin_environment_returns_string(self):
+        self.assertIsInstance(self.format.closing(), str)
 
 
 class TestTextFormat(unittest.TestCase):
@@ -460,3 +518,20 @@ class TestDokuwikiFormat(unittest.TestCase):
 
     def test_bottom_rule_is_empty(self):
         self.assertEqual('', self.format.bottom_rule())
+
+
+class TestLatexFormat(unittest.TestCase):
+    def setUp(self):
+        self.format = table.LatexFormat()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_top_rule(self):
+        self.assertEqual(r'\toprule', self.format.top_rule())
+
+    def test_middle_rule(self):
+        self.assertEqual(r'\midrule', self.format.middle_rule())
+
+    def test_bottom_rule(self):
+        self.assertEqual(r'\bottomrule', self.format.bottom_rule())

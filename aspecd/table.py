@@ -51,6 +51,10 @@ There is a list of formatters for different purposes:
 
   DokuWiki table syntax
 
+* :class:`LatexFormat`
+
+  LaTeX table syntax
+
 For simple output, you can use the basic formatter, :class:`Format`,
 as well. As this is the default in the :class:`Table` class, nothing needs
 to be done in this case.
@@ -270,6 +274,7 @@ class Table:
         self._format_columns()
         self._format_rows()
         self._add_rules()
+        self._add_opening_and_closing()
         self.table = '\n'.join(self._rows)
 
     def _format_columns(self):
@@ -368,6 +373,14 @@ class Table:
         if bottom_rule:
             self._rows.append(bottom_rule)
 
+    def _add_opening_and_closing(self):
+        opening = self.format.opening(columns=len(self._columns))
+        if opening:
+            self._rows.insert(0, opening)
+        closing = self.format.closing()
+        if closing:
+            self._rows.append(closing)
+
 
 class Format:
     """
@@ -438,6 +451,8 @@ class Format:
         rule : class:`str`
             Actual rule that gets added to the table output
 
+            Default: ''
+
         """
         return ''
 
@@ -464,6 +479,8 @@ class Format:
         rule : class:`str`
             Actual rule that gets added to the table output
 
+            Default: ''
+
         """
         return ''
 
@@ -489,6 +506,59 @@ class Format:
         -------
         rule : class:`str`
             Actual rule that gets added to the table output
+
+            Default: ''
+
+        """
+        return ''
+
+    # noinspection PyUnusedLocal,PyMethodMayBeStatic
+    def opening(self, columns=None):
+        """
+        Create opening code.
+
+        Some formats have opening (and closing, see :meth:`closing`) parts,
+        *e.g.* opening and closing tags in XML and related languages, but in
+        LaTeX as well.
+
+        If your format in a class inheriting from :class:`Format` does not need
+        this code, don't override this method, as it will by default return
+        the empty string, and hence no code gets added to the table.
+
+        Parameters
+        ----------
+        columns : :class:`int`
+            (optional) number of columns of the table
+
+        Returns
+        -------
+        opening : :class:`str`
+            Code for opening the environment
+
+            Default: ''
+
+        """
+        return ''
+
+    # noinspection PyMethodMayBeStatic
+    def closing(self):
+        """
+        Create closing code.
+
+        Some formats have opening (see :meth:`opening`) and closing parts,
+        *e.g.* opening and closing tags in XML and related languages, but in
+        LaTeX as well.
+
+        If your format in a class inheriting from :class:`Format` does not need
+        this code, don't override this method, as it will by default return
+        the empty string, and hence no code gets added to the table.
+
+        Returns
+        -------
+        closing : :class:`str`
+            Code for closing the environment
+
+            Default: ''
 
         """
         return ''
@@ -689,3 +759,154 @@ class DokuwikiFormat(Format):
         self.header_separator = '^'
         self.header_prefix = '^'
         self.header_postfix = '^'
+
+
+class LatexFormat(Format):
+    r"""
+    Table formatter for LaTeX output.
+
+    Results in a rather generic LaTeX table, and the goal of this formatter
+    is to provide valid LaTeX code without trying to go into too many
+    details of all the possibilities of LaTeX table formatting.
+
+    .. note::
+
+        The format requires the package "booktabs" to be loaded,
+        as the horizontal rules defined by this package are automatically
+        added to the LaTeX output.
+
+    An example of the LaTeX code of a table may look as follows:
+
+    .. code-block::
+
+        \begin{tabular}{lll}
+        \toprule
+        foo & bar & baz \\
+        \midrule
+        1.0 & 1.1 & 1.2 \\
+        2.0 & 2.1 & 2.2 \\
+        \bottomrule
+        \end{tabular}
+
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.padding = 0
+        self.column_separator = ' & '
+        self.column_prefix = ''
+        self.column_postfix = r' \\'
+        self.header_separator = ' & '
+        self.header_prefix = ''
+        self.header_postfix = r' \\'
+
+    def top_rule(self, column_widths=None):
+        """
+        Create top rule for table.
+
+        Tables usually have three types of rules: top rule, middle rule,
+        and bottom rule. The middle rule gets used to separate column
+        headers from the actual tabular data.
+
+        Parameters
+        ----------
+        column_widths : :class:`list`
+            Ignored in this particular case
+
+        Returns
+        -------
+        rule : class:`str`
+            Actual rule that gets added to the table output
+
+        """
+        return r'\toprule'
+
+    def middle_rule(self, column_widths=None):
+        """
+        Create middle rule for table.
+
+        Tables usually have three types of rules: top rule, middle rule,
+        and bottom rule. The middle rule gets used to separate column
+        headers from the actual tabular data.
+
+        Parameters
+        ----------
+        column_widths : :class:`list`
+            Ignored in this particular case
+
+        Returns
+        -------
+        rule : class:`str`
+            Actual rule that gets added to the table output
+
+        """
+        return r'\midrule'
+
+    def bottom_rule(self, column_widths=None):
+        """
+        Create bottom rule for table.
+
+        Tables usually have three types of rules: top rule, middle rule,
+        and bottom rule. The middle rule gets used to separate column
+        headers from the actual tabular data.
+
+        Parameters
+        ----------
+        column_widths : :class:`list`
+            Ignored in this particular case
+
+        Returns
+        -------
+        rule : class:`str`
+            Actual rule that gets added to the table output
+
+        """
+        return r'\bottomrule'
+
+    def opening(self, columns=None):
+        r"""
+        Create opening code.
+
+        In case of LaTeX, this is usually:
+
+        .. code-block::
+
+            \begin{tabular}{<column-specification>}
+
+        As this class strives for a rather generic, though valid LaTeX code,
+        the column specification is simply 'l' times the number of columns (for
+        exclusively left-aligned columns).
+
+
+        Parameters
+        ----------
+        columns : :class:`int`
+            Number of columns of the table
+
+        Returns
+        -------
+        opening : :class:`str`
+            Code for opening the environment
+
+        """
+        return r'\begin{tabular}{' + columns * 'l' + r'}'
+
+    def closing(self):
+        r"""
+        Create closing code.
+
+        In case of LaTeX, this is usually:
+
+        .. code-block::
+
+            \end{tabular}
+
+
+        Returns
+        -------
+        closing : :class:`str`
+            Code for closing the environment
+
+        """
+        return r'\end{tabular}'
