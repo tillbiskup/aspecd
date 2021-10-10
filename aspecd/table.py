@@ -5,6 +5,16 @@ While spectroscopic data are usually presented graphically (see
 the :mod:`aspecd.plotting` module for details), there are cases where a
 tabular representation is useful or even necessary.
 
+One prime example of a situation where you would want to have a tabular
+representation of a (calculated) dataset is the result of an
+:class:`aspecd.analysis.AggregatedAnalysisStep`. Here, you perform a
+:class:`aspecd.analysis.SingleAnalysisStep` on a series of datasets and
+collect the results in a :class:`aspecd.dataset.CalculatedDataset`. Of
+course, there are situations where you can simply plot this dataset,
+but while graphical representations are often helpful for obtaining trends,
+if the exact numbers are relevant, a table is often much more useful.
+
+
 .. versionadded:: 0.5
 
 
@@ -201,6 +211,7 @@ Module documentation
 
 """
 import aspecd.exceptions
+from aspecd import utils
 
 
 class Table:
@@ -208,14 +219,22 @@ class Table:
     Tabular representation of datasets.
 
     Formatting of a table can be controlled by the formatter class contained
-    in :attr:`format`. See the documentation of the :class:`Format` class for
-    details. Furthermore, the individual columns containing numerical data
-    can be formatted as well, specifying formats for the individual columns in
-    :attr:`column_format`.
+    in :attr:`format`. See the documentation of the :class:`Format` class
+    and its subclasses for details. Furthermore, the individual columns
+    containing numerical data can be formatted as well, specifying formats
+    for the individual columns in :attr:`column_format`.
 
     In case the axes of a dataset contain values in their
     :attr:`aspecd.dataset.Axis.index` attribute, these values will be used
     as first column and column headers, respectively.
+
+    In case of indices present in either the first or second axis or both,
+    they will be used as row indices and column headers, respectively. One
+    particular use case is in combination with the results of an
+    :class:`aspecd.analysis.AggregatedAnalysisStep` operating on a series of
+    datasets and combining the result in a
+    :class:`aspecd.dataset.CalculatedDataset` with the row indices being the
+    labels of the corresponding datasets.
 
     .. note::
 
@@ -232,10 +251,17 @@ class Table:
     table : :class:`str`
         Final table ready to be output
 
-    format : :class:`Format`
-        Settings for output format.
+    format : :class:`str`
+        Identifier for output format.
 
-        See :class:`Format` for details
+        Valid identifiers are either the empty string or any first part of a
+        subclass of :class:`Format`, *i.e.* the part before "Format".
+
+        Examples for currently valid identifiers: ``text``, ``rst``,
+        ``dokuwiki``, ``latex``
+
+        See :class:`Format` and the respective subclasses for details on the
+        formats available and what kind of output they create.
 
     column_format: :class:`list`
         (Optional) formats for the data
@@ -254,8 +280,9 @@ class Table:
     def __init__(self):
         self.dataset = None
         self.table = None
-        self.format = Format()
+        self.format = ''
         self.column_format = []
+        self._format = Format()
         self._columns = []
         self._rows = []
         self._column_widths = []
@@ -271,11 +298,17 @@ class Table:
         if self.dataset.data.data.ndim > 2:
             raise aspecd.exceptions.NotApplicableToDatasetError(
                 message='Tables work only with 1D and 2D data')
+        self._set_format()
         self._format_columns()
         self._format_rows()
         self._add_rules()
         self._add_opening_and_closing()
         self.table = '\n'.join(self._rows)
+
+    def _set_format(self):
+        format_class = self.format.lower().capitalize() + 'Format'
+        format_class = '.'.join(['aspecd.table', format_class])
+        self._format = utils.object_from_class_name(format_class)
 
     def _format_columns(self):
         self._columns = []
@@ -325,59 +358,60 @@ class Table:
         self._rows = []
         for row in range(len(self._columns[0])):
             current_row = []
-            padding = self.format.padding * ' '
+            padding = self._format.padding * ' '
             for column in self._columns:
                 current_row.append(column[row])
             if any(self.dataset.data.axes[1].index) and row == 0:
                 separator = '{padding}{separator}{padding}'.format(
-                    padding=padding, separator=self.format.header_separator
+                    padding=padding, separator=self._format.header_separator
                 )
                 if any(self.dataset.data.axes[0].index):
-                    prefix = self.format.column_prefix
+                    prefix = self._format.column_prefix
                 else:
-                    prefix = self.format.header_prefix
+                    prefix = self._format.header_prefix
                 formatted_row = \
                     '{prefix}{padding}{row}{padding}{postfix}'.format(
                         prefix=prefix,
                         padding=padding,
                         row=separator.join(current_row),
-                        postfix=self.format.header_postfix
+                        postfix=self._format.header_postfix
                     )
             else:
                 separator = '{padding}{separator}{padding}'.format(
-                    padding=padding, separator=self.format.column_separator
+                    padding=padding, separator=self._format.column_separator
                 )
                 if any(self.dataset.data.axes[0].index):
-                    prefix = self.format.header_prefix
+                    prefix = self._format.header_prefix
                 else:
-                    prefix = self.format.column_prefix
+                    prefix = self._format.column_prefix
                 formatted_row = \
                     '{prefix}{padding}{row}{padding}{postfix}'.format(
                         prefix=prefix,
                         padding=padding,
                         row=separator.join(current_row),
-                        postfix=self.format.column_postfix
+                        postfix=self._format.column_postfix
                     )
             self._rows.append(formatted_row)
 
     def _add_rules(self):
-        top_rule = self.format.top_rule(column_widths=self._column_widths)
+        top_rule = self._format.top_rule(column_widths=self._column_widths)
         if top_rule:
             self._rows.insert(0, top_rule)
         if any(self.dataset.data.axes[1].index):
             middle_rule = \
-                self.format.middle_rule(column_widths=self._column_widths)
+                self._format.middle_rule(column_widths=self._column_widths)
             if middle_rule:
                 self._rows.insert(2, middle_rule)
-        bottom_rule = self.format.bottom_rule(column_widths=self._column_widths)
+        bottom_rule = \
+            self._format.bottom_rule(column_widths=self._column_widths)
         if bottom_rule:
             self._rows.append(bottom_rule)
 
     def _add_opening_and_closing(self):
-        opening = self.format.opening(columns=len(self._columns))
+        opening = self._format.opening(columns=len(self._columns))
         if opening:
             self._rows.insert(0, opening)
-        closing = self.format.closing()
+        closing = self._format.closing()
         if closing:
             self._rows.append(closing)
 
@@ -389,6 +423,27 @@ class Format:
     The formatter is used by :class:`Table` to control the output.
 
     Different formats can be implemented by subclassing this class.
+    Currently, the following subclasses are available:
+
+    * :class:`TextFormat`
+
+      Grid layout for text output
+
+    * :class:`RstFormat`
+
+      Simple layout for reStructuredText (rst)
+
+    * :class:`DokuwikiFormat`
+
+      DokuWiki table syntax
+
+    * :class:`LatexFormat`
+
+      LaTeX table syntax
+
+    For simple output, you can use the basic formatter, :class:`Format`,
+    as well. As this is the default in the :class:`Table` class, nothing needs
+    to be done in this case.
 
     Attributes
     ----------
@@ -591,6 +646,9 @@ class TextFormat(Format):
     rule_separator_character : :class:`str`
         Character used for the column separators of horizontal lines (rules)
 
+
+    .. versionadded:: 0.5
+
     """
 
     def __init__(self):
@@ -705,6 +763,9 @@ class RstFormat(TextFormat):
     2.0 2.1 2.2
     === === ===
 
+
+    .. versionadded:: 0.5
+
     """
 
     def __init__(self):
@@ -748,6 +809,8 @@ class DokuwikiFormat(Format):
         ^ baz | 1.0 | 1.0 | 1.0 |
 
 
+    .. versionadded:: 0.5
+
     """
 
     def __init__(self):
@@ -788,6 +851,8 @@ class LatexFormat(Format):
         \bottomrule
         \end{tabular}
 
+
+    .. versionadded:: 0.5
 
     """
 
