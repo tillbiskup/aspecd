@@ -42,6 +42,11 @@ class TestTable(unittest.TestCase):
         self.table.tabulate(self.dataset)
         self.assertEqual(self.dataset, self.table.dataset)
 
+    def test_tabulate_with_dataset_adds_representation_to_dataset(self):
+        self.table.dataset = None
+        self.table.tabulate(self.dataset)
+        self.assertTrue(self.dataset.representations)
+
     def test_tabulate_with_3D_dataset_raises(self):
         self.dataset.data.data = np.random.random([5, 5, 5])
         self.table.dataset = self.dataset

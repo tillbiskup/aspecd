@@ -530,7 +530,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         """
         if not table:
             raise TypeError('tabulate needs a Table object')
-        table.tabulate(dataset=self)
+        table.tabulate(dataset=self, from_dataset=True)
         table_record = table.create_history_record()
         self.representations.append(table_record)
         self._append_task(kind='representation', task=table_record)

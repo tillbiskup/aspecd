@@ -508,7 +508,7 @@ class Table:
         self._rows = []
         self._column_widths = []
 
-    def tabulate(self, dataset=None):
+    def tabulate(self, dataset=None, from_dataset=False):
         """
         Create tabular representation of the numerical data of a dataset.
 
@@ -522,6 +522,11 @@ class Table:
         dataset : class:`aspecd.dataset.Dataset`
             Dataset to create the tabular representation for
 
+        from_dataset : `boolean`
+            whether we are called from within a dataset
+
+            Defaults to "False" and shall never be set manually.
+
         """
         if dataset:
             self.dataset = dataset
@@ -534,12 +539,15 @@ class Table:
             logger.warning('Dataset contains no data, hence nothing to '
                            'tabulate.')
             return
-        self._set_format()
-        self._format_columns()
-        self._format_rows()
-        self._add_rules()
-        self._add_opening_and_closing()
-        self.table = '\n'.join(self._rows)
+        if from_dataset:
+            self._set_format()
+            self._format_columns()
+            self._format_rows()
+            self._add_rules()
+            self._add_opening_and_closing()
+            self.table = '\n'.join(self._rows)
+        else:
+            self.dataset.tabulate(table=self)
 
     def save(self):
         """
