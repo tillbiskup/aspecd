@@ -1,3 +1,4 @@
+import os
 import textwrap
 import unittest
 
@@ -11,6 +12,11 @@ class TestTable(unittest.TestCase):
         self.table = table.Table()
         self.dataset = dataset.CalculatedDataset()
         self.dataset.data.data = np.random.random(5)
+        self.filename = 'foo'
+
+    def tearDown(self):
+        if os.path.exists(self.filename):
+            os.remove(self.filename)
 
     def test_instantiate_class(self):
         pass
@@ -101,6 +107,7 @@ class TestTable(unittest.TestCase):
         self.table.tabulate()
         column = '{:{format}} {:{format}} {:{format}}'.format(
             *self.dataset.data.data[0, :], format=format_)
+        print(self.table.table)
         self.assertEqual(column, self.table.table)
 
     def test_index_in_first_axis_adds_index_to_rows(self):
@@ -404,6 +411,22 @@ class TestTable(unittest.TestCase):
         self.table.tabulate()
         self.assertEqual(caption.title, self.table.table.split('\n')[0])
         self.assertEqual('', self.table.table.split('\n')[1])
+
+    def test_save(self):
+        self.table.dataset = self.dataset
+        self.table.tabulate()
+        self.table.filename = self.filename
+        self.table.save()
+        self.assertTrue(os.path.exists(self.filename))
+
+    def test_save_writes_content(self):
+        self.table.dataset = self.dataset
+        self.table.tabulate()
+        self.table.filename = self.filename
+        self.table.save()
+        with open(self.filename, 'r') as file:
+            file_content = file.read()
+        self.assertEqual(self.table.table, file_content)
 
 
 class TestFormat(unittest.TestCase):

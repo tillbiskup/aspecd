@@ -29,6 +29,8 @@ New features
 * Tabular representation of datasets
 
   * New module :mod:`aspecd.table`
+  * Series of output formats for tables (including DokuWiki and LaTeX)
+  * Tables can have captions that are output as well
 
 * Utils
 

@@ -430,8 +430,8 @@ class Table:
     """
     Tabular representation of datasets.
 
-    Formatting of a table can be controlled by the formatter class contained
-    in :attr:`format`. See the documentation of the :class:`Format` class
+    Formatting of a table can be controlled by the formatter class defined by
+    :attr:`format`. See the documentation of the :class:`Format` class
     and its subclasses for details. Furthermore, the individual columns
     containing numerical data can be formatted as well, specifying formats
     for the individual columns in :attr:`column_format`.
@@ -484,6 +484,12 @@ class Table:
         If the list is shorter than the number of columns, the last element
         will be used for the remaining columns.
 
+    filename : :class:`str`
+        Name of the file to save the table to.
+
+        If calling :meth:`save`, the table contained in :attr:`table`
+        will be saved to this file
+
 
     .. versionadded:: 0.5
 
@@ -495,6 +501,7 @@ class Table:
         self.table = None
         self.format = ''
         self.column_format = []
+        self.filename = ''
         self._format = Format()
         self._columns = []
         self._rows = []
@@ -517,6 +524,20 @@ class Table:
         self._add_rules()
         self._add_opening_and_closing()
         self.table = '\n'.join(self._rows)
+
+    def save(self):
+        """
+        Save table to file.
+
+        The filename is set in :attr:`filename`.
+
+        If no table exists, *i.e.* :meth:`tabulate` has not yet been called,
+        the method will silently return.
+        """
+        if not self.table:
+            return
+        with open(self.filename, 'w') as file:
+            file.write(self.table)
 
     def _set_format(self):
         format_class = self.format.lower().capitalize() + 'Format'
@@ -822,7 +843,10 @@ class Format:
             Default: ''
 
         """
-        return self._caption_content(caption) if caption else ''
+        opening = ''
+        if caption and (caption.title or caption.text):
+            opening = self._caption_content(caption)
+        return opening
 
     @staticmethod
     def _caption_content(caption=None):
