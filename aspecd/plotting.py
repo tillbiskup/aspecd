@@ -605,7 +605,7 @@ class SinglePlotter(Plotter):
         Create history record to be added to the dataset.
 
         Usually, this method gets called from within the
-        :meth:`aspecd.dataset.plot` method of the
+        :meth:`aspecd.dataset.Dataset.plot` method of the
         :class:`aspecd.dataset.Dataset` class and ensures the history of
         each plotting step to get written properly.
 

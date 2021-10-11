@@ -13,7 +13,7 @@ import aspecd.plotting
 import aspecd.processing
 import aspecd.utils
 from aspecd import annotation, analysis, dataset, io, plotting, \
-    processing
+    processing, table
 import aspecd.metadata
 
 
@@ -124,7 +124,8 @@ class TestDatasetProcessing(unittest.TestCase):
     def test_process_returns_processing_object(self):
         processing_object = processing.SingleProcessingStep()
         processing_step = self.dataset.process(processing_object)
-        self.assertTrue(isinstance(processing_step, processing.SingleProcessingStep))
+        self.assertTrue(isinstance(processing_step,
+                                   processing.SingleProcessingStep))
 
     def test_process_sets_package_in_sysinfo(self):
         # Fake package name
@@ -480,6 +481,37 @@ class TestDatasetPlotting(unittest.TestCase):
         self.dataset.plot(self.plotter)
         self.assertIsInstance(self.dataset.tasks[0]['task'],
                               aspecd.history.PlotHistoryRecord)
+
+
+class TestDatasetTabulating(unittest.TestCase):
+    def setUp(self):
+        self.dataset = dataset.Dataset()
+        self.table = table.Table()
+
+    def test_has_tabulate_method(self):
+        self.assertTrue(hasattr(self.dataset, 'tabulate'))
+        self.assertTrue(callable(self.dataset.tabulate))
+
+    def test_dataset_tabulate_returns_table_object(self):
+        tab = self.dataset.tabulate(self.table)
+        self.assertTrue(isinstance(tab, table.Table))
+
+    def test_plot_without_table_raises(self):
+        with self.assertRaisesRegex(TypeError, 'tabulate needs a Table object'):
+            self.dataset.tabulate()
+
+    def test_tabulate_adds_task(self):
+        self.dataset.tabulate(self.table)
+        self.assertNotEqual(self.dataset.tasks, [])
+
+    def test_added_task_has_kind_representation(self):
+        self.dataset.tabulate(self.table)
+        self.assertEqual(self.dataset.tasks[0]['kind'], 'representation')
+
+    def test_added_task_has_table_history_record(self):
+        self.dataset.tabulate(self.table)
+        self.assertIsInstance(self.dataset.tasks[0]['task'],
+                              aspecd.history.TableHistoryRecord)
 
 
 class TestDatasetRepresentations(unittest.TestCase):

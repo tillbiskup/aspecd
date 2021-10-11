@@ -589,18 +589,20 @@ Currently, the following subclasses are implemented:
      * :class:`aspecd.tasks.MultiplotTask`
      * :class:`aspecd.tasks.CompositeplotTask`
 
+  * :class:`aspecd.tasks.TabulateTask`
   * :class:`aspecd.tasks.ReportTask`
   * :class:`aspecd.tasks.ModelTask`
   * :class:`aspecd.tasks.ExportTask`
 
-As you can see from the above list, there are (currently) two special cases
-of kinds of tasks: analysis and plot tasks. Usually, you will set the
-``kind`` of a task in a recipe to the module the class eventually performing
-the task resides in. As both, analyses and plots can either span one or
-several datasets, here we have to discriminate. Therefore, it is *essential*
-that you take care to set the ``kind`` value in your recipe for these kinds
-of tasks to ``singleanalysis`` or ``multianalysis``, respectively. the same
-is true for plots. To make this a bit easier to follow, see the example below.
+As you can see from the above list, there are (currently) three special cases
+of kinds of tasks: processing, analysis and plot tasks. Usually, you will
+set the ``kind`` of a task in a recipe to the module the class eventually
+performing the task resides in. As both, analyses and plots can either span
+one or several datasets, here we have to discriminate. Therefore,
+it is *essential* that you take care to set the ``kind`` value in your
+recipe for these kinds of tasks to ``singleanalysis`` or ``multianalysis``,
+respectively. the same is true for plots. To make this a bit easier to
+follow, see the example below.
 
 .. code-block:: yaml
 
@@ -2618,8 +2620,8 @@ class PlotTask(Task):
         original plot contained and the new plot added on top of it.
 
 
-    .. versionadded:: 0.4.0
-        Attribute :attr:`target`
+    .. versionchanged:: 0.4
+        Added attribute :attr:`target`
 
     """
 
@@ -2719,8 +2721,8 @@ class SingleplotTask(PlotTask):
     For more information on the underlying general class,
     see :class:`aspecd.plotting.SinglePlotter`.
 
-    For an example of how such a analysis task may be included into a
-    recipe, see the YAML listing below:
+    For an example of how such a singleplot task may be included into a recipe,
+    see the YAML listing below:
 
     .. code-block:: yaml
 
@@ -2768,7 +2770,7 @@ class SingleplotTask(PlotTask):
     In case you apply the single plotter to more than one dataset and would
     like to save individual plots, you can do that by supplying a list of
     filenames instead of only a single filename. In this case, the plots get
-    saved to the filenames in the list. A minmal example may look like this:
+    saved to the filenames in the list. A minimal example may look like this:
 
     .. code-block:: yaml
 
@@ -2788,16 +2790,16 @@ class SingleplotTask(PlotTask):
         run into trouble.
 
     .. note::
-        If the recipe contains the ``output_directory`` key on the top
-        level, the figure(s) will be saved to this directory.
+        If the recipe contains the ``output`` key in its ``directories`` dict,
+        the figure(s) will be saved to this directory.
 
     As long as ``autosave_plots`` in the recipe is set to True, the plots
     will be saved automatically, even if no filename is provided. These
     automatically generated filenames consist of the last part of the
     dataset source (excluding a potential file extension) and the name of
     the plotter used. To prevent the plotters in a recipe from automatically
-    saving the plots, include the ``autosave_plots`` directive on the top
-    level of your recipe and set it to False.
+    saving the plots, include the ``autosave_plots`` directive in the
+    ``settings`` dict of your recipe and set it to False.
 
     """
 
@@ -2892,16 +2894,16 @@ class MultiplotTask(PlotTask):
         :meth:`matplotlib.figure.Figure.savefig` method.
 
     .. note::
-        If the recipe contains the ``output_directory`` key on the top
-        level, the figure(s) will be saved to this directory.
+        If the recipe contains the ``output`` key in its ``directories`` dict,
+        the figure(s) will be saved to this directory.
 
     As long as ``autosave_plots`` in the recipe is set to True, the plots
     will be saved automatically, even if no filename is provided. These
     automatically generated filenames consist of the last part of the
-    dataset sources (excluding a potential file extension) joint by underscores
-    and the name of the plotter used. To prevent the plotters in a recipe
-    from automatically saving the plots, include the ``autosave_plots``
-    directive on the top level of your recipe and set it to False.
+    dataset source (excluding a potential file extension) and the name of
+    the plotter used. To prevent the plotters in a recipe from automatically
+    saving the plots, include the ``autosave_plots`` directive in the
+    ``settings`` dict of your recipe and set it to False.
 
     """
 
@@ -2982,10 +2984,11 @@ class CompositeplotTask(PlotTask):
     subplot locations, as they will be set to one single axis by default.
 
     .. note::
-        As long as the ``autosave_plots`` directive at the top level of the
-        recipe is set to True, the results of the individual plotters
-        combined in the CompositePlotter will be saved to generic filenames.
-        To prevent this from happening, set ``autosave_plots`` to false.
+        As long as the ``autosave_plots`` in the recipe is set to True,
+        the results of the individual plotters combined in the
+        CompositePlotter will be saved to generic filenames. To prevent this
+        from happening, include the ``autosave_plots`` directive in the
+        ``settings`` dict of your recipe and set it to False.
 
     """
 
@@ -3290,6 +3293,115 @@ class ExportTask(Task):
                                            task.target)
             logger.info('Export "%s" to file "%s"', dataset_id, task.target)
             dataset.export_to(task)
+
+
+class TabulateTask(Task):
+    """
+    Tabulate step defined as task in recipe-driven data analysis.
+
+    Tables will always be created individually for each dataset.
+
+    For more information on the underlying general class,
+    see :class:`aspecd.table.Table`.
+
+    For an example of how such a tabulating task may be included into a
+    recipe, see the YAML listing below:
+
+    .. code-block:: yaml
+
+        kind: tabulate
+        type: Table
+        properties:
+          caption:
+            title: >
+              Ideally a single sentence summarising the intend of the table
+            text: >
+              More text for the table caption
+          filename: fancytable.txt
+        apply_to:
+          - loi:xxx
+
+    Note that you can refer to datasets and results created during cooking
+    of a recipe using their respective labels. Those labels will
+    automatically be replaced by the actual dataset/result prior to
+    performing the task.
+
+    .. note::
+        As soon as you provide a filename in the properties of your recipe,
+        the resulting table will automatically be saved to that filename.
+
+    In case you apply the task to more than one dataset and would like to
+    save individual tables, you can do that by supplying a list of
+    filenames instead of only a single filename. In this case, the tables get
+    saved to the filenames in the list. A minimal example may look like this:
+
+    .. code-block:: yaml
+
+        kind: tabulate
+        type: Table
+        properties:
+          filename:
+            - fancytable1.pdf
+            - fancytable2.pdf
+        apply_to:
+          - loi:xxx
+          - loi:yyy
+
+    .. important::
+        Make sure to provide the same number of file names in your recipe as
+        the number of datasets you create the tables for. Otherwise you may
+        run into trouble.
+
+    .. note::
+        If the recipe contains the ``output`` key in its ``directories`` dict,
+        the figure(s) will be saved to this directory.
+
+
+    .. versionadded:: 0.5
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self._module = 'table'
+
+    def _perform(self):
+        filenames = []
+        if "filename" in self.properties \
+                and isinstance(self.properties["filename"], list) \
+                and len(self.apply_to) == len(self.properties["filename"]):
+            filenames = self.properties["filename"]
+        for idx, dataset_id in enumerate(self.apply_to):
+            dataset = self.recipe.get_dataset(dataset_id)
+            self._task = self.get_object()
+            if filenames:
+                self._task.filename = filenames[idx]
+            logger.info('Perform "%s" on dataset "%s"', self.type, dataset_id)
+            self._task = dataset.tabulate(self._task)
+            self.save_table(self._task)
+
+    def save_table(self, table=None):
+        """
+        Save the figure of the plot created by the task.
+
+        Parameters
+        ----------
+        table : :class:`aspecd.table.Table`
+            Table whose table should be saved
+
+        """
+        filename = None
+        if table.filename:
+            filename = table.filename
+        elif 'filename' in self.properties and self.properties['filename']:
+            filename = self.properties['filename']
+        if filename:
+            if self.recipe.directories['output']:
+                filename = os.path.join(self.recipe.directories['output'],
+                                        filename)
+            logger.info('Save table from "%s" to file "%s"', self.type,
+                        filename)
+            table.save()
 
 
 class TaskFactory:

@@ -85,8 +85,7 @@ at the following examples:
     ds.data.data = np.random.random([5,3])
 
     tab = table.Table()
-    tab.dataset = ds
-    tab.tabulate()
+    tab = ds.tabulate(tab)
 
     print(tab.table)
 
@@ -112,7 +111,7 @@ If we would want to reduce the number of digits shown, we could use the
 .. code-block::
 
     tab.column_format = ['8.6f']
-    tab.tabulate()
+    tab = ds.tabulate(tab)
 
     print(tab.table)
 
@@ -151,9 +150,8 @@ second axis. A full example could look like this:
     ds.data.axes[1].index = ['foo', 'bar', 'baz']
 
     tab = table.Table()
-    tab.dataset = ds
     tab.column_format = ['8.6f']
-    tab.tabulate()
+    tab = ds.tabulate(tab)
 
     print(tab.table)
 
@@ -183,9 +181,8 @@ latter (admittedly again in an artificial example):
     ds.data.axes[1].index = ['foo', 'bar', 'baz']
 
     tab = table.Table()
-    tab.dataset = ds
     tab.column_format = ['8.6f']
-    tab.tabulate()
+    tab = ds.tabulate(tab)
 
     print(tab.table)
 
@@ -223,9 +220,8 @@ with both, row indices and colum headers, and show the different formats.
     ds.data.axes[1].index = ['foo', 'bar', 'baz']
 
     tab = table.Table()
-    tab.dataset = ds
     tab.column_format = ['8.6f']
-    tab.tabulate()
+    tab = ds.tabulate(tab)
 
     print(tab.table)
 
@@ -249,7 +245,7 @@ Now, let's see how the text format looks like:
 
     # Same as above
     tab.format = 'text'
-    tab.tabulate()
+    tab = ds.tabulate(tab)
 
     print(tab.table)
 
@@ -275,7 +271,7 @@ Next is reStructuredText:
 
     # Same as above
     tab.format = 'rst'
-    tab.tabulate()
+    tab = ds.tabulate(tab)
 
     print(tab.table)
 
@@ -303,7 +299,7 @@ wiki can be used as an electronic lab notebook (ELN):
 
     # Same as above
     tab.format = 'dokuwiki'
-    tab.tabulate()
+    tab = ds.tabulate(tab)
 
     print(tab.table)
 
@@ -328,7 +324,7 @@ and honestly, manually formatting LaTeX tables can be quite tedious.
 
     # Same as above
     tab.format = 'latex'
-    tab.tabulate()
+    tab = ds.tabulate(tab)
 
     print(tab.table)
 
@@ -382,10 +378,9 @@ plain text on top of the actual table, wrapped to not have endless lines.
                    ' euismod quis id orci.'
 
     tab = table.Table()
-    tab.dataset = ds
     tab.caption = caption
     tab.column_format = ['8.6f']
-    tab.tabulate()
+    tab = ds.tabulate(tab)
 
     print(tab.table)
 
@@ -420,10 +415,15 @@ Module documentation
 ====================
 
 """
+import logging
 import textwrap
 
 import aspecd.exceptions
-from aspecd import utils
+from aspecd import history, utils
+
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 
 class Table:
@@ -496,6 +496,7 @@ class Table:
     """
 
     def __init__(self):
+        self.name = aspecd.utils.full_class_name(self)
         self.dataset = None
         self.caption = Caption()
         self.table = None
@@ -507,17 +508,32 @@ class Table:
         self._rows = []
         self._column_widths = []
 
-    def tabulate(self):
+    def tabulate(self, dataset=None):
         """
         Create tabular representation of the numerical data of a dataset.
 
         The result is stored in :attr:`table`.
+
+        In case of an empty dataset, a warning is logged and no further
+        action taken.
+
+        Parameters
+        ----------
+        dataset : class:`aspecd.dataset.Dataset`
+            Dataset to create the tabular representation for
+
         """
+        if dataset:
+            self.dataset = dataset
         if not self.dataset:
             raise aspecd.exceptions.MissingDatasetError
         if self.dataset.data.data.ndim > 2:
             raise aspecd.exceptions.NotApplicableToDatasetError(
                 message='Tables work only with 1D and 2D data')
+        if self.dataset.data.data.size == 0:
+            logger.warning('Dataset contains no data, hence nothing to '
+                           'tabulate.')
+            return
         self._set_format()
         self._format_columns()
         self._format_rows()
@@ -538,6 +554,26 @@ class Table:
             return
         with open(self.filename, 'w') as file:
             file.write(self.table)
+
+    def create_history_record(self):
+        """
+        Create history record to be added to the dataset.
+
+        Usually, this method gets called from within the
+        :meth:`aspecd.dataset.Dataset.tabulate` method of the
+        :class:`aspecd.dataset.Dataset` class and ensures the history of
+        each tabulating step to get written properly.
+
+        Returns
+        -------
+        history_record : :class:`aspecd.history.TableHistoryRecord`
+            history record for tabulating step
+
+        """
+        history_record = \
+            history.TableHistoryRecord(package=self.dataset.package_name)
+        history_record.table = history.TableRecord(table=self)
+        return history_record
 
     def _set_format(self):
         format_class = self.format.lower().capitalize() + 'Format'
@@ -1412,6 +1448,7 @@ class Caption(utils.Properties):
         is self-contained such that it explains the table sufficiently to
         understand its intent and content without needing to read all the
         surrounding text.
+
 
     .. versionadded:: 0.5
 

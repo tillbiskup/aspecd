@@ -2417,6 +2417,7 @@ class TestReportTask(unittest.TestCase):
         self.assertEqual(read_content, 'blub')
 
     def test_perform_task_with_multiple_datasets_and_filenames(self):
+        # noinspection PyTypedDict
         self.report_task["properties"]["filename"] = \
             ['test-report1.tex', 'test-report2.tex']
         self.report_task.pop("apply_to")
@@ -2585,6 +2586,7 @@ class TestExportTask(unittest.TestCase):
         self.assertTrue(os.path.exists(self.filename))
 
     def test_perform_task_with_multiple_datasets_writes_files(self):
+        # noinspection PyTypedDict
         self.export_task['properties']['target'] = [self.filename,
                                                     self.filename2]
         recipe_dict = {'datasets': ['foo', 'bar'],
@@ -2605,6 +2607,96 @@ class TestExportTask(unittest.TestCase):
         self.task.perform()
         self.assertTrue(os.path.exists(os.path.join(self.output_directory,
                                                     self.filename)))
+
+
+class TestTabulateTask(unittest.TestCase):
+    def setUp(self):
+        self.task = tasks.TabulateTask()
+        self.recipe = tasks.Recipe()
+        self.dataset = ['foo']
+        self.table_filename = 'foo.pdf'
+        self.datasets = ['foo', 'bar']
+        self.table_filenames = ['foo.pdf', 'bar.pdf']
+        self.tabulate_task = {'kind': 'tabulate',
+                              'type': 'Table',
+                              'apply_to': self.dataset}
+
+    def tearDown(self):
+        if os.path.exists(self.table_filename):
+            os.remove(self.table_filename)
+        for file in self.table_filenames:
+            if os.path.exists(file):
+                os.remove(file)
+
+    def prepare_recipe(self):
+        dataset_factory = dataset.DatasetFactory()
+        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        self.recipe.dataset_factory = dataset_factory
+        recipe_dict = {'datasets': self.dataset,
+                       'tasks': [self.tabulate_task]}
+        self.recipe.from_dict(recipe_dict)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_perform_task(self):
+        self.prepare_recipe()
+        self.recipe.datasets[self.dataset[0]].data.data = np.random.random(5)
+        self.task.from_dict(self.tabulate_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(self.recipe.datasets[self.dataset[0]].tasks)
+
+    def test_perform_task_issues_log_message(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.tabulate_task)
+        self.task.recipe = self.recipe
+        with self.assertLogs(__package__, level='INFO') as cm:
+            self.task.perform()
+        self.assertIn('Perform "{}" on dataset "{}"'.format(
+            self.tabulate_task['type'], self.dataset[0]), cm.output[0])
+
+    def test_perform_task_with_filename_saves_table(self):
+        self.prepare_recipe()
+        self.recipe.datasets[self.dataset[0]].data.data = np.random.random(5)
+        # noinspection PyTypeChecker
+        self.tabulate_task['properties'] = {'filename': self.table_filename}
+        self.task.from_dict(self.tabulate_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(os.path.exists(self.table_filename))
+
+    def test_perform_task_with_filename_issues_log_message(self):
+        self.prepare_recipe()
+        self.recipe.datasets[self.dataset[0]].data.data = np.random.random(5)
+        # noinspection PyTypeChecker
+        self.tabulate_task['properties'] = {'filename': self.table_filename}
+        self.task.from_dict(self.tabulate_task)
+        self.task.recipe = self.recipe
+        with self.assertLogs(__package__, level='INFO') as cm:
+            self.task.perform()
+        self.assertIn('Save table from "{}" to file "{}"'.format(
+            self.tabulate_task['type'], self.table_filename), cm.output[1])
+
+    def test_perform_task_with_list_of_filenames_saves_plots(self):
+        self.tabulate_task = {'kind': 'tabulate',
+                              'type': 'Table',
+                              'apply_to': self.datasets}
+        dataset_factory = dataset.DatasetFactory()
+        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        self.recipe.dataset_factory = dataset_factory
+        recipe_dict = {'datasets': self.datasets,
+                       'tasks': [self.tabulate_task]}
+        self.recipe.from_dict(recipe_dict)
+        self.recipe.datasets[self.datasets[0]].data.data = np.random.random(5)
+        self.recipe.datasets[self.datasets[1]].data.data = np.random.random(5)
+        # noinspection PyTypeChecker
+        self.tabulate_task['properties'] = {'filename': self.table_filenames}
+        self.task.from_dict(self.tabulate_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        for file in self.table_filenames:
+            self.assertTrue(os.path.exists(file))
 
 
 class TestTaskFactory(unittest.TestCase):

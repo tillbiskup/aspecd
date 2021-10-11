@@ -502,6 +502,40 @@ class Dataset(aspecd.utils.ToDictMixin):
         self._append_task(kind='representation', task=plot_record)
         return plotter
 
+    def tabulate(self, table=None):
+        """Create table from data of current dataset.
+
+        Every table is an object of type :class:`aspecd.table.Table`
+        and is passed as an argument to :meth:`tabulate`.
+
+        The information necessary to reproduce a table is stored in the
+        :attr:`representations` attribute as object of class
+        :class:`aspecd.dataset.TableHistoryRecord`.
+
+        Parameters
+        ----------
+        table : :obj:`aspecd.table.Table`
+            table created from the data of the current dataset
+
+        Returns
+        -------
+        table : :obj:`aspecd.table.Table`
+            table created from the data of the current dataset
+
+        Raises
+        ------
+        TypeError
+            Raised when trying to tabulate without table
+
+        """
+        if not table:
+            raise TypeError('tabulate needs a Table object')
+        table.tabulate(dataset=self)
+        table_record = table.create_history_record()
+        self.representations.append(table_record)
+        self._append_task(kind='representation', task=table_record)
+        return table
+
     def delete_representation(self, index=None):
         """Remove representation record from dataset.
 

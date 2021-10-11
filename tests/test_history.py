@@ -8,7 +8,7 @@ import aspecd.exceptions
 import aspecd.history
 import aspecd.system
 import aspecd.utils
-from aspecd import processing, dataset, analysis, plotting
+from aspecd import processing, dataset, analysis, plotting, table
 
 
 class TestHistoryRecord(unittest.TestCase):
@@ -559,3 +559,76 @@ class TestMultiPlotRecord(unittest.TestCase):
 
     def test_has_datasets_property(self):
         self.assertTrue(hasattr(self.plot_record, 'datasets'))
+
+
+class TestTableRecord(unittest.TestCase):
+    def setUp(self):
+        self.table = aspecd.table.Table()
+        self.table_record = \
+            aspecd.history.TableRecord(self.table)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_instantiate_format_from_table(self):
+        self.table.format = 'dokuwiki'
+        table_record = aspecd.history.TableRecord(self.table)
+        self.assertEqual(table_record.format, self.table.format)
+
+    def test_instantiate_class_name_from_table(self):
+        table_record = aspecd.history.TableRecord(self.table)
+        self.assertEqual(table_record.class_name,
+                         aspecd.utils.full_class_name(self.table))
+
+    def test_has_from_table_method(self):
+        self.assertTrue(hasattr(self.table_record, 'from_table'))
+        self.assertTrue(callable(self.table_record.from_table))
+
+    def test_has_create_table_method(self):
+        self.assertTrue(hasattr(self.table_record, 'create_table'))
+        self.assertTrue(callable(self.table_record.create_table))
+
+    def test_create_table_returns_table_object(self):
+        test_object = self.table_record.create_table()
+        self.assertTrue(isinstance(test_object, aspecd.table.Table))
+
+    def test_table_object_has_correct_format_value(self):
+        self.table.format = 'dokuwiki'
+        test_object = self.table_record.create_table()
+        self.assertEqual(self.table_record.format, test_object.format)
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.table_record, 'to_dict'))
+        self.assertTrue(callable(self.table_record.to_dict))
+
+    def test_from_dict(self):
+        orig_dict = self.table_record.to_dict()
+        orig_dict["format"] = 'dokuwiki'
+        new_table_record = aspecd.history.TableRecord()
+        new_table_record.from_dict(orig_dict)
+        self.assertDictEqual(orig_dict,
+                             new_table_record.to_dict())
+
+
+class TestTableHistoryRecord(unittest.TestCase):
+    def setUp(self):
+        self.table = aspecd.table.Table()
+        self.table_record = aspecd.history.TableHistoryRecord(table=self.table)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_instantiate_class_with_package_name(self):
+        aspecd.history.TableHistoryRecord(table=self.table, package="numpy")
+
+    def test_instantiate_class_with_package_name_sets_sysinfo(self):
+        table_ = aspecd.history.TableHistoryRecord(table=self.table,
+                                                   package="numpy")
+        self.assertTrue("numpy" in table_.sysinfo.packages.keys())
+
+    def test_has_annotation_property(self):
+        self.assertTrue(hasattr(self.table_record, 'table'))
+
+    def test_annotation_is_annotation_record(self):
+        self.assertTrue(isinstance(self.table_record.table,
+                                   aspecd.history.TableRecord))

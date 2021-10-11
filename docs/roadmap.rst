@@ -10,7 +10,11 @@ For version 0.5
 
 * Analysis and tabular representation of data
 
-  * Task for tabular representation
+  * Modify :class:`aspecd.analysis.BasicCharacteristics` to better work with :class:`aspecd.analysis.AggregatedAnalysisStep`
+
+
+For version 0.6
+===============
 
 * Report task:
 

@@ -754,3 +754,137 @@ class PlotHistoryRecord(HistoryRecord):
     def __init__(self, package=''):
         super().__init__(package=package)
         self.plot = SinglePlotRecord()
+
+
+class TableRecord(aspecd.utils.ToDictMixin):
+    """Base class for table records.
+
+    For reproducibility of tabulating, information for each table needs to be
+    collected that suffices to reproduce the table. This is what a TableRecord
+    is good for.
+
+    All information will usually be obtained from a table object, either
+    by instantiating a TableRecord object providing a table object,
+    or by calling :meth:`from_table` on a TableRecord object.
+
+    Attributes
+    ----------
+    caption : :class:`aspecd.plotting.Caption`
+        User-supplied information for the table.
+
+    format : :class:`str`
+        Identifier for table output format.
+
+    column_format : :class:`list`
+        (Optional) formats for the data
+
+    filename : :class:`str`
+        Name of the file the table has been/should be saved to
+
+    class_name : :class:`str`
+        Fully qualified name of the class of the corresponding table
+
+    Parameters
+    ----------
+    table : :class:`aspecd.table.Table`
+        Table the record should be created for.
+
+    Raises
+    ------
+    TypeError
+        Raised when no table exists to act on
+
+    """
+
+    def __init__(self, table=None):
+        super().__init__()
+        self.class_name = ''
+        self.caption = None
+        self.format = ''
+        self.column_format = []
+        self.filename = ''
+        self._attributes_to_copy = ['caption', 'format', 'column_format',
+                                    'filename']
+        if table:
+            self.from_table(table=table)
+
+    def from_table(self, table=None):
+        """Obtain information from table.
+
+        Parameters
+        ----------
+        table : :obj:`aspecd.table.Table`
+            Table object to obtain information from
+
+        Raises
+        ------
+        TypeError
+            Raised if no table is provided.
+
+        """
+        if not table:
+            raise TypeError('from_table needs a Table object')
+        for attribute in self._attributes_to_copy:
+            setattr(self, attribute, getattr(table, attribute))
+        self.class_name = table.name
+
+    def create_table(self):
+        """Create a table object from the parameters stored.
+
+        Returns
+        -------
+        table : :class:`aspecd.table.Table`
+            actual table object that can be used for tabulating
+
+        """
+        table = aspecd.utils.object_from_class_name(self.class_name)
+        for attribute in self._attributes_to_copy:
+            setattr(table, attribute, getattr(self, attribute))
+        return table
+
+    def from_dict(self, dict_=None):
+        """
+        Set properties from dictionary.
+
+        Only parameters in the dictionary that are valid properties of the
+        class are set accordingly.
+
+        Parameters
+        ----------
+        dict_ : :class:`dict`
+            Dictionary containing properties to set
+
+        """
+        for key, value in dict_.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+
+
+class TableHistoryRecord(HistoryRecord):
+    """History record for tables created from datasets.
+
+    Attributes
+    ----------
+    table : :class:`aspecd.table.Table`
+        Table the history is saved for
+
+    package : :class:`str`
+        Name of package the history record gets recorded for
+
+        Prerequisite for reproducibility, gets stored in the
+        :attr:`aspecd.dataset.HistoryRecord.sysinfo` attribute.
+        Will usually be provided automatically by the dataset.
+
+    Parameters
+    ----------
+    table : :class:`aspecd.table.Table`
+        Table the history is saved for
+
+    package : :class:`str`
+        Name of package the history record gets recorded for
+
+    """
+
+    def __init__(self, table=None, package=''):
+        super().__init__(package=package)
+        self.table = TableRecord(table)

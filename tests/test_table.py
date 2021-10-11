@@ -30,6 +30,18 @@ class TestTable(unittest.TestCase):
         with self.assertRaises(exceptions.MissingDatasetError):
             self.table.tabulate()
 
+    def test_tabulate_with_dataset_with_empty_data_warns(self):
+        self.table.dataset = dataset.Dataset()
+        with self.assertLogs(__package__, level='WARNING') as cm:
+            self.table.tabulate()
+        self.assertIn('Dataset contains no data, hence nothing to tabulate.',
+                      cm.output[0])
+
+    def test_tabulate_with_dataset_parameter_sets_dataset(self):
+        self.table.dataset = None
+        self.table.tabulate(self.dataset)
+        self.assertEqual(self.dataset, self.table.dataset)
+
     def test_tabulate_with_3D_dataset_raises(self):
         self.dataset.data.data = np.random.random([5, 5, 5])
         self.table.dataset = self.dataset
@@ -107,7 +119,6 @@ class TestTable(unittest.TestCase):
         self.table.tabulate()
         column = '{:{format}} {:{format}} {:{format}}'.format(
             *self.dataset.data.data[0, :], format=format_)
-        print(self.table.table)
         self.assertEqual(column, self.table.table)
 
     def test_index_in_first_axis_adds_index_to_rows(self):

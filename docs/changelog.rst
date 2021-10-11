@@ -17,6 +17,7 @@ New features
 
   * YAML representation of tasks and recipes using :meth:`aspecd.tasks.Task.to_yaml` and :meth:`aspecd.tasks.Recipe.to_yaml` - convenience methods for later use in guided recipe generation
   * :class:`aspecd.tasks.AggregatedanalysisTask` for performing a SingleAnalysisStep on a series of datasets, aggregating the result in a CalculatedDataset
+  * :class:`aspecd.tasks.TabulateTask` for tabular representation of data of a dataset
 
 * Datasets
 
