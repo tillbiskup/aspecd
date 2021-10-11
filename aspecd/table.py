@@ -1,4 +1,4 @@
-"""
+r"""
 Tabular representation of datasets.
 
 While spectroscopic data are usually presented graphically (see
@@ -204,12 +204,224 @@ and the row indices added:
     e 0.939195 0.541248 0.917136
 
 
+Output formats
+==============
+
+Tables can be output using different formats, and if you need a special
+format, you can of course implement one on your own, by subclassing
+:class:`Format`. However, out of the box there are already a number of
+formats, from plain (default, shown above) to text to reStructuredText (rst),
+DokuWiki, and LaTeX. To give you a quick overview, we will create a dataset
+with both, row indices and colum headers, and show the different formats.
+
+
+.. code-block::
+
+    ds = dataset.Dataset()
+    ds.data.data = np.random.random([5,3])
+    ds.data.axes[0].index = ['a', 'b', 'c', 'd', 'e']
+    ds.data.axes[1].index = ['foo', 'bar', 'baz']
+
+    tab = table.Table()
+    tab.dataset = ds
+    tab.column_format = ['8.6f']
+    tab.tabulate()
+
+    print(tab.table)
+
+
+The result is the same as already shown above, just a plain table, though
+already quite useful:
+
+.. code-block::
+
+      foo      bar      baz
+    a 0.689140 0.775321 0.657159
+    b 0.315142 0.412736 0.580745
+    c 0.116352 0.807541 0.410055
+    d 0.226994 0.715985 0.967606
+    e 0.532774 0.620670 0.745630
+
+
+Now, let's see how the text format looks like:
+
+.. code-block::
+
+    # Same as above
+    tab.format = 'text'
+    tab.tabulate()
+
+    print(tab.table)
+
+
+And here you go:
+
+.. code-block::
+
+    +---+----------+----------+----------+
+    |   | foo      | bar      | baz      |
+    +---+----------+----------+----------+
+    | a | 0.689140 | 0.775321 | 0.657159 |
+    | b | 0.315142 | 0.412736 | 0.580745 |
+    | c | 0.116352 | 0.807541 | 0.410055 |
+    | d | 0.226994 | 0.715985 | 0.967606 |
+    | e | 0.532774 | 0.620670 | 0.745630 |
+    +---+----------+----------+----------+
+
+
+Next is reStructuredText:
+
+.. code-block::
+
+    # Same as above
+    tab.format = 'rst'
+    tab.tabulate()
+
+    print(tab.table)
+
+
+As you can see, this format outputs the "simple" rst style, that can be used
+as well for an easy-to-read text-only output:
+
+.. code-block::
+
+    = ======== ======== ========
+      foo      bar      baz
+    = ======== ======== ========
+    a 0.689140 0.775321 0.657159
+    b 0.315142 0.412736 0.580745
+    c 0.116352 0.807541 0.410055
+    d 0.226994 0.715985 0.967606
+    e 0.532774 0.620670 0.745630
+    = ======== ======== ========
+
+
+Another format that may be useful is DokuWiki, as this kind of lightweight
+wiki can be used as an electronic lab notebook (ELN):
+
+.. code-block::
+
+    # Same as above
+    tab.format = 'dokuwiki'
+    tab.tabulate()
+
+    print(tab.table)
+
+
+This will even correctly highlight the column headers and row indices as
+"headers":
+
+.. code-block::
+
+    |   ^ foo      ^ bar      ^ baz      ^
+    ^ a | 0.689140 | 0.775321 | 0.657159 |
+    ^ b | 0.315142 | 0.412736 | 0.580745 |
+    ^ c | 0.116352 | 0.807541 | 0.410055 |
+    ^ d | 0.226994 | 0.715985 | 0.967606 |
+    ^ e | 0.532774 | 0.620670 | 0.745630 |
+
+
+And finally, LaTeX, as this is of great use in the scientific world,
+and honestly, manually formatting LaTeX tables can be quite tedious.
+
+.. code-block::
+
+    # Same as above
+    tab.format = 'latex'
+    tab.tabulate()
+
+    print(tab.table)
+
+
+As you can see, the details of the formatting are left to you, but at least,
+you get valid LaTeX code and a table layout according to typesetting
+standards, *i.e.* only horizontal lines. Note that the horizontal lines (
+"rules") are typeset using the booktabs package that should always be used:
+
+.. code-block:: latex
+
+    \begin{tabular}{llll}
+    \toprule
+      & foo      & bar      & baz      \\
+    \midrule
+    a & 0.689140 & 0.775321 & 0.657159 \\
+    b & 0.315142 & 0.412736 & 0.580745 \\
+    c & 0.116352 & 0.807541 & 0.410055 \\
+    d & 0.226994 & 0.715985 & 0.967606 \\
+    e & 0.532774 & 0.620670 & 0.745630 \\
+    \bottomrule
+    \end{tabular}
+
+
+Captions
+========
+
+Tables can and should have captions that describe the content, as rarely the
+numbers (and row indices and colum headers) stand on their own. Hence,
+you can add a table caption to a table. As writing a caption is necessarily a
+manual task, it would only be fair if the table output would include this
+caption. For formats such as DokuWiki and LaTeX, it is fairly obvious how to
+add the table caption, and for the other formats, the caption is added as
+plain text on top of the actual table, wrapped to not have endless lines.
+
+
+.. code-block::
+
+    ds = dataset.Dataset()
+    ds.data.data = np.random.random([5,5])
+    ds.data.axes[0].index = ['a', 'b', 'c', 'd', 'e']
+    ds.data.axes[1].index = ['foo', 'bar', 'baz', 'foobar', 'frob']
+
+    caption = table.Caption()
+    caption.title = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'
+    caption.text = 'Quisque varius tortor ac faucibus posuere. In hac ' \
+                   'habitasse platea dictumst. Morbi rutrum felis vitae '\
+                   'tristique accumsan. Sed est nisl, auctor a metus a, ' \
+                   'elementum cursus velit. Proin et rutrum erat. ' \
+                   'Praesent id urna odio. Duis quis augue ac nunc commodo' \
+                   ' euismod quis id orci.'
+
+    tab = table.Table()
+    tab.dataset = ds
+    tab.caption = caption
+    tab.column_format = ['8.6f']
+    tab.tabulate()
+
+    print(tab.table)
+
+
+The result of the print statement above would output something like this:
+
+.. code-block::
+
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque
+    varius tortor ac faucibus posuere. In hac habitasse platea dictumst.
+    Morbi rutrum felis vitae tristique accumsan. Sed est nisl, auctor a
+    metus a, elementum cursus velit. Proin et rutrum erat. Praesent id
+    urna odio. Duis quis augue ac nunc commodo euismod quis id orci.
+
+      foo      bar      baz      foobar   frob
+    a 0.162747 0.620320 0.677983 0.719360 0.426734
+    b 0.342259 0.907828 0.252471 0.987115 0.563511
+    c 0.253853 0.752020 0.277696 0.479128 0.929410
+    d 0.768840 0.220356 0.247271 0.379556 0.231765
+    e 0.113655 0.725631 0.098438 0.753049 0.363572
+
+
+Note that the caption has been wrapped for better readability, and that an
+empty line is inserted between caption and table. Of course, you can combine
+the caption with the other textual formats ("text", "rst") as well, and it
+will be output in the same way. The formats "dokuwiki" and "latex" are
+special, see the respective format class definitions (
+:class:`DokuwikiFormat`, :class:`LatexFormat`) for details.
 
 
 Module documentation
 ====================
 
 """
+import textwrap
+
 import aspecd.exceptions
 from aspecd import utils
 
@@ -279,6 +491,7 @@ class Table:
 
     def __init__(self):
         self.dataset = None
+        self.caption = Caption()
         self.table = None
         self.format = ''
         self.column_format = []
@@ -408,10 +621,11 @@ class Table:
             self._rows.append(bottom_rule)
 
     def _add_opening_and_closing(self):
-        opening = self._format.opening(columns=len(self._columns))
+        opening = self._format.opening(columns=len(self._columns),
+                                       caption=self.caption)
         if opening:
             self._rows.insert(0, opening)
-        closing = self._format.closing()
+        closing = self._format.closing(caption=self.caption)
         if closing:
             self._rows.append(closing)
 
@@ -568,7 +782,7 @@ class Format:
         return ''
 
     # noinspection PyUnusedLocal,PyMethodMayBeStatic
-    def opening(self, columns=None):
+    def opening(self, columns=None, caption=None):
         """
         Create opening code.
 
@@ -576,14 +790,29 @@ class Format:
         *e.g.* opening and closing tags in XML and related languages, but in
         LaTeX as well.
 
-        If your format in a class inheriting from :class:`Format` does not need
-        this code, don't override this method, as it will by default return
-        the empty string, and hence no code gets added to the table.
+        Furthermore, table captions are usually set above the table, and if
+        your table has a caption with content, this caption will be output
+        as well. In its simplest form, as implemented here, caption title
+        and caption text will be concatenated and wrapped using
+        :func:`textwrap.wrap`, and an empty line added after the caption to
+        separate it from the actual table. Thus, your table captions are
+        output together with your table in simple text format.
+
+        Override this method according to your needs for your particular
+        format.
 
         Parameters
         ----------
         columns : :class:`int`
             (optional) number of columns of the table
+
+        caption : :class:`Caption`
+            (optional) table caption
+
+            For details, see the :class:`Caption` class documentation.
+
+            Only if one of the properties of :class:`Caption` contains
+            content, the caption will be considered.
 
         Returns
         -------
@@ -593,10 +822,15 @@ class Format:
             Default: ''
 
         """
-        return ''
+        return self._caption_content(caption) if caption else ''
+
+    @staticmethod
+    def _caption_content(caption=None):
+        caption_text = ' '.join([caption.title, caption.text]).rstrip()
+        return '\n'.join(textwrap.wrap(caption_text)) + '\n'
 
     # noinspection PyMethodMayBeStatic
-    def closing(self):
+    def closing(self, caption=None):
         """
         Create closing code.
 
@@ -607,6 +841,19 @@ class Format:
         If your format in a class inheriting from :class:`Format` does not need
         this code, don't override this method, as it will by default return
         the empty string, and hence no code gets added to the table.
+
+        Parameters
+        ----------
+        caption : :class:`Caption`
+            (optional) table caption
+
+            For details, see the :class:`Caption` class documentation.
+
+            Only if one of the properties of :class:`Caption` contains
+            content, the caption will be considered.
+
+            Having a caption requires some formats to create an additional
+            container surrounding the actual table.
 
         Returns
         -------
@@ -823,6 +1070,107 @@ class DokuwikiFormat(Format):
         self.header_prefix = '^'
         self.header_postfix = '^'
 
+    def opening(self, columns=None, caption=None):
+        """
+        Create opening code.
+
+        In case of DokuWiki, this is usually empty, except in cases where
+        you have added a caption. In the latter case, code consistent with
+        the DokuWiki caption plugin will be output, like so:
+
+        .. code-block:: xml
+
+            <table>
+            <caption>*Caption title* Caption text</caption>
+
+
+        To make this work in your DokuWiki, make sure to have the caption
+        plugin installed.
+
+
+        Parameters
+        ----------
+        columns : :class:`int`
+            Number of columns of the table
+
+        caption : :class:`Caption`
+            (optional) table caption
+
+            For details, see the :class:`Caption` class documentation.
+
+            Only if one of the properties of :class:`Caption` contains
+            content, the caption will be considered.
+
+            Having a caption requires DokuWiki to create an additional
+            table environment surrounding the actual table. As this needs to
+            be closed, the closing needs to have the information regarding
+            the caption.
+
+        Returns
+        -------
+        opening : :class:`str`
+            Code for opening the environment
+
+        """
+        opening = ''
+        if caption and (caption.title or caption.text):
+            opening = '\n'.join([
+                '<table>',
+                '<caption>{}</caption>'.format(self._caption_string(caption))
+            ])
+        return opening
+
+    @staticmethod
+    def _caption_string(caption=None):
+        caption_string = []
+        if caption.title:
+            caption_string.append('*{}*'.format(caption.title))
+        caption_string.append(caption.text)
+        return ' '.join(caption_string).rstrip()
+
+    def closing(self, caption=None):
+        """
+        Create closing code.
+
+        In case of DokuWiki, this is usually empty, except in cases where
+        you have added a caption. In the latter case, code consistent with
+        the DokuWiki caption plugin will be output, like so:
+
+        .. code-block:: xml
+
+            </table>
+
+
+        To make this work in your DokuWiki, make sure to have the caption
+        plugin installed.
+
+
+        Parameters
+        ----------
+        caption : :class:`Caption`
+            (optional) table caption
+
+            For details, see the :class:`Caption` class documentation.
+
+            Only if one of the properties of :class:`Caption` contains
+            content, the caption will be considered.
+
+            Having a caption requires DokuWiki to create an additional
+            table environment surrounding the actual table. As this needs to
+            be closed, the closing needs to have the information regarding
+            the caption.
+
+        Returns
+        -------
+        closing : :class:`str`
+            Code for closing the environment
+
+        """
+        closing = ''
+        if caption and (caption.title or caption.text):
+            closing = '</table>'
+        return closing
+
 
 class LatexFormat(Format):
     r"""
@@ -929,7 +1277,7 @@ class LatexFormat(Format):
         """
         return r'\bottomrule'
 
-    def opening(self, columns=None):
+    def opening(self, columns=None, caption=None):
         r"""
         Create opening code.
 
@@ -949,15 +1297,42 @@ class LatexFormat(Format):
         columns : :class:`int`
             Number of columns of the table
 
+        caption : :class:`Caption`
+            (optional) table caption
+
+            For details, see the :class:`Caption` class documentation.
+
+            Only if one of the properties of :class:`Caption` contains
+            content, the caption will be considered.
+
+            Having a caption requires LaTeX to create an additional
+            table environment surrounding the actual table. As this needs to
+            be closed, the closing needs to have the information regarding
+            the caption.
+
         Returns
         -------
         opening : :class:`str`
             Code for opening the environment
 
         """
-        return r'\begin{tabular}{' + columns * 'l' + r'}'
+        opening = r'\begin{tabular}{' + columns * 'l' + r'}'
+        if caption and (caption.title or caption.text):
+            opening = '\n'.join([
+                r'\begin{table}',
+                r'\caption{' + self._caption_string(caption=caption) + r'}',
+                opening])
+        return opening
 
-    def closing(self):
+    @staticmethod
+    def _caption_string(caption):
+        caption_string = []
+        if caption.title:
+            caption_string.append(r'\textbf{' + caption.title + r'}')
+        caption_string.append(caption.text)
+        return ' '.join(caption_string).rstrip()
+
+    def closing(self, caption=None):
         r"""
         Create closing code.
 
@@ -968,10 +1343,57 @@ class LatexFormat(Format):
             \end{tabular}
 
 
+        Parameters
+        ----------
+        caption : :class:`Caption`
+            (optional) table caption
+
+            For details, see the :class:`Caption` class documentation.
+
+            Only if one of the properties of :class:`Caption` contains
+            content, the caption will be considered.
+
+            Having a caption requires LaTeX to create an additional
+            table environment surrounding the actual table. As this needs to
+            be closed, the closing needs to have the information regarding
+            the caption.
+
         Returns
         -------
         closing : :class:`str`
             Code for closing the environment
 
         """
-        return r'\end{tabular}'
+        closing = r'\end{tabular}'
+        if caption and (caption.title or caption.text):
+            closing = '\n'.join([closing, r'\end{table}'])
+        return closing
+
+
+class Caption(utils.Properties):
+    """
+    Caption for tables.
+
+    Attributes
+    ----------
+    title: :class:`str`
+        usually one sentence describing the intent of the table
+
+        Often plotted bold-face in a table caption.
+
+    text: :class:`str`
+        additional text directly following the title
+
+        Contains more information about the table. Ideally, a table caption
+        is self-contained such that it explains the table sufficiently to
+        understand its intent and content without needing to read all the
+        surrounding text.
+
+    .. versionadded:: 0.5
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.title = ''
+        self.text = ''

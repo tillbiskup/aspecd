@@ -1,3 +1,4 @@
+import textwrap
 import unittest
 
 import numpy as np
@@ -391,6 +392,19 @@ class TestTable(unittest.TestCase):
         self.table.tabulate()
         self.assertEqual(r'\midrule', self.table.table.split('\n')[3])
 
+    def test_with_caption(self):
+        caption = table.Caption()
+        caption.title = 'Lorem ipsum dolor sit amet'
+        self.dataset.data.data = np.ones([3, 3])
+        index = ['foo', 'bar', 'baz']
+        self.dataset.data.axes[0].index = index
+        self.dataset.data.axes[1].index = index
+        self.table.dataset = self.dataset
+        self.table.caption = caption
+        self.table.tabulate()
+        self.assertEqual(caption.title, self.table.table.split('\n')[0])
+        self.assertEqual('', self.table.table.split('\n')[1])
+
 
 class TestFormat(unittest.TestCase):
     def setUp(self):
@@ -448,9 +462,34 @@ class TestFormat(unittest.TestCase):
     def test_opening_with_columns(self):
         self.format.opening(columns=5)
 
+    def test_opening_with_columns_and_caption(self):
+        self.format.opening(columns=5, caption=table.Caption())
+
+    def test_opening_with_caption_returns_caption(self):
+        caption = table.Caption()
+        caption.title = 'Lorem ipsum'
+        expected_opening = '\n'.join(textwrap.wrap(caption.title)) + '\n'
+        opening = self.format.opening(caption=caption)
+        self.assertEqual(expected_opening, opening)
+
+    def test_opening_with_caption_with_title_and_text(self):
+        caption = table.Caption()
+        caption.title = 'Lorem ipsum'
+        caption.text = 'dolor sit amet, consectetur adipiscing elit. ' \
+                       'Curabitur commodo tempor vulputate. Sed placerat ' \
+                       'ultricies ex. Donec iaculis ipsum non felis mattis, ' \
+                       'quis mollis urna pharetra'
+        expected_opening = '\n'.join(textwrap.wrap(
+            ' '.join([caption.title, caption.text]))) + '\n'
+        opening = self.format.opening(caption=caption)
+        self.assertEqual(expected_opening, opening)
+
     def test_has_closing_method(self):
         self.assertTrue(hasattr(self.format, 'closing'))
         self.assertTrue(callable(self.format.closing))
+
+    def test_closing_with_caption(self):
+        self.format.closing(caption=table.Caption())
 
     def test_begin_environment_returns_string(self):
         self.assertIsInstance(self.format.closing(), str)
@@ -524,6 +563,38 @@ class TestDokuwikiFormat(unittest.TestCase):
     def test_bottom_rule_is_empty(self):
         self.assertEqual('', self.format.bottom_rule())
 
+    def test_opening_without_caption_is_empty(self):
+        self.assertEqual('', self.format.opening())
+
+    def test_opening_with_caption(self):
+        caption = table.Caption()
+        caption.title = 'Lorem ipsum'
+        expected_opening = \
+            '\n'.join(['<table>', 
+                       '<caption>*{}*</caption>'.format(caption.title)])
+        opening = self.format.opening(caption=caption)
+        self.assertEqual(expected_opening, opening)
+
+    def test_opening_with_caption_with_title_and_text(self):
+        caption = table.Caption()
+        caption.title = 'Lorem ipsum'
+        caption.text = 'dolor sit amet'
+        expected_opening = \
+            '\n'.join(['<table>',
+                       '<caption>*{}* {}</caption>'.format(caption.title,
+                                                           caption.text)])
+        opening = self.format.opening(caption=caption)
+        self.assertEqual(expected_opening, opening)
+
+    def test_closing_without_caption_is_empty(self):
+        self.assertEqual('', self.format.closing())
+
+    def test_closing_with_caption(self):
+        caption = table.Caption()
+        caption.title = 'Lorem ipsum'
+        closing = self.format.closing(caption=caption)
+        self.assertEqual('</table>', closing)
+
 
 class TestLatexFormat(unittest.TestCase):
     def setUp(self):
@@ -540,3 +611,51 @@ class TestLatexFormat(unittest.TestCase):
 
     def test_bottom_rule(self):
         self.assertEqual(r'\bottomrule', self.format.bottom_rule())
+
+    def test_opening_with_caption_adds_table_environment_and_caption(self):
+        caption = table.Caption()
+        caption.title = 'Lorem ipsum'
+        expected_opening = \
+            '\n'.join([r'\begin{table}',
+                       r'\caption{\textbf{' + caption.title + r'}}',
+                       r'\begin{tabular}{l}'])
+        opening = self.format.opening(columns=1, caption=caption)
+        self.assertEqual(expected_opening, opening)
+
+    def test_opening_with_caption_title_and_text(self):
+        caption = table.Caption()
+        caption.title = 'Lorem ipsum'
+        caption.text = 'dolor sit amet'
+        caption_text = r'\caption{\textbf{' + caption.title + r'} ' + \
+                       caption.text + r'}'
+        opening = self.format.opening(columns=1, caption=caption)
+        self.assertEqual(caption_text, opening.splitlines()[1])
+
+    def test_closing_with_caption_adds_table_environment(self):
+        caption = table.Caption()
+        caption.title = 'Lorem ipsum'
+        expected_closing = '\n'.join([r'\end{tabular}', r'\end{table}'])
+        closing = self.format.closing(caption=caption)
+        self.assertEqual(expected_closing, closing)
+
+
+class TestCaption(unittest.TestCase):
+    def setUp(self):
+        self.caption = table.Caption()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.caption, 'to_dict'))
+        self.assertTrue(callable(self.caption.to_dict))
+
+    def test_has_from_dict_method(self):
+        self.assertTrue(hasattr(self.caption, 'from_dict'))
+        self.assertTrue(callable(self.caption.from_dict))
+
+    def test_has_title_property(self):
+        self.assertTrue(hasattr(self.caption, 'title'))
+
+    def test_has_text_property(self):
+        self.assertTrue(hasattr(self.caption, 'text'))
