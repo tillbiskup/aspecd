@@ -792,6 +792,9 @@ class BasicCharacteristics(SingleAnalysisStep):
 
             Valid values are "min", "max", "amplitude", and "area".
 
+            A special kind is "all", returning all characteristics. In this
+            case, output can only be "value" (the default).
+
         output : :class:`str`
             Kind of output: (intensity) value, axes value(s), or axes indices
 
@@ -801,7 +804,7 @@ class BasicCharacteristics(SingleAnalysisStep):
 
             Default: "value"
 
-    result :
+    result : :class:`float` | :class:`list`
         Characteristic(s) of the dataset.
 
         The actual return type depends on the type of characteristics and
@@ -812,8 +815,30 @@ class BasicCharacteristics(SingleAnalysisStep):
         ========================= ============= ==============
         min, max, amplitude, area value         :class:`float`
         min, max                  axes, indices :class:`list`
-        all                       value         :class:`dict`
+        all                       value         :class:`list`
         ========================= ============= ==============
+
+        The corresponding kind is set as index, hence it will be used by
+        :class:`AggregatedAnalysisStep` and included in the dataset output
+        by this step - and hence in tabular output created by
+        :class:`aspecd.table.Table`.
+
+    index : :class:`list`
+        Label for each element in :attr:`result`
+
+        Always reflecting the kind of characteristic(s) asked for. In case
+        of asking for values, it is a list of the kinds. In case of the
+        output set to axes or indices, it will be the kind followed by
+        either the axis quantity or "index#".
+
+        Assuming a 2D dataset with axes quantities set to "wavelength" and
+        "time" and asking for the minimum, the index will be
+        ``['min(wavelength)', 'min(time)']`` in case of output set to
+        axes, and ``['min(index0)', 'min(index1)']`` in case of output
+        set to indices.
+
+        The index will be used, *e.g.*, by :class:`AggregatedAnalysisStep`
+        and in tabular representations of the results.
 
 
     Raises
@@ -868,7 +893,8 @@ class BasicCharacteristics(SingleAnalysisStep):
     "amplitude" have no analogon on the axes.
 
     Sometimes, you are interested in getting the values of all
-    characteristics at once in form of a dictionary:
+    characteristics at once in form of a list, with the kind stored in
+    :attr:`index`:
 
     .. code-block:: yaml
 
@@ -884,6 +910,12 @@ class BasicCharacteristics(SingleAnalysisStep):
     above.
 
     .. versionadded:: 0.2
+
+    .. versionchanged:: 0.5
+
+        :attr:`result` is either scalar or list in all cases,
+        and :attr:`index` is set to kind, for use with
+        :class:`AggregatedAnalysisStep` and tabular output.
 
     """
 
@@ -914,12 +946,9 @@ class BasicCharacteristics(SingleAnalysisStep):
                 kind=self.parameters["kind"],
                 output=self.parameters["output"])
         if self.parameters["kind"] == "all":
-            self.result = {
-                'min': self._get_characteristic("min"),
-                'max': self._get_characteristic("max"),
-                'amplitude': self._get_characteristic("amplitude"),
-                'area': self._get_characteristic("area"),
-            }
+            self.result = []
+            for kind in ['min', 'max', 'amplitude', 'area']:
+                self.result.append(self._get_characteristic(kind))
 
     def _get_characteristic(self, kind=None, output="value"):
         function = getattr(self, '_get_characteristic_' + output)
@@ -935,6 +964,7 @@ class BasicCharacteristics(SingleAnalysisStep):
             result = np.ptp(self.dataset.data.data)
         if kind == "area":
             result = self.dataset.data.data.sum()
+        self.index.append(kind)
         return result
 
     def _get_characteristic_axes(self, kind=None):
@@ -945,12 +975,16 @@ class BasicCharacteristics(SingleAnalysisStep):
                                    self.dataset.data.data.shape)
             for dim in range(self.dataset.data.data.ndim):
                 result.append(self.dataset.data.axes[dim].values[idx[dim]])
+                self.index.append(
+                    '{}({})'.format(kind, self.dataset.data.axes[dim].quantity))
         if kind == "max":
             result = []
             idx = np.unravel_index(self.dataset.data.data.argmax(),
                                    self.dataset.data.data.shape)
             for dim in range(self.dataset.data.data.ndim):
                 result.append(self.dataset.data.axes[dim].values[idx[dim]])
+                self.index.append(
+                    '{}({})'.format(kind, self.dataset.data.axes[dim].quantity))
         return result
 
     def _get_characteristic_indices(self, kind=None):
@@ -958,9 +992,13 @@ class BasicCharacteristics(SingleAnalysisStep):
         if kind == "min":
             result = list(np.unravel_index(self.dataset.data.data.argmin(),
                                            self.dataset.data.data.shape))
+            for dim in range(self.dataset.data.data.ndim):
+                self.index.append('{}(index{})'.format(kind, dim))
         if kind == "max":
             result = list(np.unravel_index(self.dataset.data.data.argmax(),
                                            self.dataset.data.data.shape))
+            for dim in range(self.dataset.data.data.ndim):
+                self.index.append('{}(index{})'.format(kind, dim))
         return result
 
 

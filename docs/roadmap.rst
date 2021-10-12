@@ -8,10 +8,6 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.5
 ===============
 
-* Analysis and tabular representation of data
-
-  * Modify :class:`aspecd.analysis.BasicCharacteristics` to better work with :class:`aspecd.analysis.AggregatedAnalysisStep`
-
 
 For version 0.6
 ===============

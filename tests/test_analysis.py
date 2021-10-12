@@ -372,6 +372,11 @@ class TestBasicCharacteristics(unittest.TestCase):
         analysis = self.dataset.analyse(self.analysis)
         self.assertEqual(self.dataset.data.data.min(), analysis.result)
 
+    def test_min_sets_kind_in_index(self):
+        self.analysis.parameters["kind"] = "min"
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertEqual([self.analysis.parameters["kind"]], analysis.index)
+
     def test_max(self):
         self.analysis.parameters["kind"] = "max"
         analysis = self.dataset.analyse(self.analysis)
@@ -399,7 +404,8 @@ class TestBasicCharacteristics(unittest.TestCase):
             'area': self.dataset.data.data.sum(),
         }
         analysis = self.dataset.analyse(self.analysis)
-        self.assertEqual(result_dict, analysis.result)
+        self.assertEqual(list(result_dict.values()), analysis.result)
+        self.assertEqual(list(result_dict.keys()), analysis.index)
 
     def test_min_with_axes_output(self):
         self.analysis.parameters["kind"] = "min"
@@ -409,6 +415,14 @@ class TestBasicCharacteristics(unittest.TestCase):
             [self.dataset.data.axes[0].values[self.dataset.data.data.argmin()]]
         self.assertEqual(result, analysis.result)
 
+    def test_min_with_axes_output_sets_index(self):
+        self.analysis.parameters["kind"] = "min"
+        self.analysis.parameters["output"] = "axes"
+        self.dataset.data.axes[0].quantity = 'foo'
+        analysis = self.dataset.analyse(self.analysis)
+        index = ['min(foo)']
+        self.assertEqual(index, analysis.index)
+
     def test_max_with_axes_output(self):
         self.analysis.parameters["kind"] = "max"
         self.analysis.parameters["output"] = "axes"
@@ -417,17 +431,39 @@ class TestBasicCharacteristics(unittest.TestCase):
             [self.dataset.data.axes[0].values[self.dataset.data.data.argmax()]]
         self.assertEqual(result, analysis.result)
 
+    def test_max_with_axes_output_sets_index(self):
+        self.analysis.parameters["kind"] = "max"
+        self.analysis.parameters["output"] = "axes"
+        self.dataset.data.axes[0].quantity = 'foo'
+        analysis = self.dataset.analyse(self.analysis)
+        index = ['max(foo)']
+        self.assertEqual(index, analysis.index)
+
     def test_min_with_indices_output(self):
         self.analysis.parameters["kind"] = "min"
         self.analysis.parameters["output"] = "indices"
         analysis = self.dataset.analyse(self.analysis)
         self.assertEqual([self.dataset.data.data.argmin()], analysis.result)
 
+    def test_min_with_indices_output_sets_index(self):
+        self.analysis.parameters["kind"] = "min"
+        self.analysis.parameters["output"] = "indices"
+        analysis = self.dataset.analyse(self.analysis)
+        index = ['min(index0)']
+        self.assertEqual(index, analysis.index)
+
     def test_max_with_indices_output(self):
         self.analysis.parameters["kind"] = "max"
         self.analysis.parameters["output"] = "indices"
         analysis = self.dataset.analyse(self.analysis)
         self.assertEqual([self.dataset.data.data.argmax()], analysis.result)
+
+    def test_max_with_indices_output_sets_index(self):
+        self.analysis.parameters["kind"] = "max"
+        self.analysis.parameters["output"] = "indices"
+        analysis = self.dataset.analyse(self.analysis)
+        index = ['max(index0)']
+        self.assertEqual(index, analysis.index)
 
     def test_area_or_amplitude_with_axes_output_raises(self):
         characteristics = ["area", "amplitude"]
@@ -485,7 +521,7 @@ class TestBasicCharacteristics(unittest.TestCase):
             'area': self.dataset3d.data.data.sum(),
         }
         analysis = self.dataset3d.analyse(self.analysis)
-        self.assertEqual(result_dict, analysis.result)
+        self.assertEqual(list(result_dict.values()), analysis.result)
 
     def test_min_with_axes_output_with_3d_data(self):
         self.analysis.parameters["kind"] = "min"

@@ -22,6 +22,7 @@ New features
 * Datasets
 
   * New attribute :attr:`aspecd.dataset.Axis.index` (for individual labels for each data point, similar to pandas and for tabular data)
+  * :meth:`aspecd.dataset.Dataset.tabulate` to create tables from datasets
 
 * Analysis steps
 
@@ -36,6 +37,12 @@ New features
 * Utils
 
   * :func:`aspecd.utils.get_package_data` for obtaining package data (*i.e.*, non-code files contained in distribution)
+
+
+Changes
+-------
+
+* :class:`aspecd.analysis.BasicCharacteristics` always returns scalars or lists in its results and writes index (for compatibility with :class:`aspecd.analysis.AggregatedAnalysisStep` and tabular output).
 
 
 Version 0.4.0

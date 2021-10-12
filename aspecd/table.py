@@ -1,6 +1,13 @@
 r"""
 Tabular representation of datasets.
 
+.. sidebar:: Contents
+
+    .. contents::
+        :local:
+        :depth: 1
+
+
 While spectroscopic data are usually presented graphically (see
 the :mod:`aspecd.plotting` module for details), there are cases where a
 tabular representation is useful or even necessary.
@@ -22,12 +29,13 @@ Why this module?
 ================
 
 While there are several Python packages available capable of formatting tables
-(PrettyTable, Tablib, pandas), all these do much more than only formatting
-tables, but are designed to work with tables as well, *i.e.* modifying and
-filtering the table contents. This is, however, not needed in the given
-context, hence the attempt to create a rather lightweight implementation.
+(PrettyTable, Tablib, pandas, to name but a few), all these do much more than
+only formatting tables, but are designed to work with tables as well, *i.e.*
+modifying and filtering the table contents. This is, however, not needed in
+the given context, hence the attempt to create a rather lightweight
+implementation.
 
-The implementation focusses on the following aspects:
+The implementation focuses on the following aspects:
 
   * Tabulation of 1D and 2D datasets
   * Primarily textual output
@@ -209,7 +217,7 @@ format, you can of course implement one on your own, by subclassing
 :class:`Format`. However, out of the box there are already a number of
 formats, from plain (default, shown above) to text to reStructuredText (rst),
 DokuWiki, and LaTeX. To give you a quick overview, we will create a dataset
-with both, row indices and colum headers, and show the different formats.
+with both, row indices and column headers, and show the different formats.
 
 
 .. code-block::
@@ -353,7 +361,7 @@ Captions
 ========
 
 Tables can and should have captions that describe the content, as rarely the
-numbers (and row indices and colum headers) stand on their own. Hence,
+numbers (and row indices and column headers) stand on their own. Hence,
 you can add a table caption to a table. As writing a caption is necessarily a
 manual task, it would only be fair if the table output would include this
 caption. For formats such as DokuWiki and LaTeX, it is fairly obvious how to

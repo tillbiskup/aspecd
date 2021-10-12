@@ -100,12 +100,13 @@ class ProcessingStepRecord(aspecd.utils.ToDictMixin):
     """Base class for processing step records stored in the dataset history.
 
     The history of a :class:`aspecd.dataset.Dataset` should *not* contain
-    references to :class:`aspecd.processing.SingleProcessingStep` objects, but rather
-    records that contain all necessary information to create the respective
-    objects inherited from :class:`aspecd.processing.SingleProcessingStep`. One
-    reason for this is simply that we want to import datasets containing
-    processing steps in their history for which no corresponding processing
-    class exists in the current installation of the application.
+    references to :class:`aspecd.processing.SingleProcessingStep` objects,
+    but rather records that contain all necessary information to create the
+    respective objects inherited from
+    :class:`aspecd.processing.SingleProcessingStep`. One reason for this is
+    simply that we want to import datasets containing processing steps in
+    their history for which no corresponding processing class exists in the
+    current installation of the application.
 
     .. note::
         Each history entry in a dataset stores the processing as a
