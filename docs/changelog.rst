@@ -8,7 +8,7 @@ This page contains a summary of changes between the official ASpecD releases. On
 Version 0.5.0
 =============
 
-Not yet released
+Released 2021-10-12
 
 New features
 ------------
