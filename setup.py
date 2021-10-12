@@ -58,7 +58,7 @@ setuptools.setup(
         'dev': ['prospector'],
         'docs': ['sphinx', 'sphinx-rtd-theme'],
     },
-    python_requires='>=3.5',
+    python_requires='>=3.7',
     entry_points={
         'console_scripts': [
             'serve = aspecd.tasks:serve',

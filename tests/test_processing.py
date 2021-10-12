@@ -2073,9 +2073,9 @@ class TestNoise(unittest.TestCase):
         self.processing.parameters['exponent'] = -1
         self.dataset2d.process(self.processing)
         self.assertAlmostEqual(-1., self.slope_of_power_spectral_density(
-            self.dataset2d.data.data[:, 0]), delta=0.1)
+            self.dataset2d.data.data[:, 0]), delta=0.16)
         self.assertAlmostEqual(0., self.slope_of_power_spectral_density(
-            self.dataset2d.data.data[0, :]), delta=0.15)
+            self.dataset2d.data.data[0, :]), delta=0.16)
 
     def test_3d_dataset(self):
         self.dataset3d.process(self.processing)
