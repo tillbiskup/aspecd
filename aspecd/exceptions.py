@@ -225,6 +225,21 @@ class MissingProcessingStepError(Error):
         self.message = message
 
 
+class MissingAnalysisStepError(Error):
+    """Exception raised trying to analyse without analysis_step
+
+    Attributes
+    ----------
+    message : :class:`str`
+        explanation of the error
+
+    """
+
+    def __init__(self, message=''):
+        super().__init__(message)
+        self.message = message
+
+
 class UndoWithEmptyHistoryError(Error):
     """Exception raised trying to undo with empty history
 
@@ -332,36 +347,6 @@ class AxesCountError(Error):
 
 class AxesValuesInconsistentWithDataError(Error):
     """Exception raised for axes values inconsistent with data
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__(message)
-        self.message = message
-
-
-class AxisValuesDimensionError(Error):
-    """Exception raised for wrong dimension of values
-
-    Attributes
-    ----------
-    message : :class:`str`
-        explanation of the error
-
-    """
-
-    def __init__(self, message=''):
-        super().__init__(message)
-        self.message = message
-
-
-class AxisValuesTypeError(Error):
-    """Exception raised for wrong type of values
 
     Attributes
     ----------

@@ -5,6 +5,46 @@ Changelog
 This page contains a summary of changes between the official ASpecD releases. Only the biggest changes are listed here. A complete and detailed log of all changes is available through the `GitHub Repository Browser <https://github.com/tillbiskup/aspecd/commits/master>`_.
 
 
+Version 0.5.0
+=============
+
+Released 2021-10-12
+
+New features
+------------
+
+* Tasks/Recipe-driven data analysis
+
+  * YAML representation of tasks and recipes using :meth:`aspecd.tasks.Task.to_yaml` and :meth:`aspecd.tasks.Recipe.to_yaml` - convenience methods for later use in guided recipe generation
+  * :class:`aspecd.tasks.AggregatedanalysisTask` for performing a SingleAnalysisStep on a series of datasets, aggregating the result in a CalculatedDataset
+  * :class:`aspecd.tasks.TabulateTask` for tabular representation of data of a dataset
+
+* Datasets
+
+  * New attribute :attr:`aspecd.dataset.Axis.index` (for individual labels for each data point, similar to pandas and for tabular data)
+  * :meth:`aspecd.dataset.Dataset.tabulate` to create tables from datasets
+
+* Analysis steps
+
+  * New class :class:`aspecd.analysis.AggregatedAnalysisStep` for aggregating the results of a SingleAnalysisStep on multiple datasets in a CalculatedDataset
+
+* Tabular representation of datasets
+
+  * New module :mod:`aspecd.table`
+  * Series of output formats for tables (including DokuWiki and LaTeX)
+  * Tables can have captions that are output as well
+
+* Utils
+
+  * :func:`aspecd.utils.get_package_data` for obtaining package data (*i.e.*, non-code files contained in distribution)
+
+
+Changes
+-------
+
+* :class:`aspecd.analysis.BasicCharacteristics` always returns scalars or lists in its results and writes index (for compatibility with :class:`aspecd.analysis.AggregatedAnalysisStep` and tabular output).
+
+
 Version 0.4.0
 =============
 

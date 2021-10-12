@@ -589,18 +589,20 @@ Currently, the following subclasses are implemented:
      * :class:`aspecd.tasks.MultiplotTask`
      * :class:`aspecd.tasks.CompositeplotTask`
 
+  * :class:`aspecd.tasks.TabulateTask`
   * :class:`aspecd.tasks.ReportTask`
   * :class:`aspecd.tasks.ModelTask`
   * :class:`aspecd.tasks.ExportTask`
 
-As you can see from the above list, there are (currently) two special cases
-of kinds of tasks: analysis and plot tasks. Usually, you will set the
-``kind`` of a task in a recipe to the module the class eventually performing
-the task resides in. As both, analyses and plots can either span one or
-several datasets, here we have to discriminate. Therefore, it is *essential*
-that you take care to set the ``kind`` value in your recipe for these kinds
-of tasks to ``singleanalysis`` or ``multianalysis``, respectively. the same
-is true for plots. To make this a bit easier to follow, see the example below.
+As you can see from the above list, there are (currently) three special cases
+of kinds of tasks: processing, analysis and plot tasks. Usually, you will
+set the ``kind`` of a task in a recipe to the module the class eventually
+performing the task resides in. As both, analyses and plots can either span
+one or several datasets, here we have to discriminate. Therefore,
+it is *essential* that you take care to set the ``kind`` value in your
+recipe for these kinds of tasks to ``singleanalysis`` or ``multianalysis``,
+respectively. the same is true for plots. To make this a bit easier to
+follow, see the example below.
 
 .. code-block:: yaml
 
@@ -1183,6 +1185,64 @@ class Recipe:
         return not aspecd.utils.full_class_name(dataset).startswith(tuple(
             package_names))
 
+    def to_yaml(self):
+        """
+        Create YAML representation of recipe.
+
+        As users will interact with recipes primarily in form of YAML files,
+        this method conveniently returns the YAML representation of an empty
+        recipe that can serve as a starting point for own recipes.
+
+        Returns
+        -------
+        yaml : :class:`str`
+            YAML representation of a recipe
+
+
+        Examples
+        --------
+        To get the YAML representation of an empty recipe, create a recipe
+        object and call this method:
+
+        .. code-block::
+
+            recipe = aspecd.tasks.Recipe()
+            print(recipe.to_yaml())
+
+        The result of the last line (the print statement from above) will
+        look as follows:
+
+        .. code-block:: yaml
+
+            format:
+              type: ASpecD recipe
+              version: '0.2'
+            settings:
+              default_package: ''
+              autosave_plots: true
+              write_history: true
+            directories:
+              output: ''
+              datasets_source: ''
+            datasets: []
+            tasks: []
+
+        As you can see, you will get the full set of settings currently
+        allowed within a recipe. Not all of them are strictly necessary,
+        and for details, you still need to look into the documentation.
+        But this can make it much easier to start with writing recipes.
+
+        Similarly, you can get YAML representations of tasks that you can
+        add to your recipe. For details, see the documentation of the
+        :meth:`Task.to_yaml` method.
+
+        .. versionadded:: 0.5
+
+        """
+        yaml = aspecd.utils.Yaml()
+        yaml.dict = self.to_dict()
+        return yaml.write_stream()
+
     def import_from(self, importer=None):
         """
         Import recipe using importer.
@@ -1416,12 +1476,8 @@ class Chef:
                 self.history["tasks"].extend(task_history)
             else:
                 self.history["tasks"].append(task_history)
-        try:
-            self.history["info"]["end"] = \
-                datetime.datetime.now().isoformat(timespec=self._timespec)
-        except TypeError:
-            self.history["info"]["end"] = \
-                datetime.datetime.now().isoformat(sep='T')
+        self.history["info"]["end"] = \
+            datetime.datetime.now().isoformat(timespec=self._timespec)
 
     def _assign_recipe(self, recipe):
         if not recipe:
@@ -1431,11 +1487,7 @@ class Chef:
             self.recipe = recipe
 
     def _prepare_history(self):
-        try:
-            timestamp = datetime.datetime.now().isoformat(
-                timespec=self._timespec)
-        except TypeError:
-            timestamp = datetime.datetime.now().isoformat(sep='T')
+        timestamp = datetime.datetime.now().isoformat(timespec=self._timespec)
         self.history["info"] = {'start': timestamp, 'end': ''}
         system_info = aspecd.system.SystemInfo(self.recipe.default_package)
         self.history["system_info"] = system_info.to_dict()
@@ -1619,9 +1671,13 @@ class Task(aspecd.utils.ToDictMixin):
         if 'parameters' in self.properties:
             self._replace_objects_with_labels(self.properties["parameters"])
         self._replace_objects_with_labels(self.properties)
+        if not self.kind:
+            self.kind = self.__class__.__name__[:-4].lower()
         return super().to_dict()
 
-    def _replace_objects_with_labels(self, dict_=None):
+    def _replace_objects_with_labels(self, dict_=None):  # noqa: MC0001
+        if not self.recipe:
+            return
         for property_key, property_value in dict_.items():
             for dataset_key, dataset_value in self.recipe.datasets.items():
                 if property_value is dataset_value:
@@ -1635,6 +1691,69 @@ class Task(aspecd.utils.ToDictMixin):
             for plotter_key, plotter_value in self.recipe.plotters.items():
                 if property_value is plotter_value:
                     dict_[property_key] = plotter_key
+
+    def to_yaml(self):
+        """
+        Create YAML representation of task.
+
+        As users will use tasks primarily within recipes, *i.e.* in YAML
+        files, this method conveniently returns the YAML representation of a
+        task.
+
+        Returns
+        -------
+        yaml : :class:`str`
+            YAML representation of a task
+
+
+        Examples
+        --------
+        To get the YAML representation of a concrete task, you need to
+        create a task object of the appropriate class and assign a type to it:
+
+        .. code-block::
+
+            task = aspecd.tasks.ProcessingTask()
+            task.type = 'Normalisation'
+            print(task.to_yaml())
+
+        The result of the last line (the print statement from above) will
+        look as follows:
+
+        .. code-block:: yaml
+
+            kind: processing
+            type: Normalisation
+            properties:
+              parameters:
+                kind: maximum
+                range: null
+                range_unit: index
+                noise_range: null
+                noise_range_unit: percentage
+            apply_to: []
+            result: ''
+            comment: ''
+
+        As you can see, you will get the full set of settings for this
+        particular task. Not all of them are strictly necessary, and for
+        details, you still need to look into the respective documentation.
+        But this can make it much easier to add tasks to a recipe.
+
+        Similarly, you can get YAML representations of an empty recipe where
+        you can add to your tasks to. For details, see the documentation of the
+        :meth:`Recipe.to_yaml` method.
+
+        .. versionadded:: 0.5
+
+        """
+        if not self._task and self.type:
+            if not self.kind:
+                self.kind = self.__class__.__name__[:-4].lower()
+            self._task = self.get_object()
+        yaml = aspecd.utils.Yaml()
+        yaml.dict = self.to_dict()
+        return yaml.write_stream()
 
     def perform(self):
         """
@@ -2389,6 +2508,51 @@ class MultianalysisTask(AnalysisTask):
         self.recipe.results[label] = result
 
 
+class AggregatedanalysisTask(AnalysisTask):
+    """
+    Analysis step defined as task in recipe-driven data analysis.
+
+    AggregatedAnalysis steps perform a given
+    :class:`aspecd.tasks.SingleanalysisTask` on a list of datasets and combine
+    the result in a :class:`aspecd.dataset.CalculatedDataset`.
+
+    For more information on the underlying general class,
+    see :class:`aspecd.analysis.AggregatedAnalysisStep`.
+
+    For an example of how such an analysis task may be included into a
+    recipe, see the YAML listing below:
+
+    .. code-block:: yaml
+
+        - kind: aggregatedanalysis
+          type: BasicCharacteristics
+          properties:
+            parameters:
+              kind: min
+          apply_to:
+            - dataset1
+            - dataset2
+          result: basic_characteristics
+
+
+    .. versionadded:: 0.5
+
+    """
+
+    # noinspection PyUnresolvedReferences
+    def _perform(self):
+        logger.info('Perform "%s" on datasets "%s" resulting in "%s"',
+                    self.type, ', '.join(self.apply_to), self.result)
+        analysis_step = self.type
+        self.type = 'AggregatedAnalysisStep'
+        self._task = self.get_object()
+        self._task.analysis_step = analysis_step
+        self._task.datasets = self.recipe.get_datasets(self.apply_to)
+        self._task.analyse()
+        if self.result:
+            self.recipe.results[self.result] = self._task.result
+
+
 class AnnotationTask(Task):
     """
     Annotation step defined as task in recipe-driven data analysis.
@@ -2456,8 +2620,8 @@ class PlotTask(Task):
         original plot contained and the new plot added on top of it.
 
 
-    .. versionadded:: 0.4.0
-        Attribute :attr:`target`
+    .. versionchanged:: 0.4
+        Added attribute :attr:`target`
 
     """
 
@@ -2467,6 +2631,31 @@ class PlotTask(Task):
         self.result = ''
         self.target = ''
         self._module = 'plotting'
+
+    def to_dict(self):
+        """
+        Create dictionary containing public attributes of an object.
+
+        Furthermore, replace certain objects with their respective labels
+        provided in the recipe. These objects currently include datasets,
+        results, figures (*i.e.* figure records), and plotters.
+
+        Returns
+        -------
+        public_attributes : :class:`collections.OrderedDict`
+            Ordered dictionary containing the public attributes of the object
+
+            The order of attribute definition is preserved
+
+
+        .. versionchanged:: 0.5
+            Properties of underlying task object are added
+
+        """
+        if 'properties' not in self.properties \
+                and hasattr(self._task, 'properties'):
+            self.properties["properties"] = self._task.properties.to_dict()
+        return super().to_dict()
 
     def perform(self):
         """
@@ -2532,8 +2721,8 @@ class SingleplotTask(PlotTask):
     For more information on the underlying general class,
     see :class:`aspecd.plotting.SinglePlotter`.
 
-    For an example of how such a analysis task may be included into a
-    recipe, see the YAML listing below:
+    For an example of how such a singleplot task may be included into a recipe,
+    see the YAML listing below:
 
     .. code-block:: yaml
 
@@ -2581,7 +2770,7 @@ class SingleplotTask(PlotTask):
     In case you apply the single plotter to more than one dataset and would
     like to save individual plots, you can do that by supplying a list of
     filenames instead of only a single filename. In this case, the plots get
-    saved to the filenames in the list. A minmal example may look like this:
+    saved to the filenames in the list. A minimal example may look like this:
 
     .. code-block:: yaml
 
@@ -2601,16 +2790,16 @@ class SingleplotTask(PlotTask):
         run into trouble.
 
     .. note::
-        If the recipe contains the ``output_directory`` key on the top
-        level, the figure(s) will be saved to this directory.
+        If the recipe contains the ``output`` key in its ``directories`` dict,
+        the figure(s) will be saved to this directory.
 
     As long as ``autosave_plots`` in the recipe is set to True, the plots
     will be saved automatically, even if no filename is provided. These
     automatically generated filenames consist of the last part of the
     dataset source (excluding a potential file extension) and the name of
     the plotter used. To prevent the plotters in a recipe from automatically
-    saving the plots, include the ``autosave_plots`` directive on the top
-    level of your recipe and set it to False.
+    saving the plots, include the ``autosave_plots`` directive in the
+    ``settings`` dict of your recipe and set it to False.
 
     """
 
@@ -2705,16 +2894,16 @@ class MultiplotTask(PlotTask):
         :meth:`matplotlib.figure.Figure.savefig` method.
 
     .. note::
-        If the recipe contains the ``output_directory`` key on the top
-        level, the figure(s) will be saved to this directory.
+        If the recipe contains the ``output`` key in its ``directories`` dict,
+        the figure(s) will be saved to this directory.
 
     As long as ``autosave_plots`` in the recipe is set to True, the plots
     will be saved automatically, even if no filename is provided. These
     automatically generated filenames consist of the last part of the
-    dataset sources (excluding a potential file extension) joint by underscores
-    and the name of the plotter used. To prevent the plotters in a recipe
-    from automatically saving the plots, include the ``autosave_plots``
-    directive on the top level of your recipe and set it to False.
+    dataset source (excluding a potential file extension) and the name of
+    the plotter used. To prevent the plotters in a recipe from automatically
+    saving the plots, include the ``autosave_plots`` directive in the
+    ``settings`` dict of your recipe and set it to False.
 
     """
 
@@ -2795,10 +2984,11 @@ class CompositeplotTask(PlotTask):
     subplot locations, as they will be set to one single axis by default.
 
     .. note::
-        As long as the ``autosave_plots`` directive at the top level of the
-        recipe is set to True, the results of the individual plotters
-        combined in the CompositePlotter will be saved to generic filenames.
-        To prevent this from happening, set ``autosave_plots`` to false.
+        As long as the ``autosave_plots`` in the recipe is set to True,
+        the results of the individual plotters combined in the
+        CompositePlotter will be saved to generic filenames. To prevent this
+        from happening, include the ``autosave_plots`` directive in the
+        ``settings`` dict of your recipe and set it to False.
 
     """
 
@@ -3103,6 +3293,115 @@ class ExportTask(Task):
                                            task.target)
             logger.info('Export "%s" to file "%s"', dataset_id, task.target)
             dataset.export_to(task)
+
+
+class TabulateTask(Task):
+    """
+    Tabulate step defined as task in recipe-driven data analysis.
+
+    Tables will always be created individually for each dataset.
+
+    For more information on the underlying general class,
+    see :class:`aspecd.table.Table`.
+
+    For an example of how such a tabulating task may be included into a
+    recipe, see the YAML listing below:
+
+    .. code-block:: yaml
+
+        kind: tabulate
+        type: Table
+        properties:
+          caption:
+            title: >
+              Ideally a single sentence summarising the intend of the table
+            text: >
+              More text for the table caption
+          filename: fancytable.txt
+        apply_to:
+          - loi:xxx
+
+    Note that you can refer to datasets and results created during cooking
+    of a recipe using their respective labels. Those labels will
+    automatically be replaced by the actual dataset/result prior to
+    performing the task.
+
+    .. note::
+        As soon as you provide a filename in the properties of your recipe,
+        the resulting table will automatically be saved to that filename.
+
+    In case you apply the task to more than one dataset and would like to
+    save individual tables, you can do that by supplying a list of
+    filenames instead of only a single filename. In this case, the tables get
+    saved to the filenames in the list. A minimal example may look like this:
+
+    .. code-block:: yaml
+
+        kind: tabulate
+        type: Table
+        properties:
+          filename:
+            - fancytable1.pdf
+            - fancytable2.pdf
+        apply_to:
+          - loi:xxx
+          - loi:yyy
+
+    .. important::
+        Make sure to provide the same number of file names in your recipe as
+        the number of datasets you create the tables for. Otherwise you may
+        run into trouble.
+
+    .. note::
+        If the recipe contains the ``output`` key in its ``directories`` dict,
+        the figure(s) will be saved to this directory.
+
+
+    .. versionadded:: 0.5
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self._module = 'table'
+
+    def _perform(self):
+        filenames = []
+        if "filename" in self.properties \
+                and isinstance(self.properties["filename"], list) \
+                and len(self.apply_to) == len(self.properties["filename"]):
+            filenames = self.properties["filename"]
+        for idx, dataset_id in enumerate(self.apply_to):
+            dataset = self.recipe.get_dataset(dataset_id)
+            self._task = self.get_object()
+            if filenames:
+                self._task.filename = filenames[idx]
+            logger.info('Perform "%s" on dataset "%s"', self.type, dataset_id)
+            self._task = dataset.tabulate(self._task)
+            self.save_table(self._task)
+
+    def save_table(self, table=None):
+        """
+        Save the figure of the plot created by the task.
+
+        Parameters
+        ----------
+        table : :class:`aspecd.table.Table`
+            Table whose table should be saved
+
+        """
+        filename = None
+        if table.filename:
+            filename = table.filename
+        elif 'filename' in self.properties and self.properties['filename']:
+            filename = self.properties['filename']
+        if filename:
+            if self.recipe.directories['output']:
+                filename = os.path.join(self.recipe.directories['output'],
+                                        filename)
+            logger.info('Save table from "%s" to file "%s"', self.type,
+                        filename)
+            table.save()
 
 
 class TaskFactory:
@@ -3459,7 +3758,10 @@ def serve():
             logger.setLevel(logging.DEBUG)
         else:
             logger.setLevel(logging.INFO)
-        logger.addHandler(logging.StreamHandler(stream=sys.stdout))
+        handler = logging.StreamHandler(stream=sys.stdout)
+        formatter = logging.Formatter('%(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
     chef_de_service = ChefDeService()
     try:
         chef_de_service.serve(recipe_filename=args.recipe)

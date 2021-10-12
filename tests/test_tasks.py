@@ -1,8 +1,10 @@
 """Tests for tasks."""
 import collections
+import contextlib
 import copy
 import datetime
 import glob
+import io
 import os
 import shutil
 import subprocess
@@ -13,7 +15,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 import aspecd.exceptions
-from aspecd import dataset, io, plotting, processing, report, tasks, utils
+import aspecd.io
+from aspecd import dataset, plotting, processing, report, tasks, utils
 
 
 class TestRecipe(unittest.TestCase):
@@ -25,7 +28,8 @@ class TestRecipe(unittest.TestCase):
         self.dataset_filename = 'foo'
         self.task = {'kind': 'processing', 'type': 'SingleProcessingStep'}
         self.dataset_factory = dataset.DatasetFactory()
-        self.dataset_factory.importer_factory = io.DatasetImporterFactory()
+        self.dataset_factory.importer_factory = \
+            aspecd.io.DatasetImporterFactory()
 
     def tearDown(self):
         if os.path.exists(self.filename):
@@ -87,7 +91,7 @@ class TestRecipe(unittest.TestCase):
         yaml_contents = {'tasks': [self.task]}
         with open(self.filename, 'w') as file:
             utils.yaml.dump(yaml_contents, file)
-        importer = io.RecipeYamlImporter(source=self.filename)
+        importer = aspecd.io.RecipeYamlImporter(source=self.filename)
         self.recipe.dataset_factory = self.dataset_factory
         self.recipe.import_from(importer=importer)
         for key in self.task:
@@ -98,7 +102,7 @@ class TestRecipe(unittest.TestCase):
         yaml_contents = {'tasks': [self.task]}
         with open(self.filename, 'w') as file:
             utils.yaml.dump(yaml_contents, file)
-        importer = io.RecipeYamlImporter(source=self.filename)
+        importer = aspecd.io.RecipeYamlImporter(source=self.filename)
         self.recipe.dataset_factory = self.dataset_factory
         self.recipe.import_from(importer=importer)
         self.assertEqual(self.filename, self.recipe.filename)
@@ -107,7 +111,7 @@ class TestRecipe(unittest.TestCase):
         yaml_contents = {'datasets': self.datasets}
         with open(self.filename, 'w') as file:
             utils.yaml.dump(yaml_contents, file)
-        importer = io.RecipeYamlImporter(source=self.filename)
+        importer = aspecd.io.RecipeYamlImporter(source=self.filename)
         self.recipe.dataset_factory = self.dataset_factory
         self.recipe.import_from(importer=importer)
         self.assertEqual(len(self.recipe.datasets), len(self.datasets))
@@ -120,7 +124,7 @@ class TestRecipe(unittest.TestCase):
             self.recipe.export_to()
 
     def test_export_to_yaml_exporter_writes_yaml_file(self):
-        exporter = io.RecipeYamlExporter(target=self.filename)
+        exporter = aspecd.io.RecipeYamlExporter(target=self.filename)
         self.recipe.export_to(exporter)
         to_dict_contents = self.recipe.to_dict()
         with open(self.filename, 'r') as file:
@@ -434,13 +438,19 @@ class TestRecipe(unittest.TestCase):
         self.recipe.from_dict(dict_)
         self.assertFalse(self.recipe.settings['autosave_plots'])
 
+    def test_to_yaml_returns_string(self):
+        self.assertIsInstance(self.recipe.to_yaml(), str)
+
+    def test_to_yaml_contains_format(self):
+        self.assertIn('format:', self.recipe.to_yaml())
+
 
 class TestChef(unittest.TestCase):
     def setUp(self):
         self.chef = tasks.Chef()
         self.recipe = tasks.Recipe()
         dataset_factory = dataset.DatasetFactory()
-        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
         self.recipe.dataset_factory = dataset_factory
         self.dataset = '/foo'
         self.processing_task = {'kind': 'processing',
@@ -1151,6 +1161,17 @@ class TestTask(unittest.TestCase):
         dict_ = self.task.to_dict()
         self.assertEqual(dict_["properties"]["parameters"]["foo"], "foo")
 
+    def test_to_yaml_returns_string(self):
+        self.assertIsInstance(self.task.to_yaml(), str)
+
+    def test_to_yaml_contains_kind(self):
+        self.assertIn('kind: ', self.task.to_yaml())
+
+    def test_to_yaml_with_concrete_type_contains_parameters(self):
+        self.task.kind = 'processing'
+        self.task.type = 'ProcessingStep'
+        self.assertIn('parameters: ', self.task.to_yaml())
+
 
 class TestProcessingTask(unittest.TestCase):
     def setUp(self):
@@ -1164,7 +1185,7 @@ class TestProcessingTask(unittest.TestCase):
     def prepare_recipe(self):
         self.processing_task['apply_to'] = self.dataset
         dataset_factory = dataset.DatasetFactory()
-        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
         self.recipe.dataset_factory = dataset_factory
         recipe_dict = {'datasets': self.dataset,
                        'tasks': [self.processing_task]}
@@ -1298,6 +1319,18 @@ class TestProcessingTask(unittest.TestCase):
         self.task.perform()
         dict_ = self.task.to_dict()
         self.assertEqual(dict_[0]['result'], 'result1')
+        
+    def test_to_dict_sets_kind(self):
+        dict_ = self.task.to_dict()
+        self.assertEqual('processing', dict_['kind'])
+
+    def test_to_yaml_sets_kind(self):
+        self.task.to_yaml()
+        self.assertEqual('processing', self.task.kind)
+
+    def test_to_yaml_with_actual_type(self):
+        self.task.type = 'Normalisation'
+        self.task.to_yaml()
 
 
 class TestSingleProcessingTask(unittest.TestCase):
@@ -1311,7 +1344,7 @@ class TestSingleProcessingTask(unittest.TestCase):
                                 'type': 'SingleProcessingStep',
                                 'apply_to': self.dataset}
         dataset_factory = dataset.DatasetFactory()
-        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
         self.recipe.dataset_factory = dataset_factory
         recipe_dict = {'datasets': self.dataset,
                        'tasks': [self.processing_task]}
@@ -1339,7 +1372,7 @@ class TestMultiProcessingTask(unittest.TestCase):
                                 'type': 'MultiProcessingStep',
                                 'apply_to': self.dataset}
         dataset_factory = dataset.DatasetFactory()
-        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
         self.recipe.dataset_factory = dataset_factory
         recipe_dict = {'datasets': self.dataset,
                        'tasks': [self.processing_task]}
@@ -1450,7 +1483,7 @@ class TestAnalysisTask(unittest.TestCase):
                               'type': 'AnalysisStep',
                               'apply_to': self.dataset}
         dataset_factory = dataset.DatasetFactory()
-        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
         self.recipe.dataset_factory = dataset_factory
         recipe_dict = {'datasets': self.dataset,
                        'tasks': [self.analysis_task]}
@@ -1481,9 +1514,6 @@ class TestSingleAnalysisTask(unittest.TestCase):
         self.analysis_task = {'kind': 'singleanalysis',
                               'type': 'SingleAnalysisStep',
                               'apply_to': self.dataset}
-        dataset_factory = dataset.DatasetFactory()
-        dataset_factory.importer_factory = io.DatasetImporterFactory()
-        self.recipe.dataset_factory = dataset_factory
         recipe_dict = {'datasets': self.dataset,
                        'tasks': [self.analysis_task]}
         self.recipe.from_dict(recipe_dict)
@@ -1571,7 +1601,7 @@ class TestMultiAnalysisTask(unittest.TestCase):
                               'type': 'MultiAnalysisStep',
                               'apply_to': self.dataset}
         dataset_factory = dataset.DatasetFactory()
-        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
         self.recipe.dataset_factory = dataset_factory
         recipe_dict = {'datasets': self.dataset,
                        'tasks': [self.analysis_task]}
@@ -1632,6 +1662,73 @@ class TestMultiAnalysisTask(unittest.TestCase):
             self.assertEqual(self.recipe.results[result].id, result)
 
 
+class TestAggregatedAnalysisTask(unittest.TestCase):
+    def setUp(self):
+        self.task = tasks.AggregatedanalysisTask()
+        self.recipe = tasks.Recipe()
+        self.dataset = ['foo', 'bar']
+        self.result = 'aggregated_result'
+        self.analysis_task = {'kind': 'aggregatedanalysis',
+                              'type': 'BasicCharacteristics',
+                              'properties': {'parameters': {'kind': 'min'}},
+                              'apply_to': self.dataset,
+                              'result': self.result}
+
+    def prepare_recipe(self):
+        recipe_dict = {'datasets': self.dataset,
+                       'tasks': [self.analysis_task]}
+        self.recipe.from_dict(recipe_dict)
+        self.recipe.datasets[self.dataset[0]].data.data = np.zeros(5)
+        self.recipe.datasets[self.dataset[1]].data.data = np.ones(5)
+        self.recipe.datasets[self.dataset[0]].label = self.dataset[0]
+        self.recipe.datasets[self.dataset[1]].label = self.dataset[1]
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_perform_task_returns_calculated_dataset_in_result(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.analysis_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertIsInstance(self.recipe.results[self.result],
+                              aspecd.dataset.CalculatedDataset)
+
+    def test_perform_task_sets_values_in_result(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.analysis_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertEqual(len(self.dataset),
+                         len(self.recipe.results[self.result].data.data))
+
+    def test_perform_task_sets_correct_values_in_result(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.analysis_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertEqual(0., self.recipe.results[self.result].data.data[0])
+        self.assertEqual(1., self.recipe.results[self.result].data.data[1])
+
+    def test_perform_task_sets_index_in_result(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.analysis_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertEqual(self.dataset,
+                         self.recipe.results[self.result].data.axes[0].index)
+
+    def test_perform_task_issues_log_message(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.analysis_task)
+        self.task.recipe = self.recipe
+        with self.assertLogs(__package__, level='INFO') as cm:
+            self.task.perform()
+        self.assertIn('Perform "{}" on datasets "{}" resulting in "{}"'.format(
+            self.analysis_task['type'], ', '.join(self.dataset), self.result),
+            cm.output[0])
+
+
 class TestAnnotationTask(unittest.TestCase):
     def setUp(self):
         self.task = tasks.AnnotationTask()
@@ -1643,7 +1740,7 @@ class TestAnnotationTask(unittest.TestCase):
                                 'type': 'Comment',
                                 'apply_to': self.dataset}
         dataset_factory = dataset.DatasetFactory()
-        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
         self.recipe.dataset_factory = dataset_factory
         recipe_dict = {'datasets': self.dataset,
                        'tasks': [self.annotation_task]}
@@ -1674,13 +1771,13 @@ class TestPlotTask(unittest.TestCase):
         self.task = tasks.PlotTask()
         self.recipe = tasks.Recipe()
         self.dataset = ['foo']
-
-    def prepare_recipe(self):
         self.plotting_task = {'kind': 'plot',
                               'type': 'Plotter',
                               'apply_to': self.dataset}
+
+    def prepare_recipe(self):
         dataset_factory = dataset.DatasetFactory()
-        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
         self.recipe.dataset_factory = dataset_factory
         recipe_dict = {'datasets': self.dataset,
                        'tasks': [self.plotting_task]}
@@ -1770,6 +1867,12 @@ class TestPlotTask(unittest.TestCase):
     def test_has_target_property(self):
         self.assertTrue(hasattr(self.task, 'target'))
 
+    def test_to_dict_adds_properties_to_properties(self):
+        self.task.from_dict(self.plotting_task)
+        self.task._task = self.task.get_object()
+        dict_ = self.task.to_dict()
+        self.assertIn('properties', dict_['properties'])
+
 
 class TestSinglePlotTask(unittest.TestCase):
     def setUp(self):
@@ -1801,7 +1904,7 @@ class TestSinglePlotTask(unittest.TestCase):
 
     def prepare_recipe(self):
         dataset_factory = dataset.DatasetFactory()
-        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
         self.recipe.dataset_factory = dataset_factory
         recipe_dict = {'datasets': self.dataset,
                        'tasks': [self.plotting_task]}
@@ -1851,7 +1954,7 @@ class TestSinglePlotTask(unittest.TestCase):
                               'type': 'SinglePlotter',
                               'apply_to': self.datasets}
         dataset_factory = dataset.DatasetFactory()
-        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
         self.recipe.dataset_factory = dataset_factory
         recipe_dict = {'datasets': self.datasets,
                        'tasks': [self.plotting_task]}
@@ -1954,7 +2057,7 @@ class TestMultiPlotTask(unittest.TestCase):
 
     def prepare_recipe(self):
         dataset_factory = dataset.DatasetFactory()
-        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
         self.recipe.dataset_factory = dataset_factory
         recipe_dict = {'datasets': self.dataset,
                        'tasks': [self.plotting_task]}
@@ -2091,7 +2194,7 @@ class TestCompositePlotTask(unittest.TestCase):
 
     def prepare_recipe(self):
         dataset_factory = dataset.DatasetFactory()
-        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
         self.recipe.dataset_factory = dataset_factory
         recipe_dict = {'datasets': self.dataset,
                        'tasks': [self.singleplotting_task, self.plotting_task]}
@@ -2194,7 +2297,7 @@ class TestReportTask(unittest.TestCase):
 
     def prepare_recipe(self):
         dataset_factory = dataset.DatasetFactory()
-        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
         self.recipe.dataset_factory = dataset_factory
         recipe_dict = {'datasets': [self.dataset],
                        'tasks': [self.report_task]}
@@ -2250,7 +2353,8 @@ class TestReportTask(unittest.TestCase):
         self.report_task['compile'] = True
         self.task.from_dict(self.report_task)
         self.task.recipe = self.recipe
-        self.task.perform()
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.task.perform()
         self.assertTrue(os.path.exists(self.result))
 
     def test_perform_task_does_not_compile_if_not_possible(self):
@@ -2318,6 +2422,7 @@ class TestReportTask(unittest.TestCase):
         self.assertEqual(read_content, 'blub')
 
     def test_perform_task_with_multiple_datasets_and_filenames(self):
+        # noinspection PyTypedDict
         self.report_task["properties"]["filename"] = \
             ['test-report1.tex', 'test-report2.tex']
         self.report_task.pop("apply_to")
@@ -2360,7 +2465,7 @@ class TestModelTask(unittest.TestCase):
 
     def prepare_recipe(self):
         dataset_factory = dataset.DatasetFactory()
-        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
         self.recipe.dataset_factory = dataset_factory
         recipe_dict = {'datasets': [self.dataset],
                        'tasks': [self.model_task]}
@@ -2453,7 +2558,7 @@ class TestExportTask(unittest.TestCase):
 
     def prepare_recipe(self):
         dataset_factory = dataset.DatasetFactory()
-        dataset_factory.importer_factory = io.DatasetImporterFactory()
+        dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
         self.recipe.dataset_factory = dataset_factory
         recipe_dict = {'datasets': [self.dataset],
                        'tasks': [self.export_task]}
@@ -2486,6 +2591,7 @@ class TestExportTask(unittest.TestCase):
         self.assertTrue(os.path.exists(self.filename))
 
     def test_perform_task_with_multiple_datasets_writes_files(self):
+        # noinspection PyTypedDict
         self.export_task['properties']['target'] = [self.filename,
                                                     self.filename2]
         recipe_dict = {'datasets': ['foo', 'bar'],
@@ -2506,6 +2612,96 @@ class TestExportTask(unittest.TestCase):
         self.task.perform()
         self.assertTrue(os.path.exists(os.path.join(self.output_directory,
                                                     self.filename)))
+
+
+class TestTabulateTask(unittest.TestCase):
+    def setUp(self):
+        self.task = tasks.TabulateTask()
+        self.recipe = tasks.Recipe()
+        self.dataset = ['foo']
+        self.table_filename = 'foo.pdf'
+        self.datasets = ['foo', 'bar']
+        self.table_filenames = ['foo.pdf', 'bar.pdf']
+        self.tabulate_task = {'kind': 'tabulate',
+                              'type': 'Table',
+                              'apply_to': self.dataset}
+
+    def tearDown(self):
+        if os.path.exists(self.table_filename):
+            os.remove(self.table_filename)
+        for file in self.table_filenames:
+            if os.path.exists(file):
+                os.remove(file)
+
+    def prepare_recipe(self):
+        dataset_factory = dataset.DatasetFactory()
+        dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
+        self.recipe.dataset_factory = dataset_factory
+        recipe_dict = {'datasets': self.dataset,
+                       'tasks': [self.tabulate_task]}
+        self.recipe.from_dict(recipe_dict)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_perform_task(self):
+        self.prepare_recipe()
+        self.recipe.datasets[self.dataset[0]].data.data = np.random.random(5)
+        self.task.from_dict(self.tabulate_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(self.recipe.datasets[self.dataset[0]].tasks)
+
+    def test_perform_task_issues_log_message(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.tabulate_task)
+        self.task.recipe = self.recipe
+        with self.assertLogs(__package__, level='INFO') as cm:
+            self.task.perform()
+        self.assertIn('Perform "{}" on dataset "{}"'.format(
+            self.tabulate_task['type'], self.dataset[0]), cm.output[0])
+
+    def test_perform_task_with_filename_saves_table(self):
+        self.prepare_recipe()
+        self.recipe.datasets[self.dataset[0]].data.data = np.random.random(5)
+        # noinspection PyTypeChecker
+        self.tabulate_task['properties'] = {'filename': self.table_filename}
+        self.task.from_dict(self.tabulate_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(os.path.exists(self.table_filename))
+
+    def test_perform_task_with_filename_issues_log_message(self):
+        self.prepare_recipe()
+        self.recipe.datasets[self.dataset[0]].data.data = np.random.random(5)
+        # noinspection PyTypeChecker
+        self.tabulate_task['properties'] = {'filename': self.table_filename}
+        self.task.from_dict(self.tabulate_task)
+        self.task.recipe = self.recipe
+        with self.assertLogs(__package__, level='INFO') as cm:
+            self.task.perform()
+        self.assertIn('Save table from "{}" to file "{}"'.format(
+            self.tabulate_task['type'], self.table_filename), cm.output[1])
+
+    def test_perform_task_with_list_of_filenames_saves_plots(self):
+        self.tabulate_task = {'kind': 'tabulate',
+                              'type': 'Table',
+                              'apply_to': self.datasets}
+        dataset_factory = dataset.DatasetFactory()
+        dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
+        self.recipe.dataset_factory = dataset_factory
+        recipe_dict = {'datasets': self.datasets,
+                       'tasks': [self.tabulate_task]}
+        self.recipe.from_dict(recipe_dict)
+        self.recipe.datasets[self.datasets[0]].data.data = np.random.random(5)
+        self.recipe.datasets[self.datasets[1]].data.data = np.random.random(5)
+        # noinspection PyTypeChecker
+        self.tabulate_task['properties'] = {'filename': self.table_filenames}
+        self.task.from_dict(self.tabulate_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        for file in self.table_filenames:
+            self.assertTrue(os.path.exists(file))
 
 
 class TestTaskFactory(unittest.TestCase):
@@ -2825,7 +3021,7 @@ class TestServe(unittest.TestCase):
         self.create_recipe()
         result = subprocess.run(["serve", self.recipe_filename],
                                 capture_output=True, text=True)
-        self.assertIn('Import dataset', result.stdout)
+        self.assertIn('INFO - Import dataset', result.stdout)
 
     def test_call_with_quiet_option_does_not_print_log_info(self):
         self.create_recipe()

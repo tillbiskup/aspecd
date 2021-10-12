@@ -225,26 +225,6 @@ class TestAxesValuesInconsistentWithDataError(unittest.TestCase):
             raise self.exception('bla')
 
 
-class TestAxisValuesDimensionError(unittest.TestCase):
-
-    def setUp(self):
-        self.exception = aspecd.exceptions.AxisValuesDimensionError
-
-    def test_prints_message(self):
-        with self.assertRaisesRegex(self.exception, 'bla'):
-            raise self.exception('bla')
-
-
-class TestAxisValuesTypeError(unittest.TestCase):
-
-    def setUp(self):
-        self.exception = aspecd.exceptions.AxisValuesTypeError
-
-    def test_prints_message(self):
-        with self.assertRaisesRegex(self.exception, 'bla'):
-            raise self.exception('bla')
-
-
 class TestMissingImporterError(unittest.TestCase):
 
     def setUp(self):

@@ -1,6 +1,8 @@
 """Tests for reports."""
 
 import collections
+import contextlib
+import io
 import os
 import shutil
 import unittest
@@ -241,7 +243,8 @@ class TestLaTeXReporter(unittest.TestCase):
             f.write(template_content)
         self.report.render()
         self.report.save()
-        self.report.compile()
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.report.compile()
         self.assertTrue(os.path.exists(self.result))
 
     def test_compile_does_not_leave_temp_files(self):
@@ -253,7 +256,8 @@ class TestLaTeXReporter(unittest.TestCase):
             f.write(template_content)
         self.report.render()
         self.report.save()
-        self.report.compile()
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.report.compile()
         basename, _ = os.path.splitext(self.result)
         logfile = ".".join([basename, 'log'])
         self.assertFalse(os.path.exists(logfile))
@@ -272,7 +276,8 @@ class TestLaTeXReporter(unittest.TestCase):
         self.report.includes.append(self.include)
         self.report.render()
         self.report.save()
-        self.report.compile()
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.report.compile()
         self.assertTrue(os.path.exists(self.result))
 
     def test_compile_with_includes_and_path_creates_output(self):
@@ -291,7 +296,8 @@ class TestLaTeXReporter(unittest.TestCase):
         self.report.filename = os.path.join(self.subdir, self.filename)
         self.report.render()
         self.report.save()
-        self.report.compile()
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.report.compile()
         self.assertTrue(os.path.exists(os.path.join(self.subdir, self.result)))
 
     def test_compile_with_absolute_path_for_report_creates_output(self):
@@ -304,7 +310,8 @@ class TestLaTeXReporter(unittest.TestCase):
         self.report.filename = os.path.join(os.getcwd(), self.filename)
         self.report.render()
         self.report.save()
-        self.report.compile()
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.report.compile()
         self.assertTrue(os.path.exists(self.result))
 
     def test_render_replaces_underscore_with_camel_case_in_context_dict(self):

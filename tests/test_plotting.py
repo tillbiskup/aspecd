@@ -1,4 +1,6 @@
 """Tests for plotting."""
+import contextlib
+import io
 import warnings
 
 import matplotlib.axes
@@ -875,7 +877,8 @@ class TestMultiPlotter(unittest.TestCase):
     def test_plot_with_show_legend_set_to_true_adds_legend(self):
         self.plotter.datasets.append(dataset.Dataset())
         self.plotter.parameters['show_legend'] = True
-        self.plotter.plot()
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.plotter.plot()
         self.assertIs(type(self.plotter.legend), matplotlib.legend.Legend)
 
     def test_axes_properties_set_axes_labels(self):
@@ -1149,7 +1152,8 @@ class TestCompositePlotter(unittest.TestCase):
         single_plotter.dataset = self.dataset
         single_plotter.parameters['show_legend'] = True
         self.plotter.plotter.append(single_plotter)
-        self.plotter.plot()
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.plotter.plot()
         self.assertTrue(isinstance(self.plotter.axes[0].get_legend(),
                                    matplotlib.legend.Legend))
 
@@ -1692,7 +1696,8 @@ class TestLegendProperties(unittest.TestCase):
         self.legend_properties.loc = 'center'
         plot = plotting.Plotter()
         plot.plot()
-        legend = plot.axes.legend()
+        with contextlib.redirect_stderr(io.StringIO()):
+            legend = plot.axes.legend()
         self.legend_properties.apply(legend=legend)
         self.assertEqual(self.legend_properties.loc, legend.loc)
         plt.close(plot.figure)
@@ -1703,7 +1708,8 @@ class TestLegendProperties(unittest.TestCase):
         plot = plotting.Plotter()
         plot.properties.legend = self.legend_properties
         plot.parameters['show_legend'] = True
-        plot.plot()
+        with contextlib.redirect_stderr(io.StringIO()):
+            plot.plot()
         legend = plot.legend
         self.assertEqual(location, legend._loc)
         plt.close(plot.figure)
@@ -1714,7 +1720,8 @@ class TestLegendProperties(unittest.TestCase):
         plot = plotting.Plotter()
         plot.properties.from_dict(properties)
         plot.parameters['show_legend'] = True
-        plot.plot()
+        with contextlib.redirect_stderr(io.StringIO()):
+            plot.plot()
         legend = plot.legend
         self.assertEqual(location, legend._loc)
         plt.close(plot.figure)
@@ -1725,7 +1732,8 @@ class TestLegendProperties(unittest.TestCase):
         plot = plotting.Plotter()
         plot.properties.legend = self.legend_properties
         plot.parameters['show_legend'] = True
-        plot.plot()
+        with contextlib.redirect_stderr(io.StringIO()):
+            plot.plot()
         legend = plot.legend
         self.assertEqual(frameon, legend.get_frame_on())
         plt.close(plot.figure)
@@ -1924,7 +1932,8 @@ class TestMultiPlotProperties(unittest.TestCase):
         dataset_.label = 'foo'
         plotter.datasets = [dataset_]
         plotter.plot()
-        plotter.legend = plotter.axes.legend()
+        with contextlib.redirect_stderr(io.StringIO()):
+            plotter.legend = plotter.axes.legend()
         self.plot_properties.apply(plotter=plotter)
         self.assertEqual(self.plot_properties.legend.loc,
                          plotter.legend.loc)

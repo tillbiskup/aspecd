@@ -53,6 +53,12 @@ class TestAnalysisStep(unittest.TestCase):
     def test_description_references_is_list(self):
         self.assertTrue(isinstance(self.analysisstep.references, list))
 
+    def test_has_index_property(self):
+        self.assertTrue(hasattr(self.analysisstep, 'index'))
+
+    def test_index_is_list(self):
+        self.assertTrue(isinstance(self.analysisstep.index, list))
+
     def test_has_analyse_method(self):
         self.assertTrue(hasattr(self.analysisstep, 'analyse'))
         self.assertTrue(callable(self.analysisstep.analyse))
@@ -210,6 +216,109 @@ class TestMultiAnalysisStep(unittest.TestCase):
             analysis_step.analyse()
 
 
+class TestAggregatedAnalysisStep(unittest.TestCase):
+    def setUp(self):
+        self.analysis = aspecd.analysis.AggregatedAnalysisStep()
+        self.analysis.datasets.append(aspecd.dataset.Dataset())
+        self.analysis.analysis_step = 'BasicCharacteristics'
+        self.analysis.parameters["kind"] = "min"
+        self.analysis.datasets[0].data.data = np.zeros(5)
+        self.analysis.datasets[0].label = 'foo'
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_datasets_property(self):
+        self.assertTrue(hasattr(self.analysis, 'datasets'))
+
+    def test_datasets_property_is_list(self):
+        self.assertTrue(isinstance(self.analysis.datasets, list))
+
+    def test_has_analysis_step_property(self):
+        self.assertTrue(hasattr(self.analysis, 'analysis_step'))
+
+    def test_has_appropriate_description(self):
+        self.assertIn('Aggregated analysis step for multiple datasets',
+                      self.analysis.description)
+
+    def test_analyse_without_datasets_raises(self):
+        self.analysis.datasets = []
+        with self.assertRaises(aspecd.exceptions.MissingDatasetError):
+            self.analysis.analyse()
+
+    def test_analyse_without_analysis_step_raises(self):
+        self.analysis.analysis_step = ''
+        with self.assertRaises(aspecd.exceptions.MissingAnalysisStepError):
+            self.analysis.analyse()
+
+    def test_analyse_with_analysis_step_returning_dataset_raises(self):
+        self.analysis.analysis_step = 'PowerDensitySpectrum'
+        with self.assertRaisesRegex(ValueError,
+                                    'Analysis step .* returns dataset'):
+            self.analysis.analyse()
+
+    def test_analyse_returns_calculated_dataset_in_result(self):
+        self.analysis.analyse()
+        self.assertIsInstance(self.analysis.result,
+                              aspecd.dataset.CalculatedDataset)
+
+    def test_result_has_calculation_type_set_correctly(self):
+        self.analysis.analyse()
+        self.assertEqual('aspecd.analysis.AggregatedAnalysisStep',
+                         self.analysis.result.metadata.calculation.type)
+
+    def test_analyse_sets_correct_value_in_result(self):
+        self.analysis.analyse()
+        self.assertEqual(min(self.analysis.datasets[0].data.data),
+                         self.analysis.result.data.data[0])
+
+    def test_analyse_with_full_class_name(self):
+        self.analysis.analysis_step = 'aspecd.analysis.BasicCharacteristics'
+        self.analysis.analyse()
+        self.assertEqual(min(self.analysis.datasets[0].data.data),
+                         self.analysis.result.data.data[0])
+
+    def test_analyse_sets_index_in_result(self):
+        self.analysis.analyse()
+        self.assertEqual(self.analysis.datasets[0].label,
+                         self.analysis.result.data.axes[0].index[0])
+
+    def test_analyse_with_multiple_datasets_sets_correct_values_in_result(self):
+        self.analysis.datasets.append(aspecd.dataset.Dataset())
+        self.analysis.datasets[1].data.data = np.ones(5)
+        self.analysis.datasets[1].label = 'bar'
+        self.analysis.analyse()
+        self.assertEqual(min(self.analysis.datasets[0].data.data),
+                         self.analysis.result.data.data[0])
+        self.assertEqual(min(self.analysis.datasets[1].data.data),
+                         self.analysis.result.data.data[1])
+
+    def test_analyse_with_multiple_datasets_sets_index_in_result(self):
+        self.analysis.datasets.append(aspecd.dataset.Dataset())
+        self.analysis.datasets[1].data.data = np.ones(5)
+        self.analysis.datasets[1].label = 'bar'
+        self.analysis.analyse()
+        self.assertEqual(self.analysis.datasets[1].label,
+                         self.analysis.result.data.axes[0].index[1])
+
+    def test_analyse_with_list_return_sets_correct_value_in_result(self):
+        self.analysis.parameters["output"] = "indices"
+        self.analysis.datasets[0].data.data = np.zeros([5, 5])
+        self.analysis.analyse()
+        self.assertEqual(self.analysis.datasets[0].data.data.ndim,
+                         len(self.analysis.result.data.data[0, :]))
+
+    def test_analyse_with_list_return_and_multiple_datasets(self):
+        self.analysis.parameters["output"] = "indices"
+        self.analysis.datasets[0].data.data = np.zeros([5, 5])
+        self.analysis.datasets.append(aspecd.dataset.Dataset())
+        self.analysis.datasets[1].data.data = np.ones([3, 3])
+        self.analysis.datasets.append(aspecd.dataset.Dataset())
+        self.analysis.datasets[2].data.data = np.random.random([4, 4])
+        self.analysis.analyse()
+        self.assertEqual((3, 2), self.analysis.result.data.data.shape)
+
+
 class TestPreprocessing(unittest.TestCase):
     def setUp(self):
         self.analysisstep = aspecd.analysis.SingleAnalysisStep()
@@ -263,6 +372,11 @@ class TestBasicCharacteristics(unittest.TestCase):
         analysis = self.dataset.analyse(self.analysis)
         self.assertEqual(self.dataset.data.data.min(), analysis.result)
 
+    def test_min_sets_kind_in_index(self):
+        self.analysis.parameters["kind"] = "min"
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertEqual([self.analysis.parameters["kind"]], analysis.index)
+
     def test_max(self):
         self.analysis.parameters["kind"] = "max"
         analysis = self.dataset.analyse(self.analysis)
@@ -290,7 +404,8 @@ class TestBasicCharacteristics(unittest.TestCase):
             'area': self.dataset.data.data.sum(),
         }
         analysis = self.dataset.analyse(self.analysis)
-        self.assertEqual(result_dict, analysis.result)
+        self.assertEqual(list(result_dict.values()), analysis.result)
+        self.assertEqual(list(result_dict.keys()), analysis.index)
 
     def test_min_with_axes_output(self):
         self.analysis.parameters["kind"] = "min"
@@ -300,6 +415,14 @@ class TestBasicCharacteristics(unittest.TestCase):
             [self.dataset.data.axes[0].values[self.dataset.data.data.argmin()]]
         self.assertEqual(result, analysis.result)
 
+    def test_min_with_axes_output_sets_index(self):
+        self.analysis.parameters["kind"] = "min"
+        self.analysis.parameters["output"] = "axes"
+        self.dataset.data.axes[0].quantity = 'foo'
+        analysis = self.dataset.analyse(self.analysis)
+        index = ['min(foo)']
+        self.assertEqual(index, analysis.index)
+
     def test_max_with_axes_output(self):
         self.analysis.parameters["kind"] = "max"
         self.analysis.parameters["output"] = "axes"
@@ -308,17 +431,39 @@ class TestBasicCharacteristics(unittest.TestCase):
             [self.dataset.data.axes[0].values[self.dataset.data.data.argmax()]]
         self.assertEqual(result, analysis.result)
 
+    def test_max_with_axes_output_sets_index(self):
+        self.analysis.parameters["kind"] = "max"
+        self.analysis.parameters["output"] = "axes"
+        self.dataset.data.axes[0].quantity = 'foo'
+        analysis = self.dataset.analyse(self.analysis)
+        index = ['max(foo)']
+        self.assertEqual(index, analysis.index)
+
     def test_min_with_indices_output(self):
         self.analysis.parameters["kind"] = "min"
         self.analysis.parameters["output"] = "indices"
         analysis = self.dataset.analyse(self.analysis)
         self.assertEqual([self.dataset.data.data.argmin()], analysis.result)
 
+    def test_min_with_indices_output_sets_index(self):
+        self.analysis.parameters["kind"] = "min"
+        self.analysis.parameters["output"] = "indices"
+        analysis = self.dataset.analyse(self.analysis)
+        index = ['min(index0)']
+        self.assertEqual(index, analysis.index)
+
     def test_max_with_indices_output(self):
         self.analysis.parameters["kind"] = "max"
         self.analysis.parameters["output"] = "indices"
         analysis = self.dataset.analyse(self.analysis)
         self.assertEqual([self.dataset.data.data.argmax()], analysis.result)
+
+    def test_max_with_indices_output_sets_index(self):
+        self.analysis.parameters["kind"] = "max"
+        self.analysis.parameters["output"] = "indices"
+        analysis = self.dataset.analyse(self.analysis)
+        index = ['max(index0)']
+        self.assertEqual(index, analysis.index)
 
     def test_area_or_amplitude_with_axes_output_raises(self):
         characteristics = ["area", "amplitude"]
@@ -376,7 +521,7 @@ class TestBasicCharacteristics(unittest.TestCase):
             'area': self.dataset3d.data.data.sum(),
         }
         analysis = self.dataset3d.analyse(self.analysis)
-        self.assertEqual(result_dict, analysis.result)
+        self.assertEqual(list(result_dict.values()), analysis.result)
 
     def test_min_with_axes_output_with_3d_data(self):
         self.analysis.parameters["kind"] = "min"

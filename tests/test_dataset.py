@@ -13,7 +13,7 @@ import aspecd.plotting
 import aspecd.processing
 import aspecd.utils
 from aspecd import annotation, analysis, dataset, io, plotting, \
-    processing
+    processing, table
 import aspecd.metadata
 
 
@@ -124,7 +124,8 @@ class TestDatasetProcessing(unittest.TestCase):
     def test_process_returns_processing_object(self):
         processing_object = processing.SingleProcessingStep()
         processing_step = self.dataset.process(processing_object)
-        self.assertTrue(isinstance(processing_step, processing.SingleProcessingStep))
+        self.assertTrue(isinstance(processing_step,
+                                   processing.SingleProcessingStep))
 
     def test_process_sets_package_in_sysinfo(self):
         # Fake package name
@@ -480,6 +481,37 @@ class TestDatasetPlotting(unittest.TestCase):
         self.dataset.plot(self.plotter)
         self.assertIsInstance(self.dataset.tasks[0]['task'],
                               aspecd.history.PlotHistoryRecord)
+
+
+class TestDatasetTabulating(unittest.TestCase):
+    def setUp(self):
+        self.dataset = dataset.Dataset()
+        self.table = table.Table()
+
+    def test_has_tabulate_method(self):
+        self.assertTrue(hasattr(self.dataset, 'tabulate'))
+        self.assertTrue(callable(self.dataset.tabulate))
+
+    def test_dataset_tabulate_returns_table_object(self):
+        tab = self.dataset.tabulate(self.table)
+        self.assertTrue(isinstance(tab, table.Table))
+
+    def test_plot_without_table_raises(self):
+        with self.assertRaisesRegex(TypeError, 'tabulate needs a Table object'):
+            self.dataset.tabulate()
+
+    def test_tabulate_adds_task(self):
+        self.dataset.tabulate(self.table)
+        self.assertNotEqual(self.dataset.tasks, [])
+
+    def test_added_task_has_kind_representation(self):
+        self.dataset.tabulate(self.table)
+        self.assertEqual(self.dataset.tasks[0]['kind'], 'representation')
+
+    def test_added_task_has_table_history_record(self):
+        self.dataset.tabulate(self.table)
+        self.assertIsInstance(self.dataset.tasks[0]['task'],
+                              aspecd.history.TableHistoryRecord)
 
 
 class TestDatasetRepresentations(unittest.TestCase):
@@ -1009,10 +1041,10 @@ class TestData(unittest.TestCase):
 
     def test_modify_data_with_higher_dimension_adds_axis(self):
         old_data = np.random.random([5, 1])
-        new_data = np.random.random([7, 3])
+        new_data = np.random.random([4, 3, 2])
         self.data.data = old_data
         self.data.data = new_data
-        self.assertEqual(3, len(self.data.axes))
+        self.assertEqual(4, len(self.data.axes))
 
     def test_setting_data_adjusts_axes_values(self):
         new_data = np.zeros([6, 1])
@@ -1053,6 +1085,8 @@ class TestData(unittest.TestCase):
         orig_dict['axes'][0]['values'] = np.arange(10)
         orig_dict['axes'][0]['label'] = 'foo'
         orig_dict['axes'][1]['label'] = 'bar'
+        orig_dict['axes'][0]['index'] = \
+            ['' for _ in orig_dict['axes'][0]['values']]
         self.data.from_dict(orig_dict)
         self.assertDictEqual(orig_dict, self.data.to_dict())
         # np.testing.assert_allclose(orig_dict["data"], self.data.data)
@@ -1203,6 +1237,24 @@ class TestAxis(unittest.TestCase):
         self.axis.values = np.asarray([0, 1, 2, 4, 8])
         self.assertFalse(self.axis.equidistant)
 
+    def test_has_index_property(self):
+        self.assertTrue(hasattr(self.axis, 'index'))
+
+    def test_index_is_list(self):
+        self.assertTrue(isinstance(self.axis.index, list))
+
+    def test_index_is_same_length_as_values(self):
+        length = 5
+        self.axis.values = np.zeros(length)
+        self.assertEqual(length, len(self.axis.index))
+
+    def test_setting_index_with_incompatible_length_to_values_raises(self):
+        self.axis.values = np.zeros(5)
+        indices = ['foo', 'bar']
+        with self.assertRaisesRegex(IndexError, 'index and values need to be '
+                                                'of same length'):
+            self.axis.index = indices
+
     def test_has_to_dict_method(self):
         self.assertTrue(hasattr(self.axis, 'to_dict'))
         self.assertTrue(callable(self.axis.to_dict))
@@ -1210,6 +1262,10 @@ class TestAxis(unittest.TestCase):
     def test_to_dict_includes_values(self):
         dict_ = self.axis.to_dict()
         self.assertIn('values', dict_)
+
+    def test_to_dict_includes_index(self):
+        dict_ = self.axis.to_dict()
+        self.assertIn('index', dict_)
 
     def test_has_from_dict_method(self):
         self.assertTrue(hasattr(self.axis, 'from_dict'))
@@ -1225,23 +1281,19 @@ class TestAxis(unittest.TestCase):
     def test_from_dict_sets_numeric_values(self):
         orig_dict = self.axis.to_dict()
         orig_dict['values'] = np.arange(10)
+        orig_dict['index'] = ['' for _ in orig_dict['values']]
         self.axis.from_dict(orig_dict)
         new_dict = self.axis.to_dict()
         self.assertDictEqual(orig_dict, new_dict)
-
-
-class TestAxisSettings(unittest.TestCase):
-
-    def setUp(self):
-        self.axis = dataset.Axis()
 
     def test_set_values(self):
         self.axis.values = np.zeros(0)
 
     def test_set_wrong_type_for_values_fails(self):
-        with self.assertRaises(aspecd.exceptions.AxisValuesTypeError):
+        with self.assertRaisesRegex(ValueError, 'Wrong type: expected'):
             self.axis.values = 'foo'
 
     def test_set_multidimensional_values_fails(self):
-        with self.assertRaises(aspecd.exceptions.AxisValuesDimensionError):
+        with self.assertRaisesRegex(IndexError, 'Values need to be '
+                                                'one-dimensional'):
             self.axis.values = np.zeros([0, 0])

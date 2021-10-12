@@ -366,10 +366,14 @@ class LaTeXReporter(Reporter):
         os.chdir(self._temp_dir)
         _, filename_wo_path = os.path.split(self.filename)
         # Path to filename stripped, there should be no security implications.
-        subprocess.run([self.latex_executable,  # nosec
-                        '-output-directory', self._temp_dir,
-                        '-interaction=nonstopmode',
-                        filename_wo_path], check=False)
+        process = subprocess.run([self.latex_executable,  # nosec
+                                  '-output-directory', self._temp_dir,
+                                  '-interaction=nonstopmode',
+                                  filename_wo_path],
+                                 check=False,
+                                 capture_output=True)
+        print(process.stdout.decode())
+        print(process.stderr.decode())
         os.chdir(self._pwd)
 
     def _copy_files_from_temp_dir(self):

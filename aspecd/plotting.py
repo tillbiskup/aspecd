@@ -605,7 +605,7 @@ class SinglePlotter(Plotter):
         Create history record to be added to the dataset.
 
         Usually, this method gets called from within the
-        :meth:`aspecd.dataset.plot` method of the
+        :meth:`aspecd.dataset.Dataset.plot` method of the
         :class:`aspecd.dataset.Dataset` class and ensures the history of
         each plotting step to get written properly.
 
@@ -3010,13 +3010,7 @@ class SurfaceProperties(DrawingProperties):
 
         """
         super().apply(drawing=drawing)
-        # Note: Since Python 3.6 and compatible matplotlib versions,
-        #       all drawings have an attribute "axes", hence when dropping
-        #       Python 3.5 support, testing can be removed
-        if hasattr(drawing, 'axes'):
-            children = drawing.axes.get_children()
-        else:
-            children = drawing.ax.get_children()
+        children = drawing.axes.get_children()
         for child in children:
             if isinstance(child, mpl.collections.LineCollection):
                 if self.linewidths:

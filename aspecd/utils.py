@@ -11,6 +11,7 @@ import hashlib
 import importlib
 import inspect
 import os
+import pkgutil
 import re
 
 import numpy as np
@@ -307,6 +308,29 @@ class Yaml:
 
         Default: False
 
+    binary_files : :class:`list`
+        List of names of the binary files containing large arrays
+
+    binary_directory : :class:`str`
+        Directory the binary files should be stored in
+
+        Default: ''
+
+    loader : :class:`yaml.loader`
+        Type of loader used for loading the YAML file
+
+        The type of loader used is crucial for the safety of your
+        application. See the documentation of the PyYAML package for details.
+
+        Default: :class:`yaml.SafeLoader`
+
+    dumper : :class:`yaml.Dumper`
+        Type of dumper used for loading the YAML file
+
+        The type of dumper used is should be compatible to the type of loader.
+
+        Default: :class:`yaml.SafeDumper`
+
     Raises
     ------
     aspecd.utils.MissingFilenameError
@@ -315,6 +339,9 @@ class Yaml:
 
     .. versionchanged:: 0.4
         Added :attr:`numpy_array_to_list`
+
+    .. versionchanged:: 0.5
+        Added :attr:`dumper` and set dumper to SafeDumper
 
     """
 
@@ -325,6 +352,7 @@ class Yaml:
         self.numpy_array_size_threshold = 100
         self.numpy_array_to_list = False
         self.loader = yaml.SafeLoader
+        self.dumper = yaml.SafeDumper
         self.loader.add_implicit_resolver(
             u'tag:yaml.org,2002:float',
             re.compile(u'''^(?:
@@ -374,7 +402,7 @@ class Yaml:
         if not filename:
             raise aspecd.exceptions.MissingFilenameError
         with open(filename, 'w') as file:
-            yaml.dump(self.dict, file)
+            yaml.dump(self.dict, file, Dumper=self.dumper)
 
     def read_stream(self, stream=None):
         """
@@ -398,7 +426,7 @@ class Yaml:
             string representation of YAML file
 
         """
-        return yaml.dump(self.dict)
+        return yaml.dump(self.dict, Dumper=self.dumper)
 
     def serialise_numpy_arrays(self):
         """
@@ -860,3 +888,63 @@ def isiterable(variable):
     except TypeError:
         answer = False
     return answer
+
+
+def get_package_data(name='', directory=''):
+    """
+    Obtain contents from a non-code file ("package data").
+
+    A note on obtaining data from the distributed package: Rather than
+    manually playing around with paths relative to the package root
+    directory, contents of non-code files need to be obtained in a way that
+    works with different kinds of package installation.
+
+    Note that in Python, only files within the package, *i.e.* within the
+    directory where all the modules are located, can be accessed, not files
+    that reside on the root directory of the package.
+
+    .. note::
+
+        In case you would want to get package data from a package different
+        than aspecd, you can prefix the name of the file to retrieve with
+        the package name, using the '@' as a separator.
+
+        Suppose you would want to retrieve the file ``__main__.py`` file
+        from the "pip" package (why should you?):
+
+        .. code-block::
+
+            get_package_data('pip@__main__.py', directory='')
+
+        This would return the contents of this file.
+
+
+    Parameters
+    ----------
+    name : :class:`str`
+        Name of the file whose contents should be accessed.
+
+        In case the file should be retrieved from a different package,
+        the package name can be prefixed, using '@' as a separator.
+
+    directory : :class:`str`
+        Directory within the package where the files are located.
+
+        Default: ''
+
+    Returns
+    -------
+    contents : :class:`str`
+        String containing the contents of the non-code file.
+
+
+    .. versionadded:: 0.5
+
+    """
+    if not name:
+        raise ValueError('No filename given.')
+    package = __package__
+    if '@' in name:
+        package, name = name.split('@')
+    contents = pkgutil.get_data(package, '/'.join([directory, name])).decode()
+    return contents
