@@ -1172,6 +1172,11 @@ class TestTask(unittest.TestCase):
         self.task.type = 'ProcessingStep'
         self.assertIn('parameters: ', self.task.to_yaml())
 
+    def test_to_yaml_with_numpy_arrays(self):
+        self.task.kind = 'plotting'
+        self.task.type = 'MultiPlotter1D'
+        self.task.to_yaml()
+
 
 class TestProcessingTask(unittest.TestCase):
     def setUp(self):

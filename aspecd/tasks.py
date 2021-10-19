@@ -1752,7 +1752,9 @@ class Task(aspecd.utils.ToDictMixin):
                 self.kind = self.__class__.__name__[:-4].lower()
             self._task = self.get_object()
         yaml = aspecd.utils.Yaml()
+        yaml.numpy_array_to_list = True
         yaml.dict = self.to_dict()
+        yaml.serialise_numpy_arrays()
         return yaml.write_stream()
 
     def perform(self):
