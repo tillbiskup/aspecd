@@ -1324,10 +1324,59 @@ class TestProcessingTask(unittest.TestCase):
         self.task.perform()
         dict_ = self.task.to_dict()
         self.assertEqual(dict_[0]['result'], 'result1')
-        
+
     def test_to_dict_sets_kind(self):
         dict_ = self.task.to_dict()
         self.assertEqual('processing', dict_['kind'])
+
+    def test_to_dict_with_multiprocessingstep_sets_kind(self):
+        self.task.kind = 'processing'
+        self.task.type = 'MultiProcessingStep'
+        self.task._task = self.task.get_object()
+        dict_ = self.task.to_dict()
+        self.assertEqual('multiprocessing', dict_['kind'])
+
+    def test_to_dict_with_singleplotter_sets_kind(self):
+        self.task.kind = 'plotting'
+        self.task.type = 'SinglePlotter1D'
+        self.task._task = self.task.get_object()
+        dict_ = self.task.to_dict()
+        self.assertEqual('singleplot', dict_['kind'])
+
+    def test_to_dict_with_multiplotter_sets_kind(self):
+        self.task.kind = 'plotting'
+        self.task.type = 'MultiPlotter1D'
+        self.task._task = self.task.get_object()
+        dict_ = self.task.to_dict()
+        self.assertEqual('multiplot', dict_['kind'])
+
+    def test_to_dict_with_compositeplotter_sets_kind(self):
+        self.task.kind = 'plotting'
+        self.task.type = 'CompositePlotter'
+        self.task._task = self.task.get_object()
+        dict_ = self.task.to_dict()
+        self.assertEqual('compositeplot', dict_['kind'])
+
+    def test_to_dict_with_singleanalysis_sets_kind(self):
+        self.task.kind = 'analysis'
+        self.task.type = 'SingleAnalysisStep'
+        self.task._task = self.task.get_object()
+        dict_ = self.task.to_dict()
+        self.assertEqual('singleanalysis', dict_['kind'])
+
+    def test_to_dict_with_multianalysis_sets_kind(self):
+        self.task.kind = 'analysis'
+        self.task.type = 'MultiAnalysisStep'
+        self.task._task = self.task.get_object()
+        dict_ = self.task.to_dict()
+        self.assertEqual('multianalysis', dict_['kind'])
+
+    def test_to_dict_with_aggregatedanalysis_sets_kind(self):
+        self.task.kind = 'analysis'
+        self.task.type = 'AggregatedAnalysisStep'
+        self.task._task = self.task.get_object()
+        dict_ = self.task.to_dict()
+        self.assertEqual('aggregatedanalysis', dict_['kind'])
 
     def test_to_yaml_sets_kind(self):
         self.task.to_yaml()

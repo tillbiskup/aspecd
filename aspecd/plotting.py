@@ -553,6 +553,7 @@ class SinglePlotter(Plotter):
         self.dataset = None
         self.drawing = None
         self.description = 'Abstract plotting step for single dataset'
+        self.__kind__ = 'singleplot'
 
     # pylint: disable=arguments-differ
     def plot(self, dataset=None, from_dataset=False):
@@ -1365,6 +1366,7 @@ class MultiPlotter(Plotter):
         # noinspection PyTypeChecker
         self.parameters['axes'] = [aspecd.dataset.Axis(),
                                    aspecd.dataset.Axis()]
+        self.__kind__ = 'multiplot'
 
     def plot(self):
         """Perform the actual plotting on the given list of datasets.
@@ -1847,6 +1849,7 @@ class CompositePlotter(Plotter):
         self.axes_positions = []
         self.plotter = []
         self.properties = CompositePlotProperties()
+        self.__kind__ = 'compositeplot'
 
     def _create_figure_and_axes(self):
         self.figure = plt.figure()

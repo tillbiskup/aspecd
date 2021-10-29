@@ -641,6 +641,7 @@ class MultiProcessingStep(ProcessingStep):
         super().__init__()
         self.description = 'Abstract multiprocessing step'
         self.datasets = []
+        self.__kind__ = 'multiprocessing'
 
     def process(self):
         """Perform the actual processing step.

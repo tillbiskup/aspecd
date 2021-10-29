@@ -461,6 +461,7 @@ class SingleAnalysisStep(AnalysisStep):
         self.preprocessing = []
         self.description = 'Abstract single analysis step'
         self.dataset = None
+        self.__kind__ = 'singleanalysis'
 
     # pylint: disable=arguments-differ
     def analyse(self, dataset=None, from_dataset=False):
@@ -615,6 +616,7 @@ class MultiAnalysisStep(AnalysisStep):
         super().__init__()
         self.datasets = []
         self.description = 'Abstract analysis step for multiple datasets'
+        self.__kind__ = 'multianalysis'
 
     def analyse(self):
         """Perform the actual analysis on the given list of datasets.
@@ -723,6 +725,7 @@ class AggregatedAnalysisStep(AnalysisStep):
         self.description = 'Aggregated analysis step for multiple datasets'
         self.result = self.create_dataset()
         self._analysis_object = None
+        self.__kind__ = 'aggregatedanalysis'
 
     def analyse(self):
         """

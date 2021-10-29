@@ -1673,6 +1673,8 @@ class Task(aspecd.utils.ToDictMixin):
         self._replace_objects_with_labels(self.properties)
         if not self.kind:
             self.kind = self.__class__.__name__[:-4].lower()
+        if hasattr(self._task, '__kind__'):
+            self.kind = self._task.__kind__
         return super().to_dict()
 
     def _replace_objects_with_labels(self, dict_=None):  # noqa: MC0001
