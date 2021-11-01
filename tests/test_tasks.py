@@ -365,6 +365,17 @@ class TestRecipe(unittest.TestCase):
         dict_ = self.recipe.to_dict()
         self.assertEqual(self.dataset, dict_['datasets'][0])
 
+    def test_to_dict_with_datasets_source_directory(self):
+        self.recipe.directories['datasets_source'] = 'foo'
+        id_ = 'foobar'
+        tmp = dataset.Dataset()
+        tmp.id = os.path.join(self.recipe.directories['datasets_source'],
+                               id_)
+        tmp.label = id_
+        self.recipe.datasets[id_] = tmp
+        dict_ = self.recipe.to_dict()
+        self.assertEqual(id_, dict_['datasets'][0])
+
     def test_to_dict_with_task_returns_task_dict(self):
         task = tasks.Task()
         task.from_dict(self.task)

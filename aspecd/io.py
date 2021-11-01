@@ -405,7 +405,7 @@ class DatasetImporter:
         # pylint: disable=protected-access
         self.dataset._origdata = copy.deepcopy(self.dataset.data)
         self.dataset.id = self.source
-        self.dataset.label = self.source
+        self.dataset.label = os.path.split(self.source)[-1]
 
     def _import(self):
         """Perform the actual import of data and metadata into the dataset.

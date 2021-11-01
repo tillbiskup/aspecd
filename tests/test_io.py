@@ -33,6 +33,7 @@ class TestDatasetImporter(unittest.TestCase):
 
     def test_import_into_with_dataset_sets_dataset(self):
         test_dataset = dataset.Dataset()
+        self.importer.source = 'filename'
         self.importer.import_into(test_dataset)
         self.assertIs(self.importer.dataset, test_dataset)
 
@@ -40,13 +41,20 @@ class TestDatasetImporter(unittest.TestCase):
         test_dataset = dataset.Dataset()
         self.importer.source = 'filename'
         self.importer.import_into(test_dataset)
-        self.assertIs(test_dataset.id, self.importer.source)
+        self.assertEqual(test_dataset.id, self.importer.source)
 
     def test_import_into_with_dataset_sets_label(self):
         test_dataset = dataset.Dataset()
         self.importer.source = 'filename'
         self.importer.import_into(test_dataset)
-        self.assertIs(test_dataset.label, self.importer.source)
+        self.assertEqual(test_dataset.label, self.importer.source)
+
+    def test_import_into_sets_label_without_path(self):
+        test_dataset = dataset.Dataset()
+        self.importer.source = '/path/to/filename.ext'
+        self.importer.import_into(test_dataset)
+        self.assertEqual(test_dataset.label, os.path.split(
+            self.importer.source)[-1])
 
 
 class TestDatasetExporter(unittest.TestCase):
