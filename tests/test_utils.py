@@ -648,6 +648,12 @@ class TestCopyKeysBetweenDicts(unittest.TestCase):
         target = utils.copy_keys_between_dicts(source, target)
         self.assertEqual('vfoo', target["kfoo"][0]["kbar"])
 
+    def test_copy_key_if_target_key_is_dict_but_source_key_is_not(self):
+        source = {'kfoo': 'kbar'}
+        target = {'kfoo': {'kbar': 'vfoo'}}
+        target = utils.copy_keys_between_dicts(source, target)
+        self.assertEqual(source['kfoo'], target['kfoo'])
+
 
 class TestRemoveEmptyValuesFromDicts(unittest.TestCase):
 

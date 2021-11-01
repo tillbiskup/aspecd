@@ -638,6 +638,10 @@ def copy_keys_between_dicts(source=None, target=None):
     If the key in ``source`` is a dict and exists in ``target``, the two
     dicts will be joined, not loosing keys in ``target``.
 
+    If, however, the key in ``source`` is *not* a dict, but the
+    corresponding key in ``target`` is a dict, the corresponding value in
+    ``target`` will be replaced with that from ``source``.
+
     Parameters
     ----------
     source : :class:`dict`
@@ -652,7 +656,8 @@ def copy_keys_between_dicts(source=None, target=None):
 
     """
     for key in source:
-        if key in target and isinstance(target[key], dict):
+        if key in target and isinstance(target[key], dict) \
+                and isinstance(source[key], dict):
             target[key] = copy_keys_between_dicts(source[key], target[key])
         else:
             target[key] = source[key]
