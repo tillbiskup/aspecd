@@ -136,6 +136,7 @@ class Reporter:
         self.context['sysinfo'] = \
             aspecd.system.SystemInfo(package=aspecd.utils.package_name(
                 self)).to_dict()
+        self.__kind__ = 'report'
 
     def render(self):
         """Render the template.

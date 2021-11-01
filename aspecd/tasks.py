@@ -1168,8 +1168,8 @@ class Recipe:
                 dataset_dict['label'] = self.datasets[dataset].label
             if self._dataset_from_foreign_package(self.datasets[dataset]):
                 dataset_dict['source'] = self.datasets[dataset].id
-                dataset_dict['package'] = \
-                    aspecd.utils.full_class_name(dataset).split('.')[0]
+                dataset_dict['package'] = aspecd.utils.full_class_name(
+                    self.datasets[dataset]).split('.')[0]
             if dataset_dict:
                 dict_['datasets'].append(dataset_dict)
             else:
@@ -1180,8 +1180,8 @@ class Recipe:
 
     def _dataset_from_foreign_package(self, dataset=None):
         package_names = ['aspecd']
-        if self.default_package:
-            package_names.append(self.default_package)
+        if self.settings['default_package']:
+            package_names.append(self.settings['default_package'])
         return not aspecd.utils.full_class_name(dataset).startswith(tuple(
             package_names))
 
@@ -2996,6 +2996,10 @@ class CompositeplotTask(PlotTask):
 
     """
 
+    def __init__(self):
+        super().__init__()
+        self.properties['plotter'] = []
+
     def to_dict(self):
         """
         Create dictionary containing public attributes of the object.
@@ -3013,7 +3017,7 @@ class CompositeplotTask(PlotTask):
             for key, value in self.recipe.plotters.items():
                 if plotter is value:
                     self.properties['plotter'] = key
-        super().to_dict()
+        return super().to_dict()
 
     def _perform(self):
         self._task = self.get_object()

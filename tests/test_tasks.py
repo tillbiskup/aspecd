@@ -344,15 +344,26 @@ class TestRecipe(unittest.TestCase):
                               'id': id_},
                              dict_['datasets'][0])
 
-    def test_to_dict_with_foreign_dataset_returns_dataset_as_dict(self):
+    def test_to_dict_with_foreign_dataset_includes_package_in_dict(self):
         class ForeignDataset:
             id = self.dataset
             label = self.dataset
         foreign_dataset = ForeignDataset()
         self.recipe.datasets[self.dataset] = foreign_dataset
         dict_ = self.recipe.to_dict()
-        self.assertDictEqual({'source': self.dataset, 'package': 'builtins'},
-                             dict_['datasets'][0])
+        self.assertDictEqual(
+            {'source': self.dataset, 'package': 'test_tasks'},
+            dict_['datasets'][0])
+
+    def test_to_dict_with_foreign_dataset_and_default_package(self):
+        class ForeignDataset:
+            id = self.dataset
+            label = self.dataset
+        foreign_dataset = ForeignDataset()
+        self.recipe.settings['default_package'] = __name__
+        self.recipe.datasets[self.dataset] = foreign_dataset
+        dict_ = self.recipe.to_dict()
+        self.assertEqual(self.dataset, dict_['datasets'][0])
 
     def test_to_dict_with_task_returns_task_dict(self):
         task = tasks.Task()

@@ -294,6 +294,7 @@ class Model:
         self.references = []
         self._dataset = aspecd.dataset.CalculatedDataset()
         self._axes_from_dataset = []
+        self.__kind__ = 'model'
 
     def create(self):
         """

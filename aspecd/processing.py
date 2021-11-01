@@ -346,6 +346,7 @@ class ProcessingStep:
         self.description = 'Abstract processing step'
         self.comment = ''
         self.references = []
+        self.__kind__ = 'processing'
 
     def process(self):
         """Perform the actual processing step.

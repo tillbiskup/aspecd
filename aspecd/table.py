@@ -515,6 +515,7 @@ class Table:
         self._columns = []
         self._rows = []
         self._column_widths = []
+        self.__kind__ = 'tabulate'
 
     def tabulate(self, dataset=None, from_dataset=False):
         """
