@@ -626,7 +626,7 @@ class TestChef(unittest.TestCase):
                        'directories': {'datasets_source': '/foo'}}
         recipe.from_dict(recipe_dict)
         self.chef.cook(recipe=recipe)
-        self.assertEqual('bar', self.chef.history["datasets"][0]["source"])
+        self.assertEqual('bar', self.chef.history["datasets"][0])
 
     def test_cook_w_datasets_source_dir_w_slash_shortens_dataset_paths(self):
         recipe = self.recipe
@@ -635,7 +635,7 @@ class TestChef(unittest.TestCase):
                        'directories': {'datasets_source': '/foo/'}}
         recipe.from_dict(recipe_dict)
         self.chef.cook(recipe=recipe)
-        self.assertEqual('bar', self.chef.history["datasets"][0]["source"])
+        self.assertEqual('bar', self.chef.history["datasets"][0])
 
     def test_cook_adds_output_directory_to_history(self):
         recipe = self.recipe

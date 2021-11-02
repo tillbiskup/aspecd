@@ -178,8 +178,7 @@ import logging
 import os
 
 import matplotlib as mpl
-from matplotlib.figure import Figure
-import matplotlib.style
+import matplotlib.pyplot as plt
 # pylint: disable=unused-import
 import matplotlib.collections
 import matplotlib.ticker as ticker
@@ -356,22 +355,33 @@ class Plotter:
     def _set_style(self):
         self._original_rcparams = mpl.rcParams.copy()
         if self.style:
-            if self.style not in \
-                    matplotlib.style.available + ['default', 'xkcd']:
+            if self.style not in plt.style.available + ['default', 'xkcd']:
                 message = 'Cannot find matplotlib style "{style}".'.format(
                     style=self.style)
                 raise aspecd.exceptions.StyleNotFoundError(message=message)
             if self.style == 'xkcd':
                 self._set_xkcd_style()
             else:
-                matplotlib.style.use(self.style)
+                plt.style.use(self.style)
 
     def _reset_style(self):
         dict.update(mpl.rcParams, self._original_rcparams)
 
     @staticmethod
     def _set_xkcd_style():
-        from matplotlib import patheffects
+        """
+        Set plot style similar to XKCD web comics.
+
+        The code below is taken from the official matplotlib.pyplot module
+        and slightly adapted. The reason for not using the original code
+        is that it is only available from the pyplot submodule.
+
+        Original source:
+
+        https://matplotlib.org/stable/_modules/matplotlib/pyplot.html#xkcd
+
+        """
+        from matplotlib import patheffects  # noqa
         mpl.rcParams.update({
             'font.family': ['xkcd', 'xkcd Script', 'Humor Sans', 'Comic Neue',
                             'Comic Sans MS'],
@@ -416,8 +426,7 @@ class Plotter:
         """
         if not self.figure and not self.axes:
             mpl.interactive(False)  # Mac OS X: prevent plot window from opening
-            self.figure = Figure()
-            self.axes = self.figure.subplots()
+            self.figure, self.axes = plt.subplots()
 
     def _create_plot(self):
         """Perform the actual plotting of the data of the dataset(s).
@@ -1886,7 +1895,7 @@ class CompositePlotter(Plotter):
         self.__kind__ = 'compositeplot'
 
     def _create_figure_and_axes(self):
-        self.figure = Figure()
+        self.figure = plt.figure()
         grid_spec = self.figure.add_gridspec(self.grid_dimensions[0],
                                              self.grid_dimensions[1])
         for subplot in self.subplot_locations:
