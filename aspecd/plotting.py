@@ -178,9 +178,10 @@ import logging
 import os
 
 import matplotlib as mpl
+from matplotlib.figure import Figure
+import matplotlib.style
 # pylint: disable=unused-import
 import matplotlib.collections
-import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
 
@@ -305,6 +306,8 @@ class Plotter:
         self.caption = Caption()
         self.legend = None
         self.style = ''
+        #
+        self._original_rcparams = None
 
     @property
     def fig(self):
@@ -329,6 +332,7 @@ class Plotter:
         self.properties.apply(plotter=self)
         self._set_legend()
         self._add_zero_lines()
+        self._reset_style()
 
     # noinspection PyUnusedLocal
     @staticmethod
@@ -350,15 +354,44 @@ class Plotter:
         return True
 
     def _set_style(self):
+        self._original_rcparams = mpl.rcParams.copy()
         if self.style:
-            if self.style not in plt.style.available + ['default', 'xkcd']:
+            if self.style not in \
+                    matplotlib.style.available + ['default', 'xkcd']:
                 message = 'Cannot find matplotlib style "{style}".'.format(
                     style=self.style)
                 raise aspecd.exceptions.StyleNotFoundError(message=message)
             if self.style == 'xkcd':
-                plt.xkcd()
+                self._set_xkcd_style()
             else:
-                plt.style.use(self.style)
+                matplotlib.style.use(self.style)
+
+    def _reset_style(self):
+        dict.update(mpl.rcParams, self._original_rcparams)
+
+    @staticmethod
+    def _set_xkcd_style():
+        from matplotlib import patheffects
+        mpl.rcParams.update({
+            'font.family': ['xkcd', 'xkcd Script', 'Humor Sans', 'Comic Neue',
+                            'Comic Sans MS'],
+            'font.size': 14.0,
+            'path.sketch': (1, 100, 2),  # (scale, length, randomness),
+            'path.effects': [
+                patheffects.withStroke(linewidth=4, foreground="w")],
+            'axes.linewidth': 1.5,
+            'lines.linewidth': 2.0,
+            'figure.facecolor': 'white',
+            'grid.linewidth': 0.0,
+            'axes.grid': False,
+            'axes.unicode_minus': False,
+            'axes.edgecolor': 'black',
+            'xtick.major.size': 8,
+            'xtick.major.width': 3,
+            'ytick.major.size': 8,
+            'ytick.major.width': 3,
+            'text.usetex': False,
+        })
 
     def _create_figure_and_axes(self):
         """Create figure and axes and assign to attributes.
@@ -383,7 +416,8 @@ class Plotter:
         """
         if not self.figure and not self.axes:
             mpl.interactive(False)  # Mac OS X: prevent plot window from opening
-            self.figure, self.axes = plt.subplots()
+            self.figure = Figure()
+            self.axes = self.figure.subplots()
 
     def _create_plot(self):
         """Perform the actual plotting of the data of the dataset(s).
@@ -1852,7 +1886,7 @@ class CompositePlotter(Plotter):
         self.__kind__ = 'compositeplot'
 
     def _create_figure_and_axes(self):
-        self.figure = plt.figure()
+        self.figure = Figure()
         grid_spec = self.figure.add_gridspec(self.grid_dimensions[0],
                                              self.grid_dimensions[1])
         for subplot in self.subplot_locations:
@@ -2475,15 +2509,15 @@ class MultiPlot1DProperties(MultiPlotProperties):
         self.drawings.append(drawing_properties)
 
     def _set_default_properties(self, drawing_properties):
-        property_cycle = plt.rcParams['axes.prop_cycle'].by_key()
+        property_cycle = mpl.rcParams['axes.prop_cycle'].by_key()
         length_properties = len(property_cycle["color"])
         idx = len(self.drawings)
         for key, value in property_cycle.items():
             setattr(drawing_properties, key, value[idx % length_properties])
         for key in ['linewidth', 'linestyle', 'marker']:
             rc_property = 'lines.' + key
-            if rc_property in plt.rcParams.keys():
-                setattr(drawing_properties, key, plt.rcParams[rc_property])
+            if rc_property in mpl.rcParams.keys():
+                setattr(drawing_properties, key, mpl.rcParams[rc_property])
 
 
 class CompositePlotProperties(PlotProperties):

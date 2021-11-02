@@ -156,6 +156,24 @@ class TestPlotter(unittest.TestCase):
         with self.assertRaises(aspecd.exceptions.StyleNotFoundError):
             self.plotter.plot()
 
+    def test_plot_with_style_restores_previous_settings_after_plot(self):
+        orig_rcparams = matplotlib.rcParams.copy()
+        self.plotter.style = 'seaborn'
+        self.plotter.plot()
+        self.assertEqual(orig_rcparams['axes.facecolor'],
+                         matplotlib.rcParams['axes.facecolor'])
+        # Cleanup in case anything goes wrong
+        dict.update(matplotlib.rcParams, orig_rcparams)
+
+    def test_plot_with_xkcd_style_restores_previous_settings_after_plot(self):
+        orig_rcparams = matplotlib.rcParams.copy()
+        self.plotter.style = 'xkcd'
+        self.plotter.plot()
+        self.assertEqual(orig_rcparams['path.effects'],
+                         matplotlib.rcParams['path.effects'])
+        # Cleanup in case anything goes wrong
+        dict.update(matplotlib.rcParams, orig_rcparams)
+
     def test_plot_adds_zero_lines(self):
         self.plotter.parameters['show_zero_lines'] = True
         self.plotter.plot()
