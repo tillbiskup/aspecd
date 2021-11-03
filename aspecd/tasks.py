@@ -1065,10 +1065,6 @@ class Recipe:
             package = self.settings['default_package'] \
                 if self.settings['default_package'] else 'aspecd'
             self.dataset_factory = self._get_dataset_factory(package=package)
-        if self.directories['output'] \
-                and not self.directories['output'].startswith('/'):
-            self.directories['output'] = \
-                self._get_absolute_path(self.directories['output'])
         if 'datasets' in dict_:
             for key in dict_['datasets']:
                 self._append_dataset(key)

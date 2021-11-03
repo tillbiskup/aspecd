@@ -449,12 +449,6 @@ class TestRecipe(unittest.TestCase):
         self.recipe.from_dict(dict_)
         self.assertEqual('/foo', self.recipe.directories['output'])
 
-    def test_from_dict_makes_output_directory_absolute_path(self):
-        dict_ = {'directories': {'output': 'foo'}}
-        self.recipe.from_dict(dict_)
-        self.assertEqual(os.path.join(os.path.abspath(os.path.curdir), 'foo'),
-                         self.recipe.directories['output'])
-
     def test_from_dict_sets_autosave_plots(self):
         dict_ = {'settings': {'autosave_plots': False}}
         self.recipe.from_dict(dict_)
