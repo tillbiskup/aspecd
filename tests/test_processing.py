@@ -63,6 +63,15 @@ class TestProcessingStep(unittest.TestCase):
         self.assertTrue(hasattr(self.processing, 'process'))
         self.assertTrue(callable(self.processing.process))
 
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.processing, 'to_dict'))
+        self.assertTrue(callable(self.processing.to_dict))
+
+    def test_to_dict_does_not_contain_certain_keys(self):
+        for key in ['undoable', 'name', 'description', 'references']:
+            with self.subTest(key=key):
+                self.assertNotIn(key, self.processing.to_dict())
+
 
 class TestSingleProcessingStep(unittest.TestCase):
     def setUp(self):
@@ -78,6 +87,11 @@ class TestSingleProcessingStep(unittest.TestCase):
     def test_description_property_is_sensible(self):
         self.assertIn(self.processing.description,
                       'Abstract singleprocessing step')
+
+    def test_to_dict_does_not_contain_certain_keys(self):
+        for key in ['dataset']:
+            with self.subTest(key=key):
+                self.assertNotIn(key, self.processing.to_dict())
 
     def test_process_checks_applicability(self):
         class MyProcessingStep(aspecd.processing.SingleProcessingStep):
@@ -226,6 +240,11 @@ class TestMultiProcessingStep(unittest.TestCase):
     def test_description_property_is_sensible(self):
         self.assertIn(self.processing.description,
                       'Abstract multiprocessing step')
+
+    def test_to_dict_does_not_contain_certain_keys(self):
+        for key in ['datasets']:
+            with self.subTest(key=key):
+                self.assertNotIn(key, self.processing.to_dict())
 
     def test_has_datasets_property(self):
         self.assertTrue(hasattr(self.processing, 'datasets'))

@@ -5,6 +5,34 @@ Changelog
 This page contains a summary of changes between the official ASpecD releases. Only the biggest changes are listed here. A complete and detailed log of all changes is available through the `GitHub Repository Browser <https://github.com/tillbiskup/aspecd/commits/master>`_.
 
 
+Version 0.6.0
+=============
+
+Not yet released
+
+
+New features
+------------
+
+* :meth:`aspecd.utils.ToDictMixin.to_dict` can optionally remove keys with empty values
+* ``to_dict()`` method in :class:`aspecd.processing.ProcessingStep`, :class:`aspecd.analysis.AnalysisStep`, :class:`aspecd.annotation.Annotation`, :class:`aspecd.plotting.Plotter`, :class:`aspecd.table.Table`, :class:`aspecd.report.Reporter`, :class:`aspecd.model.Model`
+
+
+Changes
+-------
+
+* Dataset labels do not contain source path
+* Recipe dataset_source and output directories are no longer converted to absolute paths
+* More complete recipe history for tasks, including more of their properties
+
+Fixes
+-----
+
+* :meth:`aspecd.tasks.Task.to_yaml` serialises numpy arrays
+* Datasets from foreign packages are correctly listed in recipe history
+* :func:`aspecd.utils.copy_keys_between_dicts` properly traverses
+
+
 Version 0.5.0
 =============
 

@@ -58,6 +58,15 @@ class TestReporter(unittest.TestCase):
     def test_has_report_property(self):
         self.assertTrue(hasattr(self.report, 'report'))
 
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.report, 'to_dict'))
+        self.assertTrue(callable(self.report.to_dict))
+
+    def test_to_dict_does_not_contain_certain_keys(self):
+        for key in ['context', 'environment', 'report']:
+            with self.subTest(key=key):
+                self.assertNotIn(key, self.report.to_dict())
+
     def test_has_render_method(self):
         self.assertTrue(hasattr(self.report, 'render'))
         self.assertTrue(callable(self.report.render))
@@ -222,6 +231,11 @@ class TestLaTeXReporter(unittest.TestCase):
 
     def test_has_latex_executable_property(self):
         self.assertTrue(hasattr(self.report, 'latex_executable'))
+
+    def test_to_dict_does_not_contain_certain_keys(self):
+        for key in ['latex_executable']:
+            with self.subTest(key=key):
+                self.assertNotIn(key, self.report.to_dict())
 
     def test_render_with_template_with_absolute_path(self):
         with open(self.template2, 'w+') as f:

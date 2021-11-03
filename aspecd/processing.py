@@ -255,7 +255,7 @@ import aspecd.history
 import aspecd.utils
 
 
-class ProcessingStep:
+class ProcessingStep(aspecd.utils.ToDictMixin):
     """Base class for processing steps.
 
     Each class actually performing a processing step should inherit from this
@@ -339,6 +339,7 @@ class ProcessingStep:
     """
 
     def __init__(self):
+        super().__init__()
         self.undoable = False
         self.name = aspecd.utils.full_class_name(self)
         self.parameters = dict()
@@ -347,6 +348,8 @@ class ProcessingStep:
         self.comment = ''
         self.references = []
         self.__kind__ = 'processing'
+        self._exclude_from_to_dict = \
+            ['undoable', 'name', 'description', 'references']
 
     def process(self):
         """Perform the actual processing step.
@@ -491,6 +494,7 @@ class SingleProcessingStep(ProcessingStep):
         super().__init__()
         self.description = 'Abstract singleprocessing step'
         self.dataset = None
+        self._exclude_from_to_dict.extend(['dataset'])
 
     # pylint: disable=arguments-differ
     def process(self, dataset=None, from_dataset=False):
@@ -643,6 +647,7 @@ class MultiProcessingStep(ProcessingStep):
         self.description = 'Abstract multiprocessing step'
         self.datasets = []
         self.__kind__ = 'multiprocessing'
+        self._exclude_from_to_dict.extend(['datasets'])
 
     def process(self):
         """Perform the actual processing step.

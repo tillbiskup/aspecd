@@ -58,7 +58,7 @@ import aspecd.system
 import aspecd.utils
 
 
-class Reporter:
+class Reporter(aspecd.utils.ToDictMixin):
     """Base class for reports.
 
     To generate a report from a template, you will need a template in the
@@ -128,6 +128,7 @@ class Reporter:
     """
 
     def __init__(self, template='', filename=''):
+        super().__init__()
         self.template = template
         self.filename = filename
         self.context = collections.OrderedDict()
@@ -137,6 +138,7 @@ class Reporter:
             aspecd.system.SystemInfo(package=aspecd.utils.package_name(
                 self)).to_dict()
         self.__kind__ = 'report'
+        self._exclude_from_to_dict = ['context', 'environment', 'report']
 
     def render(self):
         """Render the template.
@@ -284,6 +286,7 @@ class LaTeXReporter(Reporter):
 
         self._temp_dir = tempfile.mkdtemp()
         self._pwd = os.getcwd()
+        self._exclude_from_to_dict.extend(['latex_executable'])
 
     def _render(self):
         """Perform the actual rendering of the template.

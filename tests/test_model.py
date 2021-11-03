@@ -41,6 +41,15 @@ class TestModel(unittest.TestCase):
     def test_description_references_is_list(self):
         self.assertTrue(isinstance(self.model.references, list))
 
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.model, 'to_dict'))
+        self.assertTrue(callable(self.model.to_dict))
+
+    def test_to_dict_does_not_contain_certain_keys(self):
+        for key in ['name', 'description', 'references']:
+            with self.subTest(key=key):
+                self.assertNotIn(key, self.model.to_dict())
+
     def test_has_create_method(self):
         self.assertTrue(hasattr(self.model, 'create'))
         self.assertTrue(callable(self.model.create))

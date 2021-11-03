@@ -41,6 +41,15 @@ class TestAnnotation(unittest.TestCase):
         self.assertEqual(self.annotation.type,
                          self.annotation.__class__.__name__.lower())
 
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.annotation, 'to_dict'))
+        self.assertTrue(callable(self.annotation.to_dict))
+
+    def test_to_dict_does_not_contain_certain_keys(self):
+        for key in ['dataset']:
+            with self.subTest(key=key):
+                self.assertNotIn(key, self.annotation.to_dict())
+
     def test_has_annotate_method(self):
         self.assertTrue(hasattr(self.annotation, 'annotate'))
         self.assertTrue(callable(self.annotation.annotate))

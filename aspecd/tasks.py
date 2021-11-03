@@ -1696,11 +1696,11 @@ class Task(aspecd.utils.ToDictMixin):
             New parameter `remove_empty`
 
         """
-        if hasattr(self._task, 'parameters'):
-            if 'parameters' not in self.properties:
-                self.properties["parameters"] = dict()
-            for key, value in self._task.parameters.items():
-                self.properties["parameters"][key] = value
+        if self._task:
+            task_copy = copy.copy(self._task)
+            if hasattr(task_copy, 'parameters'):
+                self._replace_objects_with_labels(task_copy.parameters)
+            self.properties.update(task_copy.to_dict())
         if 'parameters' in self.properties:
             self._replace_objects_with_labels(self.properties["parameters"])
         self._replace_objects_with_labels(self.properties)
@@ -2681,41 +2681,6 @@ class PlotTask(Task):
         self.result = ''
         self.target = ''
         self._module = 'plotting'
-
-    def to_dict(self, remove_empty=False):
-        """
-        Create dictionary containing public attributes of an object.
-
-        Furthermore, replace certain objects with their respective labels
-        provided in the recipe. These objects currently include datasets,
-        results, figures (*i.e.* figure records), and plotters.
-
-        Parameters
-        ----------
-        remove_empty : :class:`bool`
-            Whether to remove empty fields
-
-            Default: False
-
-        Returns
-        -------
-        public_attributes : :class:`collections.OrderedDict`
-            Ordered dictionary containing the public attributes of the object
-
-            The order of attribute definition is preserved
-
-
-        .. versionchanged:: 0.5
-            Properties of underlying task object are added
-
-        .. versionchanged:: 0.6
-            New parameter `remove_empty`
-
-        """
-        if 'properties' not in self.properties \
-                and hasattr(self._task, 'properties'):
-            self.properties["properties"] = self._task.properties.to_dict()
-        return super().to_dict(remove_empty=remove_empty)
 
     def perform(self):
         """

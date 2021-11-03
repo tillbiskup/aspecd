@@ -194,7 +194,7 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
-class Plotter:
+class Plotter(aspecd.utils.ToDictMixin):
     """Base class for plots.
 
     Each class actually plotting data should inherit from this class.
@@ -292,6 +292,7 @@ class Plotter:
 
     def __init__(self):
         # Name defaults always to the full class name, don't change!
+        super().__init__()
         self.name = aspecd.utils.full_class_name(self)
         self.parameters = {
             'show_legend': False,
@@ -307,6 +308,8 @@ class Plotter:
         self.style = ''
         #
         self._original_rcparams = None
+        self._exclude_from_to_dict = \
+            ['name', 'description', 'figure', 'axes', 'legend']
 
     @property
     def fig(self):
@@ -516,6 +519,7 @@ class Plotter:
 
     def _set_legend(self):
         if self.parameters['show_legend']:
+            # noinspection PyArgumentList
             self.legend = self.axes.legend(**self.properties.legend.to_dict())
 
     def _add_zero_lines(self):
@@ -523,16 +527,20 @@ class Plotter:
             if isinstance(self.axes, list):
                 for axes in self.axes:
                     if axes.get_ylim()[0] <= 0 <= axes.get_ylim()[1]:
+                        # noinspection PyArgumentList
                         axes.axhline(**self.properties.zero_lines.to_dict(),
                                      zorder=1)
                     if axes.get_xlim()[0] <= 0 <= axes.get_xlim()[1]:
+                        # noinspection PyArgumentList
                         axes.axvline(**self.properties.zero_lines.to_dict(),
                                      zorder=1)
             else:
                 if self.axes.get_ylim()[0] <= 0 <= self.axes.get_ylim()[1]:
+                    # noinspection PyArgumentList
                     self.axes.axhline(**self.properties.zero_lines.to_dict(),
                                       zorder=1)
                 if self.axes.get_xlim()[0] <= 0 <= self.axes.get_xlim()[1]:
+                    # noinspection PyArgumentList
                     self.axes.axvline(**self.properties.zero_lines.to_dict(),
                                       zorder=1)
 
@@ -597,6 +605,7 @@ class SinglePlotter(Plotter):
         self.drawing = None
         self.description = 'Abstract plotting step for single dataset'
         self.__kind__ = 'singleplot'
+        self._exclude_from_to_dict.extend(['dataset', 'drawing'])
 
     # pylint: disable=arguments-differ
     def plot(self, dataset=None, from_dataset=False):
@@ -1364,7 +1373,7 @@ class SinglePlotter2DStacked(SinglePlotter):
                 offset = idx * self.parameters['offset']
                 self.axes.axhline(
                     y=offset,
-                    **self.properties.zero_lines.to_dict(),
+                    **self.properties.zero_lines.to_dict(),  # noqa
                     zorder=1)
 
 
@@ -1775,7 +1784,7 @@ class MultiPlotter1DStacked(MultiPlotter1D):
                 offset = -idx * self.parameters['offset']
                 self.axes.axhline(
                     y=offset,
-                    **self.properties.zero_lines.to_dict(),
+                    **self.properties.zero_lines.to_dict(),  # noqa
                     zorder=1)
 
 

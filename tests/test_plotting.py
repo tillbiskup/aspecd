@@ -81,6 +81,15 @@ class TestPlotter(unittest.TestCase):
     def test_has_style_property(self):
         self.assertTrue(hasattr(self.plotter, 'style'))
 
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.plotter, 'to_dict'))
+        self.assertTrue(callable(self.plotter.to_dict))
+
+    def test_to_dict_does_not_contain_certain_keys(self):
+        for key in ['name', 'description', 'figure', 'axes', 'legend']:
+            with self.subTest(key=key):
+                self.assertNotIn(key, self.plotter.to_dict())
+
     def test_has_save_method(self):
         self.assertTrue(hasattr(self.plotter, 'save'))
         self.assertTrue(callable(self.plotter.save))
@@ -205,6 +214,11 @@ class TestSinglePlotter(unittest.TestCase):
 
     def test_has_drawing_property(self):
         self.assertTrue(hasattr(self.plotter, 'drawing'))
+
+    def test_to_dict_does_not_contain_certain_keys(self):
+        for key in ['dataset', 'drawing']:
+            with self.subTest(key=key):
+                self.assertNotIn(key, self.plotter.to_dict())
 
     def test_plot_without_dataset_raises(self):
         with self.assertRaises(aspecd.exceptions.MissingDatasetError):

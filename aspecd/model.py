@@ -226,10 +226,10 @@ import numpy as np
 import aspecd.dataset
 import aspecd.exceptions
 import aspecd.utils
-from aspecd.utils import not_zero, isiterable
+from aspecd.utils import not_zero, isiterable, ToDictMixin
 
 
-class Model:
+class Model(ToDictMixin):
     """
     Base class for numerical models.
 
@@ -268,8 +268,7 @@ class Model:
         Short description, to be set in class definition
 
     references : :class:`list`
-        List of references with relevance for the implementation of the
-        processing step.
+        List of references with relevance for the implementation of the model.
 
         Use appropriate record types from the `bibrecord package
         <https://bibrecord.docs.till-biskup.de/>`_.
@@ -287,6 +286,7 @@ class Model:
     """
 
     def __init__(self):
+        super().__init__()
         self.name = aspecd.utils.full_class_name(self)
         self.parameters = dict()
         self.variables = []
@@ -295,6 +295,7 @@ class Model:
         self._dataset = aspecd.dataset.CalculatedDataset()
         self._axes_from_dataset = []
         self.__kind__ = 'model'
+        self._exclude_from_to_dict = ['name', 'description', 'references']
 
     def create(self):
         """

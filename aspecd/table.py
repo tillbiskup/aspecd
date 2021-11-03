@@ -434,7 +434,7 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
-class Table:
+class Table(utils.ToDictMixin):
     """
     Tabular representation of datasets.
 
@@ -504,6 +504,7 @@ class Table:
     """
 
     def __init__(self):
+        super().__init__()
         self.name = aspecd.utils.full_class_name(self)
         self.dataset = None
         self.caption = Caption()
@@ -516,6 +517,7 @@ class Table:
         self._rows = []
         self._column_widths = []
         self.__kind__ = 'tabulate'
+        self._exclude_from_to_dict = ['name', 'dataset', 'table']
 
     def tabulate(self, dataset=None, from_dataset=False):
         """

@@ -21,9 +21,10 @@ simply subclass the :class:`aspecd.annotations.Annotation` base class.
 
 import aspecd.exceptions
 import aspecd.history
+from aspecd.utils import ToDictMixin
 
 
-class Annotation:
+class Annotation(ToDictMixin):
     """
     Annotations are user-supplied additional information to datasets.
 
@@ -67,6 +68,7 @@ class Annotation:
     """
 
     def __init__(self):
+        super().__init__()
         self.type = self.__class__.__name__.lower()
         self.content = dict()
         self.dataset = None
@@ -77,6 +79,7 @@ class Annotation:
                                 'distance']
         # Default scope if none is set explicitly
         self._default_scope = self._allowed_scopes[0]
+        self._exclude_from_to_dict = ['dataset']
 
     @property
     def scope(self):
