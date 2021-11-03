@@ -46,7 +46,7 @@ class TestAnnotation(unittest.TestCase):
         self.assertTrue(callable(self.annotation.to_dict))
 
     def test_to_dict_does_not_contain_certain_keys(self):
-        for key in ['dataset']:
+        for key in ['dataset', 'type']:
             with self.subTest(key=key):
                 self.assertNotIn(key, self.annotation.to_dict())
 

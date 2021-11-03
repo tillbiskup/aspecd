@@ -14,6 +14,10 @@ Not yet released
 New features
 ------------
 
+* Reports
+
+  * Context contains ``templates_dir`` allowing to include sub-templates
+
 * Tasks/Recipe-driven data analysis
 
   * YAML representation of recipe and tasks via :meth:`aspecd.tasks.Recipe.to_yaml` and :meth:`aspecd.tasks.Task.to_yaml`
@@ -41,6 +45,7 @@ Fixes
 * :meth:`aspecd.tasks.Task.to_yaml` serialises numpy arrays
 * Datasets from foreign packages are correctly listed in recipe history
 * :func:`aspecd.utils.copy_keys_between_dicts` properly traverses
+* :class:`aspecd.utils.Yaml` handles :class:`numpy.double`
 
 
 Version 0.5.0

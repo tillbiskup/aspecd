@@ -1859,6 +1859,10 @@ class TestAnnotationTask(unittest.TestCase):
         self.assertIn('Perform "{}" on dataset "{}"'.format(
             self.annotation_task['type'], self.dataset[0]), cm.output[0])
 
+    def test_to_dict_sets_kind(self):
+        dict_ = self.task.to_dict()
+        self.assertEqual('annotation', dict_['kind'])
+
 
 class TestPlotTask(unittest.TestCase):
     def setUp(self):

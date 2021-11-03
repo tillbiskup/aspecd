@@ -92,6 +92,22 @@ class TestReporter(unittest.TestCase):
         self.report.template = self.template2
         self.report.render()
 
+    def test_render_sets_template_dir_in_context(self):
+        with open(self.template2, 'w+') as f:
+            f.write('')
+        self.report.template = self.template2
+        self.report.render()
+        self.assertEqual(os.path.split(self.report.template)[0] + os.path.sep,
+                         self.report.context['template_dir'])
+
+    def test_render_sets_empty_template_dir_in_context(self):
+        with open(self.template, 'w+') as f:
+            f.write('')
+        self.report.template = self.template
+        self.report.render()
+        self.assertEqual(os.path.split(self.template)[0],
+                         self.report.context['template_dir'])
+
     def test_render_with_template_with_relative_path(self):
         with open(self.template, 'w+') as f:
             f.write('')

@@ -509,7 +509,7 @@ class AnnotationRecord(aspecd.utils.ToDictMixin):
         super().__init__()
         self.content = dict()
         self.class_name = ''
-        self._attributes_to_copy = ['content']
+        self._attributes_to_copy = ['content', 'type']
         if annotation:
             self.from_annotation(annotation)
 
@@ -562,7 +562,7 @@ class AnnotationHistoryRecord(HistoryRecord):
 
     Attributes
     ----------
-    annotation : :class:`aspecd.analysis.Annotation`
+    annotation : :class:`aspecd.annotation.Annotation`
         Annotation the history is saved for
 
     package : :class:`str`

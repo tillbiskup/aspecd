@@ -96,9 +96,13 @@ class Reporter(aspecd.utils.ToDictMixin):
     context : :class:`collections.OrderedDict`
         Variables of a template that are replaced with the given content.
 
-        context contains a key "sysinfo" containing system-related
+        It contains a key "sysinfo" containing system-related
         information, i.e. the information contained in the
         :class:`aspecd.system.SystemInfo` class.
+
+        Furthermore, the key "template_dir" contains the (relative or
+        absolute) path to the template provided in :attr:`template`. This is
+        particularly useful for including subtemplates.
 
     environment : :class:`aspecd.report.GenericEnvironment`
         Jinja2 environment used for rendering the template.
@@ -161,6 +165,10 @@ class Reporter(aspecd.utils.ToDictMixin):
         if not self.template or not os.path.exists(self.template):
             message = ' '.join(['Cannot find template file', self.template])
             raise FileNotFoundError(message)
+        # noinspection PyTypeChecker
+        self.context['template_dir'] = os.path.split(self.template)[0]
+        if self.context['template_dir']:
+            self.context['template_dir'] += os.path.sep
         self.template = os.path.realpath(self.template)
         self._render()
 

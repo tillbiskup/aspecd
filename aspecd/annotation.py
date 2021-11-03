@@ -79,7 +79,8 @@ class Annotation(ToDictMixin):
                                 'distance']
         # Default scope if none is set explicitly
         self._default_scope = self._allowed_scopes[0]
-        self._exclude_from_to_dict = ['dataset']
+        self._exclude_from_to_dict = ['dataset', 'type']
+        self.__kind__ = 'annotation'
 
     @property
     def scope(self):
