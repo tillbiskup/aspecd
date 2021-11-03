@@ -219,6 +219,17 @@ class TestToDictMixin(unittest.TestCase):
         self.assertEqual(['purpose', '_foo', '_bar'],
                          list(obj.to_dict().keys()))
 
+    def test_remove_empty_properties_from_dict(self):
+        class Test(utils.ToDictMixin):
+            def __init__(self):
+                super().__init__()
+                self.purpose = ''
+                self.comment = 'Lorem ipsum'
+
+        obj = Test()
+        self.assertEqual(['comment'],
+                         list(obj.to_dict(remove_empty=True).keys()))
+
 
 class TestGetAspecdVersion(unittest.TestCase):
 

@@ -1137,14 +1137,28 @@ class Recipe:
             task.package = self.settings['default_package']
         self.tasks.append(task)
 
-    def to_dict(self):
+    def to_dict(self, remove_empty=False):
         """
         Return dict from attributes.
+
+        Parameters
+        ----------
+        remove_empty : :class:`bool`
+            Whether to remove empty fields from tasks
+
+            Default: False
 
         Returns
         -------
         dict_ : :class:`dict`
-            Dictionary with fields "datasets" and "tasks"
+            Dictionary representing a recipe.
+
+            Contains fields "format", "settings", "directories",
+            "datasets", and "tasks".
+
+
+        .. versionchanged:: 0.6
+            New parameter `remove_empty` to remove empty fields from tasks.
 
         """
         dict_ = {
@@ -1174,7 +1188,7 @@ class Recipe:
             else:
                 dict_['datasets'].append(self.datasets[dataset].id)
         for task in self.tasks:
-            dict_['tasks'].append(task.to_dict())
+            dict_['tasks'].append(task.to_dict(remove_empty=remove_empty))
         return dict_
 
     def _dataset_from_foreign_package(self, dataset=None):
@@ -1184,13 +1198,20 @@ class Recipe:
         return not aspecd.utils.full_class_name(dataset).startswith(tuple(
             package_names))
 
-    def to_yaml(self):
+    def to_yaml(self, remove_empty=False):
         """
         Create YAML representation of recipe.
 
         As users will interact with recipes primarily in form of YAML files,
         this method conveniently returns the YAML representation of an empty
         recipe that can serve as a starting point for own recipes.
+
+        Parameters
+        ----------
+        remove_empty : :class:`bool`
+            Whether to remove empty fields from tasks
+
+            Default: False
 
         Returns
         -------
@@ -1237,9 +1258,12 @@ class Recipe:
 
         .. versionadded:: 0.5
 
+        .. versionchanged:: 0.6
+            Parameter `remove_empty` to remove empty fields from tasks.
+
         """
         yaml = aspecd.utils.Yaml()
-        yaml.dict = self.to_dict()
+        yaml.dict = self.to_dict(remove_empty=remove_empty)
         return yaml.write_stream()
 
     def import_from(self, importer=None):
@@ -1642,13 +1666,20 @@ class Task(aspecd.utils.ToDictMixin):
                 else:
                     setattr(self, key, value)
 
-    def to_dict(self):
+    def to_dict(self, remove_empty=False):
         """
         Create dictionary containing public attributes of an object.
 
         Furthermore, replace certain objects with their respective labels
         provided in the recipe. These objects currently include datasets,
         results, figures (*i.e.* figure records), and plotters.
+
+        Parameters
+        ----------
+        remove_empty : :class:`bool`
+            Whether to remove empty fields
+
+            Default: False
 
         Returns
         -------
@@ -1660,6 +1691,9 @@ class Task(aspecd.utils.ToDictMixin):
 
         .. versionchanged:: 0.4
             (Implicit) parameters of underlying task object are added
+
+        .. versionchanged:: 0.6
+            New parameter `remove_empty`
 
         """
         if hasattr(self._task, 'parameters'):
@@ -1674,7 +1708,7 @@ class Task(aspecd.utils.ToDictMixin):
             self.kind = self.__class__.__name__[:-4].lower()
         if hasattr(self._task, '__kind__'):
             self.kind = self._task.__kind__
-        return super().to_dict()
+        return super().to_dict(remove_empty=remove_empty)
 
     def _replace_objects_with_labels(self, dict_=None):  # noqa: MC0001
         if not self.recipe:
@@ -1693,13 +1727,20 @@ class Task(aspecd.utils.ToDictMixin):
                 if property_value is plotter_value:
                     dict_[property_key] = plotter_key
 
-    def to_yaml(self):
+    def to_yaml(self, remove_empty=False):
         """
         Create YAML representation of task.
 
         As users will use tasks primarily within recipes, *i.e.* in YAML
         files, this method conveniently returns the YAML representation of a
         task.
+
+        Parameters
+        ----------
+        remove_empty : :class:`bool`
+            Whether to remove empty fields
+
+            Default: False
 
         Returns
         -------
@@ -1747,6 +1788,9 @@ class Task(aspecd.utils.ToDictMixin):
 
         .. versionadded:: 0.5
 
+        .. versionchanged:: 0.6
+            Parameter `remove_empty`
+
         """
         if not self._task and self.type:
             if not self.kind:
@@ -1754,7 +1798,7 @@ class Task(aspecd.utils.ToDictMixin):
             self._task = self.get_object()
         yaml = aspecd.utils.Yaml()
         yaml.numpy_array_to_list = True
-        yaml.dict = self.to_dict()
+        yaml.dict = self.to_dict(remove_empty=remove_empty)
         yaml.serialise_numpy_arrays()
         return yaml.write_stream()
 
@@ -2103,7 +2147,7 @@ class ProcessingTask(Task):
         self._dict_representations = []
         self._internal = False
 
-    def to_dict(self):
+    def to_dict(self, remove_empty=False):
         """
         Create dictionary containing public attributes of an object.
 
@@ -2127,10 +2171,13 @@ class ProcessingTask(Task):
             Return list of dicts in case of multiple datasets and added
             parameters during execution of the task
 
+        .. versionchanged:: 0.6
+            New parameter `remove_empty`
+
         """
         return self._dict_representations \
             if self._dict_representations and not self._internal \
-            else super().to_dict()
+            else super().to_dict(remove_empty=remove_empty)
 
     def _perform(self):
         result_labels = None
@@ -2635,13 +2682,20 @@ class PlotTask(Task):
         self.target = ''
         self._module = 'plotting'
 
-    def to_dict(self):
+    def to_dict(self, remove_empty=False):
         """
         Create dictionary containing public attributes of an object.
 
         Furthermore, replace certain objects with their respective labels
         provided in the recipe. These objects currently include datasets,
         results, figures (*i.e.* figure records), and plotters.
+
+        Parameters
+        ----------
+        remove_empty : :class:`bool`
+            Whether to remove empty fields
+
+            Default: False
 
         Returns
         -------
@@ -2654,11 +2708,14 @@ class PlotTask(Task):
         .. versionchanged:: 0.5
             Properties of underlying task object are added
 
+        .. versionchanged:: 0.6
+            New parameter `remove_empty`
+
         """
         if 'properties' not in self.properties \
                 and hasattr(self._task, 'properties'):
             self.properties["properties"] = self._task.properties.to_dict()
-        return super().to_dict()
+        return super().to_dict(remove_empty=remove_empty)
 
     def perform(self):
         """
@@ -2999,9 +3056,16 @@ class CompositeplotTask(PlotTask):
         super().__init__()
         self.properties['plotter'] = []
 
-    def to_dict(self):
+    def to_dict(self, remove_empty=False):
         """
         Create dictionary containing public attributes of the object.
+
+        Parameters
+        ----------
+        remove_empty : :class:`bool`
+            Whether to remove empty fields
+
+            Default: False
 
         Returns
         -------
@@ -3010,13 +3074,16 @@ class CompositeplotTask(PlotTask):
 
             The order of attribute definition is preserved
 
+        .. versionchanged:: 0.6
+            New parameter `remove_empty`
+
         """
         # Replace plotter objects with reference name
         for plotter in self.properties['plotter']:
             for key, value in self.recipe.plotters.items():
                 if plotter is value:
                     self.properties['plotter'] = key
-        return super().to_dict()
+        return super().to_dict(remove_empty=remove_empty)
 
     def _perform(self):
         self._task = self.get_object()

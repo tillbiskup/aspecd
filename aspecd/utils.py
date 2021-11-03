@@ -128,9 +128,16 @@ class ToDictMixin:
         self.__odict__[attribute] = value
         super().__setattr__(attribute, value)
 
-    def to_dict(self):
+    def to_dict(self, remove_empty=False):
         """
         Create dictionary containing public attributes of an object.
+
+        Parameters
+        ----------
+        remove_empty : :class:`bool`
+            Whether to remove keys with empty values
+
+            Default: False
 
         Returns
         -------
@@ -139,11 +146,16 @@ class ToDictMixin:
 
             The order of attribute definition is preserved
 
+        .. versionchanged:: 0.6
+            New parameter `remove_empty`
+
         """
         if hasattr(self, '__odict__'):
             result = self._traverse_dict(self.__odict__)
         else:
             result = self._traverse_dict(self.__dict__)
+        if remove_empty:
+            result = remove_empty_values_from_dict(result)
         return result
 
     def _traverse_dict(self, instance_dict):

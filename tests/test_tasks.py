@@ -383,6 +383,13 @@ class TestRecipe(unittest.TestCase):
         dict_ = self.recipe.to_dict()
         self.assertEqual(task.to_dict(), dict_['tasks'][0])
 
+    def test_to_dict_w_remove_empty_removes_empty_fields_in_task(self):
+        task = tasks.Task()
+        task.from_dict(self.task)
+        self.recipe.tasks.append(task)
+        dict_ = self.recipe.to_dict(remove_empty=True)
+        self.assertEqual(task.to_dict(remove_empty=True), dict_['tasks'][0])
+
     def test_has_get_dataset_method(self):
         self.assertTrue(hasattr(self.recipe, 'get_dataset'))
         self.assertTrue(callable(self.recipe.get_dataset))
@@ -459,6 +466,12 @@ class TestRecipe(unittest.TestCase):
 
     def test_to_yaml_contains_format(self):
         self.assertIn('format:', self.recipe.to_yaml())
+
+    def test_to_yaml_w_remove_empty_removes_empty_fields_in_task(self):
+        task = tasks.Task()
+        task.from_dict(self.task)
+        self.recipe.tasks.append(task)
+        self.assertNotIn('apply_to', self.recipe.to_yaml(remove_empty=True))
 
 
 class TestChef(unittest.TestCase):
@@ -1164,10 +1177,8 @@ class TestTask(unittest.TestCase):
         self.assertEqual(dict_["properties"]["parameters"]["foo"], "foo")
 
     def test_to_dict_with_plotter_in_parameters_replaces_it_with_label(self):
-        kind = 'processing'
-        type_ = 'SingleProcessingStep'
-        self.task.kind = kind
-        self.task.type = type_
+        self.task.kind = 'processing'
+        self.task.type = 'SingleProcessingStep'
         plotter = aspecd.plotting.Plotter()
         recipe = tasks.Recipe()
         recipe.plotters["foo"] = plotter
@@ -1176,6 +1187,13 @@ class TestTask(unittest.TestCase):
         self.task.perform()
         dict_ = self.task.to_dict()
         self.assertEqual(dict_["properties"]["parameters"]["foo"], "foo")
+
+    def test_to_dict_with_remove_empty(self):
+        self.task.kind = 'processing'
+        self.task.type = 'SingleProcessingStep'
+        self.task.properties["parameters"] = {}
+        dict_ = self.task.to_dict(remove_empty=True)
+        self.assertNotIn("properties", dict_)
 
     def test_to_yaml_returns_string(self):
         self.assertIsInstance(self.task.to_yaml(), str)
@@ -1192,6 +1210,12 @@ class TestTask(unittest.TestCase):
         self.task.kind = 'plotting'
         self.task.type = 'MultiPlotter1D'
         self.task.to_yaml()
+
+    def test_to_yaml_with_remove_empty(self):
+        self.task.kind = 'processing'
+        self.task.type = 'SingleProcessingStep'
+        self.task.properties["parameters"] = {}
+        self.assertNotIn("properties", self.task.to_yaml(remove_empty=True))
 
 
 class TestProcessingTask(unittest.TestCase):
