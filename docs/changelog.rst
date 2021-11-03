@@ -14,8 +14,18 @@ Not yet released
 New features
 ------------
 
-* :meth:`aspecd.utils.ToDictMixin.to_dict` can optionally remove keys with empty values
-* ``to_dict()`` method in :class:`aspecd.processing.ProcessingStep`, :class:`aspecd.analysis.AnalysisStep`, :class:`aspecd.annotation.Annotation`, :class:`aspecd.plotting.Plotter`, :class:`aspecd.table.Table`, :class:`aspecd.report.Reporter`, :class:`aspecd.model.Model`
+* Tasks/Recipe-driven data analysis
+
+  * YAML representation of recipe and tasks via :meth:`aspecd.tasks.Recipe.to_yaml` and :meth:`aspecd.tasks.Task.to_yaml`
+
+* Utils
+
+  * :func:`change_working_dir` can be used as context manager to temporarily change the working directory.
+
+* General
+
+  * :meth:`aspecd.utils.ToDictMixin.to_dict` can optionally remove keys with empty values
+  * ``to_dict()`` method in :class:`aspecd.processing.ProcessingStep`, :class:`aspecd.analysis.AnalysisStep`, :class:`aspecd.annotation.Annotation`, :class:`aspecd.plotting.Plotter`, :class:`aspecd.table.Table`, :class:`aspecd.report.Reporter`, :class:`aspecd.model.Model`
 
 
 Changes

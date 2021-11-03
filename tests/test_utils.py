@@ -918,3 +918,17 @@ class TestGetPackageData(unittest.TestCase):
     def test_get_package_data_with_foreign_package_returns_content(self):
         content = utils.get_package_data('pip@__main__.py', directory='')
         self.assertTrue(content)
+
+
+class TestChangeWorkingDir(unittest.TestCase):
+
+    def test_change_working_dir_changes_working_dir(self):
+        with utils.change_working_dir('..'):
+            working_dir = os.path.abspath(os.getcwd())
+        self.assertEqual(os.path.split(os.getcwd())[0], working_dir)
+
+    def test_change_working_dir_returns_to_original_dir(self):
+        oldpwd = os.getcwd()
+        with utils.change_working_dir('..'):
+            pass
+        self.assertEqual(oldpwd, os.getcwd())

@@ -236,6 +236,12 @@ class LaTeXReporter(Reporter):
     single (pdf)LaTeX run is performed with option
     "-interaction=nonstopmode" passed in order to not block further execution.
 
+    .. important::
+        For enhanced security, the temporary directory used for compiling
+        the template will be removed after successful compilation.
+        Therefore, no traces of your report should remain outside the
+        current directory controlled by the user.
+
     .. note::
         Due to problems with LaTeX rendering text containing underscores,
         the keys in the context dict are recursively parsed and each
@@ -367,18 +373,17 @@ class LaTeXReporter(Reporter):
         (pdf)LaTeX is currently called with the "-interaction=nonstopmode"
         option in order to not block further execution.
         """
-        os.chdir(self._temp_dir)
-        _, filename_wo_path = os.path.split(self.filename)
-        # Path to filename stripped, there should be no security implications.
-        process = subprocess.run([self.latex_executable,  # nosec
-                                  '-output-directory', self._temp_dir,
-                                  '-interaction=nonstopmode',
-                                  filename_wo_path],
-                                 check=False,
-                                 capture_output=True)
-        print(process.stdout.decode())
-        print(process.stderr.decode())
-        os.chdir(self._pwd)
+        with aspecd.utils.change_working_dir(self._temp_dir):
+            _, filename_wo_path = os.path.split(self.filename)
+            # Path stripped, there should be no security implications.
+            process = subprocess.run([self.latex_executable,  # nosec
+                                      '-output-directory', self._temp_dir,
+                                      '-interaction=nonstopmode',
+                                      filename_wo_path],
+                                     check=False,
+                                     capture_output=True)
+            print(process.stdout.decode())
+            print(process.stderr.decode())
 
     def _copy_files_from_temp_dir(self):
         """Copy result of compile step from temporary to target directory

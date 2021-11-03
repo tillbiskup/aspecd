@@ -28,10 +28,6 @@ For version 0.6
 For later versions
 ==================
 
-* Recipe-driven data analysis
-
-  * Functionality to create recipe structure/structure for tasks as YAML (for use either with CLI or with web interface)
-
 * Remaining basic processing and analysis steps:
 
   * denoising (via SVD or similar)
