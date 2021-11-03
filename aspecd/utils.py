@@ -502,6 +502,8 @@ class Yaml:
                     dict_[key] = {'type': 'numpy.ndarray',
                                   'dtype': str(dict_[key].dtype),
                                   'array': dict_[key].tolist()}
+            elif isinstance(dict_[key], np.float64):
+                dict_[key] = float(dict_[key])
             elif isinstance(dict_[key], (dict, collections.OrderedDict)):
                 self._traverse_serialise_numpy_arrays(dict_=dict_[key])
             # make list of binary_files unique
