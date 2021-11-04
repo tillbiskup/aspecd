@@ -1702,7 +1702,11 @@ class Task(aspecd.utils.ToDictMixin):
                 self._replace_objects_with_labels(task_copy.parameters)
             self.properties.update(task_copy.to_dict())
         if 'parameters' in self.properties:
-            self._replace_objects_with_labels(self.properties["parameters"])
+            if isinstance(self.properties["parameters"], list):
+                for parameters in self.properties["parameters"]:
+                    self._replace_objects_with_labels(parameters)
+            else:
+                self._replace_objects_with_labels(self.properties["parameters"])
         self._replace_objects_with_labels(self.properties)
         if not self.kind:
             self.kind = self.__class__.__name__[:-4].lower()

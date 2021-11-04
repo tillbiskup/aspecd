@@ -48,6 +48,7 @@ Fixes
 * :func:`aspecd.utils.copy_keys_between_dicts` properly traverses
 * :class:`aspecd.utils.Yaml` handles :class:`numpy.double`
 * Recipe-driven data analysis: automatically generated figure filenames get added to recipe figure record
+* Models work now correctly when based on a dataset
 
 
 Version 0.5.0

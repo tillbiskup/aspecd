@@ -362,7 +362,7 @@ class Model(ToDictMixin):
         """
         if not dataset:
             raise aspecd.exceptions.MissingDatasetError
-        for index in range(len(dataset.data.axes)):
+        for index in range(len(dataset.data.axes)-1):
             self.variables.append(dataset.data.axes[index].values)
         self._axes_from_dataset = dataset.data.axes
 
@@ -525,8 +525,8 @@ class CompositeModel(Model):
              - Lorentzian
              - Lorentzian
            parameters:
-             - position: 3
              - position: 5
+             - position: 8
          result: multiple_lorentzians
 
     Note that you need to provide parameters for each of the individual
@@ -564,7 +564,7 @@ class CompositeModel(Model):
            parameters:
              - frequency: 1
                phase: 1.57
-             - rate: -1
+             - rate: -0.2
            operators:
              - multiply
          result: damped_oscillation
@@ -603,7 +603,10 @@ class CompositeModel(Model):
             raise IndexError('Models and operators count differs')
 
     def _perform_task(self):
-        data = np.zeros(len(self.variables))
+        if isinstance(self.variables, list):
+            data = np.zeros([len(x) for x in self.variables])
+        else:
+            data = np.zeros(len(self.variables))
         for idx, model_name in enumerate(self.models):
             model = self._get_model(model_name)
             for key in self.parameters[idx]:
@@ -612,6 +615,7 @@ class CompositeModel(Model):
             model.variables = self.variables
             # noinspection PyUnresolvedReferences
             dataset = model.create()
+            data = data.reshape(dataset.data.data.shape)
             if self.operators[idx] in ('+', 'plus', 'add'):
                 data += dataset.data.data * self.weights[idx]
             if self.operators[idx] in ('*', 'times', 'multiply'):
@@ -683,7 +687,7 @@ class FamilyOfCurves(Model):
          properties:
            parameters:
              shape: 1001
-             range: [0, 20]
+             range: [-5, 5]
          result: dummy
 
        - kind: model
@@ -748,7 +752,7 @@ class FamilyOfCurves(Model):
     # noinspection PyUnresolvedReferences
     def _perform_task(self):
         self._dataset.data.data = \
-            np.zeros([len(self.variables), len(self.vary["values"])])
+            np.zeros([len(self.variables[0]), len(self.vary["values"])])
         model = self._get_model(self.model)
         model.variables = self.variables
         for key in self.parameters:
@@ -757,7 +761,9 @@ class FamilyOfCurves(Model):
             model.parameters[self.vary["parameter"]] = value
             dataset = model.create()
             self._dataset.data.data[:, idx] = dataset.data.data
-        self._dataset.data.axes[-1].quantity = self.vary["parameter"]
+        self._dataset.data.axes[-2].quantity = self.vary["parameter"]
+        if self._axes_from_dataset:
+            self._axes_from_dataset.insert(-1, self._dataset.data.axes[-2])
 
     @staticmethod
     def _get_model(model_name):
@@ -1200,7 +1206,7 @@ class Polynomial(Model):
 
     def _perform_task(self):
         polynomial = np.polynomial.Polynomial(self.parameters["coefficients"])
-        self._dataset.data.data = polynomial(self.variables)
+        self._dataset.data.data = polynomial(self.variables[0])
 
 
 class Gaussian(Model):
@@ -1314,7 +1320,7 @@ class Gaussian(Model):
         self.parameters["width"] = 1
 
     def _perform_task(self):
-        x = np.asarray(self.variables)  # pylint: disable=invalid-name
+        x = np.asarray(self.variables[0])  # pylint: disable=invalid-name
         amplitude = self.parameters["amplitude"]
         position = self.parameters["position"]
         width = self.parameters["width"]
@@ -1435,7 +1441,7 @@ class NormalisedGaussian(Model):
         self.parameters["width"] = 1
 
     def _perform_task(self):
-        x = np.asarray(self.variables)  # pylint: disable=invalid-name
+        x = np.asarray(self.variables[0])  # pylint: disable=invalid-name
         position = self.parameters["position"]
         width = self.parameters["width"]
         amplitude = 1 / not_zero(width * np.sqrt(2 * np.pi))
@@ -1556,7 +1562,7 @@ class Lorentzian(Model):
         self.parameters["width"] = 1
 
     def _perform_task(self):
-        x = np.asarray(self.variables)  # pylint: disable=invalid-name
+        x = np.asarray(self.variables[0])  # pylint: disable=invalid-name
         amplitude = self.parameters["amplitude"]
         position = self.parameters["position"]
         width = self.parameters["width"]
@@ -1668,7 +1674,7 @@ class NormalisedLorentzian(Model):
         self.parameters["width"] = 1
 
     def _perform_task(self):
-        x = np.asarray(self.variables)  # pylint: disable=invalid-name
+        x = np.asarray(self.variables[0])  # pylint: disable=invalid-name
         position = self.parameters["position"]
         width = self.parameters["width"]
         amplitude = 1 / (np.pi * not_zero(width))
@@ -1783,7 +1789,7 @@ class Sine(Model):
         self.parameters['phase'] = 0
 
     def _perform_task(self):
-        x = np.asarray(self.variables)  # pylint: disable=invalid-name
+        x = np.asarray(self.variables[0])  # pylint: disable=invalid-name
         amplitude = self.parameters["amplitude"]
         frequency = self.parameters["frequency"]
         phase = self.parameters["phase"]
@@ -1888,7 +1894,7 @@ class Exponential(Model):
         self.parameters["rate"] = 1
 
     def _perform_task(self):
-        x = np.asarray(self.variables)  # pylint: disable=invalid-name
+        x = np.asarray(self.variables[0])  # pylint: disable=invalid-name
         prefactor = self.parameters["prefactor"]
         rate = self.parameters["rate"]
         exponential = prefactor * np.exp(rate * x)
