@@ -2,6 +2,7 @@
 
 import collections
 import contextlib
+import datetime
 import io
 import os
 import shutil
@@ -107,6 +108,14 @@ class TestReporter(unittest.TestCase):
         self.report.render()
         self.assertEqual(os.path.split(self.template)[0],
                          self.report.context['template_dir'])
+
+    def test_render_sets_timestamp_in_context(self):
+        with open(self.template, 'w+') as f:
+            f.write('')
+        self.report.template = self.template
+        self.report.render()
+        self.assertEqual(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                         self.report.context['timestamp'])
 
     def test_render_with_template_with_relative_path(self):
         with open(self.template, 'w+') as f:

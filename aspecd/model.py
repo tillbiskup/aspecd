@@ -273,6 +273,12 @@ class Model(ToDictMixin):
         Use appropriate record types from the `bibrecord package
         <https://bibrecord.docs.till-biskup.de/>`_.
 
+    label : :class:`str`
+        Label that will be applied to the calculated dataset
+
+        Usually, labels provide a short and concise description of a
+        dataset, at least in a given context.
+
 
     .. versionchanged:: 0.3
         New attribute :attr:`description`
@@ -283,6 +289,9 @@ class Model(ToDictMixin):
     .. versionchanged:: 0.4
         New attribute :attr:`references`
 
+    .. versionchanged:: 0.6
+        New attribute :attr:`label`
+
     """
 
     def __init__(self):
@@ -292,6 +301,7 @@ class Model(ToDictMixin):
         self.variables = []
         self.description = 'Abstract model'
         self.references = []
+        self.label = ''
         self._dataset = aspecd.dataset.CalculatedDataset()
         self._axes_from_dataset = []
         self.__kind__ = 'model'
@@ -441,6 +451,7 @@ class Model(ToDictMixin):
         """
         self._dataset.metadata.calculation.type = self.name
         self._dataset.metadata.calculation.parameters = self.parameters
+        self._dataset.label = self.label
 
     def _set_dataset_origdata(self):
         # pylint: disable=protected-access

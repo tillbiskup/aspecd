@@ -118,6 +118,14 @@ class TestModel(unittest.TestCase):
         self.assertEqual(self.model.parameters,
                          dataset.metadata.calculation.parameters)
 
+    def test_create_with_label_sets_label_of_calculated_dataset(self):
+        self.model.parameters = [0]
+        self.model.variables = [np.linspace(0, 1)]
+        self.model.label = 'foobar'
+        dataset = self.model.create()
+        self.assertEqual(self.model.label,
+                         dataset.label)
+
     def test_has_from_dataset_method(self):
         self.assertTrue(hasattr(self.model, 'from_dataset'))
         self.assertTrue(callable(self.model.from_dataset))

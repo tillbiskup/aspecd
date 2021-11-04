@@ -50,6 +50,7 @@ import os
 import shutil
 import subprocess  # nosec
 import tempfile
+from datetime import datetime
 
 import jinja2
 
@@ -104,6 +105,9 @@ class Reporter(aspecd.utils.ToDictMixin):
         absolute) path to the template provided in :attr:`template`. This is
         particularly useful for including subtemplates.
 
+        A key "timestamp" contains the current timestamp when starting to
+        render the report.
+
     environment : :class:`aspecd.report.GenericEnvironment`
         Jinja2 environment used for rendering the template.
 
@@ -128,6 +132,10 @@ class Reporter(aspecd.utils.ToDictMixin):
 
     aspecd.report.MissingFilenameError
         Raised if no output file for the report is provided.
+
+
+    .. versionadded:: 0.6
+        New parameter ``label`` to add label to calculated dataset
 
     """
 
@@ -169,6 +177,8 @@ class Reporter(aspecd.utils.ToDictMixin):
         self.context['template_dir'] = os.path.split(self.template)[0]
         if self.context['template_dir']:
             self.context['template_dir'] += os.path.sep
+        self.context['timestamp'] = \
+            datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         self.template = os.path.realpath(self.template)
         self._render()
 

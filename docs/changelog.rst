@@ -40,6 +40,8 @@ Changes
 * More complete recipe history for tasks, including more of their properties
 * Recipe-driven data analysis: Figures get added to recipe with default label if no label is provided.
 * :class:`aspecd.processing.Noise`: explicit noise amplitude can be given
+* Model can add label to created dataset
+* ModelTask adds result label as id to result
 
 
 Fixes

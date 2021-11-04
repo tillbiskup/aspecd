@@ -3261,6 +3261,7 @@ class ModelTask(Task):
         logger.info('Create model "%s"', self.type)
         result = task.create()
         if self.result:
+            result.id = self.result
             self.recipe.results[self.result] = result
 
 

@@ -2622,6 +2622,15 @@ class TestModelTask(unittest.TestCase):
         self.task.perform()
         self.assertTrue(len(self.recipe.results))
 
+    def test_perform_task_with_result_adds_result_as_id_to_dataseet(self):
+        self.prepare_recipe()
+        result = 'foo'
+        self.model_task['result'] = result
+        self.task.from_dict(self.model_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertEqual(result, self.recipe.results[result].id)
+
     def test_added_result_is_calculated_dataset(self):
         self.prepare_recipe()
         result = 'foo'
