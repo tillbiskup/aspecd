@@ -2074,6 +2074,15 @@ class TestSinglePlotTask(unittest.TestCase):
         self.task.perform()
         self.assertTrue(os.path.exists(self.figure_filename))
 
+    def test_perform_task_autosaving_adds_filename_to_task(self):
+        self.figure_filename = \
+            "".join([self.dataset[0], "_", self.plotting_task["type"], ".pdf"])
+        self.prepare_recipe()
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(self.task.properties['filename'])
+
     def test_perform_task_wo_filename_wo_autosave_does_not_save_plot(self):
         self.figure_filename = \
             "".join([self.dataset[0], "_", self.plotting_task["type"], ".pdf"])

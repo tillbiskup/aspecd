@@ -46,6 +46,7 @@ Fixes
 * Datasets from foreign packages are correctly listed in recipe history
 * :func:`aspecd.utils.copy_keys_between_dicts` properly traverses
 * :class:`aspecd.utils.Yaml` handles :class:`numpy.double`
+* Recipe-driven data analysis: automatically generated figure filenames get added to recipe figure record
 
 
 Version 0.5.0
