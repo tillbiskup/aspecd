@@ -2696,8 +2696,9 @@ class PlotTask(Task):
 
         """
         super().perform()
-        if self.label:
-            self._add_figure_to_recipe()
+        if not self.label:
+            self.label = 'fig{}'.format(len(self.recipe.figures) + 1)
+        self._add_figure_to_recipe()
         if self.result:
             self._add_plotter_to_recipe()
 

@@ -38,6 +38,7 @@ Changes
 * Dataset labels do not contain source path
 * Recipe dataset_source and output directories are no longer converted to absolute paths
 * More complete recipe history for tasks, including more of their properties
+* Recipe-driven data analysis: Figures get added to recipe with default label if no label is provided.
 
 Fixes
 -----

@@ -1900,12 +1900,19 @@ class TestPlotTask(unittest.TestCase):
         self.task.from_dict(self.plotting_task)
         self.assertEqual(label, self.task.label)
 
-    def test_perform_task_without_label_doesnt_add_figure_to_recipe(self):
+    def test_perform_task_without_label_adds_figure_to_recipe(self):
         self.prepare_recipe()
         self.task.from_dict(self.plotting_task)
         self.task.recipe = self.recipe
         self.task.perform()
-        self.assertFalse(self.recipe.figures)
+        self.assertTrue(len(self.recipe.figures))
+
+    def test_perform_task_without_label_sets_default_label(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertIn('fig1', self.recipe.figures)
 
     def test_perform_task_with_label_adds_figure_to_recipe(self):
         self.prepare_recipe()
