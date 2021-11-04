@@ -1029,7 +1029,7 @@ class Differentiation(SingleProcessingStep):
         if self.dataset.data.data.ndim == 1:
             self.dataset.data.data = np.gradient(self.dataset.data.data)
         else:
-            self.dataset.data.data = np.gradient(self.dataset.data.data)[-1]
+            self.dataset.data.data = np.gradient(self.dataset.data.data)[0]
 
 
 class ScalarAlgebra(SingleProcessingStep):

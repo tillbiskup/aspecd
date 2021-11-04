@@ -50,6 +50,7 @@ Fixes
 * Recipe-driven data analysis: automatically generated figure filenames get added to recipe figure record
 * Models work now correctly when based on a dataset
 * :class:`aspecd.model.FamilyOfCurves` sets correct values for additional axis
+* :class:`aspecd.processing.Differentiation` works correctly for 2D datasets
 
 
 Version 0.5.0
