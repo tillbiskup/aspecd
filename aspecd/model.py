@@ -362,7 +362,7 @@ class Model(ToDictMixin):
         """
         if not dataset:
             raise aspecd.exceptions.MissingDatasetError
-        for index in range(len(dataset.data.axes)-1):
+        for index in range(len(dataset.data.axes) - 1):
             self.variables.append(dataset.data.axes[index].values)
         self._axes_from_dataset = dataset.data.axes
 
@@ -761,7 +761,10 @@ class FamilyOfCurves(Model):
             model.parameters[self.vary["parameter"]] = value
             dataset = model.create()
             self._dataset.data.data[:, idx] = dataset.data.data
-        self._dataset.data.axes[-2].quantity = self.vary["parameter"]
+        if len(self.vary["values"]) > 1:
+            self._dataset.data.axes[-2].quantity = self.vary["parameter"]
+            self._dataset.data.axes[-2].values = \
+                [float(x) for x in self.vary["values"]]
         if self._axes_from_dataset:
             self._axes_from_dataset.insert(-1, self._dataset.data.axes[-2])
 

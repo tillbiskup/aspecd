@@ -1136,7 +1136,8 @@ class Data(aspecd.utils.ToDictMixin):
             self._axes.append(Axis())
         for index in range(self.data.ndim):
             if len(self.axes[index].values) != data_shape[index]:
-                self.axes[index].values = np.arange(data_shape[index])
+                self.axes[index].values = np.arange(data_shape[index],
+                                                    dtype=np.float64)
 
     def _check_axes(self):
         if len(self._axes) > self.data.ndim + 1:

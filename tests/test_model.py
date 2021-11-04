@@ -372,6 +372,24 @@ class TestFamilyOfCurves(unittest.TestCase):
         self.assertEqual(self.model.vary["parameter"],
                          family_of_curves.data.axes[-2].quantity)
 
+    def test_create_model_sets_axis_values(self):
+        self.model.model = "Sine"
+        self.model.vary["parameter"] = "amplitude"
+        self.model.vary["values"] = [2, 4]
+        self.model.variables = [self.variables]
+        family_of_curves = self.model.create()
+        self.assertListEqual(self.model.vary["values"],
+                             list(family_of_curves.data.axes[-2].values))
+
+    def test_create_model_sets_float_axis_values(self):
+        self.model.model = "Sine"
+        self.model.vary["parameter"] = "amplitude"
+        self.model.vary["values"] = [2., 4.]
+        self.model.variables = [self.variables]
+        family_of_curves = self.model.create()
+        self.assertListEqual(self.model.vary["values"],
+                             list(family_of_curves.data.axes[-2].values))
+
     def test_create_from_dataset(self):
         values = np.linspace(5, 50)
         dataset = aspecd.dataset.Dataset()

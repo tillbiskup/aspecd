@@ -49,6 +49,7 @@ Fixes
 * :class:`aspecd.utils.Yaml` handles :class:`numpy.double`
 * Recipe-driven data analysis: automatically generated figure filenames get added to recipe figure record
 * Models work now correctly when based on a dataset
+* :class:`aspecd.model.FamilyOfCurves` sets correct values for additional axis
 
 
 Version 0.5.0

@@ -478,9 +478,11 @@ class Yaml:
     def _traverse_serialise_numpy_arrays(self, dict_=None):  # noqa: MC0001
         for key in dict_.keys():
             if isinstance(dict_[key], list):
-                for element in dict_[key]:
+                for idx, element in enumerate(dict_[key]):
                     if isinstance(element, (dict, collections.OrderedDict)):
                         self._traverse_serialise_numpy_arrays(dict_=element)
+                    elif isinstance(element, np.float64):
+                        dict_[key][idx] = float(element)
             elif isinstance(dict_[key], np.ndarray):
                 if dict_[key].size > self.numpy_array_size_threshold:
                     self._create_binary_directory()
