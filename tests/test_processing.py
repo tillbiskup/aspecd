@@ -2079,6 +2079,24 @@ class TestNoise(unittest.TestCase):
         self.assertAlmostEqual(1, max(self.dataset.data.data)-min(
             self.dataset.data.data))
 
+    def test_normalised_noise_with_2d_has_amplitude_of_one(self):
+        self.processing.parameters['normalise'] = True
+        self.dataset2d.process(self.processing)
+        self.assertAlmostEqual(1, self.dataset2d.data.data.max()-
+            self.dataset2d.data.data.min())
+
+    def test_noise_with_given_amplitude(self):
+        self.processing.parameters['amplitude'] = 0.01
+        self.dataset.process(self.processing)
+        self.assertAlmostEqual(0.01, max(self.dataset.data.data)-min(
+            self.dataset.data.data))
+
+    def test_noise_with_given_amplitude_with_2d(self):
+        self.processing.parameters['amplitude'] = 0.01
+        self.dataset2d.process(self.processing)
+        self.assertAlmostEqual(0.01, self.dataset2d.data.data.max()-
+            self.dataset2d.data.data.min())
+
     def test_standard_is_pink_noise(self):
         self.dataset.process(self.processing)
         self.assertAlmostEqual(-1., self.slope_of_power_spectral_density(

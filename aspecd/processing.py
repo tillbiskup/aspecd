@@ -2964,6 +2964,13 @@ class Noise(SingleProcessingStep):
 
             In this case, the *amplitude* is normalised to 1.
 
+        amplitude : :class:`float`
+            Amplitude of the noise
+
+            This is often useful to explicitly control the noise level and
+            removes the need to first normalise and scale the data noise
+            should be added to.
+
 
     .. note::
         The exponent for the noise is not restricted to integer values,
@@ -2982,10 +2989,74 @@ class Noise(SingleProcessingStep):
         noise will be relevant.
 
 
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Generally, adding noise to a dataset can be quite simple. Without
+    explicitly providing any parameter, 1/f or pink noise will be added to
+    the data:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: Noise
+
+    Of course, you can control in much more detail the kind of noise and its
+    amplitude. To add Gaussian (white) noise to a dataset:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: Noise
+         properties:
+           parameters:
+             exponent: 0
+
+    Similarly, you could add Brownian (1/f**2) noise (with an exponent of
+    -2), but you can give positive exponents as well. While this type of
+    noise is less relevant in spectroscopy, it is relevant in other areas.
+
+    To control the noise amplitude, there are two different strategies:
+    normalising the amplitude to one, and providing an explicit amplitude.
+    Normalising works as follows:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: Noise
+         properties:
+           parameters:
+             normalise: true
+
+    Providing an explicit amplitude can be quite helpful in case you want to
+    control the signal-to-noise ratio and know the amplitude of your signal
+    prior to adding noise. Adding noise with a noise amplitude of 0.01 would
+    be done as follows:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: Noise
+         properties:
+           parameters:
+             amplitude: 0.01
+
+    Note that in case you do not provide an exponent, its default value will
+    be used, resulting in pink (1/f) noise, as this is spectroscopically the
+    most relevant.
+
+
     .. versionadded:: 0.3
 
     .. versionchanged:: 0.4
         Added reference to :attr:`references`
+
+    .. versionchanged:: 0.6
+        Added parameter ``amplitude``
 
     """
 
@@ -2995,6 +3066,7 @@ class Noise(SingleProcessingStep):
         self.undoable = True
         self.parameters["exponent"] = -1
         self.parameters["normalise"] = False
+        self.parameters["amplitude"] = None
         self.references = [
             bib.Article(
                 author=['J. Timmer', 'M. König'],
@@ -3008,8 +3080,10 @@ class Noise(SingleProcessingStep):
 
     def _perform_task(self):
         noise = self._generate_noise()
-        if self.parameters["normalise"]:
-            noise /= (max(noise) - min(noise))
+        if self.parameters["normalise"] or self.parameters["amplitude"]:
+            noise /= (noise.max() - noise.min())
+        if self.parameters["amplitude"]:
+            noise *= self.parameters["amplitude"]
         self.dataset.data.data += noise
 
     def _generate_noise(self):

@@ -39,6 +39,8 @@ Changes
 * Recipe dataset_source and output directories are no longer converted to absolute paths
 * More complete recipe history for tasks, including more of their properties
 * Recipe-driven data analysis: Figures get added to recipe with default label if no label is provided.
+* :class:`aspecd.processing.Noise`: explicit noise amplitude can be given
+
 
 Fixes
 -----
@@ -51,6 +53,7 @@ Fixes
 * Models work now correctly when based on a dataset
 * :class:`aspecd.model.FamilyOfCurves` sets correct values for additional axis
 * :class:`aspecd.processing.Differentiation` works correctly for 2D datasets
+* :class:`aspecd.processing.Noise`: normalisation works with >1D datasets
 
 
 Version 0.5.0
