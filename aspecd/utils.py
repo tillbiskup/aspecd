@@ -972,7 +972,7 @@ def get_package_data(name='', directory=''):
 
 # noinspection PyShadowingNames
 @contextlib.contextmanager
-def change_working_dir(path=''):
+def change_working_dir(path=''):  # pylint: disable=redefined-outer-name
     """
     Context manager for temporarily changing the working directory.
 

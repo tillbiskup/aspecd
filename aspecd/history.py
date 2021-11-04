@@ -493,6 +493,10 @@ class AnnotationRecord(aspecd.utils.ToDictMixin):
     class_name : :class:`str`
         Fully qualified name of the class of the corresponding annotation
 
+    type : :class:`str`
+        Type of the annotation, usually similar to the class name but
+        human-readable and useful, *e.g.*, in reports.
+
     Parameters
     ----------
     annotation : :class:`aspecd.annotation.Annotation`
@@ -503,12 +507,17 @@ class AnnotationRecord(aspecd.utils.ToDictMixin):
     aspecd.annotation.MissingAnnotationError
         Raised when no annotation exists to act on
 
+
+    .. versionchanged:: 0.6
+        Added attribute :attr:`type`
+
     """
 
     def __init__(self, annotation=None):
         super().__init__()
         self.content = dict()
         self.class_name = ''
+        self.type = ''
         self._attributes_to_copy = ['content', 'type']
         if annotation:
             self.from_annotation(annotation)
