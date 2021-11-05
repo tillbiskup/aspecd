@@ -16,12 +16,14 @@ New features
 
 * Reports
 
-  * Context contains ``templates_dir`` allowing to include sub-templates
+  * Templates for reporting information contained in datasets come bundled with ASpecD.
+  * Context contains ``templates_dir`` allowing to include sub-templates.
+  * New class :class:`TxtReporter` for plain text reports
 
 * Tasks/Recipe-driven data analysis
 
   * YAML representation of recipe and tasks via :meth:`aspecd.tasks.Recipe.to_yaml` and :meth:`aspecd.tasks.Task.to_yaml`
-  * Figure labels can be set in plotters; otherwise a default label will be set and can be accessed from within reports
+  * Figure labels can be set in plotters; otherwise a default label will be set and can be accessed from within reports.
 
 * Utils
 
@@ -29,24 +31,24 @@ New features
 
 * General
 
-  * :meth:`aspecd.utils.ToDictMixin.to_dict` can optionally remove keys with empty values
+  * :meth:`aspecd.utils.ToDictMixin.to_dict` can optionally remove keys with empty values.
   * ``to_dict()`` method in :class:`aspecd.processing.ProcessingStep`, :class:`aspecd.analysis.AnalysisStep`, :class:`aspecd.annotation.Annotation`, :class:`aspecd.plotting.Plotter`, :class:`aspecd.table.Table`, :class:`aspecd.report.Reporter`, :class:`aspecd.model.Model`
 
 * Models
 
-  * Axes quantities and units can be explicitly set on model creation
+  * Axes quantities and units can be explicitly set on model creation.
 
 
 Changes
 -------
 
-* Dataset labels do not contain source path
-* Recipe dataset_source and output directories are no longer converted to absolute paths
+* Dataset labels do not contain source path.
+* Recipe dataset_source and output directories are no longer converted to absolute paths.
 * More complete recipe history for tasks, including more of their properties
 * Recipe-driven data analysis: Figures get added to recipe with default label if no label is provided.
-* :class:`aspecd.processing.Noise`: explicit noise amplitude can be given
-* Model can add label to created dataset
-* ModelTask adds result label as id to result
+* :class:`aspecd.processing.Noise`: explicit noise amplitude can be given.
+* Model can add label to created dataset.
+* ModelTask adds result label as id to result.
 * Plotter: Default figure size changed to (6., 4.) inch
 
 

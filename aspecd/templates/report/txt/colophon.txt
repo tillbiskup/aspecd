@@ -1,0 +1,10 @@
+Colophon
+========
+
+This report has been generated using the ASpecD framework. If you use it in your research, please cite ASpecD (doi:10.5281/zenodo.4717937, details: https://docs.aspecd.de/) and the other packages accordingly.
+
+Packages: {% for key, value in sysinfo.packages.items() %}{{ key }} ({{ value }}){% if not loop.last %}, {% else %}.{% endif %}{% endfor %}
+
+Python version: {{ sysinfo.python.version | replace("\n", "") }}
+
+Platform: {{ sysinfo.platform }}

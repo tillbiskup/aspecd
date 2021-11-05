@@ -8,6 +8,8 @@ import os
 import shutil
 import unittest
 
+import jinja2
+
 import aspecd.exceptions
 from aspecd import report
 
@@ -78,7 +80,7 @@ class TestReporter(unittest.TestCase):
 
     def test_render_with_nonexistent_template_raises(self):
         self.report.template = 'foo.bar'
-        with self.assertRaises(FileNotFoundError):
+        with self.assertRaises(jinja2.exceptions.TemplateNotFound):
             self.report.render()
 
     def test_render_with_template(self):
@@ -196,6 +198,40 @@ class TestReporter(unittest.TestCase):
         with open(self.filename) as f:
             read_content = f.read()
         self.assertEqual(self.report.context['bar'], read_content)
+
+    def test_render_with_template_from_package(self):
+        self.report.template = 'txt/figure.txt'
+        self.report.context = {'figure': {'caption': {'title': '', 'text': ''}}}
+        self.report.filename = self.filename
+        self.report.create()
+
+
+class TestTxtReporter(unittest.TestCase):
+    def setUp(self):
+        self.report = report.TxtReporter()
+        self.template = 'test_template.txt'
+        self.filename = 'test_report.txt'
+
+    def tearDown(self):
+        if os.path.exists(self.template):
+            os.remove(self.template)
+        if os.path.exists(self.filename):
+            os.remove(self.filename)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_render_with_local_template(self):
+        with open(self.template, 'w+') as f:
+            f.write('')
+        self.report.template = self.template
+        self.report.render()
+
+    def test_render_with_template_from_package(self):
+        self.report.template = 'figure.txt'
+        self.report.context = {'figure': {'caption': {'title': '', 'text': ''}}}
+        self.report.filename = self.filename
+        self.report.create()
 
 
 class TestLaTeXEnvironment(unittest.TestCase):
@@ -363,3 +399,9 @@ class TestLaTeXReporter(unittest.TestCase):
         self.report.context = {'bla_blub': 'foo'}
         self.report.render()
         self.assertTrue('blaBlub' in self.report.context)
+
+    def test_render_with_template_from_package(self):
+        self.report.template = 'figure.tex'
+        self.report.context = {'figure': {'caption': {'title': '', 'text': ''}}}
+        self.report.filename = self.filename
+        self.report.create()

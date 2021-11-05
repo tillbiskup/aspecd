@@ -1,0 +1,131 @@
+%{ extends templateDir + 'base.tex' }%
+
+%{ block title }%
+%{ endblock }%
+
+%{ block body }%
+\rule[1ex]{\textwidth}{1pt}
+\\[1em]
+\textbf{\LARGE Dataset report}
+\\[1ex]
+\rule{\textwidth}{1pt}
+
+\hfill --- \textsl{{@ sysinfo.user.login }}, {@ timestamp }
+
+\section{Overview}
+
+\begin{tabbing}
+\hspace*{1.5cm}\=\kill
+ID:\>\texttt{{@ dataset.id | replace("_", "\_") }}
+\\
+Label:\>{@ dataset.label }
+\end{tabbing}
+
+This is %{ if dataset.data.calculated }%
+a calculated %{ else }%
+an experimental %{ endif}%
+dataset with
+{@ dataset.history | count } processing steps,
+{@ dataset.analyses | count } analyses,
+{@ dataset.annotations | count } annotations,
+{@ dataset.representations | count } representations, and
+{@ dataset.tasks | count } total tasks.
+For details, see below. Information on how this report has been generated and how to cite the underlying software are given at the end.
+
+%{ if dataset.history -}%
+\section{Processing steps}
+
+In total, {@ dataset.history | count } processing steps have been carried out:
+
+\begin{enumerate}
+%{ for processing_step in dataset.history -}%
+\item {@ processing_step.processing.description }
+%{ endfor }%
+\end{enumerate}
+
+For details of the individual processing steps, see below.
+
+%{ for processing_step in dataset.history }%
+
+%{ include templateDir + "processing_step.tex" }%
+
+%{ endfor }%
+%{ endif }%
+
+%{- if dataset.analyses }%
+\section{Analysis steps}
+
+In total, {@ dataset.analyses | count } analysis steps have been carried out:
+
+\begin{enumerate}
+%{ for analysis_step in dataset.analyses -}%
+\item {@ analysis_step.analysis.description }
+%{ endfor }%
+\end{enumerate}
+
+For details of the individual analysis steps, see below.
+
+%{ for analysis_step in dataset.analyses }%
+
+%{ include templateDir + "analysis_step.tex" }%
+
+%{ endfor }%
+%{ endif }%
+
+%{- if dataset.annotations }%
+\section{Annotations}
+
+In total, {@ dataset.annotations | count } annotations have been created:
+
+\begin{enumerate}
+%{ for annotation in dataset.annotations -}%
+\item {@ annotation.annotation.type | capitalize }
+%{ endfor }%
+\end{enumerate}
+
+%{ for annotation in dataset.annotations }%
+
+%{ if annotation.annotation.type == 'comment' }%%{ include templateDir + "annotation_comment.tex" }%%{ endif }%
+
+%{ endfor}%
+
+%{ endif }%
+
+%{- if dataset.representations }%
+\section{Representations}
+
+In total, {@ dataset.representations | count } representations have been created:
+
+\begin{enumerate}
+%{ for representation in dataset.representations }%
+%{ if representation.plot }%
+\item {@ representation.plot.description } (Fig.~\ref{fig:{@ representation.plot.label }})
+%{ endif }%
+%{ endfor }%
+\end{enumerate}
+
+%{ for representation in dataset.representations }%
+%{ if representation.plot }%
+%{ set figure=representation.plot }%
+
+%{ include templateDir + "figure.tex" }%
+
+%{ endif }%
+%{ endfor }%
+
+\clearpage
+%{ endif }%
+
+
+\section{Metadata}
+
+%{ if dataset.data.calculated }%
+%{ include templateDir + "metadata_calculated.tex" }%
+%{ else }%
+%{ include templateDir + "metadata_experimental.tex" }%
+%{ endif }%
+
+
+
+%{ include templateDir + "colophon.tex" }%
+%{ endblock }%

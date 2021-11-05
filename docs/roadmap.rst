@@ -8,21 +8,26 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.6
 ===============
 
+* Report task: automatically generate filenames in case they are not given, similar to plots
+
+* Handling of mapper recipe (from package source, not from directory)
+
+
+For version 0.7
+===============
+
 * Report task:
 
-  * Add figure captions to context if available
   * Operating on recipes, *i.e.* report on all tasks in a recipe
   * Adding arbitrary dict representations of properties of datasets/results to context
 
-* Default report templates for each type of processing/analysis task
-
-  Includes deciding where to store these templates, whether to have them stored in different directories for different languages, and alike. Ideally, templates should be copied to a user-accessible directory for modifying there. (See experience gained implementing pymetacode)
-
-* Expand use cases: reports
-
 * Recipes: Subrecipes that can be included in recipes
 
-* Handling of mapper recipe (from package source, not from directory)
+* Reports:
+
+  * LaTeXFigureReporter for generating LaTeX code to include figures in documents
+  * Looking for templates in derived packages
+  * Looking for templates in user directory
 
 
 For later versions
@@ -40,8 +45,6 @@ For later versions
   * different types of interpolation
 
 * Templates for creating derived packages
-
-* Tabular representations of characteristics extracted from datasets
 
 * Plotter: Factory to create single plots of each given dataset.
 

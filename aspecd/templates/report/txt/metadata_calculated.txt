@@ -1,0 +1,7 @@
+Calculation
+-----------
+Type: {{ dataset.metadata.calculation.type }}
+
+{% for key, value in dataset.metadata.calculation.parameters.items() %}
+{% if value %}{{ key }}: {{ value }}{% endif %}
+{%- endfor %}
