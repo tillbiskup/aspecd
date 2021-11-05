@@ -226,10 +226,10 @@ import numpy as np
 import aspecd.dataset
 import aspecd.exceptions
 import aspecd.utils
-from aspecd.utils import not_zero, isiterable
+from aspecd.utils import not_zero, isiterable, ToDictMixin
 
 
-class Model:
+class Model(ToDictMixin):
     """
     Base class for numerical models.
 
@@ -268,11 +268,26 @@ class Model:
         Short description, to be set in class definition
 
     references : :class:`list`
-        List of references with relevance for the implementation of the
-        processing step.
+        List of references with relevance for the implementation of the model.
 
         Use appropriate record types from the `bibrecord package
         <https://bibrecord.docs.till-biskup.de/>`_.
+
+    label : :class:`str`
+        Label that will be applied to the calculated dataset
+
+        Usually, labels provide a short and concise description of a
+        dataset, at least in a given context.
+
+    axes : :class:`list`
+        List of dicts containing quantity and unit for each axis.
+
+        Needs to have the same length as the axes of the created dataset.
+
+        If you would like to skip one axis, set it to an empty dict, None,
+        or False (*i.e.*, anything that evaluates to False in Python). This
+        is particularly helpful with models such as :class:`FamilyOfCurves`
+        that auto-generate one axis.
 
 
     .. versionchanged:: 0.3
@@ -284,16 +299,24 @@ class Model:
     .. versionchanged:: 0.4
         New attribute :attr:`references`
 
+    .. versionchanged:: 0.6
+        New attributes :attr:`label` and :attr:`axes`
+
     """
 
     def __init__(self):
+        super().__init__()
         self.name = aspecd.utils.full_class_name(self)
         self.parameters = dict()
         self.variables = []
         self.description = 'Abstract model'
         self.references = []
+        self.label = ''
+        self.axes = []
         self._dataset = aspecd.dataset.CalculatedDataset()
         self._axes_from_dataset = []
+        self.__kind__ = 'model'
+        self._exclude_from_to_dict = ['name', 'description', 'references']
 
     def create(self):
         """
@@ -360,7 +383,7 @@ class Model:
         """
         if not dataset:
             raise aspecd.exceptions.MissingDatasetError
-        for index in range(len(dataset.data.axes)):
+        for index in range(len(dataset.data.axes) - 1):
             self.variables.append(dataset.data.axes[index].values)
         self._axes_from_dataset = dataset.data.axes
 
@@ -424,11 +447,23 @@ class Model:
         """
         if self._axes_from_dataset:
             self._dataset.data.axes = self._axes_from_dataset
-        elif isinstance(self.variables[0], (list, np.ndarray)):
-            for index in range(len(self.variables)):
-                self._dataset.data.axes[index].values = self.variables[index]
         else:
-            self._dataset.data.axes[0].values = np.asarray(self.variables)
+            if isinstance(self.variables[0], (list, np.ndarray)):
+                for index in range(len(self.variables)):
+                    self._dataset.data.axes[index].values = \
+                        self.variables[index]
+            else:
+                self._dataset.data.axes[0].values = np.asarray(self.variables)
+            self._dataset.data.axes[-1].quantity = 'amplitude'
+            self._dataset.data.axes[-1].unit = 'a.u.'
+        if self.axes:
+            if len(self.axes) != len(self._dataset.data.axes):
+                message = "Number of axes and dataset axes need to be identical"
+                raise IndexError(message)
+            for idx, axis in enumerate(self._dataset.data.axes):
+                if self.axes[idx]:
+                    axis.quantity = self.axes[idx]['quantity']
+                    axis.unit = self.axes[idx]['unit']
 
     def _set_dataset_metadata(self):
         """
@@ -439,6 +474,7 @@ class Model:
         """
         self._dataset.metadata.calculation.type = self.name
         self._dataset.metadata.calculation.parameters = self.parameters
+        self._dataset.label = self.label
 
     def _set_dataset_origdata(self):
         # pylint: disable=protected-access
@@ -523,8 +559,8 @@ class CompositeModel(Model):
              - Lorentzian
              - Lorentzian
            parameters:
-             - position: 3
              - position: 5
+             - position: 8
          result: multiple_lorentzians
 
     Note that you need to provide parameters for each of the individual
@@ -562,7 +598,7 @@ class CompositeModel(Model):
            parameters:
              - frequency: 1
                phase: 1.57
-             - rate: -1
+             - rate: -0.2
            operators:
              - multiply
          result: damped_oscillation
@@ -601,7 +637,10 @@ class CompositeModel(Model):
             raise IndexError('Models and operators count differs')
 
     def _perform_task(self):
-        data = np.zeros(len(self.variables))
+        if isinstance(self.variables, list):
+            data = np.zeros([len(x) for x in self.variables])
+        else:
+            data = np.zeros(len(self.variables))
         for idx, model_name in enumerate(self.models):
             model = self._get_model(model_name)
             for key in self.parameters[idx]:
@@ -610,6 +649,7 @@ class CompositeModel(Model):
             model.variables = self.variables
             # noinspection PyUnresolvedReferences
             dataset = model.create()
+            data = data.reshape(dataset.data.data.shape)
             if self.operators[idx] in ('+', 'plus', 'add'):
                 data += dataset.data.data * self.weights[idx]
             if self.operators[idx] in ('*', 'times', 'multiply'):
@@ -681,7 +721,7 @@ class FamilyOfCurves(Model):
          properties:
            parameters:
              shape: 1001
-             range: [0, 20]
+             range: [-5, 5]
          result: dummy
 
        - kind: model
@@ -746,7 +786,7 @@ class FamilyOfCurves(Model):
     # noinspection PyUnresolvedReferences
     def _perform_task(self):
         self._dataset.data.data = \
-            np.zeros([len(self.variables), len(self.vary["values"])])
+            np.zeros([len(self.variables[0]), len(self.vary["values"])])
         model = self._get_model(self.model)
         model.variables = self.variables
         for key in self.parameters:
@@ -755,7 +795,12 @@ class FamilyOfCurves(Model):
             model.parameters[self.vary["parameter"]] = value
             dataset = model.create()
             self._dataset.data.data[:, idx] = dataset.data.data
-        self._dataset.data.axes[-1].quantity = self.vary["parameter"]
+        if len(self.vary["values"]) > 1:
+            self._dataset.data.axes[-2].quantity = self.vary["parameter"]
+            self._dataset.data.axes[-2].values = \
+                [float(x) for x in self.vary["values"]]
+        if self._axes_from_dataset:
+            self._axes_from_dataset.insert(-1, self._dataset.data.axes[-2])
 
     @staticmethod
     def _get_model(model_name):
@@ -1198,7 +1243,7 @@ class Polynomial(Model):
 
     def _perform_task(self):
         polynomial = np.polynomial.Polynomial(self.parameters["coefficients"])
-        self._dataset.data.data = polynomial(self.variables)
+        self._dataset.data.data = polynomial(self.variables[0])
 
 
 class Gaussian(Model):
@@ -1312,7 +1357,7 @@ class Gaussian(Model):
         self.parameters["width"] = 1
 
     def _perform_task(self):
-        x = np.asarray(self.variables)  # pylint: disable=invalid-name
+        x = np.asarray(self.variables[0])  # pylint: disable=invalid-name
         amplitude = self.parameters["amplitude"]
         position = self.parameters["position"]
         width = self.parameters["width"]
@@ -1433,7 +1478,7 @@ class NormalisedGaussian(Model):
         self.parameters["width"] = 1
 
     def _perform_task(self):
-        x = np.asarray(self.variables)  # pylint: disable=invalid-name
+        x = np.asarray(self.variables[0])  # pylint: disable=invalid-name
         position = self.parameters["position"]
         width = self.parameters["width"]
         amplitude = 1 / not_zero(width * np.sqrt(2 * np.pi))
@@ -1554,7 +1599,7 @@ class Lorentzian(Model):
         self.parameters["width"] = 1
 
     def _perform_task(self):
-        x = np.asarray(self.variables)  # pylint: disable=invalid-name
+        x = np.asarray(self.variables[0])  # pylint: disable=invalid-name
         amplitude = self.parameters["amplitude"]
         position = self.parameters["position"]
         width = self.parameters["width"]
@@ -1666,7 +1711,7 @@ class NormalisedLorentzian(Model):
         self.parameters["width"] = 1
 
     def _perform_task(self):
-        x = np.asarray(self.variables)  # pylint: disable=invalid-name
+        x = np.asarray(self.variables[0])  # pylint: disable=invalid-name
         position = self.parameters["position"]
         width = self.parameters["width"]
         amplitude = 1 / (np.pi * not_zero(width))
@@ -1781,7 +1826,7 @@ class Sine(Model):
         self.parameters['phase'] = 0
 
     def _perform_task(self):
-        x = np.asarray(self.variables)  # pylint: disable=invalid-name
+        x = np.asarray(self.variables[0])  # pylint: disable=invalid-name
         amplitude = self.parameters["amplitude"]
         frequency = self.parameters["frequency"]
         phase = self.parameters["phase"]
@@ -1886,7 +1931,7 @@ class Exponential(Model):
         self.parameters["rate"] = 1
 
     def _perform_task(self):
-        x = np.asarray(self.variables)  # pylint: disable=invalid-name
+        x = np.asarray(self.variables[0])  # pylint: disable=invalid-name
         prefactor = self.parameters["prefactor"]
         rate = self.parameters["rate"]
         exponential = prefactor * np.exp(rate * x)

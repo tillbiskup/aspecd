@@ -146,8 +146,8 @@ files. This will usually be the directory you cook the recipe from. However,
 sometimes it is quite convenient to specify an output directory, either
 relative or absolute.
 
-To do so, simply add the ``output_directory`` key to the top level of your
-recipe:
+To do so, simply add the ``output`` key to the top level ``directories`` key of
+your recipe:
 
 .. code-block:: yaml
 
@@ -484,7 +484,43 @@ Simply executing a command from a terminal, that's all that is to it. In
 this particular example, ``<my-recipe>`` is a placeholder for your recipe
 file name.
 
-Of course, you can do the same from within Python::
+Of course, you need to have the ASpecD package installed (preferrably within
+a virtual environment), and you still need to have access to a terminal. But
+that's all. And when you have hit "enter", you will usually see a list of
+lines starting with "INFO" telling you what is happening. If something is
+notable or gets entirely wrong, you will see lines starting with "WARNING"
+or "ERROR", respectively. With standard settings, the latter will *not*
+provide you with the complete stack trace, as this is usually not helpful
+for the user. If, however, you are developer or otherwise interested in the
+details (or are asked by a developer to provide more details), use the
+``-v`` switch to get more verbose output. Conversely, if you insist on not
+seeing any info of what happened, you can use the ``-q`` switch to silence
+the ``serve`` command. To get more information, use the help builtin to the
+``serve`` command:
+
+.. code-block:: bash
+
+    serve -h
+
+Its output will look similar to the following:
+
+.. code-block:: none
+
+    usage: serve [-h] [-v | -q] recipe
+
+    Process a recipe in context of recipe-driven data analysis
+
+    positional arguments:
+      recipe         YAML file containing recipe
+
+    optional arguments:
+      -h, --help     show this help message and exit
+      -v, --verbose  show debug output
+      -q, --quiet    don't show any output
+
+
+Of course, you can do the same from within Python (however, why would you
+want to do that)::
 
     serve(recipe_filename='<my-recipe>.yaml')
 
@@ -1030,8 +1066,6 @@ class Recipe:
         self.dataset_factory = None
         self.task_factory = TaskFactory()
         self.default_package = ''
-        self.datasets_source_directory = ''
-        self.output_directory = ''
         self.autosave_plots = True
         self.filename = ''
 
@@ -1065,10 +1099,6 @@ class Recipe:
             package = self.settings['default_package'] \
                 if self.settings['default_package'] else 'aspecd'
             self.dataset_factory = self._get_dataset_factory(package=package)
-        if self.directories['output'] \
-                and not self.directories['output'].startswith('/'):
-            self.directories['output'] = \
-                self._get_absolute_path(self.directories['output'])
         if 'datasets' in dict_:
             for key in dict_['datasets']:
                 self._append_dataset(key)
@@ -1141,14 +1171,28 @@ class Recipe:
             task.package = self.settings['default_package']
         self.tasks.append(task)
 
-    def to_dict(self):
+    def to_dict(self, remove_empty=False):
         """
         Return dict from attributes.
+
+        Parameters
+        ----------
+        remove_empty : :class:`bool`
+            Whether to remove empty fields from tasks
+
+            Default: False
 
         Returns
         -------
         dict_ : :class:`dict`
-            Dictionary with fields "datasets" and "tasks"
+            Dictionary representing a recipe.
+
+            Contains fields "format", "settings", "directories",
+            "datasets", and "tasks".
+
+
+        .. versionchanged:: 0.6
+            New parameter `remove_empty` to remove empty fields from tasks.
 
         """
         dict_ = {
@@ -1160,6 +1204,9 @@ class Recipe:
         }
         for dataset in self.datasets:
             dataset_dict = {}
+            if self.directories['datasets_source']:
+                self.datasets[dataset].id = \
+                    os.path.split(self.datasets[dataset].id)[-1]
             if not self.datasets[dataset].id == dataset:
                 dataset_dict['source'] = self.datasets[dataset].id
                 dataset_dict['id'] = dataset
@@ -1168,30 +1215,37 @@ class Recipe:
                 dataset_dict['label'] = self.datasets[dataset].label
             if self._dataset_from_foreign_package(self.datasets[dataset]):
                 dataset_dict['source'] = self.datasets[dataset].id
-                dataset_dict['package'] = \
-                    aspecd.utils.full_class_name(dataset).split('.')[0]
+                dataset_dict['package'] = aspecd.utils.full_class_name(
+                    self.datasets[dataset]).split('.')[0]
             if dataset_dict:
                 dict_['datasets'].append(dataset_dict)
             else:
                 dict_['datasets'].append(self.datasets[dataset].id)
         for task in self.tasks:
-            dict_['tasks'].append(task.to_dict())
+            dict_['tasks'].append(task.to_dict(remove_empty=remove_empty))
         return dict_
 
     def _dataset_from_foreign_package(self, dataset=None):
         package_names = ['aspecd']
-        if self.default_package:
-            package_names.append(self.default_package)
+        if self.settings['default_package']:
+            package_names.append(self.settings['default_package'])
         return not aspecd.utils.full_class_name(dataset).startswith(tuple(
             package_names))
 
-    def to_yaml(self):
+    def to_yaml(self, remove_empty=False):
         """
         Create YAML representation of recipe.
 
         As users will interact with recipes primarily in form of YAML files,
         this method conveniently returns the YAML representation of an empty
         recipe that can serve as a starting point for own recipes.
+
+        Parameters
+        ----------
+        remove_empty : :class:`bool`
+            Whether to remove empty fields from tasks
+
+            Default: False
 
         Returns
         -------
@@ -1238,9 +1292,12 @@ class Recipe:
 
         .. versionadded:: 0.5
 
+        .. versionchanged:: 0.6
+            Parameter `remove_empty` to remove empty fields from tasks.
+
         """
         yaml = aspecd.utils.Yaml()
-        yaml.dict = self.to_dict()
+        yaml.dict = self.to_dict(remove_empty=remove_empty)
         return yaml.write_stream()
 
     def import_from(self, importer=None):
@@ -1643,13 +1700,20 @@ class Task(aspecd.utils.ToDictMixin):
                 else:
                     setattr(self, key, value)
 
-    def to_dict(self):
+    def to_dict(self, remove_empty=False):
         """
         Create dictionary containing public attributes of an object.
 
         Furthermore, replace certain objects with their respective labels
         provided in the recipe. These objects currently include datasets,
         results, figures (*i.e.* figure records), and plotters.
+
+        Parameters
+        ----------
+        remove_empty : :class:`bool`
+            Whether to remove empty fields
+
+            Default: False
 
         Returns
         -------
@@ -1662,18 +1726,27 @@ class Task(aspecd.utils.ToDictMixin):
         .. versionchanged:: 0.4
             (Implicit) parameters of underlying task object are added
 
+        .. versionchanged:: 0.6
+            New parameter `remove_empty`
+
         """
-        if hasattr(self._task, 'parameters'):
-            if 'parameters' not in self.properties:
-                self.properties["parameters"] = dict()
-            for key, value in self._task.parameters.items():
-                self.properties["parameters"][key] = value
+        if self._task:
+            task_copy = copy.copy(self._task)
+            if hasattr(task_copy, 'parameters'):
+                self._replace_objects_with_labels(task_copy.parameters)
+            self.properties.update(task_copy.to_dict())
         if 'parameters' in self.properties:
-            self._replace_objects_with_labels(self.properties["parameters"])
+            if isinstance(self.properties["parameters"], list):
+                for parameters in self.properties["parameters"]:
+                    self._replace_objects_with_labels(parameters)
+            else:
+                self._replace_objects_with_labels(self.properties["parameters"])
         self._replace_objects_with_labels(self.properties)
         if not self.kind:
             self.kind = self.__class__.__name__[:-4].lower()
-        return super().to_dict()
+        if hasattr(self._task, '__kind__'):
+            self.kind = self._task.__kind__
+        return super().to_dict(remove_empty=remove_empty)
 
     def _replace_objects_with_labels(self, dict_=None):  # noqa: MC0001
         if not self.recipe:
@@ -1692,13 +1765,20 @@ class Task(aspecd.utils.ToDictMixin):
                 if property_value is plotter_value:
                     dict_[property_key] = plotter_key
 
-    def to_yaml(self):
+    def to_yaml(self, remove_empty=False):
         """
         Create YAML representation of task.
 
         As users will use tasks primarily within recipes, *i.e.* in YAML
         files, this method conveniently returns the YAML representation of a
         task.
+
+        Parameters
+        ----------
+        remove_empty : :class:`bool`
+            Whether to remove empty fields
+
+            Default: False
 
         Returns
         -------
@@ -1746,13 +1826,18 @@ class Task(aspecd.utils.ToDictMixin):
 
         .. versionadded:: 0.5
 
+        .. versionchanged:: 0.6
+            Parameter `remove_empty`
+
         """
         if not self._task and self.type:
             if not self.kind:
                 self.kind = self.__class__.__name__[:-4].lower()
             self._task = self.get_object()
         yaml = aspecd.utils.Yaml()
-        yaml.dict = self.to_dict()
+        yaml.numpy_array_to_list = True
+        yaml.dict = self.to_dict(remove_empty=remove_empty)
+        yaml.serialise_numpy_arrays()
         return yaml.write_stream()
 
     def perform(self):
@@ -2100,7 +2185,7 @@ class ProcessingTask(Task):
         self._dict_representations = []
         self._internal = False
 
-    def to_dict(self):
+    def to_dict(self, remove_empty=False):
         """
         Create dictionary containing public attributes of an object.
 
@@ -2124,10 +2209,13 @@ class ProcessingTask(Task):
             Return list of dicts in case of multiple datasets and added
             parameters during execution of the task
 
+        .. versionchanged:: 0.6
+            New parameter `remove_empty`
+
         """
         return self._dict_representations \
             if self._dict_representations and not self._internal \
-            else super().to_dict()
+            else super().to_dict(remove_empty=remove_empty)
 
     def _perform(self):
         result_labels = None
@@ -2632,31 +2720,6 @@ class PlotTask(Task):
         self.target = ''
         self._module = 'plotting'
 
-    def to_dict(self):
-        """
-        Create dictionary containing public attributes of an object.
-
-        Furthermore, replace certain objects with their respective labels
-        provided in the recipe. These objects currently include datasets,
-        results, figures (*i.e.* figure records), and plotters.
-
-        Returns
-        -------
-        public_attributes : :class:`collections.OrderedDict`
-            Ordered dictionary containing the public attributes of the object
-
-            The order of attribute definition is preserved
-
-
-        .. versionchanged:: 0.5
-            Properties of underlying task object are added
-
-        """
-        if 'properties' not in self.properties \
-                and hasattr(self._task, 'properties'):
-            self.properties["properties"] = self._task.properties.to_dict()
-        return super().to_dict()
-
     def perform(self):
         """
         Call the appropriate method of the underlying object.
@@ -2670,9 +2733,10 @@ class PlotTask(Task):
         recipe in case an :attr:`aspecd.tasks.PlotTask.label` has been set.
 
         """
+        if not self.label:
+            self.label = 'fig{}'.format(len(self.recipe.figures) + 1)
         super().perform()
-        if self.label:
-            self._add_figure_to_recipe()
+        self._add_figure_to_recipe()
         if self.result:
             self._add_plotter_to_recipe()
 
@@ -2680,6 +2744,8 @@ class PlotTask(Task):
         figure_record = FigureRecord()
         # noinspection PyTypeChecker
         figure_record.from_plotter(self.get_object())
+        if self.label:
+            figure_record.label = self.label
         self.recipe.figures[self.label] = figure_record
 
     def _add_plotter_to_recipe(self):
@@ -2701,6 +2767,7 @@ class PlotTask(Task):
         elif 'filename' in self.properties and self.properties['filename']:
             filename = self.properties['filename']
         if filename:
+            self.properties['filename'] = filename
             if self.recipe.directories['output']:
                 filename = os.path.join(self.recipe.directories['output'],
                                         filename)
@@ -2812,6 +2879,8 @@ class SingleplotTask(PlotTask):
         for number, dataset_id in enumerate(self.apply_to):
             dataset = self.recipe.get_dataset(dataset_id)
             self._task = self.get_object()
+            if self.label and not self._task.label:
+                self._task.label = self.label
             if self.target:
                 self._task.figure = self.recipe.plotters[self.target].figure
                 self._task.axes = self.recipe.plotters[self.target].axes
@@ -2992,9 +3061,20 @@ class CompositeplotTask(PlotTask):
 
     """
 
-    def to_dict(self):
+    def __init__(self):
+        super().__init__()
+        self.properties['plotter'] = []
+
+    def to_dict(self, remove_empty=False):
         """
         Create dictionary containing public attributes of the object.
+
+        Parameters
+        ----------
+        remove_empty : :class:`bool`
+            Whether to remove empty fields
+
+            Default: False
 
         Returns
         -------
@@ -3003,13 +3083,16 @@ class CompositeplotTask(PlotTask):
 
             The order of attribute definition is preserved
 
+        .. versionchanged:: 0.6
+            New parameter `remove_empty`
+
         """
         # Replace plotter objects with reference name
         for plotter in self.properties['plotter']:
             for key, value in self.recipe.plotters.items():
                 if plotter is value:
                     self.properties['plotter'] = key
-        super().to_dict()
+        return super().to_dict(remove_empty=remove_empty)
 
     def _perform(self):
         self._task = self.get_object()
@@ -3027,44 +3110,34 @@ class ReportTask(Task):
     For more information on the underlying general class,
     see :class:`aspecd.report.Reporter`.
 
-    For an example of how such an analysis task may be included into a
-    recipe, see the YAML listing below:
+    For an example of how such a report task may be included into a recipe,
+    see the YAML listing below:
 
     .. code-block:: yaml
 
-        kind: report
-        type: LaTeXReporter
-        properties:
-          template: my-fancy-latex-template.tex
-          filename: some-filename-for-final-report.tex
-          context:
-            general:
-              title: Some fancy title
-              author: John Doe
-            free_text:
-              intro: >
-                Short introduction of the experiment performed
-              metadata: >
-                Tabular and customisable overview of the dataset's metadata
-              history: >
-                Presentation of all processing, analysis and representation
-                steps
-            figures:
-              title: my_fancy_figure
-        compile: True
-        apply_to:
-          - loi:xxx
+        - kind: report
+          type: LaTeXReporter
+          properties:
+            template: dataset.tex
+            filename: report.tex
+          compile: true
+
+    In this particular case, we use a LaTeX reporter and most likely one of
+    the templates that come bundled with the ASpecD package (atl least,
+    a template with that name comes bundled with ASpecD). As the template
+    name already suggests, this report will contain information on a
+    dataset. Furthermore, setting ``compile`` to true will render the
+    generated report into a PDF document.
 
     Note that you can refer to datasets, results, and figures created during
     cooking of a recipe using their respective labels. Those labels will
     automatically be replaced by the actual dataset/result prior to
     performing the task.
 
-    Whatever fields you set as property ``context`` can be accessed
+    Whatever fields you set in the property ``context`` can be accessed
     directly from within the template using the usual Python syntax for
-    accessing keys of dictionaries. The fields shown here assume
-    a certain structure of your template containing user-supplied free text
-    for the introduction to several sections.
+    accessing keys of dictionaries as well as the (more convenient) dot
+    syntax provided by Jinja2.
 
     Additionally, the context will contain the key ``dataset`` containing the
     result of the :meth:`aspecd.dataset.Dataset.to_dict` method, thus the full
@@ -3097,8 +3170,51 @@ class ReportTask(Task):
         run into trouble.
 
     .. note::
-        If the recipe contains the ``output_directory`` key on the top
-        level, the reports will be written to this directory.
+        If the recipe contains the ``output`` key in its ``directories`` dict,
+        the figure(s) will be saved to this directory.
+
+    In case you do not provide a filename, the report is nevertheless saved
+    for each of the datasets, using a auto-generated filename consisting of
+    the dataset label and the template used. Assuming a dataset "foo" and a
+    template "dataset.tex", the resulting report will be saved to the file
+    "foo_report_dataset.tex".
+
+    Generally, you are entirely free to create content for your reports from
+    within a recipe, as the following fictitious example shows:
+
+    .. code-block:: yaml
+
+        kind: report
+        type: LaTeXReporter
+        properties:
+          template: my-fancy-latex-template.tex
+          filename: some-filename-for-final-report.tex
+          context:
+            general:
+              title: Some fancy title
+              author: John Doe
+            free_text:
+              intro: >
+                Short introduction of the experiment performed
+              metadata: >
+                Tabular and customisable overview of the dataset's metadata
+              history: >
+                Presentation of all processing, analysis and representation
+                steps
+            figures:
+              title: my_fancy_figure
+        compile: True
+        apply_to:
+          - loi:xxx
+
+    The fields shown here assume a certain structure of your template
+    containing user-supplied free text for the introduction to several
+    sections. And be aware that in such cases, you need to know your
+    templates quite well and have a direct dependency between the keys
+    provided in the recipe and the corresponding placeholders in your
+    template. Therefore, much more often, you will use either general
+    reporters for datasets and alike (as shown above) or create specialised
+    reporter classes collecting the necessary information for you.
 
 
     Attributes
@@ -3124,7 +3240,13 @@ class ReportTask(Task):
             dataset = self.recipe.get_dataset(dataset_id)
             task = self.get_object()
             task.context['dataset'] = dataset.to_dict()
-            if isinstance(self.properties["filename"], list):
+            if 'filename' not in self.properties \
+                    or not self.properties['filename']:
+                dataset_basename = \
+                    os.path.splitext(os.path.split(dataset.id)[-1])[0]
+                task.filename = \
+                    "_".join([dataset_basename, "report", task.template])
+            elif isinstance(self.properties["filename"], list):
                 task.filename = self.properties["filename"][idx]
             if self.recipe.directories['output']:
                 task.filename = os.path.join(self.recipe.directories['output'],
@@ -3216,6 +3338,7 @@ class ModelTask(Task):
         logger.info('Create model "%s"', self.type)
         result = task.create()
         if self.result:
+            result.id = self.result
             self.recipe.results[self.result] = result
 
 
@@ -3268,8 +3391,8 @@ class ExportTask(Task):
         run into trouble.
 
     .. note::
-        If the recipe contains the ``output_directory`` key on the top
-        level, the datasets will be saved to this directory.
+        If the recipe contains the ``output`` key in its ``directories`` dict,
+        the datasets will be saved to this directory.
 
     """
 
@@ -3611,7 +3734,7 @@ class FigureRecord(aspecd.utils.ToDictMixin):
         """
         if not plotter:
             raise aspecd.exceptions.MissingPlotterError
-        for attribute in ['caption', 'parameters', 'filename']:
+        for attribute in ['caption', 'parameters', 'filename', 'label']:
             setattr(self, attribute, getattr(plotter, attribute))
 
 

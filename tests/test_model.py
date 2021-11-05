@@ -41,6 +41,15 @@ class TestModel(unittest.TestCase):
     def test_description_references_is_list(self):
         self.assertTrue(isinstance(self.model.references, list))
 
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.model, 'to_dict'))
+        self.assertTrue(callable(self.model.to_dict))
+
+    def test_to_dict_does_not_contain_certain_keys(self):
+        for key in ['name', 'description', 'references']:
+            with self.subTest(key=key):
+                self.assertNotIn(key, self.model.to_dict())
+
     def test_has_create_method(self):
         self.assertTrue(hasattr(self.model, 'create'))
         self.assertTrue(callable(self.model.create))
@@ -81,6 +90,52 @@ class TestModel(unittest.TestCase):
         np.testing.assert_allclose(dataset.data.axes[0].values,
                                    self.model.variables[0])
 
+    def test_create_sets_last_axis_quantity_and_unit_to_defaults(self):
+        self.model.parameters = [0]
+        self.model.variables = [np.linspace(0, 1)]
+        dataset = self.model.create()
+        self.assertEqual('amplitude', dataset.data.axes[-1].quantity)
+        self.assertEqual('a.u.', dataset.data.axes[-1].unit)
+
+    def test_create_with_axes_sets_axes_quantities_and_units(self):
+        axes = [
+            {'quantity': 'foo0', 'unit': 'bar0'},
+            {'quantity': 'foo1', 'unit': 'bar1'},
+        ]
+        self.model.parameters = [0]
+        self.model.variables = [np.linspace(0, 1)]
+        self.model.axes = axes
+        dataset = self.model.create()
+        for idx, axis in enumerate(dataset.data.axes):
+            self.assertEqual(axes[idx]["quantity"], axis.quantity)
+            self.assertEqual(axes[idx]["unit"], axis.unit)
+
+    def test_create_with_axes_and_omitted_axis(self):
+        axes = [
+            None,
+            {'quantity': 'foo1', 'unit': 'bar1'},
+        ]
+        self.model.parameters = [0]
+        self.model.variables = [np.linspace(0, 1)]
+        self.model.axes = axes
+        dataset = self.model.create()
+        for idx, axis in enumerate(dataset.data.axes):
+            if axes[idx]:
+                self.assertEqual(axes[idx]["quantity"], axis.quantity)
+                self.assertEqual(axes[idx]["unit"], axis.unit)
+            else:
+                self.assertEqual("", axis.quantity)
+                self.assertEqual("", axis.unit)
+
+    def test_create_with_axes_unequal_to_number_of_dataset_axes_raises(self):
+        axes = [{'quantity': 'foo0', 'unit': 'bar0'}]
+        self.model.parameters = [0]
+        self.model.variables = [np.linspace(0, 1)]
+        self.model.axes = axes
+        message = "Number of axes and dataset axes need to be identical"
+        with self.assertRaisesRegex(IndexError, message):
+            self.model.create()
+
     def test_create_sets_calculated_dataset_origdata_axis_values(self):
         self.model.parameters = [0]
         self.model.variables = [np.linspace(0, 1)]
@@ -96,6 +151,13 @@ class TestModel(unittest.TestCase):
             np.testing.assert_allclose(dataset.data.axes[index].values,
                                        self.model.variables[index])
 
+    def test_create_with_2d_sets_last_axis_measure_and_unit_to_defaults(self):
+        self.model.parameters = [0]
+        self.model.variables = [np.linspace(0, 1), np.linspace(2, 3)]
+        dataset = self.model.create()
+        self.assertEqual('amplitude', dataset.data.axes[-1].quantity)
+        self.assertEqual('a.u.', dataset.data.axes[-1].unit)
+
     def test_create_sets_calculated_dataset_calculation_type(self):
         self.model.parameters = [0]
         self.model.variables = [np.linspace(0, 1)]
@@ -108,6 +170,14 @@ class TestModel(unittest.TestCase):
         dataset = self.model.create()
         self.assertEqual(self.model.parameters,
                          dataset.metadata.calculation.parameters)
+
+    def test_create_with_label_sets_label_of_calculated_dataset(self):
+        self.model.parameters = [0]
+        self.model.variables = [np.linspace(0, 1)]
+        self.model.label = 'foobar'
+        dataset = self.model.create()
+        self.assertEqual(self.model.label,
+                         dataset.label)
 
     def test_has_from_dataset_method(self):
         self.assertTrue(hasattr(self.model, 'from_dataset'))
@@ -129,7 +199,7 @@ class TestModel(unittest.TestCase):
         dataset = aspecd.dataset.Dataset()
         dataset.data.data = np.random.random([10, 5])
         self.model.from_dataset(dataset=dataset)
-        for index in range(len(dataset.data.axes)):
+        for index in range(len(dataset.data.axes)-1):
             np.testing.assert_allclose(dataset.data.axes[index].values,
                                        self.model.variables[index])
 
@@ -193,12 +263,12 @@ class TestCompositeModel(unittest.TestCase):
         # Create single model
         single_model = aspecd.model.Polynomial()
         single_model.parameters = parameters
-        single_model.variables = variables
+        single_model.variables = [variables]
         single_model_result = single_model.create()
         # Create composite model
         self.model.models = models
         self.model.parameters = [parameters]
-        self.model.variables = variables
+        self.model.variables = [variables]
         composite_model_result = self.model.create()
         self.assertListEqual(list(single_model_result.data.data),
                              list(composite_model_result.data.data))
@@ -211,23 +281,23 @@ class TestCompositeModel(unittest.TestCase):
         # Create single model
         single_model = aspecd.model.Polynomial()
         single_model.parameters = parameters
-        single_model.variables = variables
+        single_model.variables = [variables]
         single_model_result = single_model.create()
         # Create composite model
         self.model.models = models
         self.model.parameters = [parameters]
         self.model.weights = weights
-        self.model.variables = variables
+        self.model.variables = [variables]
         composite_model_result = self.model.create()
         self.assertListEqual(list(single_model_result.data.data * weights[0]),
                              list(composite_model_result.data.data))
 
     def test_create_with_multiple_models_equivalent_to_sum_of_models(self):
-        variables = np.linspace(0, 5)
+        variables = [np.linspace(0, 5)]
         models = ['Sine', 'Exponential']
         parameters = [{'amplitude': 10}, {'rate': -4}]
         # Create individual models
-        data = np.zeros(len(variables))
+        data = np.zeros(len(variables[0]))
         for idx, model_name in enumerate(models):
             model = aspecd.utils.object_from_class_name('aspecd.model.' +
                                                         model_name)
@@ -246,12 +316,12 @@ class TestCompositeModel(unittest.TestCase):
         self.assertListEqual(list(data), list(composite_model_result.data.data))
 
     def test_create_with_operator(self):
-        variables = np.linspace(0, 5)
+        variables = [np.linspace(0, 5)]
         models = ['Sine', 'Exponential']
         parameters = [{'amplitude': 10}, {'rate': -4}]
         operators = ['*']
         # Create individual models
-        data = np.zeros(len(variables))
+        data = np.zeros(len(variables[0]))
         for idx, model_name in enumerate(models):
             model = aspecd.utils.object_from_class_name('aspecd.model.' +
                                                         model_name)
@@ -327,9 +397,9 @@ class TestFamilyOfCurves(unittest.TestCase):
         self.model.model = "Sine"
         self.model.vary["parameter"] = "amplitude"
         self.model.vary["values"] = 4
-        self.model.variables = self.variables
+        self.model.variables = [self.variables]
         simple_model = aspecd.model.Sine()
-        simple_model.variables = self.variables
+        simple_model.variables = [self.variables]
         simple_model.parameters["amplitude"] = self.model.vary["values"]
         simple_dataset = simple_model.create()
         family_of_curves = self.model.create()
@@ -340,9 +410,9 @@ class TestFamilyOfCurves(unittest.TestCase):
         self.model.model = "Sine"
         self.model.vary["parameter"] = "amplitude"
         self.model.vary["values"] = [2, 4]
-        self.model.variables = self.variables
+        self.model.variables = [self.variables]
         simple_model1 = aspecd.model.Sine()
-        simple_model1.variables = self.variables
+        simple_model1.variables = [self.variables]
         simple_model1.parameters["amplitude"] = self.model.vary["values"][0]
         simple_dataset1 = simple_model1.create()
         simple_model2 = copy.deepcopy(simple_model1)
@@ -358,10 +428,59 @@ class TestFamilyOfCurves(unittest.TestCase):
         self.model.model = "Sine"
         self.model.vary["parameter"] = "amplitude"
         self.model.vary["values"] = [2, 4]
-        self.model.variables = self.variables
+        self.model.variables = [self.variables]
         family_of_curves = self.model.create()
         self.assertEqual(self.model.vary["parameter"],
-                         family_of_curves.data.axes[-1].quantity)
+                         family_of_curves.data.axes[-2].quantity)
+
+    def test_create_model_sets_axis_values(self):
+        self.model.model = "Sine"
+        self.model.vary["parameter"] = "amplitude"
+        self.model.vary["values"] = [2, 4]
+        self.model.variables = [self.variables]
+        family_of_curves = self.model.create()
+        self.assertListEqual(self.model.vary["values"],
+                             list(family_of_curves.data.axes[-2].values))
+
+    def test_create_model_sets_float_axis_values(self):
+        self.model.model = "Sine"
+        self.model.vary["parameter"] = "amplitude"
+        self.model.vary["values"] = [2., 4.]
+        self.model.variables = [self.variables]
+        family_of_curves = self.model.create()
+        self.assertListEqual(self.model.vary["values"],
+                             list(family_of_curves.data.axes[-2].values))
+
+    def test_create_from_dataset(self):
+        values = np.linspace(5, 50)
+        dataset = aspecd.dataset.Dataset()
+        dataset.data.data = np.linspace(0, 1)
+        dataset.data.axes[0].values = values
+        self.model.from_dataset(dataset=dataset)
+        self.model.model = "Sine"
+        self.model.vary["parameter"] = "amplitude"
+        self.model.vary["values"] = [2, 4]
+        family_of_curves = self.model.create()
+        self.assertEqual(self.model.vary["parameter"],
+                         family_of_curves.data.axes[-2].quantity)
+
+    def test_create_with_axes_unequal_to_number_of_dataset_axes_raises(self):
+        axes = [
+            {'quantity': 'foo0', 'unit': 'bar0'},
+            {'quantity': 'foo0', 'unit': 'bar0'}
+        ]
+        values = np.linspace(5, 50)
+        dataset = aspecd.dataset.Dataset()
+        dataset.data.data = np.linspace(0, 1)
+        dataset.data.axes[0].values = values
+        self.model.from_dataset(dataset=dataset)
+        self.model.model = "Sine"
+        self.model.vary["parameter"] = "amplitude"
+        self.model.vary["values"] = [2, 4]
+        self.model.axes = axes
+        message = "Number of axes and dataset axes need to be identical"
+        with self.assertRaisesRegex(IndexError, message):
+            self.model.create()
 
 
 class TestZeros(unittest.TestCase):
@@ -516,7 +635,7 @@ class TestPolynomial(unittest.TestCase):
 
     def test_create_returns_polynomial(self):
         self.model.parameters["coefficients"] = [0, 1]
-        self.model.variables = np.linspace(0, 5, 6)
+        self.model.variables = [np.linspace(0, 5, 6)]
         dataset = self.model.create()
         self.assertEqual(0, dataset.data.data[0])
         self.assertEqual(5, dataset.data.data[-1])
@@ -552,22 +671,22 @@ class TestGaussian(unittest.TestCase):
 
     def test_amplitude_sets_maximum(self):
         amplitude = 0.5
-        self.model.variables = np.linspace(-5, 5, 2**10)
+        self.model.variables = [np.linspace(-5, 5, 2**10)]
         self.model.parameters["amplitude"] = amplitude
         dataset = self.model.create()
         self.assertAlmostEqual(amplitude, max(dataset.data.data), 4)
 
     def test_position_set_position(self):
         position = 0.5
-        self.model.variables = np.linspace(-5, 5, 1001)
+        self.model.variables = [np.linspace(-5, 5, 1001)]
         self.model.parameters["position"] = position
         dataset = self.model.create()
-        self.assertAlmostEqual(position, self.model.variables[np.argmax(
+        self.assertAlmostEqual(position, self.model.variables[0][np.argmax(
             dataset.data.data)], 4)
 
     def test_width_sets_width(self):
         width = 2
-        self.model.variables = np.linspace(-5, 5, 10001)
+        self.model.variables = [np.linspace(-5, 5, 10001)]
         self.model.parameters["width"] = width
         dataset = self.model.create()
         fwhm_expected = 2*np.sqrt(2*np.log(2))*width
@@ -575,7 +694,7 @@ class TestGaussian(unittest.TestCase):
 
     def test_zero_width_returns_finite_output(self):
         width = 0
-        self.model.variables = np.linspace(-5, 5)
+        self.model.variables = [np.linspace(-5, 5)]
         self.model.parameters["width"] = width
         with np.errstate(divide='raise'):
             dataset = self.model.create()
@@ -593,22 +712,22 @@ class TestNormalisedGaussian(unittest.TestCase):
         self.assertIn('normalised gaussian', self.model.description.lower())
 
     def test_amplitude_is_normalised(self):
-        self.model.variables = np.linspace(-5, 5, 2**10)
+        self.model.variables = [np.linspace(-5, 5, 2**10)]
         amplitude = 1 / (self.model.parameters["width"] * np.sqrt(2 * np.pi))
         dataset = self.model.create()
         self.assertAlmostEqual(amplitude, max(dataset.data.data), 4)
 
     def test_position_set_position(self):
         position = 0.5
-        self.model.variables = np.linspace(-5, 5, 1001)
+        self.model.variables = [np.linspace(-5, 5, 1001)]
         self.model.parameters["position"] = position
         dataset = self.model.create()
-        self.assertAlmostEqual(position, self.model.variables[np.argmax(
+        self.assertAlmostEqual(position, self.model.variables[0][np.argmax(
             dataset.data.data)], 4)
 
     def test_width_sets_width(self):
         width = 2
-        self.model.variables = np.linspace(-5, 5, 10001)
+        self.model.variables = [np.linspace(-5, 5, 10001)]
         self.model.parameters["width"] = width
         dataset = self.model.create()
         fwhm_expected = 2*np.sqrt(2*np.log(2))*width
@@ -616,7 +735,7 @@ class TestNormalisedGaussian(unittest.TestCase):
 
     def test_zero_width_returns_finite_output(self):
         width = 0
-        self.model.variables = np.linspace(-5, 5)
+        self.model.variables = [np.linspace(-5, 5)]
         self.model.parameters["width"] = width
         with np.errstate(divide='raise'):
             dataset = self.model.create()
@@ -635,22 +754,22 @@ class TestLorentzian(unittest.TestCase):
 
     def test_amplitude_sets_maximum(self):
         amplitude = 0.5
-        self.model.variables = np.linspace(-5, 5, 2**10)
+        self.model.variables = [np.linspace(-5, 5, 2**10)]
         self.model.parameters["amplitude"] = amplitude
         dataset = self.model.create()
         self.assertAlmostEqual(amplitude, max(dataset.data.data), 4)
 
     def test_position_set_position(self):
         position = 0.5
-        self.model.variables = np.linspace(-5, 5, 1001)
+        self.model.variables = [np.linspace(-5, 5, 1001)]
         self.model.parameters["position"] = position
         dataset = self.model.create()
-        self.assertAlmostEqual(position, self.model.variables[np.argmax(
+        self.assertAlmostEqual(position, self.model.variables[0][np.argmax(
             dataset.data.data)], 4)
 
     def test_width_sets_width(self):
         width = 2
-        self.model.variables = np.linspace(-5, 5, 10001)
+        self.model.variables = [np.linspace(-5, 5, 10001)]
         self.model.parameters["width"] = width
         dataset = self.model.create()
         fwhm_expected = 2*width
@@ -658,7 +777,7 @@ class TestLorentzian(unittest.TestCase):
 
     def test_zero_width_returns_finite_output(self):
         width = 0
-        self.model.variables = np.linspace(-5, 5)
+        self.model.variables = [np.linspace(-5, 5)]
         self.model.parameters["width"] = width
         with np.errstate(divide='raise'):
             dataset = self.model.create()
@@ -676,22 +795,22 @@ class TestNormalisedLorentzian(unittest.TestCase):
         self.assertIn('normalised lorentzian', self.model.description.lower())
 
     def test_amplitude_is_normalised(self):
-        self.model.variables = np.linspace(-5, 5, 2**10)
+        self.model.variables = [np.linspace(-5, 5, 2**10)]
         amplitude = 1 / (self.model.parameters["width"] * np.pi)
         dataset = self.model.create()
         self.assertAlmostEqual(amplitude, max(dataset.data.data), 4)
 
     def test_position_set_position(self):
         position = 0.5
-        self.model.variables = np.linspace(-5, 5, 1001)
+        self.model.variables = [np.linspace(-5, 5, 1001)]
         self.model.parameters["position"] = position
         dataset = self.model.create()
-        self.assertAlmostEqual(position, self.model.variables[np.argmax(
+        self.assertAlmostEqual(position, self.model.variables[0][np.argmax(
             dataset.data.data)], 4)
 
     def test_width_sets_width(self):
         width = 2
-        self.model.variables = np.linspace(-5, 5, 10001)
+        self.model.variables = [np.linspace(-5, 5, 10001)]
         self.model.parameters["width"] = width
         dataset = self.model.create()
         fwhm_expected = 2*width
@@ -699,7 +818,7 @@ class TestNormalisedLorentzian(unittest.TestCase):
 
     def test_zero_width_returns_finite_output(self):
         width = 0
-        self.model.variables = np.linspace(-5, 5)
+        self.model.variables = [np.linspace(-5, 5)]
         self.model.parameters["width"] = width
         with np.errstate(divide='raise'):
             dataset = self.model.create()
@@ -717,7 +836,7 @@ class TestSine(unittest.TestCase):
         self.assertIn('sine', self.model.description.lower())
 
     def test_roots_at_correct_place(self):
-        self.model.variables = np.linspace(0, 2*np.pi, 1001)
+        self.model.variables = [np.linspace(0, 2*np.pi, 1001)]
         dataset = self.model.create()
         for index in [0, 500, 1000]:
             self.assertAlmostEqual(0, dataset.data.data[index])
@@ -726,20 +845,20 @@ class TestSine(unittest.TestCase):
 
     def test_amplitude_sets_amplitude(self):
         amplitude = 42.
-        self.model.variables = np.linspace(0, 2*np.pi, 1001)
+        self.model.variables = [np.linspace(0, 2*np.pi, 1001)]
         self.model.parameters["amplitude"] = amplitude
         dataset = self.model.create()
         self.assertAlmostEqual(amplitude, max(dataset.data.data))
 
     def test_frequency_sets_frequency(self):
-        self.model.variables = np.linspace(0, 2*np.pi, 1001)
+        self.model.variables = [np.linspace(0, 2*np.pi, 1001)]
         self.model.parameters["frequency"] = 2
         dataset = self.model.create()
         for index in [0, 250, 500, 750, 1000]:
             self.assertAlmostEqual(0, dataset.data.data[index])
 
     def test_phase_shifts_roots(self):
-        self.model.variables = np.linspace(0, 2*np.pi, 1001)
+        self.model.variables = [np.linspace(0, 2*np.pi, 1001)]
         self.model.parameters["phase"] = 0.5 * np.pi
         dataset = self.model.create()
         for index in [250, 750]:
@@ -757,21 +876,21 @@ class TestExponential(unittest.TestCase):
         self.assertIn('exponential', self.model.description.lower())
 
     def test_only_positive_values(self):
-        self.model.variables = np.linspace(-1, 2, 101)
+        self.model.variables = [np.linspace(-1, 2, 101)]
         dataset = self.model.create()
         self.assertTrue(np.all(dataset.data.data > 0))
 
     def test_prefactor_sets_intercept(self):
         prefactor = 42.
-        self.model.variables = np.linspace(0, 2, 101)
+        self.model.variables = [np.linspace(0, 2, 101)]
         self.model.parameters["prefactor"] = prefactor
         dataset = self.model.create()
         self.assertAlmostEqual(prefactor, dataset.data.data[0])
 
     def test_rate_sets_rate(self):
         rate = 4.2
-        self.model.variables = np.linspace(0, 2, 101)
+        self.model.variables = [np.linspace(0, 2, 101)]
         self.model.parameters["rate"] = rate
         dataset = self.model.create()
-        self.assertAlmostEqual(np.exp(rate * self.model.variables[-1]),
+        self.assertAlmostEqual(np.exp(rate * self.model.variables[0][-1]),
                                dataset.data.data[-1])

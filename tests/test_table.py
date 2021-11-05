@@ -21,6 +21,15 @@ class TestTable(unittest.TestCase):
     def test_instantiate_class(self):
         pass
 
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.table, 'to_dict'))
+        self.assertTrue(callable(self.table.to_dict))
+
+    def test_to_dict_does_not_contain_certain_keys(self):
+        for key in ['name', 'dataset', 'table']:
+            with self.subTest(key=key):
+                self.assertNotIn(key, self.table.to_dict())
+
     def test_has_tabulate_method(self):
         self.assertTrue(hasattr(self.table, 'tabulate'))
         self.assertTrue(callable(self.table.tabulate))

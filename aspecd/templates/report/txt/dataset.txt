@@ -1,0 +1,116 @@
+{#-
+
+This file is part of the ASpecD package and used as template for creating reports of single datasets.
+
+Feel free to adapt the file to your needs, but make sure to copy it before to a directory outside of the installation of the ASpecD package. You can use the modified template by referring to it with the absolute or relative path.
+
+-#}
+##################
+# Dataset report #
+##################
+
+Overview
+========
+
+ID: {{ dataset.id }}
+Label: {{ dataset.id }}
+
+This is {% if dataset.data.calculated %}a calculated{% else %}an experimental{% endif%} dataset with:
+
+* {{ dataset.history | count }} processing steps
+* {{ dataset.analyses | count }} analyses
+* {{ dataset.annotations | count }} annotations
+* {{ dataset.representations | count }} representations
+* {{ dataset.tasks | count }} total tasks
+
+For details, see below. Information on how this report has been generated and how to cite the underlying software are given at the end.
+
+
+{% if dataset.history -%}
+Processing steps
+================
+
+In total, {{ dataset.history | count }} processing steps have been carried out:
+
+{% for processing_step in dataset.history -%}
+* #{{ loop.index }}: {{ processing_step.processing.description }}
+{% endfor %}
+
+{% for processing_step in dataset.history -%}
+#{{ loop.index }}: {{ processing_step.processing.description }}
+
+{% include template_dir + "processing_step.txt" %}
+{% endfor %}
+{% endif %}
+
+
+{%- if dataset.analyses %}
+Analysis steps
+==============
+
+In total, {{ dataset.analyses | count }} analysis steps have been carried out:
+
+{% for analysis_step in dataset.analyses -%}
+* #{{ loop.index }}: {{ analysis_step.analysis.description }}
+{% endfor %}
+
+{% for analysis_step in dataset.analyses -%}
+#{{ loop.index }}: {{ analysis_step.analysis.description }}
+
+{% include template_dir + "analysis_step.txt" %}
+{% endfor %}
+{% endif %}
+
+
+{%- if dataset.annotations %}
+Annotations
+===========
+
+In total, {{ dataset.annotations | count }} annotations have been created:
+
+{% for annotation in dataset.annotations -%}
+* #{{ loop.index }}: {{ annotation.annotation.type | capitalize }}
+{% endfor %}
+
+{% for annotation in dataset.annotations -%}
+#{{ loop.index }}: {{ annotation.annotation.type | capitalize }}
+
+{% if annotation.annotation.type == 'comment' %}{% include template_dir + "annotation_comment.txt" %}{% endif %}
+{% endfor -%}
+
+{% endif %}
+
+
+{%- if dataset.representations %}
+Representations
+===============
+
+In total, {{ dataset.representations | count }} representations have been created:
+
+{% for representation in dataset.representations -%}
+{% if representation.plot -%}
+* #{{ loop.index }}: {{ representation.plot.description }}
+{% endif -%}
+{% endfor %}
+
+{% for representation in dataset.representations -%}
+{% if representation.plot -%}
+{% set figure=representation.plot -%}
+#{{ loop.index }}: {{ figure.description }}
+  
+{% include template_dir + "figure.txt" %}
+{% endif %}
+{% endfor -%}
+
+{% endif -%}
+
+
+Metadata
+========
+{% if dataset.data.calculated %}
+{% include template_dir + "metadata_calculated.txt" %}
+{% else %}
+{% include template_dir + "metadata_experimental.txt" %}
+{% endif %}
+
+{% include template_dir + "colophon.txt" %}

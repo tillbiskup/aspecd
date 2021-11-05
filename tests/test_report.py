@@ -2,10 +2,13 @@
 
 import collections
 import contextlib
+import datetime
 import io
 import os
 import shutil
 import unittest
+
+import jinja2
 
 import aspecd.exceptions
 from aspecd import report
@@ -58,6 +61,15 @@ class TestReporter(unittest.TestCase):
     def test_has_report_property(self):
         self.assertTrue(hasattr(self.report, 'report'))
 
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.report, 'to_dict'))
+        self.assertTrue(callable(self.report.to_dict))
+
+    def test_to_dict_does_not_contain_certain_keys(self):
+        for key in ['context', 'environment', 'report']:
+            with self.subTest(key=key):
+                self.assertNotIn(key, self.report.to_dict())
+
     def test_has_render_method(self):
         self.assertTrue(hasattr(self.report, 'render'))
         self.assertTrue(callable(self.report.render))
@@ -68,7 +80,7 @@ class TestReporter(unittest.TestCase):
 
     def test_render_with_nonexistent_template_raises(self):
         self.report.template = 'foo.bar'
-        with self.assertRaises(FileNotFoundError):
+        with self.assertRaises(jinja2.exceptions.TemplateNotFound):
             self.report.render()
 
     def test_render_with_template(self):
@@ -82,6 +94,30 @@ class TestReporter(unittest.TestCase):
             f.write('')
         self.report.template = self.template2
         self.report.render()
+
+    def test_render_sets_template_dir_in_context(self):
+        with open(self.template2, 'w+') as f:
+            f.write('')
+        self.report.template = self.template2
+        self.report.render()
+        self.assertEqual(os.path.split(self.report.template)[0] + os.path.sep,
+                         self.report.context['template_dir'])
+
+    def test_render_sets_empty_template_dir_in_context(self):
+        with open(self.template, 'w+') as f:
+            f.write('')
+        self.report.template = self.template
+        self.report.render()
+        self.assertEqual(os.path.split(self.template)[0],
+                         self.report.context['template_dir'])
+
+    def test_render_sets_timestamp_in_context(self):
+        with open(self.template, 'w+') as f:
+            f.write('')
+        self.report.template = self.template
+        self.report.render()
+        self.assertEqual(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                         self.report.context['timestamp'])
 
     def test_render_with_template_with_relative_path(self):
         with open(self.template, 'w+') as f:
@@ -163,6 +199,40 @@ class TestReporter(unittest.TestCase):
             read_content = f.read()
         self.assertEqual(self.report.context['bar'], read_content)
 
+    def test_render_with_template_from_package(self):
+        self.report.template = 'txt/figure.txt'
+        self.report.context = {'figure': {'caption': {'title': '', 'text': ''}}}
+        self.report.filename = self.filename
+        self.report.create()
+
+
+class TestTxtReporter(unittest.TestCase):
+    def setUp(self):
+        self.report = report.TxtReporter()
+        self.template = 'test_template.txt'
+        self.filename = 'test_report.txt'
+
+    def tearDown(self):
+        if os.path.exists(self.template):
+            os.remove(self.template)
+        if os.path.exists(self.filename):
+            os.remove(self.filename)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_render_with_local_template(self):
+        with open(self.template, 'w+') as f:
+            f.write('')
+        self.report.template = self.template
+        self.report.render()
+
+    def test_render_with_template_from_package(self):
+        self.report.template = 'figure.txt'
+        self.report.context = {'figure': {'caption': {'title': '', 'text': ''}}}
+        self.report.filename = self.filename
+        self.report.create()
+
 
 class TestLaTeXEnvironment(unittest.TestCase):
     def setUp(self):
@@ -222,6 +292,11 @@ class TestLaTeXReporter(unittest.TestCase):
 
     def test_has_latex_executable_property(self):
         self.assertTrue(hasattr(self.report, 'latex_executable'))
+
+    def test_to_dict_does_not_contain_certain_keys(self):
+        for key in ['latex_executable']:
+            with self.subTest(key=key):
+                self.assertNotIn(key, self.report.to_dict())
 
     def test_render_with_template_with_absolute_path(self):
         with open(self.template2, 'w+') as f:
@@ -324,3 +399,9 @@ class TestLaTeXReporter(unittest.TestCase):
         self.report.context = {'bla_blub': 'foo'}
         self.report.render()
         self.assertTrue('blaBlub' in self.report.context)
+
+    def test_render_with_template_from_package(self):
+        self.report.template = 'figure.tex'
+        self.report.context = {'figure': {'caption': {'title': '', 'text': ''}}}
+        self.report.filename = self.filename
+        self.report.create()

@@ -1,0 +1,10 @@
+  Parameters:
+{% for key, value in analysis_step.analysis.parameters.items() %}
+  * {{ key }}: {{ value }}
+{%- endfor %}
+
+  Result: {{ analysis_step.analysis.result }}
+{%- if analysis_step.analysis.comment %}
+
+  Comment: {{ analysis_step.analysis.comment }}
+{% endif %}

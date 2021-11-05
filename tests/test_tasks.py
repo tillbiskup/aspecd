@@ -64,9 +64,6 @@ class TestRecipe(unittest.TestCase):
     def test_has_default_package_property(self):
         self.assertTrue(hasattr(self.recipe, 'default_package'))
 
-    def test_has_output_directory_property(self):
-        self.assertTrue(hasattr(self.recipe, 'output_directory'))
-
     def test_has_format_and_settings_and_directories_properties(self):
         self.assertTrue(hasattr(self.recipe, 'format'))
         self.assertTrue(hasattr(self.recipe, 'settings'))
@@ -344,15 +341,37 @@ class TestRecipe(unittest.TestCase):
                               'id': id_},
                              dict_['datasets'][0])
 
-    def test_to_dict_with_foreign_dataset_returns_dataset_as_dict(self):
+    def test_to_dict_with_foreign_dataset_includes_package_in_dict(self):
         class ForeignDataset:
             id = self.dataset
             label = self.dataset
         foreign_dataset = ForeignDataset()
         self.recipe.datasets[self.dataset] = foreign_dataset
         dict_ = self.recipe.to_dict()
-        self.assertDictEqual({'source': self.dataset, 'package': 'builtins'},
-                             dict_['datasets'][0])
+        self.assertDictEqual(
+            {'source': self.dataset, 'package': 'test_tasks'},
+            dict_['datasets'][0])
+
+    def test_to_dict_with_foreign_dataset_and_default_package(self):
+        class ForeignDataset:
+            id = self.dataset
+            label = self.dataset
+        foreign_dataset = ForeignDataset()
+        self.recipe.settings['default_package'] = __name__
+        self.recipe.datasets[self.dataset] = foreign_dataset
+        dict_ = self.recipe.to_dict()
+        self.assertEqual(self.dataset, dict_['datasets'][0])
+
+    def test_to_dict_with_datasets_source_directory(self):
+        self.recipe.directories['datasets_source'] = 'foo'
+        id_ = 'foobar'
+        tmp = dataset.Dataset()
+        tmp.id = os.path.join(self.recipe.directories['datasets_source'],
+                               id_)
+        tmp.label = id_
+        self.recipe.datasets[id_] = tmp
+        dict_ = self.recipe.to_dict()
+        self.assertEqual(id_, dict_['datasets'][0])
 
     def test_to_dict_with_task_returns_task_dict(self):
         task = tasks.Task()
@@ -360,6 +379,13 @@ class TestRecipe(unittest.TestCase):
         self.recipe.tasks.append(task)
         dict_ = self.recipe.to_dict()
         self.assertEqual(task.to_dict(), dict_['tasks'][0])
+
+    def test_to_dict_w_remove_empty_removes_empty_fields_in_task(self):
+        task = tasks.Task()
+        task.from_dict(self.task)
+        self.recipe.tasks.append(task)
+        dict_ = self.recipe.to_dict(remove_empty=True)
+        self.assertEqual(task.to_dict(remove_empty=True), dict_['tasks'][0])
 
     def test_has_get_dataset_method(self):
         self.assertTrue(hasattr(self.recipe, 'get_dataset'))
@@ -427,12 +453,6 @@ class TestRecipe(unittest.TestCase):
         self.recipe.from_dict(dict_)
         self.assertEqual('/foo', self.recipe.directories['output'])
 
-    def test_from_dict_makes_output_directory_absolute_path(self):
-        dict_ = {'directories': {'output': 'foo'}}
-        self.recipe.from_dict(dict_)
-        self.assertEqual(os.path.join(os.path.abspath(os.path.curdir), 'foo'),
-                         self.recipe.directories['output'])
-
     def test_from_dict_sets_autosave_plots(self):
         dict_ = {'settings': {'autosave_plots': False}}
         self.recipe.from_dict(dict_)
@@ -443,6 +463,12 @@ class TestRecipe(unittest.TestCase):
 
     def test_to_yaml_contains_format(self):
         self.assertIn('format:', self.recipe.to_yaml())
+
+    def test_to_yaml_w_remove_empty_removes_empty_fields_in_task(self):
+        task = tasks.Task()
+        task.from_dict(self.task)
+        self.recipe.tasks.append(task)
+        self.assertNotIn('apply_to', self.recipe.to_yaml(remove_empty=True))
 
 
 class TestChef(unittest.TestCase):
@@ -604,7 +630,7 @@ class TestChef(unittest.TestCase):
                        'directories': {'datasets_source': '/foo'}}
         recipe.from_dict(recipe_dict)
         self.chef.cook(recipe=recipe)
-        self.assertEqual('bar', self.chef.history["datasets"][0]["source"])
+        self.assertEqual('bar', self.chef.history["datasets"][0])
 
     def test_cook_w_datasets_source_dir_w_slash_shortens_dataset_paths(self):
         recipe = self.recipe
@@ -613,7 +639,7 @@ class TestChef(unittest.TestCase):
                        'directories': {'datasets_source': '/foo/'}}
         recipe.from_dict(recipe_dict)
         self.chef.cook(recipe=recipe)
-        self.assertEqual('bar', self.chef.history["datasets"][0]["source"])
+        self.assertEqual('bar', self.chef.history["datasets"][0])
 
     def test_cook_adds_output_directory_to_history(self):
         recipe = self.recipe
@@ -1148,10 +1174,8 @@ class TestTask(unittest.TestCase):
         self.assertEqual(dict_["properties"]["parameters"]["foo"], "foo")
 
     def test_to_dict_with_plotter_in_parameters_replaces_it_with_label(self):
-        kind = 'processing'
-        type_ = 'SingleProcessingStep'
-        self.task.kind = kind
-        self.task.type = type_
+        self.task.kind = 'processing'
+        self.task.type = 'SingleProcessingStep'
         plotter = aspecd.plotting.Plotter()
         recipe = tasks.Recipe()
         recipe.plotters["foo"] = plotter
@@ -1160,6 +1184,13 @@ class TestTask(unittest.TestCase):
         self.task.perform()
         dict_ = self.task.to_dict()
         self.assertEqual(dict_["properties"]["parameters"]["foo"], "foo")
+
+    def test_to_dict_with_remove_empty(self):
+        self.task.kind = 'processing'
+        self.task.type = 'SingleProcessingStep'
+        self.task.properties["parameters"] = {}
+        dict_ = self.task.to_dict(remove_empty=True)
+        self.assertNotIn("properties", dict_)
 
     def test_to_yaml_returns_string(self):
         self.assertIsInstance(self.task.to_yaml(), str)
@@ -1171,6 +1202,17 @@ class TestTask(unittest.TestCase):
         self.task.kind = 'processing'
         self.task.type = 'ProcessingStep'
         self.assertIn('parameters: ', self.task.to_yaml())
+
+    def test_to_yaml_with_numpy_arrays(self):
+        self.task.kind = 'plotting'
+        self.task.type = 'MultiPlotter1D'
+        self.task.to_yaml()
+
+    def test_to_yaml_with_remove_empty(self):
+        self.task.kind = 'processing'
+        self.task.type = 'SingleProcessingStep'
+        self.task.properties["parameters"] = {}
+        self.assertNotIn("properties", self.task.to_yaml(remove_empty=True))
 
 
 class TestProcessingTask(unittest.TestCase):
@@ -1319,10 +1361,59 @@ class TestProcessingTask(unittest.TestCase):
         self.task.perform()
         dict_ = self.task.to_dict()
         self.assertEqual(dict_[0]['result'], 'result1')
-        
+
     def test_to_dict_sets_kind(self):
         dict_ = self.task.to_dict()
         self.assertEqual('processing', dict_['kind'])
+
+    def test_to_dict_with_multiprocessingstep_sets_kind(self):
+        self.task.kind = 'processing'
+        self.task.type = 'MultiProcessingStep'
+        self.task._task = self.task.get_object()
+        dict_ = self.task.to_dict()
+        self.assertEqual('multiprocessing', dict_['kind'])
+
+    def test_to_dict_with_singleplotter_sets_kind(self):
+        self.task.kind = 'plotting'
+        self.task.type = 'SinglePlotter1D'
+        self.task._task = self.task.get_object()
+        dict_ = self.task.to_dict()
+        self.assertEqual('singleplot', dict_['kind'])
+
+    def test_to_dict_with_multiplotter_sets_kind(self):
+        self.task.kind = 'plotting'
+        self.task.type = 'MultiPlotter1D'
+        self.task._task = self.task.get_object()
+        dict_ = self.task.to_dict()
+        self.assertEqual('multiplot', dict_['kind'])
+
+    def test_to_dict_with_compositeplotter_sets_kind(self):
+        self.task.kind = 'plotting'
+        self.task.type = 'CompositePlotter'
+        self.task._task = self.task.get_object()
+        dict_ = self.task.to_dict()
+        self.assertEqual('compositeplot', dict_['kind'])
+
+    def test_to_dict_with_singleanalysis_sets_kind(self):
+        self.task.kind = 'analysis'
+        self.task.type = 'SingleAnalysisStep'
+        self.task._task = self.task.get_object()
+        dict_ = self.task.to_dict()
+        self.assertEqual('singleanalysis', dict_['kind'])
+
+    def test_to_dict_with_multianalysis_sets_kind(self):
+        self.task.kind = 'analysis'
+        self.task.type = 'MultiAnalysisStep'
+        self.task._task = self.task.get_object()
+        dict_ = self.task.to_dict()
+        self.assertEqual('multianalysis', dict_['kind'])
+
+    def test_to_dict_with_aggregatedanalysis_sets_kind(self):
+        self.task.kind = 'analysis'
+        self.task.type = 'AggregatedAnalysisStep'
+        self.task._task = self.task.get_object()
+        dict_ = self.task.to_dict()
+        self.assertEqual('aggregatedanalysis', dict_['kind'])
 
     def test_to_yaml_sets_kind(self):
         self.task.to_yaml()
@@ -1765,6 +1856,10 @@ class TestAnnotationTask(unittest.TestCase):
         self.assertIn('Perform "{}" on dataset "{}"'.format(
             self.annotation_task['type'], self.dataset[0]), cm.output[0])
 
+    def test_to_dict_sets_kind(self):
+        dict_ = self.task.to_dict()
+        self.assertEqual('annotation', dict_['kind'])
+
 
 class TestPlotTask(unittest.TestCase):
     def setUp(self):
@@ -1802,12 +1897,19 @@ class TestPlotTask(unittest.TestCase):
         self.task.from_dict(self.plotting_task)
         self.assertEqual(label, self.task.label)
 
-    def test_perform_task_without_label_doesnt_add_figure_to_recipe(self):
+    def test_perform_task_without_label_adds_figure_to_recipe(self):
         self.prepare_recipe()
         self.task.from_dict(self.plotting_task)
         self.task.recipe = self.recipe
         self.task.perform()
-        self.assertFalse(self.recipe.figures)
+        self.assertTrue(len(self.recipe.figures))
+
+    def test_perform_task_without_label_sets_default_label(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertIn('fig1', self.recipe.figures)
 
     def test_perform_task_with_label_adds_figure_to_recipe(self):
         self.prepare_recipe()
@@ -1817,6 +1919,15 @@ class TestPlotTask(unittest.TestCase):
         self.task.recipe = self.recipe
         self.task.perform()
         self.assertTrue(len(self.recipe.figures))
+
+    def test_perform_task_with_label_adds_label_to_figure_record(self):
+        self.prepare_recipe()
+        label = 'foo'
+        self.plotting_task['label'] = label
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertEqual(label, self.recipe.figures[label].label)
 
     def test_figure_added_to_recipe_is_figure_record(self):
         self.prepare_recipe()
@@ -1976,6 +2087,15 @@ class TestSinglePlotTask(unittest.TestCase):
         self.task.perform()
         self.assertTrue(os.path.exists(self.figure_filename))
 
+    def test_perform_task_autosaving_adds_filename_to_task(self):
+        self.figure_filename = \
+            "".join([self.dataset[0], "_", self.plotting_task["type"], ".pdf"])
+        self.prepare_recipe()
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(self.task.properties['filename'])
+
     def test_perform_task_wo_filename_wo_autosave_does_not_save_plot(self):
         self.figure_filename = \
             "".join([self.dataset[0], "_", self.plotting_task["type"], ".pdf"])
@@ -2036,6 +2156,24 @@ class TestSinglePlotTask(unittest.TestCase):
         task2.perform()
         self.assertEqual(self.task._task.figure.number,
                          task2._task.figure.number)
+
+    def test_perform_task_with_label_adds_label_to_dataset_figure_record(self):
+        self.prepare_recipe()
+        label = 'foo'
+        self.plotting_task['label'] = label
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertEqual(label, self.recipe.datasets[
+            self.dataset[0]].representations[0].plot.label)
+
+    def test_perform_task_wo_label_adds_default_label_to_dataset_fig_rec(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertEqual('fig1', self.recipe.datasets[
+            self.dataset[0]].representations[0].plot.label)
 
 
 class TestMultiPlotTask(unittest.TestCase):
@@ -2451,6 +2589,18 @@ class TestReportTask(unittest.TestCase):
         self.assertTrue(os.path.exists(os.path.join(self.output_directory,
                                                     self.filename)))
 
+    def test_perform_task_without_filename_saves_report_to_default_name(self):
+        self.filename = "_".join([self.dataset[1:], "report", self.template])
+        self.prepare_recipe()
+        template_content = "{@dataset['id']}"
+        self.prepare_template(template_content)
+        self.report_task['properties'].pop('filename')
+        self.task.from_dict(self.report_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        print(self.filename)
+        self.assertTrue(os.path.exists(self.filename))
+
 
 class TestModelTask(unittest.TestCase):
     def setUp(self):
@@ -2507,6 +2657,15 @@ class TestModelTask(unittest.TestCase):
         self.task.recipe = self.recipe
         self.task.perform()
         self.assertTrue(len(self.recipe.results))
+
+    def test_perform_task_with_result_adds_result_as_id_to_dataset(self):
+        self.prepare_recipe()
+        result = 'foo'
+        self.model_task['result'] = result
+        self.task.from_dict(self.model_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertEqual(result, self.recipe.results[result].id)
 
     def test_added_result_is_calculated_dataset(self):
         self.prepare_recipe()

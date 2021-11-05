@@ -219,6 +219,17 @@ class TestToDictMixin(unittest.TestCase):
         self.assertEqual(['purpose', '_foo', '_bar'],
                          list(obj.to_dict().keys()))
 
+    def test_remove_empty_properties_from_dict(self):
+        class Test(utils.ToDictMixin):
+            def __init__(self):
+                super().__init__()
+                self.purpose = ''
+                self.comment = 'Lorem ipsum'
+
+        obj = Test()
+        self.assertEqual(['comment'],
+                         list(obj.to_dict(remove_empty=True).keys()))
+
 
 class TestGetAspecdVersion(unittest.TestCase):
 
@@ -409,6 +420,11 @@ class TestYaml(unittest.TestCase):
                           collections.OrderedDict({'bar': {'foo': array}})}
         self.yaml.serialise_numpy_arrays()
         self.assertDictEqual(resulting_dict, self.yaml.dict)
+
+    def test_serialise_numpy_array_handles_numpy_floats(self):
+        self.yaml.dict = {'foobar': np.float64(5)}
+        self.yaml.serialise_numpy_arrays()
+        self.assertFalse(isinstance(self.yaml.dict['foobar'], np.float64))
 
     def test_has_deserialise_numpy_array_method(self):
         self.assertTrue(hasattr(self.yaml, 'deserialise_numpy_arrays'))
@@ -647,6 +663,12 @@ class TestCopyKeysBetweenDicts(unittest.TestCase):
         target = {'kfoo': [{'kbar': 'vbar', 'kfoobar': 'vfoobar'}]}
         target = utils.copy_keys_between_dicts(source, target)
         self.assertEqual('vfoo', target["kfoo"][0]["kbar"])
+
+    def test_copy_key_if_target_key_is_dict_but_source_key_is_not(self):
+        source = {'kfoo': 'kbar'}
+        target = {'kfoo': {'kbar': 'vfoo'}}
+        target = utils.copy_keys_between_dicts(source, target)
+        self.assertEqual(source['kfoo'], target['kfoo'])
 
 
 class TestRemoveEmptyValuesFromDicts(unittest.TestCase):
@@ -901,3 +923,17 @@ class TestGetPackageData(unittest.TestCase):
     def test_get_package_data_with_foreign_package_returns_content(self):
         content = utils.get_package_data('pip@__main__.py', directory='')
         self.assertTrue(content)
+
+
+class TestChangeWorkingDir(unittest.TestCase):
+
+    def test_change_working_dir_changes_working_dir(self):
+        with utils.change_working_dir('..'):
+            working_dir = os.path.abspath(os.getcwd())
+        self.assertEqual(os.path.split(os.getcwd())[0], working_dir)
+
+    def test_change_working_dir_returns_to_original_dir(self):
+        oldpwd = os.getcwd()
+        with utils.change_working_dir('..'):
+            pass
+        self.assertEqual(oldpwd, os.getcwd())

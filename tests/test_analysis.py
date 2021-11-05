@@ -86,6 +86,15 @@ class TestAnalysisStep(unittest.TestCase):
         self.assertDictEqual(self.analysisstep.parameters,
                              dataset.metadata.calculation.parameters)
 
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.analysisstep, 'to_dict'))
+        self.assertTrue(callable(self.analysisstep.to_dict))
+
+    def test_to_dict_does_not_contain_certain_keys(self):
+        for key in ['name', 'description', 'references']:
+            with self.subTest(key=key):
+                self.assertNotIn(key, self.analysisstep.to_dict())
+
 
 class TestSingleAnalysisStep(unittest.TestCase):
     def setUp(self):
@@ -99,6 +108,11 @@ class TestSingleAnalysisStep(unittest.TestCase):
 
     def test_preprocessing_is_list(self):
         self.assertTrue(isinstance(self.analysisstep.preprocessing, list))
+
+    def test_to_dict_does_not_contain_certain_keys(self):
+        for key in ['dataset']:
+            with self.subTest(key=key):
+                self.assertNotIn(key, self.analysisstep.to_dict())
 
     def test_analyse_with_dataset(self):
         test_dataset = aspecd.dataset.Dataset()
@@ -162,6 +176,11 @@ class TestMultiAnalysisStep(unittest.TestCase):
 
     def test_instantiate_class(self):
         pass
+
+    def test_to_dict_does_not_contain_certain_keys(self):
+        for key in ['datasets']:
+            with self.subTest(key=key):
+                self.assertNotIn(key, self.analysisstep.to_dict())
 
     def test_has_datasets_property(self):
         self.assertTrue(hasattr(self.analysisstep, 'datasets'))
@@ -240,6 +259,11 @@ class TestAggregatedAnalysisStep(unittest.TestCase):
     def test_has_appropriate_description(self):
         self.assertIn('Aggregated analysis step for multiple datasets',
                       self.analysis.description)
+
+    def test_to_dict_does_not_contain_certain_keys(self):
+        for key in ['datasets, result']:
+            with self.subTest(key=key):
+                self.assertNotIn(key, self.analysis.to_dict())
 
     def test_analyse_without_datasets_raises(self):
         self.analysis.datasets = []

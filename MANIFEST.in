@@ -9,3 +9,6 @@ include LICENSE*
 
 # Include mapper recipes
 include aspecd/*_mapper.yaml
+
+# Include templates
+recursive-include aspecd/templates *

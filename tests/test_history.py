@@ -505,6 +505,7 @@ class TestPlotRecord(unittest.TestCase):
         caption.title = 'My fancy figure'
         caption.text = 'Some more description'
         plotter.caption = caption
+        plotter.label = 'label'
         self.plot_record.from_plotter(plotter)
         self.assertEqual(plotter.name, self.plot_record.class_name)
         self.assertEqual(plotter.filename, self.plot_record.filename)
@@ -512,6 +513,7 @@ class TestPlotRecord(unittest.TestCase):
         self.assertEqual(plotter.properties, self.plot_record.properties)
         self.assertEqual(plotter.description, self.plot_record.description)
         self.assertEqual(plotter.caption.title, self.plot_record.caption.title)
+        self.assertEqual(plotter.label, self.plot_record.label)
 
     def test_instantiate_with_plotter_sets_attributes_from_plotter(self):
         plotter = plotting.Plotter()

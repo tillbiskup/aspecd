@@ -219,7 +219,7 @@ import aspecd.utils
 from aspecd.history import AnalysisHistoryRecord
 
 
-class AnalysisStep:
+class AnalysisStep(aspecd.utils.ToDictMixin):
     """
     Base class for analysis steps.
 
@@ -307,6 +307,7 @@ class AnalysisStep:
     """
 
     def __init__(self):
+        super().__init__()
         self.name = aspecd.utils.full_class_name(self)
         self.parameters = dict()
         self.result = None
@@ -314,6 +315,7 @@ class AnalysisStep:
         self.description = 'Abstract analysis step'
         self.comment = ''
         self.references = []
+        self._exclude_from_to_dict = ['name', 'description', 'references']
 
     def analyse(self):
         """Perform the actual analysis step on the given dataset.
@@ -461,6 +463,8 @@ class SingleAnalysisStep(AnalysisStep):
         self.preprocessing = []
         self.description = 'Abstract single analysis step'
         self.dataset = None
+        self.__kind__ = 'singleanalysis'
+        self._exclude_from_to_dict.extend(['dataset'])
 
     # pylint: disable=arguments-differ
     def analyse(self, dataset=None, from_dataset=False):
@@ -615,6 +619,8 @@ class MultiAnalysisStep(AnalysisStep):
         super().__init__()
         self.datasets = []
         self.description = 'Abstract analysis step for multiple datasets'
+        self.__kind__ = 'multianalysis'
+        self._exclude_from_to_dict.extend(['datasets'])
 
     def analyse(self):
         """Perform the actual analysis on the given list of datasets.
@@ -723,6 +729,7 @@ class AggregatedAnalysisStep(AnalysisStep):
         self.description = 'Aggregated analysis step for multiple datasets'
         self.result = self.create_dataset()
         self._analysis_object = None
+        self.__kind__ = 'aggregatedanalysis'
 
     def analyse(self):
         """

@@ -488,11 +488,39 @@ Just to show an example of how to switch off the autosaving of plots:
 In this particular case, the result of the singleplot task will not be saved to a file, and unless you add a label and use the resulting plotter in a compositeplotter task, you will not see the results, as recipe-driven data analysis works fully unattended and non-interactive.
 
 
-.. todo::
+Reports
+-------
 
-    Things to add:
+While plotting can become quite complex and involved already, reports push things to another level entirely. On the other hand, reports are indispensable to get access to all the information contained in datasets and recipes, hence information you as scientist have provided during data analysis.
 
-    * Reports
+Using a template engine (`Jinja2 <http://jinja.pocoo.org/>`_), reports separate the data source (dataset, recipe, ...) from layout and final report and allow for creating reports in a number of different output formats. Generally, formatting and contents of your reports are only limited by your imagination, and using the template inheritance mechanisms of Jinja2 allows even for very elegant and economic generation of complex reports reusing standard building blocks.
+
+However, things can become complex quite quickly. Therefore, we will refrain from digging too much into details here and continue with a simple yet powerful "out-of-the-box" example:
+
+.. code-block:: yaml
+
+    datasets:
+      - dataset
+
+    tasks:
+      - kind: report
+        type: LaTeXReporter
+        properties:
+          template: dataset.tex
+          filename: report.tex
+        compile: true
+
+So what happens here? We have loaded a single dataset and used the :class:`aspecd.report.LaTeXReporter` on it. Here, we used ``dataset.tex`` as template and output the report to ``report.tex``. The template is one of the bundled templates that come with the ASpecD package (starting with version 0.6) and work out of the box. As we've set ``compile`` to true, we will even get our LaTeX report compiled into a PDF document. Therefore, we will end up with a file ``report.tex`` with the final LaTeX-formatted report and a file ``report.pdf`` containing the typeset result.
+
+And what does this report contain? Basically an overview of all the information contained within the dataset, *i.e.* a list of processing and analysis steps, all representations (including the generated figures), annotations, and a summary of the metadata of the dataset. Of course, as this is a generic template, the formatting tries to be as generic as possible as well. Nevertheless, never underestimate the power of generic reports with uniform formatting, as this greatly facilitates comparing reports for different datasets.
+
+But what if you don't like the way the bundled templates look like? Don't
+worry, we've got you covered: Simply provide a relative or absolute path to
+your own template, even with the same name. Hence, in the above example,
+if you place a file ``dataset.tex`` in the directory you serve the recipe
+from, it will be used instead of the bundled one.
+
+Of course, LaTeX is not the only format available and supported. Generally, many formats are supported thanks to Jinja2. Currently (as of version 0.6), only LaTeX and plain text are supported, but more may be added in the future. For details, see the documentation of the :mod:`aspecd.report` module.
 
 
 .. _specific_packages:

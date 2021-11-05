@@ -81,6 +81,18 @@ class TestPlotter(unittest.TestCase):
     def test_has_style_property(self):
         self.assertTrue(hasattr(self.plotter, 'style'))
 
+    def test_has_label_property(self):
+        self.assertTrue(hasattr(self.plotter, 'label'))
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.plotter, 'to_dict'))
+        self.assertTrue(callable(self.plotter.to_dict))
+
+    def test_to_dict_does_not_contain_certain_keys(self):
+        for key in ['name', 'description', 'figure', 'axes', 'legend']:
+            with self.subTest(key=key):
+                self.assertNotIn(key, self.plotter.to_dict())
+
     def test_has_save_method(self):
         self.assertTrue(hasattr(self.plotter, 'save'))
         self.assertTrue(callable(self.plotter.save))
@@ -156,6 +168,24 @@ class TestPlotter(unittest.TestCase):
         with self.assertRaises(aspecd.exceptions.StyleNotFoundError):
             self.plotter.plot()
 
+    def test_plot_with_style_restores_previous_settings_after_plot(self):
+        orig_rcparams = matplotlib.rcParams.copy()
+        self.plotter.style = 'seaborn'
+        self.plotter.plot()
+        self.assertEqual(orig_rcparams['axes.facecolor'],
+                         matplotlib.rcParams['axes.facecolor'])
+        # Cleanup in case anything goes wrong
+        dict.update(matplotlib.rcParams, orig_rcparams)
+
+    def test_plot_with_xkcd_style_restores_previous_settings_after_plot(self):
+        orig_rcparams = matplotlib.rcParams.copy()
+        self.plotter.style = 'xkcd'
+        self.plotter.plot()
+        self.assertEqual(orig_rcparams['path.effects'],
+                         matplotlib.rcParams['path.effects'])
+        # Cleanup in case anything goes wrong
+        dict.update(matplotlib.rcParams, orig_rcparams)
+
     def test_plot_adds_zero_lines(self):
         self.plotter.parameters['show_zero_lines'] = True
         self.plotter.plot()
@@ -187,6 +217,11 @@ class TestSinglePlotter(unittest.TestCase):
 
     def test_has_drawing_property(self):
         self.assertTrue(hasattr(self.plotter, 'drawing'))
+
+    def test_to_dict_does_not_contain_certain_keys(self):
+        for key in ['dataset', 'drawing']:
+            with self.subTest(key=key):
+                self.assertNotIn(key, self.plotter.to_dict())
 
     def test_plot_without_dataset_raises(self):
         with self.assertRaises(aspecd.exceptions.MissingDatasetError):
@@ -352,7 +387,7 @@ class TestSinglePlotter1D(unittest.TestCase):
         self.assertEqual(dataset_.data.axes[0].values[0],
                          plotter.axes.get_xlim()[0])
 
-    def test_axes_tight_y_sets_xlim_to_data_limits(self):
+    def test_axes_tight_y_sets_ylim_to_data_limits(self):
         dataset_ = aspecd.dataset.CalculatedDataset()
         dataset_.data.data = np.random.random([100])
         dataset_.data.axes[0].values = np.linspace(np.pi, 2*np.pi, 100)
@@ -797,6 +832,45 @@ class TestSinglePlotter2DStacked(unittest.TestCase):
         self.plotter.parameters['show_zero_lines'] = True
         plotter = dataset_.plot(self.plotter)
         self.assertGreaterEqual(20, len(plotter.axes.get_lines()))
+
+    def test_plot_with_offset_zero_sets_correct_ylabel(self):
+        test_dataset = aspecd.dataset.CalculatedDataset()
+        test_dataset.data.data = np.random.random([5, 10]) - 0.5
+        test_dataset.data.axes[2].quantity = 'intensity'
+        test_dataset.data.axes[2].unit = 'a.u.'
+        self.plotter.parameters['offset'] = 0
+        plotter = test_dataset.plot(self.plotter)
+        self.assertEqual('$intensity$ / a.u.', plotter.axes.get_ylabel())
+
+    def test_axes_tight_x_sets_xlim_to_data_limits(self):
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.random.random([100, 5])
+        dataset_.data.axes[0].values = np.linspace(np.pi, 2*np.pi, 100)
+        self.plotter.parameters['tight'] = 'x'
+        plotter = dataset_.plot(self.plotter)
+        self.assertEqual(dataset_.data.axes[0].values[0],
+                         plotter.axes.get_xlim()[0])
+
+    def test_axes_tight_y_and_offset_zero_sets_ylim_to_data_limits(self):
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.random.random([100, 5])
+        self.plotter.parameters['offset'] = 0
+        self.plotter.parameters['tight'] = 'y'
+        plotter = dataset_.plot(self.plotter)
+        self.assertEqual(dataset_.data.data.min(),
+                         plotter.axes.get_ylim()[0])
+
+    def test_axes_tight_both_and_offset_zero_sets_limits(self):
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.random.random([100, 5])
+        dataset_.data.axes[0].values = np.linspace(np.pi, 2*np.pi, 100)
+        self.plotter.parameters['offset'] = 0
+        self.plotter.parameters['tight'] = 'both'
+        plotter = dataset_.plot(self.plotter)
+        self.assertEqual(dataset_.data.axes[0].values[0],
+                         plotter.axes.get_xlim()[0])
+        self.assertEqual(dataset_.data.data.min(),
+                         plotter.axes.get_ylim()[0])
 
 
 class TestMultiPlotter(unittest.TestCase):

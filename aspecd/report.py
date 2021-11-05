@@ -1,13 +1,84 @@
 """General facilities for generating reports.
 
+.. sidebar:: Contents
+
+    .. contents::
+        :local:
+        :depth: 1
+
 To do scientific research in terms of reproducibility and traceability it's
 highly necessary to report all the steps done on a given dataset and never
-separate the dataset from its metadata. However, having a dataset containing
+separate the dataset from its metadata. Similarly, a recipe in context
+of recipe-driven data analysis stores a lot of relevant information on what
+tasks have been performed on a series of datasets (and even more so the
+recipe history). However, having a dataset (or recipe history) containing
 all these metadata is only useful if there are easy ways to retrieve and
-present the information stored. This is the task of reports.
+present the information stored. This is the task of reports. This module
+provides functionality to create reports based on templates provided either
+by the user or by the package as such.
 
-This module provides functionality to create reports based on templates
-provided either by the user or by the package as such.
+
+"Batteries included": Templates contained in the package
+========================================================
+
+The "batteries included" approach of Python itself is probably responsible
+to a great deal for the success of Python as a language. ASpecD, similarly,
+tries to provide you with a sensible set of tools you need for your routine
+data analysis in spectroscopy. Reports are no exception to that rule.
+
+Hence, ASpecD comes bundled with a (growing) series of templates allowing
+you to create reports of datasets and alike. Thus, getting access to all
+information stored in a single dataset is as simple as calling a single
+reporter, and in context of recipe-driven data analysis, it is even simpler:
+
+.. code-block:: yaml
+
+    - kind: report
+      type: LaTeXReporter
+      properties:
+        template: dataset.tex
+        filename: report.tex
+      compile: true
+
+This would create a report of a dataset that is then stored in the file
+``report.tex``, using the template ``dataset.tex`` bundled with the ASpecD
+package. As you even set ``compile`` to true, it would even compile the
+LaTeX report, including all figures generated during cooking the recipe and
+referenced from within the report. Hence, you end up in your current
+directory with both, a LaTeX file ``report.tex`` and a PDF file ``report.pdf``.
+
+But what if you don't like the way the bundled templates look like? Don't
+worry, we've got you covered: Simply provide a relative or absolute path to
+your own template, even with the same name. Hence, in the above example,
+if you place a file ``dataset.tex`` in the directory you serve the recipe
+from, it will be used instead of the bundled one.
+
+
+Output formats
+==============
+
+Template engines provide means of a "separation of concerns" (a term coined
+by Edsger W. Dijkstra and highly important not only in software
+development): The data source is entirely independent of the formatting of
+the report, and one and the same template engine can be used to create
+reports in a multitude of output formats.
+
+Currently, the ASpecD framework supports two output formats (more may be
+added in the future): plain text (txt) and LaTeX. The respective reporter
+classes are:
+
+  * :class:`TxtReporter`
+  * :class:`LaTeXReporter`
+
+The bundled templates used with the respective reporters are stored within
+the ``templates/report/`` directory of the ASpecD package, and here within
+subdirectories (``txt``, ``latex``) for each of the formats. This makes it
+easy to add additional formats and to shorten the template paths when using
+the reporters.
+
+
+Background: Jinja2
+==================
 
 The report functionality relies heavily on the `Jinja2 template engine
 <http://jinja.pocoo.org/>`_ . Therefore, it is very useful to be generally
@@ -24,24 +95,38 @@ former is a list of settings determining the type of delimiters used within
 a certain template for the control structures that are understood by
 Jinja2. As Jinja2 is developed with web applications (and hence HTML) in
 mind, those delimiters may not be feasible for other types of languages a
-template may be written in, such as LaTeX. Currently, the :mod:`aspecd.report`
-module of the ASpecD framework provides a generic environment as well as a
-dedicated LaTeX environment, implemented as respective classes:
+template may be written in, such as LaTeX.
 
-  * :class:`GenericEnvironment` and
-  * :class:`LaTeXEnvironment`.
+Currently, the :mod:`aspecd.report` module of the ASpecD framework provides
+a generic environment as well as dedicated Txt and LaTeX environments,
+implemented as respective classes:
 
-These two environments get automatically loaded by the respective reporter
+  * :class:`GenericEnvironment`
+  * :class:`TxtEnvironment`
+  * :class:`LaTeXEnvironment`
+
+These environments get automatically loaded by the respective reporter
 classes:
 
-  * :class:`Reporter` and
-  * :class:`LaTeXReporter`.
+  * :class:`Reporter`
+  * :class:`TxtReporter`
+  * :class:`LaTeXReporter`
+
+While the :class:`TxtEnvironment` and :class:`TxtReporter` classes are
+basically identical to the :class:`GenericEnvironment` and :class:`Reporter`
+classes, respectively, the :class:`LaTeXEnvironment` and
+:class:`LaTeXReporter` provide some heavy adaptations to rendering and even
+compiling LaTeX templates.
 
 The second important concept of Jinja2 is that of the "context": Think of
 it as a dictionary containing all the key--value pairs you can use to
 replace placeholders within a template with their actual values. In the
 simplest of all cases within the context of the ASpecD framework,
 this could be the metadata of an :class:`aspecd.dataset.Dataset`.
+
+
+Module documentation
+====================
 
 """
 
@@ -50,6 +135,7 @@ import os
 import shutil
 import subprocess  # nosec
 import tempfile
+from datetime import datetime
 
 import jinja2
 
@@ -58,7 +144,7 @@ import aspecd.system
 import aspecd.utils
 
 
-class Reporter:
+class Reporter(aspecd.utils.ToDictMixin):
     """Base class for reports.
 
     To generate a report from a template, you will need a template in the
@@ -96,9 +182,16 @@ class Reporter:
     context : :class:`collections.OrderedDict`
         Variables of a template that are replaced with the given content.
 
-        context contains a key "sysinfo" containing system-related
+        It contains a key "sysinfo" containing system-related
         information, i.e. the information contained in the
         :class:`aspecd.system.SystemInfo` class.
+
+        Furthermore, the key "template_dir" contains the (relative or
+        absolute) path to the template provided in :attr:`template`. This is
+        particularly useful for including subtemplates.
+
+        A key "timestamp" contains the current timestamp when starting to
+        render the report.
 
     environment : :class:`aspecd.report.GenericEnvironment`
         Jinja2 environment used for rendering the template.
@@ -125,9 +218,14 @@ class Reporter:
     aspecd.report.MissingFilenameError
         Raised if no output file for the report is provided.
 
+
+    .. versionadded:: 0.6
+        New parameter ``label`` to add label to calculated dataset
+
     """
 
     def __init__(self, template='', filename=''):
+        super().__init__()
         self.template = template
         self.filename = filename
         self.context = collections.OrderedDict()
@@ -136,6 +234,8 @@ class Reporter:
         self.context['sysinfo'] = \
             aspecd.system.SystemInfo(package=aspecd.utils.package_name(
                 self)).to_dict()
+        self.__kind__ = 'report'
+        self._exclude_from_to_dict = ['context', 'environment', 'report']
 
     def render(self):
         """Render the template.
@@ -155,10 +255,14 @@ class Reporter:
             Raised if the template file provided does not exist.
 
         """
-        if not self.template or not os.path.exists(self.template):
-            message = ' '.join(['Cannot find template file', self.template])
-            raise FileNotFoundError(message)
-        self.template = os.path.realpath(self.template)
+        if not self.template:
+            raise FileNotFoundError('No template provided')
+        # noinspection PyTypeChecker
+        self.context['template_dir'] = os.path.split(self.template)[0]
+        if self.context['template_dir']:
+            self.context['template_dir'] += os.path.sep
+        self.context['timestamp'] = \
+            datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         self._render()
 
     def _render(self):
@@ -177,7 +281,11 @@ class Reporter:
         If you need to change anything here, simply override this method in
         a child class according to your needs.
         """
-        template = self.environment.get_template(self.template)
+        try:
+            template = self.environment.get_template(self.template)
+        except jinja2.exceptions.TemplateError:
+            self.template = os.path.realpath(self.template)
+            template = self.environment.get_template(self.template)
         self.report = template.render(self.context)
 
     def save(self):
@@ -207,6 +315,40 @@ class Reporter:
         self.save()
 
 
+class TxtReporter(Reporter):
+    """Plain text reporter.
+
+    The most basic format for a report is plain text. Its probably biggest
+    advantage is that it is intrinsically platform-independent (except of
+    the encoding, but UTF-8 should not pose any problems any more in 2021
+    and after).
+
+    The perhaps biggest disadvantage is the lack of standard formatting and
+    the overall limited formatting options, not to speak of including figures.
+
+    As such, the plain text reporter can be used for a first overview and
+    for maximum portability. For well-formatted reports, have a look at the
+    :class:`LaTeXReporter`.
+
+    Attributes
+    ----------
+    environment : :class:`aspecd.report.TxtEnvironment`
+        Jinja2 environment used for rendering the template.
+
+        Similar to the :class:`aspecd.report.GenericEnvironment`, but with
+        the package path for template lookup set to the path for txt
+        templates within the ASpecD package.
+
+
+    .. versionadded:: 0.6
+
+    """
+
+    def __init__(self, template='', filename=''):
+        super().__init__()
+        self.environment = TxtEnvironment()
+
+
 class LaTeXReporter(Reporter):
     """LaTeX Reporter.
 
@@ -232,6 +374,12 @@ class LaTeXReporter(Reporter):
     usually created during a (pdf)LaTeX run. Furthermore, currently, only a
     single (pdf)LaTeX run is performed with option
     "-interaction=nonstopmode" passed in order to not block further execution.
+
+    .. important::
+        For enhanced security, the temporary directory used for compiling
+        the template will be removed after successful compilation.
+        Therefore, no traces of your report should remain outside the
+        current directory controlled by the user.
 
     .. note::
         Due to problems with LaTeX rendering text containing underscores,
@@ -283,6 +431,7 @@ class LaTeXReporter(Reporter):
 
         self._temp_dir = tempfile.mkdtemp()
         self._pwd = os.getcwd()
+        self._exclude_from_to_dict.extend(['latex_executable'])
 
     def _render(self):
         """Perform the actual rendering of the template.
@@ -363,18 +512,17 @@ class LaTeXReporter(Reporter):
         (pdf)LaTeX is currently called with the "-interaction=nonstopmode"
         option in order to not block further execution.
         """
-        os.chdir(self._temp_dir)
-        _, filename_wo_path = os.path.split(self.filename)
-        # Path to filename stripped, there should be no security implications.
-        process = subprocess.run([self.latex_executable,  # nosec
-                                  '-output-directory', self._temp_dir,
-                                  '-interaction=nonstopmode',
-                                  filename_wo_path],
-                                 check=False,
-                                 capture_output=True)
-        print(process.stdout.decode())
-        print(process.stderr.decode())
-        os.chdir(self._pwd)
+        with aspecd.utils.change_working_dir(self._temp_dir):
+            _, filename_wo_path = os.path.split(self.filename)
+            # Path stripped, there should be no security implications.
+            process = subprocess.run([self.latex_executable,  # nosec
+                                      '-output-directory', self._temp_dir,
+                                      '-interaction=nonstopmode',
+                                      filename_wo_path],
+                                     check=False,
+                                     capture_output=True)
+            print(process.stdout.decode())
+            print(process.stderr.decode())
 
     def _copy_files_from_temp_dir(self):
         """Copy result of compile step from temporary to target directory
@@ -411,21 +559,79 @@ class LaTeXReporter(Reporter):
 class GenericEnvironment(jinja2.Environment):
     """Jinja2 environment for rendering generic templates.
 
-    .. todo::
-        Describe the settings in more detail, thus providing users of this
-        class and in turn the :class:`aspecd.report.Reporter` class with
-        ideas of how to create their templates.
+    The environment does not change any of the jinja settings except of the
+    loaders. Here, a list of loaders using :class:`jinja2.ChoiceLoader` is
+    implemented. Using this loader makes it possible to search subsequently
+    in different places for a template. Here, the first hit is used,
+    therefore, the sequence of loaders is *crucial*.
+
+    Currently, there are two loaders implemented, in exactly this sequence:
+
+    #. :class:`jinja2.FileSystemLoader`
+
+        Looking for templates in the current directory and using an absolute
+        path
+
+    #. :class:`jinja2.PackageLoader`
+
+        Looking for templates in the aspecd package in the package path
+        "templates/report/", *i.e.* the base directory for all report
+        templates of the ASpecD package.
 
     """
 
     def __init__(self):
         env = {
-            "loader": jinja2.FileSystemLoader(
-                [
-                    os.path.abspath('.'),
-                    os.path.abspath('/')
-                ]
-            )
+            "loader": jinja2.ChoiceLoader([
+                jinja2.FileSystemLoader(
+                    [
+                        os.path.abspath('.'),
+                        os.path.abspath('/')
+                    ]
+                ),
+                jinja2.PackageLoader(
+                    "aspecd", package_path="templates/report/")
+            ])
+        }
+        super().__init__(**env)
+
+
+class TxtEnvironment(jinja2.Environment):
+    """Jinja2 environment for rendering generic text templates.
+
+    The environment does not change any of the jinja settings except of the
+    loaders. Here, a list of loaders using :class:`jinja2.ChoiceLoader` is
+    implemented. Using this loader makes it possible to search subsequently
+    in different places for a template. Here, the first hit is used,
+    therefore, the sequence of loaders is *crucial*.
+
+    Currently, there are two loaders implemented, in exactly this sequence:
+
+    #. :class:`jinja2.FileSystemLoader`
+
+        Looking for templates in the current directory and using an absolute
+        path
+
+    #. :class:`jinja2.PackageLoader`
+
+        Looking for templates in the aspecd package in the package path
+        "templates/report/txt/", *i.e.* the directory for all bare text report
+        templates of the ASpecD package.
+
+    """
+
+    def __init__(self):
+        env = {
+            "loader": jinja2.ChoiceLoader([
+                jinja2.FileSystemLoader(
+                    [
+                        os.path.abspath('.'),
+                        os.path.abspath('/')
+                    ]
+                ),
+                jinja2.PackageLoader(
+                    "aspecd", package_path="templates/report/txt/")
+            ])
         }
         super().__init__(**env)
 
@@ -459,6 +665,26 @@ class LaTeXEnvironment(jinja2.Environment):
     as possible, for authoritative information the reader is referred to
     the actual source code.
 
+    Besides extensively modifying the control codes used within the
+    template, the environment implements a list of loaders using
+    :class:`jinja2.ChoiceLoader`. Using this loader makes it possible to
+    search subsequently in different places for a template. Here, the first
+    hit is used, therefore, the sequence of loaders is *crucial*.
+
+    Currently, there are two loaders implemented, in exactly this sequence:
+
+    #. :class:`jinja2.FileSystemLoader`
+
+        Looking for templates in the current directory and using an absolute
+        path
+
+    #. :class:`jinja2.PackageLoader`
+
+        Looking for templates in the aspecd package in the package path
+        "templates/report/latex/", *i.e.* the directory for all bare text report
+        templates of the ASpecD package.
+
+
     """
 
     def __init__(self):
@@ -473,11 +699,15 @@ class LaTeXEnvironment(jinja2.Environment):
             "line_comment_prefix": '%#',
             "trim_blocks": True,
             "autoescape": False,
-            "loader": jinja2.FileSystemLoader(
-                [
-                    os.path.abspath('.'),
-                    os.path.abspath('/')
-                ]
-            )
+            "loader": jinja2.ChoiceLoader([
+                jinja2.FileSystemLoader(
+                    [
+                        os.path.abspath('.'),
+                        os.path.abspath('/')
+                    ]
+                ),
+                jinja2.PackageLoader(
+                    "aspecd", package_path="templates/report/latex/")
+            ])
         }
         super().__init__(**env)

@@ -178,9 +178,9 @@ import logging
 import os
 
 import matplotlib as mpl
+import matplotlib.pyplot as plt
 # pylint: disable=unused-import
 import matplotlib.collections
-import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
 
@@ -194,7 +194,7 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
-class Plotter:
+class Plotter(aspecd.utils.ToDictMixin):
     """Base class for plots.
 
     Each class actually plotting data should inherit from this class.
@@ -265,22 +265,18 @@ class Plotter:
     legend : :class:`matplotlib.legend.Legend`
         Legend object
 
+    label : :class:`str`
+        Label used to reference figure, *e.g.* in context of a report
+
     style : :class:`str`
         plotting style to use
 
         You can use all plotting styles understood by matplotlib. See
         :mod:`matplotlib.style` for details.
 
-
-    .. note::
-        If you set the style via :attr:`aspecd.plotting.Plotter.style`,
-        all following figures will use this style, until you set another style.
-
-        As it seems, there is no way in matplotlib to find out the current
-        style, and hence reset to it. One way to fix this problem would be
-        to revert to the default style by issuing the following command::
-
-            matplotlib.pyplot.style.use('default')
+        Note that the style will only be applied for the current plot and
+        reset to the values before the plot, at least as long as applying
+        the style (only) affects the rcParams of matplotlib.
 
 
     Raises
@@ -288,10 +284,15 @@ class Plotter:
     aspecd.exceptions.MissingSaverError
         Raised when no saver is provided when trying to save
 
+
+    .. versionchanged:: 0.6
+        New attribute :attr:`label`
+
     """
 
     def __init__(self):
         # Name defaults always to the full class name, don't change!
+        super().__init__()
         self.name = aspecd.utils.full_class_name(self)
         self.parameters = {
             'show_legend': False,
@@ -304,7 +305,12 @@ class Plotter:
         self.filename = ''
         self.caption = Caption()
         self.legend = None
+        self.label = ''
         self.style = ''
+        #
+        self._original_rcparams = None
+        self._exclude_from_to_dict = \
+            ['name', 'description', 'figure', 'axes', 'legend']
 
     @property
     def fig(self):
@@ -329,6 +335,7 @@ class Plotter:
         self.properties.apply(plotter=self)
         self._set_legend()
         self._add_zero_lines()
+        self._reset_style()
 
     # noinspection PyUnusedLocal
     @staticmethod
@@ -350,15 +357,55 @@ class Plotter:
         return True
 
     def _set_style(self):
+        self._original_rcparams = mpl.rcParams.copy()
         if self.style:
             if self.style not in plt.style.available + ['default', 'xkcd']:
                 message = 'Cannot find matplotlib style "{style}".'.format(
                     style=self.style)
                 raise aspecd.exceptions.StyleNotFoundError(message=message)
             if self.style == 'xkcd':
-                plt.xkcd()
+                self._set_xkcd_style()
             else:
                 plt.style.use(self.style)
+
+    def _reset_style(self):
+        dict.update(mpl.rcParams, self._original_rcparams)
+
+    @staticmethod
+    def _set_xkcd_style():
+        """
+        Set plot style similar to XKCD web comics.
+
+        The code below is taken from the official matplotlib.pyplot module
+        and slightly adapted. The reason for not using the original code
+        is that it is only available from the pyplot submodule.
+
+        Original source:
+
+        https://matplotlib.org/stable/_modules/matplotlib/pyplot.html#xkcd
+
+        """
+        from matplotlib import patheffects  # noqa
+        mpl.rcParams.update({
+            'font.family': ['xkcd', 'xkcd Script', 'Humor Sans', 'Comic Neue',
+                            'Comic Sans MS'],
+            'font.size': 14.0,
+            'path.sketch': (1, 100, 2),  # (scale, length, randomness),
+            'path.effects': [
+                patheffects.withStroke(linewidth=4, foreground="w")],
+            'axes.linewidth': 1.5,
+            'lines.linewidth': 2.0,
+            'figure.facecolor': 'white',
+            'grid.linewidth': 0.0,
+            'axes.grid': False,
+            'axes.unicode_minus': False,
+            'axes.edgecolor': 'black',
+            'xtick.major.size': 8,
+            'xtick.major.width': 3,
+            'ytick.major.size': 8,
+            'ytick.major.width': 3,
+            'text.usetex': False,
+        })
 
     def _create_figure_and_axes(self):
         """Create figure and axes and assign to attributes.
@@ -473,6 +520,7 @@ class Plotter:
 
     def _set_legend(self):
         if self.parameters['show_legend']:
+            # noinspection PyArgumentList
             self.legend = self.axes.legend(**self.properties.legend.to_dict())
 
     def _add_zero_lines(self):
@@ -480,16 +528,20 @@ class Plotter:
             if isinstance(self.axes, list):
                 for axes in self.axes:
                     if axes.get_ylim()[0] <= 0 <= axes.get_ylim()[1]:
+                        # noinspection PyArgumentList
                         axes.axhline(**self.properties.zero_lines.to_dict(),
                                      zorder=1)
                     if axes.get_xlim()[0] <= 0 <= axes.get_xlim()[1]:
+                        # noinspection PyArgumentList
                         axes.axvline(**self.properties.zero_lines.to_dict(),
                                      zorder=1)
             else:
                 if self.axes.get_ylim()[0] <= 0 <= self.axes.get_ylim()[1]:
+                    # noinspection PyArgumentList
                     self.axes.axhline(**self.properties.zero_lines.to_dict(),
                                       zorder=1)
                 if self.axes.get_xlim()[0] <= 0 <= self.axes.get_xlim()[1]:
+                    # noinspection PyArgumentList
                     self.axes.axvline(**self.properties.zero_lines.to_dict(),
                                       zorder=1)
 
@@ -553,6 +605,8 @@ class SinglePlotter(Plotter):
         self.dataset = None
         self.drawing = None
         self.description = 'Abstract plotting step for single dataset'
+        self.__kind__ = 'singleplot'
+        self._exclude_from_to_dict.extend(['dataset', 'drawing'])
 
     # pylint: disable=arguments-differ
     def plot(self, dataset=None, from_dataset=False):
@@ -1162,6 +1216,13 @@ class SinglePlotter2DStacked(SinglePlotter):
 
             Default: None
 
+        tight: :class:`str`
+            Whether to set the axes limits tight to the data
+
+            Possible values: 'x', 'y', 'both'
+
+            Default: ''
+
     properties : :class:`aspecd.plotting.SinglePlot1DProperties`
         Properties of the plot, defining its appearance
 
@@ -1218,6 +1279,9 @@ class SinglePlotter2DStacked(SinglePlotter):
            parameters:
              show_zero_lines: True
 
+    .. versionchanged:: 0.6
+        ylabel is set to third axis if offset = 0; new parameter "tight"
+
     """
 
     # noinspection PyTypeChecker
@@ -1231,6 +1295,7 @@ class SinglePlotter2DStacked(SinglePlotter):
             'stacking_dimension': 1,
             'offset': None,
             'yticklabelformat': None,
+            'tight': '',
         }
         self.drawing = []
         self.properties = SinglePlot1DProperties()
@@ -1279,6 +1344,14 @@ class SinglePlotter2DStacked(SinglePlotter):
             self.properties.axes.yticks = yticks
             self.properties.axes.yticklabels = \
                 self._format_yticklabels(yticklabels)
+        if self.parameters['tight']:
+            if self.parameters['tight'] in ('x', 'both'):
+                self.axes.set_xlim([self.dataset.data.axes[0].values.min(),
+                                    self.dataset.data.axes[0].values.max()])
+            if self.parameters['tight'] in ('y', 'both'):
+                if self.parameters['offset'] == 0:
+                    self.axes.set_ylim([self.dataset.data.data.min(),
+                                        self.dataset.data.data.max()])
 
     def _format_yticklabels(self, yticklabels):
         if self.parameters['yticklabelformat']:
@@ -1309,6 +1382,8 @@ class SinglePlotter2DStacked(SinglePlotter):
         else:
             xlabel = self._create_axis_label_string(self.dataset.data.axes[0])
             ylabel = self._create_axis_label_string(self.dataset.data.axes[1])
+        if self.parameters["offset"] == 0:
+            ylabel = self._create_axis_label_string(self.dataset.data.axes[2])
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel(ylabel)
 
@@ -1320,7 +1395,7 @@ class SinglePlotter2DStacked(SinglePlotter):
                 offset = idx * self.parameters['offset']
                 self.axes.axhline(
                     y=offset,
-                    **self.properties.zero_lines.to_dict(),
+                    **self.properties.zero_lines.to_dict(),  # noqa
                     zorder=1)
 
 
@@ -1365,6 +1440,7 @@ class MultiPlotter(Plotter):
         # noinspection PyTypeChecker
         self.parameters['axes'] = [aspecd.dataset.Axis(),
                                    aspecd.dataset.Axis()]
+        self.__kind__ = 'multiplot'
 
     def plot(self):
         """Perform the actual plotting on the given list of datasets.
@@ -1730,7 +1806,7 @@ class MultiPlotter1DStacked(MultiPlotter1D):
                 offset = -idx * self.parameters['offset']
                 self.axes.axhline(
                     y=offset,
-                    **self.properties.zero_lines.to_dict(),
+                    **self.properties.zero_lines.to_dict(),  # noqa
                     zorder=1)
 
 
@@ -1847,6 +1923,7 @@ class CompositePlotter(Plotter):
         self.axes_positions = []
         self.plotter = []
         self.properties = CompositePlotProperties()
+        self.__kind__ = 'compositeplot'
 
     def _create_figure_and_axes(self):
         self.figure = plt.figure()
@@ -2472,15 +2549,15 @@ class MultiPlot1DProperties(MultiPlotProperties):
         self.drawings.append(drawing_properties)
 
     def _set_default_properties(self, drawing_properties):
-        property_cycle = plt.rcParams['axes.prop_cycle'].by_key()
+        property_cycle = mpl.rcParams['axes.prop_cycle'].by_key()
         length_properties = len(property_cycle["color"])
         idx = len(self.drawings)
         for key, value in property_cycle.items():
             setattr(drawing_properties, key, value[idx % length_properties])
         for key in ['linewidth', 'linestyle', 'marker']:
             rc_property = 'lines.' + key
-            if rc_property in plt.rcParams.keys():
-                setattr(drawing_properties, key, plt.rcParams[rc_property])
+            if rc_property in mpl.rcParams.keys():
+                setattr(drawing_properties, key, mpl.rcParams[rc_property])
 
 
 class CompositePlotProperties(PlotProperties):
@@ -2545,7 +2622,7 @@ class FigureProperties(aspecd.utils.Properties):
 
         2-tuple of floats
 
-        Default: 6.4, 4.8
+        Default: 6, 4
 
     dpi: :class:`float`
         Figure resolution in dots per inch.
@@ -2560,11 +2637,15 @@ class FigureProperties(aspecd.utils.Properties):
     aspecd.exceptions.MissingFigureError
         Raised if no figure is provided.
 
+
+    .. versionchanged:: 0.6
+        Default figure size set to (6., 4.)
+
     """
 
     def __init__(self):
         super().__init__()
-        self.size = (6.4, 4.8)
+        self.size = (6., 4.)
         self.dpi = 100.0
         self.title = ''
 

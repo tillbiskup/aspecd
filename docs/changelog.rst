@@ -5,6 +5,68 @@ Changelog
 This page contains a summary of changes between the official ASpecD releases. Only the biggest changes are listed here. A complete and detailed log of all changes is available through the `GitHub Repository Browser <https://github.com/tillbiskup/aspecd/commits/master>`_.
 
 
+Version 0.6.0
+=============
+
+Released 2021-11-05
+
+
+New features
+------------
+
+* Reports
+
+  * Templates for reporting information contained in datasets come bundled with ASpecD.
+  * Context contains ``templates_dir`` allowing to include sub-templates.
+  * New class :class:`TxtReporter` for plain text reports
+
+* Tasks/Recipe-driven data analysis
+
+  * YAML representation of recipe and tasks via :meth:`aspecd.tasks.Recipe.to_yaml` and :meth:`aspecd.tasks.Task.to_yaml`
+  * Figure labels can be set in plotters; otherwise a default label will be set and can be accessed from within reports.
+
+* Utils
+
+  * :func:`change_working_dir` can be used as context manager to temporarily change the working directory.
+
+* General
+
+  * :meth:`aspecd.utils.ToDictMixin.to_dict` can optionally remove keys with empty values.
+  * ``to_dict()`` method in :class:`aspecd.processing.ProcessingStep`, :class:`aspecd.analysis.AnalysisStep`, :class:`aspecd.annotation.Annotation`, :class:`aspecd.plotting.Plotter`, :class:`aspecd.table.Table`, :class:`aspecd.report.Reporter`, :class:`aspecd.model.Model`
+
+* Models
+
+  * Axes quantities and units can be explicitly set on model creation.
+
+
+Changes
+-------
+
+* Dataset labels do not contain source path.
+* Recipe dataset_source and output directories are no longer converted to absolute paths.
+* More complete recipe history for tasks, including more of their properties
+* Recipe-driven data analysis: Figures get added to recipe with default label if no label is provided.
+* :class:`aspecd.processing.Noise`: explicit noise amplitude can be given.
+* Model can add label to created dataset.
+* ModelTask adds result label as id to result.
+* Plotter: Default figure size changed to (6., 4.) inch
+
+
+Fixes
+-----
+
+* :meth:`aspecd.tasks.Task.to_yaml` serialises numpy arrays
+* Datasets from foreign packages are correctly listed in recipe history
+* :func:`aspecd.utils.copy_keys_between_dicts` properly traverses
+* :class:`aspecd.utils.Yaml` handles :class:`numpy.double`
+* Recipe-driven data analysis: automatically generated figure filenames get added to recipe figure record
+* Models work now correctly when based on a dataset
+* :class:`aspecd.model.FamilyOfCurves` sets correct values for additional axis
+* :class:`aspecd.processing.Differentiation` works correctly for 2D datasets
+* :class:`aspecd.processing.Noise`: normalisation works with >1D datasets
+* :class:`aspecd.plotting.SinglePlotter2DStacked`: ylabel is set to third axis if offset = 0
+
+
 Version 0.5.0
 =============
 

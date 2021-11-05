@@ -6,6 +6,7 @@ modules of the ASpecD package, but it can be imported into every other module.
 """
 
 import collections
+import contextlib
 import datetime
 import hashlib
 import importlib
@@ -128,9 +129,16 @@ class ToDictMixin:
         self.__odict__[attribute] = value
         super().__setattr__(attribute, value)
 
-    def to_dict(self):
+    def to_dict(self, remove_empty=False):
         """
         Create dictionary containing public attributes of an object.
+
+        Parameters
+        ----------
+        remove_empty : :class:`bool`
+            Whether to remove keys with empty values
+
+            Default: False
 
         Returns
         -------
@@ -139,11 +147,16 @@ class ToDictMixin:
 
             The order of attribute definition is preserved
 
+        .. versionchanged:: 0.6
+            New parameter `remove_empty`
+
         """
         if hasattr(self, '__odict__'):
             result = self._traverse_dict(self.__odict__)
         else:
             result = self._traverse_dict(self.__dict__)
+        if remove_empty:
+            result = remove_empty_values_from_dict(result)
         return result
 
     def _traverse_dict(self, instance_dict):
@@ -465,9 +478,11 @@ class Yaml:
     def _traverse_serialise_numpy_arrays(self, dict_=None):  # noqa: MC0001
         for key in dict_.keys():
             if isinstance(dict_[key], list):
-                for element in dict_[key]:
+                for idx, element in enumerate(dict_[key]):
                     if isinstance(element, (dict, collections.OrderedDict)):
                         self._traverse_serialise_numpy_arrays(dict_=element)
+                    elif isinstance(element, np.float64):
+                        dict_[key][idx] = float(element)
             elif isinstance(dict_[key], np.ndarray):
                 if dict_[key].size > self.numpy_array_size_threshold:
                     self._create_binary_directory()
@@ -489,6 +504,8 @@ class Yaml:
                     dict_[key] = {'type': 'numpy.ndarray',
                                   'dtype': str(dict_[key].dtype),
                                   'array': dict_[key].tolist()}
+            elif isinstance(dict_[key], np.float64):
+                dict_[key] = float(dict_[key])
             elif isinstance(dict_[key], (dict, collections.OrderedDict)):
                 self._traverse_serialise_numpy_arrays(dict_=dict_[key])
             # make list of binary_files unique
@@ -638,6 +655,10 @@ def copy_keys_between_dicts(source=None, target=None):
     If the key in ``source`` is a dict and exists in ``target``, the two
     dicts will be joined, not loosing keys in ``target``.
 
+    If, however, the key in ``source`` is *not* a dict, but the
+    corresponding key in ``target`` is a dict, the corresponding value in
+    ``target`` will be replaced with that from ``source``.
+
     Parameters
     ----------
     source : :class:`dict`
@@ -652,7 +673,8 @@ def copy_keys_between_dicts(source=None, target=None):
 
     """
     for key in source:
-        if key in target and isinstance(target[key], dict):
+        if key in target and isinstance(target[key], dict) \
+                and isinstance(source[key], dict):
             target[key] = copy_keys_between_dicts(source[key], target[key])
         else:
             target[key] = source[key]
@@ -948,3 +970,46 @@ def get_package_data(name='', directory=''):
         package, name = name.split('@')
     contents = pkgutil.get_data(package, '/'.join([directory, name])).decode()
     return contents
+
+
+# noinspection PyShadowingNames
+@contextlib.contextmanager
+def change_working_dir(path=''):  # pylint: disable=redefined-outer-name
+    """
+    Context manager for temporarily changing the working directory.
+
+    Sometimes it is necessary to temporarily change the working directory,
+    but one would like to ensure that the directory is reverted even in case
+    an exception is raised.
+
+    Due to its nature as a context manager, this function can be used with a
+    ``with`` statement. See below for an example.
+
+
+    Parameters
+    ----------
+    path : :class:`str`
+        Path the current working directory should be changed to.
+
+
+    Examples
+    --------
+    To temporarily change the working directory:
+
+    .. code-block::
+
+        with change_working_dir(os.path.join('some', 'path')):
+            # Do something that may raise an exception
+
+    This can come in quite handy in case of tests.
+
+
+    .. versionadded:: 0.6
+
+    """
+    oldpwd = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(oldpwd)

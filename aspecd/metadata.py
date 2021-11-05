@@ -155,7 +155,6 @@ Module documentation
 
 import datetime
 import logging
-import os
 
 import aspecd.exceptions
 import aspecd.utils
@@ -1165,9 +1164,10 @@ class MetadataMapper:
         self._add_mappings_from_recipe()
 
     def _load_mapping_recipe_from_file(self):
-        root_path = os.path.split(os.path.abspath(__file__))[0]
         yaml_file = aspecd.utils.Yaml()
-        yaml_file.read_from(os.path.join(root_path, self.recipe_filename))
+        # noinspection PyTypeChecker
+        yaml_file.read_stream(
+            aspecd.utils.get_package_data(self.recipe_filename))
         self._mapping_recipes = yaml_file.dict
 
     def _choose_mapping_recipe(self):

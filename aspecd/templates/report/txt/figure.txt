@@ -1,0 +1,5 @@
+  Filename: {{ figure.filename }}
+{%- if figure.caption.title or figure.caption.text %}
+
+  Caption: {{ figure.caption.title }} {{ figure.caption.text }}
+{% endif -%}
