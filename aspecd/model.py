@@ -279,6 +279,16 @@ class Model(ToDictMixin):
         Usually, labels provide a short and concise description of a
         dataset, at least in a given context.
 
+    axes : :class:`list`
+        List of dicts containing quantity and unit for each axis.
+
+        Needs to have the same length as the axes of the created dataset.
+
+        If you would like to skip one axis, set it to an empty dict, None,
+        or False (*i.e.*, anything that evaluates to False in Python). This
+        is particularly helpful with models such as :class:`FamilyOfCurves`
+        that auto-generate one axis.
+
 
     .. versionchanged:: 0.3
         New attribute :attr:`description`
@@ -290,7 +300,7 @@ class Model(ToDictMixin):
         New attribute :attr:`references`
 
     .. versionchanged:: 0.6
-        New attribute :attr:`label`
+        New attributes :attr:`label` and :attr:`axes`
 
     """
 
@@ -302,6 +312,7 @@ class Model(ToDictMixin):
         self.description = 'Abstract model'
         self.references = []
         self.label = ''
+        self.axes = []
         self._dataset = aspecd.dataset.CalculatedDataset()
         self._axes_from_dataset = []
         self.__kind__ = 'model'
@@ -405,6 +416,9 @@ class Model(ToDictMixin):
         if len(self.variables) == 0:
             raise aspecd.exceptions.MissingParameterError(
                 'No variables to evaluate model for provided')
+        if self.axes and len(self.axes) != len(self.variables) + 1:
+            message = "Number of axes and dataset axes need to be identical"
+            raise IndexError(message)
 
     def _sanitise_parameters(self):
         """Ensure parameters provided for model are correct.
@@ -436,11 +450,20 @@ class Model(ToDictMixin):
         """
         if self._axes_from_dataset:
             self._dataset.data.axes = self._axes_from_dataset
-        elif isinstance(self.variables[0], (list, np.ndarray)):
-            for index in range(len(self.variables)):
-                self._dataset.data.axes[index].values = self.variables[index]
         else:
-            self._dataset.data.axes[0].values = np.asarray(self.variables)
+            if isinstance(self.variables[0], (list, np.ndarray)):
+                for index in range(len(self.variables)):
+                    self._dataset.data.axes[index].values = \
+                        self.variables[index]
+            else:
+                self._dataset.data.axes[0].values = np.asarray(self.variables)
+            self._dataset.data.axes[-1].quantity = 'amplitude'
+            self._dataset.data.axes[-1].unit = 'a.u.'
+            if self.axes:
+                for idx, axis in enumerate(self._dataset.data.axes):
+                    if self.axes[idx]:
+                        axis.quantity = self.axes[idx]['quantity']
+                        axis.unit = self.axes[idx]['unit']
 
     def _set_dataset_metadata(self):
         """

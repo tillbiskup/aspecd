@@ -90,6 +90,52 @@ class TestModel(unittest.TestCase):
         np.testing.assert_allclose(dataset.data.axes[0].values,
                                    self.model.variables[0])
 
+    def test_create_sets_last_axis_quantity_and_unit_to_defaults(self):
+        self.model.parameters = [0]
+        self.model.variables = [np.linspace(0, 1)]
+        dataset = self.model.create()
+        self.assertEqual('amplitude', dataset.data.axes[-1].quantity)
+        self.assertEqual('a.u.', dataset.data.axes[-1].unit)
+
+    def test_create_with_axes_sets_axes_quantities_and_units(self):
+        axes = [
+            {'quantity': 'foo0', 'unit': 'bar0'},
+            {'quantity': 'foo1', 'unit': 'bar1'},
+        ]
+        self.model.parameters = [0]
+        self.model.variables = [np.linspace(0, 1)]
+        self.model.axes = axes
+        dataset = self.model.create()
+        for idx, axis in enumerate(dataset.data.axes):
+            self.assertEqual(axes[idx]["quantity"], axis.quantity)
+            self.assertEqual(axes[idx]["unit"], axis.unit)
+
+    def test_create_with_axes_and_omitted_axis(self):
+        axes = [
+            None,
+            {'quantity': 'foo1', 'unit': 'bar1'},
+        ]
+        self.model.parameters = [0]
+        self.model.variables = [np.linspace(0, 1)]
+        self.model.axes = axes
+        dataset = self.model.create()
+        for idx, axis in enumerate(dataset.data.axes):
+            if axes[idx]:
+                self.assertEqual(axes[idx]["quantity"], axis.quantity)
+                self.assertEqual(axes[idx]["unit"], axis.unit)
+            else:
+                self.assertEqual("", axis.quantity)
+                self.assertEqual("", axis.unit)
+
+    def test_create_with_axes_unequal_to_number_of_dataset_axes_raises(self):
+        axes = [{'quantity': 'foo0', 'unit': 'bar0'}]
+        self.model.parameters = [0]
+        self.model.variables = [np.linspace(0, 1)]
+        self.model.axes = axes
+        message = "Number of axes and dataset axes need to be identical"
+        with self.assertRaisesRegex(IndexError, message):
+            self.model.create()
+
     def test_create_sets_calculated_dataset_origdata_axis_values(self):
         self.model.parameters = [0]
         self.model.variables = [np.linspace(0, 1)]
@@ -104,6 +150,13 @@ class TestModel(unittest.TestCase):
         for index in range(len(self.model.variables)):
             np.testing.assert_allclose(dataset.data.axes[index].values,
                                        self.model.variables[index])
+
+    def test_create_with_2d_sets_last_axis_measure_and_unit_to_defaults(self):
+        self.model.parameters = [0]
+        self.model.variables = [np.linspace(0, 1), np.linspace(2, 3)]
+        dataset = self.model.create()
+        self.assertEqual('amplitude', dataset.data.axes[-1].quantity)
+        self.assertEqual('a.u.', dataset.data.axes[-1].unit)
 
     def test_create_sets_calculated_dataset_calculation_type(self):
         self.model.parameters = [0]
