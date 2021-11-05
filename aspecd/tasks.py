@@ -2767,10 +2767,10 @@ class PlotTask(Task):
         elif 'filename' in self.properties and self.properties['filename']:
             filename = self.properties['filename']
         if filename:
-            self.properties['filename'] = filename
             if self.recipe.directories['output']:
                 filename = os.path.join(self.recipe.directories['output'],
                                         filename)
+            self.properties['filename'] = filename
             saver = aspecd.plotting.Saver(filename=filename)
             logger.info('Save figure from "%s" to file "%s"', self.type,
                         filename)

@@ -11,6 +11,12 @@ Version 0.7.0
 Not yet released
 
 
+Fixes
+-----
+
+* ReportTask works with output directory set in recipe
+
+
 Version 0.6.0
 =============
 

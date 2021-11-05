@@ -2049,6 +2049,22 @@ class TestSinglePlotTask(unittest.TestCase):
         self.task.perform()
         self.assertTrue(os.path.exists(self.figure_filename))
 
+    def test_figure_added_to_recipe_contains_filename_with_output_dir(self):
+        self.prepare_recipe()
+        output_directory = 'outputdir'
+        self.recipe.directories['output'] = output_directory
+        # noinspection PyTypeChecker
+        label = 'foo'
+        self.plotting_task['label'] = label
+        self.plotting_task['properties'] = {'filename': self.figure_filename}
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        os.mkdir(output_directory)
+        self.task.perform()
+        self.assertEqual(os.path.join('outputdir', 'foo.pdf'),
+                         self.recipe.figures[label].filename)
+        shutil.rmtree(output_directory)
+
     def test_perform_task_with_filename_issues_log_message(self):
         self.prepare_recipe()
         # noinspection PyTypeChecker
