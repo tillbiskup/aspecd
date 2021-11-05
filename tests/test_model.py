@@ -464,6 +464,24 @@ class TestFamilyOfCurves(unittest.TestCase):
         self.assertEqual(self.model.vary["parameter"],
                          family_of_curves.data.axes[-2].quantity)
 
+    def test_create_with_axes_unequal_to_number_of_dataset_axes_raises(self):
+        axes = [
+            {'quantity': 'foo0', 'unit': 'bar0'},
+            {'quantity': 'foo0', 'unit': 'bar0'}
+        ]
+        values = np.linspace(5, 50)
+        dataset = aspecd.dataset.Dataset()
+        dataset.data.data = np.linspace(0, 1)
+        dataset.data.axes[0].values = values
+        self.model.from_dataset(dataset=dataset)
+        self.model.model = "Sine"
+        self.model.vary["parameter"] = "amplitude"
+        self.model.vary["values"] = [2, 4]
+        self.model.axes = axes
+        message = "Number of axes and dataset axes need to be identical"
+        with self.assertRaisesRegex(IndexError, message):
+            self.model.create()
+
 
 class TestZeros(unittest.TestCase):
     def setUp(self):

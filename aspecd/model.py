@@ -416,9 +416,6 @@ class Model(ToDictMixin):
         if len(self.variables) == 0:
             raise aspecd.exceptions.MissingParameterError(
                 'No variables to evaluate model for provided')
-        if self.axes and len(self.axes) != len(self.variables) + 1:
-            message = "Number of axes and dataset axes need to be identical"
-            raise IndexError(message)
 
     def _sanitise_parameters(self):
         """Ensure parameters provided for model are correct.
@@ -459,11 +456,14 @@ class Model(ToDictMixin):
                 self._dataset.data.axes[0].values = np.asarray(self.variables)
             self._dataset.data.axes[-1].quantity = 'amplitude'
             self._dataset.data.axes[-1].unit = 'a.u.'
-            if self.axes:
-                for idx, axis in enumerate(self._dataset.data.axes):
-                    if self.axes[idx]:
-                        axis.quantity = self.axes[idx]['quantity']
-                        axis.unit = self.axes[idx]['unit']
+        if self.axes:
+            if len(self.axes) != len(self._dataset.data.axes):
+                message = "Number of axes and dataset axes need to be identical"
+                raise IndexError(message)
+            for idx, axis in enumerate(self._dataset.data.axes):
+                if self.axes[idx]:
+                    axis.quantity = self.axes[idx]['quantity']
+                    axis.unit = self.axes[idx]['unit']
 
     def _set_dataset_metadata(self):
         """
