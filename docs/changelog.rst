@@ -31,6 +31,10 @@ New features
   * :meth:`aspecd.utils.ToDictMixin.to_dict` can optionally remove keys with empty values
   * ``to_dict()`` method in :class:`aspecd.processing.ProcessingStep`, :class:`aspecd.analysis.AnalysisStep`, :class:`aspecd.annotation.Annotation`, :class:`aspecd.plotting.Plotter`, :class:`aspecd.table.Table`, :class:`aspecd.report.Reporter`, :class:`aspecd.model.Model`
 
+* Models
+
+  * Axes quantities and units can be explicitly set on model creation
+
 
 Changes
 -------
@@ -42,6 +46,7 @@ Changes
 * :class:`aspecd.processing.Noise`: explicit noise amplitude can be given
 * Model can add label to created dataset
 * ModelTask adds result label as id to result
+* Plotter: Default figure size changed to (6., 4.) inch
 
 
 Fixes

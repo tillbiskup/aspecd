@@ -2605,7 +2605,7 @@ class FigureProperties(aspecd.utils.Properties):
 
         2-tuple of floats
 
-        Default: 6.4, 4.8
+        Default: 6, 4
 
     dpi: :class:`float`
         Figure resolution in dots per inch.
@@ -2620,11 +2620,15 @@ class FigureProperties(aspecd.utils.Properties):
     aspecd.exceptions.MissingFigureError
         Raised if no figure is provided.
 
+
+    .. versionchanged:: 0.6
+        Default figure size set to (6., 4.)
+
     """
 
     def __init__(self):
         super().__init__()
-        self.size = (6.4, 4.8)
+        self.size = (6., 4.)
         self.dpi = 100.0
         self.title = ''
 
