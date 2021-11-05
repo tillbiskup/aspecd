@@ -274,16 +274,9 @@ class Plotter(aspecd.utils.ToDictMixin):
         You can use all plotting styles understood by matplotlib. See
         :mod:`matplotlib.style` for details.
 
-
-    .. note::
-        If you set the style via :attr:`aspecd.plotting.Plotter.style`,
-        all following figures will use this style, until you set another style.
-
-        As it seems, there is no way in matplotlib to find out the current
-        style, and hence reset to it. One way to fix this problem would be
-        to revert to the default style by issuing the following command::
-
-            matplotlib.pyplot.style.use('default')
+        Note that the style will only be applied for the current plot and
+        reset to the values before the plot, at least as long as applying
+        the style (only) affects the rcParams of matplotlib.
 
 
     Raises
