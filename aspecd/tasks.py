@@ -146,8 +146,8 @@ files. This will usually be the directory you cook the recipe from. However,
 sometimes it is quite convenient to specify an output directory, either
 relative or absolute.
 
-To do so, simply add the ``output_directory`` key to the top level of your
-recipe:
+To do so, simply add the ``output`` key to the top level ``directories`` key of
+your recipe:
 
 .. code-block:: yaml
 
@@ -484,7 +484,43 @@ Simply executing a command from a terminal, that's all that is to it. In
 this particular example, ``<my-recipe>`` is a placeholder for your recipe
 file name.
 
-Of course, you can do the same from within Python::
+Of course, you need to have the ASpecD package installed (preferrably within
+a virtual environment), and you still need to have access to a terminal. But
+that's all. And when you have hit "enter", you will usually see a list of
+lines starting with "INFO" telling you what is happening. If something is
+notable or gets entirely wrong, you will see lines starting with "WARNING"
+or "ERROR", respectively. With standard settings, the latter will *not*
+provide you with the complete stack trace, as this is usually not helpful
+for the user. If, however, you are developer or otherwise interested in the
+details (or are asked by a developer to provide more details), use the
+``-v`` switch to get more verbose output. Conversely, if you insist on not
+seeing any info of what happened, you can use the ``-q`` switch to silence
+the ``serve`` command. To get more information, use the help builtin to the
+``serve`` command:
+
+.. code-block:: bash
+
+    serve -h
+
+Its output will look similar to the following:
+
+.. code-block:: none
+
+    usage: serve [-h] [-v | -q] recipe
+
+    Process a recipe in context of recipe-driven data analysis
+
+    positional arguments:
+      recipe         YAML file containing recipe
+
+    optional arguments:
+      -h, --help     show this help message and exit
+      -v, --verbose  show debug output
+      -q, --quiet    don't show any output
+
+
+Of course, you can do the same from within Python (however, why would you
+want to do that)::
 
     serve(recipe_filename='<my-recipe>.yaml')
 
@@ -1030,8 +1066,6 @@ class Recipe:
         self.dataset_factory = None
         self.task_factory = TaskFactory()
         self.default_package = ''
-        self.datasets_source_directory = ''
-        self.output_directory = ''
         self.autosave_plots = True
         self.filename = ''
 
@@ -3076,44 +3110,34 @@ class ReportTask(Task):
     For more information on the underlying general class,
     see :class:`aspecd.report.Reporter`.
 
-    For an example of how such an analysis task may be included into a
-    recipe, see the YAML listing below:
+    For an example of how such a report task may be included into a recipe,
+    see the YAML listing below:
 
     .. code-block:: yaml
 
-        kind: report
-        type: LaTeXReporter
-        properties:
-          template: my-fancy-latex-template.tex
-          filename: some-filename-for-final-report.tex
-          context:
-            general:
-              title: Some fancy title
-              author: John Doe
-            free_text:
-              intro: >
-                Short introduction of the experiment performed
-              metadata: >
-                Tabular and customisable overview of the dataset's metadata
-              history: >
-                Presentation of all processing, analysis and representation
-                steps
-            figures:
-              title: my_fancy_figure
-        compile: True
-        apply_to:
-          - loi:xxx
+        - kind: report
+          type: LaTeXReporter
+          properties:
+            template: dataset.tex
+            filename: report.tex
+          compile: true
+
+    In this particular case, we use a LaTeX reporter and most likely one of
+    the templates that come bundled with the ASpecD package (atl least,
+    a template with that name comes bundled with ASpecD). As the template
+    name already suggests, this report will contain information on a
+    dataset. Furthermore, setting ``compile`` to true will render the
+    generated report into a PDF document.
 
     Note that you can refer to datasets, results, and figures created during
     cooking of a recipe using their respective labels. Those labels will
     automatically be replaced by the actual dataset/result prior to
     performing the task.
 
-    Whatever fields you set as property ``context`` can be accessed
+    Whatever fields you set in the property ``context`` can be accessed
     directly from within the template using the usual Python syntax for
-    accessing keys of dictionaries. The fields shown here assume
-    a certain structure of your template containing user-supplied free text
-    for the introduction to several sections.
+    accessing keys of dictionaries as well as the (more convenient) dot
+    syntax provided by Jinja2.
 
     Additionally, the context will contain the key ``dataset`` containing the
     result of the :meth:`aspecd.dataset.Dataset.to_dict` method, thus the full
@@ -3146,8 +3170,51 @@ class ReportTask(Task):
         run into trouble.
 
     .. note::
-        If the recipe contains the ``output_directory`` key on the top
-        level, the reports will be written to this directory.
+        If the recipe contains the ``output`` key in its ``directories`` dict,
+        the figure(s) will be saved to this directory.
+
+    In case you do not provide a filename, the report is nevertheless saved
+    for each of the datasets, using a auto-generated filename consisting of
+    the dataset label and the template used. Assuming a dataset "foo" and a
+    template "dataset.tex", the resulting report will be saved to the file
+    "foo_report_dataset.tex".
+
+    Generally, you are entirely free to create content for your reports from
+    within a recipe, as the following fictitious example shows:
+
+    .. code-block:: yaml
+
+        kind: report
+        type: LaTeXReporter
+        properties:
+          template: my-fancy-latex-template.tex
+          filename: some-filename-for-final-report.tex
+          context:
+            general:
+              title: Some fancy title
+              author: John Doe
+            free_text:
+              intro: >
+                Short introduction of the experiment performed
+              metadata: >
+                Tabular and customisable overview of the dataset's metadata
+              history: >
+                Presentation of all processing, analysis and representation
+                steps
+            figures:
+              title: my_fancy_figure
+        compile: True
+        apply_to:
+          - loi:xxx
+
+    The fields shown here assume a certain structure of your template
+    containing user-supplied free text for the introduction to several
+    sections. And be aware that in such cases, you need to know your
+    templates quite well and have a direct dependency between the keys
+    provided in the recipe and the corresponding placeholders in your
+    template. Therefore, much more often, you will use either general
+    reporters for datasets and alike (as shown above) or create specialised
+    reporter classes collecting the necessary information for you.
 
 
     Attributes
@@ -3173,7 +3240,13 @@ class ReportTask(Task):
             dataset = self.recipe.get_dataset(dataset_id)
             task = self.get_object()
             task.context['dataset'] = dataset.to_dict()
-            if isinstance(self.properties["filename"], list):
+            if 'filename' not in self.properties \
+                    or not self.properties['filename']:
+                dataset_basename = \
+                    os.path.splitext(os.path.split(dataset.id)[-1])[0]
+                task.filename = \
+                    "_".join([dataset_basename, "report", task.template])
+            elif isinstance(self.properties["filename"], list):
                 task.filename = self.properties["filename"][idx]
             if self.recipe.directories['output']:
                 task.filename = os.path.join(self.recipe.directories['output'],
@@ -3318,8 +3391,8 @@ class ExportTask(Task):
         run into trouble.
 
     .. note::
-        If the recipe contains the ``output_directory`` key on the top
-        level, the datasets will be saved to this directory.
+        If the recipe contains the ``output`` key in its ``directories`` dict,
+        the datasets will be saved to this directory.
 
     """
 

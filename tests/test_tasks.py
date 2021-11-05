@@ -64,9 +64,6 @@ class TestRecipe(unittest.TestCase):
     def test_has_default_package_property(self):
         self.assertTrue(hasattr(self.recipe, 'default_package'))
 
-    def test_has_output_directory_property(self):
-        self.assertTrue(hasattr(self.recipe, 'output_directory'))
-
     def test_has_format_and_settings_and_directories_properties(self):
         self.assertTrue(hasattr(self.recipe, 'format'))
         self.assertTrue(hasattr(self.recipe, 'settings'))
@@ -2591,6 +2588,18 @@ class TestReportTask(unittest.TestCase):
         self.task.perform()
         self.assertTrue(os.path.exists(os.path.join(self.output_directory,
                                                     self.filename)))
+
+    def test_perform_task_without_filename_saves_report_to_default_name(self):
+        self.filename = "_".join([self.dataset[1:], "report", self.template])
+        self.prepare_recipe()
+        template_content = "{@dataset['id']}"
+        self.prepare_template(template_content)
+        self.report_task['properties'].pop('filename')
+        self.task.from_dict(self.report_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        print(self.filename)
+        self.assertTrue(os.path.exists(self.filename))
 
 
 class TestModelTask(unittest.TestCase):
