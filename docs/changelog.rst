@@ -56,6 +56,7 @@ Fixes
 * :class:`aspecd.model.FamilyOfCurves` sets correct values for additional axis
 * :class:`aspecd.processing.Differentiation` works correctly for 2D datasets
 * :class:`aspecd.processing.Noise`: normalisation works with >1D datasets
+* :class:`aspecd.plotting.SinglePlotter2DStacked`: ylabel is set to third axis if offset = 0
 
 
 Version 0.5.0

@@ -1271,6 +1271,9 @@ class SinglePlotter2DStacked(SinglePlotter):
            parameters:
              show_zero_lines: True
 
+    .. versionchanged:: 0.6
+        ylabel is set to third axis if offset = 0
+
     """
 
     # noinspection PyTypeChecker
@@ -1362,6 +1365,8 @@ class SinglePlotter2DStacked(SinglePlotter):
         else:
             xlabel = self._create_axis_label_string(self.dataset.data.axes[0])
             ylabel = self._create_axis_label_string(self.dataset.data.axes[1])
+        if self.parameters["offset"] == 0:
+            ylabel = self._create_axis_label_string(self.dataset.data.axes[2])
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel(ylabel)
 

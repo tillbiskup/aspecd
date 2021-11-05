@@ -830,6 +830,15 @@ class TestSinglePlotter2DStacked(unittest.TestCase):
         plotter = dataset_.plot(self.plotter)
         self.assertGreaterEqual(20, len(plotter.axes.get_lines()))
 
+    def test_plot_with_offset_zero_sets_correct_ylabel(self):
+        test_dataset = aspecd.dataset.CalculatedDataset()
+        test_dataset.data.data = np.random.random([5, 10]) - 0.5
+        test_dataset.data.axes[2].quantity = 'intensity'
+        test_dataset.data.axes[2].unit = 'a.u.'
+        self.plotter.parameters['offset'] = 0
+        plotter = test_dataset.plot(self.plotter)
+        self.assertEqual('$intensity$ / a.u.', plotter.axes.get_ylabel())
+
 
 class TestMultiPlotter(unittest.TestCase):
     def setUp(self):
