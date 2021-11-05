@@ -265,6 +265,9 @@ class Plotter(aspecd.utils.ToDictMixin):
     legend : :class:`matplotlib.legend.Legend`
         Legend object
 
+    label : :class:`str`
+        Label used to reference figure, *e.g.* in context of a report
+
     style : :class:`str`
         plotting style to use
 
@@ -288,6 +291,10 @@ class Plotter(aspecd.utils.ToDictMixin):
     aspecd.exceptions.MissingSaverError
         Raised when no saver is provided when trying to save
 
+
+    .. versionchanged:: 0.6
+        New attribute :attr:`label`
+
     """
 
     def __init__(self):
@@ -305,6 +312,7 @@ class Plotter(aspecd.utils.ToDictMixin):
         self.filename = ''
         self.caption = Caption()
         self.legend = None
+        self.label = ''
         self.style = ''
         #
         self._original_rcparams = None
@@ -1215,6 +1223,13 @@ class SinglePlotter2DStacked(SinglePlotter):
 
             Default: None
 
+        tight: :class:`str`
+            Whether to set the axes limits tight to the data
+
+            Possible values: 'x', 'y', 'both'
+
+            Default: ''
+
     properties : :class:`aspecd.plotting.SinglePlot1DProperties`
         Properties of the plot, defining its appearance
 
@@ -1272,7 +1287,7 @@ class SinglePlotter2DStacked(SinglePlotter):
              show_zero_lines: True
 
     .. versionchanged:: 0.6
-        ylabel is set to third axis if offset = 0
+        ylabel is set to third axis if offset = 0; new parameter "tight"
 
     """
 
@@ -1287,6 +1302,7 @@ class SinglePlotter2DStacked(SinglePlotter):
             'stacking_dimension': 1,
             'offset': None,
             'yticklabelformat': None,
+            'tight': '',
         }
         self.drawing = []
         self.properties = SinglePlot1DProperties()
@@ -1335,6 +1351,14 @@ class SinglePlotter2DStacked(SinglePlotter):
             self.properties.axes.yticks = yticks
             self.properties.axes.yticklabels = \
                 self._format_yticklabels(yticklabels)
+        if self.parameters['tight']:
+            if self.parameters['tight'] in ('x', 'both'):
+                self.axes.set_xlim([self.dataset.data.axes[0].values.min(),
+                                    self.dataset.data.axes[0].values.max()])
+            if self.parameters['tight'] in ('y', 'both'):
+                if self.parameters['offset'] == 0:
+                    self.axes.set_ylim([self.dataset.data.data.min(),
+                                        self.dataset.data.data.max()])
 
     def _format_yticklabels(self, yticklabels):
         if self.parameters['yticklabelformat']:

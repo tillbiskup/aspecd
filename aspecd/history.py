@@ -618,14 +618,22 @@ class PlotRecord(aspecd.utils.ToDictMixin):
         Name of the plotter.
 
         Defaults to the plotter class name and shall never be set manually.
+
     description : :class:`str`
         Short description of the plot
+
     parameters : :class:`dict`
         All parameters necessary for the plot, implicit and explicit
+
     properties : :class:`aspecd.plotting.PlotProperties`
         Properties of the plot, defining its appearance
+
     caption : :class:`aspecd.plotting.Caption`
         User-supplied information for the figure.
+
+    label : :class:`str`
+        Label used to reference figure, *e.g.* in context of a report
+
     filename : :class:`str`
         Name of the file the plot has been/should be saved to
 
@@ -640,6 +648,10 @@ class PlotRecord(aspecd.utils.ToDictMixin):
     aspecd.plotting.MissingPlotterError
         Raised if no plotter is provided.
 
+
+    .. versionchanged:: 0.6
+        New attribute :attr:`label`
+
     """
 
     def __init__(self, plotter=None):
@@ -649,9 +661,11 @@ class PlotRecord(aspecd.utils.ToDictMixin):
         self.parameters = dict()
         self.properties = None
         self.caption = None
+        self.label = ''
         self.filename = ''
         self._attributes_to_copy = ['description', 'parameters',
-                                    'properties', 'caption', 'filename']
+                                    'properties', 'caption', 'filename',
+                                    'label']
         if plotter:
             self.from_plotter(plotter=plotter)
 

@@ -81,6 +81,9 @@ class TestPlotter(unittest.TestCase):
     def test_has_style_property(self):
         self.assertTrue(hasattr(self.plotter, 'style'))
 
+    def test_has_label_property(self):
+        self.assertTrue(hasattr(self.plotter, 'label'))
+
     def test_has_to_dict_method(self):
         self.assertTrue(hasattr(self.plotter, 'to_dict'))
         self.assertTrue(callable(self.plotter.to_dict))
@@ -384,7 +387,7 @@ class TestSinglePlotter1D(unittest.TestCase):
         self.assertEqual(dataset_.data.axes[0].values[0],
                          plotter.axes.get_xlim()[0])
 
-    def test_axes_tight_y_sets_xlim_to_data_limits(self):
+    def test_axes_tight_y_sets_ylim_to_data_limits(self):
         dataset_ = aspecd.dataset.CalculatedDataset()
         dataset_.data.data = np.random.random([100])
         dataset_.data.axes[0].values = np.linspace(np.pi, 2*np.pi, 100)
@@ -838,6 +841,36 @@ class TestSinglePlotter2DStacked(unittest.TestCase):
         self.plotter.parameters['offset'] = 0
         plotter = test_dataset.plot(self.plotter)
         self.assertEqual('$intensity$ / a.u.', plotter.axes.get_ylabel())
+
+    def test_axes_tight_x_sets_xlim_to_data_limits(self):
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.random.random([100, 5])
+        dataset_.data.axes[0].values = np.linspace(np.pi, 2*np.pi, 100)
+        self.plotter.parameters['tight'] = 'x'
+        plotter = dataset_.plot(self.plotter)
+        self.assertEqual(dataset_.data.axes[0].values[0],
+                         plotter.axes.get_xlim()[0])
+
+    def test_axes_tight_y_and_offset_zero_sets_ylim_to_data_limits(self):
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.random.random([100, 5])
+        self.plotter.parameters['offset'] = 0
+        self.plotter.parameters['tight'] = 'y'
+        plotter = dataset_.plot(self.plotter)
+        self.assertEqual(dataset_.data.data.min(),
+                         plotter.axes.get_ylim()[0])
+
+    def test_axes_tight_both_and_offset_zero_sets_limits(self):
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.random.random([100, 5])
+        dataset_.data.axes[0].values = np.linspace(np.pi, 2*np.pi, 100)
+        self.plotter.parameters['offset'] = 0
+        self.plotter.parameters['tight'] = 'both'
+        plotter = dataset_.plot(self.plotter)
+        self.assertEqual(dataset_.data.axes[0].values[0],
+                         plotter.axes.get_xlim()[0])
+        self.assertEqual(dataset_.data.data.min(),
+                         plotter.axes.get_ylim()[0])
 
 
 class TestMultiPlotter(unittest.TestCase):

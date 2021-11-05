@@ -2699,9 +2699,9 @@ class PlotTask(Task):
         recipe in case an :attr:`aspecd.tasks.PlotTask.label` has been set.
 
         """
-        super().perform()
         if not self.label:
             self.label = 'fig{}'.format(len(self.recipe.figures) + 1)
+        super().perform()
         self._add_figure_to_recipe()
         if self.result:
             self._add_plotter_to_recipe()
@@ -2710,6 +2710,8 @@ class PlotTask(Task):
         figure_record = FigureRecord()
         # noinspection PyTypeChecker
         figure_record.from_plotter(self.get_object())
+        if self.label:
+            figure_record.label = self.label
         self.recipe.figures[self.label] = figure_record
 
     def _add_plotter_to_recipe(self):
@@ -2843,6 +2845,8 @@ class SingleplotTask(PlotTask):
         for number, dataset_id in enumerate(self.apply_to):
             dataset = self.recipe.get_dataset(dataset_id)
             self._task = self.get_object()
+            if self.label and not self._task.label:
+                self._task.label = self.label
             if self.target:
                 self._task.figure = self.recipe.plotters[self.target].figure
                 self._task.axes = self.recipe.plotters[self.target].axes
@@ -3657,7 +3661,7 @@ class FigureRecord(aspecd.utils.ToDictMixin):
         """
         if not plotter:
             raise aspecd.exceptions.MissingPlotterError
-        for attribute in ['caption', 'parameters', 'filename']:
+        for attribute in ['caption', 'parameters', 'filename', 'label']:
             setattr(self, attribute, getattr(plotter, attribute))
 
 

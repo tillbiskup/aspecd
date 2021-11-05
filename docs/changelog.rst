@@ -21,6 +21,7 @@ New features
 * Tasks/Recipe-driven data analysis
 
   * YAML representation of recipe and tasks via :meth:`aspecd.tasks.Recipe.to_yaml` and :meth:`aspecd.tasks.Task.to_yaml`
+  * Figure labels can be set in plotters; otherwise a default label will be set and can be accessed from within reports
 
 * Utils
 

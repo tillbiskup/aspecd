@@ -1923,6 +1923,15 @@ class TestPlotTask(unittest.TestCase):
         self.task.perform()
         self.assertTrue(len(self.recipe.figures))
 
+    def test_perform_task_with_label_adds_label_to_figure_record(self):
+        self.prepare_recipe()
+        label = 'foo'
+        self.plotting_task['label'] = label
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertEqual(label, self.recipe.figures[label].label)
+
     def test_figure_added_to_recipe_is_figure_record(self):
         self.prepare_recipe()
         label = 'foo'
@@ -2150,6 +2159,24 @@ class TestSinglePlotTask(unittest.TestCase):
         task2.perform()
         self.assertEqual(self.task._task.figure.number,
                          task2._task.figure.number)
+
+    def test_perform_task_with_label_adds_label_to_dataset_figure_record(self):
+        self.prepare_recipe()
+        label = 'foo'
+        self.plotting_task['label'] = label
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertEqual(label, self.recipe.datasets[
+            self.dataset[0]].representations[0].plot.label)
+
+    def test_perform_task_wo_label_adds_default_label_to_dataset_fig_rec(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertEqual('fig1', self.recipe.datasets[
+            self.dataset[0]].representations[0].plot.label)
 
 
 class TestMultiPlotTask(unittest.TestCase):
