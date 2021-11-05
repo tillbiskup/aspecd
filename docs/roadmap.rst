@@ -10,8 +10,6 @@ For version 0.6
 
 * Report task: automatically generate filenames in case they are not given, similar to plots
 
-* Handling of mapper recipe (from package source, not from directory)
-
 
 For version 0.7
 ===============
