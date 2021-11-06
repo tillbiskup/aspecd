@@ -443,7 +443,11 @@ class LaTeXReporter(Reporter):
         LaTeX without having to replace the placeholder variables beforehand.
 
         """
-        template = self.environment.get_template(self.template)
+        try:
+            template = self.environment.get_template(self.template)
+        except jinja2.exceptions.TemplateError:
+            self.template = os.path.realpath(self.template)
+            template = self.environment.get_template(self.template)
         self.context = self._change_keys_in_dict_recursively(self.context)
         self.report = template.render(self.context)
 

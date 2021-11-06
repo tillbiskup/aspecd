@@ -304,6 +304,12 @@ class TestLaTeXReporter(unittest.TestCase):
         self.report.template = self.template2
         self.report.render()
 
+    def test_render_with_template_with_relative_path(self):
+        with open(self.template, 'w+') as f:
+            f.write('')
+        self.report.template = '../tests/' + self.template
+        self.report.render()
+
     def test_compile_with_inexisting_latex_executable_raises(self):
         self.report.latex_executable = 'foo'
         with self.assertRaises(aspecd.exceptions.LaTeXExecutableNotFoundError):

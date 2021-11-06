@@ -15,6 +15,7 @@ Fixes
 -----
 
 * ReportTask works with output directory set in recipe
+* LatexReporter finds templates with relative path
 
 
 Version 0.6.0
