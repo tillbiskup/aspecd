@@ -234,6 +234,7 @@ class Reporter(aspecd.utils.ToDictMixin):
         self.context['sysinfo'] = \
             aspecd.system.SystemInfo(package=aspecd.utils.package_name(
                 self)).to_dict()
+        self._jinja_template = None
         self.__kind__ = 'report'
         self._exclude_from_to_dict = ['context', 'environment', 'report']
 
@@ -261,9 +262,17 @@ class Reporter(aspecd.utils.ToDictMixin):
         self.context['template_dir'] = os.path.split(self.template)[0]
         if self.context['template_dir']:
             self.context['template_dir'] += os.path.sep
-        self.context['timestamp'] = \
-            datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        # noinspection PyTypeChecker
+        self.context['timestamp'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        self._get_template()
         self._render()
+
+    def _get_template(self):
+        try:
+            self._jinja_template = self.environment.get_template(self.template)
+        except jinja2.exceptions.TemplateError:
+            self.template = os.path.realpath(self.template)
+            self._jinja_template = self.environment.get_template(self.template)
 
     def _render(self):
         """Perform the actual rendering of the template.
@@ -281,12 +290,7 @@ class Reporter(aspecd.utils.ToDictMixin):
         If you need to change anything here, simply override this method in
         a child class according to your needs.
         """
-        try:
-            template = self.environment.get_template(self.template)
-        except jinja2.exceptions.TemplateError:
-            self.template = os.path.realpath(self.template)
-            template = self.environment.get_template(self.template)
-        self.report = template.render(self.context)
+        self.report = self._jinja_template.render(self.context)
 
     def save(self):
         """Save report to file.
@@ -345,7 +349,7 @@ class TxtReporter(Reporter):
     """
 
     def __init__(self, template='', filename=''):
-        super().__init__()
+        super().__init__(template=template, filename=filename)
         self.environment = TxtEnvironment()
 
 
@@ -443,13 +447,8 @@ class LaTeXReporter(Reporter):
         LaTeX without having to replace the placeholder variables beforehand.
 
         """
-        try:
-            template = self.environment.get_template(self.template)
-        except jinja2.exceptions.TemplateError:
-            self.template = os.path.realpath(self.template)
-            template = self.environment.get_template(self.template)
         self.context = self._change_keys_in_dict_recursively(self.context)
-        self.report = template.render(self.context)
+        super()._render()
 
     def _change_keys_in_dict_recursively(self, dict_=None):
         tmp_dict = collections.OrderedDict()
