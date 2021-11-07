@@ -264,10 +264,10 @@ class Reporter(aspecd.utils.ToDictMixin):
             self.context['template_dir'] += os.path.sep
         # noinspection PyTypeChecker
         self.context['timestamp'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        self._get_template()
+        self._get_jinja_template()
         self._render()
 
-    def _get_template(self):
+    def _get_jinja_template(self):
         try:
             self._jinja_template = self.environment.get_template(self.template)
         except jinja2.exceptions.TemplateError:
