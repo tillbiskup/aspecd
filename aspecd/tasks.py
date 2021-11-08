@@ -2225,7 +2225,8 @@ class ProcessingTask(Task):
             else:
                 self.result = None
         for number, dataset_id in enumerate(self.apply_to):
-            dict_pre = self.to_dict()
+            tmp_task = copy.deepcopy(self)
+            dict_pre = tmp_task.to_dict()
             dataset = self.recipe.get_dataset(dataset_id)
             self._task = self.get_object()
             if self.comment:
@@ -2246,7 +2247,8 @@ class ProcessingTask(Task):
                             dataset_id)
                 self._task = dataset.process(processing_step=self._task)
             self._internal = True
-            dict_post = self.to_dict()
+            tmp_task = copy.deepcopy(self)
+            dict_post = tmp_task.to_dict()
             self._internal = False
             if dict_post != dict_pre and len(self.apply_to) > 1:
                 dict_post['apply_to'] = [dataset_id]
@@ -2767,7 +2769,8 @@ class PlotTask(Task):
         elif 'filename' in self.properties and self.properties['filename']:
             filename = self.properties['filename']
         if filename:
-            if self.recipe.directories['output']:
+            if self.recipe.directories['output'] and not filename.startswith(
+                    self.recipe.directories['output']):
                 filename = os.path.join(self.recipe.directories['output'],
                                         filename)
             self.properties['filename'] = filename
@@ -2876,7 +2879,10 @@ class SingleplotTask(PlotTask):
                 and isinstance(self.properties["filename"], list) \
                 and len(self.apply_to) == len(self.properties["filename"]):
             filenames = self.properties["filename"]
+        autosave_filename = False
         for number, dataset_id in enumerate(self.apply_to):
+            if autosave_filename:
+                self.properties.pop('filename')
             dataset = self.recipe.get_dataset(dataset_id)
             self._task = self.get_object()
             if self.label and not self._task.label:
@@ -2894,6 +2900,7 @@ class SingleplotTask(PlotTask):
                 plotter_name = self._task.name.split(".")[-1]
                 self._task.filename = \
                     "".join([dataset_basename, "_", plotter_name, ".pdf"])
+                autosave_filename = True
             logger.info('Perform "%s" on dataset "%s"', self.type, dataset_id)
             dataset.plot(plotter=self._task)
             # noinspection PyTypeChecker

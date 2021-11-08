@@ -2103,6 +2103,28 @@ class TestSinglePlotTask(unittest.TestCase):
         self.task.perform()
         self.assertTrue(os.path.exists(self.figure_filename))
 
+    def test_perform_task_without_filename_saves_plots_to_default_names(self):
+        self.plotting_task = {'kind': 'singleplot',
+                              'type': 'SinglePlotter',
+                              'apply_to': self.datasets}
+        self.figure_filenames = []
+        for name in self.datasets:
+            self.figure_filenames.append(
+                "".join([name, "_", self.plotting_task["type"], ".pdf"])
+            )
+        dataset_factory = dataset.DatasetFactory()
+        dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
+        self.recipe.dataset_factory = dataset_factory
+        recipe_dict = {'datasets': self.datasets,
+                       'tasks': [self.plotting_task]}
+        self.recipe.from_dict(recipe_dict)
+        # noinspection PyTypeChecker
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        for name in self.figure_filenames:
+            self.assertTrue(os.path.exists(name))
+
     def test_perform_task_autosaving_adds_filename_to_task(self):
         self.figure_filename = \
             "".join([self.dataset[0], "_", self.plotting_task["type"], ".pdf"])
