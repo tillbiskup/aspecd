@@ -2225,8 +2225,7 @@ class ProcessingTask(Task):
             else:
                 self.result = None
         for number, dataset_id in enumerate(self.apply_to):
-            tmp_task = copy.deepcopy(self)
-            dict_pre = tmp_task.to_dict()
+            dict_pre = self.to_dict()
             dataset = self.recipe.get_dataset(dataset_id)
             self._task = self.get_object()
             if self.comment:
@@ -2247,8 +2246,7 @@ class ProcessingTask(Task):
                             dataset_id)
                 self._task = dataset.process(processing_step=self._task)
             self._internal = True
-            tmp_task = copy.deepcopy(self)
-            dict_post = tmp_task.to_dict()
+            dict_post = self.to_dict()
             self._internal = False
             if dict_post != dict_pre and len(self.apply_to) > 1:
                 dict_post['apply_to'] = [dataset_id]

@@ -17,7 +17,8 @@ Fixes
 * ReportTask works with output directory set in recipe (7aaa33d6f2)
 * LatexReporter finds templates with relative path (c5949d7e07)
 * Yaml handles numpy floats and ints (1bd9164bdd)
-* ProcessingTask handles multiple datasets, SinglePlotTask automatically generated figure filenames with multiple datasets ()
+* ProcessingTask handles multiple datasets, SinglePlotTask automatically generated figure filenames with multiple datasets (6816342d9b)
+* ProcessingTask no longer tries to deep-copy matplotlib objects ()
 
 
 Version 0.6.0

@@ -494,7 +494,34 @@ class SingleProcessingStep(ProcessingStep):
         super().__init__()
         self.description = 'Abstract singleprocessing step'
         self.dataset = None
-        self._exclude_from_to_dict.extend(['dataset'])
+
+    def to_dict(self, remove_empty=False):
+        """
+        Create dictionary containing public attributes of an object.
+
+        In this particular case, the key "dataset" from the top level of the
+        resulting dictionary will be removed, but not keys with the same
+        name on lower levels of the resulting dict.
+
+        Parameters
+        ----------
+        remove_empty : :class:`bool`
+            Whether to remove keys with empty values
+
+            Default: False
+
+        Returns
+        -------
+        public_attributes : :class:`collections.OrderedDict`
+            Ordered dictionary containing the public attributes of the object
+
+            The order of attribute definition is preserved
+
+        """
+        dict_ = super().to_dict(remove_empty=remove_empty)
+        # noinspection PyUnresolvedReferences
+        dict_.pop('dataset')
+        return dict_
 
     # pylint: disable=arguments-differ
     def process(self, dataset=None, from_dataset=False):

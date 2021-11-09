@@ -1996,6 +1996,8 @@ class TestSinglePlotTask(unittest.TestCase):
         self.plotting_task = {'kind': 'singleplot',
                               'type': 'SinglePlotter',
                               'apply_to': self.dataset}
+        self.recipe_dict = {'datasets': self.dataset,
+                            'tasks': [self.plotting_task]}
         root_path = os.path.split(os.path.abspath(__file__))[0]
         self.output_directory = os.path.join(root_path, 'output_directory')
         os.mkdir(self.output_directory)
@@ -2017,9 +2019,7 @@ class TestSinglePlotTask(unittest.TestCase):
         dataset_factory = dataset.DatasetFactory()
         dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
         self.recipe.dataset_factory = dataset_factory
-        recipe_dict = {'datasets': self.dataset,
-                       'tasks': [self.plotting_task]}
-        self.recipe.from_dict(recipe_dict)
+        self.recipe.from_dict(self.recipe_dict)
 
     def test_instantiate_class(self):
         pass
