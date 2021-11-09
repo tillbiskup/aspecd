@@ -2238,7 +2238,7 @@ class ProcessingTask(Task):
                 logger.info('Perform "%s" on dataset "%s" resulting in "%s"',
                             self.type, dataset_id, self.result)
                 dataset_copy = copy.deepcopy(dataset)
-                dataset_copy.process(processing_step=self._task)
+                self._task = dataset_copy.process(processing_step=self._task)
                 if result_labels:
                     dataset_copy.id = self.result[number]
                     self.recipe.results[self.result[number]] = dataset_copy
@@ -2252,7 +2252,7 @@ class ProcessingTask(Task):
             self._internal = True
             dict_post = self.to_dict()
             self._internal = False
-            if dict_post != dict_pre and len(self.apply_to) > 1:
+            if str(dict_post) != str(dict_pre) and len(self.apply_to) > 1:
                 dict_post['apply_to'] = [dataset_id]
                 if dict_post['result']:
                     dict_post['result'] = self.result[number]

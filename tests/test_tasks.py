@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import unittest
 from unittest.mock import patch
+import warnings
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -1374,6 +1375,19 @@ class TestProcessingTask(unittest.TestCase):
         dict_ = self.task.to_dict()
         self.assertEqual(dict_[0]['result'], 'result1')
 
+    def test_to_dict_with_numpy_params_does_not_warn(self):
+        self.dataset = ['foo', 'bar']
+        self.processing_task["type"] = 'BaselineCorrection'
+        self.processing_task["result"] = ['result1', 'result2']
+        self.prepare_recipe()
+        self.recipe.datasets['foo'].data.data = np.random.random(10)+5
+        self.recipe.datasets['bar'].data.data = np.random.random(10)+3
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        with warnings.catch_warnings(record=True) as warning:
+            self.task.perform()
+            self.assertFalse(warning)
+
     def test_to_dict_sets_kind(self):
         dict_ = self.task.to_dict()
         self.assertEqual('processing', dict_['kind'])
@@ -2665,7 +2679,6 @@ class TestReportTask(unittest.TestCase):
         self.task.from_dict(self.report_task)
         self.task.recipe = self.recipe
         self.task.perform()
-        print(self.filename)
         self.assertTrue(os.path.exists(self.filename))
 
 
