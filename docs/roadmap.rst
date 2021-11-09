@@ -50,6 +50,8 @@ For later versions
 
   May impair the platform-independence of the recipe (*i.e.*, tying it to Python/NumPy)
 
+* Convert from :class:`collections.OrderedDict` to :class:`dict`, as starting with Python 3.7, dicts preserve the insertion-order of the keys.
+
 
 Todos
 =====

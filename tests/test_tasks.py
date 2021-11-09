@@ -1337,6 +1337,18 @@ class TestProcessingTask(unittest.TestCase):
         dict_ = self.task.to_dict()
         self.assertIsInstance(dict_, list)
 
+    def test_to_dict_with_multiple_datasets_and_same_params_returns_dict(self):
+        self.dataset = ['foo', 'bar']
+        self.processing_task["type"] = 'Noise'
+        self.prepare_recipe()
+        self.recipe.datasets['foo'].data.data = np.random.random(10)+5
+        self.recipe.datasets['bar'].data.data = np.random.random(10)+3
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertIsInstance(dict_, dict)
+
     def test_to_dict_with_multiple_datasets_and_params_adjusts_apply_to(self):
         self.dataset = ['foo', 'bar']
         self.processing_task["type"] = 'BaselineCorrection'
@@ -1422,6 +1434,23 @@ class TestProcessingTask(unittest.TestCase):
     def test_to_yaml_with_actual_type(self):
         self.task.type = 'Normalisation'
         self.task.to_yaml()
+
+    def test_processing_after_plot_task_with_multiple_datasets(self):
+        self.dataset = ['foo', 'bar']
+        self.processing_task["type"] = 'Noise'
+        self.prepare_recipe()
+        self.recipe.datasets['foo'].data.data = np.random.random(10)+5
+        self.recipe.datasets['bar'].data.data = np.random.random(10)+3
+        self.recipe.settings['autosave_plots'] = False
+        plot_task = tasks.SingleplotTask()
+        plot_task.from_dict({'kind': 'singleplot',
+                             'type': 'SinglePlotter1D'})
+        plot_task.recipe = self.recipe
+        plot_task.perform()
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertEqual(2, len(self.recipe.datasets['foo'].tasks))
 
 
 class TestSingleProcessingTask(unittest.TestCase):

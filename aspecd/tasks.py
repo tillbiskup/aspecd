@@ -2225,8 +2225,12 @@ class ProcessingTask(Task):
             else:
                 self.result = None
         for number, dataset_id in enumerate(self.apply_to):
-            dict_pre = self.to_dict()
             dataset = self.recipe.get_dataset(dataset_id)
+            self._task = self.get_object()
+            self._internal = True
+            dict_pre = self.to_dict()
+            self._internal = False
+            # Dirty fix, but self.to_dict() changes object attributes
             self._task = self.get_object()
             if self.comment:
                 self._task.comment = self.comment
