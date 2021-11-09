@@ -1466,6 +1466,19 @@ class TestProcessingTask(unittest.TestCase):
         self.task.perform()
         self.assertEqual(2, len(self.recipe.datasets['foo'].tasks))
 
+    def test_to_dict_with_multiple_datasets_and_dataset_ids(self):
+        self.dataset = ['foo', 'bar']
+        self.processing_task["type"] = 'DatasetAlgebra'
+        self.processing_task["properties"] = {'parameters': {'kind': 'minus',
+                                                             'dataset': 'foo'}}
+        self.prepare_recipe()
+        self.recipe.datasets['foo'].data.data = np.random.random(10)+5
+        self.recipe.datasets['bar'].data.data = np.random.random(10)+3
+        self.task.recipe = self.recipe
+        self.task.from_dict(self.processing_task)
+        self.task.perform()
+        self.assertEqual('foo', self.task.properties['parameters']['dataset'])
+
 
 class TestSingleProcessingTask(unittest.TestCase):
     def setUp(self):

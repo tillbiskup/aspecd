@@ -1753,10 +1753,12 @@ class Task(aspecd.utils.ToDictMixin):
             return
         for property_key, property_value in dict_.items():
             for dataset_key, dataset_value in self.recipe.datasets.items():
-                if property_value is dataset_value:
+                if property_value is dataset_value or \
+                        property_value is dataset_value.id:
                     dict_[property_key] = dataset_key
             for dataset_key, dataset_value in self.recipe.results.items():
-                if property_value is dataset_value:
+                if property_value is dataset_value or \
+                        property_value is dataset_value.id:
                     dict_[property_key] = dataset_key
             for figure_key, figure_value in self.recipe.figures.items():
                 if property_value is figure_value:
