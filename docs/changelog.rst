@@ -19,6 +19,7 @@ Fixes
 * Yaml handles numpy floats and ints (1bd9164bdd)
 * ProcessingTask handles multiple datasets, SinglePlotTask automatically generated figure filenames with multiple datasets (6816342d9b)
 * ProcessingTask no longer tries to deep-copy matplotlib objects (eea0588db2)
+* Replacing dataset labels in recipes works with dataset ids/source (dd8d3ada3d)
 
 
 Version 0.6.0
