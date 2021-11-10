@@ -376,6 +376,8 @@ class Yaml:
             |[-+]?\\.(?:inf|Inf|INF)
             |\\.(?:nan|NaN|NAN))$''', re.X),
             list(u'-+0123456789.'))
+        self.dumper.add_representer(np.float64, self._numpy_float_representer)
+        self.dumper.add_representer(np.int64, self._numpy_int_representer)
 
     def read_from(self, filename=''):
         """
@@ -478,11 +480,9 @@ class Yaml:
     def _traverse_serialise_numpy_arrays(self, dict_=None):  # noqa: MC0001
         for key in dict_.keys():
             if isinstance(dict_[key], list):
-                for idx, element in enumerate(dict_[key]):
+                for element in dict_[key]:
                     if isinstance(element, (dict, collections.OrderedDict)):
                         self._traverse_serialise_numpy_arrays(dict_=element)
-                    elif isinstance(element, np.float64):
-                        dict_[key][idx] = float(element)
             elif isinstance(dict_[key], np.ndarray):
                 if dict_[key].size > self.numpy_array_size_threshold:
                     self._create_binary_directory()
@@ -504,8 +504,6 @@ class Yaml:
                     dict_[key] = {'type': 'numpy.ndarray',
                                   'dtype': str(dict_[key].dtype),
                                   'array': dict_[key].tolist()}
-            elif isinstance(dict_[key], np.float64):
-                dict_[key] = float(dict_[key])
             elif isinstance(dict_[key], (dict, collections.OrderedDict)):
                 self._traverse_serialise_numpy_arrays(dict_=dict_[key])
             # make list of binary_files unique
@@ -562,6 +560,14 @@ class Yaml:
         if self.binary_directory and not os.path.exists(
                 self.binary_directory):
             os.mkdir(self.binary_directory)
+
+    @staticmethod
+    def _numpy_float_representer(dumper, data):
+        return dumper.represent_float(float(data))
+
+    @staticmethod
+    def _numpy_int_representer(dumper, data):
+        return dumper.represent_int(int(data))
 
 
 def replace_value_in_dict(replacement=None, target=None):  # noqa: MC0001

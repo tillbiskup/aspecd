@@ -93,6 +93,10 @@ class TestSingleProcessingStep(unittest.TestCase):
             with self.subTest(key=key):
                 self.assertNotIn(key, self.processing.to_dict())
 
+    def test_to_dict_keeps_dataset_key_in_subdict(self):
+        self.processing.parameters['dataset'] = 'foo'
+        self.assertIn('dataset', self.processing.to_dict()['parameters'])
+
     def test_process_checks_applicability(self):
         class MyProcessingStep(aspecd.processing.SingleProcessingStep):
 

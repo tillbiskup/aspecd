@@ -1753,10 +1753,12 @@ class Task(aspecd.utils.ToDictMixin):
             return
         for property_key, property_value in dict_.items():
             for dataset_key, dataset_value in self.recipe.datasets.items():
-                if property_value is dataset_value:
+                if property_value is dataset_value or \
+                        property_value is dataset_value.id:
                     dict_[property_key] = dataset_key
             for dataset_key, dataset_value in self.recipe.results.items():
-                if property_value is dataset_value:
+                if property_value is dataset_value or \
+                        property_value is dataset_value.id:
                     dict_[property_key] = dataset_key
             for figure_key, figure_value in self.recipe.figures.items():
                 if property_value is figure_value:
@@ -2225,8 +2227,12 @@ class ProcessingTask(Task):
             else:
                 self.result = None
         for number, dataset_id in enumerate(self.apply_to):
-            dict_pre = self.to_dict()
             dataset = self.recipe.get_dataset(dataset_id)
+            self._task = self.get_object()
+            self._internal = True
+            dict_pre = self.to_dict()
+            self._internal = False
+            # Dirty fix, but self.to_dict() changes object attributes
             self._task = self.get_object()
             if self.comment:
                 self._task.comment = self.comment
@@ -2234,7 +2240,7 @@ class ProcessingTask(Task):
                 logger.info('Perform "%s" on dataset "%s" resulting in "%s"',
                             self.type, dataset_id, self.result)
                 dataset_copy = copy.deepcopy(dataset)
-                dataset_copy.process(processing_step=self._task)
+                self._task = dataset_copy.process(processing_step=self._task)
                 if result_labels:
                     dataset_copy.id = self.result[number]
                     self.recipe.results[self.result[number]] = dataset_copy
@@ -2248,7 +2254,7 @@ class ProcessingTask(Task):
             self._internal = True
             dict_post = self.to_dict()
             self._internal = False
-            if dict_post != dict_pre and len(self.apply_to) > 1:
+            if str(dict_post) != str(dict_pre) and len(self.apply_to) > 1:
                 dict_post['apply_to'] = [dataset_id]
                 if dict_post['result']:
                     dict_post['result'] = self.result[number]
@@ -2767,10 +2773,11 @@ class PlotTask(Task):
         elif 'filename' in self.properties and self.properties['filename']:
             filename = self.properties['filename']
         if filename:
-            self.properties['filename'] = filename
-            if self.recipe.directories['output']:
+            if self.recipe.directories['output'] and not filename.startswith(
+                    self.recipe.directories['output']):
                 filename = os.path.join(self.recipe.directories['output'],
                                         filename)
+            self.properties['filename'] = filename
             saver = aspecd.plotting.Saver(filename=filename)
             logger.info('Save figure from "%s" to file "%s"', self.type,
                         filename)
@@ -2876,7 +2883,10 @@ class SingleplotTask(PlotTask):
                 and isinstance(self.properties["filename"], list) \
                 and len(self.apply_to) == len(self.properties["filename"]):
             filenames = self.properties["filename"]
+        autosave_filename = False
         for number, dataset_id in enumerate(self.apply_to):
+            if autosave_filename:
+                self.properties.pop('filename')
             dataset = self.recipe.get_dataset(dataset_id)
             self._task = self.get_object()
             if self.label and not self._task.label:
@@ -2894,6 +2904,7 @@ class SingleplotTask(PlotTask):
                 plotter_name = self._task.name.split(".")[-1]
                 self._task.filename = \
                     "".join([dataset_basename, "_", plotter_name, ".pdf"])
+                autosave_filename = True
             logger.info('Perform "%s" on dataset "%s"', self.type, dataset_id)
             dataset.plot(plotter=self._task)
             # noinspection PyTypeChecker

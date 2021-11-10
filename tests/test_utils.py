@@ -421,11 +421,6 @@ class TestYaml(unittest.TestCase):
         self.yaml.serialise_numpy_arrays()
         self.assertDictEqual(resulting_dict, self.yaml.dict)
 
-    def test_serialise_numpy_array_handles_numpy_floats(self):
-        self.yaml.dict = {'foobar': np.float64(5)}
-        self.yaml.serialise_numpy_arrays()
-        self.assertFalse(isinstance(self.yaml.dict['foobar'], np.float64))
-
     def test_has_deserialise_numpy_array_method(self):
         self.assertTrue(hasattr(self.yaml, 'deserialise_numpy_arrays'))
         self.assertTrue(callable(self.yaml.deserialise_numpy_arrays))
@@ -509,6 +504,14 @@ class TestYaml(unittest.TestCase):
         self.yaml.dict = self.dict
         dump = yaml.dump(self.dict)
         self.assertEqual(dump, self.yaml.write_stream())
+
+    def test_write_stream_with_numpy_float(self):
+        self.yaml.dict = {'foo': np.float64(5)}
+        self.assertEqual('foo: 5.0', self.yaml.write_stream().strip())
+
+    def test_write_stream_with_numpy_int(self):
+        self.yaml.dict = {'foo': np.int64(5)}
+        self.assertEqual('foo: 5', self.yaml.write_stream().strip())
 
     def test_read_stream(self):
         self.yaml.dict = self.dict

@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import unittest
 from unittest.mock import patch
+import warnings
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -1337,6 +1338,18 @@ class TestProcessingTask(unittest.TestCase):
         dict_ = self.task.to_dict()
         self.assertIsInstance(dict_, list)
 
+    def test_to_dict_with_multiple_datasets_and_same_params_returns_dict(self):
+        self.dataset = ['foo', 'bar']
+        self.processing_task["type"] = 'Noise'
+        self.prepare_recipe()
+        self.recipe.datasets['foo'].data.data = np.random.random(10)+5
+        self.recipe.datasets['bar'].data.data = np.random.random(10)+3
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertIsInstance(dict_, dict)
+
     def test_to_dict_with_multiple_datasets_and_params_adjusts_apply_to(self):
         self.dataset = ['foo', 'bar']
         self.processing_task["type"] = 'BaselineCorrection'
@@ -1361,6 +1374,19 @@ class TestProcessingTask(unittest.TestCase):
         self.task.perform()
         dict_ = self.task.to_dict()
         self.assertEqual(dict_[0]['result'], 'result1')
+
+    def test_to_dict_with_numpy_params_does_not_warn(self):
+        self.dataset = ['foo', 'bar']
+        self.processing_task["type"] = 'BaselineCorrection'
+        self.processing_task["result"] = ['result1', 'result2']
+        self.prepare_recipe()
+        self.recipe.datasets['foo'].data.data = np.random.random(10)+5
+        self.recipe.datasets['bar'].data.data = np.random.random(10)+3
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        with warnings.catch_warnings(record=True) as warning:
+            self.task.perform()
+            self.assertFalse(warning)
 
     def test_to_dict_sets_kind(self):
         dict_ = self.task.to_dict()
@@ -1422,6 +1448,36 @@ class TestProcessingTask(unittest.TestCase):
     def test_to_yaml_with_actual_type(self):
         self.task.type = 'Normalisation'
         self.task.to_yaml()
+
+    def test_processing_after_plot_task_with_multiple_datasets(self):
+        self.dataset = ['foo', 'bar']
+        self.processing_task["type"] = 'Noise'
+        self.prepare_recipe()
+        self.recipe.datasets['foo'].data.data = np.random.random(10)+5
+        self.recipe.datasets['bar'].data.data = np.random.random(10)+3
+        self.recipe.settings['autosave_plots'] = False
+        plot_task = tasks.SingleplotTask()
+        plot_task.from_dict({'kind': 'singleplot',
+                             'type': 'SinglePlotter1D'})
+        plot_task.recipe = self.recipe
+        plot_task.perform()
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertEqual(2, len(self.recipe.datasets['foo'].tasks))
+
+    def test_to_dict_with_multiple_datasets_and_dataset_ids(self):
+        self.dataset = ['foo', 'bar']
+        self.processing_task["type"] = 'DatasetAlgebra'
+        self.processing_task["properties"] = {'parameters': {'kind': 'minus',
+                                                             'dataset': 'foo'}}
+        self.prepare_recipe()
+        self.recipe.datasets['foo'].data.data = np.random.random(10)+5
+        self.recipe.datasets['bar'].data.data = np.random.random(10)+3
+        self.task.recipe = self.recipe
+        self.task.from_dict(self.processing_task)
+        self.task.perform()
+        self.assertEqual('foo', self.task.properties['parameters']['dataset'])
 
 
 class TestSingleProcessingTask(unittest.TestCase):
@@ -1996,6 +2052,8 @@ class TestSinglePlotTask(unittest.TestCase):
         self.plotting_task = {'kind': 'singleplot',
                               'type': 'SinglePlotter',
                               'apply_to': self.dataset}
+        self.recipe_dict = {'datasets': self.dataset,
+                            'tasks': [self.plotting_task]}
         root_path = os.path.split(os.path.abspath(__file__))[0]
         self.output_directory = os.path.join(root_path, 'output_directory')
         os.mkdir(self.output_directory)
@@ -2017,9 +2075,7 @@ class TestSinglePlotTask(unittest.TestCase):
         dataset_factory = dataset.DatasetFactory()
         dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
         self.recipe.dataset_factory = dataset_factory
-        recipe_dict = {'datasets': self.dataset,
-                       'tasks': [self.plotting_task]}
-        self.recipe.from_dict(recipe_dict)
+        self.recipe.from_dict(self.recipe_dict)
 
     def test_instantiate_class(self):
         pass
@@ -2048,6 +2104,22 @@ class TestSinglePlotTask(unittest.TestCase):
         self.task.recipe = self.recipe
         self.task.perform()
         self.assertTrue(os.path.exists(self.figure_filename))
+
+    def test_figure_added_to_recipe_contains_filename_with_output_dir(self):
+        self.prepare_recipe()
+        output_directory = 'outputdir'
+        self.recipe.directories['output'] = output_directory
+        # noinspection PyTypeChecker
+        label = 'foo'
+        self.plotting_task['label'] = label
+        self.plotting_task['properties'] = {'filename': self.figure_filename}
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        os.mkdir(output_directory)
+        self.task.perform()
+        self.assertEqual(os.path.join('outputdir', 'foo.pdf'),
+                         self.recipe.figures[label].filename)
+        shutil.rmtree(output_directory)
 
     def test_perform_task_with_filename_issues_log_message(self):
         self.prepare_recipe()
@@ -2086,6 +2158,28 @@ class TestSinglePlotTask(unittest.TestCase):
         self.task.recipe = self.recipe
         self.task.perform()
         self.assertTrue(os.path.exists(self.figure_filename))
+
+    def test_perform_task_without_filename_saves_plots_to_default_names(self):
+        self.plotting_task = {'kind': 'singleplot',
+                              'type': 'SinglePlotter',
+                              'apply_to': self.datasets}
+        self.figure_filenames = []
+        for name in self.datasets:
+            self.figure_filenames.append(
+                "".join([name, "_", self.plotting_task["type"], ".pdf"])
+            )
+        dataset_factory = dataset.DatasetFactory()
+        dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
+        self.recipe.dataset_factory = dataset_factory
+        recipe_dict = {'datasets': self.datasets,
+                       'tasks': [self.plotting_task]}
+        self.recipe.from_dict(recipe_dict)
+        # noinspection PyTypeChecker
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        for name in self.figure_filenames:
+            self.assertTrue(os.path.exists(name))
 
     def test_perform_task_autosaving_adds_filename_to_task(self):
         self.figure_filename = \
@@ -2598,7 +2692,6 @@ class TestReportTask(unittest.TestCase):
         self.task.from_dict(self.report_task)
         self.task.recipe = self.recipe
         self.task.perform()
-        print(self.filename)
         self.assertTrue(os.path.exists(self.filename))
 
 

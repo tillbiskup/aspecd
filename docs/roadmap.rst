@@ -8,6 +8,8 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.7
 ===============
 
+* Plotter: tight layout (to prevent labels from getting clipped)
+
 * Report task:
 
   * Operating on recipes, *i.e.* report on all tasks in a recipe
@@ -24,6 +26,10 @@ For version 0.7
 
 For later versions
 ==================
+
+* Annotations
+
+  * graphical annotations for characteristic points (and distances, areas?)
 
 * Remaining basic processing and analysis steps:
 
@@ -43,6 +49,8 @@ For later versions
 * Basic maths in values of recipes (ranges, basic numpy functions)?
 
   May impair the platform-independence of the recipe (*i.e.*, tying it to Python/NumPy)
+
+* Convert from :class:`collections.OrderedDict` to :class:`dict`, as starting with Python 3.7, dicts preserve the insertion-order of the keys.
 
 
 Todos

@@ -787,6 +787,21 @@ class MetadataMapper:
     developed by J. Popp for use within the `trEPR Python package
     <https://docs.trepr.de/>`_.
 
+    .. note::
+
+        The mapping recipes should be stored within the package, and as
+        accessing files from within packages should *not* be done using
+        regular fiile-system paths, but rather the respective functionality
+        of the pkgutil package used. Therefore, internally,
+        the :func:`aspecd.utils.get_package_data` function is used. In case
+        of using the :class:`MetadataMapper` class from a package derived
+        from ASpecD, prefix the name of the recipe file with the package,
+        followed by the '@' character. As an example, if you would want to
+        use the recipe 'mappings.yaml' from within the package 'trepr',
+        you would need to specify ``trepr@mappings.yaml`` as
+        :attr`recipe_filename`.
+
+
     Attributes
     ----------
     metadata : :class:`dict`
@@ -835,6 +850,11 @@ class MetadataMapper:
 
     As you can see, the ``modified_dict`` contains the dictionary where the
     mappings from ``mappings.yaml`` have been applied to.
+
+
+    .. versionchanged:: 0.6
+        Recipe files now retrieved from package data now via
+        :func:`aspecd.utils.get_package_data`
 
     """
 
