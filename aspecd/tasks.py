@@ -3010,7 +3010,8 @@ class MultiplotTask(PlotTask):
             The order of attribute definition is preserved
 
         """
-        self._task.datasets = self.apply_to
+        if self._task:
+            self._task.datasets = self.apply_to
         return super().to_dict()
 
     def _perform(self):
