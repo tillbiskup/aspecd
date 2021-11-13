@@ -2393,6 +2393,14 @@ class TestMultiPlotTask(unittest.TestCase):
         self.assertEqual(self.task._task.figure.number,
                          task2._task.figure.number)
 
+    def test_task_to_dict_contains_dataset_labels_not_datasets(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(self.task.apply_to, dict_['properties']['datasets'])
+
 
 class TestCompositePlotTask(unittest.TestCase):
     def setUp(self):

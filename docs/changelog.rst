@@ -11,6 +11,18 @@ Version 0.7.0
 Not yet released
 
 
+Version 0.6.2
+=============
+
+Not yet released
+
+
+Fixes
+-----
+
+* Recipe containing a MultiplotTask does not contain datasets as dicts
+
+
 Version 0.6.1
 =============
 

@@ -2987,6 +2987,32 @@ class MultiplotTask(PlotTask):
 
     """
 
+    def to_dict(self, remove_empty=False):
+        """
+        Create dictionary containing public attributes of an object.
+
+        Furthermore, replace certain objects with their respective labels
+        provided in the recipe. These objects currently include datasets,
+        results, figures (*i.e.* figure records), and plotters.
+
+        Parameters
+        ----------
+        remove_empty : :class:`bool`
+            Whether to remove empty fields
+
+            Default: False
+
+        Returns
+        -------
+        public_attributes : :class:`collections.OrderedDict`
+            Ordered dictionary containing the public attributes of the object
+
+            The order of attribute definition is preserved
+
+        """
+        self._task.datasets = self.apply_to
+        return super().to_dict()
+
     def _perform(self):
         self._task = self.get_object()
         if self.target:
