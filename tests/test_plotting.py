@@ -1259,6 +1259,17 @@ class TestCompositePlotter(unittest.TestCase):
         self.assertTrue(isinstance(self.plotter.axes[0].get_legend(),
                                    matplotlib.legend.Legend))
 
+    def test_plot_sets_style_property_to_plotters(self):
+        self.plotter.grid_dimensions = [1, 1]
+        self.plotter.subplot_locations = [[0, 0, 1, 1]]
+        single_plotter = plotting.SinglePlotter1D()
+        single_plotter.dataset = self.dataset
+        self.plotter.style = 'xkcd'
+        self.plotter.plotter.append(single_plotter)
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.plotter.plot()
+        self.assertEqual(self.plotter.style, self.plotter.plotter[0].style)
+
 
 class TestSingleCompositePlotter(unittest.TestCase):
     def setUp(self):

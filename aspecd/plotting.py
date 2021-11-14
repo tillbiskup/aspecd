@@ -1960,6 +1960,8 @@ class CompositePlotter(Plotter):
     def _create_plot(self):
         if not self.plotter or len(self.plotter) < len(self.axes):
             raise aspecd.exceptions.MissingPlotterError
+        for plotter in self.plotter:
+            plotter.style = self.style
         for idx, axes in enumerate(self.axes):
             self.plotter[idx].figure = self.figure
             self.plotter[idx].axes = axes
