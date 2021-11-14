@@ -1340,6 +1340,9 @@ class SinglePlotter2DStacked(SinglePlotter):
                 # noinspection PyTypeChecker
                 yticks.append(idx * self.parameters['offset'])
             yticklabels = self.dataset.data.axes[1].values.astype(float)
+            # TODO: @Till
+            #yticklabels = np.linspace(yticklabels[0], yticklabels[-1], num=19)
+            #yticks = np.linspace(yticks[0], yticks[-1], num=19)
         if self.parameters['offset']:
             self.properties.axes.yticks = yticks
             self.properties.axes.yticklabels = \
