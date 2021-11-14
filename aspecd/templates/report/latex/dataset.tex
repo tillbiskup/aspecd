@@ -25,11 +25,31 @@ This is %{ if dataset.data.calculated }%
 a calculated %{ else }%
 an experimental %{ endif}%
 dataset with
+%{ if dataset.history|count > 1 or dataset.history|count == 0 }%
 {@ dataset.history | count } processing steps,
+%{ else }%
+1 processing step,
+%{endif}%
+%{ if dataset.analyses|count > 1 or dataset.analyses|count == 0}%
 {@ dataset.analyses | count } analyses,
+%{ else }%
+1 analysis,
+%{endif}%
+%{ if dataset.annotations|count > 1 or dataset.annotations|count == 0}%
 {@ dataset.annotations | count } annotations,
+%{ else }%
+1 annotation,
+%{endif}%
+%{ if dataset.representations|count > 1 or dataset.representations|count == 0}%
 {@ dataset.representations | count } representations, and
+%{ else }%
+1 representation, and
+%{endif}%
+%{ if dataset.tasks|count > 1 or dataset.tasks|count == 0}%
 {@ dataset.tasks | count } total tasks.
+%{ else }%
+1 total task.
+%{endif}%
 For details, see below. Information on how this report has been generated and how to cite the underlying software are given at the end.
 
 %{ if dataset.history -}%
