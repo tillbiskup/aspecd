@@ -1553,7 +1553,8 @@ class Chef:
     def _prepare_history(self):
         timestamp = datetime.datetime.now().isoformat(timespec=self._timespec)
         self.history["info"] = {'start': timestamp, 'end': ''}
-        system_info = aspecd.system.SystemInfo(self.recipe.default_package)
+        system_info = aspecd.system.SystemInfo(
+            self.recipe.settings['default_package'])
         self.history["system_info"] = system_info.to_dict()
         recipe_dict = self.recipe.to_dict()
         for key in ["format", "settings", "directories", "datasets"]:
@@ -3262,6 +3263,9 @@ class ReportTask(Task):
         for idx, dataset_id in enumerate(self.apply_to):
             dataset = self.recipe.get_dataset(dataset_id)
             task = self.get_object()
+            system_info = aspecd.system.SystemInfo(
+                self.recipe.settings['default_package'])
+            task.context["sysinfo"] = system_info.to_dict()
             task.context['dataset'] = dataset.to_dict()
             if 'filename' not in self.properties \
                     or not self.properties['filename']:

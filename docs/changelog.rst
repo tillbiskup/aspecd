@@ -28,6 +28,8 @@ Fixes
 * Recipe containing a MultiplotTask does not contain datasets as dicts
 * PlotTask with automatically generated filenames and >1 datasets writes correct filenames to figure record in recipe
 * CompositePlotter sets plot style of plotters
+* Grammar in ``dataset.tex`` template
+* Colophon of report via ReportTask contains default package set in recipe
 
 
 Version 0.6.1
