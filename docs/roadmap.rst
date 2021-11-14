@@ -5,6 +5,14 @@ Roadmap
 A few ideas how to develop the project further, currently a list as a reminder for the main developers themselves, in no particular order, though with a tendency to list more important aspects first:
 
 
+For version 0.6.2
+=================
+
+* Bugfix: PlotTask with automatically generated filenames and >1 datasets needs to write correct filenames to figure record in recipe
+
+* SinglePlotter2DStacked: allow to only display every n-th ytick (for many stacked curves)
+
+
 For version 0.7
 ===============
 

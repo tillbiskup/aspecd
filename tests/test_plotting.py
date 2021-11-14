@@ -1002,6 +1002,11 @@ class TestMultiPlotter(unittest.TestCase):
                 aspecd.exceptions.NotApplicableToDatasetError, message):
             plotter.plot()
 
+    def test_to_dict_does_not_contain_certain_keys(self):
+        for key in ['datasets', 'drawings']:
+            with self.subTest(key=key):
+                self.assertNotIn(key, self.plotter.to_dict())
+
 
 class TestMultiPlotter1D(unittest.TestCase):
     def setUp(self):

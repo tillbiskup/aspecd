@@ -1444,6 +1444,7 @@ class MultiPlotter(Plotter):
         self.parameters['axes'] = [aspecd.dataset.Axis(),
                                    aspecd.dataset.Axis()]
         self.__kind__ = 'multiplot'
+        self._exclude_from_to_dict.extend(['datasets', 'drawings'])
 
     def plot(self):
         """Perform the actual plotting on the given list of datasets.
