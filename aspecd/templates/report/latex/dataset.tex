@@ -16,7 +16,7 @@
 
 \begin{tabbing}
 \hspace*{1.5cm}\=\kill
-ID:\>\texttt{{@ dataset.id | replace("_", "\_") }}
+Source:\>\texttt{{@ dataset.id | replace("_", "\_") }}
 \\
 Label:\>{@ dataset.label }
 \end{tabbing}
@@ -35,7 +35,11 @@ For details, see below. Information on how this report has been generated and ho
 %{ if dataset.history -}%
 \section{Processing steps}
 
+%{ if dataset.history|count > 1 }%
 In total, {@ dataset.history | count } processing steps have been carried out:
+%{ else }%
+In total, 1 processing step has been carried out:
+%{endif}%
 
 \begin{enumerate}
 %{ for processing_step in dataset.history -}%
@@ -55,7 +59,11 @@ For details of the individual processing steps, see below.
 %{- if dataset.analyses }%
 \section{Analysis steps}
 
+%{ if dataset.analyses|count > 1 }%
 In total, {@ dataset.analyses | count } analysis steps have been carried out:
+%{ else }%
+In total, 1 analysis step has been carried out:
+%{endif}%
 
 \begin{enumerate}
 %{ for analysis_step in dataset.analyses -}%
@@ -75,7 +83,11 @@ For details of the individual analysis steps, see below.
 %{- if dataset.annotations }%
 \section{Annotations}
 
+%{ if dataset.annotations|count > 1 }%
 In total, {@ dataset.annotations | count } annotations have been created:
+%{ else }%
+In total, 1 annotation has been created:
+%{endif}%
 
 \begin{enumerate}
 %{ for annotation in dataset.annotations -}%
@@ -94,7 +106,11 @@ In total, {@ dataset.annotations | count } annotations have been created:
 %{- if dataset.representations }%
 \section{Representations}
 
+%{ if dataset.representations|count > 1 }%
 In total, {@ dataset.representations | count } representations have been created:
+%{ else }%
+In total, 1 representation has been created:
+%{endif}%
 
 \begin{enumerate}
 %{ for representation in dataset.representations }%
