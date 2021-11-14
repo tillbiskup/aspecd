@@ -2079,7 +2079,8 @@ class SingleCompositePlotter(CompositePlotter):
         else:
             self.dataset = dataset
         for plotter in self.plotter:
-            plotter.dataset = self.dataset
+            if hasattr(plotter, 'dataset'):
+                plotter.dataset = self.dataset
 
     def _call_from_dataset(self, from_dataset):
         if not from_dataset:

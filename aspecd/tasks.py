@@ -1205,10 +1205,15 @@ class Recipe:
         for dataset in self.datasets:
             dataset_dict = {}
             if self.directories['datasets_source']:
-                if not self.directories['datasets_source'].endswith(os.sep):
-                    self.directories['datasets_source'] += os.sep
-                self.datasets[dataset].id = self.datasets[dataset].id.replace(
-                    self.directories['datasets_source'], '', 1)
+                if self.datasets[dataset].id.startswith(os.sep):
+                    pattern = os.path.realpath(
+                        self.directories['datasets_source'])
+                else:
+                    pattern = self.directories['datasets_source']
+                if not pattern.endswith(os.sep):
+                    pattern += os.sep
+                self.datasets[dataset].id = \
+                    self.datasets[dataset].id.replace(pattern, '', 1)
             if not self.datasets[dataset].id == dataset:
                 dataset_dict['source'] = self.datasets[dataset].id
                 dataset_dict['id'] = dataset
