@@ -8,12 +8,11 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.6.2
 =================
 
+* Plotter: tight layout (to prevent labels from getting clipped)
 
 
 For version 0.7
 ===============
-
-* Plotter: tight layout (to prevent labels from getting clipped)
 
 * Report task:
 
