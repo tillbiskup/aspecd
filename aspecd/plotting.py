@@ -2108,7 +2108,9 @@ class SingleCompositePlotter(CompositePlotter):
             self.dataset.plot(self)
         else:
             self._check_applicability()
+            representations = copy.copy(self.dataset.representations)
             super().plot()
+            self.dataset.representations = representations
 
     def _check_applicability(self):
         if not self.applicable(self.dataset):
