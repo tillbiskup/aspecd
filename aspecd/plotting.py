@@ -1216,6 +1216,18 @@ class SinglePlotter2DStacked(SinglePlotter):
 
             Default: None
 
+        ytickcount : :class:`int`
+            number of tick labels on the y axis
+
+            Useful in case of too many ticks displayed on the y axis.
+
+            If "None", as many ticks as plotted lines will be displayed.
+
+            If the number is larger than the number of plotted lines,
+            only one tick per line will be shown, not more.
+
+            Default: None
+
         tight: :class:`str`
             Whether to set the axes limits tight to the data
 
@@ -1282,6 +1294,9 @@ class SinglePlotter2DStacked(SinglePlotter):
     .. versionchanged:: 0.6
         ylabel is set to third axis if offset = 0; new parameter "tight"
 
+    .. versionchanged:: 0.6.2
+        New parameter ``ytickcount``
+
     """
 
     # noinspection PyTypeChecker
@@ -1295,6 +1310,7 @@ class SinglePlotter2DStacked(SinglePlotter):
             'stacking_dimension': 1,
             'offset': None,
             'yticklabelformat': None,
+            'ytickcount': None,
             'tight': '',
         }
         self.drawing = []
@@ -1340,9 +1356,12 @@ class SinglePlotter2DStacked(SinglePlotter):
                 # noinspection PyTypeChecker
                 yticks.append(idx * self.parameters['offset'])
             yticklabels = self.dataset.data.axes[1].values.astype(float)
-            # TODO: @Till
-            #yticklabels = np.linspace(yticklabels[0], yticklabels[-1], num=19)
-            #yticks = np.linspace(yticks[0], yticks[-1], num=19)
+        if self.parameters['ytickcount']:
+            # noinspection PyTypeChecker
+            ytickcount = min(len(self.drawing), self.parameters['ytickcount'])
+            yticklabels = np.linspace(yticklabels[0], yticklabels[-1],
+                                      num=ytickcount)
+            yticks = np.linspace(yticks[0], yticks[-1], num=ytickcount)
         if self.parameters['offset']:
             self.properties.axes.yticks = yticks
             self.properties.axes.yticklabels = \

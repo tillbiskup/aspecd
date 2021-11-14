@@ -8,9 +8,6 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.6.2
 =================
 
-* Bugfix: PlotTask with automatically generated filenames and >1 datasets needs to write correct filenames to figure record in recipe
-
-* SinglePlotter2DStacked: allow to only display every n-th ytick (for many stacked curves)
 
 
 For version 0.7

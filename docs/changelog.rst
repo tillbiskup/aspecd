@@ -16,6 +16,11 @@ Version 0.6.2
 
 Not yet released
 
+Changes
+-------
+
+* New parameter ``ytickcount`` for :class:`aspecd.plotting.SinglePlotter2DStacked` to control maximum number of yticks
+
 
 Fixes
 -----

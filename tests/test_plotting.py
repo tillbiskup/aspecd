@@ -872,6 +872,29 @@ class TestSinglePlotter2DStacked(unittest.TestCase):
         self.assertEqual(dataset_.data.data.min(),
                          plotter.axes.get_ylim()[0])
 
+    def test_set_maximum_of_yticks(self):
+        self.plotter.parameters['stacking_dimension'] = 0
+        test_dataset = aspecd.dataset.CalculatedDataset()
+        test_dataset.data.data = np.random.random([50, 10]) - 0.5
+        test_dataset.data.axes[0].quantity = 'zero'
+        test_dataset.data.axes[0].unit = 'foo'
+        test_dataset.data.axes[0].values = np.linspace(5, 10, 50)
+        self.plotter.parameters['ytickcount'] = 19
+        plotter = test_dataset.plot(self.plotter)
+        self.assertEqual(self.plotter.parameters['ytickcount'],
+                         len(plotter.axes.get_yticks()))
+
+    def test_set_maximum_of_yticks_does_not_exceed_lines(self):
+        self.plotter.parameters['stacking_dimension'] = 0
+        test_dataset = aspecd.dataset.CalculatedDataset()
+        test_dataset.data.data = np.random.random([5, 10]) - 0.5
+        test_dataset.data.axes[0].quantity = 'zero'
+        test_dataset.data.axes[0].unit = 'foo'
+        test_dataset.data.axes[0].values = np.linspace(5, 10, 5)
+        self.plotter.parameters['ytickcount'] = 19
+        plotter = test_dataset.plot(self.plotter)
+        self.assertEqual(5, len(plotter.axes.get_yticks()))
+
 
 class TestMultiPlotter(unittest.TestCase):
     def setUp(self):
