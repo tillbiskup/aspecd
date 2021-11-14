@@ -2749,7 +2749,7 @@ class PlotTask(Task):
     def _add_figure_to_recipe(self):
         figure_record = FigureRecord()
         # noinspection PyTypeChecker
-        figure_record.from_plotter(self.get_object())
+        figure_record.from_plotter(self._task)
         if self.label:
             figure_record.label = self.label
         self.recipe.figures[self.label] = figure_record
@@ -2782,6 +2782,7 @@ class PlotTask(Task):
             logger.info('Save figure from "%s" to file "%s"', self.type,
                         filename)
             plot.save(saver)
+        return filename
 
 
 class SingleplotTask(PlotTask):
@@ -2879,6 +2880,7 @@ class SingleplotTask(PlotTask):
 
     def _perform(self):
         filenames = []
+        save_filenames = []
         if "filename" in self.properties \
                 and isinstance(self.properties["filename"], list) \
                 and len(self.apply_to) == len(self.properties["filename"]):
@@ -2908,10 +2910,13 @@ class SingleplotTask(PlotTask):
             logger.info('Perform "%s" on dataset "%s"', self.type, dataset_id)
             dataset.plot(plotter=self._task)
             # noinspection PyTypeChecker
-            self.save_plot(plot=self._task)
+            save_filename = self.save_plot(plot=self._task)
+            save_filenames.append(save_filename)
             if not self.result:
                 # noinspection PyUnresolvedReferences
                 plt.close(self._task.figure)
+        if len(self.apply_to) > 1 and save_filenames:
+            self._task.filename = save_filenames
 
 
 class MultiplotTask(PlotTask):
@@ -3277,7 +3282,10 @@ class ReportTask(Task):
     def _get_filenames_of_figures(self):
         filenames = []
         for figure in self.recipe.figures:
-            filenames.append(self.recipe.figures[figure].filename)
+            if isinstance(self.recipe.figures[figure].filename, list):
+                filenames.extend(self.recipe.figures[figure].filename)
+            else:
+                filenames.append(self.recipe.figures[figure].filename)
         return filenames
 
 
