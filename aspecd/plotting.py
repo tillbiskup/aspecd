@@ -242,6 +242,16 @@ class Plotter(aspecd.utils.ToDictMixin):
 
             Default: True
 
+        tight_layout : :class:`bool`
+            Whether to adjust the plot to fit into the figure area
+
+            For details see :meth:`matplotlib.figure.Figure.tight_layout`.
+
+            Use with care, as this will automatically adjust the padding
+            around the axes and might lead to unexpected results.
+
+            Default: False
+
     properties : :class:`aspecd.plotting.PlotProperties`
         Properties of the plot, defining its appearance
 
@@ -288,6 +298,9 @@ class Plotter(aspecd.utils.ToDictMixin):
     .. versionchanged:: 0.6
         New attribute :attr:`label`
 
+    .. versionchanged:: 0.6.2
+        New parameter ``tight_layout``
+
     """
 
     def __init__(self):
@@ -296,7 +309,8 @@ class Plotter(aspecd.utils.ToDictMixin):
         self.name = aspecd.utils.full_class_name(self)
         self.parameters = {
             'show_legend': False,
-            'show_zero_lines': True
+            'show_zero_lines': True,
+            'tight_layout': False,
         }
         self.properties = PlotProperties()
         self.description = 'Abstract plotting step'
@@ -335,6 +349,7 @@ class Plotter(aspecd.utils.ToDictMixin):
         self.properties.apply(plotter=self)
         self._set_legend()
         self._add_zero_lines()
+        self._tight_layout()
         self._reset_style()
 
     # noinspection PyUnusedLocal
@@ -544,6 +559,10 @@ class Plotter(aspecd.utils.ToDictMixin):
                     # noinspection PyArgumentList
                     self.axes.axvline(**self.properties.zero_lines.to_dict(),
                                       zorder=1)
+
+    def _tight_layout(self):
+        if self.parameters['tight_layout']:
+            self.figure.set_tight_layout(True)
 
 
 class SinglePlotter(Plotter):
@@ -1304,7 +1323,7 @@ class SinglePlotter2DStacked(SinglePlotter):
         super().__init__()
         self.description = '2D stackplot for a single dataset'
         self.dataset = None
-        self.parameters = {
+        self.parameters.update({
             'show_legend': False,
             'show_zero_lines': False,
             'stacking_dimension': 1,
@@ -1312,7 +1331,7 @@ class SinglePlotter2DStacked(SinglePlotter):
             'yticklabelformat': None,
             'ytickcount': None,
             'tight': '',
-        }
+        })
         self.drawing = []
         self.properties = SinglePlot1DProperties()
 

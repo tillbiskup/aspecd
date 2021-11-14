@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import unittest
+from unittest.mock import MagicMock, patch
 
 import aspecd.exceptions
 from aspecd import plotting, utils, dataset
@@ -202,6 +203,13 @@ class TestPlotter(unittest.TestCase):
         self.plotter.plot()
         self.assertEqual(self.plotter.properties.zero_lines.color,
                          self.plotter.ax.get_lines()[0]._color)
+
+    def test_plot_sets_tight_layout(self):
+        self.plotter.parameters['tight_layout'] = True
+        mock = MagicMock()
+        with patch('matplotlib.figure.Figure.set_tight_layout', mock):
+            self.plotter.plot()
+        mock.assert_called()
 
 
 class TestSinglePlotter(unittest.TestCase):

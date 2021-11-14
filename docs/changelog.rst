@@ -20,7 +20,7 @@ Changes
 -------
 
 * New parameter ``ytickcount`` for :class:`aspecd.plotting.SinglePlotter2DStacked` to control maximum number of yticks
-
+* New parameter ``tight_layout`` for :class:`aspecd.plotting.Plotter` to prevent labels from getting clipped
 
 Fixes
 -----
