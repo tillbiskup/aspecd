@@ -3,7 +3,7 @@
 \begin{description}
 %{ for key, value in dataset.metadata.measurement.items() }%
 %{ if value }%
-\item[{@ key }] {@ value }
+\item[{@ key }] {@ value | replace("_", "\_") }
 %{ endif }%
 %{ endfor }%
 \end{description}
@@ -13,7 +13,7 @@
 \begin{description}
 %{ for key, value in dataset.metadata.sample.items() }%
 %{ if value }%
-\item[{@ key }] {@ value }
+\item[{@ key }] {@ value | replace("_", "\_") }
 %{ endif }%
 %{ endfor }%
 \end{description}
@@ -23,7 +23,7 @@
 \begin{description}
 %{ for key, value in dataset.metadata.temperatureControl.items() }%
 %{ if value }%
-\item[{@ key }] %{ if 'value' in value }%{@ value.value } {@ value.unit }%{ else }%{@ value }%{ endif }%
+\item[{@ key }] %{ if 'value' in value }%{@ value.value } {@ value.unit }%{ else }%{@ value | replace("_", "\_") }%{ endif }%
 
 %{ endif }%
 %{ endfor }%

@@ -31,6 +31,7 @@ Fixes
 * Grammar in ``dataset.tex`` template
 * Colophon of report via ReportTask contains default package set in recipe
 * CompositePlotter does not add plotters of subfigures to list of dataset representations
+* Escaping of "_" in LaTeX templates
 
 
 Version 0.6.1

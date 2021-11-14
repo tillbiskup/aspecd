@@ -43,7 +43,7 @@ In total, 1 processing step has been carried out:
 
 \begin{enumerate}
 %{ for processing_step in dataset.history -}%
-\item {@ processing_step.processing.description }
+\item {@ processing_step.processing.description | replace("_", "\_") }
 %{ endfor }%
 \end{enumerate}
 
@@ -67,7 +67,7 @@ In total, 1 analysis step has been carried out:
 
 \begin{enumerate}
 %{ for analysis_step in dataset.analyses -}%
-\item {@ analysis_step.analysis.description }
+\item {@ analysis_step.analysis.description | replace("_", "\_") }
 %{ endfor }%
 \end{enumerate}
 
@@ -115,7 +115,7 @@ In total, 1 representation has been created:
 \begin{enumerate}
 %{ for representation in dataset.representations }%
 %{ if representation.plot }%
-\item {@ representation.plot.description } (Fig.~\ref{fig:{@ representation.plot.label }})
+\item {@ representation.plot.description | replace("_", "\_") } (Fig.~\ref{fig:{@ representation.plot.label }})
 %{ endif }%
 %{ endfor }%
 \end{enumerate}

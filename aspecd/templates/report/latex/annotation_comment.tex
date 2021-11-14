@@ -1,7 +1,7 @@
 \subsection{{@ annotation.annotation.type | capitalize }}
 
 %{ if annotation.annotation.content.comment }%
-{@ annotation.annotation.content.comment }
+{@ annotation.annotation.content.comment | replace("_", "\_") }
 %{ else }%
 This comment has no content.
 %{ endif }%
