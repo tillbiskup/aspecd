@@ -30,7 +30,7 @@ Fixes
 * CompositePlotter sets plot style of plotters
 * Grammar in ``dataset.tex`` template
 * Colophon of report via ReportTask contains default package set in recipe
-* CompositePlotter does not add plotters of subfigures to list of dataset representations
+* CompositePlotter does not add plotters of subfigures to list of dataset representations and list of dataset tasks
 * Escaping of "_" in LaTeX templates
 
 
