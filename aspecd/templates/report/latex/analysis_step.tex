@@ -7,7 +7,7 @@
 \\
 \midrule
 %{ for key, value in analysis_step.analysis.parameters.items() }%
-{@ key | replace("_", "\_") } & {@ value | replace("_", "\_") }
+{@ key | replace("_", "\\_") } & {@ value | replace("_", "\\_") }
 \\
 %{ endfor }%
 \bottomrule
@@ -15,5 +15,5 @@
 \vspace*{1ex}
 
 %{ if analysis_step.analysis.comment }%
-Comment: {@ analysis_step.analysis.comment | replace("_", "\_") }
+Comment: {@ analysis_step.analysis.comment | replace("_", "\\_") }
 %{ endif }%

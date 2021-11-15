@@ -1323,6 +1323,24 @@ class TestSingleCompositePlotter(unittest.TestCase):
         self.plotter.plot(dataset=test_dataset)
         self.assertGreater(len(test_dataset.representations), 0)
 
+    def test_plot_with_dataset_sets_only_one_representation(self):
+        self.plotter.grid_dimensions = [1, 1]
+        self.plotter.subplot_locations = [[0, 0, 1, 1]]
+        single_plotter = plotting.SinglePlotter1D()
+        self.plotter.plotter.append(single_plotter)
+        test_dataset = dataset.Dataset()
+        self.plotter.plot(dataset=test_dataset)
+        self.assertEqual(1, len(test_dataset.representations))
+
+    def test_plot_with_dataset_sets_only_one_task(self):
+        self.plotter.grid_dimensions = [1, 1]
+        self.plotter.subplot_locations = [[0, 0, 1, 1]]
+        single_plotter = plotting.SinglePlotter1D()
+        self.plotter.plotter.append(single_plotter)
+        test_dataset = dataset.Dataset()
+        self.plotter.plot(dataset=test_dataset)
+        self.assertEqual(1, len(test_dataset.tasks))
+
     def test_plot_checks_applicability(self):
         class MyPlotter(aspecd.plotting.SingleCompositePlotter):
 

@@ -10,7 +10,7 @@ This processing step is %{- if not processing_step.processing.undoable }% not%{-
 \\
 \midrule
 %{ for key, value in processing_step.processing.parameters.items() }%
-{@ key | replace("_", "\_") } & {@ value | replace("_", "\_") }
+{@ key | replace("_", "\\_") } & {@ value | replace("_", "\\_") }
 \\
 %{ endfor }%
 \bottomrule
@@ -21,5 +21,5 @@ For this processing step, no parameters were supplied nor necessary.
 %{ endif }%
 
 %{ if processing_step.processing.comment }%
-Comment: {@ processing_step.processing.comment | replace("_", "\_") }
+Comment: {@ processing_step.processing.comment | replace("_", "\\_") }
 %{ endif }%
