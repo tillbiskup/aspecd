@@ -1820,6 +1820,18 @@ class TestFiltering(unittest.TestCase):
                 self.dataset.process(self.processing)
                 self.assertTrue(all(filtered_data == self.dataset.data.data))
 
+    def test_savitzky_golay_filter_with_1d_data_with_even_window_length(self):
+        self.processing.parameters["type"] = "savitzky-golay"
+        self.processing.parameters["window_length"] = 10
+        self.processing.parameters["order"] = 3
+        filtered_data = \
+            scipy.signal.savgol_filter(self.dataset.data.data,
+                                       self.processing.parameters[
+                                           "window_length"] + 1,
+                                       self.processing.parameters["order"])
+        self.dataset.process(self.processing)
+        self.assertTrue(all(filtered_data == self.dataset.data.data))
+
     def test_filter_with_alternative_names_sets_generic_filter_type(self):
         alternative_names = ['box', 'boxcar', 'moving-average', 'car']
         self.processing.parameters["window_length"] = 3

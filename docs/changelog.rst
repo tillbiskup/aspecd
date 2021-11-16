@@ -16,6 +16,8 @@ Fixes
 
 * :class:`aspecd.tasks.Task` warns if key in dict (recipe) is no property of the task.
 * :class:`aspecd.processing.DatasetAlgebra` returns shape in error message if shapes differ.
+* Processing and analysis tasks issue warning if result
+* Ensure window length for Savitzky-Golay filter in :class:`aspecd.processing.Filtering` to always be odd
 
 
 Version 0.6.2

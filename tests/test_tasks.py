@@ -1240,7 +1240,7 @@ class TestProcessingTask(unittest.TestCase):
     def setUp(self):
         self.task = tasks.ProcessingTask()
         self.recipe = tasks.Recipe()
-        self.dataset = ['foo']
+        self.dataset = ['baz']
         self.processing_task = {'kind': 'processing',
                                 'type': 'SingleProcessingStep',
                                 'apply_to': self.dataset}
@@ -1301,6 +1301,14 @@ class TestProcessingTask(unittest.TestCase):
         self.task.perform()
         self.assertTrue(len(self.recipe.results))
 
+    def test_perform_task_with_result_name_identical_to_dataset_warns(self):
+        self.prepare_recipe()
+        self.processing_task['result'] = self.dataset[0]
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        with self.assertWarnsRegex(UserWarning, 'identical to dataset'):
+            self.task.perform()
+
     def test_perform_task_with_result_issues_log_message(self):
         self.prepare_recipe()
         result = 'foo'
@@ -1319,7 +1327,7 @@ class TestProcessingTask(unittest.TestCase):
         recipe_dict = {'datasets': result,
                        'tasks': [self.processing_task]}
         self.recipe.from_dict(recipe_dict)
-        self.processing_task['result'] = result
+        self.processing_task['result'] = ['fooz', 'barz']
         self.processing_task['apply_to'] = result
         self.task.from_dict(self.processing_task)
         self.task.recipe = self.recipe
@@ -1339,7 +1347,8 @@ class TestProcessingTask(unittest.TestCase):
     def test_to_dict_adds_params_from_processing_of_task_object(self):
         self.processing_task["type"] = 'BaselineCorrection'
         self.prepare_recipe()
-        self.recipe.datasets['foo'].data.data = np.random.random(10)+5
+        self.recipe.datasets[self.dataset[0]].data.data = \
+            np.random.random(10)+5
         self.task.from_dict(self.processing_task)
         self.task.recipe = self.recipe
         self.task.perform()
@@ -1675,7 +1684,7 @@ class TestSingleAnalysisTask(unittest.TestCase):
     def setUp(self):
         self.task = tasks.SingleanalysisTask()
         self.recipe = tasks.Recipe()
-        self.dataset = ['foo']
+        self.dataset = ['baz']
 
     def prepare_recipe(self):
         self.analysis_task = {'kind': 'singleanalysis',
@@ -1732,6 +1741,18 @@ class TestSingleAnalysisTask(unittest.TestCase):
                        return_value=mock_obj):
                 self.task.perform()
         self.assertEqual(result, self.recipe.results[result].id)
+
+    def test_perform_task_with_result_name_identical_to_dataset_warns(self):
+        self.prepare_recipe()
+        self.analysis_task['result'] = self.dataset[0]
+        self.task.from_dict(self.analysis_task)
+        self.task.recipe = self.recipe
+        with patch('aspecd.analysis.SingleAnalysisStep',
+                   result=aspecd.dataset.Dataset()) as mock_obj:
+            with patch('aspecd.tasks.Task._create_object',
+                       return_value=mock_obj):
+                with self.assertWarnsRegex(UserWarning, 'identical to dataset'):
+                    self.task.perform()
 
     def test_perform_task_with_result_and_multiple_datasets_adds_results(self):
         self.prepare_recipe()
@@ -1860,6 +1881,14 @@ class TestAggregatedAnalysisTask(unittest.TestCase):
         self.task.perform()
         self.assertIsInstance(self.recipe.results[self.result],
                               aspecd.dataset.CalculatedDataset)
+
+    def test_perform_task_with_result_name_identical_to_dataset_warns(self):
+        self.prepare_recipe()
+        self.analysis_task['result'] = self.dataset[0]
+        self.task.from_dict(self.analysis_task)
+        self.task.recipe = self.recipe
+        with self.assertWarnsRegex(UserWarning, 'identical to dataset'):
+            self.task.perform()
 
     def test_perform_task_sets_values_in_result(self):
         self.prepare_recipe()

@@ -2696,6 +2696,9 @@ class Filtering(SingleProcessingStep):
             self.dataset.data.data = scipy.ndimage.gaussian_filter(
                 self.dataset.data.data, self.parameters["window_length"])
         elif self.parameters["type"] == "savitzky-golay":
+            # Ensure window length to be odd
+            if not self.parameters["window_length"] % 2:
+                self.parameters["window_length"] += 1
             self.dataset.data.data = scipy.signal.savgol_filter(
                 self.dataset.data.data,
                 self.parameters["window_length"],

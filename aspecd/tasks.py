@@ -2257,6 +2257,11 @@ class ProcessingTask(Task):
                 else:
                     dataset_copy.id = self.result
                     self.recipe.results[self.result] = dataset_copy
+                if dataset_copy.id in self.recipe.datasets.keys():
+                    warnings.warn(
+                        f'Result name "{dataset_copy.id}" identical to '
+                        f'dataset label, unexpected things may '
+                        f'happen.')
             else:
                 logger.info('Perform "%s" on dataset "%s"', self.type,
                             dataset_id)
@@ -2539,6 +2544,12 @@ class SingleanalysisTask(AnalysisTask):
                     if isinstance(self._task.result, aspecd.dataset.Dataset):
                         self._task.result.id = self.result
                     self.recipe.results[self.result] = self._task.result
+                if isinstance(self._task.result, aspecd.dataset.Dataset) and \
+                        self._task.result.id in self.recipe.datasets.keys():
+                    warnings.warn(
+                        f'Result name "{self.result}" identical to '
+                        f'dataset label, unexpected things may '
+                        f'happen.')
 
 
 class MultianalysisTask(AnalysisTask):
@@ -2609,6 +2620,11 @@ class MultianalysisTask(AnalysisTask):
     def _assign_result(self, label='', result=None):
         if isinstance(result, aspecd.dataset.Dataset):
             result.id = label
+            if label in  self.recipe.datasets.keys():
+                warnings.warn(
+                    f'Result name "{self.result}" identical to '
+                    f'dataset label, unexpected things may '
+                    f'happen.')
         self.recipe.results[label] = result
 
 
@@ -2654,6 +2670,11 @@ class AggregatedanalysisTask(AnalysisTask):
         self._task.datasets = self.recipe.get_datasets(self.apply_to)
         self._task.analyse()
         if self.result:
+            if self.result in self.recipe.datasets.keys():
+                warnings.warn(
+                    f'Result name "{self.result}" identical to '
+                    f'dataset label, unexpected things may '
+                    f'happen.')
             self.recipe.results[self.result] = self._task.result
 
 
