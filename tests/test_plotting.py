@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import unittest
+from unittest.mock import MagicMock, patch
 
 import aspecd.exceptions
 from aspecd import plotting, utils, dataset
@@ -202,6 +203,13 @@ class TestPlotter(unittest.TestCase):
         self.plotter.plot()
         self.assertEqual(self.plotter.properties.zero_lines.color,
                          self.plotter.ax.get_lines()[0]._color)
+
+    def test_plot_sets_tight_layout(self):
+        self.plotter.parameters['tight_layout'] = True
+        mock = MagicMock()
+        with patch('matplotlib.figure.Figure.set_tight_layout', mock):
+            self.plotter.plot()
+        mock.assert_called()
 
 
 class TestSinglePlotter(unittest.TestCase):
@@ -872,6 +880,29 @@ class TestSinglePlotter2DStacked(unittest.TestCase):
         self.assertEqual(dataset_.data.data.min(),
                          plotter.axes.get_ylim()[0])
 
+    def test_set_maximum_of_yticks(self):
+        self.plotter.parameters['stacking_dimension'] = 0
+        test_dataset = aspecd.dataset.CalculatedDataset()
+        test_dataset.data.data = np.random.random([50, 10]) - 0.5
+        test_dataset.data.axes[0].quantity = 'zero'
+        test_dataset.data.axes[0].unit = 'foo'
+        test_dataset.data.axes[0].values = np.linspace(5, 10, 50)
+        self.plotter.parameters['ytickcount'] = 19
+        plotter = test_dataset.plot(self.plotter)
+        self.assertEqual(self.plotter.parameters['ytickcount'],
+                         len(plotter.axes.get_yticks()))
+
+    def test_set_maximum_of_yticks_does_not_exceed_lines(self):
+        self.plotter.parameters['stacking_dimension'] = 0
+        test_dataset = aspecd.dataset.CalculatedDataset()
+        test_dataset.data.data = np.random.random([5, 10]) - 0.5
+        test_dataset.data.axes[0].quantity = 'zero'
+        test_dataset.data.axes[0].unit = 'foo'
+        test_dataset.data.axes[0].values = np.linspace(5, 10, 5)
+        self.plotter.parameters['ytickcount'] = 19
+        plotter = test_dataset.plot(self.plotter)
+        self.assertEqual(5, len(plotter.axes.get_yticks()))
+
 
 class TestMultiPlotter(unittest.TestCase):
     def setUp(self):
@@ -1001,6 +1032,11 @@ class TestMultiPlotter(unittest.TestCase):
         with self.assertRaisesRegex(
                 aspecd.exceptions.NotApplicableToDatasetError, message):
             plotter.plot()
+
+    def test_to_dict_does_not_contain_certain_keys(self):
+        for key in ['datasets', 'drawings']:
+            with self.subTest(key=key):
+                self.assertNotIn(key, self.plotter.to_dict())
 
 
 class TestMultiPlotter1D(unittest.TestCase):
@@ -1231,6 +1267,17 @@ class TestCompositePlotter(unittest.TestCase):
         self.assertTrue(isinstance(self.plotter.axes[0].get_legend(),
                                    matplotlib.legend.Legend))
 
+    def test_plot_sets_style_property_to_plotters(self):
+        self.plotter.grid_dimensions = [1, 1]
+        self.plotter.subplot_locations = [[0, 0, 1, 1]]
+        single_plotter = plotting.SinglePlotter1D()
+        single_plotter.dataset = self.dataset
+        self.plotter.style = 'xkcd'
+        self.plotter.plotter.append(single_plotter)
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.plotter.plot()
+        self.assertEqual(self.plotter.style, self.plotter.plotter[0].style)
+
 
 class TestSingleCompositePlotter(unittest.TestCase):
     def setUp(self):
@@ -1275,6 +1322,24 @@ class TestSingleCompositePlotter(unittest.TestCase):
         test_dataset = dataset.Dataset()
         self.plotter.plot(dataset=test_dataset)
         self.assertGreater(len(test_dataset.representations), 0)
+
+    def test_plot_with_dataset_sets_only_one_representation(self):
+        self.plotter.grid_dimensions = [1, 1]
+        self.plotter.subplot_locations = [[0, 0, 1, 1]]
+        single_plotter = plotting.SinglePlotter1D()
+        self.plotter.plotter.append(single_plotter)
+        test_dataset = dataset.Dataset()
+        self.plotter.plot(dataset=test_dataset)
+        self.assertEqual(1, len(test_dataset.representations))
+
+    def test_plot_with_dataset_sets_only_one_task(self):
+        self.plotter.grid_dimensions = [1, 1]
+        self.plotter.subplot_locations = [[0, 0, 1, 1]]
+        single_plotter = plotting.SinglePlotter1D()
+        self.plotter.plotter.append(single_plotter)
+        test_dataset = dataset.Dataset()
+        self.plotter.plot(dataset=test_dataset)
+        self.assertEqual(1, len(test_dataset.tasks))
 
     def test_plot_checks_applicability(self):
         class MyPlotter(aspecd.plotting.SingleCompositePlotter):

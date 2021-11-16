@@ -1205,8 +1205,15 @@ class Recipe:
         for dataset in self.datasets:
             dataset_dict = {}
             if self.directories['datasets_source']:
+                if self.datasets[dataset].id.startswith(os.sep):
+                    pattern = os.path.realpath(
+                        self.directories['datasets_source'])
+                else:
+                    pattern = self.directories['datasets_source']
+                if not pattern.endswith(os.sep):
+                    pattern += os.sep
                 self.datasets[dataset].id = \
-                    os.path.split(self.datasets[dataset].id)[-1]
+                    self.datasets[dataset].id.replace(pattern, '', 1)
             if not self.datasets[dataset].id == dataset:
                 dataset_dict['source'] = self.datasets[dataset].id
                 dataset_dict['id'] = dataset
@@ -1546,7 +1553,8 @@ class Chef:
     def _prepare_history(self):
         timestamp = datetime.datetime.now().isoformat(timespec=self._timespec)
         self.history["info"] = {'start': timestamp, 'end': ''}
-        system_info = aspecd.system.SystemInfo(self.recipe.default_package)
+        system_info = aspecd.system.SystemInfo(
+            self.recipe.settings['default_package'])
         self.history["system_info"] = system_info.to_dict()
         recipe_dict = self.recipe.to_dict()
         for key in ["format", "settings", "directories", "datasets"]:
@@ -2749,7 +2757,7 @@ class PlotTask(Task):
     def _add_figure_to_recipe(self):
         figure_record = FigureRecord()
         # noinspection PyTypeChecker
-        figure_record.from_plotter(self.get_object())
+        figure_record.from_plotter(self._task)
         if self.label:
             figure_record.label = self.label
         self.recipe.figures[self.label] = figure_record
@@ -2782,6 +2790,7 @@ class PlotTask(Task):
             logger.info('Save figure from "%s" to file "%s"', self.type,
                         filename)
             plot.save(saver)
+        return filename
 
 
 class SingleplotTask(PlotTask):
@@ -2879,6 +2888,7 @@ class SingleplotTask(PlotTask):
 
     def _perform(self):
         filenames = []
+        save_filenames = []
         if "filename" in self.properties \
                 and isinstance(self.properties["filename"], list) \
                 and len(self.apply_to) == len(self.properties["filename"]):
@@ -2908,10 +2918,13 @@ class SingleplotTask(PlotTask):
             logger.info('Perform "%s" on dataset "%s"', self.type, dataset_id)
             dataset.plot(plotter=self._task)
             # noinspection PyTypeChecker
-            self.save_plot(plot=self._task)
+            save_filename = self.save_plot(plot=self._task)
+            save_filenames.append(save_filename)
             if not self.result:
                 # noinspection PyUnresolvedReferences
                 plt.close(self._task.figure)
+        if len(self.apply_to) > 1 and save_filenames:
+            self._task.filename = save_filenames
 
 
 class MultiplotTask(PlotTask):
@@ -3250,6 +3263,9 @@ class ReportTask(Task):
         for idx, dataset_id in enumerate(self.apply_to):
             dataset = self.recipe.get_dataset(dataset_id)
             task = self.get_object()
+            system_info = aspecd.system.SystemInfo(
+                self.recipe.settings['default_package'])
+            task.context["sysinfo"] = system_info.to_dict()
             task.context['dataset'] = dataset.to_dict()
             if 'filename' not in self.properties \
                     or not self.properties['filename']:
@@ -3277,7 +3293,10 @@ class ReportTask(Task):
     def _get_filenames_of_figures(self):
         filenames = []
         for figure in self.recipe.figures:
-            filenames.append(self.recipe.figures[figure].filename)
+            if isinstance(self.recipe.figures[figure].filename, list):
+                filenames.extend(self.recipe.figures[figure].filename)
+            else:
+                filenames.append(self.recipe.figures[figure].filename)
         return filenames
 
 

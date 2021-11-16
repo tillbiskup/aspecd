@@ -5,7 +5,7 @@ Type: {@ dataset.metadata.calculation.type }
 \begin{description}
 %{ for key, value in dataset.metadata.calculation.parameters.items() }%
 %{ if value }%
-\item[{@ key }] {@ value }
+\item[{@ key | replace("_", "\\_") }] {@ value | replace("_", "\\_") }
 %{ endif }%
 %{ endfor }%
 \end{description}

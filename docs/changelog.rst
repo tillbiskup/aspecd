@@ -5,6 +5,31 @@ Changelog
 This page contains a summary of changes between the official ASpecD releases. Only the biggest changes are listed here. A complete and detailed log of all changes is available through the `GitHub Repository Browser <https://github.com/tillbiskup/aspecd/commits/master>`_.
 
 
+Version 0.6.2
+=============
+
+Released 2021-11-16
+
+
+Changes
+-------
+
+* New parameter ``ytickcount`` for :class:`aspecd.plotting.SinglePlotter2DStacked` to control maximum number of yticks
+* New parameter ``tight_layout`` for :class:`aspecd.plotting.Plotter` to prevent labels from getting clipped
+
+
+Fixes
+-----
+
+* Recipe containing a MultiplotTask does not contain datasets as dicts
+* PlotTask with automatically generated filenames and >1 datasets writes correct filenames to figure record in recipe
+* CompositePlotter sets plot style of plotters
+* Grammar in ``dataset.tex`` template
+* Colophon of report via ReportTask contains default package set in recipe
+* CompositePlotter does not add plotters of subfigures to list of dataset representations and list of dataset tasks
+* Escaping of "_" in LaTeX templates
+
+
 Version 0.6.1
 =============
 

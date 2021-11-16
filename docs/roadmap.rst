@@ -8,8 +8,6 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.7
 ===============
 
-* Plotter: tight layout (to prevent labels from getting clipped)
-
 * Report task:
 
   * Operating on recipes, *i.e.* report on all tasks in a recipe
@@ -22,6 +20,11 @@ For version 0.7
   * LaTeXFigureReporter for generating LaTeX code to include figures in documents
   * Looking for templates in derived packages
   * Looking for templates in user directory
+
+* Processing of 2D (eventually ND with N>1) datasets:
+
+  * Projecting/averaging excluding certain lines (due to artifacts from external noise sources or else)
+  * Combining a list of 1D datasets to a 2D dataset (reverse operation of SliceExtraction)
 
 
 For later versions

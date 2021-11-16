@@ -242,6 +242,16 @@ class Plotter(aspecd.utils.ToDictMixin):
 
             Default: True
 
+        tight_layout : :class:`bool`
+            Whether to adjust the plot to fit into the figure area
+
+            For details see :meth:`matplotlib.figure.Figure.tight_layout`.
+
+            Use with care, as this will automatically adjust the padding
+            around the axes and might lead to unexpected results.
+
+            Default: False
+
     properties : :class:`aspecd.plotting.PlotProperties`
         Properties of the plot, defining its appearance
 
@@ -288,6 +298,9 @@ class Plotter(aspecd.utils.ToDictMixin):
     .. versionchanged:: 0.6
         New attribute :attr:`label`
 
+    .. versionchanged:: 0.6.2
+        New parameter ``tight_layout``
+
     """
 
     def __init__(self):
@@ -296,7 +309,8 @@ class Plotter(aspecd.utils.ToDictMixin):
         self.name = aspecd.utils.full_class_name(self)
         self.parameters = {
             'show_legend': False,
-            'show_zero_lines': True
+            'show_zero_lines': True,
+            'tight_layout': False,
         }
         self.properties = PlotProperties()
         self.description = 'Abstract plotting step'
@@ -335,6 +349,7 @@ class Plotter(aspecd.utils.ToDictMixin):
         self.properties.apply(plotter=self)
         self._set_legend()
         self._add_zero_lines()
+        self._tight_layout()
         self._reset_style()
 
     # noinspection PyUnusedLocal
@@ -544,6 +559,10 @@ class Plotter(aspecd.utils.ToDictMixin):
                     # noinspection PyArgumentList
                     self.axes.axvline(**self.properties.zero_lines.to_dict(),
                                       zorder=1)
+
+    def _tight_layout(self):
+        if self.parameters['tight_layout']:
+            self.figure.set_tight_layout(True)
 
 
 class SinglePlotter(Plotter):
@@ -1216,6 +1235,18 @@ class SinglePlotter2DStacked(SinglePlotter):
 
             Default: None
 
+        ytickcount : :class:`int`
+            number of tick labels on the y axis
+
+            Useful in case of too many ticks displayed on the y axis.
+
+            If "None", as many ticks as plotted lines will be displayed.
+
+            If the number is larger than the number of plotted lines,
+            only one tick per line will be shown, not more.
+
+            Default: None
+
         tight: :class:`str`
             Whether to set the axes limits tight to the data
 
@@ -1282,6 +1313,9 @@ class SinglePlotter2DStacked(SinglePlotter):
     .. versionchanged:: 0.6
         ylabel is set to third axis if offset = 0; new parameter "tight"
 
+    .. versionchanged:: 0.6.2
+        New parameter ``ytickcount``
+
     """
 
     # noinspection PyTypeChecker
@@ -1289,14 +1323,15 @@ class SinglePlotter2DStacked(SinglePlotter):
         super().__init__()
         self.description = '2D stackplot for a single dataset'
         self.dataset = None
-        self.parameters = {
+        self.parameters.update({
             'show_legend': False,
             'show_zero_lines': False,
             'stacking_dimension': 1,
             'offset': None,
             'yticklabelformat': None,
+            'ytickcount': None,
             'tight': '',
-        }
+        })
         self.drawing = []
         self.properties = SinglePlot1DProperties()
 
@@ -1340,6 +1375,12 @@ class SinglePlotter2DStacked(SinglePlotter):
                 # noinspection PyTypeChecker
                 yticks.append(idx * self.parameters['offset'])
             yticklabels = self.dataset.data.axes[1].values.astype(float)
+        if self.parameters['ytickcount']:
+            # noinspection PyTypeChecker
+            ytickcount = min(len(self.drawing), self.parameters['ytickcount'])
+            yticklabels = np.linspace(yticklabels[0], yticklabels[-1],
+                                      num=ytickcount)
+            yticks = np.linspace(yticks[0], yticks[-1], num=ytickcount)
         if self.parameters['offset']:
             self.properties.axes.yticks = yticks
             self.properties.axes.yticklabels = \
@@ -1441,6 +1482,7 @@ class MultiPlotter(Plotter):
         self.parameters['axes'] = [aspecd.dataset.Axis(),
                                    aspecd.dataset.Axis()]
         self.__kind__ = 'multiplot'
+        self._exclude_from_to_dict.extend(['datasets', 'drawings'])
 
     def plot(self):
         """Perform the actual plotting on the given list of datasets.
@@ -1937,6 +1979,8 @@ class CompositePlotter(Plotter):
     def _create_plot(self):
         if not self.plotter or len(self.plotter) < len(self.axes):
             raise aspecd.exceptions.MissingPlotterError
+        for plotter in self.plotter:
+            plotter.style = self.style
         for idx, axes in enumerate(self.axes):
             self.plotter[idx].figure = self.figure
             self.plotter[idx].axes = axes
@@ -2056,14 +2100,19 @@ class SingleCompositePlotter(CompositePlotter):
         else:
             self.dataset = dataset
         for plotter in self.plotter:
-            plotter.dataset = self.dataset
+            if hasattr(plotter, 'dataset'):
+                plotter.dataset = self.dataset
 
     def _call_from_dataset(self, from_dataset):
         if not from_dataset:
             self.dataset.plot(self)
         else:
             self._check_applicability()
+            tasks = copy.copy(self.dataset.tasks)
+            representations = copy.copy(self.dataset.representations)
             super().plot()
+            self.dataset.representations = representations
+            self.dataset.tasks = tasks
 
     def _check_applicability(self):
         if not self.applicable(self.dataset):
