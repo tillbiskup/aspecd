@@ -1288,6 +1288,15 @@ class TestDatasetAlgebra(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "different shapes"):
             self.dataset1.process(self.processing)
 
+    def test_process_with_differing_shapes_shows_shape_in_message(self):
+        self.dataset1.data.data = np.random.random(5)
+        self.dataset2.data.data = np.random.random(6)
+        self.processing.parameters["dataset"] = self.dataset2
+        self.processing.parameters["kind"] = "add"
+        with self.assertRaisesRegex(ValueError,
+                                    str(self.dataset1.data.data.shape)):
+            self.dataset1.process(self.processing)
+
     def test_add_with_1d_datasets(self):
         self.dataset1.data.data = np.ones(5)
         self.dataset2.data.data = np.ones(5)

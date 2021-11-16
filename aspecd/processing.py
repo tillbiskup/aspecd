@@ -2291,7 +2291,7 @@ class DatasetAlgebra(SingleProcessingStep):
 
        - kind: multiprocessing
          type: CommonRangeExtraction
-         results:
+         result:
            - label_to_dataset
            - label_to_other_dataset
 
@@ -2342,7 +2342,9 @@ class DatasetAlgebra(SingleProcessingStep):
     def _check_shape(self):
         if self.dataset.data.data.shape \
                 != self.parameters["dataset"].data.data.shape:
-            raise ValueError("Data of datasets have different shapes.")
+            raise ValueError(f"Data of datasets have different shapes: "
+                             f"{self.dataset.data.data.shape}, "
+                             f"{self.parameters['dataset'].data.data.shape}.")
 
 
 class Interpolation(SingleProcessingStep):
@@ -2795,7 +2797,7 @@ class CommonRangeExtraction(MultiProcessingStep):
 
        - kind: multiprocessing
          type: CommonRangeExtraction
-         results:
+         result:
            - dataset1_cut
            - dataset2_cut
          apply_tp:
@@ -2812,7 +2814,7 @@ class CommonRangeExtraction(MultiProcessingStep):
 
        - kind: multiprocessing
          type: CommonRangeExtraction
-         results:
+         result:
            - label_to_dataset
            - label_to_other_dataset
 
