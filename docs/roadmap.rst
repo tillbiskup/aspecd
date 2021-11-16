@@ -5,10 +5,6 @@ Roadmap
 A few ideas how to develop the project further, currently a list as a reminder for the main developers themselves, in no particular order, though with a tendency to list more important aspects first:
 
 
-For version 0.6.2
-=================
-
-
 For version 0.7
 ===============
 
@@ -24,6 +20,11 @@ For version 0.7
   * LaTeXFigureReporter for generating LaTeX code to include figures in documents
   * Looking for templates in derived packages
   * Looking for templates in user directory
+
+* Processing of 2D (eventually ND with N>1) datasets:
+
+  * Projecting/averaging excluding certain lines (due to artifacts from external noise sources or else)
+  * Combining a list of 1D datasets to a 2D dataset (reverse operation of SliceExtraction)
 
 
 For later versions

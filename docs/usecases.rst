@@ -33,6 +33,10 @@ To give you a first example, here is a short recipe, followed by the command you
 .. code-block:: yaml
     :linenos:
 
+    format:
+      type: ASpecD recipe
+      version: '0.2'
+
     datasets:
       - /path/to/first/dataset
       - /path/to/second/dataset

@@ -20,6 +20,10 @@ What is even better: Actual data processing and analysis **no longer requires pr
 .. code-block:: yaml
     :linenos:
 
+    format:
+      type: ASpecD recipe
+      version: '0.2'
+
     datasets:
       - /path/to/first/dataset
       - /path/to/second/dataset
