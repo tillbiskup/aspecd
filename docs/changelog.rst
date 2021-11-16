@@ -11,6 +11,13 @@ Version 0.7.0
 Not yet released
 
 
+Fixes
+-----
+
+* :class:`aspecd.tasks.Task` warns if key in dict (recipe) is no property of the task.
+* :class:`aspecd.processing.DatasetAlgebra` returns shape in error message if shapes differ.
+
+
 Version 0.6.2
 =============
 

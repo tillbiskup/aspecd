@@ -826,7 +826,16 @@ class TestTask(unittest.TestCase):
         attribute = 'foo'
         dict_ = dict()
         dict_[attribute] = 'foo'
-        self.task.from_dict(dict_)
+        with warnings.catch_warnings(record=True) as warning:
+            self.task.from_dict(dict_)
+        self.assertFalse(hasattr(self.task, attribute))
+
+    def test_from_dict_with_unknown_attribute_warns(self):
+        attribute = 'foo'
+        dict_ = dict()
+        dict_[attribute] = 'foo'
+        with self.assertWarnsRegex(UserWarning, 'Unknown key'):
+            self.task.from_dict(dict_)
         self.assertFalse(hasattr(self.task, attribute))
 
     def test_has_perform_method(self):

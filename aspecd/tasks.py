@@ -1707,6 +1707,8 @@ class Task(aspecd.utils.ToDictMixin):
                         getattr(self, key).append(value)
                 else:
                     setattr(self, key, value)
+            elif not hasattr(self, key):
+                warnings.warn(f'Unknown key "{key}" ignored')
 
     def to_dict(self, remove_empty=False):
         """
