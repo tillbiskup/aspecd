@@ -2648,7 +2648,7 @@ class Filtering(SingleProcessingStep):
          properties:
            parameters:
              type: savitzky-golay
-             window_length: 10
+             window_length: 9
              order: 3
 
     Note that for this filter, you need to provide the polynomial order as
@@ -2836,6 +2836,10 @@ class CommonRangeExtraction(MultiProcessingStep):
 
     .. versionadded:: 0.2
 
+    .. versionchanged:: 0.7
+        Unit of last axis (*i.e.*, intensity) gets ignored when checking for
+        same units
+
     """
 
     def __init__(self):
@@ -2884,7 +2888,8 @@ class CommonRangeExtraction(MultiProcessingStep):
         for dataset in self.datasets:
             new_dimension = dataset.data.data.ndim
             if old_dimension and old_dimension != new_dimension:
-                raise ValueError("Datasets have different dimensions")
+                raise ValueError(f"Datasets have different dimensions: "
+                                 f"{old_dimension} vs. {new_dimension}")
             old_dimension = new_dimension
 
     def _check_common_range(self):
@@ -2895,7 +2900,8 @@ class CommonRangeExtraction(MultiProcessingStep):
                 minima.append(dataset.data.axes[dim].values[0])
                 maxima.append(dataset.data.axes[dim].values[-1])
             if np.amax(minima) > np.amin(maxima):
-                raise ValueError("Datasets have disjoint axes values")
+                raise ValueError(f"Datasets have disjoint axes values: "
+                                 f"{np.amax(minima)} > {np.amin(maxima)}")
             self.parameters["common_range"].append([np.amax(minima),
                                                     np.amin(maxima)])
 
@@ -2903,10 +2909,11 @@ class CommonRangeExtraction(MultiProcessingStep):
         old_units = None
         for dataset in self.datasets:
             new_units = []
-            for axis in dataset.data.axes:
+            for axis in dataset.data.axes[:-1]:
                 new_units.append(axis.unit)
             if old_units and old_units != new_units:
-                raise ValueError("Datasets have axes with different units")
+                raise ValueError(f"Datasets have axes with different units: "
+                                 f"{old_units} vs. {new_units}")
             old_units = new_units
 
     def _calculate_number_of_points(self):

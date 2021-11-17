@@ -46,6 +46,10 @@ To give a first impression of how such a recipe may look like:
 
 .. code-block:: yaml
 
+    format:
+      type: ASpecD recipe
+      version: '0.2'
+
     datasets:
       - loi:xxx
       - loi:yyy
@@ -239,6 +243,16 @@ a default package and overriding this for a particular task:
     tasks:
       - kind: some_other_package.processing
         type: SingleProcessingStep
+
+
+There is one important exception from this rule: If you have defined a
+default package, and for the type defined in a task there exists no
+corresponding class in the default package, the class will be looked up in
+the ASpecD framework. This means as well that if you define a class with the
+identical name to a class in the ASpecD framework in a derived package,
+and you want to explicitly use the "original" class from the ASpecD package,
+you need to explicitly prefix the value of the ``kind`` key of your respective
+task with "aspecd.".
 
 
 Setting own labels (and properties) for datasets

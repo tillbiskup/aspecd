@@ -1930,6 +1930,19 @@ class TestCommonRangeExtraction(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "different units"):
             self.processing.process()
 
+    def test_process_datasets_ignores_last_axis(self):
+        self.dataset1.data.data = np.random.random(10)
+        self.dataset1.data.axes[0].values = np.linspace(0, 5, 10)
+        self.dataset1.data.axes[0].unit = 'foo'
+        self.dataset1.data.axes[1].unit = 'bar'
+        self.dataset2.data.data = np.random.random(10)
+        self.dataset2.data.axes[0].values = np.linspace(0, 5, 10)
+        self.dataset2.data.axes[0].unit = 'foo'
+        self.dataset2.data.axes[1].unit = 'baz'
+        self.processing.datasets.append(self.dataset1)
+        self.processing.datasets.append(self.dataset2)
+        self.processing.process()
+
     def test_process_ignores_different_axes_units_if_told_so(self):
         self.dataset1.data.data = np.random.random([10, 10])
         self.dataset1.data.axes[0].values = np.linspace(0, 5, 10)
