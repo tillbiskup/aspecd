@@ -16,9 +16,10 @@ Fixes
 
 * :class:`aspecd.tasks.Task` warns if key in dict (recipe) is no property of the task.
 * :class:`aspecd.processing.DatasetAlgebra` returns shape in error message if shapes differ.
-* Processing and analysis tasks issue warning if result
+* Processing and analysis tasks issue warning if result name is identical to dataset label
 * Ensure window length for Savitzky-Golay filter in :class:`aspecd.processing.Filtering` to always be odd
 * :class:`aspecd.processing.CommonRangeExtraction` ignores unit of last axis (*i.e.*, intensity) when checking for identical units
+* :class:`aspecd.utils.ToDictMixin`: Added superclass call to preserve mro in dependent subclasses
 
 
 Version 0.6.2
