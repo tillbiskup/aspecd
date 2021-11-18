@@ -305,7 +305,6 @@ class Plotter(aspecd.utils.ToDictMixin):
 
     def __init__(self):
         # Name defaults always to the full class name, don't change!
-        super().__init__()
         self.name = aspecd.utils.full_class_name(self)
         self.parameters = {
             'show_legend': False,
@@ -321,6 +320,7 @@ class Plotter(aspecd.utils.ToDictMixin):
         self.legend = None
         self.label = ''
         self.style = ''
+        super().__init__()
         #
         self._original_rcparams = None
         self._exclude_from_to_dict = \
