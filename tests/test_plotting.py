@@ -973,6 +973,25 @@ class TestMultiPlotter(unittest.TestCase):
         self.assertEqual(xlabel, self.plotter.axes.get_xlabel())
         self.assertEqual(ylabel, self.plotter.axes.get_ylabel())
 
+    def test_plot_with_datasets_with_identical_quantity_sets_axes_labels(self):
+        test_dataset0 = dataset.Dataset()
+        test_dataset0.data.axes[0].quantity = 'foo'
+        test_dataset0.data.axes[0].unit = ''
+        test_dataset0.data.axes[1].quantity = 'foo'
+        test_dataset0.data.axes[1].unit = ''
+        test_dataset1 = dataset.Dataset()
+        test_dataset1.data.axes[0].quantity = 'foo'
+        test_dataset1.data.axes[0].unit = ''
+        test_dataset1.data.axes[1].quantity = 'foo'
+        test_dataset1.data.axes[1].unit = ''
+        xlabel = '$' + test_dataset0.data.axes[0].quantity + '$'
+        ylabel = '$' + test_dataset0.data.axes[1].quantity + '$'
+        self.plotter.datasets.append(test_dataset0)
+        self.plotter.datasets.append(test_dataset1)
+        self.plotter.plot()
+        self.assertEqual(xlabel, self.plotter.axes.get_xlabel())
+        self.assertEqual(ylabel, self.plotter.axes.get_ylabel())
+
     def test_plot_with_datasets_adds_drawing_properties(self):
         self.plotter.datasets.append(dataset.Dataset())
         self.plotter.plot()

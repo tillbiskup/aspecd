@@ -20,6 +20,8 @@ Fixes
 * Ensure window length for Savitzky-Golay filter in :class:`aspecd.processing.Filtering` to always be odd
 * :class:`aspecd.processing.CommonRangeExtraction` ignores unit of last axis (*i.e.*, intensity) when checking for identical units
 * :class:`aspecd.utils.ToDictMixin`: Added superclass call to preserve mro in dependent subclasses
+* Tasks properly handle non-dataset results from recipe
+* :class:`aspecd.plotting.MultiPlotter` sets axis labels when units are empty
 
 
 Version 0.6.2

@@ -1556,8 +1556,7 @@ class MultiPlotter(Plotter):
         if self.parameters['axes'][0].quantity:
             xlabel = \
                 self._create_axis_label_string(self.parameters['axes'][0])
-        elif all(xquantities) and all(xunits) and \
-                aspecd.utils.all_equal(xquantities) and \
+        elif aspecd.utils.all_equal(xquantities) and \
                 aspecd.utils.all_equal(xunits):
             xlabel = \
                 self._create_axis_label_string(self.datasets[0].data.axes[0])
@@ -1568,8 +1567,7 @@ class MultiPlotter(Plotter):
         if self.parameters['axes'][1].quantity:
             ylabel = \
                 self._create_axis_label_string(self.parameters['axes'][1])
-        elif all(yquantities) and all(yunits) and \
-                aspecd.utils.all_equal(yquantities) and \
+        elif aspecd.utils.all_equal(yquantities) and \
                 aspecd.utils.all_equal(yunits):
             ylabel = \
                 self._create_axis_label_string(self.datasets[0].data.axes[1])

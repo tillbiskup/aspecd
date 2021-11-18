@@ -1780,10 +1780,11 @@ class Task(aspecd.utils.ToDictMixin):
                 if property_value is dataset_value or \
                         property_value is dataset_value.id:
                     dict_[property_key] = dataset_key
-            for dataset_key, dataset_value in self.recipe.results.items():
-                if property_value is dataset_value or \
-                        property_value is dataset_value.id:
-                    dict_[property_key] = dataset_key
+            for result_key, result_value in self.recipe.results.items():
+                if property_value is result_value or \
+                        hasattr(result_value, 'id') and \
+                        property_value is result_value.id:
+                    dict_[property_key] = result_key
             for figure_key, figure_value in self.recipe.figures.items():
                 if property_value is figure_value:
                     dict_[property_key] = figure_key
