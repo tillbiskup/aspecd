@@ -474,6 +474,14 @@ class TestNormalisation(unittest.TestCase):
         self.dataset.process(self.processing)
         self.assertAlmostEqual(2, self.dataset.data.data.max(), 2)
 
+    def test_normalise_removes_unit_of_last_axis(self):
+        self.dataset.data.axes[-1].unit = 'mV'
+        for kind in ["min", "max", "amp", "area"]:
+            with self.subTest(kind=kind):
+                self.processing.parameters["kind"] = kind
+                self.dataset.process(self.processing)
+                self.assertEqual('', self.dataset.data.axes[-1].unit)
+
 
 class TestIntegration(unittest.TestCase):
     def setUp(self):

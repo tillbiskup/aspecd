@@ -946,14 +946,18 @@ class Normalisation(SingleProcessingStep):
             data = self.dataset.data.data
         if "max" in self.parameters["kind"].lower():
             self.dataset.data.data /= (data.max() - self._noise_amplitude / 2)
+            self.dataset.data.axes[-1].unit = ''
         elif "min" in self.parameters["kind"].lower():
             self.dataset.data.data /= (abs(data.min())
                                        - self._noise_amplitude / 2)
+            self.dataset.data.axes[-1].unit = ''
         elif "amp" in self.parameters["kind"].lower():
             self.dataset.data.data /= ((data.max() - data.min()) -
                                        self._noise_amplitude)
+            self.dataset.data.axes[-1].unit = ''
         elif "area" in self.parameters["kind"].lower():
             self.dataset.data.data /= np.sum(np.abs(data))
+            self.dataset.data.axes[-1].unit = ''
         else:
             raise ValueError(f'Kind {self.parameters["kind"]} not recognised.')
 
