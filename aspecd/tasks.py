@@ -2635,7 +2635,7 @@ class MultianalysisTask(AnalysisTask):
     def _assign_result(self, label='', result=None):
         if isinstance(result, aspecd.dataset.Dataset):
             result.id = label
-            if label in  self.recipe.datasets.keys():
+            if label in self.recipe.datasets.keys():
                 warnings.warn(
                     f'Result name "{self.result}" identical to '
                     f'dataset label, unexpected things may '

@@ -1385,6 +1385,9 @@ class SinglePlotter2DStacked(SinglePlotter):
             self.properties.axes.yticks = yticks
             self.properties.axes.yticklabels = \
                 self._format_yticklabels(yticklabels)
+        self._handle_tight_settings()
+
+    def _handle_tight_settings(self):
         if self.parameters['tight']:
             if self.parameters['tight'] in ('x', 'both'):
                 self.axes.set_xlim([self.dataset.data.axes[0].values.min(),
