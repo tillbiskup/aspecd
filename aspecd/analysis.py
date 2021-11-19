@@ -730,6 +730,7 @@ class AggregatedAnalysisStep(AnalysisStep):
         self.result = self.create_dataset()
         self._analysis_object = None
         self.__kind__ = 'aggregatedanalysis'
+        self._exclude_from_to_dict = ['datasets', 'result']
 
     def analyse(self):
         """
