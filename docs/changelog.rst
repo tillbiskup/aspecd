@@ -23,6 +23,7 @@ Fixes
 * Tasks properly handle non-dataset results from recipe
 * :class:`aspecd.plotting.MultiPlotter` sets axis labels when units are empty
 * :class:`aspecd.processing.Normalisation` removes unit from last axis
+* :class:`aspecd.processing.BaselineCorrection` handles zero values in range properly
 
 
 Version 0.6.2

@@ -1071,6 +1071,22 @@ class TestBaselineCorrection(unittest.TestCase):
         self.dataset.process(self.processing)
         self.assertAlmostEqual(self.dataset.data.data[-20], 0)
 
+    def test_baseline_correction_with_only_left_side(self):
+        self.dataset.data.data = \
+            np.r_[np.ones(5) + 2, np.ones(75), np.ones(20) + 5]
+        self.dataset.data.axes[0].values = np.linspace(1, 100, num=100)
+        self.processing.parameters['fit_area'] = [5, 0]
+        processing = self.dataset.process(self.processing)
+        self.assertAlmostEqual(self.dataset.data.data[-20], 3)
+
+    def test_baseline_correction_with_only_right_side(self):
+        self.dataset.data.data = \
+            np.r_[np.ones(5) + 2, np.ones(75), np.ones(20) + 5]
+        self.dataset.data.axes[0].values = np.linspace(1, 100, num=100)
+        self.processing.parameters['fit_area'] = [0, 5]
+        processing = self.dataset.process(self.processing)
+        self.assertAlmostEqual(self.dataset.data.data[0], -3)
+
     def test_baseline_correction_with_percentage_float(self):
         self.dataset.data.data = np.r_[np.ones(20) + 5, np.ones(60), np.ones(
             20)+5]

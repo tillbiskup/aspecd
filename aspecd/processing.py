@@ -1822,6 +1822,9 @@ class BaselineCorrection(SingleProcessingStep):
     .. versionchanged:: 0.3
         Coefficients are returned in unscaled data domain
 
+    .. versionchanged:: 0.6.3
+        Zero values in range properly handled
+
     """
 
     def __init__(self):
@@ -1891,24 +1894,30 @@ class BaselineCorrection(SingleProcessingStep):
     def _get_fit_range(self):
         number_of_points = len(self.dataset.data.data)
         self._data_points_left = \
-            math.ceil(number_of_points * self.parameters["fit_area"][0] / 100.0)
+            math.ceil(number_of_points
+                      * self.parameters["fit_area"][0] / 100.0)
         self._data_points_right = \
-            math.ceil(number_of_points * self.parameters["fit_area"][1] / 100.0)
+            math.ceil(number_of_points
+                      * self.parameters["fit_area"][1] / 100.0)
 
     def _get_axis_values(self):
+        left_values = right_values = []
         axis = self.parameters["axis"]
-        # pylint: disable=invalid-unary-operand-type
-        self._axis_values = np.concatenate(
-            (self.dataset.data.axes[axis].values[:self._data_points_left],
-             self.dataset.data.axes[axis].values[-self._data_points_right:])
-        )
+        if self._data_points_left:
+            left_values = \
+                self.dataset.data.axes[axis].values[:self._data_points_left]
+        if self._data_points_right:
+            right_values = \
+                self.dataset.data.axes[axis].values[-self._data_points_right:]
+        self._axis_values = np.concatenate((left_values, right_values))
 
     def _get_intensity_values(self, data):
-        # pylint: disable=invalid-unary-operand-type
-        self._intensity_values = np.concatenate(
-            (data[:self._data_points_left],
-             data[-self._data_points_right:])
-        )
+        left_values = right_values = []
+        if self._data_points_left:
+            left_values = data[:self._data_points_left]
+        if self._data_points_right:
+            right_values = data[-self._data_points_right:]
+        self._intensity_values = np.concatenate((left_values, right_values))
 
     # noinspection PyUnresolvedReferences,PyCallingNonCallable
     def _get_values_to_subtract(self):
@@ -3100,6 +3109,7 @@ class Noise(SingleProcessingStep):
 
     .. versionchanged:: 0.6
         Added parameter ``amplitude``
+
 
     """
 
