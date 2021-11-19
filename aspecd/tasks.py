@@ -3114,6 +3114,56 @@ class CompositeplotTask(PlotTask):
     for a CompositePlot you need to specify both, grid dimensions and
     subplot locations, as they will be set to one single axis by default.
 
+    The example above would create a plot with **one row and two columns**
+    (*i.e.*, two axes side-by-side). The grid dimensions are given as
+    "[number of rows, number of columns]", and each subplot location is a list
+    with four integer values: "[start_row, start_column, row_span,
+    column_span]". Therefore, having the same plot, but with the axes
+    appearing in **one column and two rows** (*i.e.*, stacked on top of each
+    other), you would define the CompositePlotter step as follows:
+
+    .. code-block:: yaml
+
+        - kind: compositeplot
+          type: CompositePlotter
+          properties:
+            grid_dimensions: [2, 1]
+            subplot_locations:
+              - [0, 0, 1, 1]
+              - [1, 0, 1, 1]
+            plotter:
+              - 1D_plot
+              - 2D_plot
+            filename: composed_plot.pdf
+
+    Of course, you can create arbitrarily complex arrangements of axes
+    within a figure, even with one axis spanning several rows or columns.
+    Note that the size you set to the figure of the composite plotter
+    defines the aspect ratio and relative size of the individual axes.
+    As an example, in a two-row layout with two axes stacked on top of each
+    other, you may want to have an overall quadratic figure with size 6x6 inch
+    to fit decently to a normal page:
+
+    .. code-block:: yaml
+
+        - kind: compositeplot
+          type: CompositePlotter
+          properties:
+            grid_dimensions: [2, 1]
+            subplot_locations:
+              - [0, 0, 1, 1]
+              - [1, 0, 1, 1]
+            plotter:
+              - 1D_plot
+              - 2D_plot
+            properties:
+              figure:
+                size: [6.0, 6.0]
+            filename: composed_plot.pdf
+
+    As with all the other plotters, there are many more options to control
+    the appearance of your figures.
+
     .. note::
         As long as the ``autosave_plots`` in the recipe is set to True,
         the results of the individual plotters combined in the
@@ -3144,6 +3194,7 @@ class CompositeplotTask(PlotTask):
             Ordered dictionary containing the public attributes of the object
 
             The order of attribute definition is preserved
+
 
         .. versionchanged:: 0.6
             New parameter `remove_empty`

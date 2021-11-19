@@ -104,6 +104,7 @@ class ToDictMixin:
         dictionary are those attributes accessed by getters and setters and
         hence not automatically included in the list otherwise.
 
+
     .. versionchanged: 0.6.3
         Added superclass call to preserve mro in dependent subclasses
 
@@ -150,6 +151,7 @@ class ToDictMixin:
             Ordered dictionary containing the public attributes of the object
 
             The order of attribute definition is preserved
+
 
         .. versionchanged:: 0.6
             New parameter `remove_empty`
