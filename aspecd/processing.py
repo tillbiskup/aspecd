@@ -2849,7 +2849,7 @@ class CommonRangeExtraction(MultiProcessingStep):
 
     .. versionadded:: 0.2
 
-    .. versionchanged:: 0.7
+    .. versionchanged:: 0.6.3
         Unit of last axis (*i.e.*, intensity) gets ignored when checking for
         same units
 

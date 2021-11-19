@@ -11,6 +11,12 @@ Version 0.7.0
 Not yet released
 
 
+Version 0.6.3
+=============
+
+Not yet released
+
+
 Fixes
 -----
 
