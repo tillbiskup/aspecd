@@ -2693,6 +2693,7 @@ class AggregatedanalysisTask(AnalysisTask):
                     f'dataset label, unexpected things may '
                     f'happen.')
             self.recipe.results[self.result] = self._task.result
+        self.type = analysis_step
 
 
 class AnnotationTask(Task):

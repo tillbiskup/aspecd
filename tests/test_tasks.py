@@ -1938,6 +1938,14 @@ class TestAggregatedAnalysisTask(unittest.TestCase):
             self.analysis_task['type'], ', '.join(self.dataset), self.result),
             cm.output[0])
 
+    def test_to_dict_contains_original_type(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.analysis_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(self.analysis_task['type'], dict_['type'])
+
 
 class TestAnnotationTask(unittest.TestCase):
     def setUp(self):
