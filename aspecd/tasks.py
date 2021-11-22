@@ -1776,8 +1776,8 @@ class Task(aspecd.utils.ToDictMixin):
         if not self.recipe:
             return
         for property_key, property_value in dict_.items():
-            if (aspecd.utils.isiterable(property_value) and not all(
-                    property_value)) or not property_value:
+            if (aspecd.utils.isiterable(property_value) and not isinstance(
+                    property_value, str)) or not property_value:
                 continue
             for dataset_key, dataset_value in self.recipe.datasets.items():
                 if property_value is dataset_value or \
