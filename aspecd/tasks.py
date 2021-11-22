@@ -1218,16 +1218,7 @@ class Recipe:
         }
         for dataset in self.datasets:
             dataset_dict = {}
-            if self.directories['datasets_source']:
-                if self.datasets[dataset].id.startswith(os.sep):
-                    pattern = os.path.realpath(
-                        self.directories['datasets_source'])
-                else:
-                    pattern = self.directories['datasets_source']
-                if not pattern.endswith(os.sep):
-                    pattern += os.sep
-                self.datasets[dataset].id = \
-                    self.datasets[dataset].id.replace(pattern, '', 1)
+            self._manage_path_in_dataset_id(dataset)
             if not self.datasets[dataset].id == dataset:
                 dataset_dict['source'] = self.datasets[dataset].id
                 dataset_dict['id'] = dataset
@@ -1245,6 +1236,22 @@ class Recipe:
         for task in self.tasks:
             dict_['tasks'].append(task.to_dict(remove_empty=remove_empty))
         return dict_
+
+    def _manage_path_in_dataset_id(self, dataset):
+        current_directory = os.path.realpath(os.curdir) + os.sep
+        if self.directories['datasets_source']:
+            if self.datasets[dataset].id.startswith(os.sep):
+                pattern = os.path.realpath(
+                    self.directories['datasets_source'])
+            else:
+                pattern = self.directories['datasets_source']
+            if not pattern.endswith(os.sep):
+                pattern += os.sep
+            self.datasets[dataset].id = \
+                self.datasets[dataset].id.replace(pattern, '', 1)
+        elif self.datasets[dataset].id.startswith(current_directory):
+            self.datasets[dataset].id = \
+                self.datasets[dataset].id.replace(current_directory, '', 1)
 
     def _dataset_from_foreign_package(self, dataset=None):
         package_names = ['aspecd']
@@ -2796,6 +2803,7 @@ class PlotTask(Task):
 
 
         .. versionchanged:: 0.6.3
+            Labels that have been replaced by datasets get re-replaced
 
         """
         obj = super().get_object()

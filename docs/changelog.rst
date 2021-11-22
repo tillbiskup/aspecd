@@ -42,6 +42,7 @@ Fixes
 * :class:`aspecd.tasks.AggregatedAnalysisTask` sets correct type in output of ``to_dict()``
 * :class:`aspecd.tasks.ReportTask` does not add empty figure filenames to includes
 * :class:`aspecd.Tasks.PlotTask` preserves labels of drawings
+* Recipe history does not contain path to current directory in dataset source
 
 
 Version 0.6.2

@@ -385,6 +385,13 @@ class TestRecipe(unittest.TestCase):
         dict_ = self.recipe.to_dict()
         self.assertEqual(id_, dict_['datasets'][0])
 
+    def test_to_dict_without_datasets_source_directory(self):
+        dataset_id = 'foo'
+        recipe_dict = {'datasets': [dataset_id]}
+        self.recipe.from_dict(recipe_dict)
+        dict_ = self.recipe.to_dict()
+        self.assertEqual(dataset_id, dict_['datasets'][0])
+
     def test_to_dict_with_task_returns_task_dict(self):
         task = tasks.Task()
         task.from_dict(self.task)
