@@ -16,7 +16,7 @@
 
 \begin{tabbing}
 \hspace*{1.5cm}\=\kill
-Source:\>\texttt{{@ dataset.id | replace("_", "\\_") }}
+Source:\>\texttt{{@ dataset.id | replace("_", "\\_") | replace("#", "\\#") }}
 \\
 Label:\>{@ dataset.label }
 \end{tabbing}
@@ -63,7 +63,7 @@ In total, 1 processing step has been carried out:
 
 \begin{enumerate}
 %{ for processing_step in dataset.history -}%
-\item {@ processing_step.processing.description | replace("_", "\\_") }
+\item {@ processing_step.processing.description | replace("_", "\\_") | replace("#", "\\#") }
 %{ endfor }%
 \end{enumerate}
 
@@ -87,7 +87,7 @@ In total, 1 analysis step has been carried out:
 
 \begin{enumerate}
 %{ for analysis_step in dataset.analyses -}%
-\item {@ analysis_step.analysis.description | replace("_", "\\_") }
+\item {@ analysis_step.analysis.description | replace("_", "\\_") | replace("#", "\\#") }
 %{ endfor }%
 \end{enumerate}
 
@@ -135,7 +135,7 @@ In total, 1 representation has been created:
 \begin{enumerate}
 %{ for representation in dataset.representations }%
 %{ if representation.plot }%
-\item {@ representation.plot.description | replace("_", "\\_") } (Fig.~\ref{fig:{@ representation.plot.label }})
+\item {@ representation.plot.description | replace("_", "\\_") | replace("#", "\\#") } (Fig.~\ref{fig:{@ representation.plot.label }})
 %{ endif }%
 %{ endfor }%
 \end{enumerate}

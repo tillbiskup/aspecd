@@ -3377,7 +3377,7 @@ class ReportTask(Task):
 
     def _add_figure_filenames_to_includes(self):
         if 'includes' in self.properties:
-            self.properties['includes'].append(
+            self.properties['includes'].extend(
                 self._get_filenames_of_figures())
         else:
             self.properties['includes'] = self._get_filenames_of_figures()
@@ -3389,6 +3389,7 @@ class ReportTask(Task):
                 filenames.extend(self.recipe.figures[figure].filename)
             else:
                 filenames.append(self.recipe.figures[figure].filename)
+        filenames = [name for name in filenames if name]
         return filenames
 
 

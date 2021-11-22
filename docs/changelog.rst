@@ -32,6 +32,7 @@ Fixes
 * :class:`aspecd.processing.BaselineCorrection` handles zero values in range properly
 * :class:`aspecd.analysis.AggregateAnalysisStep` no longer adds ``datasets`` and ``result`` to output of ``to_dict()``
 * :class:`aspecd.tasks.AggregatedAnalysisTask` sets correct type in output of ``to_dict()``
+* :class:`aspecd.tasks.ReportTask` does not add empty figure filenames to includes
 
 
 Version 0.6.2

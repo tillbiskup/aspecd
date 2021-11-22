@@ -5,6 +5,6 @@ This report has been generated using the ASpecD framework. If you use it in your
 Packages: %{ for key, value in sysinfo.packages.items() }%{@ key } ({@ value | replace("_", "\\_") })%{ if not loop.last }%, %{ else }%.%{ endif }%%{ endfor }%
 
 
-Python version: {@ sysinfo.python.version | replace("\n", "") }
+Python version: {@ sysinfo.python.version | replace("\n", "") | replace("#", "\\#") }
 
-Platform: {@ sysinfo.platform | replace("_", "\\_") }
+Platform: {@ sysinfo.platform | replace("_", "\\_") | replace("#", "\\#") }

@@ -2714,6 +2714,19 @@ class TestReportTask(unittest.TestCase):
         self.task.perform()
         self.assertIn(figure_record.filename, self.task.properties['includes'])
 
+    def test_perform_task_does_not_add_empty_figure_filename_to_includes(self):
+        self.prepare_recipe()
+        figure_record = tasks.FigureRecord()
+        figure_record.filename = ''
+        self.recipe.figures['foo'] = figure_record
+        template_content = ""
+        self.prepare_template(template_content)
+        self.task.from_dict(self.report_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertNotIn(figure_record.filename,
+                         self.task.properties['includes'])
+
     def test_perform_task_compiles_template_with_additional_properties(self):
         self.prepare_recipe()
         self.recipe.tasks[0].properties['context'] = \
