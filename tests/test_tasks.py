@@ -2809,6 +2809,17 @@ class TestReportTask(unittest.TestCase):
         self.task.perform()
         self.assertTrue(os.path.exists(self.filename))
 
+    @unittest.skip
+    def test_perform_task_with_default_package_sets_package_in_reporter(self):
+        self.prepare_recipe()
+        self.recipe.default_package = 'sphinx'
+        template_content = ""
+        self.prepare_template(template_content)
+        self.task.from_dict(self.report_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertIn(self.recipe.default_package, read_content)
+
 
 class TestModelTask(unittest.TestCase):
     def setUp(self):

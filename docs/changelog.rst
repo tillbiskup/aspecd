@@ -17,6 +17,13 @@ Version 0.6.3
 Not yet released
 
 
+Changes
+-------
+
+* :class:`aspecd.report.Reporter` adds template loader for package if :attr:`aspecd.report.Reporter.package` is provided, allowing to override templates from the ASpecD framework within derived packages.
+* :class:`aspecd.tasks.ReportTask` passes through the default package from the recipe to the reporter for overriding templates.
+
+
 Fixes
 -----
 

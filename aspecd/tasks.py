@@ -3355,9 +3355,7 @@ class ReportTask(Task):
         for idx, dataset_id in enumerate(self.apply_to):
             dataset = self.recipe.get_dataset(dataset_id)
             task = self.get_object()
-            system_info = aspecd.system.SystemInfo(
-                self.recipe.settings['default_package'])
-            task.context["sysinfo"] = system_info.to_dict()
+            task.package = self.recipe.settings['default_package']
             task.context['dataset'] = dataset.to_dict()
             if 'filename' not in self.properties \
                     or not self.properties['filename']:

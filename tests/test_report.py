@@ -45,12 +45,6 @@ class TestReporter(unittest.TestCase):
         self.assertTrue(isinstance(self.report.context,
                                    collections.OrderedDict))
 
-    def test_context_has_sysinfo_key(self):
-        self.assertIn('sysinfo', self.report.context)
-
-    def test_context_has_sysinfo_packages_key(self):
-        self.assertIn('packages', self.report.context['sysinfo'])
-
     def test_has_environment_property(self):
         self.assertTrue(hasattr(self.report, 'environment'))
 
@@ -66,7 +60,8 @@ class TestReporter(unittest.TestCase):
         self.assertTrue(callable(self.report.to_dict))
 
     def test_to_dict_does_not_contain_certain_keys(self):
-        for key in ['context', 'environment', 'report']:
+        for key in ['context', 'environment', 'report', 'package',
+                    'package_path']:
             with self.subTest(key=key):
                 self.assertNotIn(key, self.report.to_dict())
 
@@ -88,6 +83,20 @@ class TestReporter(unittest.TestCase):
             f.write('')
         self.report.template = self.template
         self.report.render()
+
+    def test_render_adds_sysinfo_key_to_context(self):
+        with open(self.template, 'w+') as f:
+            f.write('')
+        self.report.template = self.template
+        self.report.render()
+        self.assertIn('sysinfo', self.report.context)
+
+    def test_context_has_sysinfo_packages_key(self):
+        with open(self.template, 'w+') as f:
+            f.write('')
+        self.report.template = self.template
+        self.report.render()
+        self.assertIn('packages', self.report.context['sysinfo'])
 
     def test_render_with_template_with_absolute_path(self):
         with open(self.template2, 'w+') as f:
@@ -205,6 +214,75 @@ class TestReporter(unittest.TestCase):
         self.report.filename = self.filename
         self.report.create()
 
+    def test_render_with_package_adds_package_loader(self):
+        self.report.package = 'sphinx'
+        original_number_of_loaders = \
+            len(self.report.environment.loader.loaders)
+        with open(self.template, 'w+') as f:
+            f.write('')
+        self.report.template = self.template
+        self.report.render()
+        self.assertEqual(original_number_of_loaders + 1,
+                         len(self.report.environment.loader.loaders))
+
+    def test_render_with_package_and_package_path_sets_path(self):
+        package_path = 'templates/foo'
+        self.report.package = 'sphinx'
+        self.report.package_path = package_path
+        original_number_of_loaders = \
+            len(self.report.environment.loader.loaders)
+        with open(self.template, 'w+') as f:
+            f.write('')
+        self.report.template = self.template
+        self.report.render()
+        self.assertEqual(
+            package_path,
+            self.report.environment.loader.loaders[-2].package_path
+        )
+
+
+class TestGenericEnvironment(unittest.TestCase):
+    def setUp(self):
+        self.env = report.GenericEnvironment()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_add_package_loader_adds_package_loader(self):
+        package_name = 'aspecd'
+        original_number_of_loaders = len(self.env.loader.loaders)
+        self.env.add_package_loader(package_name=package_name)
+        self.assertEqual(original_number_of_loaders + 1,
+                         len(self.env.loader.loaders))
+
+    def test_add_package_loader_adds_default_package_path(self):
+        package_name = 'aspecd'
+        self.env.add_package_loader(package_name=package_name)
+        self.assertEqual(self.env.loader.loaders[-1].package_path,
+                         self.env.loader.loaders[-2].package_path)
+
+    def test_add_package_loader_with_package_path_sets_path(self):
+        package_name = 'aspecd'
+        package_path = 'templates/foo'
+        self.env.add_package_loader(package_name=package_name,
+                                    package_path=package_path)
+        self.assertEqual(package_path,
+                         self.env.loader.loaders[-2].package_path)
+
+
+class TestTxtEnvironment(unittest.TestCase):
+    def setUp(self):
+        self.env = report.TxtEnvironment()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_add_package_loader_adds_default_package_path(self):
+        package_name = 'aspecd'
+        self.env.add_package_loader(package_name=package_name)
+        self.assertEqual(self.env.loader.loaders[-1].package_path,
+                         self.env.loader.loaders[-2].package_path)
+
 
 class TestTxtReporter(unittest.TestCase):
     def setUp(self):
@@ -240,6 +318,12 @@ class TestLaTeXEnvironment(unittest.TestCase):
 
     def test_instantiate_class(self):
         pass
+
+    def test_add_package_loader_adds_default_package_path(self):
+        package_name = 'aspecd'
+        self.env.add_package_loader(package_name=package_name)
+        self.assertEqual(self.env.loader.loaders[-1].package_path,
+                         self.env.loader.loaders[-2].package_path)
 
 
 class TestLaTeXReporter(unittest.TestCase):

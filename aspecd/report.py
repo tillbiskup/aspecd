@@ -202,6 +202,16 @@ class Reporter(aspecd.utils.ToDictMixin):
     report : :class:`str`
         Actual report, i.e. rendered template
 
+    package : :class:`str`
+        Name of the package a template loader shall be added for
+
+        Additionally to adding a template loader, the package name and its
+        version number as well as all its dependencies get added to the
+        ``sysinfo`` key of the :attr:`context` dictionary.
+
+    package_path : :class:`str`
+        Path to the templates within the package defined by :attr:`package`
+
     Parameters
     ----------
     template : :class:`str`
@@ -231,12 +241,12 @@ class Reporter(aspecd.utils.ToDictMixin):
         self.context = collections.OrderedDict()
         self.environment = GenericEnvironment()
         self.report = ''
-        self.context['sysinfo'] = \
-            aspecd.system.SystemInfo(package=aspecd.utils.package_name(
-                self)).to_dict()
+        self.package = ''
+        self.package_path = ''
         self._jinja_template = None
         self.__kind__ = 'report'
-        self._exclude_from_to_dict = ['context', 'environment', 'report']
+        self._exclude_from_to_dict = ['context', 'environment', 'report',
+                                      'package', 'package_path']
 
     def render(self):
         """Render the template.
@@ -259,13 +269,29 @@ class Reporter(aspecd.utils.ToDictMixin):
         if not self.template:
             raise FileNotFoundError('No template provided')
         # noinspection PyTypeChecker
+        self._add_package_loader()
+        self._add_to_context()
+        self._get_jinja_template()
+        self._render()
+
+    def _add_package_loader(self):
+        if self.package:
+            if self.package_path:
+                self.environment.add_package_loader(
+                    package_name=self.package,
+                    package_path=self.package_path
+                )
+            else:
+                self.environment.add_package_loader(package_name=self.package)
+
+    def _add_to_context(self):
+        self.context['sysinfo'] = \
+            aspecd.system.SystemInfo(package=self.package).to_dict()
         self.context['template_dir'] = os.path.split(self.template)[0]
         if self.context['template_dir']:
             self.context['template_dir'] += os.path.sep
         # noinspection PyTypeChecker
         self.context['timestamp'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        self._get_jinja_template()
-        self._render()
 
     def _get_jinja_template(self):
         try:
@@ -581,25 +607,84 @@ class GenericEnvironment(jinja2.Environment):
         "templates/report/", *i.e.* the base directory for all report
         templates of the ASpecD package.
 
+    Additional package loaders can be inserted before the package loader for
+    the ASpecD package using the method :meth:`add_package_loader`. This
+    allows packages based on the ASpecD framework to define templates with
+    the same name as those in ASpecD and thus to load the templates provided
+    by the derived package rather than those from ASpecD.
+
+
+    Attributes
+    ----------
+    package_path : :class:`str`
+        Path to the templates within the package
+
+        Default: "templates/report"
+
+
+    Parameters
+    ----------
+    env : :class:`dict`
+        Dictionary used for creating the :class:`jinja2.Environment`
+
+        Can be used by derived classes to override the environment.
+
+
+    .. versionchanged:: 0.6.3
+        New attribute :attr:`package_path`, new parameter ``env``
+
     """
 
-    def __init__(self):
-        env = {
-            "loader": jinja2.ChoiceLoader([
-                jinja2.FileSystemLoader(
-                    [
-                        os.path.abspath('.'),
-                        os.path.abspath('/')
-                    ]
-                ),
-                jinja2.PackageLoader(
-                    "aspecd", package_path="templates/report/")
-            ])
-        }
+    def __init__(self, env=None):
+        self.package_path = "templates/report/"
+        if not env:
+            env = {
+                "loader": jinja2.ChoiceLoader([
+                    jinja2.FileSystemLoader(
+                        [
+                            os.path.abspath('.'),
+                            os.path.abspath('/')
+                        ]
+                    ),
+                    jinja2.PackageLoader(
+                        "aspecd", package_path=self.package_path)
+                ])
+            }
         super().__init__(**env)
 
+    def add_package_loader(self, package_name='', package_path=''):
+        """
+        Add a package loader for a given package name.
 
-class TxtEnvironment(jinja2.Environment):
+        The package loader will be inserted before the loader for the ASpecD
+        package. This allows packages based on the ASpecD framework to
+        define templates with the same name as those in ASpecD and thus to
+        load the templates provided by the derived package rather than those
+        from ASpecD.
+
+
+        Parameters
+        ----------
+        package_name : :class:`str`
+            Name of the package to add the loader for
+
+        package_path : :class:`str`
+            Path to the templates within the package
+
+            Defaults to :attr:`package_path`
+
+
+        .. versionadded:: 0.6.3
+
+        """
+        if not package_path:
+            package_path = self.package_path
+        package_loader = jinja2.PackageLoader(package_name=package_name,
+                                              package_path=package_path)
+        self.loader.loaders.insert(-1, package_loader)
+
+
+class TxtEnvironment(GenericEnvironment):
     """Jinja2 environment for rendering generic text templates.
 
     The environment does not change any of the jinja settings except of the
@@ -621,9 +706,14 @@ class TxtEnvironment(jinja2.Environment):
         "templates/report/txt/", *i.e.* the directory for all bare text report
         templates of the ASpecD package.
 
+
+    .. versionchanged:: 0.6.3
+        Now based on :class:`GenericEnvironment`
+
     """
 
     def __init__(self):
+        package_path = "templates/report/txt/"
         env = {
             "loader": jinja2.ChoiceLoader([
                 jinja2.FileSystemLoader(
@@ -633,13 +723,14 @@ class TxtEnvironment(jinja2.Environment):
                     ]
                 ),
                 jinja2.PackageLoader(
-                    "aspecd", package_path="templates/report/txt/")
+                    "aspecd", package_path=package_path)
             ])
         }
-        super().__init__(**env)
+        super().__init__(env)
+        self.package_path = package_path
 
 
-class LaTeXEnvironment(jinja2.Environment):
+class LaTeXEnvironment(GenericEnvironment):
     """Jinja2 environment for rendering LaTeX-based templates.
 
     This environment is designed for using templates written in LaTeX that
@@ -688,9 +779,13 @@ class LaTeXEnvironment(jinja2.Environment):
         templates of the ASpecD package.
 
 
+    .. versionchanged:: 0.6.3
+        Now based on :class:`GenericEnvironment`
+
     """
 
     def __init__(self):
+        package_path = "templates/report/latex/"
         env = {
             "block_start_string": '%{',
             "block_end_string": '}%',
@@ -710,7 +805,8 @@ class LaTeXEnvironment(jinja2.Environment):
                     ]
                 ),
                 jinja2.PackageLoader(
-                    "aspecd", package_path="templates/report/latex/")
+                    "aspecd", package_path=package_path),
             ])
         }
-        super().__init__(**env)
+        super().__init__(env)
+        self.package_path = package_path
