@@ -91,7 +91,7 @@ class TestAnalysisStep(unittest.TestCase):
         self.assertTrue(callable(self.analysisstep.to_dict))
 
     def test_to_dict_does_not_contain_certain_keys(self):
-        for key in ['name', 'description', 'references']:
+        for key in ['name', 'description', 'references', 'result']:
             with self.subTest(key=key):
                 self.assertNotIn(key, self.analysisstep.to_dict())
 

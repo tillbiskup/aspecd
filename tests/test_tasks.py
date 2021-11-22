@@ -1220,6 +1220,37 @@ class TestTask(unittest.TestCase):
         dict_ = self.task.to_dict()
         self.assertEqual(dict_["properties"]["parameters"]["foo"], "foo")
 
+    def test_to_dict_replaces_dataset_in_parameters_subdict_with_label(self):
+        dataset = aspecd.dataset.Dataset()
+        recipe = tasks.Recipe()
+        recipe.datasets["foo"] = dataset
+        task_dict = {
+            'kind': 'processing',
+            'type': 'SingleProcessingStep',
+            'properties': {'parameters': {'foo': {'bar': dataset}}}
+        }
+        self.task.from_dict(task_dict)
+        self.task.recipe = recipe
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(dict_["properties"]["parameters"]["foo"]["bar"], "foo")
+
+    def test_to_dict_replaces_dataset_in_parameters_subsubdict_with_label(self):
+        dataset = aspecd.dataset.Dataset()
+        recipe = tasks.Recipe()
+        recipe.datasets["foo"] = dataset
+        task_dict = {
+            'kind': 'processing',
+            'type': 'SingleProcessingStep',
+            'properties': {'parameters': {'foo': {'bar': {'baz': dataset}}}}
+        }
+        self.task.from_dict(task_dict)
+        self.task.recipe = recipe
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(
+            dict_["properties"]["parameters"]["foo"]["bar"]["baz"], "foo")
+
     def test_to_dict_with_remove_empty(self):
         self.task.kind = 'processing'
         self.task.type = 'SingleProcessingStep'
@@ -2808,17 +2839,6 @@ class TestReportTask(unittest.TestCase):
         self.task.recipe = self.recipe
         self.task.perform()
         self.assertTrue(os.path.exists(self.filename))
-
-    @unittest.skip
-    def test_perform_task_with_default_package_sets_package_in_reporter(self):
-        self.prepare_recipe()
-        self.recipe.default_package = 'sphinx'
-        template_content = ""
-        self.prepare_template(template_content)
-        self.task.from_dict(self.report_task)
-        self.task.recipe = self.recipe
-        self.task.perform()
-        self.assertIn(self.recipe.default_package, read_content)
 
 
 class TestModelTask(unittest.TestCase):

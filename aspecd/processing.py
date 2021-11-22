@@ -1900,6 +1900,7 @@ class BaselineCorrection(SingleProcessingStep):
             math.ceil(number_of_points
                       * self.parameters["fit_area"][1] / 100.0)
 
+    # pylint: disable=invalid-unary-operand-type
     def _get_axis_values(self):
         left_values = right_values = []
         axis = self.parameters["axis"]

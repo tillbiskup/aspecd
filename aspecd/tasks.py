@@ -1772,28 +1772,33 @@ class Task(aspecd.utils.ToDictMixin):
             self.kind = self._task.__kind__
         return super().to_dict(remove_empty=remove_empty)
 
-    def _replace_objects_with_labels(self, dict_=None):  # noqa: MC0001
+    def _replace_objects_with_labels(self, dict_=None):
         if not self.recipe:
             return
         for property_key, property_value in dict_.items():
-            if (aspecd.utils.isiterable(property_value) and not isinstance(
+            if isinstance(property_value, (dict, collections.OrderedDict)):
+                self._replace_objects_with_labels(property_value)
+            elif (aspecd.utils.isiterable(property_value) and not isinstance(
                     property_value, str)) or not property_value:
                 continue
-            for dataset_key, dataset_value in self.recipe.datasets.items():
-                if property_value is dataset_value or \
-                        property_value is dataset_value.id:
-                    dict_[property_key] = dataset_key
-            for result_key, result_value in self.recipe.results.items():
-                if property_value is result_value or \
-                        hasattr(result_value, 'id') and \
-                        property_value is result_value.id:
-                    dict_[property_key] = result_key
-            for figure_key, figure_value in self.recipe.figures.items():
-                if property_value is figure_value:
-                    dict_[property_key] = figure_key
-            for plotter_key, plotter_value in self.recipe.plotters.items():
-                if property_value is plotter_value:
-                    dict_[property_key] = plotter_key
+            dict_[property_key] = \
+                self._replace_object_with_label(property_value)
+
+    def _replace_object_with_label(self, value=None):
+        for dataset_key, dataset_value in self.recipe.datasets.items():
+            if value is dataset_value or value is dataset_value.id:
+                value = dataset_key
+        for result_key, result_value in self.recipe.results.items():
+            if value is result_value or \
+                    (hasattr(result_value, 'id') and value is result_value.id):
+                value = result_key
+        for figure_key, figure_value in self.recipe.figures.items():
+            if value is figure_value:
+                value = figure_key
+        for plotter_key, plotter_value in self.recipe.plotters.items():
+            if value is plotter_value:
+                value = plotter_key
+        return value
 
     def to_yaml(self, remove_empty=False):
         """
@@ -3349,6 +3354,33 @@ class ReportTask(Task):
     def __init__(self):
         super().__init__()
         self.compile = False
+
+    def to_dict(self, remove_empty=False):
+        """
+        Create dictionary containing public attributes of the object.
+
+        Parameters
+        ----------
+        remove_empty : :class:`bool`
+            Whether to remove empty fields
+
+            Default: False
+
+        Returns
+        -------
+        public_attributes : :class:`collections.OrderedDict`
+            Ordered dictionary containing the public attributes of the object
+
+            The order of attribute definition is preserved
+
+
+        .. versionchanged:: 0.6
+            New parameter `remove_empty`
+
+        """
+        if 'dataset' in self.properties['context']:
+            self.properties['context'].pop('dataset')
+        return super().to_dict(remove_empty=remove_empty)
 
     # noinspection PyUnresolvedReferences
     def _perform(self):
