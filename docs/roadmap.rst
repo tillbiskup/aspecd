@@ -8,7 +8,6 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.6.3
 =================
 
-* Recursive replacement of datasets (et al.) with their labels upon to_dict of tasks
 * Recipes shall not contain full paths to datasets if not given in the first place...
 
 

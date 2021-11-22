@@ -2781,6 +2781,35 @@ class PlotTask(Task):
         self.target = ''
         self._module = 'plotting'
 
+    # noinspection PyUnresolvedReferences
+    def get_object(self):
+        """
+        Return object for a plot task including all attributes.
+
+        For plot tasks, if the label of a drawing has been replaced by a
+        dataset item, it gets re-replaced by the original string.
+
+        Returns
+        -------
+        obj : :class:`object`
+            Object of a class defined in the :attr:`type` attribute of a task
+
+
+        .. versionchanged:: 0.6.3
+
+        """
+        obj = super().get_object()
+        if hasattr(obj.properties, 'drawing'):
+            if not isinstance(obj.properties.drawing.label, str):
+                obj.properties.drawing.label = self._replace_object_with_label(
+                    obj.properties.drawing.label)
+        if hasattr(obj.properties, 'drawings'):
+            for drawing in obj.properties.drawings:
+                if not isinstance(drawing.label, str):
+                    drawing.label = self._replace_object_with_label(
+                        drawing.label)
+        return obj
+
     def perform(self):
         """
         Call the appropriate method of the underlying object.
@@ -3210,10 +3239,10 @@ class CompositeplotTask(PlotTask):
 
         """
         # Replace plotter objects with reference name
-        for plotter in self.properties['plotter']:
+        for idx, plotter in enumerate(self.properties['plotter']):
             for key, value in self.recipe.plotters.items():
                 if plotter is value:
-                    self.properties['plotter'] = key
+                    self.properties['plotter'][idx] = key
         return super().to_dict(remove_empty=remove_empty)
 
     def _perform(self):
@@ -3378,7 +3407,8 @@ class ReportTask(Task):
             New parameter `remove_empty`
 
         """
-        if 'dataset' in self.properties['context']:
+        if 'context' in self.properties \
+                and 'dataset' in self.properties['context']:
             self.properties['context'].pop('dataset')
         return super().to_dict(remove_empty=remove_empty)
 

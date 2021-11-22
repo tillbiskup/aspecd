@@ -2398,6 +2398,17 @@ class TestSinglePlotTask(unittest.TestCase):
         self.assertEqual('fig1', self.recipe.datasets[
             self.dataset[0]].representations[0].plot.label)
 
+    def test_label_converted_to_dataset_gets_replaced_by_dataset_label(self):
+        self.plotting_task['properties'] = \
+            {'properties': {'drawing': {'label': self.dataset[0]}}}
+        self.prepare_recipe()
+        self.task.recipe = self.recipe
+        self.task.from_dict(self.plotting_task)
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(self.dataset[0],
+                         dict_['properties']['properties']['drawing']['label'])
+
 
 class TestMultiPlotTask(unittest.TestCase):
     def setUp(self):
@@ -2522,6 +2533,18 @@ class TestMultiPlotTask(unittest.TestCase):
         self.assertEqual(self.task._task.figure.number,
                          task2._task.figure.number)
 
+    def test_label_converted_to_dataset_gets_replaced_by_dataset_label(self):
+        self.plotting_task['properties'] = \
+            {'properties': {'drawings': [{'label': self.dataset[0]}]}}
+        self.prepare_recipe()
+        self.task.recipe = self.recipe
+        self.task.from_dict(self.plotting_task)
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(self.dataset[0],
+                         dict_['properties']['properties']['drawings'][0][
+                             'label'])
+
 
 class TestCompositePlotTask(unittest.TestCase):
     def setUp(self):
@@ -2630,6 +2653,20 @@ class TestCompositePlotTask(unittest.TestCase):
         self.task.recipe = self.recipe
         self.task.perform()
         self.task.to_dict()
+
+    def test_task_to_dict_replaces_plotter_with_label(self):
+        self.prepare_recipe()
+        self.pretask.from_dict(self.singleplotting_task)
+        self.pretask.recipe = self.recipe
+        self.pretask.perform()
+        # noinspection PyTypeChecker
+        self.plotting_task['properties']['filename'] = self.figure_filename
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(self.singleplotting_task['result'],
+                         dict_['properties']['plotter'][0])
 
 
 class TestReportTask(unittest.TestCase):
