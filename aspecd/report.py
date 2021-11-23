@@ -51,7 +51,10 @@ But what if you don't like the way the bundled templates look like? Don't
 worry, we've got you covered: Simply provide a relative or absolute path to
 your own template, even with the same name. Hence, in the above example,
 if you place a file ``dataset.tex`` in the directory you serve the recipe
-from, it will be used instead of the bundled one.
+from, it will be used instead of the bundled one. Developers of other
+packages can do the same and provide templates with the same name as those
+provided by the ASpecD package. Theirs will take precedence. For details,
+see below.
 
 
 Output formats
@@ -75,6 +78,91 @@ the ``templates/report/`` directory of the ASpecD package, and here within
 subdirectories (``txt``, ``latex``) for each of the formats. This makes it
 easy to add additional formats and to shorten the template paths when using
 the reporters.
+
+
+Choosing the language of a report
+=================================
+
+While ASpecD is currently designed to predominantly use English as its
+native language, reports support different languages, provided the templates
+for the respective language are contained in the package.
+
+To select a language (different than the default, English), set the
+:attr:`Reporter.language` attribute accordingly. By default, two-letter ISO
+codes are used, such as ``en`` (English) and ``de`` (German). Please note
+that this setting will only have an effect if templates for the requested
+language are provided either by the ASpecD package or by the package based
+on ASpecD.
+
+In context of recipe-driven data analysis, getting a report on a dataset in
+German rather than in English, use the following:
+
+
+.. code-block:: yaml
+
+    - kind: report
+      type: LaTeXReporter
+      properties:
+        language: de
+        template: datensatz.tex
+        filename: bericht.tex
+      compile: true
+
+
+Note that the name of the template changes as well, as it would not make too
+much sense to have English filenames for templates written in other
+languages.
+
+.. important::
+
+    As the ASpecD framework natively uses the English language for
+    descriptions, parameter names and alike, providing templates in
+    different languages will likely result in a mixture of languages within
+    the final report.
+
+
+Package developers: Organisation of templates
+=============================================
+
+As mentioned above, the bundled templates used with the respective reporters
+are stored within the ``templates/report/`` directory of the ASpecD package.
+Each output format has its own subdirectory, currently existing directories
+are ``txt`` and ``latex``. Furthermore, to allow for different languages,
+each of these directories can (and should) contain another interlayer in
+terms of directories representing the languages. By default, two-letter ISO
+codes are used, such as ``en`` (English) and ``de`` (German).
+
+Currently, the ASpecD template organisation looks similar to the following:
+
+.. code-block::
+
+    templates/
+        report/
+            latex/
+                de/
+                    basis.tex
+                    datensatz.tex
+                    ...
+                en/
+                    base.tex
+                    dataset.tex
+                    ...
+            txt/
+                en/
+                    dataset.txt
+                    ...
+
+
+If you do not plan to support multiple languages, you can skip the language
+directories. In this case, the templates are supposed to be in English language.
+
+To change the contents of a (sub)template for your package, *e.g.* the
+"colophon.tex" template containing important information on how a report has
+been generated, simply provide a template with this name in the
+corresponding template directory within your package. As long as you are
+using recipe-driven data analysis and provide a default package in your
+recipe, the reporters will be notified and look for templates in your
+package before defaulting to the templates provided with the ASpecD framework.
 
 
 Background: Jinja2
@@ -138,6 +226,7 @@ import tempfile
 from datetime import datetime
 
 import jinja2
+import pkg_resources
 
 import aspecd.exceptions
 import aspecd.system
@@ -212,6 +301,13 @@ class Reporter(aspecd.utils.ToDictMixin):
     package_path : :class:`str`
         Path to the templates within the package defined by :attr:`package`
 
+    language : :class:`str`
+        (Human) language of the templates
+
+        Usually a two-letter code. Only if the corresponding template
+        directory exists within the package, the language will be set.
+
+
     Parameters
     ----------
     template : :class:`str`
@@ -228,10 +324,6 @@ class Reporter(aspecd.utils.ToDictMixin):
     aspecd.report.MissingFilenameError
         Raised if no output file for the report is provided.
 
-
-    .. versionadded:: 0.6
-        New parameter ``label`` to add label to calculated dataset
-
     """
 
     def __init__(self, template='', filename=''):
@@ -243,6 +335,7 @@ class Reporter(aspecd.utils.ToDictMixin):
         self.report = ''
         self.package = ''
         self.package_path = ''
+        self.language = ''
         self._jinja_template = None
         self.__kind__ = 'report'
         self._exclude_from_to_dict = ['context', 'environment', 'report',
@@ -270,6 +363,7 @@ class Reporter(aspecd.utils.ToDictMixin):
             raise FileNotFoundError('No template provided')
         # noinspection PyTypeChecker
         self._add_package_loader()
+        self._set_language()
         self._add_to_context()
         self._get_jinja_template()
         self._render()
@@ -283,6 +377,11 @@ class Reporter(aspecd.utils.ToDictMixin):
                 )
             else:
                 self.environment.add_package_loader(package_name=self.package)
+
+    def _set_language(self):
+        if self.language:
+            self.environment.language = self.language
+            self.environment.set_language()
 
     def _add_to_context(self):
         self.context['sysinfo'] = \
@@ -616,7 +715,7 @@ class GenericEnvironment(jinja2.Environment):
 
     Attributes
     ----------
-    package_path : :class:`str`
+    path : :class:`str`
         Path to the templates within the package
 
         Default: "templates/report"
@@ -629,14 +728,26 @@ class GenericEnvironment(jinja2.Environment):
 
         Can be used by derived classes to override the environment.
 
+    path : :class:`str`
+        Path to the templates within the package
+
+    lang : :class:`str`
+        Language of the templates
+
+        Usually a two-letter code; if a corresponding subdirectory to
+        :attr:`path` exists within the template package directory, it will be
+        added to the path of the template package loaders.
+
 
     .. versionchanged:: 0.6.3
-        New attribute :attr:`package_path`, new parameter ``env``
+        New attribute :attr:`package_path`, new parameters ``env``,
+        ``path``, ``lang``
 
     """
 
-    def __init__(self, env=None):
-        self.package_path = "templates/report/"
+    def __init__(self, env=None, path="templates/report/", lang=None):
+        self.path = path
+        self.language = lang
         if not env:
             env = {
                 "loader": jinja2.ChoiceLoader([
@@ -647,10 +758,38 @@ class GenericEnvironment(jinja2.Environment):
                         ]
                     ),
                     jinja2.PackageLoader(
-                        "aspecd", package_path=self.package_path)
+                        "aspecd", package_path=self.path
+                    )
                 ])
             }
         super().__init__(**env)
+        self.set_language()
+
+    def set_language(self):
+        """
+        Adjust the template directory of the package loaders for the language.
+
+        Only if a language is set in the class and the corresponding
+        template directory exists, the loaders will be updated. As it seems,
+        there is currently no way to adjust the package_path of a
+        :class:`jinja2.PackageLoader`, hence the loaders are replaced with
+        new loaders with adjusted package_path.
+
+        """
+        if self.language:
+            for idx, loader in enumerate(self.loader.loaders):
+                if isinstance(loader, jinja2.PackageLoader):
+                    package_name = loader.package_name
+                    package_path = loader.package_path
+                    if package_path.endswith('en'):
+                        package_path = package_path.rstrip('/en')
+                    package_path = "/".join([package_path, self.language])
+                    if pkg_resources.resource_exists(package_name,
+                                                     package_path):
+                        self.loader.loaders[idx] = jinja2.PackageLoader(
+                            package_name=package_name,
+                            package_path=package_path
+                        )
 
     def add_package_loader(self, package_name='', package_path=''):
         """
@@ -661,6 +800,9 @@ class GenericEnvironment(jinja2.Environment):
         define templates with the same name as those in ASpecD and thus to
         load the templates provided by the derived package rather than those
         from ASpecD.
+
+        Only in case of the given package path to exist the package loader
+        will be added.
 
 
         Parameters
@@ -678,10 +820,15 @@ class GenericEnvironment(jinja2.Environment):
 
         """
         if not package_path:
-            package_path = self.package_path
-        package_loader = jinja2.PackageLoader(package_name=package_name,
-                                              package_path=package_path)
-        self.loader.loaders.insert(-1, package_loader)
+            package_path = self.path
+        if self.language:
+            package_path = "/".join([package_path, self.language])
+        if pkg_resources.resource_exists(package_name, package_path):
+            package_loader = jinja2.PackageLoader(
+                package_name=package_name,
+                package_path=package_path
+            )
+            self.loader.loaders.insert(-1, package_loader)
 
 
 class TxtEnvironment(GenericEnvironment):
@@ -712,8 +859,9 @@ class TxtEnvironment(GenericEnvironment):
 
     """
 
-    def __init__(self):
-        package_path = "templates/report/txt/"
+    def __init__(self, lang=None):
+        self.package_path = "templates/report/txt/"
+        self.lang = lang or 'en'
         env = {
             "loader": jinja2.ChoiceLoader([
                 jinja2.FileSystemLoader(
@@ -723,11 +871,10 @@ class TxtEnvironment(GenericEnvironment):
                     ]
                 ),
                 jinja2.PackageLoader(
-                    "aspecd", package_path=package_path)
+                    "aspecd", package_path=self.package_path)
             ])
         }
-        super().__init__(env)
-        self.package_path = package_path
+        super().__init__(env=env, path=self.package_path, lang=self.lang)
 
 
 class LaTeXEnvironment(GenericEnvironment):
@@ -784,8 +931,9 @@ class LaTeXEnvironment(GenericEnvironment):
 
     """
 
-    def __init__(self):
-        package_path = "templates/report/latex/"
+    def __init__(self, lang=None):
+        self.package_path = "templates/report/latex/"
+        self.lang = lang or 'en'
         env = {
             "block_start_string": '%{',
             "block_end_string": '}%',
@@ -805,8 +953,7 @@ class LaTeXEnvironment(GenericEnvironment):
                     ]
                 ),
                 jinja2.PackageLoader(
-                    "aspecd", package_path=package_path),
+                    "aspecd", package_path=self.package_path),
             ])
         }
-        super().__init__(env)
-        self.package_path = package_path
+        super().__init__(env=env, path=self.package_path, lang=self.lang)

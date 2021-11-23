@@ -2884,6 +2884,17 @@ class TestReportTask(unittest.TestCase):
         self.task.perform()
         self.assertTrue(os.path.exists(self.filename))
 
+    def test_perform_task_with_language_and_template_from_package(self):
+        self.prepare_recipe()
+        self.report_task['properties']['template'] = 'abbildung.tex'
+        self.report_task['properties']['language'] = 'de'
+        self.task.from_dict(self.report_task)
+        self.task.recipe = self.recipe
+        self.report_task['properties']['context'] = \
+            {'figure': {'caption': {'title': '', 'text': ''}}}
+        self.task.perform()
+        self.assertTrue(os.path.exists(self.filename))
+
 
 class TestModelTask(unittest.TestCase):
     def setUp(self):

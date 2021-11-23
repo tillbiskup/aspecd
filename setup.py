@@ -46,7 +46,7 @@ setuptools.setup(
         "Topic :: Software Development :: Libraries :: Application Frameworks"
     ],
     install_requires=[
-        'jinja2',
+        'jinja2>=3.0',
         'matplotlib',
         'numpy',
         'scipy',

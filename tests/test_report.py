@@ -208,14 +208,8 @@ class TestReporter(unittest.TestCase):
             read_content = f.read()
         self.assertEqual(self.report.context['bar'], read_content)
 
-    def test_render_with_template_from_package(self):
-        self.report.template = 'txt/figure.txt'
-        self.report.context = {'figure': {'caption': {'title': '', 'text': ''}}}
-        self.report.filename = self.filename
-        self.report.create()
-
     def test_render_with_package_adds_package_loader(self):
-        self.report.package = 'sphinx'
+        self.report.package = 'aspecd'
         original_number_of_loaders = \
             len(self.report.environment.loader.loaders)
         with open(self.template, 'w+') as f:
@@ -226,8 +220,8 @@ class TestReporter(unittest.TestCase):
                          len(self.report.environment.loader.loaders))
 
     def test_render_with_package_and_package_path_sets_path(self):
-        package_path = 'templates/foo'
-        self.report.package = 'sphinx'
+        package_path = 'templates'
+        self.report.package = 'aspecd'
         self.report.package_path = package_path
         original_number_of_loaders = \
             len(self.report.environment.loader.loaders)
@@ -248,6 +242,18 @@ class TestGenericEnvironment(unittest.TestCase):
     def test_instantiate_class(self):
         pass
 
+    def test_instantiate_with_path_sets_package_path_and_loader_path(self):
+        path = "templates/report/latex"
+        env = report.GenericEnvironment(path=path)
+        self.assertEqual(path, env.path)
+        self.assertEqual(path, env.loader.loaders[-1].package_path)
+
+    def test_instantiate_with_lang_sets_language_and_loader_path(self):
+        language = "en"
+        env = report.TxtEnvironment(lang=language)
+        self.assertEqual(language, env.language)
+        self.assertTrue(env.loader.loaders[-1].package_path.endswith(language))
+
     def test_add_package_loader_adds_package_loader(self):
         package_name = 'aspecd'
         original_number_of_loaders = len(self.env.loader.loaders)
@@ -263,7 +269,7 @@ class TestGenericEnvironment(unittest.TestCase):
 
     def test_add_package_loader_with_package_path_sets_path(self):
         package_name = 'aspecd'
-        package_path = 'templates/foo'
+        package_path = 'templates/report'
         self.env.add_package_loader(package_name=package_name,
                                     package_path=package_path)
         self.assertEqual(package_path,
@@ -492,6 +498,13 @@ class TestLaTeXReporter(unittest.TestCase):
 
     def test_render_with_template_from_package(self):
         self.report.template = 'figure.tex'
+        self.report.context = {'figure': {'caption': {'title': '', 'text': ''}}}
+        self.report.filename = self.filename
+        self.report.create()
+
+    def test_render_with_language_with_template_from_package(self):
+        self.report.language = 'de'
+        self.report.template = 'abbildung.tex'
         self.report.context = {'figure': {'caption': {'title': '', 'text': ''}}}
         self.report.filename = self.filename
         self.report.create()
