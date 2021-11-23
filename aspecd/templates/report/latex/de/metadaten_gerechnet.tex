@@ -1,0 +1,11 @@
+\subsection{Rechnung}
+
+Type: {@ dataset.metadata.calculation.type }
+
+\begin{description}
+%{ for key, value in dataset.metadata.calculation.parameters.items() }%
+%{ if value }%
+\item[{@ key | replace("_", "\\_") | replace("#", "\\#") }] {@ value | replace("_", "\\_") | replace("#", "\\#") }
+%{ endif }%
+%{ endfor }%
+\end{description}

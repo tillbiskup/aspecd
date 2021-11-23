@@ -1,0 +1,3 @@
+{% if annotation.annotation.content.comment %}  {{ annotation.annotation.content.comment }}
+{% else %}  This comment has no content.
+{% endif %}

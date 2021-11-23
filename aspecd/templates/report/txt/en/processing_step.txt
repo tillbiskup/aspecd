@@ -1,0 +1,15 @@
+  This processing step is {%- if not processing_step.processing.undoable %} not{%- endif %} undoable.
+
+{%- if processing_step.processing.parameters %}
+
+  Parameters:
+{% for key, value in processing_step.processing.parameters.items() %}
+  * {{ key }}: {{ value }}
+{%- endfor %}{% else %}
+
+  For this processing step, no parameters were supplied nor necessary.
+{%- endif %}
+{%- if processing_step.processing.comment %}
+
+  Comment: {{ processing_step.processing.comment }}
+{% endif %}

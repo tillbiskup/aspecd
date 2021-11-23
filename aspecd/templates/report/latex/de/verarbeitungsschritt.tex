@@ -1,0 +1,25 @@
+\subsection{{@ processing_step.processing.description }}
+
+Dieser Verarbeitungsschritt kann %{- if not processing_step.processing.undoable }% nicht%{- endif }% rückgängig gemacht werden.
+
+%{ if processing_step.processing.parameters }%
+\vspace*{1ex}
+\begin{tabular}{ll}
+\toprule
+\multicolumn{2}{c}{\textbf{Parameter}}
+\\
+\midrule
+%{ for key, value in processing_step.processing.parameters.items() }%
+{@ key | replace("_", "\\_") | replace("#", "\\#") } & {@ value | replace("_", "\\_") | replace("#", "\\#") }
+\\
+%{ endfor }%
+\bottomrule
+\end{tabular}
+\vspace*{1ex}
+%{ else }%
+Für diesen Verarbeitungsschritt wurden keine Parameter angegeben und waren keine Parameter notwendig.
+%{ endif }%
+
+%{ if processing_step.processing.comment }%
+Kommentar: {@ processing_step.processing.comment | replace("_", "\\_") | replace("#", "\\#") }
+%{ endif }%

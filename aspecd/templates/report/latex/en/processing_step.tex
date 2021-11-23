@@ -1,0 +1,25 @@
+\subsection{{@ processing_step.processing.description }}
+
+This processing step is %{- if not processing_step.processing.undoable }% not%{- endif }% undoable.
+
+%{ if processing_step.processing.parameters }%
+\vspace*{1ex}
+\begin{tabular}{ll}
+\toprule
+\multicolumn{2}{c}{\textbf{Parameters}}
+\\
+\midrule
+%{ for key, value in processing_step.processing.parameters.items() }%
+{@ key | replace("_", "\\_") | replace("#", "\\#") } & {@ value | replace("_", "\\_") | replace("#", "\\#") }
+\\
+%{ endfor }%
+\bottomrule
+\end{tabular}
+\vspace*{1ex}
+%{ else }%
+For this processing step, no parameters were supplied nor necessary.
+%{ endif }%
+
+%{ if processing_step.processing.comment }%
+Comment: {@ processing_step.processing.comment | replace("_", "\\_") | replace("#", "\\#") }
+%{ endif }%

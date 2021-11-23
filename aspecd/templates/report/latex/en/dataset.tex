@@ -1,0 +1,167 @@
+%{ extends templateDir + 'base.tex' }%
+
+%{ block title }%
+%{ endblock }%
+
+%{ block body }%
+\rule[1ex]{\textwidth}{1pt}
+\\[1em]
+\textbf{\LARGE Dataset report}
+\\[1ex]
+\rule{\textwidth}{1pt}
+
+\hfill --- \textsl{{@ sysinfo.user.login }}, {@ timestamp }
+
+\section{Overview}
+
+\begin{tabbing}
+\hspace*{1.5cm}\=\kill
+Source:\>\texttt{{@ dataset.id | replace("_", "\\_") | replace("#", "\\#") }}
+\\
+Label:\>{@ dataset.label }
+\end{tabbing}
+
+This is %{ if dataset.data.calculated }%
+a calculated %{ else }%
+an experimental %{ endif}%
+dataset with
+%{ if dataset.history|count > 1 or dataset.history|count == 0 }%
+{@ dataset.history | count } processing steps,
+%{ else }%
+1 processing step,
+%{endif}%
+%{ if dataset.analyses|count > 1 or dataset.analyses|count == 0}%
+{@ dataset.analyses | count } analyses,
+%{ else }%
+1 analysis,
+%{endif}%
+%{ if dataset.annotations|count > 1 or dataset.annotations|count == 0}%
+{@ dataset.annotations | count } annotations,
+%{ else }%
+1 annotation,
+%{endif}%
+%{ if dataset.representations|count > 1 or dataset.representations|count == 0}%
+{@ dataset.representations | count } representations, and
+%{ else }%
+1 representation, and
+%{endif}%
+%{ if dataset.tasks|count > 1 or dataset.tasks|count == 0}%
+{@ dataset.tasks | count } total tasks.
+%{ else }%
+1 total task.
+%{endif}%
+For details, see below. Information on how this report has been generated and how to cite the underlying software are given at the end.
+
+%{ if dataset.history -}%
+\section{Processing steps}
+
+%{ if dataset.history|count > 1 }%
+In total, {@ dataset.history | count } processing steps have been carried out:
+%{ else }%
+In total, 1 processing step has been carried out:
+%{endif}%
+
+\begin{enumerate}
+%{ for processing_step in dataset.history -}%
+\item {@ processing_step.processing.description | replace("_", "\\_") | replace("#", "\\#") }
+%{ endfor }%
+\end{enumerate}
+
+For details of the individual processing steps, see below.
+
+%{ for processing_step in dataset.history }%
+
+%{ include templateDir + "processing_step.tex" }%
+
+%{ endfor }%
+%{ endif }%
+
+%{- if dataset.analyses }%
+\section{Analysis steps}
+
+%{ if dataset.analyses|count > 1 }%
+In total, {@ dataset.analyses | count } analysis steps have been carried out:
+%{ else }%
+In total, 1 analysis step has been carried out:
+%{endif}%
+
+\begin{enumerate}
+%{ for analysis_step in dataset.analyses -}%
+\item {@ analysis_step.analysis.description | replace("_", "\\_") | replace("#", "\\#") }
+%{ endfor }%
+\end{enumerate}
+
+For details of the individual analysis steps, see below.
+
+%{ for analysis_step in dataset.analyses }%
+
+%{ include templateDir + "analysis_step.tex" }%
+
+%{ endfor }%
+%{ endif }%
+
+%{- if dataset.annotations }%
+\section{Annotations}
+
+%{ if dataset.annotations|count > 1 }%
+In total, {@ dataset.annotations | count } annotations have been created:
+%{ else }%
+In total, 1 annotation has been created:
+%{endif}%
+
+\begin{enumerate}
+%{ for annotation in dataset.annotations -}%
+\item {@ annotation.annotation.type | capitalize }
+%{ endfor }%
+\end{enumerate}
+
+%{ for annotation in dataset.annotations }%
+
+%{ if annotation.annotation.type == 'comment' }%%{ include templateDir + "annotation_comment.tex" }%%{ endif }%
+
+%{ endfor}%
+
+%{ endif }%
+
+%{- if dataset.representations }%
+\section{Representations}
+
+%{ if dataset.representations|count > 1 }%
+In total, {@ dataset.representations | count } representations have been created:
+%{ else }%
+In total, 1 representation has been created:
+%{endif}%
+
+\begin{enumerate}
+%{ for representation in dataset.representations }%
+%{ if representation.plot }%
+\item {@ representation.plot.description | replace("_", "\\_") | replace("#", "\\#") } (Fig.~\ref{fig:{@ representation.plot.label }})
+%{ endif }%
+%{ endfor }%
+\end{enumerate}
+
+%{ for representation in dataset.representations }%
+%{ if representation.plot }%
+%{ set figure=representation.plot }%
+
+%{ include templateDir + "figure.tex" }%
+
+%{ endif }%
+%{ endfor }%
+
+\clearpage
+%{ endif }%
+
+
+\section{Metadata}
+
+%{ if dataset.data.calculated }%
+%{ include templateDir + "metadata_calculated.tex" }%
+%{ else }%
+%{ include templateDir + "metadata_experimental.tex" }%
+%{ endif }%
+
+
+
+%{ include templateDir + "colophon.tex" }%
+%{ endblock }%

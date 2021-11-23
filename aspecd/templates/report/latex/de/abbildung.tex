@@ -1,0 +1,12 @@
+\begin{figure}
+\hspace*{\fill}\includegraphics{{@ figure.filename }}\hspace*{\fill}
+%{ if figure.caption.title or figure.caption.text }%
+\caption{%{ if figure.caption.title }%
+\textbf{{@ figure.caption.title | replace("_", "\\_") | replace("#", "\\#") }}
+%{ endif }%
+{@ figure.caption.text | replace("_", "\\_") | replace("#", "\\#") }}
+%{ else }%
+\caption{\emph{Zu dieser Abbildung wurde keine Abbildungsunterschrift angegeben.}}
+%{ endif }%
+\label{fig:{@ figure.label }}
+\end{figure}

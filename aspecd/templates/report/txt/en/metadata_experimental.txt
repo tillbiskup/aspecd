@@ -1,0 +1,17 @@
+Measurement
+-----------
+{% for key, value in dataset.metadata.measurement.items() %}
+{% if value %}{{ key }}: {{ value }}{% endif %}
+{%- endfor %}
+
+Sample
+------
+{% for key, value in dataset.metadata.sample.items() %}
+{% if value %}{{ key }}: {{ value }}{% endif %}
+{%- endfor %}
+
+Temperature
+-----------
+{% for key, value in dataset.metadata.temperature_control.items() %}
+{% if value %}{% if 'value' in value %}{{ key }}: {{ value.value }} {{ value.unit }}{% else %}{{ key }}: {{ value }}{% endif %}{% endif %}
+{%- endfor %}

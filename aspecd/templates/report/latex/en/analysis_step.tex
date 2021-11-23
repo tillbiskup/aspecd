@@ -1,0 +1,19 @@
+\subsection{{@ analysis_step.analysis.description }}
+
+\vspace*{1ex}
+\begin{tabular}{ll}
+\toprule
+\multicolumn{2}{c}{\textbf{Parameters}}
+\\
+\midrule
+%{ for key, value in analysis_step.analysis.parameters.items() }%
+{@ key | replace("_", "\\_") | replace("#", "\\#") } & {@ value | replace("_", "\\_") | replace("#", "\\#") }
+\\
+%{ endfor }%
+\bottomrule
+\end{tabular}
+\vspace*{1ex}
+
+%{ if analysis_step.analysis.comment }%
+Comment: {@ analysis_step.analysis.comment | replace("_", "\\_") | replace("#", "\\#") }
+%{ endif }%
