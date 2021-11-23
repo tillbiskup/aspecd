@@ -24,6 +24,7 @@ Changes
 * :class:`aspecd.tasks.ReportTask` passes through the default package from the recipe to the reporter for overriding templates.
 * :class:`aspecd.infofile.Infofile`: Comment gets converted into a single string
 * Dependency change: Jinja >= 3.0
+* :class:`aspecd.io.TxtImporter` handles decimal separator different than dot
 
 
 Fixes

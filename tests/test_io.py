@@ -612,6 +612,43 @@ class TestTxtImporter(unittest.TestCase):
         self.assertListEqual(list(data[:, 0]),
                              list(self.dataset._origdata.axes[0].values))
 
+    def test_import_with_skiprows(self):
+        data = np.random.random([5, 1])
+        np.savetxt(self.source, data)
+
+        skiprows = 2
+        self.importer.source = self.source
+        self.importer.parameters["skiprows"] = skiprows
+        self.dataset.import_from(self.importer)
+        self.assertEqual(len(data) - skiprows, len(self.dataset.data.data))
+
+    def test_import_with_delimiter(self):
+        with open(self.source, 'w+') as file:
+            file.write('1;5;1\n2;6;2\n3;7;3\n4;8;4\n5;9;5\n')
+
+        self.importer.source = self.source
+        self.importer.parameters["delimiter"] = ";"
+        self.dataset.import_from(self.importer)
+        self.assertEqual((5, 3), self.dataset.data.data.shape)
+
+    def test_import_with_comments(self):
+        with open(self.source, 'w+') as file:
+            file.write('% Lorem ipsum\n1 5 1\n2 6 2\n3 7 3\n4 8 4\n5 9 5\n')
+
+        self.importer.source = self.source
+        self.importer.parameters["comments"] = "%"
+        self.dataset.import_from(self.importer)
+        self.assertEqual((5, 3), self.dataset.data.data.shape)
+
+    def test_import_with_separator(self):
+        with open(self.source, 'w+') as file:
+            file.write('1,1\n2,2\n3,3\n4,4\n5,5\n')
+
+        self.importer.source = self.source
+        self.importer.parameters["separator"] = ","
+        self.dataset.import_from(self.importer)
+        self.assertEqual((5, ), self.dataset.data.data.shape)
+
 
 class TestTxtExporter(unittest.TestCase):
     def setUp(self):

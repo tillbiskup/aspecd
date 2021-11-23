@@ -290,6 +290,7 @@ Module documentation
 
 """
 import copy
+import io
 import os
 import tempfile
 import zipfile
@@ -1139,7 +1140,9 @@ class TxtImporter(DatasetImporter):
 
     .. note::
         The importer relies on :func:`numpy.loadtxt` for reading text files.
-        Hence, the same limitations apply, *e.g.* the dot as decimal separator.
+        Hence, you can use any parameters understood by this function as
+        keys in the :attr:`parameters` attribute. For handling decimal
+        separators (non-standard behaviour), see below.
 
     If your data consist of two columns, the first will automatically be
     interpreted as the *x* axis. In all other cases, data will be read as is
@@ -1154,15 +1157,59 @@ class TxtImporter(DatasetImporter):
         skiprows : :class:`int`
             Number of rows to skip in text file (*e.g.*, header lines)
 
+        delimiter : :class:`str`
+            The string used to separate values.
+
+            Default: None (meaning: whitespace)
+
+        comments : :class:`str` | :class:`list`
+            Characters or list of characters indicating the start of a comment.
+
+            Default: #
+
+        separator : :class:`str`
+            Character used as decimal separator.
+
+            Default: None (meaning: dot)
+
+
+    .. admonition:: Decimal separators
+
+        Handling decimal separators other than the dot is notoriously
+        difficult, though often necessary. For this, the non-standard key
+        ``separator`` has been introduced that is not supported by numpy
+        itself. If you specify a character using this parameter, the file
+        will be read as text and the character specified replaced by the
+        dot. Only afterwards will :func:`numpy.loadtxt` be used with all the
+        other parameters as usual.
+
+
+    .. versionchanged:: 0.6.3
+        Document more parameter keys; add handling of decimal separator.
+
     """
 
     def __init__(self, source=None):
         super().__init__(source=source)
         self.extension = '.txt'
         self.parameters["skiprows"] = 0
+        self.parameters["delimiter"] = None
+        self.parameters["comments"] = "#"
+        self.parameters["separator"] = None
 
     def _import(self):
-        data = np.loadtxt(self.source, **self.parameters)
+        if "separator" in self.parameters:
+            separator = self.parameters.pop("separator")
+        else:
+            separator = None
+        if separator:
+            with open(self.source, encoding="utf8") as file:
+                contents = file.read()
+            contents = contents.replace(separator, '.')
+            # noinspection PyTypeChecker
+            data = np.loadtxt(io.StringIO(contents), **self.parameters)
+        else:
+            data = np.loadtxt(self.source, **self.parameters)
         if len(np.shape(data)) > 1 and np.shape(data)[1] == 2:
             self.dataset.data.axes[0].values = data[:, 0]
             data = data[:, 1]
