@@ -1,0 +1,170 @@
+%{ extends templateDir + 'basis.tex' }%
+
+%{ block title }%
+%{ endblock }%
+
+%{ block body }%
+\rule[1ex]{\textwidth}{1pt}
+\\[1em]
+\textbf{\LARGE Datensatz-Bericht}
+\\[1ex]
+\rule{\textwidth}{1pt}
+
+\hfill --- \textsl{{@ sysinfo.user.login }}, {@ timestamp }
+
+\section{Überblick}
+
+\begin{tabbing}
+\hspace*{1.5cm}\=\kill
+Quelle:\>\texttt{{@ dataset.id | replace("_", "\\_") | replace("#", "\\#") }}
+\\
+Etikett:\>{@ dataset.label }
+\end{tabbing}
+
+Dies ist ein %{ if dataset.data.calculated }%
+berechneter %{ else }%
+experimenteller %{ endif}%
+Datensatz mit
+%{ if dataset.history|count > 1 or dataset.history|count == 0 }%
+{@ dataset.history | count } Verarbeitungsschritten,
+%{ else }%
+1 Verarbeitungsschritt
+%{endif}%
+%{ if dataset.analyses|count > 1 or dataset.analyses|count == 0}%
+{@ dataset.analyses | count } Analyseschritten,
+%{ else }%
+1 Analyseschritt,
+%{endif}%
+%{ if dataset.annotations|count > 1 or dataset.annotations|count == 0}%
+{@ dataset.annotations | count } Anmerkungen,
+%{ else }%
+1 Anmerkung,
+%{endif}%
+%{ if dataset.representations|count > 1 or dataset.representations|count == 0}%
+{@ dataset.representations | count } Darstellungen und
+%{ else }%
+1 Darstellung und
+%{endif}%
+%{ if dataset.tasks|count > 1 or dataset.tasks|count == 0}%
+{@ dataset.tasks | count } Aufgaben insgesamt.
+%{ else }%
+1 Aufgabe insgesamt.
+%{endif}%
+Für Details siehe unten. Hinweise, wie dieser Bericht erstellt wurde und wie die verwendete Software zitiert werden sollte, finden sich am Ende des Dokuments. Bitte beachten Sie, dass Parameternamen etc. \emph{nicht} übersetzt werden.
+
+%{ if dataset.history -}%
+\section{Verarbeitungsschritte}
+
+%{ if dataset.history|count > 1 }%
+Insgesamt wurden {@ dataset.history | count } Verarbeitungsschritte durchgeführt:
+%{ else }%
+Insgesamt wurde 1 Verarbeitungsschritt durchgeführt:
+%{endif}%
+
+\begin{enumerate}
+%{ for processing_step in dataset.history -}%
+\item {@ processing_step.processing.description | replace("_", "\\_") | replace("#", "\\#") }
+%{ endfor }%
+\end{enumerate}
+
+
+Details zu den einzelnen Verarbeitungsschritten sind nachfolgend aufgeführt.
+
+%{ for processing_step in dataset.history }%
+
+%{ include templateDir + "verarbeitungsschritt.tex" }%
+
+%{ endfor }%
+%{ endif }%
+
+%{- if dataset.analyses }%
+\section{Analyseschritte}
+
+%{ if dataset.analyses|count > 1 }%
+Insgesamt wurden {@ dataset.analyses | count } Analyseschritte durchgeführt:
+%{ else }%
+Insgesamt wurde 1 Analyseschritt durchgeführt:
+%{endif}%
+
+\begin{enumerate}
+%{ for analysis_step in dataset.analyses -}%
+\item {@ analysis_step.analysis.description | replace("_", "\\_") | replace("#", "\\#") }
+%{ endfor }%
+\end{enumerate}
+
+Details zu den einzelnen Analyseschritten sind nachfolgend aufgeführt.
+
+%{ for analysis_step in dataset.analyses }%
+
+%{ include templateDir + "analyseschritt.tex" }%
+
+%{ endfor }%
+%{ endif }%
+
+%{- if dataset.annotations }%
+\section{Anmerkungen}
+
+%{ if dataset.annotations|count > 1 }%
+Insgesamt wurden {@ dataset.annotations | count } Anmerkungen erstellt:
+%{ else }%
+Insgesamt wurde 1 Anmerkung erstellt:
+%{endif}%
+
+\begin{enumerate}
+%{ for annotation in dataset.annotations -}%
+\item {@ annotation.annotation.type | capitalize }
+%{ endfor }%
+\end{enumerate}
+
+%{ for annotation in dataset.annotations }%
+
+%{ if annotation.annotation.type == 'comment' }%%{ include templateDir + "anmerkung_kommentar.tex" }%%{ endif }%
+
+%{ endfor}%
+
+%{ endif }%
+
+%{- if dataset.representations }%
+\section{Darstellungen}
+
+%{ if dataset.representations|count > 1 }%
+Insgesamt wurden {@ dataset.representations | count } Darstellungen erzeugt:
+%{ else }%
+Insgesamt wurde 1 Darstellung erzeugt:
+%{endif}%
+
+\begin{enumerate}
+%{ for representation in dataset.representations }%
+%{ if representation.plot }%
+\item {@ representation.plot.description | replace("_", "\\_") | replace("#", "\\#") } (Fig.~\ref{fig:{@ representation.plot.label }})
+%{ endif }%
+%{ endfor }%
+\end{enumerate}
+
+%{ for representation in dataset.representations }%
+%{ if representation.plot }%
+%{ set figure=representation.plot }%
+
+%{ include templateDir + "abbildung.tex" }%
+
+%{ endif }%
+%{ endfor }%
+
+\clearpage
+%{ endif }%
+
+
+\section{Metadaten}
+
+Zur Beachtung: Die nachfolgend aufgelisteten Parameternamen wurden aus Gründen der Kompatibilität mit \LaTeX{} gegenüber ihrer Benennung in Python von \enquote{snake case} (Worttrennung durch Unterstrich, \enquote{\_}) in \enquote{camel case} (Worttrennung durch Binnenmajuskel) umgewandelt.
+
+%{ if dataset.data.calculated }%
+%{ include templateDir + "metadaten_gerechnet.tex" }%
+%{ else }%
+%{ include templateDir + "metadaten_experimentell.tex" }%
+%{ endif }%
+
+
+
+%{ include templateDir + "kolophon.tex" }%
+%{ endblock }%

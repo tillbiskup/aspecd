@@ -1,0 +1,7 @@
+\subsection{{@ annotation.annotation.type | capitalize }}
+
+%{ if annotation.annotation.content.comment }%
+{@ annotation.annotation.content.comment | replace("_", "\\_") | replace("#", "\\#") }
+%{ else }%
+Dieser Kommentar hat keinen Inhalt.
+%{ endif }%

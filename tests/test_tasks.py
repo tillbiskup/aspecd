@@ -385,6 +385,13 @@ class TestRecipe(unittest.TestCase):
         dict_ = self.recipe.to_dict()
         self.assertEqual(id_, dict_['datasets'][0])
 
+    def test_to_dict_without_datasets_source_directory(self):
+        dataset_id = 'foo'
+        recipe_dict = {'datasets': [dataset_id]}
+        self.recipe.from_dict(recipe_dict)
+        dict_ = self.recipe.to_dict()
+        self.assertEqual(dataset_id, dict_['datasets'][0])
+
     def test_to_dict_with_task_returns_task_dict(self):
         task = tasks.Task()
         task.from_dict(self.task)
@@ -826,7 +833,16 @@ class TestTask(unittest.TestCase):
         attribute = 'foo'
         dict_ = dict()
         dict_[attribute] = 'foo'
-        self.task.from_dict(dict_)
+        with warnings.catch_warnings(record=True) as warning:
+            self.task.from_dict(dict_)
+        self.assertFalse(hasattr(self.task, attribute))
+
+    def test_from_dict_with_unknown_attribute_warns(self):
+        attribute = 'foo'
+        dict_ = dict()
+        dict_[attribute] = 'foo'
+        with self.assertWarnsRegex(UserWarning, 'Unknown key'):
+            self.task.from_dict(dict_)
         self.assertFalse(hasattr(self.task, attribute))
 
     def test_has_perform_method(self):
@@ -1100,7 +1116,7 @@ class TestTask(unittest.TestCase):
         dict_ = self.task.to_dict()
         self.assertEqual(dict_["properties"]["foo"], "foo")
 
-    def test_to_dict_with_result_in_properties_replaces_it_with_label(self):
+    def test_to_dict_with_dataset_from_results_replaces_it_with_label(self):
         kind = 'processing'
         type_ = 'SingleProcessingStep'
         self.task.kind = kind
@@ -1110,6 +1126,20 @@ class TestTask(unittest.TestCase):
         recipe.results["foo"] = dataset
         self.task.recipe = recipe
         self.task.properties["foo"] = dataset
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(dict_["properties"]["foo"], "foo")
+
+    def test_to_dict_with_value_from_results_replaces_it_with_label(self):
+        kind = 'processing'
+        type_ = 'SingleProcessingStep'
+        self.task.kind = kind
+        self.task.type = type_
+        value = 3.1415
+        recipe = tasks.Recipe()
+        recipe.results["foo"] = value
+        self.task.recipe = recipe
+        self.task.properties["foo"] = value
         self.task.perform()
         dict_ = self.task.to_dict()
         self.assertEqual(dict_["properties"]["foo"], "foo")
@@ -1197,6 +1227,37 @@ class TestTask(unittest.TestCase):
         dict_ = self.task.to_dict()
         self.assertEqual(dict_["properties"]["parameters"]["foo"], "foo")
 
+    def test_to_dict_replaces_dataset_in_parameters_subdict_with_label(self):
+        dataset = aspecd.dataset.Dataset()
+        recipe = tasks.Recipe()
+        recipe.datasets["foo"] = dataset
+        task_dict = {
+            'kind': 'processing',
+            'type': 'SingleProcessingStep',
+            'properties': {'parameters': {'foo': {'bar': dataset}}}
+        }
+        self.task.from_dict(task_dict)
+        self.task.recipe = recipe
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(dict_["properties"]["parameters"]["foo"]["bar"], "foo")
+
+    def test_to_dict_replaces_dataset_in_parameters_subsubdict_with_label(self):
+        dataset = aspecd.dataset.Dataset()
+        recipe = tasks.Recipe()
+        recipe.datasets["foo"] = dataset
+        task_dict = {
+            'kind': 'processing',
+            'type': 'SingleProcessingStep',
+            'properties': {'parameters': {'foo': {'bar': {'baz': dataset}}}}
+        }
+        self.task.from_dict(task_dict)
+        self.task.recipe = recipe
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(
+            dict_["properties"]["parameters"]["foo"]["bar"]["baz"], "foo")
+
     def test_to_dict_with_remove_empty(self):
         self.task.kind = 'processing'
         self.task.type = 'SingleProcessingStep'
@@ -1231,7 +1292,7 @@ class TestProcessingTask(unittest.TestCase):
     def setUp(self):
         self.task = tasks.ProcessingTask()
         self.recipe = tasks.Recipe()
-        self.dataset = ['foo']
+        self.dataset = ['baz']
         self.processing_task = {'kind': 'processing',
                                 'type': 'SingleProcessingStep',
                                 'apply_to': self.dataset}
@@ -1292,6 +1353,14 @@ class TestProcessingTask(unittest.TestCase):
         self.task.perform()
         self.assertTrue(len(self.recipe.results))
 
+    def test_perform_task_with_result_name_identical_to_dataset_warns(self):
+        self.prepare_recipe()
+        self.processing_task['result'] = self.dataset[0]
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        with self.assertWarnsRegex(UserWarning, 'identical to dataset'):
+            self.task.perform()
+
     def test_perform_task_with_result_issues_log_message(self):
         self.prepare_recipe()
         result = 'foo'
@@ -1310,7 +1379,7 @@ class TestProcessingTask(unittest.TestCase):
         recipe_dict = {'datasets': result,
                        'tasks': [self.processing_task]}
         self.recipe.from_dict(recipe_dict)
-        self.processing_task['result'] = result
+        self.processing_task['result'] = ['fooz', 'barz']
         self.processing_task['apply_to'] = result
         self.task.from_dict(self.processing_task)
         self.task.recipe = self.recipe
@@ -1330,7 +1399,8 @@ class TestProcessingTask(unittest.TestCase):
     def test_to_dict_adds_params_from_processing_of_task_object(self):
         self.processing_task["type"] = 'BaselineCorrection'
         self.prepare_recipe()
-        self.recipe.datasets['foo'].data.data = np.random.random(10)+5
+        self.recipe.datasets[self.dataset[0]].data.data = \
+            np.random.random(10)+5
         self.task.from_dict(self.processing_task)
         self.task.recipe = self.recipe
         self.task.perform()
@@ -1666,7 +1736,7 @@ class TestSingleAnalysisTask(unittest.TestCase):
     def setUp(self):
         self.task = tasks.SingleanalysisTask()
         self.recipe = tasks.Recipe()
-        self.dataset = ['foo']
+        self.dataset = ['baz']
 
     def prepare_recipe(self):
         self.analysis_task = {'kind': 'singleanalysis',
@@ -1723,6 +1793,18 @@ class TestSingleAnalysisTask(unittest.TestCase):
                        return_value=mock_obj):
                 self.task.perform()
         self.assertEqual(result, self.recipe.results[result].id)
+
+    def test_perform_task_with_result_name_identical_to_dataset_warns(self):
+        self.prepare_recipe()
+        self.analysis_task['result'] = self.dataset[0]
+        self.task.from_dict(self.analysis_task)
+        self.task.recipe = self.recipe
+        with patch('aspecd.analysis.SingleAnalysisStep',
+                   result=aspecd.dataset.Dataset()) as mock_obj:
+            with patch('aspecd.tasks.Task._create_object',
+                       return_value=mock_obj):
+                with self.assertWarnsRegex(UserWarning, 'identical to dataset'):
+                    self.task.perform()
 
     def test_perform_task_with_result_and_multiple_datasets_adds_results(self):
         self.prepare_recipe()
@@ -1852,6 +1934,14 @@ class TestAggregatedAnalysisTask(unittest.TestCase):
         self.assertIsInstance(self.recipe.results[self.result],
                               aspecd.dataset.CalculatedDataset)
 
+    def test_perform_task_with_result_name_identical_to_dataset_warns(self):
+        self.prepare_recipe()
+        self.analysis_task['result'] = self.dataset[0]
+        self.task.from_dict(self.analysis_task)
+        self.task.recipe = self.recipe
+        with self.assertWarnsRegex(UserWarning, 'identical to dataset'):
+            self.task.perform()
+
     def test_perform_task_sets_values_in_result(self):
         self.prepare_recipe()
         self.task.from_dict(self.analysis_task)
@@ -1885,6 +1975,14 @@ class TestAggregatedAnalysisTask(unittest.TestCase):
         self.assertIn('Perform "{}" on datasets "{}" resulting in "{}"'.format(
             self.analysis_task['type'], ', '.join(self.dataset), self.result),
             cm.output[0])
+
+    def test_to_dict_contains_original_type(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.analysis_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(self.analysis_task['type'], dict_['type'])
 
 
 class TestAnnotationTask(unittest.TestCase):
@@ -2307,6 +2405,17 @@ class TestSinglePlotTask(unittest.TestCase):
         self.assertEqual('fig1', self.recipe.datasets[
             self.dataset[0]].representations[0].plot.label)
 
+    def test_label_converted_to_dataset_gets_replaced_by_dataset_label(self):
+        self.plotting_task['properties'] = \
+            {'properties': {'drawing': {'label': self.dataset[0]}}}
+        self.prepare_recipe()
+        self.task.recipe = self.recipe
+        self.task.from_dict(self.plotting_task)
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(self.dataset[0],
+                         dict_['properties']['properties']['drawing']['label'])
+
 
 class TestMultiPlotTask(unittest.TestCase):
     def setUp(self):
@@ -2431,6 +2540,18 @@ class TestMultiPlotTask(unittest.TestCase):
         self.assertEqual(self.task._task.figure.number,
                          task2._task.figure.number)
 
+    def test_label_converted_to_dataset_gets_replaced_by_dataset_label(self):
+        self.plotting_task['properties'] = \
+            {'properties': {'drawings': [{'label': self.dataset[0]}]}}
+        self.prepare_recipe()
+        self.task.recipe = self.recipe
+        self.task.from_dict(self.plotting_task)
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(self.dataset[0],
+                         dict_['properties']['properties']['drawings'][0][
+                             'label'])
+
 
 class TestCompositePlotTask(unittest.TestCase):
     def setUp(self):
@@ -2539,6 +2660,20 @@ class TestCompositePlotTask(unittest.TestCase):
         self.task.recipe = self.recipe
         self.task.perform()
         self.task.to_dict()
+
+    def test_task_to_dict_replaces_plotter_with_label(self):
+        self.prepare_recipe()
+        self.pretask.from_dict(self.singleplotting_task)
+        self.pretask.recipe = self.recipe
+        self.pretask.perform()
+        # noinspection PyTypeChecker
+        self.plotting_task['properties']['filename'] = self.figure_filename
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(self.singleplotting_task['result'],
+                         dict_['properties']['plotter'][0])
 
 
 class TestReportTask(unittest.TestCase):
@@ -2654,6 +2789,19 @@ class TestReportTask(unittest.TestCase):
         self.task.perform()
         self.assertIn(figure_record.filename, self.task.properties['includes'])
 
+    def test_perform_task_does_not_add_empty_figure_filename_to_includes(self):
+        self.prepare_recipe()
+        figure_record = tasks.FigureRecord()
+        figure_record.filename = ''
+        self.recipe.figures['foo'] = figure_record
+        template_content = ""
+        self.prepare_template(template_content)
+        self.task.from_dict(self.report_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertNotIn(figure_record.filename,
+                         self.task.properties['includes'])
+
     def test_perform_task_compiles_template_with_additional_properties(self):
         self.prepare_recipe()
         self.recipe.tasks[0].properties['context'] = \
@@ -2733,6 +2881,17 @@ class TestReportTask(unittest.TestCase):
         self.report_task['properties'].pop('filename')
         self.task.from_dict(self.report_task)
         self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(os.path.exists(self.filename))
+
+    def test_perform_task_with_language_and_template_from_package(self):
+        self.prepare_recipe()
+        self.report_task['properties']['template'] = 'abbildung.tex'
+        self.report_task['properties']['language'] = 'de'
+        self.task.from_dict(self.report_task)
+        self.task.recipe = self.recipe
+        self.report_task['properties']['context'] = \
+            {'figure': {'caption': {'title': '', 'text': ''}}}
         self.task.perform()
         self.assertTrue(os.path.exists(self.filename))
 

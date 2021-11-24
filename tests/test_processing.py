@@ -474,6 +474,14 @@ class TestNormalisation(unittest.TestCase):
         self.dataset.process(self.processing)
         self.assertAlmostEqual(2, self.dataset.data.data.max(), 2)
 
+    def test_normalise_removes_unit_of_last_axis(self):
+        self.dataset.data.axes[-1].unit = 'mV'
+        for kind in ["min", "max", "amp", "area"]:
+            with self.subTest(kind=kind):
+                self.processing.parameters["kind"] = kind
+                self.dataset.process(self.processing)
+                self.assertEqual('', self.dataset.data.axes[-1].unit)
+
 
 class TestIntegration(unittest.TestCase):
     def setUp(self):
@@ -1063,6 +1071,22 @@ class TestBaselineCorrection(unittest.TestCase):
         self.dataset.process(self.processing)
         self.assertAlmostEqual(self.dataset.data.data[-20], 0)
 
+    def test_baseline_correction_with_only_left_side(self):
+        self.dataset.data.data = \
+            np.r_[np.ones(5) + 2, np.ones(75), np.ones(20) + 5]
+        self.dataset.data.axes[0].values = np.linspace(1, 100, num=100)
+        self.processing.parameters['fit_area'] = [5, 0]
+        processing = self.dataset.process(self.processing)
+        self.assertAlmostEqual(self.dataset.data.data[-20], 3)
+
+    def test_baseline_correction_with_only_right_side(self):
+        self.dataset.data.data = \
+            np.r_[np.ones(5) + 2, np.ones(75), np.ones(20) + 5]
+        self.dataset.data.axes[0].values = np.linspace(1, 100, num=100)
+        self.processing.parameters['fit_area'] = [0, 5]
+        processing = self.dataset.process(self.processing)
+        self.assertAlmostEqual(self.dataset.data.data[0], -3)
+
     def test_baseline_correction_with_percentage_float(self):
         self.dataset.data.data = np.r_[np.ones(20) + 5, np.ones(60), np.ones(
             20)+5]
@@ -1286,6 +1310,15 @@ class TestDatasetAlgebra(unittest.TestCase):
         self.processing.parameters["dataset"] = self.dataset2
         self.processing.parameters["kind"] = "add"
         with self.assertRaisesRegex(ValueError, "different shapes"):
+            self.dataset1.process(self.processing)
+
+    def test_process_with_differing_shapes_shows_shape_in_message(self):
+        self.dataset1.data.data = np.random.random(5)
+        self.dataset2.data.data = np.random.random(6)
+        self.processing.parameters["dataset"] = self.dataset2
+        self.processing.parameters["kind"] = "add"
+        with self.assertRaisesRegex(ValueError,
+                                    str(self.dataset1.data.data.shape)):
             self.dataset1.process(self.processing)
 
     def test_add_with_1d_datasets(self):
@@ -1811,6 +1844,18 @@ class TestFiltering(unittest.TestCase):
                 self.dataset.process(self.processing)
                 self.assertTrue(all(filtered_data == self.dataset.data.data))
 
+    def test_savitzky_golay_filter_with_1d_data_with_even_window_length(self):
+        self.processing.parameters["type"] = "savitzky-golay"
+        self.processing.parameters["window_length"] = 10
+        self.processing.parameters["order"] = 3
+        filtered_data = \
+            scipy.signal.savgol_filter(self.dataset.data.data,
+                                       self.processing.parameters[
+                                           "window_length"] + 1,
+                                       self.processing.parameters["order"])
+        self.dataset.process(self.processing)
+        self.assertTrue(all(filtered_data == self.dataset.data.data))
+
     def test_filter_with_alternative_names_sets_generic_filter_type(self):
         alternative_names = ['box', 'boxcar', 'moving-average', 'car']
         self.processing.parameters["window_length"] = 3
@@ -1908,6 +1953,19 @@ class TestCommonRangeExtraction(unittest.TestCase):
         self.processing.datasets.append(self.dataset2)
         with self.assertRaisesRegex(ValueError, "different units"):
             self.processing.process()
+
+    def test_process_datasets_ignores_last_axis(self):
+        self.dataset1.data.data = np.random.random(10)
+        self.dataset1.data.axes[0].values = np.linspace(0, 5, 10)
+        self.dataset1.data.axes[0].unit = 'foo'
+        self.dataset1.data.axes[1].unit = 'bar'
+        self.dataset2.data.data = np.random.random(10)
+        self.dataset2.data.axes[0].values = np.linspace(0, 5, 10)
+        self.dataset2.data.axes[0].unit = 'foo'
+        self.dataset2.data.axes[1].unit = 'baz'
+        self.processing.datasets.append(self.dataset1)
+        self.processing.datasets.append(self.dataset2)
+        self.processing.process()
 
     def test_process_ignores_different_axes_units_if_told_so(self):
         self.dataset1.data.data = np.random.random([10, 10])

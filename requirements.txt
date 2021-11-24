@@ -1,7 +1,7 @@
 numpy
 scipy
 matplotlib
-jinja2
+jinja2>=3.0
 oyaml
 asdf
 bibrecord

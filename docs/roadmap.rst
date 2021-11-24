@@ -8,6 +8,10 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.7
 ===============
 
+* Recipe-driven data analysis:
+
+  * Better handling of automatically generated filenames for saving plots and reports: unique filenames; using the label rather than the source (id) of the dataset
+
 * Report task:
 
   * Operating on recipes, *i.e.* report on all tasks in a recipe
@@ -18,7 +22,6 @@ For version 0.7
 * Reports:
 
   * LaTeXFigureReporter for generating LaTeX code to include figures in documents
-  * Looking for templates in derived packages
   * Looking for templates in user directory
 
 * Processing of 2D (eventually ND with N>1) datasets:

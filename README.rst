@@ -9,6 +9,10 @@ ASpecD is a **framework for handling spectroscopic data** focussing on **reprodu
 
 What is even better: Actual data processing and analysis **no longer requires programming skills**, but is as simple as writing a text file summarising all the steps you want to have been performed on your dataset(s) in an organised way. Curious? Here is an example::
 
+    format:
+      type: ASpecD recipe
+      version: '0.2'
+
     datasets:
       - /path/to/first/dataset
       - /path/to/second/dataset

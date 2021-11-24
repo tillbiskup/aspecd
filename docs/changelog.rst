@@ -5,6 +5,42 @@ Changelog
 This page contains a summary of changes between the official ASpecD releases. Only the biggest changes are listed here. A complete and detailed log of all changes is available through the `GitHub Repository Browser <https://github.com/tillbiskup/aspecd/commits/master>`_.
 
 
+Version 0.6.3
+=============
+
+Released 2021-11-24
+
+
+Changes
+-------
+
+* :class:`aspecd.report.Reporter` adds template loader for package if :attr:`aspecd.report.Reporter.package` is provided, allowing to override templates from the ASpecD framework within derived packages.
+* :class:`aspecd.tasks.ReportTask` passes through the default package from the recipe to the reporter for overriding templates.
+* :class:`aspecd.infofile.Infofile`: Comment gets converted into a single string
+* Dependency change: Jinja >= 3.0
+* :class:`aspecd.io.TxtImporter` handles decimal separator different than dot
+
+
+Fixes
+-----
+
+* :class:`aspecd.tasks.Task` warns if key in dict (recipe) is no property of the task.
+* :class:`aspecd.processing.DatasetAlgebra` returns shape in error message if shapes differ.
+* Processing and analysis tasks issue warning if result name is identical to dataset label
+* Ensure window length for Savitzky-Golay filter in :class:`aspecd.processing.Filtering` to always be odd
+* :class:`aspecd.processing.CommonRangeExtraction` ignores unit of last axis (*i.e.*, intensity) when checking for identical units
+* :class:`aspecd.utils.ToDictMixin`: Added superclass call to preserve mro in dependent subclasses
+* Tasks properly handle non-dataset results from recipe
+* :class:`aspecd.plotting.MultiPlotter` sets axis labels when units are empty
+* :class:`aspecd.processing.Normalisation` removes unit from last axis
+* :class:`aspecd.processing.BaselineCorrection` handles zero values in range properly
+* :class:`aspecd.analysis.AggregateAnalysisStep` no longer adds ``datasets`` and ``result`` to output of ``to_dict()``
+* :class:`aspecd.tasks.AggregatedAnalysisTask` sets correct type in output of ``to_dict()``
+* :class:`aspecd.tasks.ReportTask` does not add empty figure filenames to includes
+* :class:`aspecd.Tasks.PlotTask` preserves labels of drawings
+* Recipe history does not contain path to current directory in dataset source
+
+
 Version 0.6.2
 =============
 

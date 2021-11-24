@@ -53,10 +53,14 @@ class Infofile:
 
     Raises
     ------
-    aspecd.infofile.InfofileEmptyError
+    aspecd.exceptions.InfofileEmptyError
         Raised if info file is empty
-    aspecd.infofile.InfofileTypeError
+    aspecd.exceptions.InfofileTypeError
         Raised if file provided is no info file
+
+
+    .. versionchanged:: 0.6.3
+        Comment gets converted into a single string.
 
     """
 
@@ -78,9 +82,9 @@ class Infofile:
 
         Raises
         ------
-        aspecd.infofile.InfofileEmptyError
+        aspecd.exceptions.InfofileEmptyError
             Raised if info file is empty
-        aspecd.infofile.InfofileTypeError
+        aspecd.exceptions.InfofileTypeError
             Raised if file provided is no info file
 
         """
@@ -105,8 +109,10 @@ class Infofile:
         for line in self._file_contents[1:]:
             if self._is_comment_block(blockname):
                 if blockname not in self.parameters:
-                    self.parameters[blockname] = []
-                self.parameters[blockname].append(line)
+                    self.parameters[blockname] = line.rstrip()
+                else:
+                    self.parameters[blockname] = \
+                        " ".join([self.parameters[blockname], line.rstrip()])
                 continue
             if self._is_comment_line(line):
                 continue

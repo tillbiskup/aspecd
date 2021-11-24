@@ -45,12 +45,6 @@ class TestReporter(unittest.TestCase):
         self.assertTrue(isinstance(self.report.context,
                                    collections.OrderedDict))
 
-    def test_context_has_sysinfo_key(self):
-        self.assertIn('sysinfo', self.report.context)
-
-    def test_context_has_sysinfo_packages_key(self):
-        self.assertIn('packages', self.report.context['sysinfo'])
-
     def test_has_environment_property(self):
         self.assertTrue(hasattr(self.report, 'environment'))
 
@@ -66,7 +60,8 @@ class TestReporter(unittest.TestCase):
         self.assertTrue(callable(self.report.to_dict))
 
     def test_to_dict_does_not_contain_certain_keys(self):
-        for key in ['context', 'environment', 'report']:
+        for key in ['context', 'environment', 'report', 'package',
+                    'package_path']:
             with self.subTest(key=key):
                 self.assertNotIn(key, self.report.to_dict())
 
@@ -88,6 +83,20 @@ class TestReporter(unittest.TestCase):
             f.write('')
         self.report.template = self.template
         self.report.render()
+
+    def test_render_adds_sysinfo_key_to_context(self):
+        with open(self.template, 'w+') as f:
+            f.write('')
+        self.report.template = self.template
+        self.report.render()
+        self.assertIn('sysinfo', self.report.context)
+
+    def test_context_has_sysinfo_packages_key(self):
+        with open(self.template, 'w+') as f:
+            f.write('')
+        self.report.template = self.template
+        self.report.render()
+        self.assertIn('packages', self.report.context['sysinfo'])
 
     def test_render_with_template_with_absolute_path(self):
         with open(self.template2, 'w+') as f:
@@ -199,11 +208,86 @@ class TestReporter(unittest.TestCase):
             read_content = f.read()
         self.assertEqual(self.report.context['bar'], read_content)
 
-    def test_render_with_template_from_package(self):
-        self.report.template = 'txt/figure.txt'
-        self.report.context = {'figure': {'caption': {'title': '', 'text': ''}}}
-        self.report.filename = self.filename
-        self.report.create()
+    def test_render_with_package_adds_package_loader(self):
+        self.report.package = 'aspecd'
+        original_number_of_loaders = \
+            len(self.report.environment.loader.loaders)
+        with open(self.template, 'w+') as f:
+            f.write('')
+        self.report.template = self.template
+        self.report.render()
+        self.assertEqual(original_number_of_loaders + 1,
+                         len(self.report.environment.loader.loaders))
+
+    def test_render_with_package_and_package_path_sets_path(self):
+        package_path = 'templates'
+        self.report.package = 'aspecd'
+        self.report.package_path = package_path
+        original_number_of_loaders = \
+            len(self.report.environment.loader.loaders)
+        with open(self.template, 'w+') as f:
+            f.write('')
+        self.report.template = self.template
+        self.report.render()
+        self.assertEqual(
+            package_path,
+            self.report.environment.loader.loaders[-2].package_path
+        )
+
+
+class TestGenericEnvironment(unittest.TestCase):
+    def setUp(self):
+        self.env = report.GenericEnvironment()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_instantiate_with_path_sets_package_path_and_loader_path(self):
+        path = "templates/report/latex"
+        env = report.GenericEnvironment(path=path)
+        self.assertEqual(path, env.path)
+        self.assertEqual(path, env.loader.loaders[-1].package_path)
+
+    def test_instantiate_with_lang_sets_language_and_loader_path(self):
+        language = "en"
+        env = report.TxtEnvironment(lang=language)
+        self.assertEqual(language, env.language)
+        self.assertTrue(env.loader.loaders[-1].package_path.endswith(language))
+
+    def test_add_package_loader_adds_package_loader(self):
+        package_name = 'aspecd'
+        original_number_of_loaders = len(self.env.loader.loaders)
+        self.env.add_package_loader(package_name=package_name)
+        self.assertEqual(original_number_of_loaders + 1,
+                         len(self.env.loader.loaders))
+
+    def test_add_package_loader_adds_default_package_path(self):
+        package_name = 'aspecd'
+        self.env.add_package_loader(package_name=package_name)
+        self.assertEqual(self.env.loader.loaders[-1].package_path,
+                         self.env.loader.loaders[-2].package_path)
+
+    def test_add_package_loader_with_package_path_sets_path(self):
+        package_name = 'aspecd'
+        package_path = 'templates/report'
+        self.env.add_package_loader(package_name=package_name,
+                                    package_path=package_path)
+        self.assertEqual(package_path,
+                         self.env.loader.loaders[-2].package_path)
+
+
+class TestTxtEnvironment(unittest.TestCase):
+    def setUp(self):
+        self.env = report.TxtEnvironment()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_add_package_loader_adds_default_package_path(self):
+        package_name = 'aspecd'
+        self.env.add_package_loader(package_name=package_name)
+        self.assertEqual(self.env.loader.loaders[-1].package_path,
+                         self.env.loader.loaders[-2].package_path)
 
 
 class TestTxtReporter(unittest.TestCase):
@@ -240,6 +324,12 @@ class TestLaTeXEnvironment(unittest.TestCase):
 
     def test_instantiate_class(self):
         pass
+
+    def test_add_package_loader_adds_default_package_path(self):
+        package_name = 'aspecd'
+        self.env.add_package_loader(package_name=package_name)
+        self.assertEqual(self.env.loader.loaders[-1].package_path,
+                         self.env.loader.loaders[-2].package_path)
 
 
 class TestLaTeXReporter(unittest.TestCase):
@@ -408,6 +498,13 @@ class TestLaTeXReporter(unittest.TestCase):
 
     def test_render_with_template_from_package(self):
         self.report.template = 'figure.tex'
+        self.report.context = {'figure': {'caption': {'title': '', 'text': ''}}}
+        self.report.filename = self.filename
+        self.report.create()
+
+    def test_render_with_language_with_template_from_package(self):
+        self.report.language = 'de'
+        self.report.template = 'abbildung.tex'
         self.report.context = {'figure': {'caption': {'title': '', 'text': ''}}}
         self.report.filename = self.filename
         self.report.create()

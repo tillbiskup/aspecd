@@ -305,7 +305,6 @@ class Plotter(aspecd.utils.ToDictMixin):
 
     def __init__(self):
         # Name defaults always to the full class name, don't change!
-        super().__init__()
         self.name = aspecd.utils.full_class_name(self)
         self.parameters = {
             'show_legend': False,
@@ -321,6 +320,7 @@ class Plotter(aspecd.utils.ToDictMixin):
         self.legend = None
         self.label = ''
         self.style = ''
+        super().__init__()
         #
         self._original_rcparams = None
         self._exclude_from_to_dict = \
@@ -1385,6 +1385,9 @@ class SinglePlotter2DStacked(SinglePlotter):
             self.properties.axes.yticks = yticks
             self.properties.axes.yticklabels = \
                 self._format_yticklabels(yticklabels)
+        self._handle_tight_settings()
+
+    def _handle_tight_settings(self):
         if self.parameters['tight']:
             if self.parameters['tight'] in ('x', 'both'):
                 self.axes.set_xlim([self.dataset.data.axes[0].values.min(),
@@ -1556,8 +1559,7 @@ class MultiPlotter(Plotter):
         if self.parameters['axes'][0].quantity:
             xlabel = \
                 self._create_axis_label_string(self.parameters['axes'][0])
-        elif all(xquantities) and all(xunits) and \
-                aspecd.utils.all_equal(xquantities) and \
+        elif aspecd.utils.all_equal(xquantities) and \
                 aspecd.utils.all_equal(xunits):
             xlabel = \
                 self._create_axis_label_string(self.datasets[0].data.axes[0])
@@ -1568,8 +1570,7 @@ class MultiPlotter(Plotter):
         if self.parameters['axes'][1].quantity:
             ylabel = \
                 self._create_axis_label_string(self.parameters['axes'][1])
-        elif all(yquantities) and all(yunits) and \
-                aspecd.utils.all_equal(yquantities) and \
+        elif aspecd.utils.all_equal(yquantities) and \
                 aspecd.utils.all_equal(yunits):
             ylabel = \
                 self._create_axis_label_string(self.datasets[0].data.axes[1])

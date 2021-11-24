@@ -946,14 +946,18 @@ class Normalisation(SingleProcessingStep):
             data = self.dataset.data.data
         if "max" in self.parameters["kind"].lower():
             self.dataset.data.data /= (data.max() - self._noise_amplitude / 2)
+            self.dataset.data.axes[-1].unit = ''
         elif "min" in self.parameters["kind"].lower():
             self.dataset.data.data /= (abs(data.min())
                                        - self._noise_amplitude / 2)
+            self.dataset.data.axes[-1].unit = ''
         elif "amp" in self.parameters["kind"].lower():
             self.dataset.data.data /= ((data.max() - data.min()) -
                                        self._noise_amplitude)
+            self.dataset.data.axes[-1].unit = ''
         elif "area" in self.parameters["kind"].lower():
             self.dataset.data.data /= np.sum(np.abs(data))
+            self.dataset.data.axes[-1].unit = ''
         else:
             raise ValueError(f'Kind {self.parameters["kind"]} not recognised.')
 
@@ -1818,6 +1822,9 @@ class BaselineCorrection(SingleProcessingStep):
     .. versionchanged:: 0.3
         Coefficients are returned in unscaled data domain
 
+    .. versionchanged:: 0.6.3
+        Zero values in range properly handled
+
     """
 
     def __init__(self):
@@ -1887,24 +1894,31 @@ class BaselineCorrection(SingleProcessingStep):
     def _get_fit_range(self):
         number_of_points = len(self.dataset.data.data)
         self._data_points_left = \
-            math.ceil(number_of_points * self.parameters["fit_area"][0] / 100.0)
+            math.ceil(number_of_points
+                      * self.parameters["fit_area"][0] / 100.0)
         self._data_points_right = \
-            math.ceil(number_of_points * self.parameters["fit_area"][1] / 100.0)
+            math.ceil(number_of_points
+                      * self.parameters["fit_area"][1] / 100.0)
 
+    # pylint: disable=invalid-unary-operand-type
     def _get_axis_values(self):
+        left_values = right_values = []
         axis = self.parameters["axis"]
-        # pylint: disable=invalid-unary-operand-type
-        self._axis_values = np.concatenate(
-            (self.dataset.data.axes[axis].values[:self._data_points_left],
-             self.dataset.data.axes[axis].values[-self._data_points_right:])
-        )
+        if self._data_points_left:
+            left_values = \
+                self.dataset.data.axes[axis].values[:self._data_points_left]
+        if self._data_points_right:
+            right_values = \
+                self.dataset.data.axes[axis].values[-self._data_points_right:]
+        self._axis_values = np.concatenate((left_values, right_values))
 
     def _get_intensity_values(self, data):
-        # pylint: disable=invalid-unary-operand-type
-        self._intensity_values = np.concatenate(
-            (data[:self._data_points_left],
-             data[-self._data_points_right:])
-        )
+        left_values = right_values = []
+        if self._data_points_left:
+            left_values = data[:self._data_points_left]
+        if self._data_points_right:
+            right_values = data[-self._data_points_right:]
+        self._intensity_values = np.concatenate((left_values, right_values))
 
     # noinspection PyUnresolvedReferences,PyCallingNonCallable
     def _get_values_to_subtract(self):
@@ -2291,7 +2305,7 @@ class DatasetAlgebra(SingleProcessingStep):
 
        - kind: multiprocessing
          type: CommonRangeExtraction
-         results:
+         result:
            - label_to_dataset
            - label_to_other_dataset
 
@@ -2342,7 +2356,9 @@ class DatasetAlgebra(SingleProcessingStep):
     def _check_shape(self):
         if self.dataset.data.data.shape \
                 != self.parameters["dataset"].data.data.shape:
-            raise ValueError("Data of datasets have different shapes.")
+            raise ValueError(f"Data of datasets have different shapes: "
+                             f"{self.dataset.data.data.shape}, "
+                             f"{self.parameters['dataset'].data.data.shape}.")
 
 
 class Interpolation(SingleProcessingStep):
@@ -2646,7 +2662,7 @@ class Filtering(SingleProcessingStep):
          properties:
            parameters:
              type: savitzky-golay
-             window_length: 10
+             window_length: 9
              order: 3
 
     Note that for this filter, you need to provide the polynomial order as
@@ -2694,6 +2710,9 @@ class Filtering(SingleProcessingStep):
             self.dataset.data.data = scipy.ndimage.gaussian_filter(
                 self.dataset.data.data, self.parameters["window_length"])
         elif self.parameters["type"] == "savitzky-golay":
+            # Ensure window length to be odd
+            if not self.parameters["window_length"] % 2:
+                self.parameters["window_length"] += 1
             self.dataset.data.data = scipy.signal.savgol_filter(
                 self.dataset.data.data,
                 self.parameters["window_length"],
@@ -2795,7 +2814,7 @@ class CommonRangeExtraction(MultiProcessingStep):
 
        - kind: multiprocessing
          type: CommonRangeExtraction
-         results:
+         result:
            - dataset1_cut
            - dataset2_cut
          apply_tp:
@@ -2812,7 +2831,7 @@ class CommonRangeExtraction(MultiProcessingStep):
 
        - kind: multiprocessing
          type: CommonRangeExtraction
-         results:
+         result:
            - label_to_dataset
            - label_to_other_dataset
 
@@ -2830,6 +2849,10 @@ class CommonRangeExtraction(MultiProcessingStep):
 
 
     .. versionadded:: 0.2
+
+    .. versionchanged:: 0.6.3
+        Unit of last axis (*i.e.*, intensity) gets ignored when checking for
+        same units
 
     """
 
@@ -2879,7 +2902,8 @@ class CommonRangeExtraction(MultiProcessingStep):
         for dataset in self.datasets:
             new_dimension = dataset.data.data.ndim
             if old_dimension and old_dimension != new_dimension:
-                raise ValueError("Datasets have different dimensions")
+                raise ValueError(f"Datasets have different dimensions: "
+                                 f"{old_dimension} vs. {new_dimension}")
             old_dimension = new_dimension
 
     def _check_common_range(self):
@@ -2890,7 +2914,8 @@ class CommonRangeExtraction(MultiProcessingStep):
                 minima.append(dataset.data.axes[dim].values[0])
                 maxima.append(dataset.data.axes[dim].values[-1])
             if np.amax(minima) > np.amin(maxima):
-                raise ValueError("Datasets have disjoint axes values")
+                raise ValueError(f"Datasets have disjoint axes values: "
+                                 f"{np.amax(minima)} > {np.amin(maxima)}")
             self.parameters["common_range"].append([np.amax(minima),
                                                     np.amin(maxima)])
 
@@ -2898,10 +2923,11 @@ class CommonRangeExtraction(MultiProcessingStep):
         old_units = None
         for dataset in self.datasets:
             new_units = []
-            for axis in dataset.data.axes:
+            for axis in dataset.data.axes[:-1]:
                 new_units.append(axis.unit)
             if old_units and old_units != new_units:
-                raise ValueError("Datasets have axes with different units")
+                raise ValueError(f"Datasets have axes with different units: "
+                                 f"{old_units} vs. {new_units}")
             old_units = new_units
 
     def _calculate_number_of_points(self):
@@ -3084,6 +3110,7 @@ class Noise(SingleProcessingStep):
 
     .. versionchanged:: 0.6
         Added parameter ``amplitude``
+
 
     """
 

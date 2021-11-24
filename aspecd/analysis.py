@@ -315,7 +315,8 @@ class AnalysisStep(aspecd.utils.ToDictMixin):
         self.description = 'Abstract analysis step'
         self.comment = ''
         self.references = []
-        self._exclude_from_to_dict = ['name', 'description', 'references']
+        self._exclude_from_to_dict = ['name', 'description', 'references',
+                                      'result']
 
     def analyse(self):
         """Perform the actual analysis step on the given dataset.
@@ -730,6 +731,7 @@ class AggregatedAnalysisStep(AnalysisStep):
         self.result = self.create_dataset()
         self._analysis_object = None
         self.__kind__ = 'aggregatedanalysis'
+        self._exclude_from_to_dict.extend(['datasets', 'result'])
 
     def analyse(self):
         """
