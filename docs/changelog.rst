@@ -20,7 +20,7 @@ Not yet released
 Changes
 -------
 
-* New attribute "comment" in :class:`aspecd.tasks.Task`, :class:`aspecd.report.Reporter`, :class:`aspecd.plotting.Plotter`, :class:`aspecd.io.DatasetExporter` allowing for storing user-supplied comments
+* New attribute ``comment`` in :class:`aspecd.tasks.Task`, :class:`aspecd.report.Reporter`, :class:`aspecd.plotting.Plotter`, :class:`aspecd.io.DatasetExporter` allowing for storing user-supplied comments
 
 
 Fixes

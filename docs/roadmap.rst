@@ -11,6 +11,7 @@ For version 0.7
 * Recipe-driven data analysis:
 
   * Better handling of automatically generated filenames for saving plots and reports: unique filenames; using the label rather than the source (id) of the dataset
+  * Handling of results: automatically add datasets to dataset list? How to deal with result labels identical to existing datasets?
 
 * Report task:
 
