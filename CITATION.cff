@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: If you use this software, please cite it using these metadata.
+title: ASpecD
+abstract: >
+    ASpecD is a Python framework for handling spectroscopic data focussing on reproducibility. In short: Each and every processing step applied to your data will be recorded and can be traced back, and additionally, for each representation of your data (e.g., figures, tables) you can easily follow how the data shown have been processed and where they originate from.
+
+    What is even better: Actual data processing and analysis no longer requires programming skills, but is as simple as writing a text file summarising all the steps you want to have been performed on your dataset(s) in an organised way.
+authors:
+  - family-names: Biskup
+    given-names: Till
+    orcid: "https://orcid.org/0000-0003-2913-0004"
+type: software
+license: BSD-2-Clause
+repository-code: "https://github.com/tillbiskup/aspecd"
+keywords:
+  - "spectroscopy"
+  - "data processing and analysis"
+  - "reproducible science"
+  - "reproducible research"
+  - "good scientific practice"
+  - "recipe-driven data analysis"
+identifiers:
+  - description: "The concept DOI of the work."
+    type: doi
+    value: 10.5281/zenodo.4717937

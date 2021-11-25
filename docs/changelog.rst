@@ -5,6 +5,24 @@ Changelog
 This page contains a summary of changes between the official ASpecD releases. Only the biggest changes are listed here. A complete and detailed log of all changes is available through the `GitHub Repository Browser <https://github.com/tillbiskup/aspecd/commits/master>`_.
 
 
+Version 0.6.4
+=============
+
+Released 2021-11-25
+
+
+Changes
+-------
+
+* New attribute ``comment`` in :class:`aspecd.tasks.Task`, :class:`aspecd.report.Reporter`, :class:`aspecd.plotting.Plotter`, :class:`aspecd.io.DatasetExporter` allowing for storing user-supplied comments
+
+
+Fixes
+-----
+
+* Warnings issued during cooking of a recipe are now log messages.
+
+
 Version 0.6.3
 =============
 

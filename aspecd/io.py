@@ -599,19 +599,29 @@ class DatasetExporter:
     ----------
     dataset : :obj:`aspecd.dataset.Dataset`
         dataset to export data and metadata from
+
     target : string
         specifier of the target the data and metadata will be written to
+
+    comment : :class:`str`
+        User-supplied comment describing intent, purpose, reason, ...
+
 
     Raises
     ------
     aspecd.io.MissingDatasetError
         Raised when no dataset exists to act upon
 
+
+    .. versionchanged:: 0.6.4
+        New attribute :attr:`comment`
+
     """
 
     def __init__(self, target=None):
         self.target = target
         self.dataset = None
+        self.comment = ''
 
     def export_from(self, dataset=None):
         """Perform the actual export from the given dataset.
