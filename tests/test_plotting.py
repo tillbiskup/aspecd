@@ -85,6 +85,9 @@ class TestPlotter(unittest.TestCase):
     def test_has_label_property(self):
         self.assertTrue(hasattr(self.plotter, 'label'))
 
+    def test_has_comment_property(self):
+        self.assertTrue(hasattr(self.plotter, 'comment'))
+
     def test_has_to_dict_method(self):
         self.assertTrue(hasattr(self.plotter, 'to_dict'))
         self.assertTrue(callable(self.plotter.to_dict))

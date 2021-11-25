@@ -1634,14 +1634,17 @@ class Task(aspecd.utils.ToDictMixin):
 
         Usually corresponds to the module name the type (class) is defined in.
         See the note below for special cases.
+
     type : :class:`str`
         Type of task.
 
         Corresponds to the class name eventually responsible for performing
         the task.
+
     package : :class:`str`
         Name of the package the class eventually responsible for performing the
         task belongs to.
+
     properties : :class:`dict`
         Properties necessary to perform the task.
 
@@ -1658,6 +1661,7 @@ class Task(aspecd.utils.ToDictMixin):
         :attr:`aspecd.tasks.Task.properties` dict. For a recipe, this means
         that these additional attributes are at the same level as
         :attr:`aspecd.tasks.Task.properties`.
+
     apply_to : :class:`list`
         List of datasets the task should be applied to.
 
@@ -1667,8 +1671,12 @@ class Task(aspecd.utils.ToDictMixin):
         Each dataset is referred to by the value of its
         :attr:`aspecd.dataset.Dataset.source` attribute. This should be
         unique and can consist of a filename, path, URL/URI, LOI, or alike.
+
     recipe : :class:`aspecd.tasks.Recipe`
         Recipe containing the task and the list of datasets the task refers to
+
+    comment : :class:`str`
+        User-supplied comment describing intent, purpose, reason, ...
 
 
     .. note::
@@ -1687,6 +1695,10 @@ class Task(aspecd.utils.ToDictMixin):
     aspecd.tasks.MissingRecipeError
         Raised if no recipe is available upon performing the task.
 
+
+    .. versionchanged:: 0.6.4
+        New attribute :attr:`comment`
+
     """
 
     def __init__(self, recipe=None):
@@ -1697,6 +1709,7 @@ class Task(aspecd.utils.ToDictMixin):
         self.properties = dict()
         self.apply_to = []
         self.recipe = recipe
+        self.comment = ''
         self._module = ''
         self._exclude_from_to_dict = ['recipe', 'package']
         self._task = None
@@ -1729,7 +1742,8 @@ class Task(aspecd.utils.ToDictMixin):
                 else:
                     setattr(self, key, value)
             elif not hasattr(self, key):
-                warnings.warn(f'Unknown key "{key}" ignored')
+                class_name = aspecd.utils.full_class_name(self)
+                logger.warning(f'Unknown key "{key}" ignored in "{class_name}"')
 
     def to_dict(self, remove_empty=False):
         """
@@ -2288,7 +2302,7 @@ class ProcessingTask(Task):
                     dataset_copy.id = self.result
                     self.recipe.results[self.result] = dataset_copy
                 if dataset_copy.id in self.recipe.datasets.keys():
-                    warnings.warn(
+                    logger.warning(
                         f'Result name "{dataset_copy.id}" identical to '
                         f'dataset label, unexpected things may '
                         f'happen.')
@@ -2413,6 +2427,11 @@ class MultiprocessingTask(Task):
             # noinspection PyUnresolvedReferences
             self._task.process()
             for number, dataset in enumerate(self._task.datasets):
+                if self.result[number] in self.recipe.datasets.keys():
+                    logger.warning(
+                        f'Result name "{self.result[number]}" identical to '
+                        f'dataset label, unexpected things may '
+                        f'happen.')
                 self.recipe.results[self.result[number]] = dataset
         else:
             self._task.datasets = self.recipe.get_datasets(self.apply_to)
@@ -2576,7 +2595,7 @@ class SingleanalysisTask(AnalysisTask):
                     self.recipe.results[self.result] = self._task.result
                 if isinstance(self._task.result, aspecd.dataset.Dataset) and \
                         self._task.result.id in self.recipe.datasets.keys():
-                    warnings.warn(
+                    logger.warning(
                         f'Result name "{self.result}" identical to '
                         f'dataset label, unexpected things may '
                         f'happen.')
@@ -2651,7 +2670,7 @@ class MultianalysisTask(AnalysisTask):
         if isinstance(result, aspecd.dataset.Dataset):
             result.id = label
             if label in self.recipe.datasets.keys():
-                warnings.warn(
+                logger.warning(
                     f'Result name "{self.result}" identical to '
                     f'dataset label, unexpected things may '
                     f'happen.')
@@ -2701,7 +2720,7 @@ class AggregatedanalysisTask(AnalysisTask):
         self._task.analyse()
         if self.result:
             if self.result in self.recipe.datasets.keys():
-                warnings.warn(
+                logger.warning(
                     f'Result name "{self.result}" identical to '
                     f'dataset label, unexpected things may '
                     f'happen.')

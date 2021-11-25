@@ -780,6 +780,9 @@ class TestTask(unittest.TestCase):
     def test_has_recipe_property(self):
         self.assertTrue(hasattr(self.task, 'recipe'))
 
+    def test_has_recipe_property(self):
+        self.assertTrue(hasattr(self.task, 'comment'))
+
     def test_instantiate_with_recipe_sets_recipe(self):
         recipe = tasks.Recipe()
         task = tasks.Task(recipe=recipe)
@@ -841,8 +844,9 @@ class TestTask(unittest.TestCase):
         attribute = 'foo'
         dict_ = dict()
         dict_[attribute] = 'foo'
-        with self.assertWarnsRegex(UserWarning, 'Unknown key'):
+        with self.assertLogs(__package__, level='WARNING') as cm:
             self.task.from_dict(dict_)
+        self.assertIn('Unknown key', cm.output[0])
         self.assertFalse(hasattr(self.task, attribute))
 
     def test_has_perform_method(self):
@@ -1358,8 +1362,9 @@ class TestProcessingTask(unittest.TestCase):
         self.processing_task['result'] = self.dataset[0]
         self.task.from_dict(self.processing_task)
         self.task.recipe = self.recipe
-        with self.assertWarnsRegex(UserWarning, 'identical to dataset'):
+        with self.assertLogs(__package__, level='WARNING') as cm:
             self.task.perform()
+        self.assertIn('identical to dataset', cm.output[0])
 
     def test_perform_task_with_result_issues_log_message(self):
         self.prepare_recipe()
@@ -1699,6 +1704,15 @@ class TestMultiProcessingTask(unittest.TestCase):
         self.task.perform()
         self.assertEqual(len(result), len(self.recipe.results))
 
+    def test_perform_task_with_result_name_identical_to_dataset_warns(self):
+        self.prepare_recipe()
+        self.processing_task['result'] = self.dataset
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        with self.assertLogs(__package__, level='WARNING') as cm:
+            self.task.perform()
+        self.assertIn('identical to dataset', cm.output[0])
+
 
 class TestAnalysisTask(unittest.TestCase):
     def setUp(self):
@@ -1803,8 +1817,9 @@ class TestSingleAnalysisTask(unittest.TestCase):
                    result=aspecd.dataset.Dataset()) as mock_obj:
             with patch('aspecd.tasks.Task._create_object',
                        return_value=mock_obj):
-                with self.assertWarnsRegex(UserWarning, 'identical to dataset'):
+                with self.assertLogs(__package__, level='WARNING') as cm:
                     self.task.perform()
+                self.assertIn('identical to dataset', cm.output[0])
 
     def test_perform_task_with_result_and_multiple_datasets_adds_results(self):
         self.prepare_recipe()
@@ -1888,6 +1903,19 @@ class TestMultiAnalysisTask(unittest.TestCase):
         self.task.perform()
         self.assertTrue(len(self.recipe.results))
 
+    def test_perform_task_with_result_name_identical_to_dataset_warns(self):
+        self.prepare_recipe()
+        self.analysis_task['result'] = self.dataset[0]
+        self.task.from_dict(self.analysis_task)
+        self.task.recipe = self.recipe
+        with patch('aspecd.analysis.MultiAnalysisStep',
+                   result=aspecd.dataset.Dataset()) as mock_obj:
+            with patch('aspecd.tasks.Task._create_object',
+                       return_value=mock_obj):
+                with self.assertLogs(__package__, level='WARNING') as cm:
+                    self.task.perform()
+                self.assertIn('identical to dataset', cm.output[0])
+
     @unittest.skip
     def test_perform_task_with_result_list_adds_result(self):
         self.dataset = ['foo', 'bar']
@@ -1939,8 +1967,9 @@ class TestAggregatedAnalysisTask(unittest.TestCase):
         self.analysis_task['result'] = self.dataset[0]
         self.task.from_dict(self.analysis_task)
         self.task.recipe = self.recipe
-        with self.assertWarnsRegex(UserWarning, 'identical to dataset'):
+        with self.assertLogs(__package__, level='WARNING') as cm:
             self.task.perform()
+        self.assertIn('identical to dataset', cm.output[0])
 
     def test_perform_task_sets_values_in_result(self):
         self.prepare_recipe()

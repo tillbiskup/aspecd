@@ -288,6 +288,9 @@ class Plotter(aspecd.utils.ToDictMixin):
         reset to the values before the plot, at least as long as applying
         the style (only) affects the rcParams of matplotlib.
 
+    comment : :class:`str`
+        User-supplied comment describing intent, purpose, reason, ...
+
 
     Raises
     ------
@@ -300,6 +303,9 @@ class Plotter(aspecd.utils.ToDictMixin):
 
     .. versionchanged:: 0.6.2
         New parameter ``tight_layout``
+
+    .. versionchanged:: 0.6.4
+        New attribute :attr:`comment`
 
     """
 
@@ -320,6 +326,7 @@ class Plotter(aspecd.utils.ToDictMixin):
         self.legend = None
         self.label = ''
         self.style = ''
+        self.comment = ''
         super().__init__()
         #
         self._original_rcparams = None

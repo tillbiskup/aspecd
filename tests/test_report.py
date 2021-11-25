@@ -55,6 +55,9 @@ class TestReporter(unittest.TestCase):
     def test_has_report_property(self):
         self.assertTrue(hasattr(self.report, 'report'))
 
+    def test_has_comment_property(self):
+        self.assertTrue(hasattr(self.report, 'comment'))
+
     def test_has_to_dict_method(self):
         self.assertTrue(hasattr(self.report, 'to_dict'))
         self.assertTrue(callable(self.report.to_dict))

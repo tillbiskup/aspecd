@@ -64,6 +64,9 @@ class TestDatasetExporter(unittest.TestCase):
     def test_instantiate_class(self):
         pass
 
+    def test_has_comment_property(self):
+        self.assertTrue(hasattr(self.exporter, 'comment'))
+
     def test_instantiate_with_target_sets_target(self):
         target = 'filename'
         exporter = io.DatasetExporter(target=target)

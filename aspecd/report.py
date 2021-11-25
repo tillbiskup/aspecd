@@ -307,6 +307,9 @@ class Reporter(aspecd.utils.ToDictMixin):
         Usually a two-letter code. Only if the corresponding template
         directory exists within the package, the language will be set.
 
+    comment : :class:`str`
+        User-supplied comment describing intent, purpose, reason, ...
+
 
     Parameters
     ----------
@@ -324,6 +327,13 @@ class Reporter(aspecd.utils.ToDictMixin):
     aspecd.report.MissingFilenameError
         Raised if no output file for the report is provided.
 
+
+    .. versionchanged:: 0.6.3
+        New attributes :attr:`package`, :attr:`package_path`, :attr:`language`
+
+    .. versionchanged:: 0.6.4
+        New attribute :attr:`comment`
+
     """
 
     def __init__(self, template='', filename=''):
@@ -336,6 +346,7 @@ class Reporter(aspecd.utils.ToDictMixin):
         self.package = ''
         self.package_path = ''
         self.language = ''
+        self.comment = ''
         self._jinja_template = None
         self.__kind__ = 'report'
         self._exclude_from_to_dict = ['context', 'environment', 'report',

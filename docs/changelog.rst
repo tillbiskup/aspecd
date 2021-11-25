@@ -11,6 +11,24 @@ Version 0.7.0
 Not yet released
 
 
+Version 0.6.4
+=============
+
+Not yet released
+
+
+Changes
+-------
+
+* New attribute "comment" in :class:`aspecd.tasks.Task`, :class:`aspecd.report.Reporter`, :class:`aspecd.plotting.Plotter`, :class:`aspecd.io.DatasetExporter` allowing for storing user-supplied comments
+
+
+Fixes
+-----
+
+* Warnings issued during cooking of a recipe are now log messages.
+
+
 Version 0.6.3
 =============
 
