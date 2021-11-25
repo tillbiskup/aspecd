@@ -14,7 +14,7 @@ Not yet released
 Version 0.6.4
 =============
 
-Not yet released
+Released 2021-11-25
 
 
 Changes
