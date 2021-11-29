@@ -8,21 +8,42 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.7
 ===============
 
+* Plotting
+
+  * MultiPlotter: parameter "tight" for tight axes
+
+  * Colorbar for 2D plotter
+
+  * Tick label angles
+
+  * colormaps for multiple lines
+
+* Processing
+
+  * Set label of dataset to slice/average in :class:`aspecd.processing.SliceExtraction` and :class:`aspecd.processing.Averaging`
+
+  * ExtractSlices (plural): extract several slices from a dataset and combine them in a new dataset
+
+  * CombineDatasets: combine data from several datasets into a single dataset; parameters allowing to define the axis values/quantity/unit, possibly even from given metadata; to decide: How to handle metadata that might be invalidated?
+
 * Recipe-driven data analysis:
 
   * Better handling of automatically generated filenames for saving plots and reports: unique filenames; using the label rather than the source (id) of the dataset
+
   * Handling of results: automatically add datasets to dataset list? How to deal with result labels identical to existing datasets?
+
+  * Sub-recipes that can be included in recipes
+
+    Allows for creating a library of recipes for rather complex tasks that can simply be called as single step from another recipe
 
 * Report task:
 
   * Operating on recipes, *i.e.* report on all tasks in a recipe
   * Adding arbitrary dict representations of properties of datasets/results to context
 
-* Recipes: Subrecipes that can be included in recipes
-
 * Reports:
 
-  * LaTeXFigureReporter for generating LaTeX code to include figures in documents
+  * (LaTeX)FigureReporter for generating (LaTeX) code to include figures in documents
   * Looking for templates in user directory
 
 * Processing of 2D (eventually ND with N>1) datasets:
