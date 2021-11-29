@@ -11,6 +11,12 @@ Version 0.7.0
 Not yet released
 
 
+New features
+------------
+
+* :class:`aspecd.tasks.FigurereportTask` for creating figure captions that can, *e.g.*, be included in other documents
+
+
 Version 0.6.4
 =============
 

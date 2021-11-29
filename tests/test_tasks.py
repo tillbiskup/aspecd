@@ -2925,6 +2925,136 @@ class TestReportTask(unittest.TestCase):
         self.assertTrue(os.path.exists(self.filename))
 
 
+class TestFigureReportTask(unittest.TestCase):
+    def setUp(self):
+        self.task = tasks.FigurereportTask()
+        self.recipe = tasks.Recipe()
+        self.template = 'figure.tex'
+        self.filename = 'figure-caption.tex'
+        self.figure = 'fig'
+        self.report_task = {'kind': 'figurereport',
+                            'type': 'LaTeXReporter',
+                            'properties': {'template': self.template,
+                                           'filename': self.filename,
+                                           },
+                            'apply_to': self.figure}
+        self.figure_record = aspecd.tasks.FigureRecord()
+        root_path = os.path.split(os.path.abspath(__file__))[0]
+        self.output_directory = os.path.join(root_path, 'output_directory')
+        os.mkdir(self.output_directory)
+
+    def tearDown(self):
+        if os.path.exists(self.template):
+            os.remove(self.template)
+        if os.path.exists(self.filename):
+            os.remove(self.filename)
+        if os.path.exists(self.output_directory):
+            shutil.rmtree(self.output_directory)
+
+    def prepare_recipe(self):
+        dataset_factory = dataset.DatasetFactory()
+        dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
+        self.recipe.dataset_factory = dataset_factory
+        recipe_dict = {'tasks': [self.report_task]}
+        self.recipe.from_dict(recipe_dict)
+
+    def prepare_template(self, content=''):
+        template_content = content
+        with open(self.template, 'w+') as f:
+            f.write(template_content)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_perform_task(self):
+        self.prepare_recipe()
+        template_content = ""
+        self.prepare_template(template_content)
+        self.task.from_dict(self.report_task)
+        self.recipe.figures[self.figure] = self.figure_record
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(os.path.exists(self.filename))
+
+    def test_perform_task_adds_figure_to_context(self):
+        self.prepare_recipe()
+        template_content = "{@figure['label']}"
+        self.prepare_template(template_content)
+        self.task.from_dict(self.report_task)
+        self.figure_record.label = 'foo'
+        self.recipe.figures[self.figure] = self.figure_record
+        self.task.recipe = self.recipe
+        self.task.perform()
+        with open(self.filename) as f:
+            read_content = f.read()
+        self.assertEqual(self.figure_record.label, read_content)
+
+    def test_perform_task_issues_log_message(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.report_task)
+        self.recipe.figures[self.figure] = self.figure_record
+        self.task.recipe = self.recipe
+        with self.assertLogs(__package__, level='INFO') as cm:
+            self.task.perform()
+        self.assertIn('Perform "{}" on figure "{}"'.format(
+            self.report_task['type'], self.figure), cm.output[0])
+
+    def test_perform_task_with_multiple_figures_and_filenames(self):
+        # noinspection PyTypedDict
+        self.report_task["properties"]["filename"] = \
+            ['test-report1.tex', 'test-report2.tex']
+        # noinspection PyTypedDict
+        self.report_task["apply_to"] = [self.figure, "fig2"]
+        self.prepare_recipe()
+        self.recipe.figures[self.figure] = self.figure_record
+        self.recipe.figures["fig2"] = aspecd.tasks.FigureRecord()
+        template_content = ""
+        self.prepare_template(template_content)
+        self.task.from_dict(self.report_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        for filename in self.report_task["properties"]["filename"]:
+            self.assertTrue(os.path.exists(filename))
+        # Manual teardown in this case
+        for filename in self.report_task["properties"]["filename"]:
+            if os.path.exists(filename):
+                os.remove(filename)
+
+    def test_report_gets_saved_to_output_directory_if_provided(self):
+        self.prepare_recipe()
+        template_content = ""
+        self.prepare_template(template_content)
+        self.task.from_dict(self.report_task)
+        self.recipe.figures[self.figure] = self.figure_record
+        self.recipe.directories['output'] = self.output_directory
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(os.path.exists(os.path.join(self.output_directory,
+                                                    self.filename)))
+
+    def test_perform_task_without_filename_saves_report_to_default_name(self):
+        self.filename = "_".join([self.figure, "report", self.template])
+        self.prepare_recipe()
+        template_content = ""
+        self.prepare_template(template_content)
+        self.report_task['properties'].pop('filename')
+        self.task.from_dict(self.report_task)
+        self.recipe.figures[self.figure] = self.figure_record
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(os.path.exists(self.filename))
+
+    def test_perform_task_with_language_and_template_from_package(self):
+        self.prepare_recipe()
+        self.report_task['properties']['template'] = 'abbildung.tex'
+        self.report_task['properties']['language'] = 'de'
+        self.task.from_dict(self.report_task)
+        self.recipe.figures[self.figure] = self.figure_record
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(os.path.exists(self.filename))
+
+
 class TestModelTask(unittest.TestCase):
     def setUp(self):
         self.task = tasks.ModelTask()

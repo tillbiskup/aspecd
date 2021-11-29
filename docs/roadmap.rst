@@ -43,7 +43,6 @@ For version 0.7
 
 * Reports:
 
-  * (LaTeX)FigureReporter for generating (LaTeX) code to include figures in documents
   * Looking for templates in user directory
 
 * Processing of 2D (eventually ND with N>1) datasets:
