@@ -2917,15 +2917,35 @@ class LegendProperties(aspecd.utils.Properties):
         Location of the legend
 
         For possible values, see :class:`matplotlib.legend.Legend`
+
     frameon : :class:`bool`
         Whether to plot a box around the legend
 
         Default: True
 
+    labelspacing : :class:`float`
+        Vertical space between the legend entries, in font-size units.
+
+        Default: 0.5
+
+    fontsize : :class:`int` or :class:`str`
+        Font size of the legend.
+
+        If numeric the size will be the absolute font size in points. String
+        values are relative to the current default font size. Valid string
+        values are: ``xx-small``, ``x-small``, ``small``, ``medium``,
+        ``large``, ``x-large``, ``xx-large``
+
+        Default: ``plt.rcParams['font.size']``
+
     Raises
     ------
     aspecd.exceptions.MissingLegendError
         Raised if no legend is provided.
+
+
+    .. versionchanged:: 0.7
+        Added attributes :attr:`labelspacing` and :attr:`fontsize`
 
     """
 
@@ -2933,6 +2953,8 @@ class LegendProperties(aspecd.utils.Properties):
         super().__init__()
         self.loc = 'best'
         self.frameon = True
+        self.labelspacing = 0.5
+        self.fontsize = plt.rcParams['font.size']
         self._exclude = ['location']
         self._exclude_from_to_dict = ['location']
 

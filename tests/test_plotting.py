@@ -1902,6 +1902,31 @@ class TestLegendProperties(unittest.TestCase):
     def test_location_not_included_in_to_dict(self):
         self.assertNotIn('location', self.legend_properties.to_dict())
 
+    def test_labelspacing_sets_legend_labelspacing(self):
+        labelspacing = 0.1
+        self.legend_properties.labelspacing = labelspacing
+        plot = plotting.Plotter()
+        plot.properties.legend = self.legend_properties
+        plot.parameters['show_legend'] = True
+        with contextlib.redirect_stderr(io.StringIO()):
+            plot.plot()
+        legend = plot.legend
+        self.assertEqual(labelspacing, legend.labelspacing)
+        plt.close(plot.figure)
+
+    def test_fontsize_sets_legend_fontsize(self):
+        fontsize = 'large'
+        self.legend_properties.fontsize = fontsize
+        plot = plotting.Plotter()
+        plot.properties.legend = self.legend_properties
+        plot.parameters['show_legend'] = True
+        with contextlib.redirect_stderr(io.StringIO()):
+            plot.plot()
+        legend = plot.legend
+        self.assertEqual(plt.rcParams['font.size'] * 1.2,
+                         legend.prop.get_size())
+        plt.close(plot.figure)
+
 
 class TestGridProperties(unittest.TestCase):
     def setUp(self):
