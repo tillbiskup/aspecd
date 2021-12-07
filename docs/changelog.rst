@@ -18,6 +18,12 @@ New features
 * Attributes ``labelspacing`` and ``fontsize`` in :class:`aspecd.plotting.LegendProperties`
 
 
+Fixes
+-----
+
+* Dataset importer does not override dataset label.
+
+
 Version 0.6.4
 =============
 
