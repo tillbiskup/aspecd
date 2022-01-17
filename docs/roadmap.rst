@@ -26,6 +26,10 @@ For version 0.7
 
   * CombineDatasets: combine data from several datasets into a single dataset; parameters allowing to define the axis values/quantity/unit, possibly even from given metadata; to decide: How to handle metadata that might be invalidated?
 
+* Analysis
+
+  * Automatically add analysis parameters to calculated dataset if result is a dataset
+
 * Add export tasks to dataset tasks
 
 * Recipe-driven data analysis:
