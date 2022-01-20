@@ -8,12 +8,6 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.7
 ===============
 
-* Model
-
-  * Add method ``evaluate`` for faster evaluation of model (?)
-
-    Could speed-up things in conjunction with FitPy
-
 * Analysis
 
   * Automatically add analysis parameters to calculated dataset if result is a dataset

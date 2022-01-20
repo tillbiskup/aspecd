@@ -81,7 +81,7 @@ class TestModel(unittest.TestCase):
         self.model.parameters = [0]
         self.model.variables = [np.linspace(0, 1)]
         dataset = self.model.create()
-        self.assertEqual(aspecd.dataset.CalculatedDataset, type(dataset))
+        self.assertIsInstance(dataset, aspecd.dataset.CalculatedDataset)
 
     def test_create_sets_calculated_dataset_axis_values(self):
         self.model.parameters = [0]
@@ -237,6 +237,16 @@ class TestModel(unittest.TestCase):
         dict_ = {'foo': 42}
         self.model.from_dict(dict_)
         self.assertFalse(hasattr(self.model, 'foo'))
+
+    def test_has_evaluate_method(self):
+        self.assertTrue(hasattr(self.model, 'evaluate'))
+        self.assertTrue(callable(self.model.evaluate))
+
+    def test_evaluate_returns_data(self):
+        self.model.parameters = {'foo': 42}
+        self.model.variables = [np.linspace(0, 1)]
+        data = self.model.evaluate()
+        self.assertListEqual(list(self.model.variables[0]), list(data))
 
 
 class TestCompositeModel(unittest.TestCase):
