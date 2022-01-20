@@ -3641,12 +3641,24 @@ class ModelTask(Task):
         to call the :meth:`aspecd.model.Model.from_dataset` method with to
         obtain the variables from this dataset.
 
+    output : :class:`str`
+        Type of output returned in ``result`` if given
+
+        Can be "dataset" (default) or "model". The latter is important in
+        case the model as such needs to be accessed, *e.g.* in context of
+        fitting models to data.
+
+
+    .. versionchanged:: 0.7
+        Added attribute ``output``
+
     """
 
     def __init__(self, recipe=None):
         super().__init__(recipe=recipe)
         self.result = ''
         self.from_dataset = ''
+        self.output = 'dataset'
 
     # noinspection PyUnresolvedReferences
     def _perform(self):
@@ -3654,7 +3666,10 @@ class ModelTask(Task):
         if self.from_dataset:
             task.from_dataset(self.recipe.get_dataset(self.from_dataset))
         logger.info('Create model "%s"', self.type)
-        result = task.create()
+        if self.output == 'model':
+            result = task
+        else:
+            result = task.create()
         if self.result:
             result.id = self.result
             self.recipe.results[self.result] = result

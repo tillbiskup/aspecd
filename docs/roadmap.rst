@@ -8,6 +8,18 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.7
 ===============
 
+* Model
+
+  * Add method ``evaluate`` for faster evaluation of model (?)
+
+    Could speed-up things in conjunction with FitPy
+
+* Analysis
+
+  * Automatically add analysis parameters to calculated dataset if result is a dataset
+
+  * Define class name for calculated dataset to be created (allows to automatically provide derived types in other packages, *e.g.* FitPy).
+
 * Plotting
 
   * MultiPlotter: parameter "tight" for tight axes
@@ -25,10 +37,6 @@ For version 0.7
   * ExtractSlices (plural): extract several slices from a dataset and combine them in a new dataset
 
   * CombineDatasets: combine data from several datasets into a single dataset; parameters allowing to define the axis values/quantity/unit, possibly even from given metadata; to decide: How to handle metadata that might be invalidated?
-
-* Analysis
-
-  * Automatically add analysis parameters to calculated dataset if result is a dataset
 
 * Add export tasks to dataset tasks
 

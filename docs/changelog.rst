@@ -16,6 +16,7 @@ New features
 
 * :class:`aspecd.tasks.FigurereportTask` for creating figure captions that can, *e.g.*, be included in other documents
 * Attributes ``labelspacing`` and ``fontsize`` in :class:`aspecd.plotting.LegendProperties`
+* Attribute ``output`` in :class:`aspecd.tasks.ModelTask` controlling the type of output returned (dataset or model)
 
 
 Fixes

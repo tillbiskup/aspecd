@@ -3144,6 +3144,17 @@ class TestModelTask(unittest.TestCase):
             self.recipe.datasets[self.dataset].data.axes[0].values,
             self.recipe.results[result].data.axes[0].values)
 
+    def test_output_model_returns_model(self):
+        self.prepare_recipe()
+        result = 'foo'
+        self.model_task['result'] = result
+        self.model_task["output"] = 'model'
+        self.task.from_dict(self.model_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertEqual(aspecd.model.Model,
+                         type(self.recipe.results[result]))
+
 
 class TestExportTask(unittest.TestCase):
     def setUp(self):
