@@ -72,8 +72,8 @@ class TestAnalysisStep(unittest.TestCase):
         self.assertTrue(callable(self.analysisstep.applicable))
 
     def test_create_dataset_creates_calculated_dataset(self):
-        self.assertIs(aspecd.dataset.CalculatedDataset,
-                      type(self.analysisstep.create_dataset()))
+        self.assertIsInstance(self.analysisstep.create_dataset(),
+                              aspecd.dataset.CalculatedDataset)
 
     def test_created_dataset_has_correct_type_in_metadata(self):
         dataset = self.analysisstep.create_dataset()
@@ -85,6 +85,11 @@ class TestAnalysisStep(unittest.TestCase):
         dataset = self.analysisstep.create_dataset()
         self.assertDictEqual(self.analysisstep.parameters,
                              dataset.metadata.calculation.parameters)
+
+    def test_create_dataset_with_dataset_type_returns_correct_type(self):
+        self.analysisstep.dataset_type = 'aspecd.dataset.CalculatedDataset'
+        self.assertIsInstance(self.analysisstep.create_dataset(),
+                              aspecd.dataset.CalculatedDataset)
 
     def test_has_to_dict_method(self):
         self.assertTrue(hasattr(self.analysisstep, 'to_dict'))

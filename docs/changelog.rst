@@ -18,6 +18,7 @@ New features
 * Attributes ``labelspacing`` and ``fontsize`` in :class:`aspecd.plotting.LegendProperties`
 * Attribute ``output`` in :class:`aspecd.tasks.ModelTask` controlling the type of output returned (dataset or model)
 * Method :meth:`aspecd.model.Model.evaluate` for fast evaluation of models without any checks (useful in context of fitting)
+* Attribute ``dataset_type`` in :class:`aspecd.analysis.AnalysisStep` to define type of calculated dataset that gets returned
 
 
 Fixes

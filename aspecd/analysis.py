@@ -284,6 +284,20 @@ class AnalysisStep(aspecd.utils.ToDictMixin):
 
         .. versionadded:: 0.5
 
+    dataset_type : :class:`str`
+        Full class name of the dataset that should be created
+
+        In case of returning a calculated dataset, packages derived from
+        the ASpecD framework may want to return their own instances of
+        :class:`aspecd.dataset.CalculatedDataset`.
+
+        Note that due to assigning some metadata, the class specified here
+        needs to conform to :class:`aspecd.dataset.CalculatedDataset`.
+
+        Default: "aspecd.dataset.CalculatedDataset"
+
+        .. versionadded:: 0.7
+
     description : :class:`str`
         Short description, to be set in class definition
 
@@ -312,6 +326,7 @@ class AnalysisStep(aspecd.utils.ToDictMixin):
         self.parameters = dict()
         self.result = None
         self.index = []
+        self.dataset_type = 'aspecd.dataset.CalculatedDataset'
         self.description = 'Abstract analysis step'
         self.comment = ''
         self.references = []
@@ -359,7 +374,7 @@ class AnalysisStep(aspecd.utils.ToDictMixin):
         .. versionadded:: 0.2
 
         """
-        dataset = aspecd.dataset.CalculatedDataset()
+        dataset = aspecd.utils.object_from_class_name(self.dataset_type)
         dataset.metadata.calculation.type = self.name
         dataset.metadata.calculation.parameters = self.parameters
         return dataset

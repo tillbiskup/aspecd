@@ -12,8 +12,6 @@ For version 0.7
 
   * Automatically add analysis parameters to calculated dataset if result is a dataset
 
-  * Define class name for calculated dataset to be created (allows to automatically provide derived types in other packages, *e.g.* FitPy).
-
 * Plotting
 
   * MultiPlotter: parameter "tight" for tight axes
