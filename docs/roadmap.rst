@@ -8,10 +8,6 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.7
 ===============
 
-* Analysis
-
-  * Automatically add analysis parameters to calculated dataset if result is a dataset
-
 * Plotting
 
   * MultiPlotter: parameter "tight" for tight axes

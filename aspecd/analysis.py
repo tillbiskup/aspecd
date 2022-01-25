@@ -399,6 +399,10 @@ class AnalysisStep(aspecd.utils.ToDictMixin):
 
         """
 
+    def _assign_origdata_in_dataset(self):
+        if isinstance(self.result, aspecd.dataset.Dataset):
+            self.result._origdata = copy.deepcopy(self.result.data)
+
     # noinspection PyUnusedLocal
     @staticmethod
     def applicable(dataset):  # pylint: disable=unused-argument
@@ -487,7 +491,7 @@ class SingleAnalysisStep(AnalysisStep):
         """Perform the actual analysis step on the given dataset.
 
         If no dataset is provided at method call, but is set as property in
-        the SingleAnalysisStep object, the analysd method of the dataset
+        the SingleAnalysisStep object, the analyse method of the dataset
         will be called and thus the analysis added to the list of analyses
         of the dataset.
 
@@ -552,6 +556,7 @@ class SingleAnalysisStep(AnalysisStep):
             self._check_applicability()
             self._sanitise_parameters()
             self._perform_task()
+            self._assign_origdata_in_dataset()
 
     def _check_applicability(self):
         if not self.applicable(self.dataset):
@@ -668,6 +673,7 @@ class MultiAnalysisStep(AnalysisStep):
         self._check_applicability()
         self._sanitise_parameters()
         self._perform_task()
+        self._assign_origdata_in_dataset()
 
     def _check_applicability(self):
         for dataset in self.datasets:
@@ -772,6 +778,7 @@ class AggregatedAnalysisStep(AnalysisStep):
             self.result.data.data = \
                 np.reshape(self.result.data.data, (n_datasets, -1))
         self.result.data.axes[0].index = index
+        self._assign_origdata_in_dataset()
 
     def _check_and_prepare(self):
         if not self.datasets:
