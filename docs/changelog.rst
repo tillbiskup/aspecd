@@ -25,6 +25,7 @@ Fixes
 -----
 
 * Dataset importer does not override dataset label.
+* AnalysisSteps assign data to _origdata attribute if result is dataset
 
 
 Version 0.6.4

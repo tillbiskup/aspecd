@@ -56,6 +56,8 @@ For version 0.7
 For later versions
 ==================
 
+* Get rid of OrderedDict instances, as Python preserves order in dictionaries since version 3.6
+
 * Plot styles
 
   * Switch in recipe settings for applying a style to all plots
