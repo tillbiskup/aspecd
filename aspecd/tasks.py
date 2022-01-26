@@ -1781,6 +1781,9 @@ class Task(aspecd.utils.ToDictMixin):
         """
         if self._task:
             task_copy = copy.copy(self._task)
+            if hasattr(task_copy, 'model'):  # Feels like a dirty fix...
+                task_copy.model = \
+                    self._replace_object_with_label(task_copy.model)
             if hasattr(task_copy, 'parameters'):
                 self._replace_objects_with_labels(task_copy.parameters)
             self.properties.update(task_copy.to_dict())
@@ -1815,7 +1818,10 @@ class Task(aspecd.utils.ToDictMixin):
                 value = dataset_key
         for result_key, result_value in self.recipe.results.items():
             if value is result_value or \
-                    (hasattr(result_value, 'id') and value is result_value.id):
+                    (hasattr(result_value, 'id') and value is
+                     result_value.id) or \
+                    (hasattr(result_value, 'id') and hasattr(value, 'id')
+                     and value.id is result_value.id):
                 value = result_key
         for figure_key, figure_value in self.recipe.figures.items():
             if value is figure_value:
@@ -3445,7 +3451,10 @@ class ReportTask(Task):
         for idx, dataset_id in enumerate(self.apply_to):
             dataset = self.recipe.get_dataset(dataset_id)
             task = self.get_object()
-            task.package = self.recipe.settings['default_package']
+            if not task.package:
+                task.package = self.recipe.settings['default_package']
+            if hasattr(task, 'dataset'):
+                task.dataset = dataset
             task.context['dataset'] = dataset.to_dict()
             if 'filename' not in self.properties \
                     or not self.properties['filename']:
