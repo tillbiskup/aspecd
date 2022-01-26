@@ -2435,6 +2435,7 @@ class MultiprocessingTask(Task):
                         'Result name "%s" identical to dataset label, '
                         'unexpected things may happen.', self.result[number])
                 self.recipe.results[self.result[number]] = dataset
+                dataset.id = self.result[number]
         else:
             self._task.datasets = self.recipe.get_datasets(self.apply_to)
             logger.info('Perform "%s" on datasets "%s"', self.type,

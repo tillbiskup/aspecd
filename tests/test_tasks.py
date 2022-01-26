@@ -1679,6 +1679,15 @@ class TestMultiProcessingTask(unittest.TestCase):
         self.assertNotEqual(self.recipe.results[result[0]],
                             self.recipe.datasets[self.dataset[0]])
 
+    def test_perform_task_with_result_sets_id_of_resulting_dataset(self):
+        self.prepare_recipe()
+        result = ['foofoo']
+        self.processing_task['result'] = result
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertEqual(result[0], self.recipe.results[result[0]].id)
+
     def test_perform_task_with_result_issues_log_message(self):
         self.prepare_recipe()
         result = ['foo']
