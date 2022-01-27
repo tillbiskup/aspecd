@@ -1328,14 +1328,17 @@ class SliceExtraction(SingleProcessingStep):
 
 
     .. versionchanged:: 0.2
-       Parameter "index" renamed to "position" to reflect values to be
-       either indices or axis values
+        Parameter "index" renamed to "position" to reflect values to be
+        either indices or axis values
 
     .. versionadded:: 0.2
-       Slice positions can be given both, as axis indices and axis values
+        Slice positions can be given both, as axis indices and axis values
 
     .. versionadded:: 0.2
-       Works for ND datasets with N>1
+        Works for ND datasets with N>1
+
+    .. versionchanged:: 0.7
+        Sets dataset label to slice position (in axes units)
 
 
     Examples
@@ -1461,6 +1464,7 @@ class SliceExtraction(SingleProcessingStep):
             raise ValueError("Position out of axis range.")
 
     def _perform_task(self):
+        self.dataset.label = self._set_dataset_label()
         slice_object = self._get_slice()
         self.dataset.data.data = self.dataset.data.data[slice_object]
         for axis in self.parameters["axis"]:
@@ -1498,6 +1502,21 @@ class SliceExtraction(SingleProcessingStep):
     @staticmethod
     def _get_index(vector, value):
         return np.abs(vector - value).argmin()
+
+    def _set_dataset_label(self):
+        label = ''
+        for idx, axis in enumerate(self.parameters["axis"]):
+            if label:
+                label += ', '
+            if self.parameters["unit"] == "index":
+                value = self.dataset.data.axes[axis].values[
+                    self.parameters["position"][idx]]
+            else:
+                index = self._get_index(self.dataset.data.axes[axis].values,
+                                        self.parameters["position"][idx])
+                value = self.dataset.data.axes[axis].values[index]
+            label += "{} {}".format(value, self.dataset.data.axes[axis].unit)
+        return label
 
 
 class RangeExtraction(SingleProcessingStep):

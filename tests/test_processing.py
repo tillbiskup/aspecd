@@ -841,6 +841,25 @@ class TestSliceExtraction(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.dataset.process(self.processing)
 
+    def test_extract_slice_sets_label(self):
+        self.dataset.data.axes[0].unit = 's'
+        self.dataset.data.axes[0].values = \
+            np.linspace(5, 9, self.dataset.data.data.shape[0])
+        self.dataset.data.axes[1].unit = 'mV'
+        self.processing.parameters['position'] = 3
+        self.dataset.process(self.processing)
+        self.assertEqual('8.0 s', self.dataset.label)
+
+    def test_extract_slice_with_axis_units_sets_label(self):
+        self.dataset.data.axes[0].unit = 's'
+        self.dataset.data.axes[0].values = \
+            np.linspace(5, 9, self.dataset.data.data.shape[0])
+        self.dataset.data.axes[1].unit = 'mV'
+        self.processing.parameters["unit"] = "axis"
+        self.processing.parameters['position'] = 7.0
+        self.dataset.process(self.processing)
+        self.assertEqual('7.0 s', self.dataset.label)
+
     def test_extract_2d_slice_from_3d_dataset(self):
         self.dataset.data.data = np.random.random([5, 5, 5])
         origdata = self.dataset.data.data
@@ -857,6 +876,29 @@ class TestSliceExtraction(unittest.TestCase):
         self.dataset.process(self.processing)
         np.testing.assert_allclose(origdata[:, :, 3], self.dataset.data.data)
 
+    def test_extract_2d_slice_from_3d_dataset_sets_label(self):
+        self.dataset.data.data = np.random.random([5, 5, 5])
+        self.dataset.data.axes[2].unit = 's'
+        self.dataset.data.axes[2].values = \
+            np.linspace(5, 9, self.dataset.data.data.shape[2])
+        self.dataset.data.axes[1].unit = 'mV'
+        self.processing.parameters['position'] = 3
+        self.processing.parameters['axis'] = 2
+        self.dataset.process(self.processing)
+        self.assertEqual('8.0 s', self.dataset.label)
+
+    def test_extract_2d_slice_from_3d_dataset_with_axis_units_sets_label(self):
+        self.dataset.data.data = np.random.random([5, 5, 5])
+        self.dataset.data.axes[2].unit = 's'
+        self.dataset.data.axes[2].values = \
+            np.linspace(5, 9, self.dataset.data.data.shape[2])
+        self.dataset.data.axes[1].unit = 'mV'
+        self.processing.parameters["unit"] = "axis"
+        self.processing.parameters['position'] = 7.0
+        self.processing.parameters['axis'] = 2
+        self.dataset.process(self.processing)
+        self.assertEqual('7.0 s', self.dataset.label)
+
     def test_extract_1d_slice_from_3d_dataset(self):
         self.dataset.data.data = np.random.random([5, 5, 5])
         origdata = self.dataset.data.data
@@ -864,6 +906,33 @@ class TestSliceExtraction(unittest.TestCase):
         self.processing.parameters['axis'] = [0, 1]
         self.dataset.process(self.processing)
         np.testing.assert_allclose(origdata[3, 3, :], self.dataset.data.data)
+
+    def test_extract_1d_slice_from_3d_dataset_sets_label(self):
+        self.dataset.data.data = np.random.random([5, 5, 5])
+        self.dataset.data.axes[0].unit = 's'
+        self.dataset.data.axes[1].unit = 'mV'
+        self.dataset.data.axes[0].values = \
+            np.linspace(5, 9, self.dataset.data.data.shape[0])
+        self.dataset.data.axes[1].values = \
+            np.linspace(3, 7, self.dataset.data.data.shape[1])
+        self.processing.parameters['position'] = [3, 3]
+        self.processing.parameters['axis'] = [0, 1]
+        self.dataset.process(self.processing)
+        self.assertEqual('8.0 s, 6.0 mV', self.dataset.label)
+
+    def test_extract_1d_slice_from_3d_dataset_with_axis_units_sets_label(self):
+        self.dataset.data.data = np.random.random([5, 5, 5])
+        self.dataset.data.axes[0].unit = 's'
+        self.dataset.data.axes[1].unit = 'mV'
+        self.dataset.data.axes[0].values = \
+            np.linspace(5, 9, self.dataset.data.data.shape[0])
+        self.dataset.data.axes[1].values = \
+            np.linspace(3, 7, self.dataset.data.data.shape[1])
+        self.processing.parameters["unit"] = "axis"
+        self.processing.parameters['position'] = [7.0, 5.0]
+        self.processing.parameters['axis'] = [0, 1]
+        self.dataset.process(self.processing)
+        self.assertEqual('7.0 s, 5.0 mV', self.dataset.label)
 
     def test_extract_slice_from_3d_dataset_with_3_axes_raises(self):
         self.dataset.data.data = np.random.random([5, 5, 5])

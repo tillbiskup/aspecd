@@ -21,6 +21,12 @@ New features
 * Attribute ``dataset_type`` in :class:`aspecd.analysis.AnalysisStep` to define type of calculated dataset that gets returned
 
 
+Changes
+-------
+
+* :class:`aspecd.processing.SliceExtraction` sets dataset label to slice position
+
+
 Fixes
 -----
 
