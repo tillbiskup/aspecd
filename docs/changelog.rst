@@ -25,6 +25,7 @@ Changes
 -------
 
 * :class:`aspecd.processing.SliceExtraction` sets dataset label to slice position
+* :class:`aspecd.processing.Averaging` sets dataset label to averaging range
 
 
 Fixes

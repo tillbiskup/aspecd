@@ -1336,6 +1336,46 @@ class TestAveraging(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.dataset.process(self.processing)
 
+    def test_average_sets_label(self):
+        self.dataset.data.axes[0].unit = 's'
+        self.dataset.data.axes[0].values = \
+            np.linspace(5, 9, self.dataset.data.data.shape[0])
+        self.dataset.data.axes[1].unit = 'mV'
+        self.processing.parameters["range"] = [2, 3]
+        self.dataset.process(self.processing)
+        self.assertEqual('7.0-8.0 s', self.dataset.label)
+
+    def test_average_with_axis_units_sets_label(self):
+        self.dataset.data.axes[0].unit = 's'
+        self.dataset.data.axes[0].values = \
+            np.linspace(5, 9, self.dataset.data.data.shape[0])
+        self.dataset.data.axes[1].unit = 'mV'
+        self.processing.parameters["unit"] = "axis"
+        self.processing.parameters["range"] = [7.0, 8.0]
+        self.dataset.process(self.processing)
+        self.assertEqual('7.0-8.0 s', self.dataset.label)
+
+    def test_average_along_second_axis_sets_label(self):
+        self.dataset.data.axes[0].unit = 's'
+        self.dataset.data.axes[1].values = \
+            np.linspace(5, 9, self.dataset.data.data.shape[0])
+        self.dataset.data.axes[1].unit = 'mV'
+        self.processing.parameters['axis'] = 1
+        self.processing.parameters["range"] = [2, 3]
+        self.dataset.process(self.processing)
+        self.assertEqual('7.0-8.0 mV', self.dataset.label)
+
+    def test_average_along_second_axis_with_axis_units_sets_label(self):
+        self.dataset.data.axes[0].unit = 's'
+        self.dataset.data.axes[1].values = \
+            np.linspace(5, 9, self.dataset.data.data.shape[0])
+        self.dataset.data.axes[1].unit = 'mV'
+        self.processing.parameters["unit"] = "axis"
+        self.processing.parameters['axis'] = 1
+        self.processing.parameters["range"] = [7.0, 8.0]
+        self.dataset.process(self.processing)
+        self.assertEqual('7.0-8.0 mV', self.dataset.label)
+
 
 class TestDatasetAlgebra(unittest.TestCase):
     def setUp(self):

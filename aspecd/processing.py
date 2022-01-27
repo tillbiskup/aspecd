@@ -2006,6 +2006,10 @@ class Averaging(SingleProcessingStep):
         Raised if axis is out of bounds for given dataset
 
 
+    .. versionchanged:: 0.7
+        Sets dataset label to averaging range (in axes units)
+
+
     Examples
     --------
     For convenience, a series of examples in recipe style (for details of
@@ -2098,6 +2102,7 @@ class Averaging(SingleProcessingStep):
             raise ValueError("Given range out of axis range.")
 
     def _perform_task(self):
+        self.dataset.label = self._set_dataset_label()
         range_ = self._get_range()
         if self.parameters["axis"] == 0:
             self.dataset.data.data = \
@@ -2133,7 +2138,7 @@ class Averaging(SingleProcessingStep):
 
     def _get_range(self):
         if self.parameters["unit"] == "index":
-            range_ = self.parameters["range"]
+            range_ = copy.copy(self.parameters["range"])
             if range_[1] > 0:
                 range_[1] += 1
         else:
@@ -2149,6 +2154,14 @@ class Averaging(SingleProcessingStep):
     @staticmethod
     def _get_index(vector, value):
         return np.abs(vector - value).argmin()
+
+    def _set_dataset_label(self):
+        range_ = self._get_range()
+        range_[1] -= 1
+        values = self.dataset.data.axes[self.parameters["axis"]].values[range_]
+        unit = self.dataset.data.axes[self.parameters["axis"]].unit
+        label = '{}-{} {}'.format(values[0], values[1], unit)
+        return label
 
 
 class ScalarAxisAlgebra(SingleProcessingStep):

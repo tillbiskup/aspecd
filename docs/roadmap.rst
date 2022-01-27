@@ -20,8 +20,6 @@ For version 0.7
 
 * Processing
 
-  * Set label of dataset to slice/average in :class:`aspecd.processing.SliceExtraction` and :class:`aspecd.processing.Averaging`
-
   * ExtractSlices (plural): extract several slices from a dataset and combine them in a new dataset
 
   * CombineDatasets: combine data from several datasets into a single dataset; parameters allowing to define the axis values/quantity/unit, possibly even from given metadata; to decide: How to handle metadata that might be invalidated?
