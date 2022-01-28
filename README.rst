@@ -89,6 +89,10 @@ There is a number of related packages that are based on the ASpecD framework and
 
   Package for processing and analysing continuous-wave electron paramagnetic resonance (cw-EPR) data, originally developed by P. Kirchner, currently developed and maintained by M. Schröder and T. Biskup.
 
+* `FitPy <https://docs.fitpy.de/>`_
+
+  Framework for the advanced fitting of models to spectroscopic data focussing on reproducibility, developed by T. Biskup.
+
 You may as well be interested in the `LabInform project <https://www.labinform.de/>`_ focussing on the necessary more global infrastructure in a laboratory/scientific workgroup interested in more `reproducible research <https://www.reproducible-research.de/>`_. In short, LabInform is "The Open-Source Laboratory Information System".
 
 Finally, don't forget to check out the website on `reproducible research <https://www.reproducible-research.de/>`_ covering in more general terms aspects of reproducible research and good scientific practice.
