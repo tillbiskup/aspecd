@@ -401,7 +401,7 @@ class AnalysisStep(aspecd.utils.ToDictMixin):
 
     def _assign_origdata_in_dataset(self):
         if isinstance(self.result, aspecd.dataset.Dataset):
-            self.result._origdata = copy.deepcopy(self.result.data)
+            self.result._origdata = copy.deepcopy(self.result.data)  # noqa
 
     # noinspection PyUnusedLocal
     @staticmethod
