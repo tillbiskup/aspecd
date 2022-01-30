@@ -1305,7 +1305,7 @@ class TestMultiPlotter1DStacked(unittest.TestCase):
                        max([dataset_.data.data.max()
                             for dataset_ in self.plotter.datasets])]
         data_limits[0] -= (self.plotter.parameters['offset']
-                           * len(self.plotter.datasets) - 1)
+                           * (len(self.plotter.datasets) - 1))
         self.assertListEqual(data_limits, list(self.plotter.ax.get_ylim()))
 
     def test_tight_sets_correct_axes_limits(self):
@@ -1318,7 +1318,7 @@ class TestMultiPlotter1DStacked(unittest.TestCase):
                        max([dataset_.data.data.max()
                             for dataset_ in self.plotter.datasets])]
         data_limits[0] -= (self.plotter.parameters['offset']
-                           * len(self.plotter.datasets) - 1)
+                           * (len(self.plotter.datasets) - 1))
         self.assertListEqual(data_limits, list(self.plotter.ax.get_ylim()))
 
     def test_has_switch_axes_parameter(self):
@@ -1346,7 +1346,7 @@ class TestMultiPlotter1DStacked(unittest.TestCase):
                        max([dataset_.data.data.max()
                             for dataset_ in self.plotter.datasets])]
         data_limits[0] -= (self.plotter.parameters['offset']
-                           * len(self.plotter.datasets) - 1)
+                           * (len(self.plotter.datasets) - 1))
         self.assertListEqual(data_limits, list(self.plotter.ax.get_xlim()))
 
     def test_tight_sets_correct_y_axes_limits_with_switched_axes(self):
@@ -1367,7 +1367,7 @@ class TestMultiPlotter1DStacked(unittest.TestCase):
                        max([dataset_.data.data.max()
                             for dataset_ in self.plotter.datasets])]
         data_limits[0] -= (self.plotter.parameters['offset']
-                           * len(self.plotter.datasets) - 1)
+                           * (len(self.plotter.datasets) - 1))
         self.assertListEqual(data_limits, list(self.plotter.ax.get_xlim()))
 
 

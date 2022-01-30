@@ -1982,7 +1982,7 @@ class MultiPlotter1DStacked(MultiPlotter1D):
                                 for dataset in self.datasets]),
                            max([dataset.data.data.max()
                                 for dataset in self.datasets])]
-            data_limits[0] -= (offset * len(self.datasets)-1)
+            data_limits[0] -= (offset * (len(self.datasets) - 1))
             if self.parameters['tight'] in ('x', 'both'):
                 if self.parameters['switch_axes']:
                     self.axes.set_xlim(data_limits)
