@@ -5,24 +5,40 @@ Roadmap
 A few ideas how to develop the project further, currently a list as a reminder for the main developers themselves, in no particular order, though with a tendency to list more important aspects first:
 
 
-For version 0.7
+For version 0.8
 ===============
+
+* Plotting
+
+  * Colorbar for 2D plotter
+
+  * colormaps for multiple lines
+
+* Processing
+
+  * ExtractSlices (plural): extract several slices from a dataset and combine them in a new dataset
+
+  * CombineDatasets: combine data from several datasets into a single dataset; parameters allowing to define the axis values/quantity/unit, possibly even from given metadata; to decide: How to handle metadata that might be invalidated?
+
+* Add export tasks to dataset tasks
 
 * Recipe-driven data analysis:
 
   * Better handling of automatically generated filenames for saving plots and reports: unique filenames; using the label rather than the source (id) of the dataset
+
   * Handling of results: automatically add datasets to dataset list? How to deal with result labels identical to existing datasets?
+
+  * Sub-recipes that can be included in recipes
+
+    Allows for creating a library of recipes for rather complex tasks that can simply be called as single step from another recipe
 
 * Report task:
 
   * Operating on recipes, *i.e.* report on all tasks in a recipe
   * Adding arbitrary dict representations of properties of datasets/results to context
 
-* Recipes: Subrecipes that can be included in recipes
-
 * Reports:
 
-  * LaTeXFigureReporter for generating LaTeX code to include figures in documents
   * Looking for templates in user directory
 
 * Processing of 2D (eventually ND with N>1) datasets:
@@ -33,6 +49,13 @@ For version 0.7
 
 For later versions
 ==================
+
+* Get rid of OrderedDict instances, as Python preserves order in dictionaries since version 3.6
+
+* Plot styles
+
+  * Switch in recipe settings for applying a style to all plots
+  * user-defined styles
 
 * Annotations
 

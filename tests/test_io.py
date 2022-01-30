@@ -56,6 +56,13 @@ class TestDatasetImporter(unittest.TestCase):
         self.assertEqual(test_dataset.label, os.path.split(
             self.importer.source)[-1])
 
+    def test_import_into_does_not_override_label(self):
+        test_dataset = dataset.Dataset()
+        test_dataset.label = 'foobar'
+        self.importer.source = '/path/to/filename.ext'
+        self.importer.import_into(test_dataset)
+        self.assertEqual('foobar', test_dataset.label)
+
 
 class TestDatasetExporter(unittest.TestCase):
     def setUp(self):

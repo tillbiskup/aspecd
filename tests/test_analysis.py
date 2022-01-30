@@ -72,8 +72,8 @@ class TestAnalysisStep(unittest.TestCase):
         self.assertTrue(callable(self.analysisstep.applicable))
 
     def test_create_dataset_creates_calculated_dataset(self):
-        self.assertIs(aspecd.dataset.CalculatedDataset,
-                      type(self.analysisstep.create_dataset()))
+        self.assertIsInstance(self.analysisstep.create_dataset(),
+                              aspecd.dataset.CalculatedDataset)
 
     def test_created_dataset_has_correct_type_in_metadata(self):
         dataset = self.analysisstep.create_dataset()
@@ -85,6 +85,11 @@ class TestAnalysisStep(unittest.TestCase):
         dataset = self.analysisstep.create_dataset()
         self.assertDictEqual(self.analysisstep.parameters,
                              dataset.metadata.calculation.parameters)
+
+    def test_create_dataset_with_dataset_type_returns_correct_type(self):
+        self.analysisstep.dataset_type = 'aspecd.dataset.CalculatedDataset'
+        self.assertIsInstance(self.analysisstep.create_dataset(),
+                              aspecd.dataset.CalculatedDataset)
 
     def test_has_to_dict_method(self):
         self.assertTrue(hasattr(self.analysisstep, 'to_dict'))
@@ -169,6 +174,33 @@ class TestSingleAnalysisStep(unittest.TestCase):
                 aspecd.exceptions.NotApplicableToDatasetError, message):
             dataset_.analyse(analysis)
 
+    def test_dataset_contains_parameters_obtained_during_analysis(self):
+
+        class MyAnalysisStep(aspecd.analysis.SingleAnalysisStep):
+            def _perform_task(self):
+                self.result = self.create_dataset()
+                self.parameters['foo'] = 'bar'
+
+        dataset_ = aspecd.dataset.Dataset()
+        analysis = MyAnalysisStep()
+        new_analysis = dataset_.analyse(analysis)
+        self.assertIn('foo',
+                      new_analysis.result.metadata.calculation.parameters)
+
+    def test_returned_dataset_contains_correct_origdata(self):
+
+        class MyAnalysisStep(aspecd.analysis.SingleAnalysisStep):
+            def _perform_task(self):
+                self.result = self.create_dataset()
+                self.result.data.data = np.random.random(5)
+
+        dataset_ = aspecd.dataset.Dataset()
+        analysis = MyAnalysisStep()
+        new_analysis = dataset_.analyse(analysis)
+        new_dataset = new_analysis.result
+        self.assertListEqual(list(new_dataset.data.data),
+                             list(new_dataset._origdata.data))
+
 
 class TestMultiAnalysisStep(unittest.TestCase):
     def setUp(self):
@@ -233,6 +265,20 @@ class TestMultiAnalysisStep(unittest.TestCase):
         with self.assertRaisesRegex(
                 aspecd.exceptions.NotApplicableToDatasetError, message):
             analysis_step.analyse()
+
+    def test_returned_dataset_contains_correct_origdata(self):
+
+        class MyAnalysisStep(aspecd.analysis.MultiAnalysisStep):
+            def _perform_task(self):
+                self.result = self.create_dataset()
+                self.result.data.data = np.random.random(5)
+
+        analysis_step = MyAnalysisStep()
+        analysis_step.datasets.append(aspecd.dataset.Dataset())
+        analysis_step.analyse()
+        new_dataset = analysis_step.result
+        self.assertListEqual(list(new_dataset.data.data),
+                             list(new_dataset._origdata.data))
 
 
 class TestAggregatedAnalysisStep(unittest.TestCase):
@@ -341,6 +387,11 @@ class TestAggregatedAnalysisStep(unittest.TestCase):
         self.analysis.datasets[2].data.data = np.random.random([4, 4])
         self.analysis.analyse()
         self.assertEqual((3, 2), self.analysis.result.data.data.shape)
+
+    def test_returned_dataset_contains_correct_origdata(self):
+        self.analysis.analyse()
+        self.assertListEqual(list(self.analysis.result.data.data),
+                             list(self.analysis.result._origdata.data))
 
 
 class TestPreprocessing(unittest.TestCase):

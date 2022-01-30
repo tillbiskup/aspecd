@@ -776,6 +776,15 @@ class SinglePlotter1D(SinglePlotter):
 
             Default: ''
 
+        switch_axes : :class:`bool`
+            Whether to switch *x* and *y* axes
+
+            Normally, the first axis is used as *x* axis, and the second
+            as *y* axis. Sometimes, switching this assignment is
+            necessary or convenient.
+
+            Default: False
+
     Raises
     ------
     TypeError
@@ -798,6 +807,23 @@ class SinglePlotter1D(SinglePlotter):
          properties:
            filename: output.pdf
 
+    Sometimes it is convenient to switch the *x* and *y* axes, *e.g.* in
+    context of 2D datasets where slices along both dimensions should be
+    displayed together with the 2D data and next to the respective axes. To
+    achieve this, set the ``switch_axes`` parameter accordingly:
+
+    .. code-block:: yaml
+
+       - kind: singleplot
+         type: SinglePlotter1D
+         properties:
+           parameters:
+             switch_axes: true
+           filename: output.pdf
+
+    .. versionchanged:: 0.7
+        New parameter ``switch_axes``
+
     """
 
     def __init__(self):
@@ -806,6 +832,7 @@ class SinglePlotter1D(SinglePlotter):
         self.properties = SinglePlot1DProperties()
         # noinspection PyTypeChecker
         self.parameters['tight'] = ''
+        self.parameters['switch_axes'] = False
         self._type = 'plot'
         self._allowed_types = ['plot', 'scatter', 'step', 'loglog',
                                'semilogx', 'semilogy', 'stemplot']
@@ -853,9 +880,14 @@ class SinglePlotter1D(SinglePlotter):
         plot_function = getattr(self.axes, self.type)
         if not self.properties.drawing.label:
             self.properties.drawing.label = self.dataset.label
-        self.drawing, = plot_function(self.dataset.data.axes[0].values,
-                                      self.dataset.data.data,
-                                      label=self.properties.drawing.label)
+        if self.parameters['switch_axes']:
+            self.drawing, = plot_function(self.dataset.data.data,
+                                          self.dataset.data.axes[0].values,
+                                          label=self.properties.drawing.label)
+        else:
+            self.drawing, = plot_function(self.dataset.data.axes[0].values,
+                                          self.dataset.data.data,
+                                          label=self.properties.drawing.label)
         if self.parameters['tight']:
             if self.parameters['tight'] in ('x', 'both'):
                 self.axes.set_xlim([self.dataset.data.axes[0].values.min(),
@@ -863,6 +895,14 @@ class SinglePlotter1D(SinglePlotter):
             if self.parameters['tight'] in ('y', 'both'):
                 self.axes.set_ylim([self.dataset.data.data.min(),
                                     self.dataset.data.data.max()])
+
+    def _set_axes_labels(self):
+        super()._set_axes_labels()
+        if self.parameters['switch_axes']:
+            old_xlabel = self.axes.get_xlabel()
+            old_ylabel = self.axes.get_ylabel()
+            self.axes.set_xlabel(old_ylabel)
+            self.axes.set_ylabel(old_xlabel)
 
     @staticmethod
     def applicable(dataset):
@@ -1590,6 +1630,7 @@ class MultiPlotter(Plotter):
 
 
 class MultiPlotter1D(MultiPlotter):
+    # noinspection PyUnresolvedReferences
     """
     1D plots of multiple datasets.
 
@@ -1615,6 +1656,28 @@ class MultiPlotter1D(MultiPlotter):
 
         For the properties that can be set this way, see the documentation
         of the :class:`aspecd.plotting.MultiPlotProperties` class.
+
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        Additionally to those from :class:`aspecd.plotting.MultiPlotter`,
+        the following parameters are allowed:
+
+        switch_axes : :class:`bool`
+            Whether to switch *x* and *y* axes
+
+            Normally, the first axis is used as *x* axis, and the second
+            as *y* axis. Sometimes, switching this assignment is
+            necessary or convenient.
+
+            Default: False
+
+        tight: :class:`str`
+            Whether to set the axes limits tight to the data
+
+            Possible values: 'x', 'y', 'both'
+
+            Default: ''
 
     Examples
     --------
@@ -1657,6 +1720,24 @@ class MultiPlotter1D(MultiPlotter):
         ``#``, you need to explicitly tell YAML that these are strings,
         surrounding the values by quotation marks.
 
+    Sometimes it is convenient to switch the *x* and *y* axes, *e.g.* in
+    context of 2D datasets where slices along both dimensions should be
+    displayed together with the 2D data and next to the respective axes. To
+    achieve this, set the ``switch_axes`` parameter accordingly:
+
+    .. code-block:: yaml
+
+       - kind: multiplot
+         type: MultiPlotter1D
+         properties:
+           parameters:
+             switch_axes: true
+           filename: output.pdf
+
+
+    .. versionchanged:: 0.7
+        New parameters ``switch_axes`` and ``tight``
+
     """
 
     def __init__(self):
@@ -1664,6 +1745,8 @@ class MultiPlotter1D(MultiPlotter):
         self.description = '1D plotting step for multiple datasets'
         self.drawings = []
         self.properties = MultiPlot1DProperties()
+        self.parameters['switch_axes'] = False
+        self.parameters['tight'] = ''
         self._type = 'plot'
         self._allowed_types = ['plot', 'step', 'loglog', 'semilogx',
                                'semilogy', ]
@@ -1730,10 +1813,44 @@ class MultiPlotter1D(MultiPlotter):
         for idx, dataset in enumerate(self.datasets):
             if not self.properties.drawings[idx].label:
                 self.properties.drawings[idx].label = dataset.label
-            drawing, = plot_function(dataset.data.axes[0].values,
-                                     dataset.data.data,
-                                     label=self.properties.drawings[idx].label)
+            if self.parameters['switch_axes']:
+                drawing, = plot_function(
+                    dataset.data.data,
+                    dataset.data.axes[0].values,
+                    label=self.properties.drawings[idx].label)
+            else:
+                drawing, = plot_function(
+                    dataset.data.axes[0].values,
+                    dataset.data.data,
+                    label=self.properties.drawings[idx].label)
             self.drawings.append(drawing)
+        if self.parameters['tight']:
+            axes_limits = [min([dataset.data.axes[0].values.min()
+                                for dataset in self.datasets]),
+                           max([dataset.data.axes[0].values.max()
+                                for dataset in self.datasets])]
+            data_limits = [min([dataset.data.data.min()
+                                for dataset in self.datasets]),
+                           max([dataset.data.data.max()
+                                for dataset in self.datasets])]
+            if self.parameters['tight'] in ('x', 'both'):
+                if self.parameters['switch_axes']:
+                    self.axes.set_xlim(data_limits)
+                else:
+                    self.axes.set_xlim(axes_limits)
+            if self.parameters['tight'] in ('y', 'both'):
+                if self.parameters['switch_axes']:
+                    self.axes.set_ylim(axes_limits)
+                else:
+                    self.axes.set_ylim(data_limits)
+
+    def _set_axes_labels(self):
+        super()._set_axes_labels()
+        if self.parameters['switch_axes']:
+            old_xlabel = self.axes.get_xlabel()
+            old_ylabel = self.axes.get_ylabel()
+            self.axes.set_xlabel(old_ylabel)
+            self.axes.set_ylabel(old_xlabel)
 
 
 class MultiPlotter1DStacked(MultiPlotter1D):
@@ -1843,12 +1960,39 @@ class MultiPlotter1DStacked(MultiPlotter1D):
         for idx, dataset in enumerate(self.datasets):
             if not self.properties.drawings[idx].label:
                 self.properties.drawings[idx].label = dataset.label
-            drawing, = plot_function(dataset.data.axes[0].values,
-                                     dataset.data.data - idx * offset,
-                                     label=self.properties.drawings[idx].label)
+            if self.parameters['switch_axes']:
+                drawing, = plot_function(
+                    dataset.data.data - idx * offset,
+                    dataset.data.axes[0].values,
+                    label=self.properties.drawings[idx].label)
+            else:
+                drawing, = plot_function(
+                    dataset.data.axes[0].values,
+                    dataset.data.data - idx * offset,
+                    label=self.properties.drawings[idx].label)
             self.drawings.append(drawing)
         self.axes.tick_params(axis='y', which='both', left=False,
                               right=False, labelleft=False, labelright=False)
+        if self.parameters['tight']:
+            axes_limits = [min([dataset.data.axes[0].values.min()
+                                for dataset in self.datasets]),
+                           max([dataset.data.axes[0].values.max()
+                                for dataset in self.datasets])]
+            data_limits = [min([dataset.data.data.min()
+                                for dataset in self.datasets]),
+                           max([dataset.data.data.max()
+                                for dataset in self.datasets])]
+            data_limits[0] -= (offset * (len(self.datasets) - 1))
+            if self.parameters['tight'] in ('x', 'both'):
+                if self.parameters['switch_axes']:
+                    self.axes.set_xlim(data_limits)
+                else:
+                    self.axes.set_xlim(axes_limits)
+            if self.parameters['tight'] in ('y', 'both'):
+                if self.parameters['switch_axes']:
+                    self.axes.set_ylim(axes_limits)
+                else:
+                    self.axes.set_ylim(data_limits)
 
     def _add_zero_lines(self):
         if self.parameters['show_zero_lines']:
@@ -2791,6 +2935,11 @@ class AxesProperties(aspecd.utils.Properties):
 
         Default: None
 
+    xticklabelangle: :class:`float`
+        Angle of the x-tick labels
+
+        Default: None
+
     ylabel: :class:`str`
         label for the y-axis
 
@@ -2818,10 +2967,19 @@ class AxesProperties(aspecd.utils.Properties):
 
         Default: None
 
+    yticklabelangle: :class:`float`
+        Angle of the y-tick labels
+
+        Default: None
+
     Raises
     ------
     aspecd.exceptions.MissingAxisError
         Raised if no axis is provided.
+
+
+    .. versionchanged:: 0.6
+        New properties ``xticklabelangle`` and ``yticklabelangle``
 
     """
 
@@ -2835,11 +2993,13 @@ class AxesProperties(aspecd.utils.Properties):
         self.xlim = []
         self.xscale = ''
         self.xticklabels = None
+        self.xticklabelangle = 0.0
         self.xticks = None
         self.ylabel = ''
         self.ylim = []
         self.yscale = ''
         self.yticklabels = None
+        self.yticklabelangle = 0.0
         self.yticks = None
 
     def apply(self, axes=None):
@@ -2875,6 +3035,10 @@ class AxesProperties(aspecd.utils.Properties):
             axes.set_xticklabels(self.xticklabels)
         if self.yticklabels is not None:
             axes.set_yticklabels(self.yticklabels)
+        for tick in axes.get_xticklabels():
+            tick.set_rotation(self.xticklabelangle)
+        for tick in axes.get_yticklabels():
+            tick.set_rotation(self.yticklabelangle)
 
     def _get_settable_properties(self):
         """
@@ -2917,15 +3081,35 @@ class LegendProperties(aspecd.utils.Properties):
         Location of the legend
 
         For possible values, see :class:`matplotlib.legend.Legend`
+
     frameon : :class:`bool`
         Whether to plot a box around the legend
 
         Default: True
 
+    labelspacing : :class:`float`
+        Vertical space between the legend entries, in font-size units.
+
+        Default: 0.5
+
+    fontsize : :class:`int` or :class:`str`
+        Font size of the legend.
+
+        If numeric the size will be the absolute font size in points. String
+        values are relative to the current default font size. Valid string
+        values are: ``xx-small``, ``x-small``, ``small``, ``medium``,
+        ``large``, ``x-large``, ``xx-large``
+
+        Default: ``plt.rcParams['font.size']``
+
     Raises
     ------
     aspecd.exceptions.MissingLegendError
         Raised if no legend is provided.
+
+
+    .. versionchanged:: 0.7
+        Added attributes :attr:`labelspacing` and :attr:`fontsize`
 
     """
 
@@ -2933,6 +3117,8 @@ class LegendProperties(aspecd.utils.Properties):
         super().__init__()
         self.loc = 'best'
         self.frameon = True
+        self.labelspacing = 0.5
+        self.fontsize = plt.rcParams['font.size']
         self._exclude = ['location']
         self._exclude_from_to_dict = ['location']
 

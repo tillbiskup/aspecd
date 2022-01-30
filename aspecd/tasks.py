@@ -641,6 +641,9 @@ Currently, the following subclasses are implemented:
 
   * :class:`aspecd.tasks.TabulateTask`
   * :class:`aspecd.tasks.ReportTask`
+
+    * :class:`aspecd.tasks.FigurereportTask`
+
   * :class:`aspecd.tasks.ModelTask`
   * :class:`aspecd.tasks.ExportTask`
 
@@ -1743,7 +1746,8 @@ class Task(aspecd.utils.ToDictMixin):
                     setattr(self, key, value)
             elif not hasattr(self, key):
                 class_name = aspecd.utils.full_class_name(self)
-                logger.warning(f'Unknown key "{key}" ignored in "{class_name}"')
+                logger.warning('Unknown key "%s" ignored in "%s"',
+                               key, class_name)
 
     def to_dict(self, remove_empty=False):
         """
@@ -1777,6 +1781,9 @@ class Task(aspecd.utils.ToDictMixin):
         """
         if self._task:
             task_copy = copy.copy(self._task)
+            if hasattr(task_copy, 'model'):  # Feels like a dirty fix...
+                task_copy.model = \
+                    self._replace_object_with_label(task_copy.model)
             if hasattr(task_copy, 'parameters'):
                 self._replace_objects_with_labels(task_copy.parameters)
             self.properties.update(task_copy.to_dict())
@@ -1811,7 +1818,10 @@ class Task(aspecd.utils.ToDictMixin):
                 value = dataset_key
         for result_key, result_value in self.recipe.results.items():
             if value is result_value or \
-                    (hasattr(result_value, 'id') and value is result_value.id):
+                    (hasattr(result_value, 'id') and value is
+                     result_value.id) or \
+                    (hasattr(result_value, 'id') and hasattr(value, 'id')
+                     and value.id is result_value.id):
                 value = result_key
         for figure_key, figure_value in self.recipe.figures.items():
             if value is figure_value:
@@ -2303,9 +2313,8 @@ class ProcessingTask(Task):
                     self.recipe.results[self.result] = dataset_copy
                 if dataset_copy.id in self.recipe.datasets.keys():
                     logger.warning(
-                        f'Result name "{dataset_copy.id}" identical to '
-                        f'dataset label, unexpected things may '
-                        f'happen.')
+                        'Result name "%s" identical to dataset label, '
+                        'unexpected things may happen.', dataset_copy.id)
             else:
                 logger.info('Perform "%s" on dataset "%s"', self.type,
                             dataset_id)
@@ -2429,10 +2438,10 @@ class MultiprocessingTask(Task):
             for number, dataset in enumerate(self._task.datasets):
                 if self.result[number] in self.recipe.datasets.keys():
                     logger.warning(
-                        f'Result name "{self.result[number]}" identical to '
-                        f'dataset label, unexpected things may '
-                        f'happen.')
+                        'Result name "%s" identical to dataset label, '
+                        'unexpected things may happen.', self.result[number])
                 self.recipe.results[self.result[number]] = dataset
+                dataset.id = self.result[number]
         else:
             self._task.datasets = self.recipe.get_datasets(self.apply_to)
             logger.info('Perform "%s" on datasets "%s"', self.type,
@@ -2596,9 +2605,8 @@ class SingleanalysisTask(AnalysisTask):
                 if isinstance(self._task.result, aspecd.dataset.Dataset) and \
                         self._task.result.id in self.recipe.datasets.keys():
                     logger.warning(
-                        f'Result name "{self.result}" identical to '
-                        f'dataset label, unexpected things may '
-                        f'happen.')
+                        'Result name "%s" identical to dataset label, '
+                        'unexpected things may happen.', self.result)
 
 
 class MultianalysisTask(AnalysisTask):
@@ -2671,9 +2679,8 @@ class MultianalysisTask(AnalysisTask):
             result.id = label
             if label in self.recipe.datasets.keys():
                 logger.warning(
-                    f'Result name "{self.result}" identical to '
-                    f'dataset label, unexpected things may '
-                    f'happen.')
+                    'Result name "%s" identical to dataset label, '
+                    'unexpected things may happen.', self.result)
         self.recipe.results[label] = result
 
 
@@ -2721,9 +2728,8 @@ class AggregatedanalysisTask(AnalysisTask):
         if self.result:
             if self.result in self.recipe.datasets.keys():
                 logger.warning(
-                    f'Result name "{self.result}" identical to '
-                    f'dataset label, unexpected things may '
-                    f'happen.')
+                    'Result name "%s" identical to dataset label, '
+                    'unexpected things may happen.', self.result)
             self.recipe.results[self.result] = self._task.result
         self.type = analysis_step
 
@@ -3349,10 +3355,10 @@ class ReportTask(Task):
 
     .. note::
         If the recipe contains the ``output`` key in its ``directories`` dict,
-        the figure(s) will be saved to this directory.
+        the report(s) will be saved to this directory.
 
     In case you do not provide a filename, the report is nevertheless saved
-    for each of the datasets, using a auto-generated filename consisting of
+    for each of the datasets, using an auto-generated filename consisting of
     the dataset label and the template used. Assuming a dataset "foo" and a
     template "dataset.tex", the resulting report will be saved to the file
     "foo_report_dataset.tex".
@@ -3445,7 +3451,10 @@ class ReportTask(Task):
         for idx, dataset_id in enumerate(self.apply_to):
             dataset = self.recipe.get_dataset(dataset_id)
             task = self.get_object()
-            task.package = self.recipe.settings['default_package']
+            if not task.package:
+                task.package = self.recipe.settings['default_package']
+            if hasattr(task, 'dataset'):
+                task.dataset = dataset
             task.context['dataset'] = dataset.to_dict()
             if 'filename' not in self.properties \
                     or not self.properties['filename']:
@@ -3479,6 +3488,114 @@ class ReportTask(Task):
                 filenames.append(self.recipe.figures[figure].filename)
         filenames = [name for name in filenames if name]
         return filenames
+
+
+class FigurereportTask(Task):
+    r"""
+    Reporting step particularly for figure captions.
+
+    While the more generic :class:`ReportTask` operates on datasets,
+    this task operates on figure records stored within a recipe's
+    :attr:`Recipe.figures` attribute and is hence dedicated to creating
+    figure captions. This is pretty useful in case you have added captions
+    to your figures within a recipe and want to automatically include the
+    final figure and caption into a document.
+
+    Think of a report or thesis written in LaTeX: With a series of recipes
+    analysing your data and creating the figures, wouldn't it be charming to
+    have the figure captions automatically created as well from within the
+    recipe, as there you probably know the best how to describe your data?
+    That's what this task is good for. Including the figure and caption in
+    this case reduces to a mere ``\input`` statement in LaTeX.
+
+    As reporters, you can use all the reporter classes provided with the
+    ASpecD framework. For more information see the :mod:`aspecd.report` module.
+
+    For an example of how such a report task may be included into a recipe,
+    see the YAML listing below:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          label: overview1D
+
+        - kind: figurereport
+          type: LaTeXReporter
+          properties:
+            template: figure.tex
+            filename: fig_caption.tex
+          apply_to: overview1D
+
+    In this particular case, we use a LaTeX reporter and most likely one of
+    the templates that come bundled with the ASpecD package (atl least,
+    a template with that name comes bundled with ASpecD).
+
+    You can, of course, apply the report task to multiple figures
+    individually. In this case, you most probably would like to have your
+    reports saved to individual files. This means that the property
+    ``filename`` needs to become a list:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          label: overview1D
+        - kind: singleplot
+          type: SinglePLotter1D
+          label: overview2
+        - kind: report
+          type: LaTeXReporter
+          properties:
+            template: figure.tex
+            filename:
+              - fig1_caption.tex
+              - fig2_caption.tex
+          apply_to:
+            - overview1D
+            - overview2
+
+
+    .. important::
+        Make sure to provide the same number of file names in your recipe as
+        the number of figures you apply the report to. Otherwise you may
+        run into trouble.
+
+    .. note::
+        If the recipe contains the ``output`` key in its ``directories`` dict,
+        the report(s) will be saved to this directory.
+
+    In case you do not provide a filename, the report is nevertheless saved
+    for each of the figures, using an auto-generated filename consisting of
+    the figure label and the template used. Assuming a figure "fig1" and a
+    template "figure.tex", the resulting report will be saved to the file
+    "fig1_report_figure.tex".
+
+    .. versionadded:: 0.7
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self._module = 'report'
+
+    def _perform(self):
+        for idx, figure in enumerate(self.apply_to):
+            task = self.get_object()
+            # noinspection PyUnresolvedReferences
+            task.context['figure'] = self.recipe.figures[figure].to_dict()
+            if 'filename' not in self.properties \
+                    or not self.properties['filename']:
+                # noinspection PyUnresolvedReferences
+                task.filename = "_".join([figure, "report", task.template])
+            elif isinstance(self.properties["filename"], list):
+                task.filename = self.properties["filename"][idx]
+            if self.recipe.directories['output']:
+                task.filename = os.path.join(self.recipe.directories['output'],
+                                             task.filename)
+            logger.info('Perform "%s" on figure "%s"', self.type, figure)
+            # noinspection PyUnresolvedReferences
+            task.create()
 
 
 class ModelTask(Task):
@@ -3534,12 +3651,24 @@ class ModelTask(Task):
         to call the :meth:`aspecd.model.Model.from_dataset` method with to
         obtain the variables from this dataset.
 
+    output : :class:`str`
+        Type of output returned in ``result`` if given
+
+        Can be "dataset" (default) or "model". The latter is important in
+        case the model as such needs to be accessed, *e.g.* in context of
+        fitting models to data.
+
+
+    .. versionchanged:: 0.7
+        Added attribute ``output``
+
     """
 
     def __init__(self, recipe=None):
         super().__init__(recipe=recipe)
         self.result = ''
         self.from_dataset = ''
+        self.output = 'dataset'
 
     # noinspection PyUnresolvedReferences
     def _perform(self):
@@ -3547,7 +3676,10 @@ class ModelTask(Task):
         if self.from_dataset:
             task.from_dataset(self.recipe.get_dataset(self.from_dataset))
         logger.info('Create model "%s"', self.type)
-        result = task.create()
+        if self.output == 'model':
+            result = task
+        else:
+            result = task.create()
         if self.result:
             result.id = self.result
             self.recipe.results[self.result] = result

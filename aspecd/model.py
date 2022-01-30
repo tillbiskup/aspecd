@@ -356,6 +356,31 @@ class Model(ToDictMixin):
         self._set_dataset_origdata()
         return self._dataset
 
+    def evaluate(self):
+        """
+        Evaluate model and return numerical data without any checks.
+
+        .. important::
+
+            Usually, you should always use :meth:`create` and obtain a
+            dataset based on the model. However, :meth:`create` performs a
+            lot of additional checks. Therefore, if you are sure to have set
+            all properties as necessary and are interested in a probably much
+            faster evaluation of the model for a given set of parameters,
+            *e.g.* in context of fitting, this is the method of choice.
+
+        Returns
+        -------
+        data : :class:`np.array`
+            Numerical data of the model
+
+
+        .. versionadded:: 0.7
+
+        """
+        self._perform_task()
+        return self._dataset.data.data
+
     def from_dataset(self, dataset=None):
         """
         Obtain crucial information from an existing dataset.
