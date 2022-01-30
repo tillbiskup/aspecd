@@ -1960,12 +1960,39 @@ class MultiPlotter1DStacked(MultiPlotter1D):
         for idx, dataset in enumerate(self.datasets):
             if not self.properties.drawings[idx].label:
                 self.properties.drawings[idx].label = dataset.label
-            drawing, = plot_function(dataset.data.axes[0].values,
-                                     dataset.data.data - idx * offset,
-                                     label=self.properties.drawings[idx].label)
+            if self.parameters['switch_axes']:
+                drawing, = plot_function(
+                    dataset.data.data - idx * offset,
+                    dataset.data.axes[0].values,
+                    label=self.properties.drawings[idx].label)
+            else:
+                drawing, = plot_function(
+                    dataset.data.axes[0].values,
+                    dataset.data.data - idx * offset,
+                    label=self.properties.drawings[idx].label)
             self.drawings.append(drawing)
         self.axes.tick_params(axis='y', which='both', left=False,
                               right=False, labelleft=False, labelright=False)
+        if self.parameters['tight']:
+            axes_limits = [min([dataset.data.axes[0].values.min()
+                                for dataset in self.datasets]),
+                           max([dataset.data.axes[0].values.max()
+                                for dataset in self.datasets])]
+            data_limits = [min([dataset.data.data.min()
+                                for dataset in self.datasets]),
+                           max([dataset.data.data.max()
+                                for dataset in self.datasets])]
+            data_limits[0] -= (offset * len(self.datasets)-1)
+            if self.parameters['tight'] in ('x', 'both'):
+                if self.parameters['switch_axes']:
+                    self.axes.set_xlim(data_limits)
+                else:
+                    self.axes.set_xlim(axes_limits)
+            if self.parameters['tight'] in ('y', 'both'):
+                if self.parameters['switch_axes']:
+                    self.axes.set_ylim(axes_limits)
+                else:
+                    self.axes.set_ylim(data_limits)
 
     def _add_zero_lines(self):
         if self.parameters['show_zero_lines']:

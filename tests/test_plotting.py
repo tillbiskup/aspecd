@@ -1239,6 +1239,8 @@ class TestMultiPlotter1DStacked(unittest.TestCase):
         self.plotter = plotting.MultiPlotter1DStacked()
         dataset_ = aspecd.dataset.CalculatedDataset()
         dataset_.data.data = np.sin(np.linspace(0, 2*np.pi))
+        dataset_.data.axes[0].quantity = 'magnetic field'
+        dataset_.data.axes[0].unit = 'mT'
         self.plotter.datasets.append(dataset_)
         self.plotter.datasets.append(dataset_)
         self.plotter.datasets.append(dataset_)
@@ -1285,6 +1287,88 @@ class TestMultiPlotter1DStacked(unittest.TestCase):
         self.plotter.parameters['show_zero_lines'] = True
         self.plotter.plot()
         self.assertGreater(0, self.plotter.axes.get_lines()[-1].get_ydata()[0])
+
+    def test_has_tight_parameter(self):
+        self.assertTrue('tight' in self.plotter.parameters)
+
+    def test_tight_sets_correct_x_axes_limits(self):
+        self.plotter.parameters['tight'] = 'x'
+        self.plotter.plot()
+        self.assertListEqual([0, len(self.plotter.datasets[0].data.data)-1],
+                             list(self.plotter.ax.get_xlim()))
+
+    def test_tight_sets_correct_y_axes_limits(self):
+        self.plotter.parameters['tight'] = 'y'
+        self.plotter.plot()
+        data_limits = [min([dataset_.data.data.min()
+                            for dataset_ in self.plotter.datasets]),
+                       max([dataset_.data.data.max()
+                            for dataset_ in self.plotter.datasets])]
+        data_limits[0] -= (self.plotter.parameters['offset']
+                           * len(self.plotter.datasets) - 1)
+        self.assertListEqual(data_limits, list(self.plotter.ax.get_ylim()))
+
+    def test_tight_sets_correct_axes_limits(self):
+        self.plotter.parameters['tight'] = 'both'
+        self.plotter.plot()
+        self.assertListEqual([0, len(self.plotter.datasets[0].data.data)-1],
+                             list(self.plotter.ax.get_xlim()))
+        data_limits = [min([dataset_.data.data.min()
+                            for dataset_ in self.plotter.datasets]),
+                       max([dataset_.data.data.max()
+                            for dataset_ in self.plotter.datasets])]
+        data_limits[0] -= (self.plotter.parameters['offset']
+                           * len(self.plotter.datasets) - 1)
+        self.assertListEqual(data_limits, list(self.plotter.ax.get_ylim()))
+
+    def test_has_switch_axes_parameter(self):
+        self.assertTrue('switch_axes' in self.plotter.parameters)
+
+    def test_switch_axes_sets_correct_axes_labels(self):
+        self.plotter.parameters['switch_axes'] = True
+        self.plotter.plot()
+        self.assertIn('magnetic', self.plotter.ax.get_ylabel())
+
+    def test_switch_axes_actually_switches_axes(self):
+        self.plotter.parameters['switch_axes'] = True
+        self.plotter.plot()
+        self.assertListEqual(
+            list(self.plotter.datasets[0].data.data),
+            list(self.plotter.axes.lines[0].get_xdata())
+        )
+
+    def test_tight_sets_correct_x_axes_limits_with_switched_axes(self):
+        self.plotter.parameters['tight'] = 'x'
+        self.plotter.parameters['switch_axes'] = True
+        self.plotter.plot()
+        data_limits = [min([dataset_.data.data.min()
+                            for dataset_ in self.plotter.datasets]),
+                       max([dataset_.data.data.max()
+                            for dataset_ in self.plotter.datasets])]
+        data_limits[0] -= (self.plotter.parameters['offset']
+                           * len(self.plotter.datasets) - 1)
+        self.assertListEqual(data_limits, list(self.plotter.ax.get_xlim()))
+
+    def test_tight_sets_correct_y_axes_limits_with_switched_axes(self):
+        self.plotter.parameters['tight'] = 'y'
+        self.plotter.parameters['switch_axes'] = True
+        self.plotter.plot()
+        self.assertListEqual([0, len(self.plotter.datasets[0].data.data)-1],
+                             list(self.plotter.ax.get_ylim()))
+
+    def test_tight_sets_correct_axes_limits_with_switched_axes(self):
+        self.plotter.parameters['tight'] = 'both'
+        self.plotter.parameters['switch_axes'] = True
+        self.plotter.plot()
+        self.assertListEqual([0, len(self.plotter.datasets[0].data.data)-1],
+                             list(self.plotter.ax.get_ylim()))
+        data_limits = [min([dataset_.data.data.min()
+                            for dataset_ in self.plotter.datasets]),
+                       max([dataset_.data.data.max()
+                            for dataset_ in self.plotter.datasets])]
+        data_limits[0] -= (self.plotter.parameters['offset']
+                           * len(self.plotter.datasets) - 1)
+        self.assertListEqual(data_limits, list(self.plotter.ax.get_xlim()))
 
 
 class TestCompositePlotter(unittest.TestCase):

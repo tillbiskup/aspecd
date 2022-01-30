@@ -10,8 +10,6 @@ For version 0.8
 
 * Plotting
 
-  * MultiPlotter1DStacked: parameter "tight" for tight axes
-
   * Colorbar for 2D plotter
 
   * colormaps for multiple lines
