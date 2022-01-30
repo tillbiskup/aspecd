@@ -8,13 +8,15 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.7
 ===============
 
+
+For version 0.8
+===============
+
 * Plotting
 
-  * MultiPlotter: parameter "tight" for tight axes
+  * MultiPlotter1DStacked: parameter "tight" for tight axes
 
   * Colorbar for 2D plotter
-
-  * Tick label angles
 
   * colormaps for multiple lines
 

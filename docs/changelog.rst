@@ -19,6 +19,9 @@ New features
 * Attribute ``output`` in :class:`aspecd.tasks.ModelTask` controlling the type of output returned (dataset or model)
 * Method :meth:`aspecd.model.Model.evaluate` for fast evaluation of models without any checks (useful in context of fitting)
 * Attribute ``dataset_type`` in :class:`aspecd.analysis.AnalysisStep` to define type of calculated dataset that gets returned
+* :class:`aspecd.plotting.MultiPlotter1D` with parameter "tight" for tight axes and "switch_axes" for switching axes
+* :class:`aspecd.plotting.SinglePlotter1D` with parameter "switch_axes" for switching axes
+* :class:`aspecd.plotting.AxesProperties`: angles of the axes tick labels can be set using the ``xticklabelangle`` and ``yticklabelangle`` properties
 
 
 Changes
