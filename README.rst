@@ -81,7 +81,7 @@ How to cite
 
 ASpecD is free software. However, if you use ASpecD for your own research, please cite both, the article describing it and the software itself:
 
-  * Jara Popp, Till Biskup. ASpecD: A Modular Framework for the Analysis of Spectroscopic Data Focussing on Reproducibility and Good Scientific Practice. *Chemistry--Methods* 2022, in press. `doi:10.1002/cmtd.202100097 <https://doi.org/10.1002/cmtd.202100097>`_
+  * Jara Popp, Till Biskup. ASpecD: A Modular Framework for the Analysis of Spectroscopic Data Focussing on Reproducibility and Good Scientific Practice. *Chemistry--Methods* **2**:e202100097, 2022. `doi:10.1002/cmtd.202100097 <https://doi.org/10.1002/cmtd.202100097>`_
 
   * Till Biskup. ASpecD (2022). `doi:10.5281/zenodo.4717937 <https://doi.org/10.5281/zenodo.4717937>`_
 
