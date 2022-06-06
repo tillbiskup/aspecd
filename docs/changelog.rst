@@ -5,6 +5,18 @@ Changelog
 This page contains a summary of changes between the official ASpecD releases. Only the biggest changes are listed here. A complete and detailed log of all changes is available through the `GitHub Repository Browser <https://github.com/tillbiskup/aspecd/commits/master>`_.
 
 
+Version 0.7.1
+=============
+
+Released 2022-06-xx
+
+New features
+------------
+
+* Reference to publication in documentation and colophon of reports.
+
+
+
 Version 0.7.0
 =============
 
