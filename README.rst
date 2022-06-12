@@ -76,6 +76,21 @@ Target audience
 The ASpecD framework addresses every scientist working with data (both, measured and calculated) on a daily base and concerned with `reproducibility <https://www.reproducible-research.de/>`_. The ASpecD framework ensures reproducibility and---as much as possible---replicability of data processing, starting from recording data and ending with their final (graphical) representation, e.g., in a peer-reviewed publication. This is achieved by automatically creating a gap-less record of each operation performed on your data. If you do care about reproducibility and are looking for a system that helps you to achieve this goal, ASpecD may well be interesting for you.
 
 
+How to cite
+-----------
+
+ASpecD is free software. However, if you use ASpecD for your own research, please cite both, the article describing it and the software itself:
+
+  * Jara Popp, Till Biskup. ASpecD: A Modular Framework for the Analysis of Spectroscopic Data Focussing on Reproducibility and Good Scientific Practice. *Chemistry--Methods* **2**:e202100097, 2022. `doi:10.1002/cmtd.202100097 <https://doi.org/10.1002/cmtd.202100097>`_
+
+  * Till Biskup. ASpecD (2022). `doi:10.5281/zenodo.4717937 <https://doi.org/10.5281/zenodo.4717937>`_
+
+To make things easier, ASpecD has a `DOI <https://doi.org/10.5281/zenodo.4717937>`_ provided by `Zenodo <https://zenodo.org/>`_, and you may click on the badge below to directly access the record associated with it. Note that this DOI refers to the package as such and always forwards to the most current version.
+
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.4717937.svg
+   :target: https://doi.org/10.5281/zenodo.4717937
+
+
 Related projects
 ----------------
 
