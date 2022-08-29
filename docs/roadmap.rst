@@ -8,6 +8,10 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.8
 ===============
 
+* Usability
+
+  * Importer/ImporterFactory should issue a warning if no dataset could be loaded, rather than silently continuing, as this often leads to downstream problems and exceptions thrown.
+
 * Plotting
 
   * Colorbar for 2D plotter
