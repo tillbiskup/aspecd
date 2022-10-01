@@ -2443,7 +2443,7 @@ class TestMultiPlot1DProperties(unittest.TestCase):
         plotter.plot()
         self.assertEqual(colours(1),
                          plotter.legend.get_lines()[1].get_color())
-        plt.show()
+        # plt.show()
         plt.close(plotter.figure)
 
 

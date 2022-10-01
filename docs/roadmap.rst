@@ -16,8 +16,6 @@ For version 0.8
 
   * Colorbar for 2D plotter
 
-  * colormaps for multiple lines
-
 * Processing
 
   * ExtractSlices (plural): extract several slices from a dataset and combine them in a new dataset
