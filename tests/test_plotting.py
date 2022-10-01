@@ -2424,6 +2424,28 @@ class TestMultiPlot1DProperties(unittest.TestCase):
         # plt.show()
         plt.close(plotter.figure)
 
+    def test_legend_with_colormap_has_correct_colour(self):
+        colormap_name = 'viridis'
+        n_drawings = 20
+        colours = plt.get_cmap(colormap_name, n_drawings)
+        self.plot_properties.colormap = colormap_name
+
+        plotter = plotting.MultiPlotter1D()
+        plotter.properties = self.plot_properties
+        plotter.parameters['show_legend'] = True
+        x = np.linspace(0, 2 * np.pi, 64)
+        y = np.cos(x)
+        for idx in range(n_drawings):
+            dataset_ = dataset.Dataset()
+            dataset_.data.data = idx * y
+            dataset_.label = str(idx)
+            plotter.datasets.append(dataset_)
+        plotter.plot()
+        self.assertEqual(colours(1),
+                         plotter.legend.get_lines()[1].get_color())
+        plt.show()
+        plt.close(plotter.figure)
+
 
 class TestCompositePlotProperties(unittest.TestCase):
     def setUp(self):

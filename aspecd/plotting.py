@@ -1568,6 +1568,8 @@ class MultiPlotter(Plotter):
         super().plot()
         self._set_axes_labels()
         self.properties.apply(plotter=self)
+        # Update/redraw legend after having set properties
+        self._set_legend()
 
     def _check_for_applicability(self):
         if not self.datasets:
@@ -2730,6 +2732,9 @@ class MultiPlot1DProperties(MultiPlotProperties):
         For the properties that can be set this way, see the documentation
         of the :class:`aspecd.plotting.LineProperties` class.
 
+    colormap : :class:`str`
+        NAme of the colormap to use for colouring the individual drawings
+
     Raises
     ------
     aspecd.exceptions.MissingPlotterError
@@ -2765,6 +2770,25 @@ class MultiPlot1DProperties(MultiPlotProperties):
                 setattr(drawing_properties, key, mpl.rcParams[rc_property])
 
     def apply(self, plotter=None):
+        """
+        Apply properties to plot.
+
+        The main difference to the parent class: if you set a colormap
+        property, the lines will be coloured according to the colormap.
+        Note that this needs to be done on this level, as we need to know
+        how many drawings (i.e. lines) there are to colour.
+
+        Parameters
+        ----------
+        plotter: :class:`aspecd.plotting.MultiPlotter`
+            Plotter the properties should be applied to.
+
+        Raises
+        ------
+        aspecd.exceptions.MissingPlotterError
+            Raised if no plotter is provided.
+
+        """
         super().apply(plotter=plotter)
         if hasattr(plotter, 'drawings') and self.colormap:
             idx = len(self.drawings)
