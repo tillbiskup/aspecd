@@ -2737,6 +2737,10 @@ class MultiPlot1DProperties(MultiPlotProperties):
 
     """
 
+    def __init__(self):
+        super().__init__()
+        self.colormap = None
+
     def add_drawing(self):
         """
         Add a :obj:`aspecd.plotting.LineProperties` object to the list.
@@ -2759,6 +2763,14 @@ class MultiPlot1DProperties(MultiPlotProperties):
             rc_property = 'lines.' + key
             if rc_property in mpl.rcParams.keys():
                 setattr(drawing_properties, key, mpl.rcParams[rc_property])
+
+    def apply(self, plotter=None):
+        super().apply(plotter=plotter)
+        if hasattr(plotter, 'drawings') and self.colormap:
+            idx = len(self.drawings)
+            colors = plt.get_cmap(self.colormap, idx)
+            for idx, drawing in enumerate(plotter.drawings):
+                self.drawings[idx].color = colors(idx)
 
 
 class CompositePlotProperties(PlotProperties):
