@@ -13,7 +13,9 @@ Not yet released
 New features
 ------------
 
-* MultiPlotter1D can use colormaps for coloring multiple lines
+* Plotting
+  * MultiPlotter1D can use colormaps for coloring multiple lines
+  * Number of columns can be set for legends of plots
 
 
 Version 0.7.1

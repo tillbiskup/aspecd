@@ -2133,6 +2133,24 @@ class TestLegendProperties(unittest.TestCase):
                          legend.prop.get_size())
         plt.close(plot.figure)
 
+    def test_ncol_sets_legend_columns(self):
+        ncol = 2
+        self.legend_properties.ncol = ncol
+        plot = plotting.MultiPlotter1D()
+        for idx in range(5):
+            dataset_ = dataset.Dataset()
+            dataset_.data.data = np.random.random(5)
+            dataset_.label = str(idx)
+            plot.datasets.append(dataset_)
+        plot.properties.legend = self.legend_properties
+        plot.parameters['show_legend'] = True
+        with contextlib.redirect_stderr(io.StringIO()):
+            plot.plot()
+        legend = plot.legend
+        # plt.show()
+        self.assertEqual(ncol, legend._ncol)
+        plt.close(plot.figure)
+
 
 class TestGridProperties(unittest.TestCase):
     def setUp(self):

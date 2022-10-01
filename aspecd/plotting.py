@@ -2740,6 +2740,10 @@ class MultiPlot1DProperties(MultiPlotProperties):
     aspecd.exceptions.MissingPlotterError
         Raised if no plotter is provided.
 
+
+    .. versionchanged:: 0.8
+        Added attribute :attr:`colormap`
+
     """
 
     def __init__(self):
@@ -3138,6 +3142,11 @@ class LegendProperties(aspecd.utils.Properties):
 
         Default: ``plt.rcParams['font.size']``
 
+    ncol : :class:`int`
+        Number of columns of the legend
+
+        Default: 1
+
     Raises
     ------
     aspecd.exceptions.MissingLegendError
@@ -3147,6 +3156,9 @@ class LegendProperties(aspecd.utils.Properties):
     .. versionchanged:: 0.7
         Added attributes :attr:`labelspacing` and :attr:`fontsize`
 
+    .. versionchanged:: 0.8
+        Added attribute :attr:`ncol`
+
     """
 
     def __init__(self):
@@ -3155,6 +3167,7 @@ class LegendProperties(aspecd.utils.Properties):
         self.frameon = True
         self.labelspacing = 0.5
         self.fontsize = plt.rcParams['font.size']
+        self.ncol = 1
         self._exclude = ['location']
         self._exclude_from_to_dict = ['location']
 
@@ -3174,12 +3187,12 @@ class LegendProperties(aspecd.utils.Properties):
         Parameters
         ----------
         legend: :class:`matplotlib.legend.Legend`
-            Plotter the properties should be applied to.
+            Legend the properties should be applied to.
 
         Raises
         ------
-        aspecd.exceptions.MissingFigureError
-            Raised if no figure is provided.
+        aspecd.exceptions.MissingLegendError
+            Raised if no legend is provided.
 
         """
         if not legend:
