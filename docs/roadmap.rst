@@ -18,9 +18,11 @@ For version 0.8
 
 * Processing
 
-  * ExtractSlices (plural): extract several slices from a dataset and combine them in a new dataset
+  * SlicesExtraction (plural): extract several slices from a dataset and combine them in a new dataset -- maybe better named SliceRemoval, as this better reflects the idea behind this step (*i.e.*, getting rid of a spurious slice). And both, SliceExtraction and SliceRemoval, could be extended to handle multiple slices.
 
   * CombineDatasets: combine data from several datasets into a single dataset; parameters allowing to define the axis values/quantity/unit, possibly even from given metadata; to decide: How to handle metadata that might be invalidated?
+
+  * MetadataUpdate/MetadataChange: Change metadata of a given dataset from within a recipe. Useful in case datasets contain (known) spurious or otherwise inappropriate metadata. (Metadata are provided manually and are therefore prone to human errors).
 
 * Add export tasks to dataset tasks
 
@@ -43,16 +45,11 @@ For version 0.8
 
   * Looking for templates in user directory
 
-* Processing of 2D (eventually ND with N>1) datasets:
-
-  * Projecting/averaging excluding certain lines (due to artifacts from external noise sources or else)
-  * Combining a list of 1D datasets to a 2D dataset (reverse operation of SliceExtraction)
-
 
 For later versions
 ==================
 
-* Get rid of OrderedDict instances, as Python preserves order in dictionaries since version 3.6
+* Convert from :class:`collections.OrderedDict` to :class:`dict`, as starting with Python 3.7, dicts preserve the insertion-order of the keys.
 
 * Plot styles
 
@@ -81,8 +78,6 @@ For later versions
 * Basic maths in values of recipes (ranges, basic numpy functions)?
 
   May impair the platform-independence of the recipe (*i.e.*, tying it to Python/NumPy)
-
-* Convert from :class:`collections.OrderedDict` to :class:`dict`, as starting with Python 3.7, dicts preserve the insertion-order of the keys.
 
 
 Todos

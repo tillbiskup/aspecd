@@ -14,6 +14,7 @@ New features
 ------------
 
 * Plotting
+
   * MultiPlotter1D can use colormaps for coloring multiple lines
   * Number of columns can be set for legends of plots
 
