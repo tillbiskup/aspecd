@@ -111,7 +111,11 @@ independently.
 
 * :class:`aspecd.processing.SliceExtraction`
 
-  Extract slice along one ore more dimensions from dataset.
+  Extract slice along one or more dimensions from dataset.
+
+* :class:`aspecd.processing.SliceRemoval`
+
+  Remove slice along one or more dimensions from dataset.
 
 * :class:`aspecd.processing.RangeExtraction`
 
@@ -1163,7 +1167,7 @@ class Projection(SingleProcessingStep):
     While projection can be considered a special case of averaging as
     performed by :class:`aspecd.processing.Averaging` and using the whole
     range of one axis, averaging is usually performed over part of an axis
-    only. Hence projection is semantically different and therefore
+    only. Hence, projection is semantically different and therefore
     implemented as a separate processing step.
 
     Attributes
@@ -1259,7 +1263,7 @@ class Projection(SingleProcessingStep):
 class SliceExtraction(SingleProcessingStep):
     # noinspection PyUnresolvedReferences
     """
-    Extract slice along one ore more dimensions from dataset.
+    Extract slice along one or more dimensions from dataset.
 
     With multidimensional datasets, there are use cases where you would like
     to operate only on a slice along a particular axis. One example may be
@@ -1377,7 +1381,7 @@ class SliceExtraction(SingleProcessingStep):
 
     And as it is sometimes more convenient to give ranges in axis values
     rather than indices, even this is possible. Suppose the axis you would
-    like to extract a slice from runs from 340 to 350 and you would like to
+    like to extract a slice from runs from 340 to 350, and you would like to
     extract the slice corresponding to 343:
 
     .. code-block:: yaml
@@ -1427,7 +1431,8 @@ class SliceExtraction(SingleProcessingStep):
         """
         Check whether processing step is applicable to the given dataset.
 
-        Projection is only applicable to datasets with two-dimensional data.
+        Slice extraction is only applicable to datasets with at least
+        two-dimensional data.
 
         Parameters
         ----------
@@ -1517,6 +1522,203 @@ class SliceExtraction(SingleProcessingStep):
                 value = self.dataset.data.axes[axis].values[index]
             label += "{} {}".format(value, self.dataset.data.axes[axis].unit)
         return label
+
+
+class SliceRemoval(SingleProcessingStep):
+    # noinspection PyUnresolvedReferences
+    """
+    Remove slice along one dimension from dataset.
+
+    With multidimensional datasets, there are use cases where you would like
+    to remove a slice along a particular axis, mostly due to artifacts
+    contained in this slice that impair downstream processing and analysis.
+
+    You can either provide indices or axis values for ``position``. For the
+    latter, set the parameter "unit" accordingly. For details, see below.
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        axis :
+            Index of the axis or list of indices of the axes to take the
+            position from to remove the slice
+
+            If you provide a list of axes, you need to provide as many
+            positions as axes.
+
+            If an invalid axis is provided, an IndexError is raised.
+
+            Default: 0
+
+        position :
+            Position(s) of the slice to remove
+
+            Positions can be given as axis indices (default) or axis values,
+            if the parameter "unit" is set accordingly. For details, see below.
+
+            If you provide a list of positions, you need to provide as many
+            axes as positions.
+
+            If no position is provided or the given position is out of
+            bounds for the given axis, a ValueError is raised.
+
+        unit : :class:`str`
+            Unit used for specifying the range: either "axis" or "index".
+
+            If an invalid value is provided, a ValueError is raised.
+
+            Default: "index"
+
+    Raises
+    ------
+    aspecd.exceptions.NotApplicableToDatasetError
+        Raised if dataset has not enough dimensions (*i.e.*, 1D dataset).
+
+    ValueError
+        Raised if index is out of bounds for given axis.
+
+        Raised if wrong unit is given.
+
+        Raised if too many values for axis are given.
+
+        Raised if number of values for position and axis differ.
+
+    IndexError
+        Raised if axis is out of bounds for given dataset.
+
+
+    .. versionadded:: 0.8
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    In the simplest case, just invoke the slice removal with an index only:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: SliceRemoval
+         properties:
+           parameters:
+             position: 5
+
+    This will remove the sixth slice (index five) along the first axis (index
+    zero).
+
+    If you would like to remove a slice along the second axis (with index
+    one), simply provide both parameters, index and axis:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: SliceRemoval
+         properties:
+           parameters:
+             position: 5
+             axis: 1
+
+    This will remove the sixth slice along the second axis.
+
+    And as it is sometimes more convenient to give ranges in axis values
+    rather than indices, even this is possible. Suppose the axis you would
+    like to remove a slice from runs from 340 to 350, and you would like to
+    remove the slice corresponding to 343:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: SliceRemoval
+         properties:
+           parameters:
+             position: 343
+             unit: axis
+
+    In case of you providing the range in axis units rather than indices,
+    the value closest to the actual axis value will be chosen automatically.
+
+    For ND datasets with N>2, you can currently only remove a slice along
+    one axis.
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = 'Remove slice from data of dataset'
+        self.undoable = True
+        self.parameters['position'] = None
+        self.parameters['axis'] = 0
+        self.parameters['unit'] = 'index'
+
+    @staticmethod
+    def applicable(dataset):
+        """
+        Check whether processing step is applicable to the given dataset.
+
+        Slice removal is only applicable to datasets with at least
+        two-dimensional data.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset to check
+
+        Returns
+        -------
+        applicable : :class:`bool`
+            `True` if successful, `False` otherwise.
+
+        """
+        return len(dataset.data.axes) >= 3
+
+    def _sanitise_parameters(self):
+        if not self.parameters['position'] and self.parameters['position'] != 0:
+            raise IndexError('No position provided for slice extraction')
+        if self.parameters['axis'] > self.dataset.data.data.ndim - 1:
+            raise IndexError("Axis %i out of bounds" %
+                             self.parameters['axis'])
+        self.parameters["unit"] = self.parameters["unit"].lower()
+        if self.parameters["unit"] not in ["index", "axis"]:
+            raise ValueError("Wrong unit, needs to be either index or axis.")
+        if self._out_of_range():
+            raise ValueError("Position out of axis range.")
+
+    def _out_of_range(self):
+        out_of_range = False
+        position = self.parameters['position']
+        axis = self.parameters['axis']
+        if self.parameters["unit"] == "index":
+            axis_length = self.dataset.data.data.shape[axis]
+            if abs(position) > axis_length:
+                out_of_range = True
+        else:
+            if position < min(self.dataset.data.axes[axis].values) \
+                    or position > max(self.dataset.data.axes[axis].values):
+                out_of_range = True
+        return out_of_range
+
+    def _perform_task(self):
+        axis = self.parameters['axis']
+        if self.parameters["unit"] == "index":
+            position = self.parameters["position"]
+        else:
+            position = self._get_index(self.dataset.data.axes[axis].values,
+                                       self.parameters["position"])
+        self.dataset.data.data = np.delete(
+            self.dataset.data.data,
+            position,
+            axis
+        )
+
+    @staticmethod
+    def _get_index(vector, value):
+        return np.abs(vector - value).argmin()
 
 
 class RangeExtraction(SingleProcessingStep):
@@ -1966,7 +2168,7 @@ class Averaging(SingleProcessingStep):
         higher-dimensional datasets. This may, however, change in the future.
 
     .. important::
-        Indices for the range work slightly different than in Python: While
+        Indices for the range work slightly different from Python: While
         still zero-based, a range of [2, 3] will result in having the third
         and fourth column/row averaged. This seems more intuitive to the
         average scientist than sticking with Python (and having in this case
@@ -2044,7 +2246,7 @@ class Averaging(SingleProcessingStep):
 
     And as it is sometimes more convenient to give ranges in axis values
     rather than indices, even this is possible. Suppose the axis you would
-    like to average over runs from 340 to 350 and you would like to average
+    like to average over runs from 340 to 350, and you would like to average
     from 342 to 344:
 
     .. code-block:: yaml
@@ -2273,7 +2475,7 @@ class DatasetAlgebra(SingleProcessingStep):
 
     To improve the signal-to-noise ratio, adding the data of two datasets
     can sometimes be useful. Alternatively, adding or subtracting the data
-    of two datasets can be used to help interpreting the signals.
+    of two datasets can be used to help to interpret the signals.
 
     .. important::
         The data of the two datasets to perform the scalar algebraic
@@ -3268,7 +3470,7 @@ class ChangeAxesValues(SingleProcessingStep):
     spaced data ranging from 35 to 42, of course with the same number of
     values as before.
 
-    If you would want to change both axes in a 2D dataset, same here:
+    If you  want to change both axes in a 2D dataset, same here:
 
     .. code-block:: yaml
 

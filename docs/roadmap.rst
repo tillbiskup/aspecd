@@ -18,8 +18,6 @@ For version 0.8
 
 * Processing
 
-  * SlicesExtraction (plural): extract several slices from a dataset and combine them in a new dataset -- maybe better named SliceRemoval, as this better reflects the idea behind this step (*i.e.*, getting rid of a spurious slice). And both, SliceExtraction and SliceRemoval, could be extended to handle multiple slices.
-
   * CombineDatasets: combine data from several datasets into a single dataset; parameters allowing to define the axis values/quantity/unit, possibly even from given metadata; to decide: How to handle metadata that might be invalidated?
 
   * MetadataUpdate/MetadataChange: Change metadata of a given dataset from within a recipe. Useful in case datasets contain (known) spurious or otherwise inappropriate metadata. (Metadata are provided manually and are therefore prone to human errors).

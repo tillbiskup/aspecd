@@ -18,6 +18,10 @@ New features
   * MultiPlotter1D can use colormaps for coloring multiple lines
   * Number of columns can be set for legends of plots
 
+* Processing steps
+
+  * New class :class:`aspecd.processing.SliceRemoval` for removing slices from a ND dataset with N>1.
+
 
 Version 0.7.1
 =============
