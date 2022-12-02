@@ -141,6 +141,14 @@ independently.
 
   Add (coloured) noise to data.
 
+* :class:`aspecd.processing.ChangeAxesValues`
+
+  Change values of individual axes.
+
+* :class:`aspecd.processing.RelativeAxis`
+
+  Create relative axis, centred about a given value.
+
 
 Processing steps operating on multiple datasets at once
 -------------------------------------------------------
@@ -244,6 +252,7 @@ Module documentation
 
 """
 import copy
+import logging
 import math
 import operator
 
@@ -257,6 +266,10 @@ import bibrecord.record as bib
 import aspecd.exceptions
 import aspecd.history
 import aspecd.utils
+
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 
 class ProcessingStep(aspecd.utils.ToDictMixin):
@@ -3533,3 +3546,114 @@ class ChangeAxesValues(SingleProcessingStep):
                 np.linspace(self.parameters["range"][idx][0],
                             self.parameters["range"][idx][1],
                             len(self.dataset.data.axes[axis].values))
+
+
+class RelativeAxis(SingleProcessingStep):
+    # noinspection PyUnresolvedReferences
+    """
+    Create relative axis, centred about a given value.
+
+    Sometimes, absolute axis values are less relevant than relative
+    values, particularly if you're interested in differences in distances
+    between several datasets, *e.g.* peak positions in spectroscopy.
+
+    .. note::
+        You can set an origin that is not within the range of the current
+        axis values. In such case, you will see a warning, but as this may
+        be a perfectly valid use case, no exception is thrown.
+
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        origin : :class:`float`
+            The value the axis should be centred about
+
+            This value is subtracted from the original axis values
+
+            Default: centre value of the axis range
+
+        axis : :class:`int`
+            The index of the axis to be converted into a relative axis
+
+            Default: 0
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    In case you would like to change the first axis to a relative axis and
+    centre it about its central value, things are as simple as:
+
+    .. code-block:: yaml
+
+       - kind: singleprocessing
+         type: RelativeAxis
+
+
+    Of course, this is rarely a sensible use case, and you will usually
+    want to provide a dedicated value for the origin of the new axis
+    (*i.e.*, the axis value the current axis should be centred about).
+
+    .. code-block:: yaml
+
+       - kind: singleprocessing
+         type: RelativeAxis
+         properties:
+           parameters:
+             origin: 42
+
+
+    Nothing prevents you from operating on multidimensional datasets,
+    hence converting another axis than the first axis to a relative one.
+    For making the second axis (with index 1) a relative axis,
+    do something like that:
+
+    .. code-block:: yaml
+
+       - kind: singleprocessing
+         type: RelativeAxis
+         properties:
+           parameters:
+             origin: 42
+             axis: 1
+
+
+    .. versionadded:: 0.8
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = 'Change axis to relative axis'
+        self.undoable = True
+        self.parameters['origin'] = None
+        self.parameters['axis'] = 0
+
+    def _perform_task(self):
+        axis = self.parameters['axis']
+        if not self.parameters['origin']:
+            origin_index = int(len(self.dataset.data.axes[axis].values) / 2)
+            self.parameters['origin'] = \
+                self.dataset.data.axes[axis].values[origin_index]
+        self.dataset.data.axes[axis].values -= self.parameters['origin']
+        if not self._value_within_range(self.parameters['origin'],
+                                        self.dataset.data.axes[axis].values):
+            logger.warning('origin %f outside axis range [%f %f].',
+                           self.parameters['origin'],
+                           self.dataset.data.axes[axis].values[0],
+                           self.dataset.data.axes[axis].values[-1])
+        self.dataset.data.axes[axis].quantity = \
+            'Δ' + self.dataset.data.axes[axis].quantity
+
+    @staticmethod
+    def _value_within_range(value, range_):
+        if value < min(range_) or value > max(range_):
+            return False
+        return True

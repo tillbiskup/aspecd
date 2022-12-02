@@ -1,4 +1,5 @@
 """Tests for processing."""
+import copy
 import unittest
 
 import numpy as np
@@ -2467,3 +2468,96 @@ class TestChangeAxesValues(unittest.TestCase):
         with self.assertRaisesRegex(IndexError,
                                     'Axes and ranges must be compatible'):
             self.dataset2d.process(self.processing)
+
+
+class TestRelativeAxis(unittest.TestCase):
+
+    def setUp(self):
+        self.processing = aspecd.processing.RelativeAxis()
+        axis_length = 2**5
+        self.dataset = aspecd.dataset.Dataset()
+        self.dataset.data.data = np.zeros(axis_length)
+        self.dataset.data.axes[0].values = np.linspace(340, 350, axis_length)
+        self.dataset2d = aspecd.dataset.Dataset()
+        self.dataset2d.data.data = np.zeros([axis_length, axis_length])
+        self.dataset2d.data.axes[0].values = \
+            np.linspace(340, 350, axis_length)
+        self.dataset2d.data.axes[0].values = \
+            np.linspace(0, 10, axis_length)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('change axis to relative axis',
+                      self.processing.description.lower())
+
+    def test_is_undoable(self):
+        self.assertTrue(self.processing.undoable)
+
+    def test_origin_is_set_to_floored_centre_if_not_given(self):
+        # Here is a mistake, as we subtract the index from the axis values!
+        origin_index = int(len(self.dataset.data.axes[0].values)/2)
+        origin = self.dataset.data.axes[0].values[origin_index]
+        processing_step = self.dataset.process(self.processing)
+        self.assertEqual(processing_step.parameters['origin'], origin)
+
+    def test_axis_values_are_correct_with_no_origin_given(self):
+        origin_index = int(len(self.dataset.data.axes[0].values)/2)
+        origin = self.dataset.data.axes[0].values[origin_index]
+        original_axis = copy.copy(self.dataset.data.axes[0].values)
+        self.dataset.process(self.processing)
+        self.assertEqual(original_axis[0] - origin,
+                         self.dataset.data.axes[0].values[0])
+        self.assertEqual(original_axis[-1] - origin,
+                         self.dataset.data.axes[0].values[-1])
+
+    def test_axis_values_are_correct_with_origin_given(self):
+        origin = 343
+        original_axis = copy.copy(self.dataset.data.axes[0].values)
+        self.processing.parameters['origin'] = origin
+        self.dataset.process(self.processing)
+        self.assertEqual(original_axis[0] - origin,
+                         self.dataset.data.axes[0].values[0])
+        self.assertEqual(original_axis[-1] - origin,
+                         self.dataset.data.axes[0].values[-1])
+
+    def test_origin_outside_axis_range_warns(self):
+        origin = -343
+        self.processing.parameters['origin'] = origin
+        with self.assertLogs(__package__, level='WARNING') as cm:
+            self.dataset.process(self.processing)
+        self.assertIn('outside axis range', cm.output[0])
+
+    def test_with_2d_dataset_and_no_axis_given_sets_first_axis(self):
+        origin = 343
+        original_axis_0 = copy.copy(self.dataset2d.data.axes[0].values)
+        original_axis_1 = copy.copy(self.dataset2d.data.axes[1].values)
+        self.processing.parameters['origin'] = origin
+        self.dataset2d.process(self.processing)
+        self.assertEqual(original_axis_0[0] - origin,
+                         self.dataset2d.data.axes[0].values[0])
+        self.assertEqual(original_axis_0[-1] - origin,
+                         self.dataset2d.data.axes[0].values[-1])
+        self.assertListEqual(list(original_axis_1),
+                             list(self.dataset2d.data.axes[1].values))
+
+    def test_with_2d_dataset_and_axis_sets_correct_axis(self):
+        origin = 3
+        axis = 1
+        original_axis_0 = copy.copy(self.dataset2d.data.axes[0].values)
+        original_axis_1 = copy.copy(self.dataset2d.data.axes[1].values)
+        self.processing.parameters['origin'] = origin
+        self.processing.parameters['axis'] = axis
+        self.dataset2d.process(self.processing)
+        self.assertEqual(original_axis_1[0] - origin,
+                         self.dataset2d.data.axes[1].values[0])
+        self.assertEqual(original_axis_1[-1] - origin,
+                         self.dataset2d.data.axes[1].values[-1])
+        self.assertListEqual(list(original_axis_0),
+                             list(self.dataset2d.data.axes[0].values))
+
+    # Add "Delta" to axis quantity
+    def test_delta_added_to_axis_quantity(self):
+        self.dataset.process(self.processing)
+        self.assertTrue(self.dataset.data.axes[0].quantity.startswith('Δ'))
