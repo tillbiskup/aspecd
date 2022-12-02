@@ -8,7 +8,7 @@ This page contains a summary of changes between the official ASpecD releases. On
 Version 0.8.0
 =============
 
-Not yet released
+*Not yet released*
 
 New features
 ------------
@@ -21,6 +21,7 @@ New features
 * Processing steps
 
   * New class :class:`aspecd.processing.SliceRemoval` for removing slices from a ND dataset with N>1.
+  * New class :class:`aspecd.processing.RelativeAxis` for converting an axis into a relative axis, centred about a (given) origin.
 
 
 Version 0.7.1
