@@ -8,6 +8,11 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.8
 ===============
 
+* Documentation
+
+  * Metadata for data acquisition: document info file/refer to publication (and add reference in infofile module documentation)
+  * Add "Best Practices" section showing data publications using derived packages (currently only one: Järsvall et al., Chem. Mater. 2022)?
+
 * Usability
 
   * Importer/ImporterFactory should issue a warning if no dataset could be loaded, rather than silently continuing, as this often leads to downstream problems and exceptions thrown.
@@ -21,6 +26,10 @@ For version 0.8
   * CombineDatasets: combine data from several datasets into a single dataset; parameters allowing to define the axis values/quantity/unit, possibly even from given metadata; to decide: How to handle metadata that might be invalidated?
 
   * MetadataUpdate/MetadataChange: Change metadata of a given dataset from within a recipe. Useful in case datasets contain (known) spurious or otherwise inappropriate metadata. (Metadata are provided manually and are therefore prone to human errors).
+
+* Logging
+
+  * Add loggers from other modules (than task) and derived packages
 
 * Add export tasks to dataset tasks
 
@@ -42,6 +51,12 @@ For version 0.8
 * Reports:
 
   * Looking for templates in user directory
+
+* Documentation:
+
+  * How to debug a recipe?
+
+  * Better document command-line options of the "serve" command
 
 
 For later versions
