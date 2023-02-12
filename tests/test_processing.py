@@ -1863,6 +1863,14 @@ class TestInterpolation(unittest.TestCase):
         self.assertListEqual(list(np.linspace(5, 15, 21)),
                              list(self.dataset.data.axes[0].values))
 
+    def test_interpolate_1d_data_w_axis_unit_interpolates_axis_odd_values(self):
+        self.processing.parameters["range"] = [5.85, 14.83]
+        self.processing.parameters["npoints"] = 21
+        self.processing.parameters["unit"] = "axis"
+        self.dataset.process(self.processing)
+        self.assertListEqual(list(np.linspace(5.85, 14.83, 21)),
+                             list(self.dataset.data.axes[0].values))
+
     def test_interpolate_2d_data_with_missing_range_raises(self):
         self.processing.parameters["range"] = [0, 10]
         self.processing.parameters["npoints"] = [41, 21]
@@ -2241,17 +2249,21 @@ class TestCommonRangeExtraction(unittest.TestCase):
         self.assertEqual([7, 7], self.processing.parameters["npoints"])
 
     def test_process_interpolates_axes_for_1d_datasets(self):
-        self.dataset1.data.data = np.linspace(10, 15, 11)
-        self.dataset1.data.axes[0].values = np.linspace(0, 5, 11)
-        self.dataset2.data.data = np.linspace(11, 14, 11)
-        self.dataset2.data.axes[0].values = np.linspace(1, 4, 11)
+        self.dataset1.data.data = np.linspace(10, 15, 420)
+        self.dataset1.data.axes[0].values = np.linspace(-10, 53, 420)
+        self.dataset2.data.data = np.linspace(11, 14, 230)
+        self.dataset2.data.axes[0].values = np.linspace(1, 44, 230)
         self.processing.datasets.append(self.dataset1)
         self.processing.datasets.append(self.dataset2)
         self.processing.process()
-        self.assertListEqual(list(np.linspace(1, 4, 7)),
+        self.assertListEqual(list(np.linspace(1, 44, 230)),
                              list(self.dataset1.data.axes[0].values))
-        self.assertListEqual(list(np.linspace(1, 4, 7)),
+        self.assertListEqual(list(np.linspace(1, 44, 230)),
                              list(self.dataset2.data.axes[0].values))
+        self.assertTrue(np.array_equal(
+            self.dataset1.data.axes[0].values,
+            self.dataset2.data.axes[0].values
+        ))
 
     def test_process_interpolates_data_for_1d_datasets(self):
         self.dataset1.data.data = np.linspace(10, 15, 11)

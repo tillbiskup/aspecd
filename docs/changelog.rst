@@ -24,6 +24,12 @@ New features
   * New class :class:`aspecd.processing.RelativeAxis` for converting an axis into a relative axis, centred about a (given) origin.
 
 
+Fixes
+-----
+
+* Interpolation in :class:`aspecd.processing.Interpolation` works correctly if axis range is given and no corresponding axis point exists in the original dataset.
+
+
 Version 0.7.1
 =============
 

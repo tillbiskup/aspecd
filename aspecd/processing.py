@@ -2798,21 +2798,12 @@ class Interpolation(SingleProcessingStep):
         for dim in range(self.dataset.data.data.ndim):
             if self.parameters["unit"] == "index":
                 range_ = self.parameters["range"][dim]
+                start = self.dataset.data.axes[dim].values[range_[0]]
+                stop = self.dataset.data.axes[dim].values[range_[1]]
             else:
-                range_ = [
-                    self._get_index(self.dataset.data.axes[dim].values,
-                                    self.parameters["range"][dim][0]),
-                    self._get_index(self.dataset.data.axes[dim].values,
-                                    self.parameters["range"][dim][1])
-                ]
-            start = self.dataset.data.axes[dim].values[range_[0]]
-            stop = self.dataset.data.axes[dim].values[range_[1]]
+                start, stop = self.parameters['range'][dim]
             self._axis_values.append(
                 np.linspace(start, stop, self.parameters["npoints"][dim]))
-
-    @staticmethod
-    def _get_index(vector, value):
-        return np.abs(vector - value).argmin()
 
 
 class Filtering(SingleProcessingStep):
