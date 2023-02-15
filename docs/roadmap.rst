@@ -20,6 +20,9 @@ For version 0.8
 * Plotting
 
   * Colorbar for 2D plotter
+  * (Arbitrary) lines in plot, *e.g.* to compare peak positions
+
+    Need to decide whether this goes into plotter properties or gets handled as proper annotations; probably the former, but a good starting point to think about the latter.
 
 * Processing
 
