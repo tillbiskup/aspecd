@@ -13,9 +13,9 @@ a dataset, but to the annotations in form of a
 
 Other frequent types of annotations are artefacts and characteristics,
 for which dedicated classes are available within the ASpecD framework:
-:class:`aspecd.annotations.Artefact` and
-:class:`aspecd.annotations.Characteristic`. For other types of annotations,
-simply subclass the :class:`aspecd.annotations.Annotation` base class.
+:class:`aspecd.annotation.Artefact` and
+:class:`aspecd.annotation.Characteristic`. For other types of annotations,
+simply subclass the :class:`aspecd.annotation.Annotation` base class.
 
 """
 

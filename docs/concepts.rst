@@ -20,7 +20,7 @@ Metadata
 
 *Information on data(sets), can exist separately from datasets.*
 
-Metadata are stored outside the ASpecD framework in simple yet structured text files that focus on human readability and writability, while retaining machine readability.
+Metadata are stored outside the ASpecD framework in simple yet structured text files that focus on human readability and writability, while retaining machine readability: the Infofile format. For more details, see the documentation of the :mod:`infofile <aspecd.infofile>` module.
 
 The simplest incarnation of metadata is all necessary information obtained during data acquisition that usually gets stored in a file and read upon data import. A `dataset`_ contains these metadata together with the numerical data.
 
