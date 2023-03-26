@@ -1,4 +1,5 @@
 """Tests for processing."""
+import copy
 import unittest
 
 import numpy as np
@@ -950,6 +951,107 @@ class TestSliceExtraction(unittest.TestCase):
             self.dataset.process(self.processing)
 
 
+class TestSliceRemoval(unittest.TestCase):
+    def setUp(self):
+        self.processing = aspecd.processing.SliceRemoval()
+        self.dataset = aspecd.dataset.Dataset()
+        data = np.sin(np.linspace(0, 2*np.pi, num=500))
+        self.dataset.data.data = np.tile(data, (5, 1)) \
+            * np.tile(np.linspace(1, 2, num=5), (500, 1)).T
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('remove slice', self.processing.description.lower())
+
+    def test_is_undoable(self):
+        self.assertTrue(self.processing.undoable)
+
+    def test_with_1D_dataset_raises(self):
+        dataset = aspecd.dataset.Dataset()
+        dataset.data.data = np.sin(np.linspace(0, 2*np.pi, num=500))
+        with self.assertRaises(
+                aspecd.exceptions.NotApplicableToDatasetError):
+            dataset.process(self.processing)
+
+    def test_without_position_raises(self):
+        with self.assertRaisesRegex(IndexError, "for slice extraction"):
+            self.dataset.process(self.processing)
+
+    def test_with_index_exceeding_dimension_raises(self):
+        self.processing.parameters['position'] = 10
+        with self.assertRaisesRegex(ValueError, "Position out of axis range."):
+            self.dataset.process(self.processing)
+
+    def test_remove_slice(self):
+        origdata = self.dataset.data.data
+        self.processing.parameters['position'] = 3
+        self.dataset.process(self.processing)
+        # This assertion is currently wrong ([:2, :])
+        np.testing.assert_allclose(np.delete(origdata, 3, 0),
+                                   self.dataset.data.data)
+
+    def test_remove_slice_with_index_zero(self):
+        origdata = self.dataset.data.data
+        self.processing.parameters['position'] = 0
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(origdata[1:, :], self.dataset.data.data)
+
+    def test_remove_slice_operates_along_first_axis_by_default(self):
+        origdata = self.dataset.data.data
+        self.processing.parameters['position'] = 3
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(np.delete(origdata, 3, 0),
+                                   self.dataset.data.data)
+
+    def test_remove_slice_along_second_axis(self):
+        origdata = self.dataset.data.data
+        self.processing.parameters['position'] = 3
+        self.processing.parameters['axis'] = 1
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(np.delete(origdata, 3, 1),
+                                   self.dataset.data.data)
+
+    def test_remove_slice_along_non_existing_axis_raises(self):
+        with self.assertRaisesRegex(IndexError, "Axis [0-9]+ out of bounds"):
+            self.processing.parameters['position'] = 3
+            self.processing.parameters['axis'] = 2
+            self.dataset.process(self.processing)
+
+    def test_remove_slice_with_wrong_unit_raises(self):
+        self.processing.parameters["unit"] = "foo"
+        self.processing.parameters["position"] = 3
+        with self.assertRaises(ValueError):
+            self.dataset.process(self.processing)
+
+    def test_remove_slice_with_axis_units(self):
+        self.processing.parameters["unit"] = "axis"
+        self.dataset.data.axes[0].values = \
+            np.linspace(30, 70, len(self.dataset.data.axes[0].values))
+        self.processing.parameters["position"] = 40
+        data = np.delete(self.dataset.data.data, 1, 0)
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(data, self.dataset.data.data)
+
+    def test_unit_is_case_insensitive(self):
+        self.processing.parameters["unit"] = "aXis"
+        self.dataset.data.axes[0].values = \
+            np.linspace(30, 70, len(self.dataset.data.axes[0].values))
+        self.processing.parameters["position"] = 40
+        data = np.delete(self.dataset.data.data, 1, 0)
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(data, self.dataset.data.data)
+
+    def test_remove_slice_with_axis_units_out_of_range_raises(self):
+        self.processing.parameters["unit"] = "axis"
+        self.dataset.data.axes[0].values = \
+            np.linspace(30, 70, len(self.dataset.data.axes[0].values))
+        self.processing.parameters["position"] = 300
+        with self.assertRaises(ValueError):
+            self.dataset.process(self.processing)
+
+
 class TestRangeExtraction(unittest.TestCase):
     def setUp(self):
         self.processing = aspecd.processing.RangeExtraction()
@@ -1761,6 +1863,14 @@ class TestInterpolation(unittest.TestCase):
         self.assertListEqual(list(np.linspace(5, 15, 21)),
                              list(self.dataset.data.axes[0].values))
 
+    def test_interpolate_1d_data_w_axis_unit_interpolates_axis_odd_values(self):
+        self.processing.parameters["range"] = [5.85, 14.83]
+        self.processing.parameters["npoints"] = 21
+        self.processing.parameters["unit"] = "axis"
+        self.dataset.process(self.processing)
+        self.assertListEqual(list(np.linspace(5.85, 14.83, 21)),
+                             list(self.dataset.data.axes[0].values))
+
     def test_interpolate_2d_data_with_missing_range_raises(self):
         self.processing.parameters["range"] = [0, 10]
         self.processing.parameters["npoints"] = [41, 21]
@@ -2139,17 +2249,21 @@ class TestCommonRangeExtraction(unittest.TestCase):
         self.assertEqual([7, 7], self.processing.parameters["npoints"])
 
     def test_process_interpolates_axes_for_1d_datasets(self):
-        self.dataset1.data.data = np.linspace(10, 15, 11)
-        self.dataset1.data.axes[0].values = np.linspace(0, 5, 11)
-        self.dataset2.data.data = np.linspace(11, 14, 11)
-        self.dataset2.data.axes[0].values = np.linspace(1, 4, 11)
+        self.dataset1.data.data = np.linspace(10, 15, 420)
+        self.dataset1.data.axes[0].values = np.linspace(-10, 53, 420)
+        self.dataset2.data.data = np.linspace(11, 14, 230)
+        self.dataset2.data.axes[0].values = np.linspace(1, 44, 230)
         self.processing.datasets.append(self.dataset1)
         self.processing.datasets.append(self.dataset2)
         self.processing.process()
-        self.assertListEqual(list(np.linspace(1, 4, 7)),
+        self.assertListEqual(list(np.linspace(1, 44, 230)),
                              list(self.dataset1.data.axes[0].values))
-        self.assertListEqual(list(np.linspace(1, 4, 7)),
+        self.assertListEqual(list(np.linspace(1, 44, 230)),
                              list(self.dataset2.data.axes[0].values))
+        self.assertTrue(np.array_equal(
+            self.dataset1.data.axes[0].values,
+            self.dataset2.data.axes[0].values
+        ))
 
     def test_process_interpolates_data_for_1d_datasets(self):
         self.dataset1.data.data = np.linspace(10, 15, 11)
@@ -2366,3 +2480,96 @@ class TestChangeAxesValues(unittest.TestCase):
         with self.assertRaisesRegex(IndexError,
                                     'Axes and ranges must be compatible'):
             self.dataset2d.process(self.processing)
+
+
+class TestRelativeAxis(unittest.TestCase):
+
+    def setUp(self):
+        self.processing = aspecd.processing.RelativeAxis()
+        axis_length = 2**5
+        self.dataset = aspecd.dataset.Dataset()
+        self.dataset.data.data = np.zeros(axis_length)
+        self.dataset.data.axes[0].values = np.linspace(340, 350, axis_length)
+        self.dataset2d = aspecd.dataset.Dataset()
+        self.dataset2d.data.data = np.zeros([axis_length, axis_length])
+        self.dataset2d.data.axes[0].values = \
+            np.linspace(340, 350, axis_length)
+        self.dataset2d.data.axes[0].values = \
+            np.linspace(0, 10, axis_length)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('change axis to relative axis',
+                      self.processing.description.lower())
+
+    def test_is_undoable(self):
+        self.assertTrue(self.processing.undoable)
+
+    def test_origin_is_set_to_floored_centre_if_not_given(self):
+        # Here is a mistake, as we subtract the index from the axis values!
+        origin_index = int(len(self.dataset.data.axes[0].values)/2)
+        origin = self.dataset.data.axes[0].values[origin_index]
+        processing_step = self.dataset.process(self.processing)
+        self.assertEqual(processing_step.parameters['origin'], origin)
+
+    def test_axis_values_are_correct_with_no_origin_given(self):
+        origin_index = int(len(self.dataset.data.axes[0].values)/2)
+        origin = self.dataset.data.axes[0].values[origin_index]
+        original_axis = copy.copy(self.dataset.data.axes[0].values)
+        self.dataset.process(self.processing)
+        self.assertEqual(original_axis[0] - origin,
+                         self.dataset.data.axes[0].values[0])
+        self.assertEqual(original_axis[-1] - origin,
+                         self.dataset.data.axes[0].values[-1])
+
+    def test_axis_values_are_correct_with_origin_given(self):
+        origin = 343
+        original_axis = copy.copy(self.dataset.data.axes[0].values)
+        self.processing.parameters['origin'] = origin
+        self.dataset.process(self.processing)
+        self.assertEqual(original_axis[0] - origin,
+                         self.dataset.data.axes[0].values[0])
+        self.assertEqual(original_axis[-1] - origin,
+                         self.dataset.data.axes[0].values[-1])
+
+    def test_origin_outside_axis_range_warns(self):
+        origin = -343
+        self.processing.parameters['origin'] = origin
+        with self.assertLogs(__package__, level='WARNING') as cm:
+            self.dataset.process(self.processing)
+        self.assertIn('outside axis range', cm.output[0])
+
+    def test_with_2d_dataset_and_no_axis_given_sets_first_axis(self):
+        origin = 343
+        original_axis_0 = copy.copy(self.dataset2d.data.axes[0].values)
+        original_axis_1 = copy.copy(self.dataset2d.data.axes[1].values)
+        self.processing.parameters['origin'] = origin
+        self.dataset2d.process(self.processing)
+        self.assertEqual(original_axis_0[0] - origin,
+                         self.dataset2d.data.axes[0].values[0])
+        self.assertEqual(original_axis_0[-1] - origin,
+                         self.dataset2d.data.axes[0].values[-1])
+        self.assertListEqual(list(original_axis_1),
+                             list(self.dataset2d.data.axes[1].values))
+
+    def test_with_2d_dataset_and_axis_sets_correct_axis(self):
+        origin = 3
+        axis = 1
+        original_axis_0 = copy.copy(self.dataset2d.data.axes[0].values)
+        original_axis_1 = copy.copy(self.dataset2d.data.axes[1].values)
+        self.processing.parameters['origin'] = origin
+        self.processing.parameters['axis'] = axis
+        self.dataset2d.process(self.processing)
+        self.assertEqual(original_axis_1[0] - origin,
+                         self.dataset2d.data.axes[1].values[0])
+        self.assertEqual(original_axis_1[-1] - origin,
+                         self.dataset2d.data.axes[1].values[-1])
+        self.assertListEqual(list(original_axis_0),
+                             list(self.dataset2d.data.axes[0].values))
+
+    # Add "Delta" to axis quantity
+    def test_delta_added_to_axis_quantity(self):
+        self.dataset.process(self.processing)
+        self.assertTrue(self.dataset.data.axes[0].quantity.startswith('Δ'))

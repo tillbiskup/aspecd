@@ -5,6 +5,31 @@ Changelog
 This page contains a summary of changes between the official ASpecD releases. Only the biggest changes are listed here. A complete and detailed log of all changes is available through the `GitHub Repository Browser <https://github.com/tillbiskup/aspecd/commits/master>`_.
 
 
+Version 0.8.0
+=============
+
+Released 2023-03-26
+
+New features
+------------
+
+* Plotting
+
+  * MultiPlotter1D can use colormaps for coloring multiple lines
+  * Number of columns can be set for legends of plots
+
+* Processing steps
+
+  * New class :class:`aspecd.processing.SliceRemoval` for removing slices from a ND dataset with N>1.
+  * New class :class:`aspecd.processing.RelativeAxis` for converting an axis into a relative axis, centred about a (given) origin.
+
+
+Fixes
+-----
+
+* Interpolation in :class:`aspecd.processing.Interpolation` works correctly if axis range is given and no corresponding axis point exists in the original dataset.
+
+
 Version 0.7.1
 =============
 
@@ -14,7 +39,6 @@ New features
 ------------
 
 * Reference to publication in documentation and colophon of reports.
-
 
 
 Version 0.7.0

@@ -56,7 +56,7 @@ setuptools.setup(
     ],
     extras_require={
         'dev': ['prospector'],
-        'docs': ['sphinx', 'sphinx-rtd-theme'],
+        'docs': ['sphinx', 'sphinx-rtd-theme', 'sphinx-multiversion'],
     },
     python_requires='>=3.7',
     entry_points={

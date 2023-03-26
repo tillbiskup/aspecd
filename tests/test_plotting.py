@@ -2133,6 +2133,24 @@ class TestLegendProperties(unittest.TestCase):
                          legend.prop.get_size())
         plt.close(plot.figure)
 
+    def test_ncol_sets_legend_columns(self):
+        ncol = 2
+        self.legend_properties.ncol = ncol
+        plot = plotting.MultiPlotter1D()
+        for idx in range(5):
+            dataset_ = dataset.Dataset()
+            dataset_.data.data = np.random.random(5)
+            dataset_.label = str(idx)
+            plot.datasets.append(dataset_)
+        plot.properties.legend = self.legend_properties
+        plot.parameters['show_legend'] = True
+        with contextlib.redirect_stderr(io.StringIO()):
+            plot.plot()
+        legend = plot.legend
+        # plt.show()
+        self.assertEqual(ncol, legend._ncol)
+        plt.close(plot.figure)
+
 
 class TestGridProperties(unittest.TestCase):
     def setUp(self):
@@ -2404,6 +2422,47 @@ class TestMultiPlot1DProperties(unittest.TestCase):
         linewidth = plt.rcParams['lines.marker']
         self.plot_properties.add_drawing()
         self.assertEqual(linewidth, self.plot_properties.drawings[0].marker)
+
+    def test_added_drawing_with_colormap_has_correct_colour(self):
+        colormap_name = 'viridis'
+        n_drawings = 20
+        colours = plt.get_cmap(colormap_name, n_drawings)
+        self.plot_properties.colormap = colormap_name
+
+        plotter = plotting.MultiPlotter1D()
+        plotter.properties = self.plot_properties
+        x = np.linspace(0, 2 * np.pi, 64)
+        y = np.cos(x)
+        for idx in range(n_drawings):
+            dataset_ = dataset.Dataset()
+            dataset_.data.data = idx * y
+            plotter.datasets.append(dataset_)
+        plotter.plot()
+        self.assertEqual(colours(1), plotter.properties.drawings[1].color)
+        # plt.show()
+        plt.close(plotter.figure)
+
+    def test_legend_with_colormap_has_correct_colour(self):
+        colormap_name = 'viridis'
+        n_drawings = 20
+        colours = plt.get_cmap(colormap_name, n_drawings)
+        self.plot_properties.colormap = colormap_name
+
+        plotter = plotting.MultiPlotter1D()
+        plotter.properties = self.plot_properties
+        plotter.parameters['show_legend'] = True
+        x = np.linspace(0, 2 * np.pi, 64)
+        y = np.cos(x)
+        for idx in range(n_drawings):
+            dataset_ = dataset.Dataset()
+            dataset_.data.data = idx * y
+            dataset_.label = str(idx)
+            plotter.datasets.append(dataset_)
+        plotter.plot()
+        self.assertEqual(colours(1),
+                         plotter.legend.get_lines()[1].get_color())
+        # plt.show()
+        plt.close(plotter.figure)
 
 
 class TestCompositePlotProperties(unittest.TestCase):
