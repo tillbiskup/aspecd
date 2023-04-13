@@ -23,6 +23,7 @@ For version 0.9
   * (Arbitrary) lines in plot, *e.g.* to compare peak positions
 
     Need to decide whether this goes into plotter properties or gets handled as proper annotations; probably the former, but a good starting point to think about the latter.
+  * If figure is plotted twice using automatically generated filenames, use different filenames (e.g. increment number).
 
 * Processing
 
