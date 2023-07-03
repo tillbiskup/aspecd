@@ -2039,6 +2039,28 @@ class CompositePlotter(Plotter):
         will call the :meth:`plot` property of each of these plotters
         automatically for you.
 
+    Examples
+    --------
+    A quick example how a recipe part using a composite plotter may look like.
+    Both plotters ``raw-data`` and ``processed-data`` are previously defined
+    figures using *different datasets*. Therefore, it is important to give
+    results of a processing task a unique identifier if it is used in such a
+    composite plotter.
+
+    .. code-block:: yaml
+
+        - kind: compositeplot
+          type: CompositePlotter
+          properties:
+            plotter:
+            - raw-data
+            - processed-data
+            filename: comparison.pdf
+            grid_dimensions: [1, 2]
+            subplot_locations:
+            - [0, 0, 1, 1]
+            - [0, 1, 1, 1]
+
     Attributes
     ----------
     axes : :class:`list`
@@ -2091,6 +2113,12 @@ class CompositePlotter(Plotter):
         Upon calling :meth:`aspecd.plotting.Plotter.plot`, for each axes in
         the list of axes, the corresponding plotter will be accessed and its
         :meth:`aspecd.plotting.Plotter.plot` method called.
+
+        .. note::
+            When the plotters are operating on the same dataset which got
+            processed in between, both will use and display the dataset *after*
+             processing. To prevent this, assign the result of the processing
+             step a unique name.
 
     properties : :class:`aspecd.plotting.CompositePlotProperties`
         Properties of the plot, defining its appearance
