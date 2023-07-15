@@ -2117,8 +2117,8 @@ class CompositePlotter(Plotter):
         .. note::
             When the plotters are operating on the same dataset which got
             processed in between, both will use and display the dataset *after*
-             processing. To prevent this, assign the result of the processing
-             step a unique name.
+            processing. To prevent this, assign the result of the processing
+            step a unique name.
 
     properties : :class:`aspecd.plotting.CompositePlotProperties`
         Properties of the plot, defining its appearance
