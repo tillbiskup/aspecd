@@ -8,11 +8,6 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.9
 ===============
 
-* Documentation
-
-  * Metadata for data acquisition: document info file/refer to publication (and add reference in infofile module documentation)
-  * Add "Best Practices" section showing data publications using derived packages (currently only one: Järsvall et al., Chem. Mater. 2022)?
-
 * Usability
 
   * Importer/ImporterFactory should issue a warning if no dataset could be loaded, rather than silently continuing, as this often leads to downstream problems and exceptions thrown.

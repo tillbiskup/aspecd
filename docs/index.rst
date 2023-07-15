@@ -149,10 +149,18 @@ Finally, don't forget to check out the website on `reproducible research <https:
    audience
    introduction
    concepts
+   metadata
    recipes
    usecases
    applications
    installing
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Examples:
+   :hidden:
+
+   examples/data-publications
 
 .. toctree::
    :maxdepth: 2
