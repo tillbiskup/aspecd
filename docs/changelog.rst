@@ -11,6 +11,25 @@ Version 0.9.0
 *Not yet released*
 
 
+Version 0.8.1
+=============
+
+*Not yet released*
+
+Documentation
+-------------
+
+* New section on :doc:`metadata during data acquisition <metadata>`
+* New section with :doc:`examples <examples/index>`
+* New section with :doc:`data publications <examples/data-publications>`
+
+
+Fixes
+-----
+
+* Baseline correction in :class:`aspecd.processing.BaselineCorrection` issues warning if more than 100% of the data are used and resets to 50% on each side.
+
+
 Version 0.8.0
 =============
 

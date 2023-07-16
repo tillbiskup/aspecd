@@ -177,6 +177,8 @@ Finally, don't forget to check out the website on `reproducible research <https:
    :caption: Examples:
    :hidden:
 
+   examples/index
+   examples/list
    examples/data-publications
 
 .. toctree::
