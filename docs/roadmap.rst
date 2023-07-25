@@ -19,6 +19,7 @@ For version 0.9
 
     Need to decide whether this goes into plotter properties or gets handled as proper annotations; probably the former, but a good starting point to think about the latter.
   * If figure is plotted twice using automatically generated filenames, use different filenames (e.g. increment number).
+  * Axis direction can be switched (*e.g.*, for FTIR data, hence not needing to set axis limits in reverse order)
 
 * Processing
 
@@ -26,9 +27,13 @@ For version 0.9
 
   * MetadataUpdate/MetadataChange: Change metadata of a given dataset from within a recipe. Useful in case datasets contain (known) spurious or otherwise inappropriate metadata. (Metadata are provided manually and are therefore prone to human errors).
 
+  * :class:`aspecd.processing.BaselineCorrection` with ``fit_area`` definable as axis range, and arbitrary parts of the axis (*e.g.*, in the middle of a dataset or with separate fit areas)
+
 * Logging
 
   * Add loggers from other modules (than task) and derived packages
+
+    Probably this means to switch to package-wide logging and documenting that derived packages need to log to the ASpecD logger as well.
 
 * Add export tasks to dataset tasks
 
