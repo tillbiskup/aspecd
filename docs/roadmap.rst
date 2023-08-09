@@ -20,6 +20,8 @@ For version 0.9
     Need to decide whether this goes into plotter properties or gets handled as proper annotations; probably the former, but a good starting point to think about the latter.
   * If figure is plotted twice using automatically generated filenames, use different filenames (e.g. increment number).
   * Axis direction can be switched (*e.g.*, for FTIR data, hence not needing to set axis limits in reverse order)
+  * Bugfix: Title of figure and axis label overlap when adding an axis on the top side of the figure
+  * Allow to add a legend title in recipes.
 
 * Processing
 
