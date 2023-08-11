@@ -363,6 +363,19 @@ class TestRecipe(unittest.TestCase):
         dict_ = self.recipe.to_dict()
         self.assertEqual(self.dataset, dict_['datasets'][0])
 
+    def test_to_dict_with_dataset_with_importer_parameters(self):
+        data = np.random.random(2)
+        parameters = {'skiprows': 1, 'separator': ','}
+        np.savetxt(self.dataset_filename, data)
+        dict_ = {'datasets': [{'source': self.dataset_filename,
+                               'importer': 'TxtImporter',
+                               'importer_parameters': parameters,
+                               'package': 'aspecd'}]}
+        self.recipe.from_dict(copy.deepcopy(dict_))
+        self.assertIn('importer', self.recipe.to_dict()['datasets'][0])
+        self.assertDictEqual(dict_['datasets'][0],
+                             self.recipe.to_dict()['datasets'][0])
+
     def test_to_dict_with_datasets_source_directory(self):
         self.recipe.directories['datasets_source'] = 'foo'
         id_ = 'foobar'

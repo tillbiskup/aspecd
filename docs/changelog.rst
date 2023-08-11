@@ -28,6 +28,7 @@ Fixes
 -----
 
 * Baseline correction in :class:`aspecd.processing.BaselineCorrection` issues warning if more than 100% of the data are used and resets to 50% on each side.
+* Recipe history contains importer parameters
 
 
 Version 0.8.0
