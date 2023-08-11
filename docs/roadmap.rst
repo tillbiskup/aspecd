@@ -5,20 +5,37 @@ Roadmap
 A few ideas how to develop the project further, currently a list as a reminder for the main developers themselves, in no particular order, though with a tendency to list more important aspects first:
 
 
-For version 0.8
+For version 0.9
 ===============
+
+* Usability
+
+  * Importer/ImporterFactory should issue a warning if no dataset could be loaded, rather than silently continuing, as this often leads to downstream problems and exceptions thrown.
 
 * Plotting
 
   * Colorbar for 2D plotter
+  * (Arbitrary) lines in plot, *e.g.* to compare peak positions
 
-  * colormaps for multiple lines
+    Need to decide whether this goes into plotter properties or gets handled as proper annotations; probably the former, but a good starting point to think about the latter.
+  * If figure is plotted twice using automatically generated filenames, use different filenames (e.g. increment number).
+  * Axis direction can be switched (*e.g.*, for FTIR data, hence not needing to set axis limits in reverse order)
+  * Bugfix: Title of figure and axis label overlap when adding an axis on the top side of the figure
+  * Allow to add a legend title in recipes.
 
 * Processing
 
-  * ExtractSlices (plural): extract several slices from a dataset and combine them in a new dataset
-
   * CombineDatasets: combine data from several datasets into a single dataset; parameters allowing to define the axis values/quantity/unit, possibly even from given metadata; to decide: How to handle metadata that might be invalidated?
+
+  * MetadataUpdate/MetadataChange: Change metadata of a given dataset from within a recipe. Useful in case datasets contain (known) spurious or otherwise inappropriate metadata. (Metadata are provided manually and are therefore prone to human errors).
+
+  * :class:`aspecd.processing.BaselineCorrection` with ``fit_area`` definable as axis range, and arbitrary parts of the axis (*e.g.*, in the middle of a dataset or with separate fit areas)
+
+* Logging
+
+  * Add loggers from other modules (than task) and derived packages
+
+    Probably this means to switch to package-wide logging and documenting that derived packages need to log to the ASpecD logger as well.
 
 * Add export tasks to dataset tasks
 
@@ -41,16 +58,17 @@ For version 0.8
 
   * Looking for templates in user directory
 
-* Processing of 2D (eventually ND with N>1) datasets:
+* Documentation:
 
-  * Projecting/averaging excluding certain lines (due to artifacts from external noise sources or else)
-  * Combining a list of 1D datasets to a 2D dataset (reverse operation of SliceExtraction)
+  * How to debug a recipe?
+
+  * Better document command-line options of the "serve" command
 
 
 For later versions
 ==================
 
-* Get rid of OrderedDict instances, as Python preserves order in dictionaries since version 3.6
+* Convert from :class:`collections.OrderedDict` to :class:`dict`, as starting with Python 3.7, dicts preserve the insertion-order of the keys.
 
 * Plot styles
 
@@ -79,8 +97,6 @@ For later versions
 * Basic maths in values of recipes (ranges, basic numpy functions)?
 
   May impair the platform-independence of the recipe (*i.e.*, tying it to Python/NumPy)
-
-* Convert from :class:`collections.OrderedDict` to :class:`dict`, as starting with Python 3.7, dicts preserve the insertion-order of the keys.
 
 
 Todos

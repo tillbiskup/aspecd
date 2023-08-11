@@ -1,18 +1,39 @@
 """
-Handle infofile files containing meta data for (experimental) data.
+Handle Infofile files containing metadata for (experimental) data.
 
-The infofile format is a special format dedicated to storing meta data
-accompanying experimental data. Further information can be found online:
+The Infofile format is a special format dedicated to storing metadata
+accompanying experimental data. Further information on the format
+including the full specification can be found in the following publication:
 
-https://www.till-biskup.de/en/software/info/format
+  * Bernd Paulus, Till Biskup: Towards more reproducible and FAIRer
+    research data: documenting provenance during data acquisition using the
+    Infofile format.
+    *Digital Discovery* **2**:234–244, 2023,
+    doi:`10.1039/D2DD00131D <https://doi.org/10.1039/D2DD00131D>`_
 
-This module reads and parses files complying with the infofile file format.
+For actual Infofile example files, see the git repository available at GitHub:
+
+  * https://github.com/tillbiskup/infofile
+
+Development of the templates for specific methods will always be closely
+connected to the respective data model, *e.g.* in context of the `trepr
+<https://docs.trepr.de/>`_ and `cwepr <https://docs.cwepr.de/>`_ Python
+packages.
+
+This module reads and parses files complying with the infofile file
+format. At the same time, it contains the **reference implementation of
+the parser for the Infofile format**.
 
 .. note::
     For own purposes, you may prefer using YAML files to store metadata
     that are collected in parallel to recording data over the infofile
     format. For more information on this format and it specification,
-    consult its webpage: `<http://yaml.org/>`_.
+    consult its webpage: `<https://yaml.org/>`_.
+
+    However, you may still be interested in the discussion of the Infofile
+    format and its advantages and disadvantages compared to formats such
+    as YAML and JSON. For this, you are kindly referred to the reference
+    given above, describing and discussing the Infofile format in more detail.
 
     As the lead developer of the ASpecD framework originally invented the
     infofile format for own purposes, there are quite some datasets floating

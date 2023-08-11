@@ -1,0 +1,52 @@
+format:
+  type: ASpecD recipe
+  version: '0.2'
+
+datasets:
+  - source: tbt.txt
+    label: TBT
+    importer: TxtImporter
+    importer_parameters:
+      skiprows: 2
+      separator: ','
+  - source: cbztbt.txt
+    label: CbzTBT
+    importer: TxtImporter
+    importer_parameters:
+      skiprows: 2
+      separator: ','
+  - source: cbztbtcbz.txt
+    label: CbzTBTCbz
+    importer: TxtImporter
+    importer_parameters:
+      skiprows: 2
+      separator: ','
+  - source: pcdtbt.txt
+    label: PCDTBT
+    importer: TxtImporter
+    importer_parameters:
+      skiprows: 2
+      separator: ','
+
+tasks:
+  - kind: processing
+    type: Normalisation
+    properties: 
+      parameters:
+        range: [410, 700]
+        range_unit: axis
+        
+  - kind: multiplot
+    type: MultiPlotter1D
+    properties:
+      properties:
+        axes: 
+          xlim: [300, 800]
+          xlabel: '$wavelength$ / nm'
+          ylim: [-0.05, 1.4]
+          ylabel: '$normalised\ intensity$'
+      parameters: 
+        tight_layout: True
+        show_legend: True
+      filename: uvvis-normalised.pdf
+ 

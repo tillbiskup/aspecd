@@ -1063,6 +1063,7 @@ class Recipe:
     def __init__(self):
         super().__init__()
         self.datasets = collections.OrderedDict()
+        self.dataset_parameters = collections.OrderedDict()
         self.results = collections.OrderedDict()
         self.figures = collections.OrderedDict()
         self.plotters = collections.OrderedDict()
@@ -1144,6 +1145,7 @@ class Recipe:
                 importer = key['importer']
             if 'importer_parameters' in key:
                 importer_parameters = key['importer_parameters']
+            self.dataset_parameters[label] = copy.deepcopy(properties)
         else:
             source = key
             label = key
@@ -1232,6 +1234,12 @@ class Recipe:
                 dataset_dict['source'] = self.datasets[dataset].id
                 dataset_dict['package'] = aspecd.utils.full_class_name(
                     self.datasets[dataset]).split('.')[0]
+            if dataset in self.dataset_parameters:
+                dataset_dict['source'] = self.datasets[dataset].id
+                aspecd.utils.copy_keys_between_dicts(
+                    self.dataset_parameters[dataset],
+                    dataset_dict
+                )
             if dataset_dict:
                 dict_['datasets'].append(dataset_dict)
             else:

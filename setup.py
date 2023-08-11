@@ -39,7 +39,7 @@ setuptools.setup(
         "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
         "Intended Audience :: Science/Research",
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "Topic :: Scientific/Engineering",
         "Topic :: Scientific/Engineering :: Chemistry",
         "Topic :: Scientific/Engineering :: Physics",
@@ -56,7 +56,7 @@ setuptools.setup(
     ],
     extras_require={
         'dev': ['prospector'],
-        'docs': ['sphinx', 'sphinx-rtd-theme'],
+        'docs': ['sphinx', 'sphinx-rtd-theme', 'sphinx-multiversion'],
     },
     python_requires='>=3.7',
     entry_points={
