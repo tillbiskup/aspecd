@@ -2104,9 +2104,10 @@ class BaselineCorrection(SingleProcessingStep):
             fit_area = self.parameters['fit_area'][0]
             self.parameters['fit_area'] = [fit_area, fit_area]
         if sum(self.parameters['fit_area']) > 100:
-            logger.warning('Baseline to consider spans over {fit_area} \%. It '
-                           'has been readjusted to 50 \% on each side.'.format(
-                            fit_area=sum(self.parameters['fit_area'])))
+            logger.warning(
+                r'Baseline to consider spans over {fit_area} %. It '
+                r'has been readjusted to 50 % on each side.'.format(
+                    fit_area=sum(self.parameters['fit_area'])))
             self.parameters['fit_area'] = [50, 50]
 
     def _perform_task(self):
