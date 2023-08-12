@@ -1,5 +1,6 @@
 """Tests for plotting."""
 import contextlib
+import hashlib
 import io
 import warnings
 
@@ -1685,6 +1686,16 @@ class TestSaver(unittest.TestCase):
         plotter.plot()
         self.saver.filename = self.filename
         self.saver.save(plotter)
+
+    def test_save_with_too_long_filename_replaces_filename_with_hash(self):
+        self.saver.plotter = plotting.Plotter()
+        self.saver.plotter.plot()
+        self.filename = 'a_very_long_filename_making_python_crash' * 25
+        md5hash = hashlib.md5(self.filename.encode()).hexdigest()
+        self.filename = self.filename + '.pdf'
+        self.saver.filename = self.filename
+        self.saver.save()
+        self.assertEqual(md5hash + '.pdf', self.saver.filename)
 
 
 class TestCaption(unittest.TestCase):

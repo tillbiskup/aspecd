@@ -11,6 +11,17 @@ Version 0.9.0
 *Not yet released*
 
 
+Version 0.8.2
+=============
+
+*Not yet released*
+
+Fixes
+-----
+
+* Handling of too long filenames when saving plots.
+
+
 Version 0.8.1
 =============
 

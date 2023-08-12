@@ -174,6 +174,8 @@ Module API documentation
 """
 
 import copy
+import errno
+import hashlib
 import logging
 import os
 
@@ -2384,9 +2386,26 @@ class Saver:
         figure to save. To access this figure, use the property
         :attr:`plotter.figure`.
 
+        As filenames cannot be of arbitrary length (and the limits depend on
+        operating and probably file system), if the respective error is
+        raised, the file basename is replaced by the MD5 hash of itself.
+
+        .. versionchanged:: 0.8.2
+            Handling of too long filenames
+
         """
         self._add_file_extension()
-        self.plotter.figure.savefig(self.filename, **self.parameters)
+        try:
+            self.plotter.figure.savefig(self.filename, **self.parameters)
+        except OSError as os_error:
+            if os_error.errno == errno.ENAMETOOLONG:
+                file_basename, file_extension = os.path.splitext(self.filename)
+                self.filename = ''.join([
+                    hashlib.md5(file_basename.encode()).hexdigest(),
+                    file_extension
+                ])
+            else:
+                raise
 
     def _add_file_extension(self):
         """Add file extension to filename if available.
