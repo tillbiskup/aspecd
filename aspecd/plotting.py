@@ -2780,7 +2780,12 @@ class MultiPlot1DProperties(MultiPlotProperties):
         of the :class:`aspecd.plotting.LineProperties` class.
 
     colormap : :class:`str`
-        NAme of the colormap to use for colouring the individual drawings
+        Name of the colormap to use for colouring the individual drawings
+
+        For a full list of colormaps available with Matplotlib, see
+        `https://matplotlib.org/stable/gallery/color/colormap_reference.html`_.
+
+        Note that appending ``_r`` to the name of a colormap will reverse it.
 
     Raises
     ------
