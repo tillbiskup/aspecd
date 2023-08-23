@@ -19,7 +19,8 @@ Version 0.8.2
 Fixes
 -----
 
-* Handling of too long filenames when saving plots.
+* Handling of too long filenames when saving plots: the filename is replaced by its MD5 hash.
+
 
 New features
 ------------
