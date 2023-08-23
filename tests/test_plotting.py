@@ -1696,6 +1696,7 @@ class TestSaver(unittest.TestCase):
         self.saver.filename = self.filename
         self.saver.save()
         self.assertEqual(md5hash + '.pdf', self.saver.filename)
+        self.filename = self.saver.filename  # to automatically remove file
 
 
 class TestCaption(unittest.TestCase):

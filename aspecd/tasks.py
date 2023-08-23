@@ -150,8 +150,8 @@ files. This will usually be the directory you cook the recipe from. However,
 sometimes it is quite convenient to specify an output directory, either
 relative or absolute.
 
-To do so, simply add the ``output`` key to the top level ``directories`` key of
-your recipe:
+To do so, simply add the ``output`` key to the top level ``directories``
+key of your recipe:
 
 .. code-block:: yaml
 
@@ -258,27 +258,28 @@ task with "aspecd.".
 Setting own labels (and properties) for datasets
 ------------------------------------------------
 
-Usually, you specify the path (or any other unique and supported identifier) to
-your dataset(s) in the list of datasets at the beginning of a recipe, like this:
+Usually, you specify the path (or any other unique and supported
+identifier) to your dataset(s) in the list of datasets at the beginning of
+a recipe, like this:
 
 .. code-block:: yaml
 
     datasets:
-      - /lengthly/path/to/dataset1
-      - /lengthly/path/to/dataset2
+      - /lengthy/path/to/dataset1
+      - /lengthy/path/to/dataset2
 
 
 In this case, you will have to refer to the datasets by their path (or
 whatever other identifier you used). Usually, these identifiers are quite
-lengthly, hence not necessarily convenient for use as labels within a
+lengthy, hence not necessarily convenient for use as labels within a
 recipe. However, you can set your own ids for datasets:
 
 .. code-block:: yaml
 
     datasets:
-      - source: /lengthly/path/to/dataset1
+      - source: /lengthy/path/to/dataset1
         id: dataset1
-      - source: /lengthly/path/to/dataset2
+      - source: /lengthy/path/to/dataset2
         id: dataset2
 
 
@@ -301,10 +302,10 @@ does not fit to what you need. How about that:
 .. code-block:: yaml
 
     datasets:
-      - source: /lengthly/path/to/dataset1
+      - source: /lengthy/path/to/dataset1
         id: dataset1
         label: low concentration
-      - source: /lengthly/path/to/dataset2
+      - source: /lengthy/path/to/dataset2
         id: dataset2
         label: high concentration
 
@@ -338,8 +339,8 @@ described above for setting other properties of a dataset:
 .. code-block:: yaml
 
     datasets:
-      - source: /lengthly/path/to/dataset1
-      - source: /lengthly/path/to/dataset2
+      - source: /lengthy/path/to/dataset1
+      - source: /lengthy/path/to/dataset2
         package: other_package
 
 
@@ -364,8 +365,8 @@ which importer to use:
 .. code-block:: yaml
 
     datasets:
-      - source: /lengthly/path/to/dataset1
-      - source: /lengthly/path/to/dataset2
+      - source: /lengthy/path/to/dataset1
+      - source: /lengthy/path/to/dataset2
         importer: TxtImporter
 
 However, be careful to match data format and importer, as you are overriding
@@ -377,8 +378,8 @@ well with providing an alternative package:
 .. code-block:: yaml
 
     datasets:
-      - source: /lengthly/path/to/dataset1
-      - source: /lengthly/path/to/dataset2
+      - source: /lengthy/path/to/dataset1
+      - source: /lengthy/path/to/dataset2
         package: other_package
         importer: TxtImporter
 
@@ -401,8 +402,8 @@ well:
 .. code-block:: yaml
 
     datasets:
-      - source: /lengthly/path/to/dataset1
-      - source: /lengthly/path/to/dataset2
+      - source: /lengthy/path/to/dataset1
+      - source: /lengthy/path/to/dataset2
         importer: TxtImporter
         importer_parameters:
           skiprows: 3
@@ -479,6 +480,38 @@ tasks of the recipe on the given dataset, storing the plot to a
 file named ``my_dataset.pdf``.
 
 
+Settings for recipes
+--------------------
+
+At the top level of a recipe, you can provide an (increasing) list of
+settings, part of which are described elsewhere as well. The full and
+up-to-date list is contained in the :class:`aspecd.tasks.Recipe` class
+documentation. For convenience, the most important settings are described
+below:
+
+  * ``default_package``
+
+    Set the default package tasks are obtained from. Useful mostly for
+    packages derived from the ASpecD framework.
+
+  * ``default_colormap``
+
+    Set the default colormap for plots. This will affect only those plots
+    supporting colormaps, such as :class:`aspecd.plotting.MultiPlotter1D`.
+
+  * ``autosave_plots``
+
+    Control whether plots are saved by default, even if no filename is
+    provided.
+
+  * ``write_history``
+
+    Control whether a history is written when serving a recipe. Setting
+    this to ``False`` will most probably render your data processing and
+    analysis irreproducible and therefore mostly useless. Hence,
+    use *only* for debugging purposes.
+
+
 Executing recipes: serving the cooked results
 =============================================
 
@@ -498,7 +531,7 @@ Simply executing a command from a terminal, that's all that is to it. In
 this particular example, ``<my-recipe>`` is a placeholder for your recipe
 file name.
 
-Of course, you need to have the ASpecD package installed (preferrably within
+Of course, you need to have the ASpecD package installed (preferably within
 a virtual environment), and you still need to have access to a terminal. But
 that's all. And when you have hit "enter", you will usually see a list of
 lines starting with "INFO" telling you what is happening. If something is
@@ -778,11 +811,12 @@ Notes for developers
 Recipe-driven data analysis introduces another level of abstraction and
 indirection with its use of recipes in YAML format. Based on this analogy,
 we have a :class:`aspecd.tasks.Recipe` consisting of a list of datasets and a
-list of :class:`aspecd.tasks.Task` to be performed on the datasets. Such recipe
-gets "cooked" by a :class:`aspecd.tasks.Chef`, and for the convenience of
-the user of recipe-driven data analysis, the result gets "served" by the
-:class:`aspecd.tasks.ChefDeService`. An actual user will not see any of
-this, but simply call ``serve <recipe-name.yaml>`` from the command line.
+list of :class:`aspecd.tasks.Task` to be performed on the datasets. Such
+recipe gets "cooked" by a :class:`aspecd.tasks.Chef`, and for the
+convenience of the user of recipe-driven data analysis, the result gets
+"served" by the :class:`aspecd.tasks.ChefDeService`. An actual user will
+not see any of this, but simply call ``serve <recipe-name.yaml>`` from the
+command line.
 
 Internally, recipes are represented by an instance of
 :class:`aspecd.tasks.Recipe`, and this representation takes care already to
@@ -976,8 +1010,16 @@ class Recipe:
 
            If no name for a default package is supplied, "aspecd" is used.
 
+        default_colormap: :class:`str`
+           Name of the (Matplotlib) colormap used for plots
+
+           If no name for a default colormap is supplied, the default
+           colormap for the currently installed Matplotlib version is used.
+
+           .. versionadded:: 0.8.2
+
         autosave_plots: :class:`bool`
-            Whether to save plots automatically even if no filename is provided.
+            Whether to save plots even if no filename is provided.
 
             If true, each :class:`aspecd.tasks.SingleplotTask` and
             :class:`aspecd.tasks.MultiplotTask` will save the plots to default
@@ -1074,6 +1116,7 @@ class Recipe:
         }
         self.settings = {
             'default_package': '',
+            'default_colormap': '',
             'autosave_plots': True,
             'write_history': True,
         }
@@ -1344,7 +1387,7 @@ class Recipe:
         Import recipe using importer.
 
         Importers can be created to read recipes from different sources.
-        Thus the recipe as such is entirely independent of the persistence
+        Thus, the recipe as such is entirely independent of the persistence
         layer.
 
         Parameters
@@ -1368,7 +1411,7 @@ class Recipe:
         Export recipe using exporter.
 
         Exporters can be created to write recipes to different targets.
-        Thus the recipe as such is entirely independent of the persistence
+        Thus, the recipe as such is entirely independent of the persistence
         layer.
 
         Parameters
@@ -1982,9 +2025,9 @@ class Task(aspecd.utils.ToDictMixin):
         specifying explicit class names including packages, but at the same
         time to omit the package name for classes from the current package.
 
-        Furthermore, if a package different than aspecd is provided in
+        Furthermore, if a package different from aspecd is provided in
         :attr:`package` and the class cannot be found in there, the class is
-        searched in the aspecd package instead. This allows for using all of
+        searched in the aspecd package instead. This allows for using all
         the classes provided with the ASpecD framework without needing to
         prefix them in a recipe and therefore greatly enhances the user
         experience.
@@ -2909,6 +2952,27 @@ class PlotTask(Task):
             plot.save(saver)
         return filename
 
+    def set_colormap(self):
+        """
+        Set the colormap if ``default_colormap`` is specified in the recipe.
+
+        One of the settings in the recipe is ``default_colormap``,
+        see :class:`aspecd.tasks.Recipe` for details. If the plotter has a
+        property ``colormap`` in its properties, it gets set to the value of
+        ``default_colormap`` of the recipe if this is set to a non-empty
+        value.
+
+        Each of the individual plot tasks is responsible to call this
+        method after having created the actual plotter object.
+
+        .. versionadded:: 0.8.2
+
+        """
+        if self.recipe.settings['default_colormap']:
+            if hasattr(self._task.properties, 'colormap'):
+                self._task.properties.colormap = \
+                    self.recipe.settings['default_colormap']
+
 
 class SingleplotTask(PlotTask):
     """
@@ -2943,7 +3007,7 @@ class SingleplotTask(PlotTask):
             show_legend: True
           caption:
             title: >
-              Ideally a single sentence summarising the intend of the figure
+              Ideally a single sentence summarising the intent of the figure
             text: >
               More text for the figure caption
             parameters:
@@ -2986,7 +3050,7 @@ class SingleplotTask(PlotTask):
 
     .. important::
         Make sure to provide the same number of file names in your recipe as
-        the number of datasets you apply the plotter to. Otherwise you may
+        the number of datasets you apply the plotter to. Otherwise, you may
         run into trouble.
 
     .. note::
@@ -3072,7 +3136,7 @@ class MultiplotTask(PlotTask):
             show_legend: True
           caption:
             title: >
-              Ideally a single sentence summarising the intend of the figure
+              Ideally a single sentence summarising the intent of the figure
             text: >
               More text for the figure caption
             parameters:
@@ -3119,6 +3183,7 @@ class MultiplotTask(PlotTask):
 
     def _perform(self):
         self._task = self.get_object()
+        self.set_colormap()
         if self.target:
             self._task.figure = self.recipe.plotters[self.target].figure
             self._task.axes = self.recipe.plotters[self.target].axes
@@ -3358,7 +3423,7 @@ class ReportTask(Task):
 
     .. important::
         Make sure to provide the same number of file names in your recipe as
-        the number of datasets you apply the report to. Otherwise you may
+        the number of datasets you apply the report to. Otherwise, you may
         run into trouble.
 
     .. note::
@@ -3550,7 +3615,7 @@ class FigurereportTask(Task):
           type: SinglePlotter1D
           label: overview1D
         - kind: singleplot
-          type: SinglePLotter1D
+          type: SinglePlotter1D
           label: overview2
         - kind: report
           type: LaTeXReporter
@@ -3566,7 +3631,7 @@ class FigurereportTask(Task):
 
     .. important::
         Make sure to provide the same number of file names in your recipe as
-        the number of figures you apply the report to. Otherwise you may
+        the number of figures you apply the report to. Otherwise, you may
         run into trouble.
 
     .. note::
@@ -3738,7 +3803,7 @@ class ExportTask(Task):
 
     .. important::
         Make sure to provide the same number of file names in your recipe as
-        the number of datasets you apply the exporter to. Otherwise you may
+        the number of datasets you apply the exporter to. Otherwise, you may
         run into trouble.
 
     .. note::
@@ -3788,7 +3853,7 @@ class TabulateTask(Task):
         properties:
           caption:
             title: >
-              Ideally a single sentence summarising the intend of the table
+              Ideally a single sentence summarising the intent of the table
             text: >
               More text for the table caption
           filename: fancytable.txt
@@ -3823,7 +3888,7 @@ class TabulateTask(Task):
 
     .. important::
         Make sure to provide the same number of file names in your recipe as
-        the number of datasets you create the tables for. Otherwise you may
+        the number of datasets you create the tables for. Otherwise, you may
         run into trouble.
 
     .. note::

@@ -21,6 +21,11 @@ Fixes
 
 * Handling of too long filenames when saving plots.
 
+New features
+------------
+
+* New setting ``default_colormap`` in recipes.
+
 
 Version 0.8.1
 =============

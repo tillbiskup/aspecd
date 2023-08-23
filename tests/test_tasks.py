@@ -74,8 +74,12 @@ class TestRecipe(unittest.TestCase):
         self.assertEqual(['type', 'version'], list(self.recipe.format.keys()))
 
     def test_settings_property_is_dict_with_fields(self):
-        self.assertEqual(['default_package', 'autosave_plots', 'write_history'],
-                         list(self.recipe.settings.keys()))
+        self.assertEqual([
+            'default_package',
+            'default_colormap',
+            'autosave_plots',
+            'write_history',
+            ], list(self.recipe.settings.keys()))
 
     def test_directories_property_is_dict_with_fields(self):
         self.assertEqual(['output', 'datasets_source'],
@@ -2602,6 +2606,18 @@ class TestMultiPlotTask(unittest.TestCase):
         self.assertEqual(self.dataset[0],
                          dict_['properties']['properties']['drawings'][0][
                              'label'])
+
+    def test_default_colormap_gets_set_to_plotter(self):
+        colormap = 'viridis'
+        self.prepare_recipe()
+        self.recipe.settings['default_colormap'] = colormap
+        self.plotting_task['type'] = 'MultiPlotter1D'
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(colormap,
+                         dict_['properties']['properties']['colormap'])
 
 
 class TestCompositePlotTask(unittest.TestCase):

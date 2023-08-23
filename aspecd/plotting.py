@@ -2400,7 +2400,7 @@ class Saver:
         except OSError as os_error:
             if os_error.errno == errno.ENAMETOOLONG:
                 file_basename, file_extension = os.path.splitext(self.filename)
-                self.filename = ''.join([
+                self.filename = ''.join([  # nosec B303
                     hashlib.md5(file_basename.encode()).hexdigest(),
                     file_extension
                 ])
@@ -2849,7 +2849,7 @@ class MultiPlot1DProperties(MultiPlotProperties):
         if hasattr(plotter, 'drawings') and self.colormap:
             idx = len(self.drawings)
             colors = plt.get_cmap(self.colormap, idx)
-            for idx, drawing in enumerate(plotter.drawings):
+            for idx, _ in enumerate(plotter.drawings):
                 self.drawings[idx].color = colors(idx)
 
 
