@@ -3081,6 +3081,7 @@ class SingleplotTask(PlotTask):
                 self.properties.pop('filename')
             dataset = self.recipe.get_dataset(dataset_id)
             self._task = self.get_object()
+            self.set_colormap()
             if self.label and not self._task.label:
                 self._task.label = self.label
             if self.target:

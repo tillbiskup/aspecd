@@ -2622,26 +2622,58 @@ class SinglePlot1DProperties(SinglePlotProperties):
 
 class SinglePlot2DProperties(SinglePlotProperties):
     """
-    Properties of a 2D single plot, defining its appearance.
+        Properties of a 2D single plot, defining its appearance.
 
-    Attributes
-    ----------
-    drawing : :class:`aspecd.plotting.SurfaceProperties`
-        Properties of the surface within a plot
+        Attributes
+        ----------
+        drawing : :class:`aspecd.plotting.SurfaceProperties`
+            Properties of the surface within a plot
 
-        For the properties that can be set this way, see the documentation
-        of the :class:`aspecd.plotting.SurfaceProperties` class.
+            For the properties that can be set this way, see the documentation
+            of the :class:`aspecd.plotting.SurfaceProperties` class.
 
-    Raises
-    ------
-    aspecd.exceptions.MissingPlotterError
-        Raised if no plotter is provided.
+        Raises
+        ------
+        aspecd.exceptions.MissingPlotterError
+            Raised if no plotter is provided.
 
-    """
+        """
 
     def __init__(self):
         super().__init__()
         self.drawing = SurfaceProperties()
+        self._colormap = ''
+        self._include_in_to_dict = ['colormap']
+
+    @property
+    def colormap(self):
+        """
+        Name of the colormap to use for colouring the surface.
+
+        If not given, the default colormap set via the property ``cmap`` in
+        :class:`aspecd.plotting.SurfaceProperties` will be used. Querying
+        this property will only return a non-empty string if the property
+        itself was set, not the default value set via the property ``cmap`` in
+        :class:`aspecd.plotting.SurfaceProperties`. However, setting a value
+        will be propagated to the property ``cmap`` in
+        :class:`aspecd.plotting.SurfaceProperties`. This behaviour is
+        necessary to allow for setting a default colormap in a recipe and
+        having it propagated by default to 2D surface plots as well.
+
+        For a full list of colormaps available with Matplotlib, see
+        https://matplotlib.org/stable/gallery/color/colormap_reference.html.
+
+        Note that appending ``_r`` to the name of a colormap will reverse it.
+
+        .. versionadded:: 0.8.2
+
+        """
+        return self._colormap
+
+    @colormap.setter
+    def colormap(self, colormap):
+        self._colormap = colormap
+        self.drawing.cmap = self._colormap
 
 
 class MultiPlotProperties(PlotProperties):

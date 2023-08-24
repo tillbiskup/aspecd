@@ -26,6 +26,7 @@ New features
 ------------
 
 * New setting ``default_colormap`` in recipes.
+* Property ``colormap`` in :class:`aspecd.plotting.SinglePlot2DProperties`, allowing for consistently setting (default) colormaps for 2D surface plots within a recipe.
 
 
 Version 0.8.1

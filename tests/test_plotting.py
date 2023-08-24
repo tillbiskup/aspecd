@@ -2296,6 +2296,17 @@ class TestSinglePlot2DProperties(unittest.TestCase):
                          plot.drawing.cmap.name)
         plt.close(plot.figure)
 
+    def test_colormap_is_empty_by_default(self):
+        self.assertEqual('', self.plot_properties.colormap)
+
+    def test_setting_colormap_property_sets_drawing_cmap_property(self):
+        colormap = 'RdGy'
+        self.plot_properties.colormap = colormap
+        self.assertEqual(colormap, self.plot_properties.drawing.cmap)
+
+    def test_colormap_is_included_in_to_dict(self):
+        self.assertIn('colormap', self.plot_properties.to_dict())
+
 
 class TestMultiPlotProperties(unittest.TestCase):
     def setUp(self):
