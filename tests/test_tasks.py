@@ -2619,6 +2619,21 @@ class TestMultiPlotTask(unittest.TestCase):
         self.assertEqual(colormap,
                          dict_['properties']['properties']['colormap'])
 
+    def test_default_colormap_does_not_override_task_colormap(self):
+        default_colormap = 'viridis'
+        task_colormap = 'viridis_r'
+        self.prepare_recipe()
+        self.recipe.settings['default_colormap'] = default_colormap
+        self.plotting_task['type'] = 'MultiPlotter1D'
+        self.plotting_task['properties'] = \
+            {'properties': {'colormap': task_colormap}}
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(task_colormap,
+                         dict_['properties']['properties']['colormap'])
+
 
 class TestCompositePlotTask(unittest.TestCase):
     def setUp(self):

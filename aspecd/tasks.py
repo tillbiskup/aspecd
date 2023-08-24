@@ -2958,9 +2958,9 @@ class PlotTask(Task):
 
         One of the settings in the recipe is ``default_colormap``,
         see :class:`aspecd.tasks.Recipe` for details. If the plotter has a
-        property ``colormap`` in its properties, it gets set to the value of
-        ``default_colormap`` of the recipe if this is set to a non-empty
-        value.
+        property ``colormap`` in its properties and this property is not set
+        already, it gets set to the value of ``default_colormap`` of the
+        recipe if this is set to a non-empty value.
 
         Each of the individual plot tasks is responsible to call this
         method after having created the actual plotter object.
@@ -2969,7 +2969,8 @@ class PlotTask(Task):
 
         """
         if self.recipe.settings['default_colormap']:
-            if hasattr(self._task.properties, 'colormap'):
+            if hasattr(self._task.properties, 'colormap') \
+                    and not self._task.properties.colormap:
                 self._task.properties.colormap = \
                     self.recipe.settings['default_colormap']
 
