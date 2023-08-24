@@ -14,7 +14,7 @@ Version 0.9.0
 Version 0.8.2
 =============
 
-*Not yet released*
+Released 2023-08-24
 
 Fixes
 -----
