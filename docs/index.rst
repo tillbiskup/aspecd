@@ -77,8 +77,15 @@ And to make it even more convenient for users and future-proof:
 * Extensive user and API documentation
 
 
-.. warning::
-  The ASpecD framework is currently under active development and still considered in Beta development state. Therefore, expect changes in features and public APIs that may break your own code. Nevertheless, feedback as well as feature requests are highly welcome. Furthermore, given the growing number of packages depending on the ASpecD framework, we aim at backwards compatibility wherever possible.
+Requirements
+------------
+
+The ASpecD framework comes with a rather minimal set of requirements:
+
+* Python >= 3.7 with numpy, scipy and matplotlib packages
+* command-line access for :doc:`recipe-driven data analysis <usecases>`
+* :doc:`metadata <metadata>` (in addition to the usual parameter files)
+
 
 .. _sec-how_to_cite:
 
@@ -119,6 +126,12 @@ To install the ASpecD framework on your computer (sensibly within a Python virtu
 Have a look at the more detailed :doc:`installation instructions <installing>` as well.
 
 
+Actual use cases
+----------------
+
+Python packages based on the ASpecD framework have been used already for analysing published data, and for some, the data and recipes have been published as "data publications". See the list of :doc:`data publications <examples/data-publications>` for further details.
+
+
 Related projects
 ----------------
 
@@ -149,10 +162,20 @@ Finally, don't forget to check out the website on `reproducible research <https:
    audience
    introduction
    concepts
+   metadata
    recipes
    usecases
    applications
    installing
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Examples:
+   :hidden:
+
+   examples/index
+   examples/list
+   examples/data-publications
 
 .. toctree::
    :maxdepth: 2

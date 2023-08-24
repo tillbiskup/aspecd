@@ -1,5 +1,6 @@
 """Tests for plotting."""
 import contextlib
+import hashlib
 import io
 import warnings
 
@@ -1686,6 +1687,17 @@ class TestSaver(unittest.TestCase):
         self.saver.filename = self.filename
         self.saver.save(plotter)
 
+    def test_save_with_too_long_filename_replaces_filename_with_hash(self):
+        self.saver.plotter = plotting.Plotter()
+        self.saver.plotter.plot()
+        self.filename = 'a_very_long_filename_making_python_crash' * 25
+        md5hash = hashlib.md5(self.filename.encode()).hexdigest()
+        self.filename = self.filename + '.pdf'
+        self.saver.filename = self.filename
+        self.saver.save()
+        self.assertEqual(md5hash + '.pdf', self.saver.filename)
+        self.filename = self.saver.filename  # to automatically remove file
+
 
 class TestCaption(unittest.TestCase):
     def setUp(self):
@@ -2283,6 +2295,17 @@ class TestSinglePlot2DProperties(unittest.TestCase):
         self.assertEqual(self.plot_properties.drawing.cmap,
                          plot.drawing.cmap.name)
         plt.close(plot.figure)
+
+    def test_colormap_is_empty_by_default(self):
+        self.assertEqual('', self.plot_properties.colormap)
+
+    def test_setting_colormap_property_sets_drawing_cmap_property(self):
+        colormap = 'RdGy'
+        self.plot_properties.colormap = colormap
+        self.assertEqual(colormap, self.plot_properties.drawing.cmap)
+
+    def test_colormap_is_included_in_to_dict(self):
+        self.assertIn('colormap', self.plot_properties.to_dict())
 
 
 class TestMultiPlotProperties(unittest.TestCase):

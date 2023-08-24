@@ -1,0 +1,26 @@
+common Info file - v. 0.1.0
+
+GENERAL
+Date start:  2020-04-04
+Time start:  11:05:00
+Date end:    2020-04-04
+Time end:    15:50:00
+Operator:    John Doe
+Purpose:     Kill time
+
+SAMPLE
+Name:        Random sample 1
+Description: Nicked from bench neighbour
+
+SPECTROMETER
+Model:       Some fancy commercial spectrometer
+Software:    SpectrometerControl v0.1-alpha
+
+TEMPERATURE
+Temperature: 120 K
+Controller:  Oxford ITC 503
+Cryostat:    Oxford 935CF
+Cryogen:     LN2
+
+COMMENT
+To be or not to be...

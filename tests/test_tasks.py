@@ -74,8 +74,12 @@ class TestRecipe(unittest.TestCase):
         self.assertEqual(['type', 'version'], list(self.recipe.format.keys()))
 
     def test_settings_property_is_dict_with_fields(self):
-        self.assertEqual(['default_package', 'autosave_plots', 'write_history'],
-                         list(self.recipe.settings.keys()))
+        self.assertEqual([
+            'default_package',
+            'default_colormap',
+            'autosave_plots',
+            'write_history',
+            ], list(self.recipe.settings.keys()))
 
     def test_directories_property_is_dict_with_fields(self):
         self.assertEqual(['output', 'datasets_source'],
@@ -362,6 +366,19 @@ class TestRecipe(unittest.TestCase):
         self.recipe.datasets[self.dataset] = foreign_dataset
         dict_ = self.recipe.to_dict()
         self.assertEqual(self.dataset, dict_['datasets'][0])
+
+    def test_to_dict_with_dataset_with_importer_parameters(self):
+        data = np.random.random(2)
+        parameters = {'skiprows': 1, 'separator': ','}
+        np.savetxt(self.dataset_filename, data)
+        dict_ = {'datasets': [{'source': self.dataset_filename,
+                               'importer': 'TxtImporter',
+                               'importer_parameters': parameters,
+                               'package': 'aspecd'}]}
+        self.recipe.from_dict(copy.deepcopy(dict_))
+        self.assertIn('importer', self.recipe.to_dict()['datasets'][0])
+        self.assertDictEqual(dict_['datasets'][0],
+                             self.recipe.to_dict()['datasets'][0])
 
     def test_to_dict_with_datasets_source_directory(self):
         self.recipe.directories['datasets_source'] = 'foo'
@@ -2454,6 +2471,37 @@ class TestSinglePlotTask(unittest.TestCase):
         self.assertEqual(self.dataset[0],
                          dict_['properties']['properties']['drawing']['label'])
 
+    def test_default_colormap_gets_set_to_plotter(self):
+        colormap = 'viridis'
+        self.prepare_recipe()
+        self.recipe.datasets[self.dataset[0]].data.data = \
+            np.random.random([5, 5])
+        self.recipe.settings['default_colormap'] = colormap
+        self.plotting_task['type'] = 'SinglePlotter2D'
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(colormap,
+                         dict_['properties']['properties']['colormap'])
+
+    def test_default_colormap_does_not_override_task_colormap(self):
+        default_colormap = 'viridis'
+        task_colormap = 'viridis_r'
+        self.prepare_recipe()
+        self.recipe.datasets[self.dataset[0]].data.data = \
+            np.random.random([5, 5])
+        self.recipe.settings['default_colormap'] = default_colormap
+        self.plotting_task['type'] = 'SinglePlotter2D'
+        self.plotting_task['properties'] = \
+            {'properties': {'colormap': task_colormap}}
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(task_colormap,
+                         dict_['properties']['properties']['colormap'])
+
 
 class TestMultiPlotTask(unittest.TestCase):
     def setUp(self):
@@ -2589,6 +2637,33 @@ class TestMultiPlotTask(unittest.TestCase):
         self.assertEqual(self.dataset[0],
                          dict_['properties']['properties']['drawings'][0][
                              'label'])
+
+    def test_default_colormap_gets_set_to_plotter(self):
+        colormap = 'viridis'
+        self.prepare_recipe()
+        self.recipe.settings['default_colormap'] = colormap
+        self.plotting_task['type'] = 'MultiPlotter1D'
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(colormap,
+                         dict_['properties']['properties']['colormap'])
+
+    def test_default_colormap_does_not_override_task_colormap(self):
+        default_colormap = 'viridis'
+        task_colormap = 'viridis_r'
+        self.prepare_recipe()
+        self.recipe.settings['default_colormap'] = default_colormap
+        self.plotting_task['type'] = 'MultiPlotter1D'
+        self.plotting_task['properties'] = \
+            {'properties': {'colormap': task_colormap}}
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(task_colormap,
+                         dict_['properties']['properties']['colormap'])
 
 
 class TestCompositePlotTask(unittest.TestCase):

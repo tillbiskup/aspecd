@@ -8,11 +8,6 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.9
 ===============
 
-* Documentation
-
-  * Metadata for data acquisition: document info file/refer to publication (and add reference in infofile module documentation)
-  * Add "Best Practices" section showing data publications using derived packages (currently only one: Järsvall et al., Chem. Mater. 2022)?
-
 * Usability
 
   * Importer/ImporterFactory should issue a warning if no dataset could be loaded, rather than silently continuing, as this often leads to downstream problems and exceptions thrown.
@@ -23,6 +18,10 @@ For version 0.9
   * (Arbitrary) lines in plot, *e.g.* to compare peak positions
 
     Need to decide whether this goes into plotter properties or gets handled as proper annotations; probably the former, but a good starting point to think about the latter.
+  * If figure is plotted twice using automatically generated filenames, use different filenames (e.g. increment number).
+  * Axis direction can be switched (*e.g.*, for FTIR data, hence not needing to set axis limits in reverse order)
+  * Bugfix: Title of figure and axis label overlap when adding an axis on the top side of the figure
+  * Allow to add a legend title in recipes.
 
 * Processing
 
@@ -30,9 +29,13 @@ For version 0.9
 
   * MetadataUpdate/MetadataChange: Change metadata of a given dataset from within a recipe. Useful in case datasets contain (known) spurious or otherwise inappropriate metadata. (Metadata are provided manually and are therefore prone to human errors).
 
+  * :class:`aspecd.processing.BaselineCorrection` with ``fit_area`` definable as axis range, and arbitrary parts of the axis (*e.g.*, in the middle of a dataset or with separate fit areas)
+
 * Logging
 
   * Add loggers from other modules (than task) and derived packages
+
+    Probably this means to switch to package-wide logging and documenting that derived packages need to log to the ASpecD logger as well.
 
 * Add export tasks to dataset tasks
 

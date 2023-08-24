@@ -1278,9 +1278,18 @@ class TestBaselineCorrection(unittest.TestCase):
         self.dataset.data.data = np.r_[np.ones(20) + 5, np.ones(60), np.ones(
             20)+5]
         self.dataset.data.axes[0].values = np.linspace(1, 100, num=100)
-        self.processing.parameters['percentage'] = [20, ]
+        self.processing.parameters['fit_area'] = [20, ]
         self.dataset.process(self.processing)
         self.assertAlmostEqual(self.dataset.data.data[19], 0)
+
+    def test_baseline_correction_with_more_than_hundred_percent(self):
+        self.dataset.data.data = np.r_[np.ones(20) + 5, np.ones(60), np.ones(
+            20)+5]
+        self.dataset.data.axes[0].values = np.linspace(1, 100, num=100)
+        self.processing.parameters['fit_area'] = [120, 120]
+        with self.assertLogs() as captured:
+            self.dataset.process(self.processing)
+        self.assertEqual(len(captured.records), 1)
 
     def test_with_2D_dataset(self):
         dataset = aspecd.dataset.Dataset()
@@ -1776,7 +1785,7 @@ class TestScalarAxisAlgebra(unittest.TestCase):
 
 
 class TestInterpolation(unittest.TestCase):
-    
+
     def setUp(self):
         self.processing = aspecd.processing.Interpolation()
         self.dataset = aspecd.dataset.Dataset()

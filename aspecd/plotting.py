@@ -174,6 +174,8 @@ Module API documentation
 """
 
 import copy
+import errno
+import hashlib
 import logging
 import os
 
@@ -2039,6 +2041,28 @@ class CompositePlotter(Plotter):
         will call the :meth:`plot` property of each of these plotters
         automatically for you.
 
+    Examples
+    --------
+    A quick example how a recipe part using a composite plotter may look like.
+    Both plotters ``raw-data`` and ``processed-data`` are previously defined
+    figures using *different datasets*. Therefore, it is important to give
+    results of a processing task a unique identifier if it is used in such a
+    composite plotter.
+
+    .. code-block:: yaml
+
+        - kind: compositeplot
+          type: CompositePlotter
+          properties:
+            plotter:
+            - raw-data
+            - processed-data
+            filename: comparison.pdf
+            grid_dimensions: [1, 2]
+            subplot_locations:
+            - [0, 0, 1, 1]
+            - [0, 1, 1, 1]
+
     Attributes
     ----------
     axes : :class:`list`
@@ -2091,6 +2115,12 @@ class CompositePlotter(Plotter):
         Upon calling :meth:`aspecd.plotting.Plotter.plot`, for each axes in
         the list of axes, the corresponding plotter will be accessed and its
         :meth:`aspecd.plotting.Plotter.plot` method called.
+
+        .. note::
+            When the plotters are operating on the same dataset which got
+            processed in between, both will use and display the dataset *after*
+            processing. To prevent this, assign the result of the processing
+            step a unique name.
 
     properties : :class:`aspecd.plotting.CompositePlotProperties`
         Properties of the plot, defining its appearance
@@ -2356,9 +2386,26 @@ class Saver:
         figure to save. To access this figure, use the property
         :attr:`plotter.figure`.
 
+        As filenames cannot be of arbitrary length (and the limits depend on
+        operating and probably file system), if the respective error is
+        raised, the file basename is replaced by the MD5 hash of itself.
+
+        .. versionchanged:: 0.8.2
+            Handling of too long filenames
+
         """
         self._add_file_extension()
-        self.plotter.figure.savefig(self.filename, **self.parameters)
+        try:
+            self.plotter.figure.savefig(self.filename, **self.parameters)
+        except OSError as os_error:
+            if os_error.errno == errno.ENAMETOOLONG:
+                file_basename, file_extension = os.path.splitext(self.filename)
+                self.filename = ''.join([  # nosec B303
+                    hashlib.md5(file_basename.encode()).hexdigest(),
+                    file_extension
+                ])
+            else:
+                raise
 
     def _add_file_extension(self):
         """Add file extension to filename if available.
@@ -2575,26 +2622,58 @@ class SinglePlot1DProperties(SinglePlotProperties):
 
 class SinglePlot2DProperties(SinglePlotProperties):
     """
-    Properties of a 2D single plot, defining its appearance.
+        Properties of a 2D single plot, defining its appearance.
 
-    Attributes
-    ----------
-    drawing : :class:`aspecd.plotting.SurfaceProperties`
-        Properties of the surface within a plot
+        Attributes
+        ----------
+        drawing : :class:`aspecd.plotting.SurfaceProperties`
+            Properties of the surface within a plot
 
-        For the properties that can be set this way, see the documentation
-        of the :class:`aspecd.plotting.SurfaceProperties` class.
+            For the properties that can be set this way, see the documentation
+            of the :class:`aspecd.plotting.SurfaceProperties` class.
 
-    Raises
-    ------
-    aspecd.exceptions.MissingPlotterError
-        Raised if no plotter is provided.
+        Raises
+        ------
+        aspecd.exceptions.MissingPlotterError
+            Raised if no plotter is provided.
 
-    """
+        """
 
     def __init__(self):
         super().__init__()
         self.drawing = SurfaceProperties()
+        self._colormap = ''
+        self._include_in_to_dict = ['colormap']
+
+    @property
+    def colormap(self):
+        """
+        Name of the colormap to use for colouring the surface.
+
+        If not given, the default colormap set via the property ``cmap`` in
+        :class:`aspecd.plotting.SurfaceProperties` will be used. Querying
+        this property will only return a non-empty string if the property
+        itself was set, not the default value set via the property ``cmap`` in
+        :class:`aspecd.plotting.SurfaceProperties`. However, setting a value
+        will be propagated to the property ``cmap`` in
+        :class:`aspecd.plotting.SurfaceProperties`. This behaviour is
+        necessary to allow for setting a default colormap in a recipe and
+        having it propagated by default to 2D surface plots as well.
+
+        For a full list of colormaps available with Matplotlib, see
+        https://matplotlib.org/stable/gallery/color/colormap_reference.html.
+
+        Note that appending ``_r`` to the name of a colormap will reverse it.
+
+        .. versionadded:: 0.8.2
+
+        """
+        return self._colormap
+
+    @colormap.setter
+    def colormap(self, colormap):
+        self._colormap = colormap
+        self.drawing.cmap = self._colormap
 
 
 class MultiPlotProperties(PlotProperties):
@@ -2733,7 +2812,12 @@ class MultiPlot1DProperties(MultiPlotProperties):
         of the :class:`aspecd.plotting.LineProperties` class.
 
     colormap : :class:`str`
-        NAme of the colormap to use for colouring the individual drawings
+        Name of the colormap to use for colouring the individual drawings
+
+        For a full list of colormaps available with Matplotlib, see
+        https://matplotlib.org/stable/gallery/color/colormap_reference.html.
+
+        Note that appending ``_r`` to the name of a colormap will reverse it.
 
     Raises
     ------
@@ -2797,7 +2881,7 @@ class MultiPlot1DProperties(MultiPlotProperties):
         if hasattr(plotter, 'drawings') and self.colormap:
             idx = len(self.drawings)
             colors = plt.get_cmap(self.colormap, idx)
-            for idx, drawing in enumerate(plotter.drawings):
+            for idx, _ in enumerate(plotter.drawings):
                 self.drawings[idx].color = colors(idx)
 
 

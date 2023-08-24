@@ -5,6 +5,50 @@ Changelog
 This page contains a summary of changes between the official ASpecD releases. Only the biggest changes are listed here. A complete and detailed log of all changes is available through the `GitHub Repository Browser <https://github.com/tillbiskup/aspecd/commits/master>`_.
 
 
+Version 0.9.0
+=============
+
+*Not yet released*
+
+
+Version 0.8.2
+=============
+
+Released 2023-08-24
+
+Fixes
+-----
+
+* Handling of too long filenames when saving plots: the filename is replaced by its MD5 hash.
+
+
+New features
+------------
+
+* New setting ``default_colormap`` in recipes.
+* Property ``colormap`` in :class:`aspecd.plotting.SinglePlot2DProperties`, allowing for consistently setting (default) colormaps for 2D surface plots within a recipe.
+
+
+Version 0.8.1
+=============
+
+Released 2023-08-11
+
+Documentation
+-------------
+
+* New section on :doc:`metadata during data acquisition <metadata>`
+* New section with :doc:`examples <examples/index>`
+* New section with :doc:`data publications <examples/data-publications>`
+
+
+Fixes
+-----
+
+* Baseline correction in :class:`aspecd.processing.BaselineCorrection` issues warning if more than 100% of the data are used and resets to 50% on each side.
+* Recipe history contains importer parameters
+
+
 Version 0.8.0
 =============
 
