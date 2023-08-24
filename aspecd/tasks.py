@@ -1016,6 +1016,9 @@ class Recipe:
            If no name for a default colormap is supplied, the default
            colormap for the currently installed Matplotlib version is used.
 
+           If a colormap is provided for an individual task, this colormap
+           takes precedence over the default colormap for the individual task.
+
            .. versionadded:: 0.8.2
 
         autosave_plots: :class:`bool`
