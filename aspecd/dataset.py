@@ -830,7 +830,7 @@ class DatasetReference(aspecd.utils.ToDictMixin):
         super().__init__()
         self.type = ''
         self.id = ''  # pylint: disable=invalid-name
-        self.history = list()
+        self.history = []
 
     def from_dataset(self, dataset=None):
         """
@@ -1250,8 +1250,8 @@ class Axis(aspecd.utils.ToDictMixin):
             values = np.asarray(values)
             if not isinstance(values, type(self._values)) or \
                     values.dtype != self._values.dtype:
-                raise ValueError('Wrong type: expected %s, got %s' %
-                                 (self._values.dtype, values.dtype))
+                raise ValueError(f'Wrong type: expected {self._values.dtype}, '
+                                 f'got {values.dtype}')
         if values.ndim > 1:
             raise IndexError('Values need to be one-dimensional')
         self._values = values

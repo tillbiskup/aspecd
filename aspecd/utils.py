@@ -212,7 +212,7 @@ def get_aspecd_version():
     version_file_path = os.path.join(os.path.dirname(__file__),
                                      "..", 'VERSION')
     if os.path.exists(version_file_path):
-        with open(version_file_path) as version_file:
+        with open(version_file_path, encoding="utf8") as version_file:
             version = version_file.read().strip()
     else:
         version = package_version("aspecd")
@@ -402,7 +402,7 @@ class Yaml:
         """
         if not filename:
             raise aspecd.exceptions.MissingFilenameError
-        with open(filename, 'r') as file:
+        with open(filename, 'r', encoding="utf8") as file:
             self.dict = yaml.load(file, Loader=self.loader)
 
     def write_to(self, filename=''):
@@ -422,7 +422,7 @@ class Yaml:
         """
         if not filename:
             raise aspecd.exceptions.MissingFilenameError
-        with open(filename, 'w') as file:
+        with open(filename, 'w', encoding="utf8") as file:
             yaml.dump(self.dict, file, Dumper=self.dumper)
 
     def read_stream(self, stream=None):
@@ -738,7 +738,7 @@ def convert_keys_to_variable_names(dict_):
     .. versionadded:: 0.2.1
 
     """
-    new_dict = dict()
+    new_dict = {}
     for key, value in dict_.items():
         new_key = key.replace(' ', '_').lower()
         if isinstance(value, dict):

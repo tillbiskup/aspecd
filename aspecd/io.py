@@ -355,7 +355,7 @@ class DatasetImporter:
     def __init__(self, source=None):
         self.source = source
         self.dataset = None
-        self.parameters = dict()
+        self.parameters = {}
 
     def import_into(self, dataset=None):
         """Perform the actual import into the given dataset.
@@ -548,7 +548,6 @@ class DatasetImporterFactory:
         return importer
 
     # noinspection PyMethodMayBeStatic
-    # pylint: disable=no-self-use
     def _get_importer(self):
         """Choose appropriate importer for a dataset.
 
@@ -905,7 +904,7 @@ class RecipeYamlImporter(RecipeImporter):
             self.recipe_version = self._recipe_dict['format']['version']
         deprecated_keys = ['default_package', 'autosave_plots',
                            'output_directory', 'datasets_source_directory']
-        if any([key in self._recipe_dict for key in deprecated_keys]):
+        if any(key in self._recipe_dict for key in deprecated_keys):
             self.recipe_version = '0.1'
 
     def _map_recipe_structure(self):
@@ -1020,7 +1019,8 @@ class AdfExporter(DatasetExporter):
 
     def _create_version_file(self):
         with open(os.path.join(self._tempdir_name,
-                               self._filenames["version"]), 'w+') as file:
+                               self._filenames["version"]),
+                  'w+', encoding="utf8") as file:
             file.write(self._version)
 
     def _create_readme_file(self):
@@ -1056,7 +1056,8 @@ class AdfExporter(DatasetExporter):
             "https://docs.aspecd.de/adf.html\n"
         )
         with open(os.path.join(self._tempdir_name,
-                               self._filenames["readme"]), 'w+') as file:
+                               self._filenames["readme"]),
+                  'w+', encoding="utf8") as file:
             file.write(readme_contents)
 
 

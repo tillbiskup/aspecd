@@ -465,7 +465,7 @@ class TemperatureControl(Metadata):
             del dict_["controlled"]
         else:
             controlled = False
-        super(TemperatureControl, self).from_dict(dict_)
+        super().from_dict(dict_)
         # Checking "controlled" needs to be done after assigning other keys
         if controlled_in_dict and not controlled:
             self.temperature.from_string('')
@@ -633,7 +633,7 @@ class Calculation(Metadata):
 
     def __init__(self, dict_=None):
         self.type = ''
-        self.parameters = dict()
+        self.parameters = {}
         super().__init__(dict_=dict_)
 
 
@@ -859,7 +859,7 @@ class MetadataMapper:
     """
 
     def __init__(self):
-        self.metadata = dict()
+        self.metadata = {}
         self.mappings = []
         self.version = ''
         self.recipe_filename = ''
@@ -912,7 +912,7 @@ class MetadataMapper:
     @staticmethod
     def _combine_items_in_dict(old_keys=None, new_key='', pattern='',
                                dict_=None):
-        value_tmp = list()
+        value_tmp = []
         for key in old_keys:
             value_tmp.append(dict_.pop(key))
         dict_[new_key] = pattern.join(value_tmp)

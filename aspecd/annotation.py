@@ -70,7 +70,7 @@ class Annotation(ToDictMixin):
     def __init__(self):
         super().__init__()
         self.type = self.__class__.__name__.lower()
-        self.content = dict()
+        self.content = {}
         self.dataset = None
         # Scope of the annotation; see list of allowed scopes below
         self._scope = ''

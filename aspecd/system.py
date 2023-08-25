@@ -51,10 +51,10 @@ class SystemInfo(aspecd.utils.ToDictMixin):
 
     def __init__(self, package=''):
         super().__init__()
-        self.python = dict()
-        self.packages = dict()
+        self.python = {}
+        self.packages = {}
         self.platform = platform.platform()
-        self.user = dict()
+        self.user = {}
         # Set some properties of dicts
         self._set_values(package)
 

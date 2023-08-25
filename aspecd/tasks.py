@@ -1112,7 +1112,7 @@ class Recipe:
         self.results = collections.OrderedDict()
         self.figures = collections.OrderedDict()
         self.plotters = collections.OrderedDict()
-        self.tasks = list()
+        self.tasks = []
         self.format = {
             'type': 'ASpecD recipe',
             'version': '0.2',
@@ -1175,7 +1175,7 @@ class Recipe:
         return os.path.join(os.path.abspath(os.path.curdir), path_)
 
     def _append_dataset(self, key):
-        properties = dict()
+        properties = {}
         importer = None
         importer_parameters = None
         if isinstance(key, dict):
@@ -1279,7 +1279,7 @@ class Recipe:
             if self._dataset_from_foreign_package(self.datasets[dataset]):
                 dataset_dict['source'] = self.datasets[dataset].id
                 dataset_dict['package'] = aspecd.utils.full_class_name(
-                    self.datasets[dataset]).split('.')[0]
+                    self.datasets[dataset]).split('.', maxsplit=1)[0]
             if dataset in self.dataset_parameters:
                 dataset_dict['source'] = self.datasets[dataset].id
                 aspecd.utils.copy_keys_between_dicts(
@@ -1763,7 +1763,7 @@ class Task(aspecd.utils.ToDictMixin):
         self.kind = ''
         self.type = ''
         self.package = ''
-        self.properties = dict()
+        self.properties = {}
         self.apply_to = []
         self.recipe = recipe
         self.comment = ''
@@ -2911,7 +2911,7 @@ class PlotTask(Task):
 
         """
         if not self.label:
-            self.label = 'fig{}'.format(len(self.recipe.figures) + 1)
+            self.label = f'fig{len(self.recipe.figures) + 1}'
         super().perform()
         self._add_figure_to_recipe()
         if self.result:
@@ -4131,7 +4131,7 @@ class FigureRecord(aspecd.utils.ToDictMixin):
             'text': '',
             'parameters': []
         }
-        self.parameters = dict()
+        self.parameters = {}
         self.label = ''
         self.filename = ''
 

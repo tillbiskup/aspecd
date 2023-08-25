@@ -571,7 +571,7 @@ class Table(utils.ToDictMixin):
         """
         if not self.table:
             return
-        with open(self.filename, 'w') as file:
+        with open(self.filename, 'w', encoding="utf8") as file:
             file.write(self.table)
 
     def create_history_record(self):
@@ -628,7 +628,7 @@ class Table(utils.ToDictMixin):
 
     @staticmethod
     def _adjust_column_width(current_column):
-        width = max([len(x) for x in current_column])
+        width = max(len(x) for x in current_column)
         return [x.ljust(width) for x in current_column]
 
     def _format_number(self, number, column=0):
@@ -637,10 +637,11 @@ class Table(utils.ToDictMixin):
                 string_format = self.column_format[column]
             except IndexError:
                 string_format = self.column_format[-1]
+            # pylint: disable=consider-using-f-string
             formatted_number = \
                 '{:{format}}'.format(number, format=string_format)
         else:
-            formatted_number = '{}'.format(number)
+            formatted_number = f'{number}'
         return formatted_number
 
     def _format_rows(self):
@@ -773,7 +774,7 @@ class Format:
         self.header_postfix = ''
 
     # noinspection PyUnusedLocal,PyMethodMayBeStatic
-    # pylint: disable=no-self-use,unused-argument
+    # pylint: disable=unused-argument
     def top_rule(self, column_widths=None):
         """
         Create top rule for table.
@@ -1195,7 +1196,7 @@ class DokuwikiFormat(Format):
         if caption and (caption.title or caption.text):
             opening = '\n'.join([
                 '<table>',
-                '<caption>{}</caption>'.format(self._caption_string(caption))
+                f'<caption>{self._caption_string(caption)}</caption>'
             ])
         return opening
 
@@ -1203,7 +1204,7 @@ class DokuwikiFormat(Format):
     def _caption_string(caption=None):
         caption_string = []
         if caption.title:
-            caption_string.append('*{}*'.format(caption.title))
+            caption_string.append(f'*{caption.title}*')
         caption_string.append(caption.text)
         return ' '.join(caption_string).rstrip()
 

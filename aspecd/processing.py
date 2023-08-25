@@ -358,8 +358,8 @@ class ProcessingStep(aspecd.utils.ToDictMixin):
         super().__init__()
         self.undoable = False
         self.name = aspecd.utils.full_class_name(self)
-        self.parameters = dict()
-        self.info = dict()
+        self.parameters = {}
+        self.info = {}
         self.description = 'Abstract processing step'
         self.comment = ''
         self.references = []
@@ -539,7 +539,6 @@ class SingleProcessingStep(ProcessingStep):
         dict_.pop('dataset')
         return dict_
 
-    # pylint: disable=arguments-differ
     def process(self, dataset=None, from_dataset=False):
         """Perform the actual processing step on the given dataset.
 
@@ -607,8 +606,8 @@ class SingleProcessingStep(ProcessingStep):
 
     def _check_applicability(self):
         if not self.applicable(self.dataset):
-            message = "%s not applicable to dataset with id %s" \
-                      % (self.name, self.dataset.id)
+            message = f"{self.name} not applicable to dataset with id " \
+                      f"{self.dataset.id}"
             raise aspecd.exceptions.NotApplicableToDatasetError(message=message)
 
     def create_history_record(self):
@@ -722,8 +721,8 @@ class MultiProcessingStep(ProcessingStep):
     def _check_applicability(self):
         for dataset in self.datasets:
             if not self.applicable(dataset):
-                message = "%s not applicable to dataset with id %s" \
-                          % (self.name, dataset.id)
+                message = f"{self.name} not applicable to dataset with id " \
+                          f"{dataset.id}"
                 raise aspecd.exceptions.NotApplicableToDatasetError(
                     message=message)
 
@@ -1158,6 +1157,7 @@ class ScalarAlgebra(SingleProcessingStep):
         if not self.parameters['kind']:
             raise ValueError('No kind of scalar operation given')
         if self.parameters['kind'].lower() not in self._kinds:
+            # pylint: disable=consider-using-f-string
             raise ValueError('Scalar operation "%s" not understood'
                              % self.parameters['kind'])
 
@@ -1269,7 +1269,7 @@ class Projection(SingleProcessingStep):
 
     def _sanitise_parameters(self):
         if self.parameters['axis'] > self.dataset.data.data.ndim - 1:
-            raise IndexError("Axis %i out of bounds" % self.parameters['axis'])
+            raise IndexError(f"Axis {self.parameters['axis']} out of bounds")
 
 
 class SliceExtraction(SingleProcessingStep):
@@ -1465,13 +1465,15 @@ class SliceExtraction(SingleProcessingStep):
         self.parameters['position'] = np.atleast_1d(self.parameters['position'])
         self.parameters['axis'] = np.atleast_1d(self.parameters['axis'])
         if self.parameters['axis'].size > self.dataset.data.data.ndim - 1:
-            raise ValueError('Too many axes (%i) provided for %iD dataset' %
+            # pylint: disable=consider-using-f-string
+            raise ValueError("Too many axes (%i) provided for %iD dataset" %
                              (self.parameters['axis'].size,
                               self.dataset.data.data.ndim))
         if self.parameters['axis'].size != self.parameters['position'].size:
             raise ValueError('Need same number of values for position and axis')
         for axis in self.parameters['axis']:
             if axis > self.dataset.data.data.ndim - 1:
+                # pylint: disable=consider-using-f-string
                 raise IndexError("Axis %i out of bounds" %
                                  self.parameters['axis'])
         self.parameters["unit"] = self.parameters["unit"].lower()
@@ -1532,7 +1534,7 @@ class SliceExtraction(SingleProcessingStep):
                 index = self._get_index(self.dataset.data.axes[axis].values,
                                         self.parameters["position"][idx])
                 value = self.dataset.data.axes[axis].values[index]
-            label += "{} {}".format(value, self.dataset.data.axes[axis].unit)
+            label += f"{value} {self.dataset.data.axes[axis].unit}"
         return label
 
 
@@ -1693,6 +1695,7 @@ class SliceRemoval(SingleProcessingStep):
         if not self.parameters['position'] and self.parameters['position'] != 0:
             raise IndexError('No position provided for slice extraction')
         if self.parameters['axis'] > self.dataset.data.data.ndim - 1:
+            # pylint: disable=consider-using-f-string
             raise IndexError("Axis %i out of bounds" %
                              self.parameters['axis'])
         self.parameters["unit"] = self.parameters["unit"].lower()
@@ -1872,9 +1875,8 @@ class RangeExtraction(SingleProcessingStep):
             raise IndexError('No range provided for range extraction')
         self.parameters["range"] = np.atleast_2d(self.parameters["range"])
         if len(self.parameters["range"]) < self.dataset.data.data.ndim:
-            raise IndexError('Got only %i range for %iD data' %
-                             (len(self.parameters["range"]),
-                              self.dataset.data.data.ndim))
+            raise IndexError(f'Got only {len(self.parameters["range"])} range '
+                             f'for {self.dataset.data.data.ndim}D data')
         self.parameters["unit"] = self.parameters["unit"].lower()
         if self.parameters["unit"] not in ["index", "axis", "percentage"]:
             raise ValueError("Wrong unit, needs to be either index or axis.")
@@ -2104,10 +2106,11 @@ class BaselineCorrection(SingleProcessingStep):
             fit_area = self.parameters['fit_area'][0]
             self.parameters['fit_area'] = [fit_area, fit_area]
         if sum(self.parameters['fit_area']) > 100:
+            # pylint: disable=consider-using-f-string,logging-not-lazy
             logger.warning(
-                r'Baseline to consider spans over {fit_area} %. It '
-                r'has been readjusted to 50 % on each side.'.format(
-                    fit_area=sum(self.parameters['fit_area'])))
+                "Baseline to consider spans over %s %%. It "
+                "has been readjusted to 50 %% on each side." %
+                sum(self.parameters['fit_area']))
             self.parameters['fit_area'] = [50, 50]
 
     def _perform_task(self):
@@ -2314,6 +2317,7 @@ class Averaging(SingleProcessingStep):
         if not self.parameters["range"]:
             raise ValueError("No range given in parameters to average over.")
         if self.parameters['axis'] > self.dataset.data.data.ndim - 1:
+            # pylint: disable=consider-using-f-string
             raise IndexError("Axis %i out of bounds" % self.parameters['axis'])
         self.parameters["unit"] = self.parameters["unit"].lower()
         if self.parameters["unit"] not in ["index", "axis"]:
@@ -2380,7 +2384,7 @@ class Averaging(SingleProcessingStep):
         range_[1] -= 1
         values = self.dataset.data.axes[self.parameters["axis"]].values[range_]
         unit = self.dataset.data.axes[self.parameters["axis"]].unit
-        label = '{}-{} {}'.format(values[0], values[1], unit)
+        label = f'{values[0]}-{values[1]} {unit}'
         return label
 
 
@@ -2477,6 +2481,7 @@ class ScalarAxisAlgebra(SingleProcessingStep):
         if not self.parameters['kind']:
             raise ValueError('No kind of scalar operation given')
         if self.parameters['kind'].lower() not in self._kinds:
+            # pylint: disable=consider-using-f-string
             raise ValueError('Scalar operation "%s" not understood'
                              % self.parameters['kind'])
 
@@ -2595,6 +2600,7 @@ class DatasetAlgebra(SingleProcessingStep):
         if not self.parameters["kind"]:
             raise ValueError('No kind of scalar operation given')
         if self.parameters['kind'].lower() not in self._kinds:
+            # pylint: disable=consider-using-f-string
             raise ValueError('Scalar operation "%s" not understood'
                              % self.parameters['kind'])
 
@@ -2759,7 +2765,7 @@ class Interpolation(SingleProcessingStep):
         if not self.parameters["npoints"]:
             raise ValueError('No number of points provided to interpolate for')
         if self.parameters["unit"] not in ("index", "axis"):
-            raise ValueError('Unknown unit %s' % self.parameters["unit"])
+            raise ValueError(f'Unknown unit {self.parameters["unit"]}')
         self.parameters["range"] = np.atleast_2d(self.parameters["range"])
         if len(self.parameters["range"]) < self.dataset.data.data.ndim:
             raise IndexError("List of ranges does not fit data dimensions")
@@ -2936,7 +2942,7 @@ class Filtering(SingleProcessingStep):
             raise ValueError("Missing filter type")
         self._convert_filter_type()
         if self.parameters["type"] not in self._types:
-            raise ValueError("Wrong filter type %s" % self.parameters["type"])
+            raise ValueError(f'Wrong filter type {self.parameters["type"]}')
         if not self.parameters["window_length"]:
             raise ValueError("Missing filter window length")
         if self.parameters["window_length"] > min(self.dataset.data.data.shape):
