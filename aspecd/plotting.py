@@ -3229,6 +3229,11 @@ class LegendProperties(aspecd.utils.Properties):
 
         Default: 1
 
+    title : :class:`str`
+        Title of the legend
+
+        Default: empty
+
     Raises
     ------
     aspecd.exceptions.MissingLegendError
@@ -3241,6 +3246,9 @@ class LegendProperties(aspecd.utils.Properties):
     .. versionchanged:: 0.8
         Added attribute :attr:`ncol`
 
+    .. versionchanged:: 0.8.4
+        Added attribute :attr:`title`
+
     """
 
     def __init__(self):
@@ -3250,6 +3258,7 @@ class LegendProperties(aspecd.utils.Properties):
         self.labelspacing = 0.5
         self.fontsize = plt.rcParams['font.size']
         self.ncol = 1
+        self.title = ''
         self._exclude = ['location']
         self._exclude_from_to_dict = ['location']
 

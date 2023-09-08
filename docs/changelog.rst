@@ -21,6 +21,7 @@ New features
 ------------
 
 * :class:`aspecd.processing.CommonRangeExtraction` works for *N*\ D datasets with arbitrary dimension *N*
+* Legend title can be set from recipes
 
 
 Version 0.8.3

@@ -21,7 +21,6 @@ For version 0.9
   * If figure is plotted twice using automatically generated filenames, use different filenames (e.g. increment number).
   * Axis direction can be switched (*e.g.*, for FTIR data, hence not needing to set axis limits in reverse order)
   * Bugfix: Title of figure and axis label overlap when adding an axis on the top side of the figure
-  * Allow to add a legend title in recipes.
 
 * Processing
 
@@ -72,7 +71,6 @@ For later versions
 
 * Plot styles
 
-  * Switch in recipe settings for applying a style to all plots
   * user-defined styles
 
 * Annotations
@@ -87,7 +85,6 @@ For later versions
 
 * Interpolation
 
-  * for ND with N>2
   * different types of interpolation
 
 * Templates for creating derived packages

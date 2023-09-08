@@ -2181,6 +2181,18 @@ class TestLegendProperties(unittest.TestCase):
             self.assertEqual(ncol, legend._ncols)
         plt.close(plot.figure)
 
+    def test_title_sets_legend_title(self):
+        title = 'My fancy title'
+        self.legend_properties.title = title
+        plot = plotting.Plotter()
+        plot.properties.legend = self.legend_properties
+        plot.parameters['show_legend'] = True
+        with contextlib.redirect_stderr(io.StringIO()):
+            plot.plot()
+        legend = plot.legend
+        self.assertEqual(title, legend.get_title().get_text())
+        plt.close(plot.figure)
+
 
 class TestGridProperties(unittest.TestCase):
     def setUp(self):
