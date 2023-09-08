@@ -2952,7 +2952,7 @@ class Filtering(SingleProcessingStep):
 
 class CommonRangeExtraction(MultiProcessingStep):
     # noinspection PyUnresolvedReferences
-    """
+    r"""
     Extract the common range of data for multiple datasets using interpolation.
 
     One prerequisite for adding up multiple datasets in a meaningful way is to
