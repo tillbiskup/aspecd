@@ -3466,7 +3466,8 @@ class SurfaceProperties(DrawingProperties):
         super().apply(drawing=drawing)
         children = drawing.axes.get_children()
         for child in children:
-            if isinstance(child, mpl.collections.LineCollection):
+            if isinstance(child, (mpl.collections.LineCollection,
+                                  mpl.collections.PathCollection)):
                 if self.linewidths:
                     child.set_linewidths(self.linewidths)
                 if self.linestyles:
