@@ -1033,6 +1033,17 @@ class Recipe:
 
            .. versionadded:: 0.2
 
+        autosave_datasets: :class:`bool`
+            Whether to save datasets even if no filename is provided.
+
+            If true, each :class:`aspecd.tasks.ExportTask` will save the
+            dataset(s) to default file names. For details, see the
+            documentation of the respective classes.
+
+            Default: True
+
+           .. versionadded:: 0.8.3
+
         write_history: :class:`bool`
            Whether to write a history when serving the recipe.
 
@@ -1121,6 +1132,7 @@ class Recipe:
             'default_package': '',
             'default_colormap': '',
             'autosave_plots': True,
+            'autosave_datasets': True,
             'write_history': True,
         }
         self.directories = {
@@ -3815,6 +3827,18 @@ class ExportTask(Task):
         If the recipe contains the ``output`` key in its ``directories`` dict,
         the datasets will be saved to this directory.
 
+    For convenience, as long as ``autosave_datasets`` in the recipe is set to
+    True, the exported datasets will be saved automatically, even if no
+    filename as ``target`` is provided. These automatically generated
+    filenames consist of the dataset id (usually the filename of the
+    loaded dataset without path) and the correct file extension added
+    depending on the exporter used.
+
+
+    .. versionchanged:: 0.8.3
+        Automatic saving of exported datasets if ``autosave_datasets`` is
+        set to true in the recipe (as is the default).
+
     """
 
     def __init__(self):
@@ -3832,6 +3856,8 @@ class ExportTask(Task):
             task = self.get_object()
             if targets:
                 task.target = targets[idx]
+            if not task.target and self.recipe.settings['autosave_datasets']:
+                task.target = os.path.splitext(os.path.split(dataset.id)[-1])[0]
             if self.recipe.directories['output']:
                 task.target = os.path.join(self.recipe.directories['output'],
                                            task.target)
