@@ -2960,12 +2960,6 @@ class CommonRangeExtraction(MultiProcessingStep):
     agree. This usually requires interpolating the data to a common set of
     axes.
 
-    .. important::
-        Currently, extracting the common range works *only* for **1D and 2D**
-        datasets, not for higher-dimensional datasets, due to the underlying
-        method of interpolation. See :class:`Interpolation` for details. This
-        may, however, change in the future.
-
     .. todo::
         * Make type of interpolation controllable
 
@@ -3079,6 +3073,9 @@ class CommonRangeExtraction(MultiProcessingStep):
         Unit of last axis (*i.e.*, intensity) gets ignored when checking for
         same units
 
+    .. versionchanged:: 0.8.4
+        Works for *N*\ D datasets with arbitrary dimension *N*
+
     """
 
     def __init__(self):
@@ -3088,27 +3085,6 @@ class CommonRangeExtraction(MultiProcessingStep):
         self.parameters["ignore_units"] = False
         self.parameters["common_range"] = []
         self.parameters["npoints"] = []
-
-    @staticmethod
-    def applicable(dataset):
-        """
-        Check whether processing step is applicable to the given dataset.
-
-        Extracting a common range is currently only applicable to datasets with
-        one- and two-dimensional data, due to the underlying interpolation.
-
-        Parameters
-        ----------
-        dataset : :class:`aspecd.dataset.Dataset`
-            dataset to check
-
-        Returns
-        -------
-        applicable : :class:`bool`
-            `True` if successful, `False` otherwise.
-
-        """
-        return len(dataset.data.axes) <= 3
 
     def _sanitise_parameters(self):
         if len(self.datasets) < 2:

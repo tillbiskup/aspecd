@@ -11,6 +11,18 @@ Version 0.9.0
 *Not yet released*
 
 
+Version 0.8.4
+=============
+
+*Not yet released*
+
+
+New features
+------------
+
+* :class:`aspecd.processing.CommonRangeExtraction` works for *N*\ D datasets with arbitrary dimension *N*
+
+
 Version 0.8.3
 =============
 
