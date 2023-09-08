@@ -183,7 +183,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 # pylint: disable=unused-import
 import matplotlib.collections
-import matplotlib.ticker as ticker
+from matplotlib import ticker
 import numpy as np
 
 import aspecd.dataset
@@ -384,8 +384,7 @@ class Plotter(aspecd.utils.ToDictMixin):
         self._original_rcparams = mpl.rcParams.copy()
         if self.style:
             if self.style not in plt.style.available + ['default', 'xkcd']:
-                message = 'Cannot find matplotlib style "{style}".'.format(
-                    style=self.style)
+                message = f'Cannot find matplotlib style "{self.style}".'
                 raise aspecd.exceptions.StyleNotFoundError(message=message)
             if self.style == 'xkcd':
                 self._set_xkcd_style()
@@ -636,7 +635,6 @@ class SinglePlotter(Plotter):
         self.__kind__ = 'singleplot'
         self._exclude_from_to_dict.extend(['dataset', 'drawing'])
 
-    # pylint: disable=arguments-differ
     def plot(self, dataset=None, from_dataset=False):
         """Perform the actual plotting on the given dataset.
 
@@ -722,8 +720,8 @@ class SinglePlotter(Plotter):
 
     def _check_applicability(self):
         if not self.applicable(self.dataset):
-            message = "%s not applicable to dataset with id %s" \
-                      % (self.name, self.dataset.id)
+            message = f"{self.name} not applicable to dataset with id " \
+                      f"{self.dataset.id}"
             raise aspecd.exceptions.NotApplicableToDatasetError(message=message)
 
     def _set_axes_labels(self):
@@ -1576,9 +1574,9 @@ class MultiPlotter(Plotter):
     def _check_for_applicability(self):
         if not self.datasets:
             raise aspecd.exceptions.MissingDatasetError
-        if not all([self.applicable(dataset) for dataset in self.datasets]):
+        if not all(self.applicable(dataset) for dataset in self.datasets):
             raise aspecd.exceptions.NotApplicableToDatasetError(
-                '%s not applicable to one or more datasets' % self.name)
+                f'{self.name} not applicable to one or more datasets')
 
     def _set_drawing_properties(self):
         if len(self.properties.drawings) < len(self.datasets):
@@ -1829,14 +1827,14 @@ class MultiPlotter1D(MultiPlotter):
                     label=self.properties.drawings[idx].label)
             self.drawings.append(drawing)
         if self.parameters['tight']:
-            axes_limits = [min([dataset.data.axes[0].values.min()
-                                for dataset in self.datasets]),
-                           max([dataset.data.axes[0].values.max()
-                                for dataset in self.datasets])]
-            data_limits = [min([dataset.data.data.min()
-                                for dataset in self.datasets]),
-                           max([dataset.data.data.max()
-                                for dataset in self.datasets])]
+            axes_limits = [min(dataset.data.axes[0].values.min()
+                               for dataset in self.datasets),
+                           max(dataset.data.axes[0].values.max()
+                               for dataset in self.datasets)]
+            data_limits = [min(dataset.data.data.min()
+                               for dataset in self.datasets),
+                           max(dataset.data.data.max()
+                               for dataset in self.datasets)]
             if self.parameters['tight'] in ('x', 'both'):
                 if self.parameters['switch_axes']:
                     self.axes.set_xlim(data_limits)
@@ -1978,14 +1976,14 @@ class MultiPlotter1DStacked(MultiPlotter1D):
         self.axes.tick_params(axis='y', which='both', left=False,
                               right=False, labelleft=False, labelright=False)
         if self.parameters['tight']:
-            axes_limits = [min([dataset.data.axes[0].values.min()
-                                for dataset in self.datasets]),
-                           max([dataset.data.axes[0].values.max()
-                                for dataset in self.datasets])]
-            data_limits = [min([dataset.data.data.min()
-                                for dataset in self.datasets]),
-                           max([dataset.data.data.max()
-                                for dataset in self.datasets])]
+            axes_limits = [min(dataset.data.axes[0].values.min()
+                               for dataset in self.datasets),
+                           max(dataset.data.axes[0].values.max()
+                               for dataset in self.datasets)]
+            data_limits = [min(dataset.data.data.min()
+                               for dataset in self.datasets),
+                           max(dataset.data.data.max()
+                               for dataset in self.datasets)]
             data_limits[0] -= (offset * (len(self.datasets) - 1))
             if self.parameters['tight'] in ('x', 'both'):
                 if self.parameters['switch_axes']:
@@ -2214,7 +2212,6 @@ class SingleCompositePlotter(CompositePlotter):
         self.dataset = None
         self.description = 'Composite plotter for single dataset'
 
-    # pylint: disable=arguments-differ
     def plot(self, dataset=None, from_dataset=False):
         """Perform the actual plotting on the given dataset.
 
@@ -2300,8 +2297,8 @@ class SingleCompositePlotter(CompositePlotter):
 
     def _check_applicability(self):
         if not self.applicable(self.dataset):
-            message = "%s not applicable to dataset with id %s" \
-                      % (self.name, self.dataset.id)
+            message = f"{self.name} not applicable to dataset with id " \
+                      f"{self.dataset.id}"
             raise aspecd.exceptions.NotApplicableToDatasetError(message=message)
 
 
@@ -2335,7 +2332,7 @@ class Saver:
 
     def __init__(self, filename=None):
         self.filename = filename
-        self.parameters = dict()
+        self.parameters = {}
         self.plotter = None
 
     def save(self, plotter=None):
@@ -2400,8 +2397,9 @@ class Saver:
         except OSError as os_error:
             if os_error.errno == errno.ENAMETOOLONG:
                 file_basename, file_extension = os.path.splitext(self.filename)
-                self.filename = ''.join([  # nosec B303
-                    hashlib.md5(file_basename.encode()).hexdigest(),
+                self.filename = ''.join([
+                    hashlib.md5(file_basename.encode(),
+                                usedforsecurity=False).hexdigest(),
                     file_extension
                 ])
             else:
@@ -2622,22 +2620,22 @@ class SinglePlot1DProperties(SinglePlotProperties):
 
 class SinglePlot2DProperties(SinglePlotProperties):
     """
-        Properties of a 2D single plot, defining its appearance.
+    Properties of a 2D single plot, defining its appearance.
 
-        Attributes
-        ----------
-        drawing : :class:`aspecd.plotting.SurfaceProperties`
-            Properties of the surface within a plot
+    Attributes
+    ----------
+    drawing : :class:`aspecd.plotting.SurfaceProperties`
+        Properties of the surface within a plot
 
-            For the properties that can be set this way, see the documentation
-            of the :class:`aspecd.plotting.SurfaceProperties` class.
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.SurfaceProperties` class.
 
-        Raises
-        ------
-        aspecd.exceptions.MissingPlotterError
-            Raised if no plotter is provided.
+    Raises
+    ------
+    aspecd.exceptions.MissingPlotterError
+        Raised if no plotter is provided.
 
-        """
+    """
 
     def __init__(self):
         super().__init__()
@@ -3180,7 +3178,7 @@ class AxesProperties(aspecd.utils.Properties):
 
         """
         all_properties = self.to_dict()
-        properties = dict()
+        properties = {}
         for prop in all_properties:
             if prop.startswith(('xtick', 'ytick')):
                 pass
@@ -3416,7 +3414,7 @@ class LineProperties(DrawingProperties):
             that are neither empty nor None.
 
         """
-        properties = dict()
+        properties = {}
         for prop in self.get_properties():
             if getattr(self, prop):
                 properties[prop] = getattr(self, prop)
@@ -3469,7 +3467,8 @@ class SurfaceProperties(DrawingProperties):
         super().apply(drawing=drawing)
         children = drawing.axes.get_children()
         for child in children:
-            if isinstance(child, mpl.collections.LineCollection):
+            if isinstance(child, (mpl.collections.LineCollection,
+                                  mpl.collections.PathCollection)):
                 if self.linewidths:
                     child.set_linewidths(self.linewidths)
                 if self.linestyles:

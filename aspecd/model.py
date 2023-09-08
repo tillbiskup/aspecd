@@ -307,7 +307,7 @@ class Model(ToDictMixin):
     def __init__(self):
         super().__init__()
         self.name = aspecd.utils.full_class_name(self)
-        self.parameters = dict()
+        self.parameters = {}
         self.variables = []
         self.description = 'Abstract model'
         self.references = []
@@ -474,7 +474,7 @@ class Model(ToDictMixin):
             self._dataset.data.axes = self._axes_from_dataset
         else:
             if isinstance(self.variables[0], (list, np.ndarray)):
-                for index in range(len(self.variables)):
+                for index, _ in enumerate(self.variables):
                     self._dataset.data.axes[index].values = \
                         self.variables[index]
             else:
@@ -798,7 +798,7 @@ class FamilyOfCurves(Model):
         self.description = 'Family of curves for a model with one parameter ' \
                            'varied'
         self.model = None
-        self.vary = dict()
+        self.vary = {}
 
     def _sanitise_parameters(self):
         if not self.model:
@@ -814,8 +814,8 @@ class FamilyOfCurves(Model):
             np.zeros([len(self.variables[0]), len(self.vary["values"])])
         model = self._get_model(self.model)
         model.variables = self.variables
-        for key in self.parameters:
-            model.parameters[key] = self.parameters[key]
+        for key, value in self.parameters.items():
+            model.parameters[key] = value
         for idx, value in enumerate(self.vary["values"]):
             model.parameters[self.vary["parameter"]] = value
             dataset = model.create()
@@ -978,7 +978,7 @@ class Zeros(Model):
         if not self.parameters["shape"]:
             self.parameters["shape"] = []
             if isiterable(self.variables[0]):
-                for index in range(len(self.variables)):
+                for index, _ in enumerate(self.variables):
                     # noinspection PyTypeChecker
                     self.parameters["shape"].append(len(self.variables[index]))
             else:
@@ -1147,7 +1147,7 @@ class Ones(Model):
         if not self.parameters["shape"]:
             self.parameters["shape"] = []
             if isiterable(self.variables[0]):
-                for index in range(len(self.variables)):
+                for index, _ in enumerate(self.variables):
                     # noinspection PyTypeChecker
                     self.parameters["shape"].append(len(self.variables[index]))
             else:

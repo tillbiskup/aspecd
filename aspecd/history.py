@@ -157,7 +157,7 @@ class ProcessingStepRecord(aspecd.utils.ToDictMixin):
         super().__init__()
         self.undoable = False
         self.description = ''
-        self.parameters = dict()
+        self.parameters = {}
         self.comment = ''
         self.references = []
         self.class_name = ''
@@ -316,7 +316,7 @@ class AnalysisStepRecord(aspecd.utils.ToDictMixin):
     def __init__(self, analysis_step=None):
         super().__init__()
         self.description = ''
-        self.parameters = dict()
+        self.parameters = {}
         self.comment = ''
         self.references = []
         self.class_name = ''
@@ -515,7 +515,7 @@ class AnnotationRecord(aspecd.utils.ToDictMixin):
 
     def __init__(self, annotation=None):
         super().__init__()
-        self.content = dict()
+        self.content = {}
         self.class_name = ''
         self.type = ''
         self._attributes_to_copy = ['content', 'type']
@@ -658,7 +658,7 @@ class PlotRecord(aspecd.utils.ToDictMixin):
         super().__init__()
         self.class_name = ''
         self.description = ''
-        self.parameters = dict()
+        self.parameters = {}
         self.properties = None
         self.caption = None
         self.label = ''
@@ -730,7 +730,7 @@ class SinglePlotRecord(PlotRecord):
     """
 
     def __init__(self, plotter=None):
-        self.preprocessing = list()
+        self.preprocessing = []
         super().__init__(plotter=plotter)
 
 
@@ -754,7 +754,7 @@ class MultiPlotRecord(PlotRecord):
     """
 
     def __init__(self, plotter=None):
-        self.datasets = list()
+        self.datasets = []
         super().__init__(plotter=plotter)
 
 

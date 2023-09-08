@@ -175,7 +175,7 @@ class TestPlotter(unittest.TestCase):
 
     def test_plot_with_style_restores_previous_settings_after_plot(self):
         orig_rcparams = matplotlib.rcParams.copy()
-        self.plotter.style = 'seaborn'
+        self.plotter.style = 'fivethirtyeight'
         self.plotter.plot()
         self.assertEqual(orig_rcparams['axes.facecolor'],
                          matplotlib.rcParams['axes.facecolor'])
@@ -575,8 +575,11 @@ class TestSinglePlotter2D(unittest.TestCase):
         test_dataset = dataset.Dataset()
         test_dataset.data.data = np.random.random([5, 5])
         plotter = test_dataset.plot(self.plotter)
-        line_collection = [isinstance(x, matplotlib.collections.LineCollection)
-                           for x in plotter.ax.get_children()]
+        line_collection = [
+            isinstance(x, (matplotlib.collections.LineCollection,
+                              matplotlib.collections.PathCollection))
+            for x in plotter.ax.get_children()
+        ]
         self.assertTrue(any(line_collection))
 
     def test_contour_plot_sets_correct_linewidths(self):
@@ -588,7 +591,8 @@ class TestSinglePlotter2D(unittest.TestCase):
         plotter = test_dataset.plot(self.plotter)
         line_collection = [
             x for x in plotter.ax.get_children()
-            if isinstance(x, matplotlib.collections.LineCollection)
+            if isinstance(x, (matplotlib.collections.LineCollection,
+                              matplotlib.collections.PathCollection))
         ]
         self.assertEqual(dict_['drawing']['linewidths'],
                          line_collection[0].get_linewidths()[0])
@@ -602,7 +606,8 @@ class TestSinglePlotter2D(unittest.TestCase):
         plotter = test_dataset.plot(self.plotter)
         line_collection = [
             x for x in plotter.ax.get_children()
-            if isinstance(x, matplotlib.collections.LineCollection)
+            if isinstance(x, (matplotlib.collections.LineCollection,
+                              matplotlib.collections.PathCollection))
         ]
         # linestyle ':' => (0.0, [1.0, 1.65]) for linewidth = 1
         self.assertEqual((0.0, [1.0, 1.65]),
@@ -615,12 +620,16 @@ class TestSinglePlotter2D(unittest.TestCase):
         test_dataset = dataset.Dataset()
         test_dataset.data.data = np.random.random([5, 5])
         plotter = test_dataset.plot(self.plotter)
-        line_collection = [
+        contour_lines = [
             x for x in plotter.ax.get_children()
-            if isinstance(x, matplotlib.collections.LineCollection)
+            if isinstance(x, (matplotlib.collections.LineCollection,
+                              matplotlib.collections.PathCollection))
         ]
-        self.assertListEqual([0., 0., 0., 1.],
-                             list(line_collection[0].get_colors()[0]))
+        if hasattr(contour_lines[0], 'get_colors'):
+            contour_color = list(contour_lines[0].get_colors()[0])
+        else:
+            contour_color = list(contour_lines[0].get_facecolor()[0])
+        self.assertListEqual([0., 0., 0., 1.], contour_color)
 
     def test_contourf_plot_with_contour_lines_sets_correct_linewidths(self):
         self.plotter.type = 'contourf'
@@ -632,7 +641,8 @@ class TestSinglePlotter2D(unittest.TestCase):
         plotter = test_dataset.plot(self.plotter)
         line_collection = [
             x for x in plotter.ax.get_children()
-            if isinstance(x, matplotlib.collections.LineCollection)
+            if isinstance(x, (matplotlib.collections.LineCollection,
+                              matplotlib.collections.PathCollection))
         ]
         self.assertEqual(dict_['drawing']['linewidths'],
                          line_collection[0].get_linewidths()[0])
@@ -647,7 +657,8 @@ class TestSinglePlotter2D(unittest.TestCase):
         plotter = test_dataset.plot(self.plotter)
         line_collection = [
             x for x in plotter.ax.get_children()
-            if isinstance(x, matplotlib.collections.LineCollection)
+            if isinstance(x, (matplotlib.collections.LineCollection,
+                              matplotlib.collections.PathCollection))
         ]
         # linestyle ':' => (0.0, [1.0, 1.65]) for linewidth = 1
         self.assertEqual((0.0, [1.0, 1.65]),
@@ -661,12 +672,16 @@ class TestSinglePlotter2D(unittest.TestCase):
         test_dataset = dataset.Dataset()
         test_dataset.data.data = np.random.random([5, 5])
         plotter = test_dataset.plot(self.plotter)
-        line_collection = [
+        contour_lines = [
             x for x in plotter.ax.get_children()
-            if isinstance(x, matplotlib.collections.LineCollection)
+            if isinstance(x, (matplotlib.collections.LineCollection,
+                              matplotlib.collections.PathCollection))
         ]
-        self.assertListEqual([0., 0., 0., 1.],
-                             list(line_collection[0].get_colors()[0]))
+        if hasattr(contour_lines[0], 'get_colors'):
+            contour_color = list(contour_lines[0].get_colors()[0])
+        else:
+            contour_color = list(contour_lines[0].get_facecolor()[0])
+        self.assertListEqual([0., 0., 0., 1.], contour_color)
 
 
 class TestSinglePlotter2DStacked(unittest.TestCase):
@@ -2160,7 +2175,10 @@ class TestLegendProperties(unittest.TestCase):
             plot.plot()
         legend = plot.legend
         # plt.show()
-        self.assertEqual(ncol, legend._ncol)
+        if hasattr(legend, '_ncol'):
+            self.assertEqual(ncol, legend._ncol)
+        else:
+            self.assertEqual(ncol, legend._ncols)
         plt.close(plot.figure)
 
 

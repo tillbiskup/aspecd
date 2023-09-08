@@ -323,7 +323,7 @@ class AnalysisStep(aspecd.utils.ToDictMixin):
     def __init__(self):
         super().__init__()
         self.name = aspecd.utils.full_class_name(self)
-        self.parameters = dict()
+        self.parameters = {}
         self.result = None
         self.index = []
         self.dataset_type = 'aspecd.dataset.CalculatedDataset'
@@ -486,7 +486,6 @@ class SingleAnalysisStep(AnalysisStep):
         self.__kind__ = 'singleanalysis'
         self._exclude_from_to_dict.extend(['dataset'])
 
-    # pylint: disable=arguments-differ
     def analyse(self, dataset=None, from_dataset=False):
         """Perform the actual analysis step on the given dataset.
 
@@ -560,8 +559,8 @@ class SingleAnalysisStep(AnalysisStep):
 
     def _check_applicability(self):
         if not self.applicable(self.dataset):
-            message = "%s not applicable to dataset with id %s" \
-                      % (self.name, self.dataset.id)
+            message = f"{self.name} not applicable to dataset with id " \
+                      f"{self.dataset.id}"
             raise aspecd.exceptions.NotApplicableToDatasetError(message=message)
 
     def analyze(self, dataset=None, from_dataset=False):
@@ -678,8 +677,8 @@ class MultiAnalysisStep(AnalysisStep):
     def _check_applicability(self):
         for dataset in self.datasets:
             if not self.applicable(dataset):
-                message = "%s not applicable to dataset with id %s" \
-                          % (self.name, dataset.id)
+                message = f"{self.name} not applicable to dataset with id " \
+                          f"{dataset.id}"
                 raise aspecd.exceptions.NotApplicableToDatasetError(
                     message=message)
 
@@ -787,8 +786,8 @@ class AggregatedAnalysisStep(AnalysisStep):
             raise aspecd.exceptions.MissingAnalysisStepError
         self._get_analysis_object()
         if isinstance(self._analysis_object.result, aspecd.dataset.Dataset):
-            raise ValueError('Analysis step "%s" returns dataset' %
-                             self.analysis_step)
+            raise ValueError(f'Analysis step "{self.analysis_step}" returns '
+                             f'dataset')
 
     def _get_analysis_object(self):
         try:
@@ -961,15 +960,14 @@ class BasicCharacteristics(SingleAnalysisStep):
             raise ValueError("No kind of characteristics given")
         if self.parameters["kind"] not in ['min', 'max', 'amplitude', 'area',
                                            'all']:
-            raise ValueError("Unknown kind %s" % self.parameters["kind"])
+            raise ValueError(f"Unknown kind {self.parameters['kind']}")
         if self.parameters["output"] not in ['value', 'axes', 'indices']:
-            raise ValueError("Unknown output type %s"
-                             % self.parameters["output"])
+            raise ValueError(f"Unknown output type {self.parameters['output']}")
         if self.parameters["output"] in ["axes", "indices"] and \
                 self.parameters["kind"] in ["area", "amplitude"]:
-            raise ValueError("Output %s not available for characteristic %s."
-                             % (self.parameters["output"],
-                                self.parameters["kind"]))
+            raise ValueError(f"Output {self.parameters['output']} not "
+                             f"available for characteristic "
+                             f"{self.parameters['kind']}.")
 
     def _perform_task(self):
         if self.parameters["kind"] in ['min', 'max', 'amplitude', 'area']:
@@ -1007,7 +1005,8 @@ class BasicCharacteristics(SingleAnalysisStep):
             for dim in range(self.dataset.data.data.ndim):
                 result.append(self.dataset.data.axes[dim].values[idx[dim]])
                 self.index.append(
-                    '{}({})'.format(kind, self.dataset.data.axes[dim].quantity))
+                    f'{kind}({self.dataset.data.axes[dim].quantity})'
+                )
         if kind == "max":
             result = []
             idx = np.unravel_index(self.dataset.data.data.argmax(),
@@ -1015,7 +1014,8 @@ class BasicCharacteristics(SingleAnalysisStep):
             for dim in range(self.dataset.data.data.ndim):
                 result.append(self.dataset.data.axes[dim].values[idx[dim]])
                 self.index.append(
-                    '{}({})'.format(kind, self.dataset.data.axes[dim].quantity))
+                    f'{kind}({self.dataset.data.axes[dim].quantity})'
+                )
         return result
 
     def _get_characteristic_indices(self, kind=None):
@@ -1024,12 +1024,12 @@ class BasicCharacteristics(SingleAnalysisStep):
             result = list(np.unravel_index(self.dataset.data.data.argmin(),
                                            self.dataset.data.data.shape))
             for dim in range(self.dataset.data.data.ndim):
-                self.index.append('{}(index{})'.format(kind, dim))
+                self.index.append(f'{kind}(index{dim})')
         if kind == "max":
             result = list(np.unravel_index(self.dataset.data.data.argmax(),
                                            self.dataset.data.data.shape))
             for dim in range(self.dataset.data.data.ndim):
-                self.index.append('{}(index{})'.format(kind, dim))
+                self.index.append(f'{kind}(index{dim})')
         return result
 
 
@@ -1098,7 +1098,7 @@ class BasicStatistics(SingleAnalysisStep):
         if not self.parameters["kind"]:
             raise ValueError("No kind of statistics given")
         if self.parameters["kind"] not in ['mean', 'median', 'std', 'var']:
-            raise ValueError("Unknown kind %s" % self.parameters["kind"])
+            raise ValueError(f"Unknown kind {self.parameters['kind']}")
 
     def _perform_task(self):
         function = getattr(np, self.parameters["kind"])

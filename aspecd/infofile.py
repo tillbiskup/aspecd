@@ -88,7 +88,7 @@ class Infofile:
     def __init__(self, filename=None):
         self.parameters = collections.OrderedDict()
         self.filename = filename
-        self.infofile_info = dict()
+        self.infofile_info = {}
 
         self.infofile_info['kind'] = ''
         self.infofile_info['version'] = ''
@@ -173,7 +173,7 @@ class Infofile:
             raise FileExistsError
         if not os.path.exists(self.filename):
             raise FileNotFoundError
-        with open(self.filename) as file:
+        with open(self.filename, encoding="utf8") as file:
             file_contents = list(file)
         return file_contents
 

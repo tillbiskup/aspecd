@@ -5,10 +5,29 @@ Changelog
 This page contains a summary of changes between the official ASpecD releases. Only the biggest changes are listed here. A complete and detailed log of all changes is available through the `GitHub Repository Browser <https://github.com/tillbiskup/aspecd/commits/master>`_.
 
 
-Version 0.9.0
+Version 0.8.3
 =============
 
-*Not yet released*
+Released 2023-09-08
+
+Fixes
+-----
+
+* Exporter tasks (:class:`aspecd.tasks.ExportTask`) automatically save datasets with default name if no target is provided.
+* Correct setting of contour plot properties with newer versions of Matplotlib
+
+
+Changes
+-------
+
+* :class:`aspecd.processing.Interpolation` changed interpolation method for 2D data from deprecated :class:`scipy.interpolate.interp2d` to :class:`scipy.interpolate.RegularGridInterpolator`
+
+
+New features
+------------
+
+* :class:`aspecd.processing.Interpolation` works for *N*\ D datasets with arbitrary dimension *N*
+* :class:`aspecd.tasks.Recipe` with new setting ``autosave_datasets`` (default: ``True``)
 
 
 Version 0.8.2

@@ -483,11 +483,11 @@ file named ``my_dataset.pdf``.
 Settings for recipes
 --------------------
 
-At the top level of a recipe, you can provide an (increasing) list of
-settings, part of which are described elsewhere as well. The full and
-up-to-date list is contained in the :class:`aspecd.tasks.Recipe` class
-documentation. For convenience, the most important settings are described
-below:
+At the top level of a recipe, in the `settings` block, you can provide an (
+increasing) list of settings, part of which are described elsewhere as well.
+The full and up-to-date list is contained in the
+:class:`aspecd.tasks.Recipe` class documentation. For convenience, the most
+important settings are described below:
 
   * ``default_package``
 
@@ -499,10 +499,19 @@ below:
     Set the default colormap for plots. This will affect only those plots
     supporting colormaps, such as :class:`aspecd.plotting.MultiPlotter1D`.
 
+    .. versionadded:: 0.8.2
+
   * ``autosave_plots``
 
     Control whether plots are saved by default, even if no filename is
     provided.
+
+  * ``autosave_datasets``
+
+    Control whether datasets are saved by default, even if no target is
+    provided.
+
+    .. versionadded:: 0.8.3
 
   * ``write_history``
 
@@ -510,6 +519,17 @@ below:
     this to ``False`` will most probably render your data processing and
     analysis irreproducible and therefore mostly useless. Hence,
     use *only* for debugging purposes.
+
+
+As mentioned, all these settings are set in the ``settings`` block, as shown
+in the example below:
+
+.. code-block:: yaml
+
+    settings:
+      default_package: my_package
+      default_colormap: viridis
+      autosave_plots: false
 
 
 Executing recipes: serving the cooked results
@@ -626,7 +646,7 @@ However, *use with extreme caution*!
 .. code-block:: yaml
 
     settings:
-        write_history: false
+      write_history: false
 
 To remind you of what you are doing, this will issue a warning on the
 command line if using ``serve``.
@@ -1033,6 +1053,17 @@ class Recipe:
 
            .. versionadded:: 0.2
 
+        autosave_datasets: :class:`bool`
+            Whether to save datasets even if no filename is provided.
+
+            If true, each :class:`aspecd.tasks.ExportTask` will save the
+            dataset(s) to default file names. For details, see the
+            documentation of the respective classes.
+
+            Default: True
+
+           .. versionadded:: 0.8.3
+
         write_history: :class:`bool`
            Whether to write a history when serving the recipe.
 
@@ -1112,7 +1143,7 @@ class Recipe:
         self.results = collections.OrderedDict()
         self.figures = collections.OrderedDict()
         self.plotters = collections.OrderedDict()
-        self.tasks = list()
+        self.tasks = []
         self.format = {
             'type': 'ASpecD recipe',
             'version': '0.2',
@@ -1121,6 +1152,7 @@ class Recipe:
             'default_package': '',
             'default_colormap': '',
             'autosave_plots': True,
+            'autosave_datasets': True,
             'write_history': True,
         }
         self.directories = {
@@ -1175,7 +1207,7 @@ class Recipe:
         return os.path.join(os.path.abspath(os.path.curdir), path_)
 
     def _append_dataset(self, key):
-        properties = dict()
+        properties = {}
         importer = None
         importer_parameters = None
         if isinstance(key, dict):
@@ -1279,7 +1311,7 @@ class Recipe:
             if self._dataset_from_foreign_package(self.datasets[dataset]):
                 dataset_dict['source'] = self.datasets[dataset].id
                 dataset_dict['package'] = aspecd.utils.full_class_name(
-                    self.datasets[dataset]).split('.')[0]
+                    self.datasets[dataset]).split('.', maxsplit=1)[0]
             if dataset in self.dataset_parameters:
                 dataset_dict['source'] = self.datasets[dataset].id
                 aspecd.utils.copy_keys_between_dicts(
@@ -1763,7 +1795,7 @@ class Task(aspecd.utils.ToDictMixin):
         self.kind = ''
         self.type = ''
         self.package = ''
-        self.properties = dict()
+        self.properties = {}
         self.apply_to = []
         self.recipe = recipe
         self.comment = ''
@@ -2911,7 +2943,7 @@ class PlotTask(Task):
 
         """
         if not self.label:
-            self.label = 'fig{}'.format(len(self.recipe.figures) + 1)
+            self.label = f'fig{len(self.recipe.figures) + 1}'
         super().perform()
         self._add_figure_to_recipe()
         if self.result:
@@ -3815,6 +3847,18 @@ class ExportTask(Task):
         If the recipe contains the ``output`` key in its ``directories`` dict,
         the datasets will be saved to this directory.
 
+    For convenience, as long as ``autosave_datasets`` in the recipe is set to
+    True, the exported datasets will be saved automatically, even if no
+    filename as ``target`` is provided. These automatically generated
+    filenames consist of the dataset id (usually the filename of the
+    loaded dataset without path) and the correct file extension added
+    depending on the exporter used.
+
+
+    .. versionchanged:: 0.8.3
+        Automatic saving of exported datasets if ``autosave_datasets`` is
+        set to true in the recipe (as is the default).
+
     """
 
     def __init__(self):
@@ -3832,6 +3876,8 @@ class ExportTask(Task):
             task = self.get_object()
             if targets:
                 task.target = targets[idx]
+            if not task.target and self.recipe.settings['autosave_datasets']:
+                task.target = os.path.splitext(os.path.split(dataset.id)[-1])[0]
             if self.recipe.directories['output']:
                 task.target = os.path.join(self.recipe.directories['output'],
                                            task.target)
@@ -4131,7 +4177,7 @@ class FigureRecord(aspecd.utils.ToDictMixin):
             'text': '',
             'parameters': []
         }
-        self.parameters = dict()
+        self.parameters = {}
         self.label = ''
         self.filename = ''
 

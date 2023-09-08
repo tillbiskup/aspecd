@@ -49,7 +49,7 @@ setuptools.setup(
         'jinja2>=3.0',
         'matplotlib',
         'numpy',
-        'scipy',
+        'scipy>=0.14',
         'oyaml',
         'asdf',
         'bibrecord',

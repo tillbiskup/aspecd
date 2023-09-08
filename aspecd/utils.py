@@ -212,7 +212,7 @@ def get_aspecd_version():
     version_file_path = os.path.join(os.path.dirname(__file__),
                                      "..", 'VERSION')
     if os.path.exists(version_file_path):
-        with open(version_file_path) as version_file:
+        with open(version_file_path, encoding="utf8") as version_file:
             version = version_file.read().strip()
     else:
         version = package_version("aspecd")
@@ -373,15 +373,15 @@ class Yaml:
         self.loader = yaml.SafeLoader
         self.dumper = yaml.SafeDumper
         self.loader.add_implicit_resolver(
-            u'tag:yaml.org,2002:float',
-            re.compile(u'''^(?:
+            'tag:yaml.org,2002:float',
+            re.compile('''^(?:
              [-+]?(?:[0-9][0-9_]*)\\.[0-9_]*(?:[eE][-+]?[0-9]+)?
             |[-+]?(?:[0-9][0-9_]*)(?:[eE][-+]?[0-9]+)
             |\\.[0-9_]+(?:[eE][-+][0-9]+)?
             |[-+]?[0-9][0-9_]*(?::[0-5]?[0-9])+\\.[0-9_]*
             |[-+]?\\.(?:inf|Inf|INF)
             |\\.(?:nan|NaN|NAN))$''', re.X),
-            list(u'-+0123456789.'))
+            list('-+0123456789.'))
         self.dumper.add_representer(np.float64, self._numpy_float_representer)
         self.dumper.add_representer(np.int64, self._numpy_int_representer)
 
@@ -402,7 +402,7 @@ class Yaml:
         """
         if not filename:
             raise aspecd.exceptions.MissingFilenameError
-        with open(filename, 'r') as file:
+        with open(filename, 'r', encoding="utf8") as file:
             self.dict = yaml.load(file, Loader=self.loader)
 
     def write_to(self, filename=''):
@@ -422,7 +422,7 @@ class Yaml:
         """
         if not filename:
             raise aspecd.exceptions.MissingFilenameError
-        with open(filename, 'w') as file:
+        with open(filename, 'w', encoding="utf8") as file:
             yaml.dump(self.dict, file, Dumper=self.dumper)
 
     def read_stream(self, stream=None):
@@ -738,7 +738,7 @@ def convert_keys_to_variable_names(dict_):
     .. versionadded:: 0.2.1
 
     """
-    new_dict = dict()
+    new_dict = {}
     for key, value in dict_.items():
         new_key = key.replace(' ', '_').lower()
         if isinstance(value, dict):

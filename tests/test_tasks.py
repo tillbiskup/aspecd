@@ -78,6 +78,7 @@ class TestRecipe(unittest.TestCase):
             'default_package',
             'default_colormap',
             'autosave_plots',
+            'autosave_datasets',
             'write_history',
             ], list(self.recipe.settings.keys()))
 
@@ -493,6 +494,11 @@ class TestRecipe(unittest.TestCase):
         dict_ = {'settings': {'autosave_plots': False}}
         self.recipe.from_dict(dict_)
         self.assertFalse(self.recipe.settings['autosave_plots'])
+
+    def test_from_dict_sets_autosave_datasets(self):
+        dict_ = {'settings': {'autosave_datasets': False}}
+        self.recipe.from_dict(dict_)
+        self.assertFalse(self.recipe.settings['autosave_datasets'])
 
     def test_to_yaml_returns_string(self):
         self.assertIsInstance(self.recipe.to_yaml(), str)
@@ -3319,6 +3325,37 @@ class TestExportTask(unittest.TestCase):
         self.task.perform()
         self.assertTrue(os.path.exists(os.path.join(self.output_directory,
                                                     self.filename)))
+
+    def test_perform_task_wo_target_writes_default_file(self):
+        self.prepare_recipe()
+        self.export_task['properties']['target'] = ''
+        self.task.from_dict(self.export_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(os.path.exists(self.filename))
+
+    def test_perform_task_wo_target_with_output_directory_writes_file(self):
+        self.prepare_recipe()
+        self.recipe.directories['output'] = self.output_directory
+        self.export_task['properties']['target'] = ''
+        self.task.from_dict(self.export_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(os.path.exists(os.path.join(self.output_directory,
+                                                    self.filename)))
+
+    def test_perform_task_with_multiple_datasets_wo_target_writes_files(self):
+        # noinspection PyTypedDict
+        self.export_task['properties']['target'] = ''
+        recipe_dict = {'datasets': ['foo', 'bla'],
+                       'tasks': [self.export_task]}
+        self.prepare_recipe()
+        self.recipe.from_dict(recipe_dict)
+        self.task.from_dict(self.export_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(os.path.exists(self.filename))
+        self.assertTrue(os.path.exists(self.filename2))
 
 
 class TestTabulateTask(unittest.TestCase):

@@ -440,7 +440,7 @@ class Reporter(aspecd.utils.ToDictMixin):
         if not self.filename:
             raise aspecd.exceptions.MissingFilenameError(
                 'No output file for report')
-        with open(self.filename, mode='w+') as output_file:
+        with open(self.filename, mode='w+', encoding="utf8") as output_file:
             output_file.write(self.report)
 
     def create(self):
@@ -566,7 +566,7 @@ class LaTeXReporter(Reporter):
     def __init__(self, template='', filename=''):
         super().__init__(template=template, filename=filename)
         self.environment = LaTeXEnvironment()
-        self.includes = list()
+        self.includes = []
         self.latex_executable = 'pdflatex'
 
         self._temp_dir = tempfile.mkdtemp()
