@@ -2397,8 +2397,9 @@ class Saver:
         except OSError as os_error:
             if os_error.errno == errno.ENAMETOOLONG:
                 file_basename, file_extension = os.path.splitext(self.filename)
-                self.filename = ''.join([  # nosec B303
-                    hashlib.md5(file_basename.encode()).hexdigest(),
+                self.filename = ''.join([
+                    hashlib.md5(file_basename.encode(),
+                                usedforsecurity=False).hexdigest(),
                     file_extension
                 ])
             else:
@@ -2619,22 +2620,22 @@ class SinglePlot1DProperties(SinglePlotProperties):
 
 class SinglePlot2DProperties(SinglePlotProperties):
     """
-        Properties of a 2D single plot, defining its appearance.
+    Properties of a 2D single plot, defining its appearance.
 
-        Attributes
-        ----------
-        drawing : :class:`aspecd.plotting.SurfaceProperties`
-            Properties of the surface within a plot
+    Attributes
+    ----------
+    drawing : :class:`aspecd.plotting.SurfaceProperties`
+        Properties of the surface within a plot
 
-            For the properties that can be set this way, see the documentation
-            of the :class:`aspecd.plotting.SurfaceProperties` class.
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.SurfaceProperties` class.
 
-        Raises
-        ------
-        aspecd.exceptions.MissingPlotterError
-            Raised if no plotter is provided.
+    Raises
+    ------
+    aspecd.exceptions.MissingPlotterError
+        Raised if no plotter is provided.
 
-        """
+    """
 
     def __init__(self):
         super().__init__()

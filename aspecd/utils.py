@@ -373,15 +373,15 @@ class Yaml:
         self.loader = yaml.SafeLoader
         self.dumper = yaml.SafeDumper
         self.loader.add_implicit_resolver(
-            u'tag:yaml.org,2002:float',
-            re.compile(u'''^(?:
+            'tag:yaml.org,2002:float',
+            re.compile('''^(?:
              [-+]?(?:[0-9][0-9_]*)\\.[0-9_]*(?:[eE][-+]?[0-9]+)?
             |[-+]?(?:[0-9][0-9_]*)(?:[eE][-+]?[0-9]+)
             |\\.[0-9_]+(?:[eE][-+][0-9]+)?
             |[-+]?[0-9][0-9_]*(?::[0-5]?[0-9])+\\.[0-9_]*
             |[-+]?\\.(?:inf|Inf|INF)
             |\\.(?:nan|NaN|NAN))$''', re.X),
-            list(u'-+0123456789.'))
+            list('-+0123456789.'))
         self.dumper.add_representer(np.float64, self._numpy_float_representer)
         self.dumper.add_representer(np.int64, self._numpy_int_representer)
 

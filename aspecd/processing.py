@@ -2621,7 +2621,7 @@ class DatasetAlgebra(SingleProcessingStep):
 
 class Interpolation(SingleProcessingStep):
     # noinspection PyUnresolvedReferences
-    """Interpolate data.
+    r"""Interpolate data.
 
     As soon as data of different datasets should be arithmetically combined,
     they need to have an identical grid. Often, this can only be achieved by
