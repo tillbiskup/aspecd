@@ -483,11 +483,11 @@ file named ``my_dataset.pdf``.
 Settings for recipes
 --------------------
 
-At the top level of a recipe, you can provide an (increasing) list of
-settings, part of which are described elsewhere as well. The full and
-up-to-date list is contained in the :class:`aspecd.tasks.Recipe` class
-documentation. For convenience, the most important settings are described
-below:
+At the top level of a recipe, in the `settings` block, you can provide an (
+increasing) list of settings, part of which are described elsewhere as well.
+The full and up-to-date list is contained in the
+:class:`aspecd.tasks.Recipe` class documentation. For convenience, the most
+important settings are described below:
 
   * ``default_package``
 
@@ -499,10 +499,19 @@ below:
     Set the default colormap for plots. This will affect only those plots
     supporting colormaps, such as :class:`aspecd.plotting.MultiPlotter1D`.
 
+    .. versionadded:: 0.8.2
+
   * ``autosave_plots``
 
     Control whether plots are saved by default, even if no filename is
     provided.
+
+  * ``autosave_datasets``
+
+    Control whether datasets are saved by default, even if no target is
+    provided.
+
+    .. versionadded:: 0.8.3
 
   * ``write_history``
 
@@ -510,6 +519,17 @@ below:
     this to ``False`` will most probably render your data processing and
     analysis irreproducible and therefore mostly useless. Hence,
     use *only* for debugging purposes.
+
+
+As mentioned, all these settings are set in the ``settings`` block, as shown
+in the example below:
+
+.. code-block:: yaml
+
+    settings:
+      default_package: my_package
+      default_colormap: viridis
+      autosave_plots: false
 
 
 Executing recipes: serving the cooked results
@@ -626,7 +646,7 @@ However, *use with extreme caution*!
 .. code-block:: yaml
 
     settings:
-        write_history: false
+      write_history: false
 
 To remind you of what you are doing, this will issue a warning on the
 command line if using ``serve``.
