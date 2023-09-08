@@ -1796,6 +1796,13 @@ class TestInterpolation(unittest.TestCase):
             np.reshape(np.tile(np.linspace(0, 5, 11), 21), (21, 11))
         self.dataset2d.data.axes[0].values = np.linspace(30, 40, 21)
         self.dataset2d.data.axes[1].values = np.linspace(5, 15, 11)
+        self.dataset3d = aspecd.dataset.Dataset()
+        self.dataset3d.data.data = \
+            np.reshape(np.tile(np.linspace(0, 5, 11), [21, 16]).ravel(),
+                       (21, 11, 16))
+        self.dataset3d.data.axes[0].values = np.linspace(30, 40, 21)
+        self.dataset3d.data.axes[1].values = np.linspace(5, 15, 11)
+        self.dataset3d.data.axes[2].values = np.linspace(2.5, 10, 16)
 
     def test_instantiate_class(self):
         pass
@@ -1805,12 +1812,6 @@ class TestInterpolation(unittest.TestCase):
 
     def test_is_undoable(self):
         self.assertTrue(self.processing.undoable)
-
-    def test_with_dataset_with_more_than_2d_raises(self):
-        dataset = aspecd.dataset.Dataset()
-        dataset.data.data = np.random.random([11, 11, 11])
-        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
-            dataset.process(self.processing)
 
     def test_interpolate_without_range_raises(self):
         self.processing.parameters["npoints"] = 21
@@ -1912,7 +1913,7 @@ class TestInterpolation(unittest.TestCase):
         self.processing.parameters["npoints"] = [41, 21]
         self.dataset2d.process(self.processing)
         self.assertListEqual(list(np.linspace(0, 5, 21)),
-                             list(self.dataset2d.data.data[1, :]))
+                             list(self.dataset2d.data.data[0, :]))
 
     def test_interpolate_2d_data_interpolates_axis(self):
         self.processing.parameters["range"] = [[0, 20], [0, 10]]
@@ -1920,6 +1921,28 @@ class TestInterpolation(unittest.TestCase):
         self.dataset2d.process(self.processing)
         self.assertListEqual(list(np.linspace(30, 40, 41)),
                              list(self.dataset2d.data.axes[0].values))
+
+    def test_interpolate_3d_data_with_missing_range_raises(self):
+        self.processing.parameters["range"] = [[0, 20], [0, 10]]
+        self.processing.parameters["npoints"] = [41, 21, 21]
+        with self.assertRaisesRegex(IndexError, 'List of ranges does not fit '
+                                                'data dimensions'):
+            self.dataset3d.process(self.processing)
+
+    def test_interpolate_3d_data_with_missing_npoints_raises(self):
+        self.processing.parameters["range"] = [[0, 20], [0, 10], [5, 15]]
+        self.processing.parameters["npoints"] = [41, 21]
+        with self.assertRaisesRegex(IndexError, 'List of npoints does not fit '
+                                                'data dimensions'):
+            self.dataset3d.process(self.processing)
+
+    def test_interpolate_3d_data_interpolates_data(self):
+        self.processing.parameters["range"] = [[0, 20], [0, 10], [0, 15]]
+        self.processing.parameters["npoints"] = [41, 21, 16]
+        old_data = self.dataset3d.data.data[0, :, 0]
+        self.dataset3d.process(self.processing)
+        self.assertListEqual(list(old_data),
+                             list(self.dataset3d.data.data[0, ::2, 0]))
 
 
 class TestFiltering(unittest.TestCase):

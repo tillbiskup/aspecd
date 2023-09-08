@@ -11,6 +11,31 @@ Version 0.9.0
 *Not yet released*
 
 
+Version 0.8.3
+=============
+
+*Not yet released*
+
+Fixes
+-----
+
+* Exporter tasks (:class:`aspecd.tasks.ExportTask`) automatically save datasets with default name if no target is provided.
+* Correct setting of contour plot properties with newer versions of Matplotlib
+
+
+Changes
+-------
+
+* :class:`aspecd.processing.Interpolation` changed interpolation method for 2D data from deprecated :class:`scipy.interpolate.interp2d` to :class:`scipy.interpolate.RegularGridInterpolator`
+
+
+New features
+------------
+
+* :class:`aspecd.processing.Interpolation` works for *N*\ D datasets with arbitrary dimension *N*
+* :class:`aspecd.tasks.Recipe` with new setting ``autosave_datasets`` (default: ``True``)
+
+
 Version 0.8.2
 =============
 

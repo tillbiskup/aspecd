@@ -2638,15 +2638,8 @@ class Interpolation(SingleProcessingStep):
     * `<https://stackoverflow.com/a/32763635>`_
 
 
-    .. important::
-        Currently, interpolation works *only* for **1D and 2D** datasets,
-        not for higher-dimensional datasets. This may, however, change in
-        the future.
-
     .. todo::
         * Make type of interpolation controllable
-
-        * Check for ways to make it work with ND, N>2
 
 
     Attributes
@@ -2727,6 +2720,14 @@ class Interpolation(SingleProcessingStep):
 
     .. versionadded:: 0.2
 
+    .. versionchanged:: 0.8.3
+        Interpolation for *N*\ D datasets with arbitrary dimension *N*
+
+    .. versionchanged:: 0.8.3
+        Change interpolation method for 2D data from deprecated
+        :class:`scipy.interpolate.interp2d` to
+        :class:`scipy.interpolate.RegularGridInterpolator`
+
     """
 
     def __init__(self):
@@ -2737,27 +2738,6 @@ class Interpolation(SingleProcessingStep):
         self.parameters["npoints"] = None
         self.parameters["unit"] = "index"
         self._axis_values = []
-
-    @staticmethod
-    def applicable(dataset):
-        """
-        Check whether processing step is applicable to the given dataset.
-
-        Interpolation is currently only applicable to datasets with one- and
-        two-dimensional data.
-
-        Parameters
-        ----------
-        dataset : :class:`aspecd.dataset.Dataset`
-            dataset to check
-
-        Returns
-        -------
-        applicable : :class:`bool`
-            `True` if successful, `False` otherwise.
-
-        """
-        return len(dataset.data.axes) <= 3
 
     def _sanitise_parameters(self):
         if not self.parameters["range"]:
@@ -2777,18 +2757,14 @@ class Interpolation(SingleProcessingStep):
 
     def _perform_task(self):
         self._get_axis_values()
-        if self.dataset.data.data.ndim == 1:
-            interp = interpolate.interp1d(self.dataset.data.axes[0].values,
-                                          self.dataset.data.data)
-            self.dataset.data.data = interp(self._axis_values[0])
-        elif self.dataset.data.data.ndim == 2:
-            # Note: interp2d uses Cartesian indexing (x,y => col, row),
-            #       not matrix indexing (row, col)
-            interp = interpolate.interp2d(self.dataset.data.axes[1].values,
-                                          self.dataset.data.axes[0].values,
-                                          self.dataset.data.data)
-            self.dataset.data.data = interp(self._axis_values[1],
-                                            self._axis_values[0])
+        interp = interpolate.RegularGridInterpolator(
+            [x.values for x in self.dataset.data.axes[:-1]],
+            self.dataset.data.data
+        )
+        grid = np.meshgrid(*self._axis_values, indexing='ij')
+        test_points = np.array([x.ravel() for x in grid]).T
+        shape = [len(x) for x in self._axis_values]
+        self.dataset.data.data = interp(test_points).reshape(shape)
         for dim in range(self.dataset.data.data.ndim):
             self.dataset.data.axes[dim].values = self._axis_values[dim]
 

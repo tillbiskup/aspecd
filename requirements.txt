@@ -1,5 +1,5 @@
 numpy
-scipy
+scipy>=0.14
 matplotlib
 jinja2>=3.0
 oyaml
