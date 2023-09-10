@@ -21,13 +21,22 @@ For next releases
 * Plotting
 
   * Colorbar for 2D plotter
+
+    https://matplotlib.org/stable/api/figure_api.html#matplotlib.figure.Figure.colorbar
+
   * (Arbitrary) lines in plot, *e.g.* to compare peak positions
 
     Need to decide whether this goes into plotter properties or gets handled as proper annotations; probably the former, but a good starting point to think about the latter.
-  * If figure is plotted twice using automatically generated filenames, use different filenames (e.g. increment number).
+
   * Axis direction can be switched (*e.g.*, for FTIR data, hence not needing to set axis limits in reverse order)
+
+    Currently "show stopper" for example with FTIR data.
+
   * Bugfix: Title of figure and axis label overlap when adding an axis on the top side of the figure
+
   * Quiver plots
+
+    https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.quiver.html
 
 * Processing
 
@@ -41,11 +50,15 @@ For next releases
 
   * Handling of additional axes/parameters that are logged parallel to a measurement, requiring extension of the dataset model.
 
-* Add export tasks to dataset tasks
+  * Add export tasks to dataset tasks
 
 * Recipe-driven data analysis:
 
   * Better handling of automatically generated filenames for saving plots and reports: unique filenames; using the label rather than the source (id) of the dataset
+
+  * If figure is plotted twice using automatically generated filenames, use different filenames (e.g. increment number).
+
+   Points towards reworking the :class:`aspecd.plotting.Saver` class, allowing for an additional optional parameter ``suffix`` or else. Would make handling too long filenames easier as well.
 
   * Handling of results: automatically add datasets to dataset list? How to deal with result labels identical to existing datasets?
 
