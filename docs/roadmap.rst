@@ -5,12 +5,18 @@ Roadmap
 A few ideas how to develop the project further, currently a list as a reminder for the main developers themselves, in no particular order, though with a tendency to list more important aspects first:
 
 
-For version 0.9
-===============
+For next releases
+=================
+
+* Logging
+
+  * Add loggers from other modules (than task) and derived packages
+
+    Probably this means to switch to package-wide logging and documenting that derived packages need to log to the ASpecD logger as well.
 
 * Usability
 
-  * Importer/ImporterFactory should issue a warning if no dataset could be loaded, rather than silently continuing, as this often leads to downstream problems and exceptions thrown.
+  * Importer/ImporterFactory should issue a warning if no dataset could be loaded, rather than silently continuing, as this often leads to downstream problems and exceptions thrown. (Requires changes in the way logging is currently done.)
 
 * Plotting
 
@@ -21,6 +27,7 @@ For version 0.9
   * If figure is plotted twice using automatically generated filenames, use different filenames (e.g. increment number).
   * Axis direction can be switched (*e.g.*, for FTIR data, hence not needing to set axis limits in reverse order)
   * Bugfix: Title of figure and axis label overlap when adding an axis on the top side of the figure
+  * Quiver plots
 
 * Processing
 
@@ -30,11 +37,9 @@ For version 0.9
 
   * :class:`aspecd.processing.BaselineCorrection` with ``fit_area`` definable as axis range, and arbitrary parts of the axis (*e.g.*, in the middle of a dataset or with separate fit areas)
 
-* Logging
+* Datasets
 
-  * Add loggers from other modules (than task) and derived packages
-
-    Probably this means to switch to package-wide logging and documenting that derived packages need to log to the ASpecD logger as well.
+  * Handling of additional axes/parameters that are logged parallel to a measurement, requiring extension of the dataset model.
 
 * Add export tasks to dataset tasks
 

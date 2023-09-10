@@ -867,13 +867,16 @@ Module documentation
 
 
 .. todo::
-    There is a number of things that are not yet implemented, but highly
-    recommended for a working recipe-driven data analysis that follows good
-    practice for reproducible research. This includes (but may not be
-    limited to):
+    While generally, recipe-driven data analysis works well in practice,
+    improving usability and robustness is high on the list. This includes (
+    but may not be limited to) a parser for recipes performing a static
+    analysis of their syntax and is particularly useful for larger
+    datasets and/or longer lists of tasks. Potential steps in this direction:
 
-      * Parser for recipes performing a static analysis of their syntax.
-        Useful particularly for larger datasets and/or longer lists of tasks.
+    * Add :meth:`check` method to :class:`aspecd.tasks.Task`
+    * Define required parameters in a (private) attribute of either the
+      individual task level or even on the level of the underlying objects
+    * Potentially reuse the :meth:`_sanitise_parameters` method.
 
 """
 import argparse
