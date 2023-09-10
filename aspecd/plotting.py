@@ -133,6 +133,60 @@ Concrete plotters for multiple datasets
   line-type plots, including (semi)log plots
 
 
+Properties of plot(ter)s
+========================
+
+Plots can be controlled extensively regarding their appearance. While
+Matplotlib provides both, sensible defaults and an extensive list of
+customisation options for the plot appearance, the ASpecD framework tries
+to homogenise these settings and currently provides only a subset of the
+possibilities the underlying Matplotlib library would allow.
+
+The properties of plots and their individual components are reflected in a
+hierarchy of objects. Each plotter has a corresponding :attr:`properties`
+attribute that contains an object of the respective
+:class:`aspecd.plotting.PlotProperties` class.
+
+To give you an idea of the hierarchy of classes handling the plot
+properties, below is a (hopefully complete) list:
+
+  * :class:`aspecd.plotting.PlotProperties`
+
+    * :class:`aspecd.plotting.SinglePlotProperties`
+
+      * :class:`aspecd.plotting.SinglePlot1DProperties`
+      * :class:`aspecd.plotting.SinglePlot2DProperties`
+
+    * :class:`aspecd.plotting.MultiPlotProperties`
+
+      * :class:`aspecd.plotting.MultiPlot1DProperties`
+
+    * :class:`aspecd.plotting.CompositePlotProperties`
+
+  * :class:`aspecd.plotting.FigureProperties`
+
+  * :class:`aspecd.plotting.AxesProperties`
+
+  * :class:`aspecd.plotting.LegendProperties`
+
+  * :class:`aspecd.plotting.DrawingProperties`
+
+    * :class:`aspecd.plotting.LineProperties`
+    * :class:`aspecd.plotting.SurfaceProperties`
+
+  * :class:`aspecd.plotting.GridProperties`
+
+Getting and setting plot properties is somewhat complicated by the fact
+that Matplotlib usually allows setting properties only when instantiating
+objects, or sometimes with explicit setter methods. Similarly, there may
+or may not be getter methods for the relevant attributes.
+
+In any case, while you can set and get properties of plots
+programmatically within the ASpecD framework, using :doc:`recipe-driven data
+analysis <../recipes>` is highly recommended.
+
+
+
 Plotting to existing axes
 =========================
 
@@ -2955,6 +3009,12 @@ class FigureProperties(aspecd.utils.Properties):
     title: :class:`str`
         Title for the figure as a whole
 
+        .. important::
+
+            If you have a second axis on top of the axes, setting the
+            figure title will result in the figure title clashing with the
+            upper axis. Hence, in such case, try setting the axis title.
+
     Raises
     ------
     aspecd.exceptions.MissingFigureError
@@ -3027,6 +3087,12 @@ class AxesProperties(aspecd.utils.Properties):
 
         Note that this is a per-axis title, unlike the figure title set for
         the whole figure.
+
+        .. important::
+
+            If you have a second axis on top of the axes, setting the
+            figure title will result in the figure title clashing with the
+            upper axis. Hence, in such case, try setting the axis title.
 
         Default: ''
 
