@@ -3160,6 +3160,23 @@ class AxesProperties(aspecd.utils.Properties):
 
         Default: None
 
+    invert: :class:`list` or :class:`str`
+        Axes to invert
+
+        Sometimes, inverted axes are the default, *e.g.* the wavenumber
+        axis in FTIR spectroscopy. While dedicated packages for such
+        method based on the ASpecD framework will take care of these
+        specialties, this option allows for full flexibility.
+
+        Can either be a single value, such as 'x' or 'y', or a list,
+        such as ['x'] or even ['x', 'y'].
+
+        .. note::
+
+            An alternative option to invert an axis is to provide
+            descending values for axis limits. However, this may be
+            inconvenient if you don't want to explicitly provide axis limits.
+
     Raises
     ------
     aspecd.exceptions.MissingAxisError
@@ -3168,6 +3185,9 @@ class AxesProperties(aspecd.utils.Properties):
 
     .. versionchanged:: 0.6
         New properties ``xticklabelangle`` and ``yticklabelangle``
+
+    .. versionchanged:: 0.8.4
+        New property ``invert``
 
     """
 
@@ -3189,6 +3209,7 @@ class AxesProperties(aspecd.utils.Properties):
         self.yticklabels = None
         self.yticklabelangle = 0.0
         self.yticks = None
+        self.invert = None
 
     def apply(self, axes=None):
         """
@@ -3227,6 +3248,16 @@ class AxesProperties(aspecd.utils.Properties):
             tick.set_rotation(self.xticklabelangle)
         for tick in axes.get_yticklabels():
             tick.set_rotation(self.yticklabelangle)
+        if self.invert:
+            if isinstance(self.invert, str):
+                self.invert = [self.invert]
+            for axis in self.invert:
+                if axis.lower().startswith('x'):
+                    if not axes.xaxis_inverted():
+                        axes.invert_xaxis()
+                if axis.lower().startswith('y'):
+                    if not axes.yaxis_inverted():
+                        axes.invert_yaxis()
 
     def _get_settable_properties(self):
         """
@@ -3246,7 +3277,7 @@ class AxesProperties(aspecd.utils.Properties):
         all_properties = self.to_dict()
         properties = {}
         for prop in all_properties:
-            if prop.startswith(('xtick', 'ytick')):
+            if prop.startswith(('xtick', 'ytick', 'invert')):
                 pass
             elif isinstance(all_properties[prop], np.ndarray):
                 if any(all_properties[prop]):

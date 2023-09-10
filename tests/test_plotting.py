@@ -1962,7 +1962,7 @@ class TestAxesProperties(unittest.TestCase):
         for prop in ['aspect', 'facecolor', 'position', 'title',
                      'xlabel', 'xlim', 'xscale', 'xticklabels', 'xticks',
                      'ylabel', 'ylim', 'yscale', 'yticklabels', 'yticks',
-                     'xticklabelangle', 'yticklabelangle',
+                     'xticklabelangle', 'yticklabelangle', 'invert'
                      ]:
             self.assertTrue(hasattr(self.axis_properties, prop))
 
@@ -2056,6 +2056,73 @@ class TestAxesProperties(unittest.TestCase):
         self.axis_properties.apply(axes=plot.axes)
         self.assertEqual(self.axis_properties.yticklabelangle,
                          plot.axes.get_yticklabels()[0].get_rotation())
+        plt.close(plot.figure)
+
+    def test_invert_x_axis_with_scalar_value(self):
+        self.axis_properties.invert = 'x'
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertTrue(plot.axes.xaxis_inverted())
+        plt.close(plot.figure)
+
+    def test_invert_y_axis_with_scalar_value(self):
+        self.axis_properties.invert = 'y'
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertTrue(plot.axes.yaxis_inverted())
+        plt.close(plot.figure)
+
+    def test_invert_x_axis_with_scalar_capital_value(self):
+        self.axis_properties.invert = 'X'
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertTrue(plot.axes.xaxis_inverted())
+        plt.close(plot.figure)
+
+    def test_invert_x_axis_with_string_starting_with_x(self):
+        self.axis_properties.invert = 'xaxis'
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertTrue(plot.axes.xaxis_inverted())
+        plt.close(plot.figure)
+
+    def test_invert_x_axis_with_list_value(self):
+        self.axis_properties.invert = ['x']
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertTrue(plot.axes.xaxis_inverted())
+        plt.close(plot.figure)
+
+    def test_invert_both_axes(self):
+        self.axis_properties.invert = ['x', 'y']
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertTrue(plot.axes.xaxis_inverted())
+        self.assertTrue(plot.axes.yaxis_inverted())
+        plt.close(plot.figure)
+
+    def test_invert_does_not_invert_already_inverted_x_axis(self):
+        self.axis_properties.invert = ['x']
+        plot = plotting.Plotter()
+        plot.plot()
+        plot.axes.invert_xaxis()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertTrue(plot.axes.xaxis_inverted())
+        plt.close(plot.figure)
+
+    def test_invert_does_not_invert_already_inverted_y_axis(self):
+        self.axis_properties.invert = ['y']
+        plot = plotting.Plotter()
+        plot.plot()
+        plot.axes.invert_yaxis()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertTrue(plot.axes.yaxis_inverted())
         plt.close(plot.figure)
 
 

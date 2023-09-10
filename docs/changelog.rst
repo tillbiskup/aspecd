@@ -22,6 +22,7 @@ New features
 
 * :class:`aspecd.processing.CommonRangeExtraction` works for *N*\ D datasets with arbitrary dimension *N*
 * Legend title can be set from recipes
+* New attribute :attr:`aspecd.plotting.AxesProperties.invert` for inverting axes.
 
 
 Version 0.8.3

@@ -28,12 +28,6 @@ For next releases
 
     Need to decide whether this goes into plotter properties or gets handled as proper annotations; probably the former, but a good starting point to think about the latter.
 
-  * Axis direction can be switched (*e.g.*, for FTIR data, hence not needing to set axis limits in reverse order)
-
-    Currently "show stopper" for example with FTIR data.
-
-  * Bugfix: Title of figure and axis label overlap when adding an axis on the top side of the figure
-
   * Quiver plots
 
     https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.quiver.html
