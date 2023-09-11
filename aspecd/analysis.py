@@ -113,6 +113,16 @@ independently.
   Perform linear regression without fitting the intercept on 1D data. Note
   that this is mathematically different from a polynomial fit of first order.
 
+* :class:`DeviceDataExtraction`
+
+  Extract device data as separate dataset.
+
+  Datasets may contain additional data as device data in
+  :attr:`aspecd.dataset.Dataset.device_data`. For details,
+  see :class:`aspecd.dataset.DeviceData`. To further process and analyse
+  these device data, the most general way is to extract them as
+  individual dataset and perform all further tasks on it.
+
 
 Writing own analysis steps
 ==========================
@@ -1951,3 +1961,107 @@ class LinearRegressionWithFixedIntercept(SingleAnalysisStep):
             self.result = [self.parameters["offset"], float(results[0])]
         else:
             self.result = float(results[0])
+
+
+class DeviceDataExtraction(SingleAnalysisStep):
+    """
+    Extract device data as separate dataset.
+
+    Datasets may contain additional data as device data in
+    :attr:`aspecd.dataset.Dataset.device_data`. For details,
+    see :class:`aspecd.dataset.DeviceData`. To further process and analyse
+    these device data, the most general way is to extract them as
+    individual dataset and perform all further tasks on it.
+
+    A reference to the original dataset is stored in
+    :attr:`aspecd.dataset.Dataset.references`.
+
+    Attributes
+    ----------
+    result : :class:`aspecd.dataset.CalculatedDataset`
+        Dataset containing the device data.
+
+        The device the data are extracted for is provided by the parameter
+        ``device``, see below.
+
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        device : :class:`str`
+            Name of the device the data should be extracted for.
+
+            Raises a :class:`KeyError` if the device does not exist.
+
+            Default: ''
+
+    Raises
+    ------
+    KeyError
+        Raised if device is not present in
+        :attr:`aspecd.dataset.Dataset.device_data`
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Suppose you have a dataset that contains device data referenced with
+    the key "timestamp", and you want to extract those device data and
+    make them accessible from within the recipe using the name "timestamp"
+    as well:
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: DeviceDataExtraction
+         properties:
+           parameters:
+             device: timestamp
+         result: timestamp
+
+
+    .. versionadded:: 0.9
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = 'Extract device data'
+        self.parameters["device"] = ''
+
+    @staticmethod
+    def applicable(dataset):
+        """
+        Check whether analysis step is applicable to the given dataset.
+
+        Device data extraction is only possible if device data are present.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            Dataset to check
+
+        Returns
+        -------
+        applicable : :class:`bool`
+            Whether dataset is applicable
+
+        """
+        return dataset.device_data
+
+    def _sanitise_parameters(self):
+        device = self.parameters["device"]
+        if device not in self.dataset.device_data.keys():
+            raise KeyError(f"Device '{device}' not found in dataset")
+
+    def _perform_task(self):
+        device = self.parameters["device"]
+        dataset = self.create_dataset()
+        dataset.data = copy.deepcopy(self.dataset.device_data[device])
+        reference = aspecd.dataset.DatasetReference()
+        reference.from_dataset(self.dataset)
+        dataset.references.append(reference)
+        self.result = dataset

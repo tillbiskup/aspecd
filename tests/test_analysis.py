@@ -1046,3 +1046,52 @@ class TestLinearRegressionWithFixedIntercept(unittest.TestCase):
         analysis = self.dataset.analyse(self.analysis)
         self.assertAlmostEqual(np.pi, analysis.result[0])
         self.assertAlmostEqual(2., analysis.result[1])
+
+
+class TestDeviceDataExtraction(unittest.TestCase):
+    def setUp(self):
+        self.analysis = aspecd.analysis.DeviceDataExtraction()
+        self.dataset = aspecd.dataset.Dataset()
+        device_data = aspecd.dataset.DeviceData()
+        device_data.data = np.linspace(1, 50)
+        device_data.axes[0].values = np.linspace(0.5, 25)
+        self.dataset.device_data = {'test': device_data}
+        self.analysis.parameters["device"] = 'test'
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn('extract device data',
+                      self.analysis.description.lower())
+
+    def test_analysis_returns_dataset(self):
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertTrue(isinstance(analysis.result, aspecd.dataset.Dataset))
+
+    def test_analysis_with_unknown_device_raises(self):
+        self.analysis.parameters["device"] = 'nonexisting_device'
+        with self.assertRaises(KeyError):
+            self.dataset.analyse(self.analysis)
+
+    def test_analysis_returns_dataset_with_correct_data(self):
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertListEqual(list(analysis.result.data.data),
+                             list(self.dataset.device_data["test"].data))
+
+    def test_returned_dataset_axes_are_not_identical_to_device_axes(self):
+        analysis = self.dataset.analyse(self.analysis)
+        # Hint: comparing data rather than axes does not work
+        self.assertIsNot(analysis.result.data.axes,
+                         self.dataset.device_data["test"].axes)
+
+    def test_returned_dataset_contains_reference_to_original_dataset(self):
+        self.dataset.id = 'My unique ID'
+        analysis = self.dataset.analyse(self.analysis)
+        self.assertEqual(analysis.result.references[0].id,
+                         self.dataset.id)
+
+    def test_analysis_with_dataset_with_no_device_data_raises(self):
+        self.dataset.device_data = {}
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            self.dataset.analyse(self.analysis)

@@ -17,6 +17,7 @@ New features
 * New property :attr:`aspecd.dataset.Dataset.device_data` for storing additional/secondary (monitoring) data.
 
   * New class :class:`aspecd.dataset.DeviceData` for device data.
+  * New class :class:`aspecd.analysis.DeviceDataExtraction` for extracting device data from a dataset as a separate dataset. This allows to proceed with the extracted datasets as with any other dataset.
 
 
 Version 0.8.4
@@ -30,7 +31,7 @@ New features
 
 * :class:`aspecd.processing.CommonRangeExtraction` works for *N*\ D datasets with arbitrary dimension *N*
 * Legend title can be set from recipes
-* New attribute :attr:`aspecd.plotting.AxesProperties.invert` for inverting axes.
+* New attribute :attr:`aspecd.plotting.AxesProperties.invert` for inverting axes. Helpful, *e.g.*, for plotting FTIR data without having to resort to explicitly provide descending axis limits.
 
 
 Documentation
