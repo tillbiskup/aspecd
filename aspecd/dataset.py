@@ -171,6 +171,13 @@ class Dataset(aspecd.utils.ToDictMixin):
         identifies the device (type) and the value is of type
         :class:`aspecd.dataset.DeviceData`.
 
+        .. note::
+
+            To further process and analyse these device data, the most
+            general way is to extract them as individual dataset each and
+            perform all further tasks on it, respectively. See
+            :class:`aspecd.analysis.DeviceDataExtraction` for details.
+
         .. versionadded:: 0.9
 
     metadata : :obj:`aspecd.metadata.DatasetMetadata`
