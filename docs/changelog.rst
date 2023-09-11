@@ -11,6 +11,14 @@ Version 0.9.0
 *Not yet released*
 
 
+New features
+------------
+
+* New property :attr:`aspecd.dataset.Dataset.device_data` for storing additional/secondary (monitoring) data.
+
+  * New class :class:`aspecd.dataset.DeviceData` for device data.
+
+
 Version 0.8.4
 =============
 
@@ -23,6 +31,12 @@ New features
 * :class:`aspecd.processing.CommonRangeExtraction` works for *N*\ D datasets with arbitrary dimension *N*
 * Legend title can be set from recipes
 * New attribute :attr:`aspecd.plotting.AxesProperties.invert` for inverting axes.
+
+
+Documentation
+-------------
+
+* New example: :doc:`Plotting FTIR spectra normalised to spectral feature <examples/ftir>`
 
 
 Version 0.8.3

@@ -77,6 +77,12 @@ class TestDataset(unittest.TestCase):
     def test_has_tasks_property(self):
         self.assertTrue(hasattr(self.dataset, 'tasks'))
 
+    def test_has_device_data_property(self):
+        self.assertTrue(hasattr(self.dataset, 'device_data'))
+
+    def test_device_data_is_dict(self):
+        self.assertTrue(isinstance(self.dataset.device_data, dict))
+
 
 class TestDatasetProcessing(unittest.TestCase):
     def setUp(self):
@@ -1297,3 +1303,30 @@ class TestAxis(unittest.TestCase):
         with self.assertRaisesRegex(IndexError, 'Values need to be '
                                                 'one-dimensional'):
             self.axis.values = np.zeros([0, 0])
+
+
+class TestDeviceData(unittest.TestCase):
+
+    def setUp(self):
+        self.device_data = dataset.DeviceData()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_data_property(self):
+        self.assertTrue(hasattr(self.device_data, 'data'))
+
+    def test_data_is_ndarray(self):
+        self.assertTrue(isinstance(self.device_data.data, np.ndarray))
+
+    def test_has_axes_property(self):
+        self.assertTrue(hasattr(self.device_data, 'axes'))
+
+    def test_axes_is_list(self):
+        self.assertTrue(isinstance(self.device_data.axes, list))
+
+    def test_has_metadata_property(self):
+        self.assertTrue(hasattr(self.device_data, 'metadata'))
+
+    def test_calculated_is_false(self):
+        self.assertFalse(self.device_data.calculated)
