@@ -3191,6 +3191,7 @@ class AxesProperties(aspecd.utils.Properties):
 
     """
 
+    # pylint: disable=too-many-instance-attributes
     def __init__(self):
         super().__init__()
         self.aspect = ''
@@ -3236,28 +3237,9 @@ class AxesProperties(aspecd.utils.Properties):
         for property_, value in self._get_settable_properties().items():
             if hasattr(axes, 'set_' + property_):
                 getattr(axes, 'set_' + property_)(value)
-        if self.xticks is not None:
-            axes.xaxis.set_major_locator(ticker.FixedLocator(self.xticks))
-        if self.yticks is not None:
-            axes.yaxis.set_major_locator(ticker.FixedLocator(self.yticks))
-        if self.xticklabels is not None:
-            axes.set_xticklabels(self.xticklabels)
-        if self.yticklabels is not None:
-            axes.set_yticklabels(self.yticklabels)
-        for tick in axes.get_xticklabels():
-            tick.set_rotation(self.xticklabelangle)
-        for tick in axes.get_yticklabels():
-            tick.set_rotation(self.yticklabelangle)
+        self._set_axes_ticks(axes)
         if self.invert:
-            if isinstance(self.invert, str):
-                self.invert = [self.invert]
-            for axis in self.invert:
-                if axis.lower().startswith('x'):
-                    if not axes.xaxis_inverted():
-                        axes.invert_xaxis()
-                if axis.lower().startswith('y'):
-                    if not axes.yaxis_inverted():
-                        axes.invert_yaxis()
+            self._invert_axes(axes)
 
     def _get_settable_properties(self):
         """
@@ -3285,6 +3267,31 @@ class AxesProperties(aspecd.utils.Properties):
             elif all_properties[prop]:
                 properties[prop] = all_properties[prop]
         return properties
+
+    def _set_axes_ticks(self, axes):
+        if self.xticks is not None:
+            axes.xaxis.set_major_locator(ticker.FixedLocator(self.xticks))
+        if self.yticks is not None:
+            axes.yaxis.set_major_locator(ticker.FixedLocator(self.yticks))
+        if self.xticklabels is not None:
+            axes.set_xticklabels(self.xticklabels)
+        if self.yticklabels is not None:
+            axes.set_yticklabels(self.yticklabels)
+        for tick in axes.get_xticklabels():
+            tick.set_rotation(self.xticklabelangle)
+        for tick in axes.get_yticklabels():
+            tick.set_rotation(self.yticklabelangle)
+
+    def _invert_axes(self, axes):
+        if isinstance(self.invert, str):
+            self.invert = [self.invert]
+        for axis in self.invert:
+            if axis.lower().startswith('x'):
+                if not axes.xaxis_inverted():
+                    axes.invert_xaxis()
+            if axis.lower().startswith('y'):
+                if not axes.yaxis_inverted():
+                    axes.invert_yaxis()
 
 
 class LegendProperties(aspecd.utils.Properties):
