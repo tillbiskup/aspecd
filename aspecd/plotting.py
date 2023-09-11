@@ -308,6 +308,18 @@ class Plotter(aspecd.utils.ToDictMixin):
 
             Default: False
 
+        device_data : :class:`str` or :class:`list`
+            Name(s) of the device(s) the data should be plotted for.
+
+            Datasets may contain additional data as device data in
+            :attr:`aspecd.dataset.Dataset.device_data`. For details,
+            see :class:`aspecd.dataset.DeviceData`. To conveniently plot
+            those device data instead of the primary data of the dataset,
+            provide the key(s) to the device(s) the data should be plotted
+            for.
+
+            Default: ''
+
     properties : :class:`aspecd.plotting.PlotProperties`
         Properties of the plot, defining its appearance
 
@@ -363,6 +375,9 @@ class Plotter(aspecd.utils.ToDictMixin):
     .. versionchanged:: 0.6.4
         New attribute :attr:`comment`
 
+    .. versionchanged:: 0.9
+        New parameter ''device_data''
+
     """
 
     def __init__(self):
@@ -372,6 +387,7 @@ class Plotter(aspecd.utils.ToDictMixin):
             'show_legend': False,
             'show_zero_lines': True,
             'tight_layout': False,
+            'device_data': ''
         }
         self.properties = PlotProperties()
         self.description = 'Abstract plotting step'
@@ -666,6 +682,13 @@ class SinglePlotter(Plotter):
     dataset : :class:`aspecd.dataset.Dataset`
         Dataset the plotting should be done for
 
+    data : :class:`aspecd.dataset.Data`
+        Actual data that should be plotted
+
+        Defaults to the primary data of a dataset, but can be the device
+        data. See the key ``device_data`` of :attr:`Plotter.parameters` for
+        details.
+
     drawing : :class:`matplotlib.artist.Artist`
         Actual graphical representation of the data
 
@@ -684,10 +707,11 @@ class SinglePlotter(Plotter):
         super().__init__()
         self.properties = SinglePlotProperties()
         self.dataset = None
+        self.data = None
         self.drawing = None
         self.description = 'Abstract plotting step for single dataset'
         self.__kind__ = 'singleplot'
-        self._exclude_from_to_dict.extend(['dataset', 'drawing'])
+        self._exclude_from_to_dict.extend(['dataset', 'data', 'drawing'])
 
     def plot(self, dataset=None, from_dataset=False):
         """Perform the actual plotting on the given dataset.
@@ -731,6 +755,7 @@ class SinglePlotter(Plotter):
 
         """
         self._assign_dataset(dataset)
+        self._assign_data()
         self._call_from_dataset(from_dataset)
         return self.dataset
 
@@ -772,6 +797,15 @@ class SinglePlotter(Plotter):
             self._set_axes_labels()
             self.properties.apply(plotter=self)
 
+    def _assign_data(self):
+        if self.parameters["device_data"]:
+            device = self.parameters["device_data"]
+            if device not in self.dataset.device_data:
+                raise KeyError(f"Device '{device}' not found in dataset.")
+            self.data = self.dataset.device_data[device]
+        else:
+            self.data = self.dataset.data
+
     def _check_applicability(self):
         if not self.applicable(self.dataset):
             message = f"{self.name} not applicable to dataset with id " \
@@ -786,8 +820,8 @@ class SinglePlotter(Plotter):
         If you ever need to change the handling of your axes labels,
         override this method in a child class.
         """
-        xlabel = self._create_axis_label_string(self.dataset.data.axes[0])
-        ylabel = self._create_axis_label_string(self.dataset.data.axes[1])
+        xlabel = self._create_axis_label_string(self.data.axes[0])
+        ylabel = self._create_axis_label_string(self.data.axes[1])
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel(ylabel)
 
@@ -935,20 +969,20 @@ class SinglePlotter1D(SinglePlotter):
         if not self.properties.drawing.label:
             self.properties.drawing.label = self.dataset.label
         if self.parameters['switch_axes']:
-            self.drawing, = plot_function(self.dataset.data.data,
-                                          self.dataset.data.axes[0].values,
+            self.drawing, = plot_function(self.data.data,
+                                          self.data.axes[0].values,
                                           label=self.properties.drawing.label)
         else:
-            self.drawing, = plot_function(self.dataset.data.axes[0].values,
-                                          self.dataset.data.data,
+            self.drawing, = plot_function(self.data.axes[0].values,
+                                          self.data.data,
                                           label=self.properties.drawing.label)
         if self.parameters['tight']:
             if self.parameters['tight'] in ('x', 'both'):
-                self.axes.set_xlim([self.dataset.data.axes[0].values.min(),
-                                    self.dataset.data.axes[0].values.max()])
+                self.axes.set_xlim([self.data.axes[0].values.min(),
+                                    self.data.axes[0].values.max()])
             if self.parameters['tight'] in ('y', 'both'):
-                self.axes.set_ylim([self.dataset.data.data.min(),
-                                    self.dataset.data.data.max()])
+                self.axes.set_ylim([self.data.data.min(),
+                                    self.data.data.max()])
 
     def _set_axes_labels(self):
         super()._set_axes_labels()
@@ -1225,24 +1259,24 @@ class SinglePlotter2D(SinglePlotter):
 
     def _shape_data(self):
         if self.parameters['switch_axes']:
-            data = self.dataset.data.data
+            data = self.data.data
         else:
-            data = self.dataset.data.data.T
+            data = self.data.data.T
         if self.type == 'imshow':
             data = np.flipud(data)
         return data
 
     def _get_extent(self):
         if self.parameters['switch_axes']:
-            extent = [self.dataset.data.axes[1].values[0],
-                      self.dataset.data.axes[1].values[-1],
-                      self.dataset.data.axes[0].values[0],
-                      self.dataset.data.axes[0].values[-1]]
+            extent = [self.data.axes[1].values[0],
+                      self.data.axes[1].values[-1],
+                      self.data.axes[0].values[0],
+                      self.data.axes[0].values[-1]]
         else:
-            extent = [self.dataset.data.axes[0].values[0],
-                      self.dataset.data.axes[0].values[-1],
-                      self.dataset.data.axes[1].values[0],
-                      self.dataset.data.axes[1].values[-1]]
+            extent = [self.data.axes[0].values[0],
+                      self.data.axes[0].values[-1],
+                      self.data.axes[1].values[0],
+                      self.data.axes[1].values[-1]]
         return extent
 
     def _set_axes_labels(self):
@@ -1262,11 +1296,11 @@ class SinglePlotter2D(SinglePlotter):
         override this method in a child class.
         """
         if self.parameters['switch_axes']:
-            xlabel = self._create_axis_label_string(self.dataset.data.axes[1])
-            ylabel = self._create_axis_label_string(self.dataset.data.axes[0])
+            xlabel = self._create_axis_label_string(self.data.axes[1])
+            ylabel = self._create_axis_label_string(self.data.axes[0])
         else:
-            xlabel = self._create_axis_label_string(self.dataset.data.axes[0])
-            ylabel = self._create_axis_label_string(self.dataset.data.axes[1])
+            xlabel = self._create_axis_label_string(self.data.axes[0])
+            ylabel = self._create_axis_label_string(self.data.axes[1])
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel(ylabel)
 
@@ -1454,28 +1488,28 @@ class SinglePlotter2DStacked(SinglePlotter):
 
     def _create_plot(self):
         if self.parameters['offset'] is None:
-            self.parameters['offset'] = self.dataset.data.data.max() * 1.05
+            self.parameters['offset'] = self.data.data.max() * 1.05
         yticks = []
         if self.parameters['stacking_dimension'] == 0:
             for idx in range(self.dataset.data.data.shape[0]):
                 # noinspection PyTypeChecker
-                handle = self.axes.plot(self.dataset.data.axes[1].values,
-                                        self.dataset.data.data[idx, :]
+                handle = self.axes.plot(self.data.axes[1].values,
+                                        self.data.data[idx, :]
                                         + idx * self.parameters['offset'])
                 self.drawing.append(handle[0])
                 # noinspection PyTypeChecker
                 yticks.append(idx * self.parameters['offset'])
-            yticklabels = self.dataset.data.axes[0].values.astype(float)
+            yticklabels = self.data.axes[0].values.astype(float)
         else:
-            for idx in range(self.dataset.data.data.shape[1]):
+            for idx in range(self.data.data.shape[1]):
                 # noinspection PyTypeChecker
-                handle = self.axes.plot(self.dataset.data.axes[0].values,
-                                        self.dataset.data.data[:, idx]
+                handle = self.axes.plot(self.data.axes[0].values,
+                                        self.data.data[:, idx]
                                         + idx * self.parameters['offset'])
                 self.drawing.append(handle[0])
                 # noinspection PyTypeChecker
                 yticks.append(idx * self.parameters['offset'])
-            yticklabels = self.dataset.data.axes[1].values.astype(float)
+            yticklabels = self.data.axes[1].values.astype(float)
         if self.parameters['ytickcount']:
             # noinspection PyTypeChecker
             ytickcount = min(len(self.drawing), self.parameters['ytickcount'])
@@ -1491,12 +1525,12 @@ class SinglePlotter2DStacked(SinglePlotter):
     def _handle_tight_settings(self):
         if self.parameters['tight']:
             if self.parameters['tight'] in ('x', 'both'):
-                self.axes.set_xlim([self.dataset.data.axes[0].values.min(),
-                                    self.dataset.data.axes[0].values.max()])
+                self.axes.set_xlim([self.data.axes[0].values.min(),
+                                    self.data.axes[0].values.max()])
             if self.parameters['tight'] in ('y', 'both'):
                 if self.parameters['offset'] == 0:
-                    self.axes.set_ylim([self.dataset.data.data.min(),
-                                        self.dataset.data.data.max()])
+                    self.axes.set_ylim([self.data.data.min(),
+                                        self.data.data.max()])
 
     def _format_yticklabels(self, yticklabels):
         if self.parameters['yticklabelformat']:
@@ -1522,20 +1556,20 @@ class SinglePlotter2DStacked(SinglePlotter):
         override this method in a child class.
         """
         if self.parameters['stacking_dimension'] == 0:
-            xlabel = self._create_axis_label_string(self.dataset.data.axes[1])
-            ylabel = self._create_axis_label_string(self.dataset.data.axes[0])
+            xlabel = self._create_axis_label_string(self.data.axes[1])
+            ylabel = self._create_axis_label_string(self.data.axes[0])
         else:
-            xlabel = self._create_axis_label_string(self.dataset.data.axes[0])
-            ylabel = self._create_axis_label_string(self.dataset.data.axes[1])
+            xlabel = self._create_axis_label_string(self.data.axes[0])
+            ylabel = self._create_axis_label_string(self.data.axes[1])
         if self.parameters["offset"] == 0:
-            ylabel = self._create_axis_label_string(self.dataset.data.axes[2])
+            ylabel = self._create_axis_label_string(self.data.axes[2])
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel(ylabel)
 
     def _add_zero_lines(self):
         if self.parameters['show_zero_lines']:
             dimension = self.parameters['stacking_dimension']
-            for idx in range(self.dataset.data.data.shape[dimension]):
+            for idx in range(self.data.data.shape[dimension]):
                 # noinspection PyTypeChecker
                 offset = idx * self.parameters['offset']
                 self.axes.axhline(

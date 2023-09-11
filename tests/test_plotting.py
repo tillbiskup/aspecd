@@ -215,6 +215,9 @@ class TestPlotter(unittest.TestCase):
             self.plotter.plot()
         mock.assert_called()
 
+    def test_plot_has_device_data_parameter(self):
+        self.assertIn('device_data', self.plotter.parameters)
+
 
 class TestSinglePlotter(unittest.TestCase):
     def setUp(self):
@@ -230,8 +233,11 @@ class TestSinglePlotter(unittest.TestCase):
     def test_has_drawing_property(self):
         self.assertTrue(hasattr(self.plotter, 'drawing'))
 
+    def test_has_data_property(self):
+        self.assertTrue(hasattr(self.plotter, 'data'))
+
     def test_to_dict_does_not_contain_certain_keys(self):
-        for key in ['dataset', 'drawing']:
+        for key in ['dataset', 'drawing', 'data']:
             with self.subTest(key=key):
                 self.assertNotIn(key, self.plotter.to_dict())
 
@@ -309,6 +315,33 @@ class TestSinglePlotter(unittest.TestCase):
         with self.assertRaisesRegex(
                 aspecd.exceptions.NotApplicableToDatasetError, message):
             dataset.plot(plotter)
+
+    def test_plot_from_dataset_sets_data(self):
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random(5)
+        plotter = test_dataset.plot(self.plotter)
+        self.assertListEqual(list(plotter.data.data),
+                             list(test_dataset.data.data))
+
+    def test_plot_from_dataset_with_device_data_sets_data(self):
+        test_dataset = dataset.Dataset()
+        device_data = dataset.DeviceData()
+        device_data.data = np.random.random(5)
+        test_dataset.device_data["test"] = device_data
+        self.plotter.parameters["device_data"] = "test"
+        plotter = test_dataset.plot(self.plotter)
+        self.assertListEqual(list(plotter.data.data), list(device_data.data))
+
+    def test_plot_from_dataset_with_non_existent_device_data_raises(self):
+        test_dataset = dataset.Dataset()
+        device_data = dataset.DeviceData()
+        device_data.data = np.random.random(5)
+        test_dataset.device_data["test"] = device_data
+        self.plotter.parameters["device_data"] = "nonexistent"
+        with self.assertRaises(KeyError) as context:
+            test_dataset.plot(self.plotter)
+        the_exception = context.exception
+        self.assertIn("not found in dataset", str(the_exception))
 
 
 class TestSinglePlotter1D(unittest.TestCase):
