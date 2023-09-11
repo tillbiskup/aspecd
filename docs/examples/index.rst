@@ -13,7 +13,7 @@ For each of the examples, a full recipe is provided ready to be copied and paste
 
 .. note::
 
-    For each of the recipes provided so far, real example data can be found in the accompanying `repository on GitHub <https://github.com/tillbiskup/example-data-aspecd>`_. Therefore, you can download the data and recipe to get first-hand experience with the cwepr package.
+    For each of the recipes provided so far, real example data can be found in the accompanying `repository on GitHub <https://github.com/tillbiskup/example-data-aspecd>`_. Therefore, you can download the data and recipe to get first-hand experience with the ASpecD framework.
 
 
 Prerequisites
