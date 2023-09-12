@@ -293,7 +293,7 @@ class TestSinglePlotter(unittest.TestCase):
         class MyPlotter(aspecd.plotting.SinglePlotter):
 
             @staticmethod
-            def applicable(dataset):
+            def applicable(data):
                 return False
 
         dataset = aspecd.dataset.Dataset()
@@ -305,7 +305,7 @@ class TestSinglePlotter(unittest.TestCase):
         class MyPlotter(aspecd.plotting.SinglePlotter):
 
             @staticmethod
-            def applicable(dataset):
+            def applicable(data):
                 return False
 
         dataset = aspecd.dataset.Dataset()
@@ -476,6 +476,27 @@ class TestSinglePlotter1D(unittest.TestCase):
             list(self.dataset.data.data),
             list(self.plotter.axes.lines[0].get_xdata())
         )
+
+    def test_plot_device_data_plots_device_data(self):
+        device_data = dataset.DeviceData()
+        device_data.data = np.random.random(5)
+        self.dataset.device_data["test"] = device_data
+        self.plotter.parameters["device_data"] = "test"
+        self.plotter.dataset = self.dataset
+        self.plotter.plot()
+        self.assertListEqual(
+            list(device_data.data),
+            list(self.plotter.axes.lines[0].get_ydata())
+        )
+
+    def test_plot_device_data_checks_applicability(self):
+        device_data = dataset.DeviceData()
+        device_data.data = np.random.random([5, 5])
+        self.dataset.device_data["test"] = device_data
+        self.plotter.parameters["device_data"] = "test"
+        self.plotter.dataset = self.dataset
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            self.plotter.plot()
 
 
 class TestSinglePlotter2D(unittest.TestCase):
@@ -715,6 +736,15 @@ class TestSinglePlotter2D(unittest.TestCase):
         else:
             contour_color = list(contour_lines[0].get_facecolor()[0])
         self.assertListEqual([0., 0., 0., 1.], contour_color)
+
+    def test_plot_device_data_checks_applicability_of_device_data(self):
+        device_data = dataset.DeviceData()
+        device_data.data = np.random.random(5)
+        test_dataset = aspecd.dataset.CalculatedDataset()
+        test_dataset.device_data["test"] = device_data
+        self.plotter.parameters["device_data"] = "test"
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            plotter = test_dataset.plot(self.plotter)
 
 
 class TestSinglePlotter2DStacked(unittest.TestCase):
@@ -980,6 +1010,27 @@ class TestSinglePlotter2DStacked(unittest.TestCase):
         plotter = test_dataset.plot(self.plotter)
         self.assertEqual(5, len(plotter.axes.get_yticks()))
 
+    def test_plot_device_data_plots_device_data(self):
+        device_data = dataset.DeviceData()
+        device_data.data = np.random.random([5, 5])
+        test_dataset = aspecd.dataset.CalculatedDataset()
+        test_dataset.device_data["test"] = device_data
+        self.plotter.parameters["device_data"] = "test"
+        plotter = test_dataset.plot(self.plotter)
+        self.assertListEqual(
+            list(device_data.data[:, 0]),
+            list(plotter.axes.lines[0].get_ydata())
+        )
+
+    def test_plot_device_data_checks_applicability_of_device_data(self):
+        device_data = dataset.DeviceData()
+        device_data.data = np.random.random(5)
+        test_dataset = aspecd.dataset.CalculatedDataset()
+        test_dataset.device_data["test"] = device_data
+        self.plotter.parameters["device_data"] = "test"
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            plotter = test_dataset.plot(self.plotter)
+
 
 class TestMultiPlotter(unittest.TestCase):
     def setUp(self):
@@ -997,6 +1048,12 @@ class TestMultiPlotter(unittest.TestCase):
 
     def test_datasets_property_is_list(self):
         self.assertTrue(isinstance(self.plotter.datasets, list))
+
+    def test_has_data_property(self):
+        self.assertTrue(hasattr(self.plotter, 'data'))
+
+    def test_data_property_is_list(self):
+        self.assertTrue(isinstance(self.plotter.data, list))
 
     def test_plot_without_datasets_raises(self):
         with self.assertRaises(aspecd.exceptions.MissingDatasetError):
@@ -1133,6 +1190,25 @@ class TestMultiPlotter(unittest.TestCase):
         for key in ['datasets', 'drawings']:
             with self.subTest(key=key):
                 self.assertNotIn(key, self.plotter.to_dict())
+
+    def test_plot_sets_data(self):
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random(5)
+        self.plotter.datasets.append(test_dataset)
+        self.plotter.plot()
+        self.assertListEqual(list(self.plotter.data[0].data),
+                             list(test_dataset.data.data))
+
+    def test_plot_with_device_data_sets_data(self):
+        device_data = dataset.DeviceData()
+        device_data.data = np.random.random(5)
+        test_dataset = dataset.Dataset()
+        test_dataset.device_data["test"] = device_data
+        self.plotter.datasets.append(test_dataset)
+        self.plotter.parameters["device_data"] = "test"
+        self.plotter.plot()
+        self.assertListEqual(list(self.plotter.data[0].data),
+                             list(device_data.data))
 
 
 class TestMultiPlotter1D(unittest.TestCase):
@@ -1281,6 +1357,15 @@ class TestMultiPlotter1D(unittest.TestCase):
                               max(self.dataset.data.data)],
                              list(self.plotter.ax.get_xlim()))
         self.assertListEqual([0, 4], list(self.plotter.ax.get_ylim()))
+
+    def test_plot_device_data_checks_applicability(self):
+        device_data = dataset.DeviceData()
+        device_data.data = np.random.random([5, 5])
+        self.dataset.device_data["test"] = device_data
+        self.plotter.parameters["device_data"] = "test"
+        self.plotter.datasets.append(self.dataset)
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            self.plotter.plot()
 
 
 class TestMultiPlotter1DStacked(unittest.TestCase):

@@ -433,8 +433,8 @@ class Plotter(aspecd.utils.ToDictMixin):
 
     # noinspection PyUnusedLocal
     @staticmethod
-    def applicable(dataset):  # pylint: disable=unused-argument
-        """Check whether plot is applicable to the given dataset.
+    def applicable(data):
+        """Check whether plot is applicable to the dataset.
 
         Returns `True` by default and needs to be implemented in classes
         inheriting from Plotter according to their needs.
@@ -807,7 +807,7 @@ class SinglePlotter(Plotter):
             self.data = self.dataset.data
 
     def _check_applicability(self):
-        if not self.applicable(self.dataset):
+        if not self.applicable(self.data):
             message = f"{self.name} not applicable to dataset with id " \
                       f"{self.dataset.id}"
             raise aspecd.exceptions.NotApplicableToDatasetError(message=message)
@@ -993,8 +993,8 @@ class SinglePlotter1D(SinglePlotter):
             self.axes.set_ylabel(old_xlabel)
 
     @staticmethod
-    def applicable(dataset):
-        """Check whether plot is applicable to the given dataset.
+    def applicable(data):
+        """Check whether plot is applicable to the dataset.
 
         Checks for the dimension of the data of the dataset, i.e. the
         :attr:`aspecd.dataset.Data.data` attribute. Returns `True` if data
@@ -1006,7 +1006,7 @@ class SinglePlotter1D(SinglePlotter):
             `True` if successful, `False` otherwise.
 
         """
-        return dataset.data.data.ndim == 1
+        return data.data.ndim == 1
 
 
 class SinglePlotter2D(SinglePlotter):
@@ -1217,7 +1217,7 @@ class SinglePlotter2D(SinglePlotter):
         self._type = plot_type
 
     @staticmethod
-    def applicable(dataset):
+    def applicable(data):
         """Check whether plot is applicable to the given dataset.
 
         Checks for the dimension of the data of the dataset, i.e. the
@@ -1230,7 +1230,7 @@ class SinglePlotter2D(SinglePlotter):
             `True` if successful, `False` otherwise.
 
         """
-        return dataset.data.data.ndim == 2
+        return data.data.ndim == 2
 
     def _create_plot(self):
         """Create actual plot.
@@ -1471,8 +1471,8 @@ class SinglePlotter2DStacked(SinglePlotter):
         self.properties = SinglePlot1DProperties()
 
     @staticmethod
-    def applicable(dataset):
-        """Check whether plot is applicable to the given dataset.
+    def applicable(data):
+        """Check whether plot is applicable to the dataset.
 
         Checks for the dimension of the data of the dataset, i.e. the
         :attr:`aspecd.dataset.Data.data` attribute. Returns `True` if data
@@ -1484,7 +1484,7 @@ class SinglePlotter2DStacked(SinglePlotter):
             `True` if successful, `False` otherwise.
 
         """
-        return dataset.data.data.ndim == 2
+        return data.data.ndim == 2
 
     def _create_plot(self):
         if self.parameters['offset'] is None:
@@ -1615,6 +1615,7 @@ class MultiPlotter(Plotter):
         super().__init__()
         self.properties = MultiPlotProperties()
         self.datasets = []
+        self.data = []
         self.description = 'Abstract plotting step for multiple dataset'
         # noinspection PyTypeChecker
         self.parameters['axes'] = [aspecd.dataset.Axis(),
@@ -1651,6 +1652,7 @@ class MultiPlotter(Plotter):
             Raised when no datasets exist to act on
 
         """
+        self._assign_data()
         self._check_for_applicability()
         self._set_drawing_properties()
         super().plot()
@@ -1659,10 +1661,21 @@ class MultiPlotter(Plotter):
         # Update/redraw legend after having set properties
         self._set_legend()
 
+    def _assign_data(self):
+        if self.parameters["device_data"]:
+            device = self.parameters["device_data"]
+            for dataset in self.datasets:
+                if device not in dataset.device_data:
+                    raise KeyError(f"Device '{device}' not found in dataset.")
+                self.data.append(dataset.device_data[device])
+        else:
+            for dataset in self.datasets:
+                self.data.append(dataset.data)
+
     def _check_for_applicability(self):
         if not self.datasets:
             raise aspecd.exceptions.MissingDatasetError
-        if not all(self.applicable(dataset) for dataset in self.datasets):
+        if not all(self.applicable(data) for data in self.data):
             raise aspecd.exceptions.NotApplicableToDatasetError(
                 f'{self.name} not applicable to one or more datasets')
 
@@ -1881,7 +1894,7 @@ class MultiPlotter1D(MultiPlotter):
         self._type = plot_type
 
     @staticmethod
-    def applicable(dataset):
+    def applicable(data):
         """Check whether plot is applicable to the given dataset.
 
         Checks for the dimension of the data of the dataset, i.e. the
@@ -1894,7 +1907,7 @@ class MultiPlotter1D(MultiPlotter):
             `True` if successful, `False` otherwise.
 
         """
-        return dataset.data.data.ndim == 1
+        return data.data.ndim == 1
 
     def _create_plot(self):
         """Actual drawing of datasets"""
