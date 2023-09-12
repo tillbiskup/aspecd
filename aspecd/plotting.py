@@ -433,7 +433,7 @@ class Plotter(aspecd.utils.ToDictMixin):
 
     # noinspection PyUnusedLocal
     @staticmethod
-    def applicable(data):
+    def applicable(data):  # pylint: disable=unused-argument
         """Check whether plot is applicable to the dataset.
 
         Returns `True` by default and needs to be implemented in classes
