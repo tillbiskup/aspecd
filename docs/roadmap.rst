@@ -42,8 +42,6 @@ For next releases
 
 * Datasets
 
-  * Handling of additional axes/parameters that are logged parallel to a measurement, requiring extension of the dataset model.
-
   * Add export tasks to dataset tasks
 
 * Recipe-driven data analysis:

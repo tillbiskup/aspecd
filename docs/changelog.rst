@@ -22,6 +22,11 @@ New features
 * New parameter ``device_data`` in :class:`aspecd.plotting.Plotter` for plotting device data rather than primary data of a dataset/datasets
 
 
+Changes
+-------
+
+* Plotters can now handle device data instead of the primary data of a dataset (see above). This means, however, that instead of accessing ``self.dataset.data`` (or ``self.datasets[#].data``), plotters need to access ``self.data.data`` (or ``self.data[#].data``) instead. **Authors of derived packages should update their plotters accordingly.**
+
 Version 0.8.4
 =============
 
