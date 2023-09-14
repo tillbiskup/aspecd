@@ -1328,5 +1328,9 @@ class TestDeviceData(unittest.TestCase):
     def test_has_metadata_property(self):
         self.assertTrue(hasattr(self.device_data, 'metadata'))
 
+    def test_metadata_property_is_device_metadata(self):
+        self.assertIsInstance(self.device_data.metadata,
+                              aspecd.metadata.Device)
+
     def test_calculated_is_false(self):
         self.assertFalse(self.device_data.calculated)

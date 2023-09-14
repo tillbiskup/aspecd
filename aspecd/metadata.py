@@ -637,6 +637,45 @@ class Calculation(Metadata):
         super().__init__(dict_=dict_)
 
 
+class Device(Metadata):
+    """
+    Information on the device contributing device data.
+
+    The dataset concept (see :class:`aspecd.dataset.Dataset`) rests on the
+    assumption that there is one particular set of data that can be
+    regarded as the actual or primary data of the dataset. However,
+    in many cases, parallel to these actual data, other data are recorded
+    as well, be it readouts from monitors or alike.
+
+    This class contains the metadata of the corresponding devices whose
+    data are of type :class:`aspecd.dataset.DeviceData`. That class
+    contains an attribute :attr:`aspecd.dataset.DeviceData.metadata`.
+
+    .. note::
+        You will usually need to implement derived classes for concrete
+        devices, as this class only contains a minimum set of attributes.
+
+
+    Attributes
+    ----------
+    label : :class:`str`
+        Label of the device
+
+    Parameters
+    ----------
+    dict_ : :class:`dict`
+        Dictionary containing fields corresponding to attributes of the class
+
+
+    .. versionadded:: 0.9
+
+    """
+
+    def __init__(self, dict_=None):
+        self.label = ''
+        super().__init__(dict_=dict_)
+
+
 class DatasetMetadata(aspecd.utils.ToDictMixin):
     """
     Metadata for dataset.

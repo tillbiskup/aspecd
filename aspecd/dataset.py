@@ -1429,12 +1429,13 @@ class DeviceData(Data):
 
     Attributes
     ----------
-    metadata : :class:`aspecd.metadata.Metadata`
+    metadata : :class:`aspecd.metadata.Device`
         Metadata of the device used to record the additional data
 
         .. note::
-            For actual devices you will probably create dedicated classes
-            inheriting from :class:`aspecd.metadata.Metadata`.
+            For actual devices you will want to create dedicated classes
+            inheriting from :class:`aspecd.metadata.Device` and extending
+            the available attributes.
 
     calculated : :class:`bool`
         Indicator for the origin of the numerical data (calculation or
@@ -1449,5 +1450,5 @@ class DeviceData(Data):
 
     def __init__(self):
         super().__init__()
-        self.metadata = aspecd.metadata.Metadata()
+        self.metadata = aspecd.metadata.Device()
         self.calculated = False
