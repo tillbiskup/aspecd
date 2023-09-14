@@ -18,6 +18,7 @@ New features
 
   * New class :class:`aspecd.dataset.DeviceData` for device data.
   * New class :class:`aspecd.analysis.DeviceDataExtraction` for extracting device data from a dataset as a separate dataset. This allows to proceed with the extracted datasets as with any other dataset.
+  * New class :class:`aspecd.plotting.MultiDeviceDataPlotter1D` for plotting multiple device data of a single dataset.
 
 * New parameter ``device_data`` in :class:`aspecd.plotting.Plotter` for plotting device data rather than primary data of a dataset/datasets
 
