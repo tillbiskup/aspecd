@@ -118,6 +118,11 @@ Concrete plotters for single datasets
   Composite plotter for single datasets, allowing to plot different views of
   one and the same datasets by using existing plotters for single datasets.
 
+* :class:`aspecd.plotting.MultiDeviceDataPlotter1D`
+
+  Basic line plots for multiple device data of a single dataset, allowing to
+  plot a series of line-type plots, including (semi)log plots
+
 
 Concrete plotters for multiple datasets
 ---------------------------------------
@@ -317,6 +322,10 @@ class Plotter(aspecd.utils.ToDictMixin):
             those device data instead of the primary data of the dataset,
             provide the key(s) to the device(s) the data should be plotted
             for.
+
+            Will be a string (*i.e.* data of a single device) in all cases
+            except of specific plotters for plotting data of multiple
+            devices.
 
             Default: ''
 
@@ -1578,6 +1587,256 @@ class SinglePlotter2DStacked(SinglePlotter):
                     zorder=1)
 
 
+class MultiDeviceDataPlotter1D(SinglePlotter1D):
+    """1D plots of multiple device data of a single dataset.
+
+    Convenience class taking care of 1D plots of multiple device data
+    of a single dataset. The type of plot can be set in its
+    :attr:`SinglePlotter1D.type` attribute. Allowed types are stored in the
+    :attr:`SinglePlotter1D.allowed_types` attribute.
+
+    Quite a number of properties for figure, axes, and line can be set
+    using the :attr:`MultiDeviceDataPlotter1D.properties` attribute.
+    For details, see the documentation of its respective class,
+    :class:`MultiPlot1DProperties`.
+
+    To perform the plot, call the :meth:`plot` method of the dataset the plot
+    should be performed for, and provide a reference to the actual plotter
+    object to it.
+
+    Attributes
+    ----------
+    dataset : :class:`aspecd.dataset.Dataset`
+        Dataset the plotting should be done for
+
+    data : :class:`list`
+        Actual data that should be plotted.
+
+        List of :class:`aspecd.dataset.DeviceData` objects corresponding
+        to the device data selected using the parameter ``device_data``.
+
+    drawing : :class:`list`
+        List of :obj:`matplotlib.artist.Artist` objects, one for each of the
+        actual lines of the plot
+
+    properties : :class:`aspecd.plotting.MultiPlot1DProperties`
+        Properties of the plot, defining its appearance
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.MultiPlot1DProperties` class.
+
+    parameters : :class:`dict`
+        All parameters necessary for the plot, implicit and explicit
+
+        The following keys exist, in addition to those of the superclass:
+
+        axes : :class:`list`
+            List of objects of class :class:`aspecd.dataset.Axis`
+
+            There is two ways of setting axes labels: The user may provide
+            the information required here. Alternatively, if no such
+            information is provided, the axes of each dataset are checked
+            for consistency, and if they are found to be identical,
+            this information is used.
+
+        tight: :class:`str`
+            Whether to set the axes limits tight to the data
+
+            Possible values: 'x', 'y', 'both'
+
+            Default: ''
+
+        switch_axes : :class:`bool`
+            Whether to switch *x* and *y* axes
+
+            Normally, the first axis is used as *x* axis, and the second
+            as *y* axis. Sometimes, switching this assignment is
+            necessary or convenient.
+
+            Default: False
+
+
+    Raises
+    ------
+    TypeError
+        Raised when wrong plot type is set
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. Of course, all parameters settable
+    for the superclasses can be set as well. The examples focus each on a
+    single aspect.
+
+    In the simplest case, just invoke the plotter with default values.
+    Note, however, that in any case, you need to provide a list of devices
+    whose data should be plotted:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: MultiDeviceDataPlotter1D
+          properties:
+            parameters:
+              device_data:
+                - device_1
+                - device_2
+            filename: output.pdf
+
+
+    .. versionadded:: 0.9
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = '1D plotting step for multiple device data'
+        self.data = []
+        self.drawing = []
+        self.parameters['axes'] = [aspecd.dataset.Axis(),
+                                   aspecd.dataset.Axis()]
+        self.parameters['tight'] = ''
+        self.parameters['switch_axes'] = False
+        self.properties = MultiPlot1DProperties()
+
+    @property
+    def drawings(self):
+        """Alias for drawing property.
+
+        As the plotter uses :class:`MultiPlot1DProperties` as
+        :attr:`properties`, this alias is necessary to apply the drawings
+        settings.
+
+        """
+        return self.drawing
+
+    @staticmethod
+    def applicable(data):
+        """Check whether plot is applicable to the given dataset.
+
+        Checks for the dimension of the data of the dataset, i.e. the
+        :attr:`aspecd.dataset.Data.data` attribute. Returns `True` if data
+        are one-dimensional, and `False` otherwise.
+
+        Returns
+        -------
+        applicable : :class:`bool`
+            `True` if successful, `False` otherwise.
+
+        """
+        return data.data.ndim == 1
+
+    def _check_applicability(self):
+        for data in self.data:
+            if not self.applicable(data):
+                message = f"{self.name} not applicable to dataset with id " \
+                          f"{self.dataset.id}"
+                raise aspecd.exceptions.NotApplicableToDatasetError(
+                    message=message)
+
+    def _assign_data(self):
+        if not self.parameters["device_data"]:
+            raise KeyError("No device data provided")
+        if not isinstance(self.parameters["device_data"], list):
+            # noinspection PyTypedDict
+            self.parameters["device_data"] = [self.parameters["device_data"]]
+        devices = self.parameters["device_data"]
+        for device in devices:
+            if device not in self.dataset.device_data:
+                raise KeyError(f"Device '{device}' not found in dataset.")
+            self.data.append(self.dataset.device_data[device])
+
+    def _create_plot(self):
+        self._set_drawing_properties()
+        plot_function = getattr(self.axes, self.type)
+        for idx, data in enumerate(self.data):
+            label = data.metadata.label or self.parameters['device_data'][idx]
+            if not self.properties.drawings[idx].label:
+                self.properties.drawings[idx].label = label
+            if self.parameters['switch_axes']:
+                drawing, = plot_function(data.data,
+                                         data.axes[0].values,
+                                         label=label)
+            else:
+                drawing, = plot_function(data.axes[0].values,
+                                         data.data,
+                                         label=label)
+            self.drawing.append(drawing)
+        if self.parameters['tight']:
+            axes_limits = [min(data.axes[0].values.min()
+                               for data in self.data),
+                           max(data.axes[0].values.max()
+                               for data in self.data)]
+            data_limits = [min(data.data.min()
+                               for data in self.data),
+                           max(data.data.max()
+                               for data in self.data)]
+            if self.parameters['tight'] in ('x', 'both'):
+                if self.parameters['switch_axes']:
+                    self.axes.set_xlim(data_limits)
+                else:
+                    self.axes.set_xlim(axes_limits)
+            if self.parameters['tight'] in ('y', 'both'):
+                if self.parameters['switch_axes']:
+                    self.axes.set_ylim(axes_limits)
+                else:
+                    self.axes.set_ylim(data_limits)
+
+    def _set_drawing_properties(self):
+        for _ in range(len(self.properties.drawings), len(self.data)):
+            self.properties.add_drawing()
+
+    # noinspection PyUnresolvedReferences
+    def _set_axes_labels(self):
+        """Set axes labels from axes.
+
+        This method is called automatically by :meth:`plot`.
+
+        There is two ways of setting axes labels: The user may provide the
+        information required in the "axes" key of the
+        :attr:`aspecd.plotting.Plotter.parameters` property containing a
+        list of :obj:`aspecd.dataset.Axis` objects. Alternatively,
+        if no such information is provided, the axes of each dataset are
+        checked for consistency, and if they are found to be identical,
+        this information is used.
+
+        If you ever need to change the handling of your axes labels,
+        override this method in a child class.
+        """
+        xquantities = [data.axes[0].quantity for data in self.data]
+        xunits = [data.axes[0].unit for data in self.data]
+        yquantities = [data.axes[1].quantity for data in self.data]
+        yunits = [data.axes[1].unit for data in self.data]
+        if self.parameters['axes'][0].quantity:
+            xlabel = \
+                self._create_axis_label_string(self.parameters['axes'][0])
+        elif aspecd.utils.all_equal(xquantities) and \
+                aspecd.utils.all_equal(xunits):
+            xlabel = self._create_axis_label_string(self.data[0].axes[0])
+        elif self.properties.axes.xlabel:
+            xlabel = self.properties.axes.xlabel
+        else:
+            xlabel = ''
+        if self.parameters['axes'][1].quantity:
+            ylabel = \
+                self._create_axis_label_string(self.parameters['axes'][1])
+        elif aspecd.utils.all_equal(yquantities) and \
+                aspecd.utils.all_equal(yunits):
+            ylabel = self._create_axis_label_string(self.data[0].axes[1])
+        elif self.properties.axes.ylabel:
+            ylabel = self.properties.axes.ylabel
+        else:
+            ylabel = ''
+        self.axes.set_xlabel(xlabel)
+        self.axes.set_ylabel(ylabel)
+        if self.parameters['switch_axes']:
+            old_xlabel = self.axes.get_xlabel()
+            old_ylabel = self.axes.get_ylabel()
+            self.axes.set_xlabel(old_ylabel)
+            self.axes.set_ylabel(old_xlabel)
+
+
 class MultiPlotter(Plotter):
     """Base class for plots of multiple datasets.
 
@@ -1599,8 +1858,25 @@ class MultiPlotter(Plotter):
     ----------
     properties : :class:`aspecd.plotting.MultiPlotProperties`
         Properties of the plot, defining its appearance
+
     datasets : :class:`list`
         List of dataset the plotting should be done for
+
+    parameters : :class:`dict`
+        All parameters necessary for the plot, implicit and explicit
+
+        The following keys exist, in addition to the keys inherited from the
+        superclass:
+
+        axes : :class:`list`
+            List of objects of class :class:`aspecd.dataset.Axis`
+
+            There is two ways of setting axes labels: The user may provide
+            the information required here. Alternatively, if no such
+            information is provided, the axes of each dataset are checked
+            for consistency, and if they are found to be identical,
+            this information is used.
+
 
     Raises
     ------
@@ -1621,7 +1897,7 @@ class MultiPlotter(Plotter):
         self.parameters['axes'] = [aspecd.dataset.Axis(),
                                    aspecd.dataset.Axis()]
         self.__kind__ = 'multiplot'
-        self._exclude_from_to_dict.extend(['datasets', 'drawings'])
+        self._exclude_from_to_dict.extend(['datasets', 'drawings', 'data'])
 
     def plot(self):
         """Perform the actual plotting on the given list of datasets.
