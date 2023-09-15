@@ -918,6 +918,21 @@ class SinglePlotter1D(SinglePlotter):
              switch_axes: true
            filename: output.pdf
 
+    If the dataset contains additional device data, and you want to plot
+    data of a single device rather than the primary data of the dataset (
+    and the device data are 1D), provide the name of the device (*i.e.*,
+    the key the device data are stored in the dataset). Assuming the
+    device data are stored as ``timestamp`` in the dataset:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            parameters:
+              device_data: timestamp
+            filename: output.pdf
+
     .. versionchanged:: 0.7
         New parameter ``switch_axes``
 
@@ -1684,6 +1699,66 @@ class MultiDeviceDataPlotter1D(SinglePlotter1D):
                 - device_2
             filename: output.pdf
 
+    Often, it is convenient to have a legend to know for which devices the
+    data are plotted:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: MultiDeviceDataPlotter1D
+          properties:
+            parameters:
+              device_data:
+                - device_1
+                - device_2
+              show_legend: True
+            filename: output.pdf
+
+    Here, it is interesting to note what labels will be used: Usually,
+    the data for each device will have the attribute
+    :class:`aspecd.metadata.Device.label` set, and if so, this label will
+    be used as label in the legend. If this attribute is not set, and you
+    do not provide an alternative label in the
+    :attr:`MultiPlot1DProperties.drawing` attribute, the key the device
+    data are known within the dataset will be used in the legend.
+
+    To explicitly set (or override) the labels of your device data:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: MultiDeviceDataPlotter1D
+          properties:
+            parameters:
+              device_data:
+                - device_1
+                - device_2
+              show_legend: True
+            properties:
+              drawings:
+                - label: first device
+                - label: second device
+            filename: output.pdf
+
+    As axes are only labelled in case the axes of all devices are
+    compatible, there may be situations where you want to set the axes
+    properties explicitly:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: MultiDeviceDataPlotter1D
+          properties:
+            parameters:
+              device_data:
+                - device_1
+                - device_2
+              axes:
+                - quantity: time
+                  unit: s
+                - quantity: intensity
+                  unit: a.u.
+            filename: output.pdf
 
     .. versionadded:: 0.9
 
