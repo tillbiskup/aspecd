@@ -32,6 +32,8 @@ Changes
 
 * Serving recipes logs messages from all ASpecD modules, not only from the :mod:`aspecd.tasks` module.
 
+* :class:`aspecd.io.DatasetImporterFactory` logs warning if no concrete importer could be found for a given dataset, as this will usually result in (sometimes hard to detect) downstream problems.
+
 
 Version 0.8.4
 =============

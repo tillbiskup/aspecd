@@ -291,6 +291,7 @@ Module documentation
 """
 import copy
 import io
+import logging
 import os
 import tempfile
 import zipfile
@@ -301,6 +302,9 @@ import numpy as np
 import aspecd.exceptions
 import aspecd.metadata
 import aspecd.utils
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 
 class DatasetImporter:
@@ -575,6 +579,8 @@ class DatasetImporterFactory:
             return AsdfImporter(source=self.source)
         if file_extension == '.txt':
             return TxtImporter(source=self.source)
+        logger.warning('No importer found. Using default importer. This may '
+                       'result in downstream problems.')
         return DatasetImporter(source=self.source)
 
 

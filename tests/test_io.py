@@ -147,6 +147,12 @@ class TestDatasetImporterFactory(unittest.TestCase):
                                              parameters=parameters)
         self.assertDictEqual(parameters, importer.parameters)
 
+    def test_returning_abstract_importer_logs_warning(self):
+        with self.assertLogs(__package__, level='WARNING') as captured:
+            self.factory.get_importer(source=self.source)
+        self.assertEqual(len(captured.records), 1)
+        self.assertIn('default importer', captured.output[0].lower())
+
 
 class TestRecipeImporter(unittest.TestCase):
     def setUp(self):
