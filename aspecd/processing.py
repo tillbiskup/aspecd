@@ -3073,7 +3073,7 @@ class CommonRangeExtraction(MultiProcessingStep):
         Unit of last axis (*i.e.*, intensity) gets ignored when checking for
         same units
 
-    .. versionchanged:: 0.8.4
+    .. versionchanged:: 0.9
         Works for *N*\ D datasets with arbitrary dimension *N*
 
     """

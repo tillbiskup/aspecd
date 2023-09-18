@@ -14,15 +14,29 @@ Version 0.9.0
 New features
 ------------
 
-* New property :attr:`aspecd.dataset.Dataset.device_data` for storing additional/secondary (monitoring) data.
+* Processing steps
+
+  * :class:`aspecd.processing.CommonRangeExtraction` works for *N*\ D datasets with arbitrary dimension *N*
+
+* Plotting
+
+  * Legend title can be set from recipes
+
+  * New attribute :attr:`aspecd.plotting.AxesProperties.invert` for inverting axes. Helpful, *e.g.*, for plotting FTIR data without having to resort to explicitly provide descending axis limits.
+
+* Device data
+
+  * New property :attr:`aspecd.dataset.Dataset.device_data` for storing additional/secondary (monitoring) data.
 
   * New class :class:`aspecd.dataset.DeviceData` for device data.
   * New class :class:`aspecd.analysis.DeviceDataExtraction` for extracting device data from a dataset as a separate dataset. This allows to proceed with the extracted datasets as with any other dataset.
   * New class :class:`aspecd.plotting.MultiDeviceDataPlotter1D` for plotting multiple device data of a single dataset.
 
-* New parameter ``device_data`` in :class:`aspecd.plotting.Plotter` for plotting device data rather than primary data of a dataset/datasets
+  * New parameter ``device_data`` in :class:`aspecd.plotting.Plotter` for plotting device data rather than primary data of a dataset/datasets
 
-* New function :func:`aspecd.utils.get_logger` to get a logger object for a given module with the logger within the hierarchy of the ASpecD root logger. Important for packages derived from the ASpecD framework in order to get their log messages being captured, *e.g.* during recipe-driven data analysis.
+* Logging
+
+  * New function :func:`aspecd.utils.get_logger` to get a logger object for a given module with the logger within the hierarchy of the ASpecD root logger. Important for packages derived from the ASpecD framework in order to get their log messages being captured, *e.g.* during recipe-driven data analysis.
 
 
 Changes
@@ -35,20 +49,6 @@ Changes
 * :class:`aspecd.io.DatasetImporterFactory` logs warning if no concrete importer could be found for a given dataset, as this will usually result in (sometimes hard to detect) downstream problems.
 
 * :class:`aspecd.io.DatasetExporter` adds a history record to :attr:`aspecd.dataset.Dataset.tasks`.
-
-
-Version 0.8.4
-=============
-
-*Not yet released*
-
-
-New features
-------------
-
-* :class:`aspecd.processing.CommonRangeExtraction` works for *N*\ D datasets with arbitrary dimension *N*
-* Legend title can be set from recipes
-* New attribute :attr:`aspecd.plotting.AxesProperties.invert` for inverting axes. Helpful, *e.g.*, for plotting FTIR data without having to resort to explicitly provide descending axis limits.
 
 
 Documentation

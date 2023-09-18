@@ -73,43 +73,48 @@ framework, are:
     more) simulations.
 
 
-History records
-===============
+Device data
+===========
 
-In addition, to handle the history contained within a dataset, there is a
-series of classes for storing history records:
+The dataset concept (see :class:`aspecd.dataset.Dataset`) rests on the
+assumption that there is one particular set of data that can be
+regarded as the actual or primary data of the dataset. However,
+in many cases, parallel to these actual data, other data are recorded
+as well, be it readouts from monitors or alike.
 
-  * :class:`aspecd.dataset.HistoryRecord`
+Usually, these additional data will share one axis with the
+primary data of the dataset. However, this is not necessarily the
+case. Furthermore, one dataset may contain an arbitrary number of
+additional device data entries.
 
-    Generic base class for all kinds of history records.
+Technically speaking, :class:`aspecd.dataset.DeviceData` are a special
+or extended type of :class:`aspecd.dataset.Data`, *i.e.* a unit
+containing both numerical data and corresponding axes. However,
+this class extends that with metadata specific for the device the
+additional data have been recorded with. Why storing metadata here and
+not in the :attr:`aspecd.dataset.Dataset.metadata` property? The
+latter is more concerned with an overall description of the
+experimental setup in sufficient detail, while the metadata contained
+in this class are more device-specific. Potential contents of the
+metadata here are internal device IDs, addresses for communication,
+and alike. Eventually, the metadata contained herein are those that
+can be relevant mainly for debugging purposes or sanity checks of
+experiments.
 
-    For all classes operating on datasets, such as
-    :class:`aspecd.processing.SingleProcessingStep`,
-    :class:`aspecd.analysis.SingleAnalysisStep` and others, there exist at
-    least two "representations": (i) the generic one not (necessarily) tied
-    to any concrete dataset, thus portable, and (ii) a concrete one having
-    operated on a dataset and thus being accompanied with information about
-    who has done what when how to what dataset.
+.. admonition:: Example
 
-    For this second type, a history class derived from
-    :class:`aspecd.dataset.HistoryRecord` gets used, and it is this second type
-    that is stored inside the Dataset object.
-
-  * :class:`aspecd.dataset.ProcessingHistoryRecord`
-
-    History record for processing steps on datasets.
-
-  * :class:`aspecd.dataset.AnalysisHistoryRecord`
-
-    History record for analysis steps on datasets.
-
-  * :class:`aspecd.dataset.AnnotationHistoryRecord`
-
-    History record for annotations of datasets.
-
-  * :class:`aspecd.dataset.PlotHistoryRecord`
-
-    History record for plots of datasets.
+    A real example for additional data recorded in spectroscopy comes
+    from time-resolved EPR (tr-EPR) spectroscopy: Here, you usually
+    record 2D data as function of magnetic field and time, *i.e.* a
+    full time profile per magnetic field point. As this is a
+    non-standard method, often setups are controlled by lab-written
+    software and allow for monitoring parameters not usually recorded
+    with commercial setups. In this particular case, this can be the
+    time stamp and microwave frequency for each individual recorded
+    time trace, and the `Python trEPR package
+    <https://docs.trepr.de/>`_ not only handles tr-EPR data, but is
+    capable of dealing with both additional types of data for analysis
+    purposes.
 
 
 Module documentation

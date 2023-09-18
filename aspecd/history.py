@@ -13,6 +13,74 @@ version information of the routine. Additional useful aspects contain
 information about the operating system used, the name of the operator,
 and the date the processing step has been performed.
 
+Furthermore, for reproducing data processing and analysis tasks in a
+modular fashion, there should be a way to create the actual objects for
+operating on a dataset from the history records stored in the history of
+the dataset. Furthermore, it is important to not store the actual objects
+(or a representation) of the individual tasks. Firstly, this would easily
+result in an infinite regress, as the dataset is referenced from within
+the task objects, and secondly, importing a stored dataset with a history
+would not work if during import the actual objects of the individual tasks
+need to be restored and the class has changed or does not exist (anymore).
+Thus, operating with history records is the most modular and robust way.
+
+
+Types of history records
+========================
+
+In addition, to handle the history contained within a dataset, there is a
+series of classes for storing history records:
+
+  * :class:`HistoryRecord`
+
+    Generic base class for all kinds of history records.
+
+    For all classes operating on datasets, such as
+    :class:`aspecd.processing.SingleProcessingStep`,
+    :class:`aspecd.analysis.SingleAnalysisStep` and others, there exist at
+    least two "representations": (i) the generic one not (necessarily) tied
+    to any concrete dataset, thus portable, and (ii) a concrete one having
+    operated on a dataset and thus being accompanied with information about
+    who has done what when how to what dataset.
+
+    For this second type, a history class derived from
+    :class:`aspecd.dataset.HistoryRecord` gets used, and it is this second type
+    that is stored inside the Dataset object.
+
+  * :class:`ProcessingHistoryRecord`
+
+    History record for processing steps on datasets.
+
+  * :class:`AnalysisHistoryRecord`
+
+    History record for analysis steps on datasets.
+
+  * :class:`AnnotationHistoryRecord`
+
+    History record for annotations of datasets.
+
+  * :class:`PlotHistoryRecord`
+
+    History record for plots of datasets.
+
+  * :class:`TableHistoryRecord`
+
+    History record for tables created from datasets.
+
+  * :class:`DatasetExporterHistoryRecord`
+
+    History record for exporters operating on datasets.
+
+
+.. todo::
+
+    Clarifly the difference between the HistoryRecord and Record classes,
+    and explain which is used when and how.
+
+
+Module documentation
+====================
+
 """
 
 from datetime import datetime

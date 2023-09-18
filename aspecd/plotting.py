@@ -3584,7 +3584,7 @@ class AxesProperties(aspecd.utils.Properties):
     .. versionchanged:: 0.6
         New properties ``xticklabelangle`` and ``yticklabelangle``
 
-    .. versionchanged:: 0.8.4
+    .. versionchanged:: 0.9
         New property ``invert``
 
     """
@@ -3748,7 +3748,7 @@ class LegendProperties(aspecd.utils.Properties):
     .. versionchanged:: 0.8
         Added attribute :attr:`ncol`
 
-    .. versionchanged:: 0.8.4
+    .. versionchanged:: 0.9
         Added attribute :attr:`title`
 
     """
