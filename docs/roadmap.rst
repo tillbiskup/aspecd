@@ -10,6 +10,14 @@ For next releases
 
 * Plotting
 
+  * :class:`aspecd.plotting.MultiDeviceDataPlotter1DStacked`
+
+    Similar to :class:`aspecd.plotting.MultiDeviceDataPlotter1D`, but stacked display of the individual lines as in :class:`aspecd.plotting.SinglePlotter2DStacked`
+
+  * :class:`aspecd.plotting.`MultiDeviceDataPlotter1DSeparated`
+
+    Similar to :class:`aspecd.plotting.MultiDeviceDataPlotter1D`, but with the different device data plotted in separate axes stacked vertically
+
   * Colorbar for 2D plotter
 
     https://matplotlib.org/stable/api/figure_api.html#matplotlib.figure.Figure.colorbar
@@ -43,6 +51,8 @@ For next releases
   * Sub-recipes that can be included in recipes
 
     Allows for creating a library of recipes for rather complex tasks that can simply be called as single step from another recipe
+
+  * Static (syntax) checker for recipes prior to their execution
 
 * Report task:
 
