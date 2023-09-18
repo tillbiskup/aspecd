@@ -3687,7 +3687,7 @@ class TestChefDeService(unittest.TestCase):
         os.remove(history_filename)
 
 
-@unittest.skip
+#@unittest.skip
 class TestServe(unittest.TestCase):
 
     def setUp(self):
@@ -3772,6 +3772,14 @@ class TestServe(unittest.TestCase):
         result = subprocess.run(["serve", "-q", self.recipe_filename],
                                 capture_output=True, text=True)
         self.assertNotIn('Import dataset', result.stdout)
+
+    def test_logging_from_other_module_than_tasks(self):
+        tabulate_task = {'kind': 'tabulate', 'type': 'Table'}
+        self.recipe_dict['tasks'].append(tabulate_task)
+        self.create_recipe()
+        result = subprocess.run(["serve", self.recipe_filename],
+                                capture_output=True, text=True)
+        self.assertIn('WARNING', result.stdout)
 
     def test_serve_catches_exceptions(self):
         self.recipe_dict["tasks"][0]["kind"] = "foo"

@@ -897,7 +897,7 @@ import aspecd.io
 import aspecd.plotting
 import aspecd.system
 import aspecd.utils
-
+from aspecd import package_logger
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -4348,13 +4348,13 @@ def serve():
 
     if not args.quiet:
         if args.verbose:
-            logger.setLevel(logging.DEBUG)
+            package_logger.setLevel(logging.DEBUG)
         else:
-            logger.setLevel(logging.INFO)
+            package_logger.setLevel(logging.INFO)
         handler = logging.StreamHandler(stream=sys.stdout)
         formatter = logging.Formatter('%(levelname)s - %(message)s')
         handler.setFormatter(formatter)
-        logger.addHandler(handler)
+        package_logger.addHandler(handler)
     chef_de_service = ChefDeService()
     try:
         chef_de_service.serve(recipe_filename=args.recipe)
