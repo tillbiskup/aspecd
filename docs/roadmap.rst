@@ -30,10 +30,6 @@ For next releases
 
   * :class:`aspecd.processing.BaselineCorrection` with ``fit_area`` definable as axis range, and arbitrary parts of the axis (*e.g.*, in the middle of a dataset or with separate fit areas)
 
-* Datasets
-
-  * Add export tasks to dataset tasks
-
 * Recipe-driven data analysis:
 
   * Better handling of automatically generated filenames for saving plots and reports: unique filenames; using the label rather than the source (id) of the dataset
