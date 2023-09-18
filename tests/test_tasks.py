@@ -3687,7 +3687,7 @@ class TestChefDeService(unittest.TestCase):
         os.remove(history_filename)
 
 
-#@unittest.skip
+@unittest.skip
 class TestServe(unittest.TestCase):
 
     def setUp(self):

@@ -897,7 +897,7 @@ import aspecd.io
 import aspecd.plotting
 import aspecd.system
 import aspecd.utils
-from aspecd import package_logger
+
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -4346,6 +4346,7 @@ def serve():
                        help="don't show any output")
     args = parser.parse_args()
 
+    package_logger = aspecd.utils.get_logger()
     if not args.quiet:
         if args.verbose:
             package_logger.setLevel(logging.DEBUG)

@@ -22,6 +22,8 @@ New features
 
 * New parameter ``device_data`` in :class:`aspecd.plotting.Plotter` for plotting device data rather than primary data of a dataset/datasets
 
+* New function :func:`aspecd.utils.get_logger` to get a logger object for a given module with the logger within the hierarchy of the ASpecD root logger. Important for packages derived from the ASpecD framework in order to get their log messages being captured, *e.g.* during recipe-driven data analysis.
+
 
 Changes
 -------

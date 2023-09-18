@@ -3,6 +3,7 @@
 import collections
 import copy
 import datetime
+import logging
 import os
 import shutil
 import unittest
@@ -940,3 +941,23 @@ class TestChangeWorkingDir(unittest.TestCase):
         with utils.change_working_dir('..'):
             pass
         self.assertEqual(oldpwd, os.getcwd())
+
+
+class TestGetLogger(unittest.TestCase):
+
+    def test_get_logger_returns_logger(self):
+        logger = utils.get_logger()
+        self.assertIsInstance(logger, logging.Logger)
+
+    def test_get_logger_without_argument_returns_package_logger(self):
+        logger = utils.get_logger()
+        self.assertEqual(utils.package_name(), logger.name)
+
+    def test_get_logger_with_argument_returns_child_logger(self):
+        logger = utils.get_logger(__name__)
+        name = ".".join([utils.package_name(), __name__])
+        self.assertEqual(name, logger.name)
+
+    def test_get_logger_returns_logger_with_null_handler(self):
+        logger = utils.get_logger(__name__)
+        self.assertIsInstance(logger.handlers[0], logging.NullHandler)
