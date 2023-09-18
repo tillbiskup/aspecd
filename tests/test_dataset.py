@@ -588,6 +588,19 @@ class TestDatasetExporting(unittest.TestCase):
         with self.assertRaises(aspecd.exceptions.MissingExporterError):
             self.dataset.export_to()
 
+    def test_export_adds_task(self):
+        self.dataset.export_to(self.exporter)
+        self.assertNotEqual(self.dataset.tasks, [])
+
+    def test_added_task_has_kind_export(self):
+        self.dataset.export_to(self.exporter)
+        self.assertEqual(self.dataset.tasks[0]['kind'], 'export')
+
+    def test_added_task_has_exporter_history_record(self):
+        self.dataset.export_to(self.exporter)
+        self.assertIsInstance(self.dataset.tasks[0]['task'],
+                              aspecd.history.DatasetExporterHistoryRecord)
+
 
 class TestDatasetToDict(unittest.TestCase):
     def setUp(self):

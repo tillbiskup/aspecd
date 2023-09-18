@@ -8,16 +8,6 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For next releases
 =================
 
-* Logging
-
-  * Add loggers from other modules (than task) and derived packages
-
-    Probably this means to switch to package-wide logging and documenting that derived packages need to log to the ASpecD logger as well.
-
-* Usability
-
-  * Importer/ImporterFactory should issue a warning if no dataset could be loaded, rather than silently continuing, as this often leads to downstream problems and exceptions thrown. (Requires changes in the way logging is currently done.)
-
 * Plotting
 
   * Colorbar for 2D plotter

@@ -670,6 +670,8 @@ class Dataset(aspecd.utils.ToDictMixin):
         if not exporter:
             raise aspecd.exceptions.MissingExporterError("No exporter provided")
         exporter.export_from(self)
+        exporter_record = exporter.create_history_record()
+        self._append_task(kind='export', task=exporter_record)
 
     def add_reference(self, dataset=None):
         """

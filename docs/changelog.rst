@@ -34,6 +34,8 @@ Changes
 
 * :class:`aspecd.io.DatasetImporterFactory` logs warning if no concrete importer could be found for a given dataset, as this will usually result in (sometimes hard to detect) downstream problems.
 
+* :class:`aspecd.io.DatasetExporter` adds a history record to :attr:`aspecd.dataset.Dataset.tasks`.
+
 
 Version 0.8.4
 =============

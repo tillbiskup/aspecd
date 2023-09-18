@@ -300,6 +300,7 @@ import asdf
 import numpy as np
 
 import aspecd.exceptions
+import aspecd.history
 import aspecd.metadata
 import aspecd.utils
 
@@ -678,6 +679,28 @@ class DatasetExporter:
         specific for each target format.
 
         """
+
+    def create_history_record(self):
+        """
+        Create history record to be added to the dataset.
+
+        Usually, this method gets called from within the
+        :meth:`aspecd.dataset.export_to` method of the
+        :class:`aspecd.dataset.Dataset` class and ensures the history of
+        each processing step to get written properly.
+
+        Returns
+        -------
+        history_record : :class:`aspecd.history.DatasetExporterHistoryRecord`
+            history record for export step
+
+
+        .. versionadded:: 0.9
+
+        """
+        history_record = aspecd.history.DatasetExporterHistoryRecord(
+            package=self.dataset.package_name, exporter=self)
+        return history_record
 
 
 class RecipeImporter:

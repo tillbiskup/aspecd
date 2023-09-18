@@ -8,7 +8,7 @@ import aspecd.exceptions
 import aspecd.history
 import aspecd.system
 import aspecd.utils
-from aspecd import processing, dataset, analysis, plotting, table
+from aspecd import processing, dataset, analysis, plotting, table, io
 
 
 class TestHistoryRecord(unittest.TestCase):
@@ -628,9 +628,98 @@ class TestTableHistoryRecord(unittest.TestCase):
                                                    package="numpy")
         self.assertTrue("numpy" in table_.sysinfo.packages.keys())
 
-    def test_has_annotation_property(self):
+    def test_has_table_property(self):
         self.assertTrue(hasattr(self.table_record, 'table'))
 
-    def test_annotation_is_annotation_record(self):
+    def test_table_is_table_record(self):
         self.assertTrue(isinstance(self.table_record.table,
                                    aspecd.history.TableRecord))
+
+
+class TestDatasetExporterRecord(unittest.TestCase):
+    def setUp(self):
+        self.exporter = io.DatasetExporter()
+        self.exporter_record = \
+            aspecd.history.DatasetExporterRecord(self.exporter)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_instantiate_class_name_from_exporter(self):
+        exporter_record = aspecd.history.DatasetExporterRecord(self.exporter)
+        self.assertEqual(exporter_record.class_name,
+                         aspecd.utils.full_class_name(self.exporter))
+
+    def test_copy_attributes_from_exporter(self):
+        self.exporter.target = 'foobar'
+        self.exporter.comment = 'Lorem ipsum'
+        exporter_record = aspecd.history.DatasetExporterRecord(self.exporter)
+        self.assertEqual(exporter_record.target, self.exporter.target)
+        self.assertEqual(exporter_record.comment, self.exporter.comment)
+
+    def test_has_from_exporter_method(self):
+        self.assertTrue(hasattr(self.exporter_record, 'from_exporter'))
+        self.assertTrue(callable(self.exporter_record.from_exporter))
+
+    def test_has_create_exporter_method(self):
+        self.assertTrue(hasattr(self.exporter_record, 'create_exporter'))
+        self.assertTrue(callable(self.exporter_record.create_exporter))
+
+    def test_create_exporter_returns_exporter_object(self):
+        test_object = self.exporter_record.create_exporter()
+        self.assertTrue(isinstance(test_object, aspecd.io.DatasetExporter))
+
+    def test_exporter_object_has_correct_attributes(self):
+        self.exporter_record.target = 'foo'
+        self.exporter_record.comment = 'Lorem ipsum'
+        test_object = self.exporter_record.create_exporter()
+        self.assertEqual(self.exporter_record.target, test_object.target)
+        self.assertEqual(self.exporter_record.comment, test_object.comment)
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.exporter_record, 'to_dict'))
+        self.assertTrue(callable(self.exporter_record.to_dict))
+
+    def test_from_dict(self):
+        orig_dict = self.exporter_record.to_dict()
+        orig_dict["target"] = 'foo'
+        new_exporter_record = aspecd.history.DatasetExporterRecord()
+        new_exporter_record.from_dict(orig_dict)
+        self.assertDictEqual(orig_dict,
+                             new_exporter_record.to_dict())
+
+    def test_from_exporter_without_exporter_raises(self):
+        with self.assertRaisesRegex(TypeError, 'needs a DatasetExporter'):
+            self.exporter_record.from_exporter()
+
+
+class TestDatasetExporterHistoryRecord(unittest.TestCase):
+    def setUp(self):
+        self.exporter = io.DatasetExporter()
+        self.exporter_record = \
+            aspecd.history.DatasetExporterHistoryRecord(exporter=self.exporter)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_instantiate_class_with_package_name(self):
+        aspecd.history.DatasetExporterHistoryRecord(
+            exporter=self.exporter, package="numpy")
+
+    def test_instantiate_class_with_package_name_sets_sysinfo(self):
+        exporter = aspecd.history.DatasetExporterHistoryRecord(
+            exporter=self.exporter, package="numpy")
+        self.assertTrue("numpy" in exporter.sysinfo.packages.keys())
+
+    def test_has_exporter_property(self):
+        self.assertTrue(hasattr(self.exporter_record, 'exporter'))
+
+    def test_exporter_is_exporter_record(self):
+        self.assertTrue(isinstance(self.exporter_record.exporter,
+                                   aspecd.history.DatasetExporterRecord))
+
+    def test_exporter_has_correct_attributes(self):
+        self.exporter.target = "foo"
+        exporter = aspecd.history.DatasetExporterHistoryRecord(
+            exporter=self.exporter)
+        self.assertEqual(self.exporter.target, exporter.exporter.target)
