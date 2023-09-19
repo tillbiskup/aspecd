@@ -416,7 +416,7 @@ class TestDatasetAnnotation(unittest.TestCase):
     def test_added_annotation_record_is_annotationhistoryrecord(self):
         self.dataset.annotate(self.annotation)
         self.assertTrue(isinstance(self.dataset.annotations[-1],
-                                   aspecd.history.AnnotationHistoryRecord))
+                                   aspecd.history.DatasetAnnotationHistoryRecord))
 
     def test_has_delete_annotation_method(self):
         self.assertTrue(hasattr(self.dataset, 'delete_annotation'))
@@ -454,7 +454,7 @@ class TestDatasetAnnotation(unittest.TestCase):
     def test_added_task_has_annotation_history_record(self):
         self.dataset.annotate(self.annotation)
         self.assertIsInstance(self.dataset.tasks[0]['task'],
-                              aspecd.history.AnnotationHistoryRecord)
+                              aspecd.history.DatasetAnnotationHistoryRecord)
 
 
 class TestDatasetPlotting(unittest.TestCase):

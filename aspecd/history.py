@@ -499,13 +499,6 @@ class AnalysisHistoryRecord(HistoryRecord):
     analysis : :class:`aspecd.analysis.SingleAnalysisStep`
         Analysis step the history is saved for
 
-    package : :class:`str`
-        Name of package the history record gets recorded for
-
-        Prerequisite for reproducibility, gets stored in the
-        :attr:`aspecd.dataset.HistoryRecord.sysinfo` attribute.
-        Will usually be provided automatically by the dataset.
-
     Parameters
     ----------
     analysis_step : :class:`aspecd.analysis.SingleAnalysisStep`
@@ -533,7 +526,7 @@ class AnalysisHistoryRecord(HistoryRecord):
         dataset.analyse(analysis_step=analysis_step)
 
 
-class AnnotationRecord(aspecd.utils.ToDictMixin):
+class DatasetAnnotationRecord(aspecd.utils.ToDictMixin):
     """Base class for annotation records stored in the dataset annotations.
 
     The annotation of a :class:`aspecd.dataset.Dataset` should *not* contain
@@ -634,20 +627,13 @@ class AnnotationRecord(aspecd.utils.ToDictMixin):
                 setattr(self, key, value)
 
 
-class AnnotationHistoryRecord(HistoryRecord):
-    """History record for annotations of datasets.
+class DatasetAnnotationHistoryRecord(HistoryRecord):
+    """History record for annotations of datasets or plots.
 
     Attributes
     ----------
     annotation : :class:`aspecd.annotation.Annotation`
         Annotation the history is saved for
-
-    package : :class:`str`
-        Name of package the history record gets recorded for
-
-        Prerequisite for reproducibility, gets stored in the
-        :attr:`aspecd.dataset.HistoryRecord.sysinfo` attribute.
-        Will usually be provided automatically by the dataset.
 
     Parameters
     ----------
@@ -661,7 +647,7 @@ class AnnotationHistoryRecord(HistoryRecord):
 
     def __init__(self, annotation=None, package=''):
         super().__init__(package=package)
-        self.annotation = AnnotationRecord(annotation)
+        self.annotation = DatasetAnnotationRecord(annotation)
 
 
 class PlotRecord(aspecd.utils.ToDictMixin):
@@ -834,12 +820,11 @@ class PlotHistoryRecord(HistoryRecord):
     plot : :class:`aspecd.plotting.SinglePlotRecord`
         Plot the history is saved for
 
+
+    Parameters
+    ----------
     package : :class:`str`
         Name of package the history record gets recorded for
-
-        Prerequisite for reproducibility, gets stored in the
-        :attr:`aspecd.dataset.HistoryRecord.sysinfo` attribute.
-        Will usually be provided automatically by the dataset.
 
     """
 
@@ -959,13 +944,6 @@ class TableHistoryRecord(HistoryRecord):
     ----------
     table : :class:`aspecd.table.Table`
         Table the history is saved for
-
-    package : :class:`str`
-        Name of package the history record gets recorded for
-
-        Prerequisite for reproducibility, gets stored in the
-        :attr:`aspecd.dataset.HistoryRecord.sysinfo` attribute.
-        Will usually be provided automatically by the dataset.
 
     Parameters
     ----------
@@ -1087,13 +1065,6 @@ class DatasetExporterHistoryRecord(HistoryRecord):
     ----------
     exporter : :class:`aspecd.io.DatasetExporter`
         Dataset exporter the history is saved for
-
-    package : :class:`str`
-        Name of package the history record gets recorded for
-
-        Prerequisite for reproducibility, gets stored in the
-        :attr:`aspecd.dataset.HistoryRecord.sysinfo` attribute.
-        Will usually be provided automatically by the dataset.
 
     Parameters
     ----------

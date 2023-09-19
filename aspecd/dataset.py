@@ -767,7 +767,7 @@ class Dataset(aspecd.utils.ToDictMixin):
                 elif key == "annotations":
                     for element in dict_[key]:
                         record = \
-                            aspecd.history.AnnotationHistoryRecord()
+                            aspecd.history.DatasetAnnotationHistoryRecord()
                         record.from_dict(element)
                         self.annotations.append(record)
                 elif key == "representations":
@@ -785,6 +785,9 @@ class Dataset(aspecd.utils.ToDictMixin):
                         if element["kind"] == "representation":
                             record_class_name = \
                                 'aspecd.history.PlotHistoryRecord'
+                        elif element["kind"] == "annotation":
+                            record_class_name = \
+                                'aspecd.history.DatasetAnnotationHistoryRecord'
                         else:
                             record_class_name = 'aspecd.history.' \
                                 + element["kind"].capitalize() + 'HistoryRecord'

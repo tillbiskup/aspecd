@@ -6,9 +6,10 @@ import aspecd.annotation
 import aspecd.dataset
 import aspecd.exceptions
 import aspecd.history
+import aspecd.plotting
 
 
-class TestAnnotation(unittest.TestCase):
+class TestDatasetAnnotation(unittest.TestCase):
     def setUp(self):
         self.annotation = aspecd.annotation.DatasetAnnotation()
         self.annotation.content['foo'] = 'bar'
@@ -100,7 +101,7 @@ class TestAnnotation(unittest.TestCase):
         self.annotation.dataset = aspecd.dataset.Dataset()
         history_record = self.annotation.create_history_record()
         self.assertTrue(isinstance(history_record,
-                                   aspecd.history.AnnotationHistoryRecord))
+                                   aspecd.history.DatasetAnnotationHistoryRecord))
 
 
 class TestComment(unittest.TestCase):
@@ -148,3 +149,85 @@ class TestCharacteristic(unittest.TestCase):
 
     def test_instantiate_class(self):
         pass
+
+
+# @unittest.skip
+class TestPlotAnnotation(unittest.TestCase):
+    def setUp(self):
+        self.annotation = aspecd.annotation.PlotAnnotation()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_plotter_property(self):
+        self.assertTrue(hasattr(self.annotation, 'plotter'))
+
+    def test_plotter_property_is_initially_none(self):
+        self.assertEqual(self.annotation.plotter, None)
+
+    def test_has_type_property(self):
+        self.assertTrue(hasattr(self.annotation, 'type'))
+
+    def test_type_property_equals_lower_classname(self):
+        self.assertEqual(self.annotation.type,
+                         self.annotation.__class__.__name__.lower())
+
+    def test_has_parameters_property(self):
+        self.assertTrue(hasattr(self.annotation, 'parameters'))
+        self.assertIsInstance(self.annotation.parameters, dict)
+
+    def test_has_properties_property(self):
+        self.assertTrue(hasattr(self.annotation, 'properties'))
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.annotation, 'to_dict'))
+        self.assertTrue(callable(self.annotation.to_dict))
+
+    def test_to_dict_does_not_contain_certain_keys(self):
+        for key in ['plotter', 'type']:
+            with self.subTest(key=key):
+                self.assertNotIn(key, self.annotation.to_dict())
+
+    def test_has_annotate_method(self):
+        self.assertTrue(hasattr(self.annotation, 'annotate'))
+        self.assertTrue(callable(self.annotation.annotate))
+
+    def test_annotate_without_argument_and_with_plotter(self):
+        self.annotation.plotter = aspecd.plotting.Plotter()
+        self.annotation.annotate()
+        self.assertGreater(len(self.annotation.plotter.annotations), 0)
+
+    def test_annotate_via_plotter_annotate(self):
+        test_plotter = aspecd.plotting.Plotter()
+        test_plotter.annotate(self.annotation)
+        self.assertGreater(len(test_plotter.annotations), 0)
+
+    def test_annotate_with_plotter(self):
+        test_plotter = aspecd.plotting.Plotter()
+        self.annotation.annotate(test_plotter)
+        self.assertGreater(len(test_plotter.annotations), 0)
+
+    def test_annotate_without_argument_nor_plotter_raises(self):
+        with self.assertRaises(aspecd.exceptions.MissingPlotterError):
+            self.annotation.annotate()
+
+    def test_annotate_with_empty_content_raises(self):
+        self.annotation.plotter = aspecd.plotting.Plotter()
+        self.annotation.content.clear()
+        with self.assertRaises(aspecd.exceptions.NoContentError):
+            self.annotation.annotate()
+
+    def test_annotate_returns_plotter(self):
+        test_plotter = self.annotation.annotate(aspecd.plotting.Plotter())
+        self.assertTrue(isinstance(test_plotter, aspecd.plotting.Plotter))
+
+    def test_has_create_history_record_method(self):
+        self.assertTrue(hasattr(self.annotation, 'create_history_record'))
+        self.assertTrue(callable(self.annotation.create_history_record))
+
+    def test_create_history_record_returns_history_record(self):
+        self.annotation.plotter = aspecd.plotting.Plotter()
+        history_record = self.annotation.create_history_record()
+        self.assertTrue(isinstance(history_record,
+                                   aspecd.history.DatasetAnnotationHistoryRecord))
+

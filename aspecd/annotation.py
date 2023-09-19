@@ -29,6 +29,12 @@ For other types of annotations, simply subclass the
 :class:`aspecd.annotation.Annotation` base class.
 
 
+Plot(ter) annotations
+=====================
+
+TBD
+
+
 Module documentation
 ====================
 
@@ -52,9 +58,9 @@ class DatasetAnnotation(ToDictMixin):
     e.g. saying that a dataset is not useful as something during measurement
     went wrong, they can highlight "characteristics" of the data, they can
     point to "artefacts". Each of these types is represented by a class on
-    its own that is derived from the "Annotation" base class. Additionally,
-    the type is reflected in the "type" property that gets set automatically to
-    the class name in lower-case letters.
+    its own that is derived from the :class:`DatasetAnnotation` base class.
+    Additionally, the type is reflected in the "type" property that gets
+    set automatically to the class name in lower-case letters.
 
     Each annotation has a scope (such as "point", "slice", "area", "distance",
     "dataset") it belongs to, and a "contents" property (dict) containing the
@@ -176,11 +182,11 @@ class DatasetAnnotation(ToDictMixin):
 
         Returns
         -------
-        history_record : :class:`aspecd.history.AnnotationHistoryRecord`
+        history_record : :class:`aspecd.history.DatasetAnnotationHistoryRecord`
             history record for annotation step
 
         """
-        history_record = aspecd.history.AnnotationHistoryRecord(
+        history_record = aspecd.history.DatasetAnnotationHistoryRecord(
             annotation=self, package=self.dataset.package_name)
         return history_record
 
@@ -239,3 +245,82 @@ class Artefact(DatasetAnnotation):
 
 class Characteristic(DatasetAnnotation):
     """Base class for characteristics."""
+
+
+class PlotAnnotation(ToDictMixin):
+    """
+    Base class for annotations for graphical representations (plots).
+
+    Whereas many processing steps of data can be fully automated, annotations
+    are mostly the domain of human interaction, looking at the graphical
+    representation of the data of a dataset and providing some sort of
+    comments, trying to make sense of the data.
+
+    Annotations can have different types, such as ...
+
+    Each of these types is represented by a class on
+    its own that is derived from the :class:`PlotAnnotation` base class.
+    Additionally, the type is reflected in the "type" property that gets
+    set automatically to the class name in lower-case letters.
+
+    Attributes
+    ----------
+    plotter : :class:`aspecd.plotting.Plotter`
+
+    type : :class:`str`
+
+    parameters : :class:`dict`
+
+    properties : :class:`None`
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.plotter = None
+        self.type = self.__class__.__name__.lower()
+        self.parameters = {}
+        self.properties = None
+        self._exclude_from_to_dict = ['plotter', 'type']
+
+    def annotate(self, plotter=None):
+        """
+        Annotate a plot(ter) with the given annotation.
+
+        If no plotter is provided at method call, but is set as property in
+        the Annotation object, the :meth:`aspecd.plotting.Plotter.annotate`
+        method of the plotter will be called and thus the history written.
+
+        If no plotter is provided at method call nor as property in the
+        object, the method will raise a respective exception.
+
+        Parameters
+        ----------
+        plotter : :class:`aspecd.plotting.Plotter`
+            Plot(ter) to annotate
+
+        Returns
+        -------
+        plotter : :class:`aspecd.plotting.Plotter`
+            Plotter that has been annotated
+
+        """
+        return self.plotter
+
+    def create_history_record(self):
+        """
+        Create history record to be added to the plotter.
+
+        Usually, this method gets called from within the
+        :meth:`aspecd.plotting.Plotter.annotate` method of the
+        :class:`aspecd.plotting.Plotter` class and ensures the history of
+        each annotation step to get written properly.
+
+        Returns
+        -------
+        history_record : :class:`aspecd.history.PlotAnnotationHistoryRecord`
+            history record for annotation step
+
+        """
+        history_record = aspecd.history.PlotAnnotationHistoryRecord(
+            annotation=self, package=aspecd.utils.package_name(self.plotter))
+        return history_record
