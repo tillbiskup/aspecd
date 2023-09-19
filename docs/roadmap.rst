@@ -14,7 +14,7 @@ For next releases
 
     Similar to :class:`aspecd.plotting.MultiDeviceDataPlotter1D`, but stacked display of the individual lines as in :class:`aspecd.plotting.SinglePlotter2DStacked`
 
-  * :class:`aspecd.plotting.`MultiDeviceDataPlotter1DSeparated`
+  * :class:`aspecd.plotting.MultiDeviceDataPlotter1DSeparated`
 
     Similar to :class:`aspecd.plotting.MultiDeviceDataPlotter1D`, but with the different device data plotted in separate axes stacked vertically
 

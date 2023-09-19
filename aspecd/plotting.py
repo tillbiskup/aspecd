@@ -1,6 +1,13 @@
 """
 Plotting: Graphical representations of data extracted from datasets.
 
+.. sidebar:: Contents
+
+    .. contents::
+        :local:
+        :depth: 1
+
+
 Plotting relies on `matplotlib <https://matplotlib.org/>`_, and mainly its
 object-oriented interface should be used for the actual plotting. Each
 plotter contains references to the respective figure and axes created usually
@@ -11,6 +18,15 @@ by a call similar to::
 For convenience, short hands for the :attr:`figure` and :attr:`axes`
 properties of a plotter are available, named :attr:`fig` and :attr:`ax`,
 respectively. For details on handling (own) figure and axes objects, see below.
+
+
+Types of abstract plotters
+==========================
+
+Abstract plotters are the base classes for all plotters actually used to
+graphically display data. If you are mire interested in actually plotting
+data rather than the overall concepts, have a look at :ref:`the concrete
+plotters <sec:plotting:concrete_plotters>`.
 
 Generally, two types of plotters can be distinguished:
 
@@ -57,12 +73,13 @@ A note on array dimensions and axes
 ===================================
 
 Something often quite confusing is the apparent inconsistency between the
-order of array dimensions and the order of axes. While we are used to assign
+order of array dimensions and the order of axes. While we are used to assigning
 axes in the order *x*, *y*, *z*, and assuming *x* to be horizontal,
 *y* vertical (and *z* sticking out of the paper plane), arrays are usually
-indexed row-first, column-second. That means, however, that if you simply
-plot a 2D array in axes, your *first* dimension is along the *y* axis,
-the *second* dimension along the *x* axis.
+(at least in the C world as compared to the FORTRAN world) indexed row-first,
+column-second. That means, however, that if you simply plot a 2D array in
+axes, your *first* dimension is along the *y* axis, the *second* dimension
+along the *x* axis.
 
 Therefore, as the axes of your datasets will always correspond to the array
 dimensions of your data, in case of 2D plots you will need to *either* use
@@ -79,6 +96,8 @@ dealing with images will usually *revert* the direction of your *y* axis.
 Most probably, eventually you will have to check with real data and ensure
 the plotters to plot data and axes in a consistent fashion.
 
+
+.. _sec:plotting:concrete_plotters:
 
 Types of concrete plotters
 ==========================
@@ -183,6 +202,10 @@ properties, below is a (hopefully complete) list:
 
   * :class:`aspecd.plotting.ColorbarProperties`
 
+Each of the plot properties classes, *i.e.* all subclasses of
+:class:`aspecd.plotting.PlotProperties`, contain other properties classes as
+attributes.
+
 Getting and setting plot properties is somewhat complicated by the fact
 that Matplotlib usually allows setting properties only when instantiating
 objects, or sometimes with explicit setter methods. Similarly, there may
@@ -192,6 +215,273 @@ In any case, while you can set and get properties of plots
 programmatically within the ASpecD framework, using :doc:`recipe-driven data
 analysis <../recipes>` is highly recommended.
 
+
+General tips and tricks
+=======================
+
+Plotting can become horribly complicated, simply due to the complexity of
+the matter involved and the parameters one can (and often want to) control.
+For the convenience of the user, a few more general cases are discussed
+below and example recipes provided for each case. For details on
+recipe-driven data analysis, see either the :doc:`introduction </recipes>`
+or the documentation of the :mod:`aspecd.tasks` module.
+
+
+Overall figure properties
+-------------------------
+
+On the figure level, *i.e.* the level of the overall graphical
+representation, only a few properties can be set, namely size (in inches),
+resolution (in dots per inch), and title:
+
+
+.. code-block:: yaml
+
+    - kind: singleplot
+      type: SinglePlotter1D
+      properties:
+        properties:
+          figure:
+            size: [8, 5]
+            resolution: 600
+            title: My fancy figure
+        filename: output.pdf
+
+
+.. important::
+
+    If you have a second axis on top of the axes, setting the figure title
+    will result in the figure title clashing with the upper axis. Hence,
+    in such case, try setting the axis title.
+
+
+
+Overall axes properties
+-----------------------
+
+Axes properties can be set for :class:`SinglePlotter` and
+:class:`MultiPlotter`, but for obvious reasons not for
+:class:`CompositePlotter`. In case of the latter, the properties of the axes
+are set for the individual plotters that are used to plot in the different
+axes.
+
+Below is a demonstration of just a subset of the properties that can be set.
+For further details, see the :class:`AxesProperties` class. Note in
+particular that all the settings shown here for the *x* axis can be applied to
+the *y* axis analogously.
+
+
+.. code-block:: yaml
+
+    - kind: singleplot
+      type: SinglePlotter1D
+      properties:
+        properties:
+          axes:
+            title: My fancy plot
+            aspect: equal
+            facecolor: darkgreen
+            xlabel: $foo$ / bar
+            xlim: [-5, 5]
+            xticklabelangle: 45
+            invert: True
+        filename: output.pdf
+
+
+.. important::
+
+    If you have a second axis on top of the axes, setting the figure title
+    will result in the figure title clashing with the upper axis. Hence,
+    in such case, try setting the axis title.
+
+
+
+Type of plot for 1D plotters
+----------------------------
+
+When plotting one-dimensional (1D) data, there is of course more than the
+usual line plot. For the actual types of plots that you can use, see the
+:attr:`SinglePlotter1D.allowed_types` and :attr:`MultiPlotter1D.allowed_types`
+attributes.
+
+To make a semilogy plot (*i.e.*, with logarithmic *y* axis), invoke the
+plotter as follows:
+
+.. code-block:: yaml
+
+    - kind: singleplot
+      type: SinglePlotter1D
+      properties:
+        type: semilogy
+        filename: output.pdf
+
+And analogous for the MultiPlot1D plotter:
+
+.. code-block:: yaml
+
+    - kind: multiplot
+      type: MultiPlotter1D
+      properties:
+        type: semilogy
+        filename: output.pdf
+
+
+.. important::
+
+    As the logarithm of negative values is not defined, usually having a
+    logarithmic axis with negative values will lead to unexpected
+    results. Matplotlib defaults to clipping the invalid values. To help
+    you with debugging the unexpected results, a warning will be logged
+    (and printed to the terminal when serving a recipe) in case a
+    logarithmic axis is affected by negative values. In such case,
+    the easiest is to add an offset to your data, using
+    :class:`aspecd.processing.ScalarAlgebra`.
+
+
+Appearance of individual drawings
+---------------------------------
+
+The individual drawings within the axes of a plot can be controlled in quite
+some detail. Depending on the overall type, be it a line or a surface,
+there are different classes responsible for setting the properties:
+:class:`LineProperties` and :class:`SurfaceProperties`. The general class is
+:class:`DrawingProperties`.
+
+
+Adding a grid
+-------------
+
+Particularly when comparing plots or when you want to extract values from a
+plot, a grid can come in quite handy. As a grid is already quite complicated
+-- for which axis (*x*, *y*, or both) to set the grid, for which ticks (minor,
+major, or both) -- and as you may even want to control the appearance of the
+grid lines, all these properties are handled by the :class:`GridProperties`
+class. You can add a grid to both, :class:`SinglePlotter` and
+:class:`MultiPlotter` instances.
+
+.. code-block:: yaml
+
+    - kind: singleplot
+      type: SinglePlotter1D
+      properties:
+        properties:
+          grid:
+            show: True
+            ticks: major
+            axis: both
+
+If you now even want to control the appearance of the grid lines (you can
+not, however, control individual grid lines, only all grid lines at once),
+things get even more complex:
+
+.. code-block:: yaml
+
+    - kind: singleplot
+      type: SinglePlotter1D
+      properties:
+        properties:
+          grid:
+            show: True
+            ticks: major
+            axis: both
+            lines:
+              color: #123456
+              linestyle: dashed
+              linewidth: 3
+              marker: triangle_up
+
+Note that the values for the lines are not necessarily sensible for grid
+lines. For a full list of possible properties, see the
+:class:`LineProperties` class. The same as shown here for a
+:class:`SinglePlotter` can be done for a :class:`MultiPlotter` accordingly.
+
+Adding a legend
+---------------
+
+As soon as there is more than one line in a plot, adding a legend comes in
+quite handy. Again, a legend can be controlled in quite some detail. An
+example showing some of the properties that can be set is given below:
+
+
+.. code-block:: yaml
+
+    - kind: singleplot
+      type: SinglePlotter1D
+      properties:
+        parameters:
+          show_legend: True
+        properties:
+          legend:
+            location: upper right
+            frameon: False
+            labelspacing: 0.75
+            fontsize: small
+            ncol: 2
+            title: some explanation
+
+
+Important here is to note that you need to set the ``show_legend`` parameter
+on a higher level of the overall plotter properties to ``True`` in order to
+have a legend be shown. Of course, you need not set all (or even any) of the
+properties explicitly. For details, see the :class:`LegendProperties` class.
+
+
+Adding a colorbar
+-----------------
+
+For two-dimensional (2D) plots, adding a colorbar that provides some
+information on the intensity values encoded in different colors is usually a
+good idea. The properties of the colorbar can be set via the
+:class:`ColorbarProperties` class.
+
+
+.. code-block:: yaml
+
+    - kind: singleplot
+      type: SinglePlotter2D
+      properties:
+        parameters:
+          show_colorbar: True
+        properties:
+          colorbar:
+            location: top
+            fraction: 0.1
+            aspect: 30
+            pad: 0.2
+            format: "%4.2e"
+            label:
+              text: $intensity$ / a.u.
+              location: right
+
+
+Again, you need not to set any of the properties explicitly, besides setting
+the parameter ``show_colorbar`` to ``True``. If none of the properties are
+set explicitly, the defaults provided by Matplotlib will be used.
+
+
+Plotting device data rather than primary data
+---------------------------------------------
+
+Datasets may contain additional data as device data in
+:attr:`aspecd.dataset.Dataset.device_data`. For details,
+see the :ref:`section on device data in the dataset module
+<sec:dataset:device_data>`. To conveniently plot those device data instead
+of the primary data of the dataset, provide the key(s) to the device(s) the
+data should be plotted for:
+
+
+.. code-block:: yaml
+
+    - kind: singleplot
+      type: SinglePlotter1D
+      properties:
+        parameters:
+          device_data: timestamp
+        filename: output.pdf
+
+
+Basically, all plotters understand device data and will plot the device data
+rather than the primary data of the dataset accordingly.
 
 
 Plotting to existing axes
@@ -907,9 +1197,9 @@ class SinglePlotter1D(SinglePlotter):
            filename: output.pdf
 
     Of course, line plots are not the only plot type available. Check the
-    :attr:`SinglePlotter1D.type` attribute for further details. To make a
-    semilogy plot (*i.e.*, with logarithmic *y* axis), invoke the plotter as
-    follows:
+    :attr:`SinglePlotter1D.allowed_types` attribute for further details. To
+    make a semilogy plot (*i.e.*, with logarithmic *y* axis), invoke the
+    plotter as follows:
 
     .. code-block:: yaml
 
@@ -1002,6 +1292,9 @@ class SinglePlotter1D(SinglePlotter):
     def allowed_types(self):
         """
         Return the allowed plot types.
+
+        Currently, the allowed types are: ``plot``, ``scatter``, ``step``,
+        ``loglog``, ``semilogx``, ``semilogy``, ``stemplot``.
 
         Returns
         -------
@@ -2246,9 +2539,9 @@ class MultiPlotter1D(MultiPlotter):
         surrounding the values by quotation marks.
 
     Of course, line plots are not the only plot type available. Check the
-    :attr:`MultiPlotter1D.type` attribute for further details. To make a
-    semilogy plot (*i.e.*, with logarithmic *y* axis), invoke the plotter as
-    follows:
+    :attr:`MultiPlotter1D.allowed_types` attribute for further details. To
+    make a semilogy plot (*i.e.*, with logarithmic *y* axis), invoke the
+    plotter as follows:
 
     .. code-block:: yaml
 
@@ -2327,6 +2620,9 @@ class MultiPlotter1D(MultiPlotter):
     def allowed_types(self):
         """
         Return the allowed plot types.
+
+        Currently, the allowed types are: ``plot``, ``step``, ``loglog``,
+        ``semilogx``, ``semilogy``.
 
         Returns
         -------
@@ -4214,7 +4510,7 @@ class ColorbarProperties(aspecd.utils.Properties):
     """
     Properties of the colorbar of a plot.
 
-    Basically, a subset of what :func:`matplotlib.figure.Figure.colorbar`
+    Basically, a subset of what :meth:`matplotlib.figure.Figure.colorbar`
     defines for a colorbar.
 
     Note that Matplotlib does not usually have an interface that easily
