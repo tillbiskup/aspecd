@@ -181,6 +181,8 @@ properties, below is a (hopefully complete) list:
 
   * :class:`aspecd.plotting.GridProperties`
 
+  * :class:`aspecd.plotting.ColorbarProperties`
+
 Getting and setting plot properties is somewhat complicated by the fact
 that Matplotlib usually allows setting properties only when instantiating
 objects, or sometimes with explicit setter methods. Similarly, there may
@@ -1091,6 +1093,12 @@ class SinglePlotter2D(SinglePlotter):
         show_contour_lines : :class:`bool`
             Whether to show contour lines in case of contourf plot
 
+        show_colorbar : :class:`bool`
+            Whether to show a colorbar
+
+            .. versionadded:: 0.9
+
+
     properties : :class:`aspecd.plotting.SinglePlot2DProperties`
         Properties of the plot, defining its appearance
 
@@ -1197,7 +1205,9 @@ class SinglePlotter2D(SinglePlotter):
         # noinspection PyTypeChecker
         self.parameters['levels'] = None
         self.parameters['show_contour_lines'] = False
+        self.parameters['show_colorbar'] = False
         self.properties = SinglePlot2DProperties()
+        self.colorbar = None
         self._type = 'imshow'
         self._allowed_types = ['contour', 'contourf', 'imshow']
 
@@ -1265,13 +1275,27 @@ class SinglePlotter2D(SinglePlotter):
         plotting class.
 
         """
-        plot_function = getattr(self.axes, self.type)
-        data = self._shape_data()
         # matplotlib imshow and contour have incompatible properties
         if self.type == 'imshow':
-            self.drawing = plot_function(data, extent=self._get_extent(),
-                                         aspect='auto')
-            return
+            self._plot_imshow()
+        else:
+            self._plot_contour()
+        if self.parameters['show_colorbar']:
+            self.colorbar = self.fig.colorbar(
+                self.drawing,
+                ax=self.ax,
+                **self.properties.colorbar.kwargs
+            )
+
+    def _plot_imshow(self):
+        plot_function = getattr(self.axes, self.type)
+        data = self._shape_data()
+        self.drawing = plot_function(data, extent=self._get_extent(),
+                                     aspect='auto')
+
+    def _plot_contour(self):
+        plot_function = getattr(self.axes, self.type)
+        data = self._shape_data()
         if self.parameters['levels']:
             self.drawing = plot_function(data, extent=self._get_extent(),
                                          levels=self.parameters['levels'])
@@ -3082,6 +3106,15 @@ class SinglePlot2DProperties(SinglePlotProperties):
         For the properties that can be set this way, see the documentation
         of the :class:`aspecd.plotting.SurfaceProperties` class.
 
+    colorbar : :class:`aspecd.plotting.ColorbarProperties`
+        Properties of the colorbar (optionally) added to a plot
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.ColorbarProperties` class.
+
+        .. versionadded:: 0.9
+
+
     Raises
     ------
     aspecd.exceptions.MissingPlotterError
@@ -3092,6 +3125,7 @@ class SinglePlot2DProperties(SinglePlotProperties):
     def __init__(self):
         super().__init__()
         self.drawing = SurfaceProperties()
+        self.colorbar = ColorbarProperties()
         self._colormap = ''
         self._include_in_to_dict = ['colormap']
 
@@ -3124,6 +3158,11 @@ class SinglePlot2DProperties(SinglePlotProperties):
     def colormap(self, colormap):
         self._colormap = colormap
         self.drawing.cmap = self._colormap
+
+    def apply(self, plotter=None):
+        super().apply(plotter=plotter)
+        if plotter.colorbar:
+            self.colorbar.apply(colorbar=plotter.colorbar)
 
 
 class MultiPlotProperties(PlotProperties):
@@ -3329,8 +3368,7 @@ class MultiPlot1DProperties(MultiPlotProperties):
         """
         super().apply(plotter=plotter)
         if hasattr(plotter, 'drawings') and self.colormap:
-            idx = len(self.drawings)
-            colors = plt.get_cmap(self.colormap, idx)
+            colors = plt.get_cmap(self.colormap, len(self.drawings))
             for idx, _ in enumerate(plotter.drawings):
                 self.drawings[idx].color = colors(idx)
 
@@ -3990,10 +4028,7 @@ class SurfaceProperties(DrawingProperties):
 
 class GridProperties(aspecd.utils.Properties):
     """
-    Properties of a line within a plot.
-
-    Basically, the attributes are a subset of what :mod:`matplotlib` defines
-    for :obj:`matplotlib.lines.Line2D` objects.
+    Properties of the grid of a plot.
 
     Attributes
     ----------
@@ -4065,3 +4100,139 @@ class GridProperties(aspecd.utils.Properties):
                           **self.lines.settable_properties())
             else:
                 axes.grid(True, **self.lines.settable_properties())
+
+
+class ColorbarProperties(aspecd.utils.Properties):
+    """
+    Properties of the colorbar of a plot.
+
+    Basically, a subset of what :func:`matplotlib.figure.Figure.colorbar`
+    defines for a colorbar.
+
+    Note that Matplotlib does not usually have an interface that easily
+    allows to both, set and query properties. For colorbars in particular,
+    many parameters can only be set when instantiating the colorbar object.
+
+    Attributes
+    ----------
+    location : :class:`str`
+        Location of the colorbar.
+
+        Valid parameters: None or {'left', 'right', 'top', 'bottom'}
+
+    fraction : :class:`float`
+        Fraction of original axes to use for colorbar.
+
+        Default: 0.15
+
+    aspect : :class:`float`
+        Ratio of long to short dimensions.
+
+        Default: 20.
+
+    pad : :class:`float`
+        Fraction of original axes between colorbar and new image axes.
+
+        Default: 0.05 if vertical, 0.15 if horizontal
+
+    format : :class:`str`
+        Format of the tick labels
+
+    label : :class:`dict`
+        The label on the colorbar's long axis and its properties.
+
+        The following keys exist:
+
+        text : :class:`str`
+            The label text
+
+        location : :class:`str`
+            The location of the label
+
+            Valid values depend on the orientation of the colorbar.
+
+            * For horizontal orientation one of {'left', 'center', 'right'}
+            * For vertical orientation one of {'bottom', 'center', 'top'}
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class.
+
+    Generally, the ColorbarProperties are set within the properties of the
+    respective plotter.
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter2D
+          properties:
+            properties:
+              colorbar:
+                location: top
+                fraction: 0.1
+                pad: 0.1
+                format: "%4.2e"
+                label:
+                  text: $foo$ / bar
+                  location: left
+
+
+    .. versionadded:: 0.9
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.location = None
+        self.fraction = 0.15
+        self.aspect = 20.
+        self.pad = None
+        self.format = ''
+        self.label = {'text': '', 'location': None}
+        self._exclude_from_kwargs = ['label']
+
+    @property
+    def kwargs(self):
+        """
+        Properties that can/need to be set during colorbar object creation.
+
+        Many parameters can only be set when instantiating the colorbar
+        object. For convenience, this property returns a dict with the
+        subset of properties that can (and need to) be set this way.
+
+        Those properties of the class that cannot be set this way are listed
+        in the private attribute ``_exclude_from_kwargs``. Actually setting
+        the properties to a colorbar looks like:
+
+        .. code-block::
+
+            fig.colorbar(drawing, ax=ax, **kwargs)
+
+        Here, ``**kwargs`` is the expansion of the returned dictionary.
+
+        Returns
+        -------
+        kwargs : :class:`dict`
+            dict with kwargs that can be set when instantiating the colorbar.
+
+        """
+        kwargs = self.to_dict()
+        for key in self._exclude_from_kwargs:
+            kwargs.pop(key, None)
+        keys_to_drop = [key for key, value in kwargs.items() if not value]
+        for key in keys_to_drop:
+            kwargs.pop(key)
+        return kwargs
+
+    def apply(self, colorbar=None):
+        self._set_colorbar_label(colorbar=colorbar)
+
+    def _set_colorbar_label(self, colorbar=None):
+        if "location" in self.label and self.label['location']:
+            location = self.label['location']
+        else:
+            location = None
+        colorbar.set_label(self.label['text'], loc=location)

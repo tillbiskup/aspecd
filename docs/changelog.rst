@@ -24,6 +24,8 @@ New features
 
   * New attribute :attr:`aspecd.plotting.AxesProperties.invert` for inverting axes. Helpful, *e.g.*, for plotting FTIR data without having to resort to explicitly provide descending axis limits.
 
+  * Colorbar for 2D plotter
+
 * Device data
 
   * New property :attr:`aspecd.dataset.Dataset.device_data` for storing additional/secondary (monitoring) data.

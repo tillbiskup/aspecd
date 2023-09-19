@@ -746,6 +746,41 @@ class TestSinglePlotter2D(unittest.TestCase):
         with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
             plotter = test_dataset.plot(self.plotter)
 
+    def test_colorbar_sets_colorbar(self):
+        self.plotter.parameters['show_colorbar'] = True
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        plotter = test_dataset.plot(self.plotter)
+        self.assertIsInstance(plotter.colorbar, matplotlib.colorbar.Colorbar)
+
+    def test_colorbar_properties_affect_colorbar(self):
+        self.plotter.parameters['show_colorbar'] = True
+        self.plotter.properties.colorbar.location = 'top'
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        plotter = test_dataset.plot(self.plotter)
+        # Note: the location is not set in the colorbar, only the orientation
+        self.assertEqual('horizontal', plotter.colorbar.orientation)
+
+    def test_colorbar_with_label_sets_label(self):
+        self.plotter.parameters['show_colorbar'] = True
+        self.plotter.properties.colorbar.label = {'text': 'foo'}
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        plotter = test_dataset.plot(self.plotter)
+        self.assertEqual(self.plotter.properties.colorbar.label["text"],
+                         plotter.colorbar.ax.yaxis.label.get_text())
+
+    def test_colorbar_with_label_location_sets_label_location(self):
+        self.plotter.parameters['show_colorbar'] = True
+        self.plotter.properties.colorbar.label = \
+            {'text': 'foo', 'location': 'bottom'}
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        plotter = test_dataset.plot(self.plotter)
+        self.assertEqual(0,
+                         plotter.colorbar.ax.yaxis.label.get_position()[0])
+
 
 class TestSinglePlotter2DStacked(unittest.TestCase):
     def setUp(self):
@@ -2631,6 +2666,46 @@ class TestGridProperties(unittest.TestCase):
         plt.close(plot.figure)
 
 
+class TestColorbarProperties(unittest.TestCase):
+    def setUp(self):
+        self.properties = plotting.ColorbarProperties()
+        fig, ax = plt.subplots()
+        self.colorbar = \
+            fig.colorbar(matplotlib.cm.ScalarMappable(cmap='viridis'), ax=ax)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.properties, 'to_dict'))
+        self.assertTrue(callable(self.properties.to_dict))
+
+    def test_has_from_dict_method(self):
+        self.assertTrue(hasattr(self.properties, 'from_dict'))
+        self.assertTrue(callable(self.properties.from_dict))
+
+    def test_has_properties(self):
+        for prop in ['location', 'fraction', 'aspect', 'pad', 'label',
+                     'format']:
+            self.assertTrue(hasattr(self.properties, prop))
+
+    def test_location_sets_legend_location(self):
+        location = 'top'
+        self.properties.location = location
+        plot = plotting.SinglePlotter2D()
+        plot.properties.colorbar = self.properties
+        plot.parameters['show_colorbar'] = True
+        dataset_ = dataset.Dataset()
+        dataset_.data.data = np.random.random([5, 5])
+        plot.plot(dataset=dataset_)
+        # Note: the location is not set in the colorbar, only the orientation
+        self.assertEqual('horizontal', plot.colorbar.orientation)
+        plt.close(plot.figure)
+
+    def test_kwargs_does_not_include_extra_parameters(self):
+        self.assertNotIn('label', self.properties.kwargs)
+
+
 class TestSinglePlotProperties(unittest.TestCase):
     def setUp(self):
         self.plot_properties = plotting.SinglePlotProperties()
@@ -2732,6 +2807,9 @@ class TestSinglePlot2DProperties(unittest.TestCase):
 
     def test_colormap_is_included_in_to_dict(self):
         self.assertIn('colormap', self.plot_properties.to_dict())
+
+    def test_has_colorbar_property(self):
+        self.assertTrue(hasattr(self.plot_properties, 'colorbar'))
 
 
 class TestMultiPlotProperties(unittest.TestCase):
