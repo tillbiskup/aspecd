@@ -906,6 +906,30 @@ class SinglePlotter1D(SinglePlotter):
          properties:
            filename: output.pdf
 
+    Of course, line plots are not the only plot type available. Check the
+    :attr:`SinglePlotter1D.type` attribute for further details. To make a
+    semilogy plot (*i.e.*, with logarithmic *y* axis), invoke the plotter as
+    follows:
+
+    .. code-block:: yaml
+
+       - kind: singleplot
+         type: SinglePlotter1D
+         properties:
+           type: semilogy
+           filename: output.pdf
+
+    .. important::
+
+        As the logarithm of negative values is not defined, usually having a
+        logarithmic axis with negative values will lead to unexpected
+        results. Matplotlib defaults to clipping the invalid values. To help
+        you with debugging the unexpected results, a warning will be logged
+        (and printed to the terminal when serving a recipe) in case a
+        logarithmic axis is affected by negative values. In such case,
+        the easiest is to add an offset to your data, using
+        :class:`aspecd.processing.ScalarAlgebra`.
+
     Sometimes it is convenient to switch the *x* and *y* axes, *e.g.* in
     context of 2D datasets where slices along both dimensions should be
     displayed together with the 2D data and next to the respective axes. To
@@ -937,6 +961,9 @@ class SinglePlotter1D(SinglePlotter):
 
     .. versionchanged:: 0.7
         New parameter ``switch_axes``
+
+    .. versionchanged:: 0.9
+        Issue warning with log plotters and negative values
 
     """
 
@@ -992,6 +1019,7 @@ class SinglePlotter1D(SinglePlotter):
 
     def _create_plot(self):
         plot_function = getattr(self.axes, self.type)
+        self._check_values_for_logplot()
         if not self.properties.drawing.label:
             self.properties.drawing.label = self.dataset.label
         if self.parameters['switch_axes']:
@@ -1009,6 +1037,24 @@ class SinglePlotter1D(SinglePlotter):
             if self.parameters['tight'] in ('y', 'both'):
                 self.axes.set_ylim([self.data.data.min(),
                                     self.data.data.max()])
+
+    def _check_values_for_logplot(self):
+        issue_warning = False
+        if self.parameters['switch_axes']:
+            xvalues = self.data.data
+            yvalues = self.data.axes[0].values
+        else:
+            xvalues = self.data.axes[0].values
+            yvalues = self.data.data
+        if 'semilogy' in self.type and np.min(yvalues) < 0:
+            issue_warning = True
+        if 'semilogx' in self.type and np.min(xvalues) < 0:
+            issue_warning = True
+        if 'loglog' in self.type \
+                and (np.min(xvalues) < 0 or np.min(yvalues) < 0):
+            issue_warning = True
+        if issue_warning:
+            logger.warning('Negative values with %s plot detected.', self.type)
 
     def _set_axes_labels(self):
         super()._set_axes_labels()
@@ -2037,6 +2083,7 @@ class MultiPlotter(Plotter):
         self._set_legend()
 
     def _assign_data(self):
+        self.data = []  # Important, e.g., for CompositePlotter
         if self.parameters["device_data"]:
             device = self.parameters["device_data"]
             for dataset in self.datasets:
@@ -2198,6 +2245,30 @@ class MultiPlotter1D(MultiPlotter):
         ``#``, you need to explicitly tell YAML that these are strings,
         surrounding the values by quotation marks.
 
+    Of course, line plots are not the only plot type available. Check the
+    :attr:`MultiPlotter1D.type` attribute for further details. To make a
+    semilogy plot (*i.e.*, with logarithmic *y* axis), invoke the plotter as
+    follows:
+
+    .. code-block:: yaml
+
+       - kind: multiplot
+         type: MultiPlotter1D
+         properties:
+           type: semilogy
+           filename: output.pdf
+
+    .. important::
+
+        As the logarithm of negative values is not defined, usually having a
+        logarithmic axis with negative values will lead to unexpected
+        results. Matplotlib defaults to clipping the invalid values. To help
+        you with debugging the unexpected results, a warning will be logged
+        (and printed to the terminal when serving a recipe) in case a
+        logarithmic axis is affected by negative values. In such case,
+        the easiest is to add an offset to your data, using
+        :class:`aspecd.processing.ScalarAlgebra`.
+
     Sometimes it is convenient to switch the *x* and *y* axes, *e.g.* in
     context of 2D datasets where slices along both dimensions should be
     displayed together with the 2D data and next to the respective axes. To
@@ -2215,6 +2286,9 @@ class MultiPlotter1D(MultiPlotter):
 
     .. versionchanged:: 0.7
         New parameters ``switch_axes`` and ``tight``
+
+    .. versionchanged:: 0.9
+        Issue warning with log plotters and negative values
 
     """
 
@@ -2287,30 +2361,31 @@ class MultiPlotter1D(MultiPlotter):
     def _create_plot(self):
         """Actual drawing of datasets"""
         plot_function = getattr(self.axes, self.type)
+        self._check_values_for_logplot()
         self.drawings = []
-        for idx, dataset in enumerate(self.datasets):
+        for idx, data in enumerate(self.data):
             if not self.properties.drawings[idx].label:
-                self.properties.drawings[idx].label = dataset.label
+                self.properties.drawings[idx].label = self.datasets[idx].label
             if self.parameters['switch_axes']:
                 drawing, = plot_function(
-                    dataset.data.data,
-                    dataset.data.axes[0].values,
+                    data.data,
+                    data.axes[0].values,
                     label=self.properties.drawings[idx].label)
             else:
                 drawing, = plot_function(
-                    dataset.data.axes[0].values,
-                    dataset.data.data,
+                    data.axes[0].values,
+                    data.data,
                     label=self.properties.drawings[idx].label)
             self.drawings.append(drawing)
         if self.parameters['tight']:
-            axes_limits = [min(dataset.data.axes[0].values.min()
-                               for dataset in self.datasets),
-                           max(dataset.data.axes[0].values.max()
-                               for dataset in self.datasets)]
-            data_limits = [min(dataset.data.data.min()
-                               for dataset in self.datasets),
-                           max(dataset.data.data.max()
-                               for dataset in self.datasets)]
+            axes_limits = [min(data.axes[0].values.min()
+                               for data in self.data),
+                           max(data.axes[0].values.max()
+                               for data in self.data)]
+            data_limits = [min(data.data.min()
+                               for data in self.data),
+                           max(data.data.max()
+                               for data in self.data)]
             if self.parameters['tight'] in ('x', 'both'):
                 if self.parameters['switch_axes']:
                     self.axes.set_xlim(data_limits)
@@ -2321,6 +2396,25 @@ class MultiPlotter1D(MultiPlotter):
                     self.axes.set_ylim(axes_limits)
                 else:
                     self.axes.set_ylim(data_limits)
+
+    def _check_values_for_logplot(self):
+        issue_warning = False
+        for data in self.data:
+            if self.parameters['switch_axes']:
+                xvalues = data.data
+                yvalues = data.axes[0].values
+            else:
+                xvalues = data.axes[0].values
+                yvalues = data.data
+            if 'semilogy' in self.type and np.min(yvalues) < 0:
+                issue_warning = True
+            if 'semilogx' in self.type and np.min(xvalues) < 0:
+                issue_warning = True
+            if 'loglog' in self.type \
+                    and (np.min(xvalues) < 0 or np.min(yvalues) < 0):
+                issue_warning = True
+        if issue_warning:
+            logger.warning('Negative values with %s plot detected.', self.type)
 
     def _set_axes_labels(self):
         super()._set_axes_labels()
@@ -3160,6 +3254,20 @@ class SinglePlot2DProperties(SinglePlotProperties):
         self.drawing.cmap = self._colormap
 
     def apply(self, plotter=None):
+        """
+        Apply properties to plot.
+
+        Parameters
+        ----------
+        plotter: :class:`aspecd.plotting.SinglePlotter2D`
+            Plotter the properties should be applied to.
+
+        Raises
+        ------
+        aspecd.exceptions.MissingPlotterError
+            Raised if no plotter is provided.
+
+        """
         super().apply(plotter=plotter)
         if plotter.colorbar:
             self.colorbar.apply(colorbar=plotter.colorbar)
@@ -4228,6 +4336,15 @@ class ColorbarProperties(aspecd.utils.Properties):
         return kwargs
 
     def apply(self, colorbar=None):
+        """
+        Apply properties to colorbar.
+
+        Parameters
+        ----------
+        colorbar: :class:`matplotlib.colorbar.Colorbar`
+            Colorbar the properties should be applied to.
+
+        """
         self._set_colorbar_label(colorbar=colorbar)
 
     def _set_colorbar_label(self, colorbar=None):

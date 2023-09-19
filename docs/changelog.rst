@@ -52,6 +52,8 @@ Changes
 
 * :class:`aspecd.io.DatasetExporter` adds a history record to :attr:`aspecd.dataset.Dataset.tasks`.
 
+* :class:`aspecd.plotting.SinglePlotter1D` and :class:`aspecd.plotting.MultiPlotter1D` issue warning with log plotters and negative values.
+
 
 Documentation
 -------------

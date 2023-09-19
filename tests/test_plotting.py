@@ -498,6 +498,62 @@ class TestSinglePlotter1D(unittest.TestCase):
         with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
             self.plotter.plot()
 
+    def test_semilogy_plot_with_negative_values_logs_warning(self):
+        self.plotter.type = 'semilogy'
+        self.dataset.data.data = \
+            self.dataset.data.data - np.mean(self.dataset.data.data)
+        self.plotter.dataset = self.dataset
+        with self.assertLogs(__package__, level='WARNING') as cm:
+            self.plotter.plot()
+        self.assertIn('', cm.output[0])
+
+    def test_semilogx_plot_with_negative_axis_values_logs_warning(self):
+        self.plotter.type = 'semilogx'
+        self.dataset.data.axes[0].values = \
+            np.linspace(-2, 2, len(self.dataset.data.data))
+        self.plotter.dataset = self.dataset
+        with self.assertLogs(__package__, level='WARNING') as cm:
+            self.plotter.plot()
+        self.assertIn('Negative values', cm.output[0])
+
+    def test_loglog_plot_with_negative_values_logs_warning(self):
+        self.plotter.type = 'loglog'
+        self.dataset.data.data = \
+            self.dataset.data.data - np.mean(self.dataset.data.data)
+        self.plotter.dataset = self.dataset
+        with self.assertLogs(__package__, level='WARNING') as cm:
+            self.plotter.plot()
+        self.assertIn('Negative values', cm.output[0])
+
+    def test_loglog_plot_with_negative_axis_values_logs_warning(self):
+        self.plotter.type = 'loglog'
+        self.dataset.data.axes[0].values = \
+            np.linspace(-2, 2, len(self.dataset.data.data))
+        self.plotter.dataset = self.dataset
+        with self.assertLogs(__package__, level='WARNING') as cm:
+            self.plotter.plot()
+        self.assertIn('Negative values', cm.output[0])
+
+    def test_semilogy_plot_w_neg_axis_values_and_switch_axis_logs_warning(self):
+        self.plotter.type = 'semilogy'
+        self.plotter.parameters['switch_axes'] = True
+        self.dataset.data.axes[0].values = \
+            np.linspace(-2, 2, len(self.dataset.data.data))
+        self.plotter.dataset = self.dataset
+        with self.assertLogs(__package__, level='WARNING') as cm:
+            self.plotter.plot()
+        self.assertIn('', cm.output[0])
+
+    def test_semilogx_plot_w_neg_values_and_switch_axis_logs_warning(self):
+        self.plotter.type = 'semilogx'
+        self.plotter.parameters['switch_axes'] = True
+        self.dataset.data.data = \
+            self.dataset.data.data - np.mean(self.dataset.data.data)
+        self.plotter.dataset = self.dataset
+        with self.assertLogs(__package__, level='WARNING') as cm:
+            self.plotter.plot()
+        self.assertIn('Negative values', cm.output[0])
+
 
 class TestSinglePlotter2D(unittest.TestCase):
     def setUp(self):
@@ -1612,6 +1668,74 @@ class TestMultiPlotter1D(unittest.TestCase):
         self.plotter.datasets.append(self.dataset)
         with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
             self.plotter.plot()
+
+    def test_plot_device_data_plots_device_data(self):
+        device_data = dataset.DeviceData()
+        device_data.data = np.random.random(5)
+        self.dataset.device_data["test"] = device_data
+        self.plotter.parameters["device_data"] = "test"
+        self.plotter.datasets.append(self.dataset)
+        self.plotter.plot()
+        self.assertListEqual(
+            list(device_data.data),
+            list(self.plotter.axes.lines[0].get_ydata())
+        )
+
+    def test_semilogy_plot_with_negative_values_logs_warning(self):
+        self.plotter.type = 'semilogy'
+        self.dataset.data.data = \
+            self.dataset.data.data - np.mean(self.dataset.data.data)
+        self.plotter.datasets.append(self.dataset)
+        with self.assertLogs(__package__, level='WARNING') as cm:
+            self.plotter.plot()
+        self.assertIn('', cm.output[0])
+
+    def test_semilogx_plot_with_negative_axis_values_logs_warning(self):
+        self.plotter.type = 'semilogx'
+        self.dataset.data.axes[0].values = \
+            np.linspace(-2, 2, len(self.dataset.data.data))
+        self.plotter.datasets.append(self.dataset)
+        with self.assertLogs(__package__, level='WARNING') as cm:
+            self.plotter.plot()
+        self.assertIn('Negative values', cm.output[0])
+
+    def test_loglog_plot_with_negative_values_logs_warning(self):
+        self.plotter.type = 'loglog'
+        self.dataset.data.data = \
+            self.dataset.data.data - np.mean(self.dataset.data.data)
+        self.plotter.datasets.append(self.dataset)
+        with self.assertLogs(__package__, level='WARNING') as cm:
+            self.plotter.plot()
+        self.assertIn('Negative values', cm.output[0])
+
+    def test_loglog_plot_with_negative_axis_values_logs_warning(self):
+        self.plotter.type = 'loglog'
+        self.dataset.data.axes[0].values = \
+            np.linspace(-2, 2, len(self.dataset.data.data))
+        self.plotter.datasets.append(self.dataset)
+        with self.assertLogs(__package__, level='WARNING') as cm:
+            self.plotter.plot()
+        self.assertIn('Negative values', cm.output[0])
+
+    def test_semilogy_plot_w_neg_axis_values_and_switch_axis_logs_warning(self):
+        self.plotter.type = 'semilogy'
+        self.plotter.parameters['switch_axes'] = True
+        self.dataset.data.axes[0].values = \
+            np.linspace(-2, 2, len(self.dataset.data.data))
+        self.plotter.datasets.append(self.dataset)
+        with self.assertLogs(__package__, level='WARNING') as cm:
+            self.plotter.plot()
+        self.assertIn('', cm.output[0])
+
+    def test_semilogx_plot_w_neg_values_and_switch_axis_logs_warning(self):
+        self.plotter.type = 'semilogx'
+        self.plotter.parameters['switch_axes'] = True
+        self.dataset.data.data = \
+            self.dataset.data.data - np.mean(self.dataset.data.data)
+        self.plotter.datasets.append(self.dataset)
+        with self.assertLogs(__package__, level='WARNING') as cm:
+            self.plotter.plot()
+        self.assertIn('Negative values', cm.output[0])
 
 
 class TestMultiPlotter1DStacked(unittest.TestCase):
@@ -2785,6 +2909,10 @@ class TestSinglePlot2DProperties(unittest.TestCase):
 
     def test_instantiate_class(self):
         pass
+
+    def test_apply_without_argument_raises(self):
+        with self.assertRaises(aspecd.exceptions.MissingPlotterError):
+            self.plot_properties.apply()
 
     def test_apply_sets_drawing_properties(self):
         self.plot_properties.drawing.cmap = 'RdGy'
