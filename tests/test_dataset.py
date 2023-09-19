@@ -402,7 +402,7 @@ class TestDatasetAnalysis(unittest.TestCase):
 class TestDatasetAnnotation(unittest.TestCase):
     def setUp(self):
         self.dataset = dataset.Dataset()
-        self.annotation = annotation.Annotation()
+        self.annotation = annotation.DatasetAnnotation()
         self.annotation.content = 'boo'
 
     def test_has_annotate_method(self):
@@ -629,7 +629,7 @@ class TestDatasetToDict(unittest.TestCase):
         self.dataset.to_dict()
 
     def test_to_dict_with_annotation(self):
-        annotation_step = aspecd.annotation.Annotation()
+        annotation_step = aspecd.annotation.DatasetAnnotation()
         annotation_step.content = 'foo'
         self.dataset.annotate(annotation_step)
         self.dataset.to_dict()
@@ -723,7 +723,7 @@ class TestDatasetFromDict(unittest.TestCase):
                              new_dataset.analyses[0].to_dict())
 
     def test_from_dict_sets_annotations(self):
-        annotation_ = aspecd.annotation.Annotation()
+        annotation_ = aspecd.annotation.DatasetAnnotation()
         annotation_.content = {'foo': 'bar'}
         self.dataset.annotate(annotation_)
         dataset_dict = self.dataset.to_dict()

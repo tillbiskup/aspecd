@@ -1,9 +1,17 @@
 """
-Annotations of data, e.g. characteristics, that cannot be automated.
+Annotations of data, *e.g.* characteristics, that cannot be automated.
 
-Annotations of data are eventually something that cannot be automated.
-Nevertheless, they can be quite important for the analysis and hence for
-providing new scientific insight.
+Annotations of data (and plots, *i.e.* graphical representations of data) are
+eventually something that cannot be automated. Nevertheless, they can be
+quite important for the analysis and hence for providing new scientific
+insight. Furthermore, annotations of data can sometimes be added to a
+graphical representation. A typical example would be to mark an artefact
+with an asterisk or to highlight a characteristic. Therefore, dataset
+annotations may have graphical realisations as plot annotations.
+
+
+Dataset annotations
+===================
 
 The simplest form of an annotation is a comment applying to an entire
 dataset, such as comments stored in the metadata written during data
@@ -12,10 +20,17 @@ a dataset, but to the annotations in form of a
 :obj:`aspecd.annotation.Comment` object.
 
 Other frequent types of annotations are artefacts and characteristics,
-for which dedicated classes are available within the ASpecD framework:
-:class:`aspecd.annotation.Artefact` and
-:class:`aspecd.annotation.Characteristic`. For other types of annotations,
-simply subclass the :class:`aspecd.annotation.Annotation` base class.
+for which dedicated classes are available within the ASpecD framework, are:
+
+* :class:`aspecd.annotation.Artefact`
+* :class:`aspecd.annotation.Characteristic`.
+
+For other types of annotations, simply subclass the
+:class:`aspecd.annotation.Annotation` base class.
+
+
+Module documentation
+====================
 
 """
 
@@ -24,7 +39,7 @@ import aspecd.history
 from aspecd.utils import ToDictMixin
 
 
-class Annotation(ToDictMixin):
+class DatasetAnnotation(ToDictMixin):
     """
     Annotations are user-supplied additional information to datasets.
 
@@ -93,6 +108,9 @@ class Annotation(ToDictMixin):
         stored in the private property `_default_scope` (and is defined as
         one element of the list of allowed scopes)
 
+        Currently, allowed scopes are: ``dataset``, ``slice``, ``point``,
+        ``area``, ``distance``.
+
         """
         return self._scope
 
@@ -108,20 +126,22 @@ class Annotation(ToDictMixin):
         Annotate a dataset with the given annotation.
 
         If no dataset is provided at method call, but is set as property in
-        the Annotation object, the process method of the dataset will be
-        called and thus the history written.
+        the Annotation object, the :meth:`aspecd.dataset.Dataset.annotate`
+        method of the dataset will be called and thus the history written.
 
         If no dataset is provided at method call nor as property in the
         object, the method will raise a respective exception.
 
         If no scope is set in the :obj:`aspecd.annotation.Annotation`
         object, a default value will be used that can be set in derived
-        classes in the private property `_default_scope`. A full list of
-        scopes is contained in the private property `_allowed_scopes`
+        classes in the private property ``_default_scope``. A full list of
+        scopes is contained in the private property ``_allowed_scopes``.
+        See the :attr:`scope` property for details.
 
-        The Dataset object always calls this method with the respective
-        dataset as argument. Therefore, in this case setting the dataset
-        property within the Annotation object is not necessary.
+        The :obj:`aspecd.dataset.Dataset` object always calls this method
+        with the respective dataset as argument. Therefore, in this case
+        setting the dataset property within the Annotation object is not
+        necessary.
 
         Parameters
         ----------
@@ -150,7 +170,7 @@ class Annotation(ToDictMixin):
         Create history record to be added to the dataset.
 
         Usually, this method gets called from within the
-        :meth:`aspecd.dataset.annotate` method of the
+        :meth:`aspecd.dataset.Dataset.annotate` method of the
         :class:`aspecd.dataset.Dataset` class and ensures the history of
         each annotation step to get written properly.
 
@@ -184,7 +204,7 @@ class Annotation(ToDictMixin):
             self.dataset.annotate(self)
 
 
-class Comment(Annotation):
+class Comment(DatasetAnnotation):
     """The most basic form of annotation: a simple textual comment."""
 
     def __init__(self):
@@ -209,7 +229,7 @@ class Comment(Annotation):
         self.content['comment'] = comment
 
 
-class Artefact(Annotation):
+class Artefact(DatasetAnnotation):
     """Mark something as an artefact."""
 
     def __init__(self):
@@ -217,5 +237,5 @@ class Artefact(Annotation):
         self.content['comment'] = ''
 
 
-class Characteristic(Annotation):
+class Characteristic(DatasetAnnotation):
     """Base class for characteristics."""

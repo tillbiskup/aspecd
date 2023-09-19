@@ -1635,6 +1635,8 @@ class SinglePlotter2D(SinglePlotter):
         """
         Return the allowed plot types.
 
+        Currently allowed types are: ``contour``, ``contourf``, ``imshow``
+
         Returns
         -------
         allowed_types: :class:`list`

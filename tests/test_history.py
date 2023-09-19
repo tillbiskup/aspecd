@@ -387,12 +387,12 @@ class TestAnalysisHistoryRecord(unittest.TestCase):
 
 class TestAnnotationRecord(unittest.TestCase):
     def setUp(self):
-        self.annotation = aspecd.annotation.Annotation()
+        self.annotation = aspecd.annotation.DatasetAnnotation()
         self.annotation_record = \
             aspecd.history.AnnotationRecord(self.annotation)
 
     def test_instantiate_class(self):
-        aspecd.annotation.Annotation()
+        aspecd.annotation.DatasetAnnotation()
 
     def test_instantiate_class_with_annotation(self):
         aspecd.history.AnnotationRecord(self.annotation)
@@ -421,7 +421,7 @@ class TestAnnotationRecord(unittest.TestCase):
 
     def test_create_annotation_returns_annotation_object(self):
         test_object = self.annotation_record.create_annotation()
-        self.assertTrue(isinstance(test_object, aspecd.annotation.Annotation))
+        self.assertTrue(isinstance(test_object, aspecd.annotation.DatasetAnnotation))
 
     def test_annotation_object_has_correct_contents_value(self):
         self.annotation_record.content = {'foo': 'bar'}
@@ -443,7 +443,7 @@ class TestAnnotationRecord(unittest.TestCase):
 
 class TestAnnotationHistoryRecord(unittest.TestCase):
     def setUp(self):
-        self.annotation = aspecd.annotation.Annotation()
+        self.annotation = aspecd.annotation.DatasetAnnotation()
         self.annotation_record = aspecd.history.AnnotationHistoryRecord(
             annotation=self.annotation)
 

@@ -10,7 +10,7 @@ import aspecd.history
 
 class TestAnnotation(unittest.TestCase):
     def setUp(self):
-        self.annotation = aspecd.annotation.Annotation()
+        self.annotation = aspecd.annotation.DatasetAnnotation()
         self.annotation.content['foo'] = 'bar'
 
     def test_instantiate_class(self):

@@ -54,6 +54,8 @@ Changes
 
 * :class:`aspecd.plotting.SinglePlotter1D` and :class:`aspecd.plotting.MultiPlotter1D` issue warning with log plotters and negative values.
 
+* :class:`aspecd.annotation.DatasetAnnotation` has been renamed from ``Annotation`` to reflect the fact that there are now plot annotations as well.
+
 
 Documentation
 -------------
