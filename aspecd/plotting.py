@@ -347,6 +347,63 @@ there are different classes responsible for setting the properties:
 :class:`LineProperties` and :class:`SurfaceProperties`. The general class is
 :class:`DrawingProperties`.
 
+Below is a (real-world) example of a multiplotter containing two lines,
+and in this particular case with standard settings.
+
+.. code-block:: yaml
+
+    - kind: multiplot
+      type: MultiPlotter1D
+      properties:
+        properties:
+          drawings:
+          - label: Substance 1
+            color: '#1f77b4'
+            drawstyle: default
+            linestyle: '-'
+            linewidth: 1.5
+            marker: None
+          - label: Substance 2
+            color: '#ff7f0e'
+            drawstyle: default
+            linestyle: '-'
+            linewidth: 1.5
+            marker: None
+
+
+Controlling the appearance of zero lines
+----------------------------------------
+
+While a grid is not shown by default, zero lines are, as long as the zero
+value is present in either or both axes ranges. While it is a sensible
+default to display zero lines, and switching them off is a matter of
+setting the parameter ``show_zero_lines`` to ``False``, controlling the
+appearance of these lines is often useful. Below is a (real-world) example
+of the available settings for the zero lines (with default values).
+
+.. code-block:: yaml
+
+    - kind: multiplot
+      type: MultiPlotter1D
+      properties:
+        parameters:
+          show_zero_lines: true
+        properties:
+          zero_lines:
+            label: ''
+            color: '#cccccc'
+            drawstyle: default
+            linestyle: solid
+            linewidth: 1.0
+            marker: ''
+
+
+While it rarely makes sense to set line markers for these lines, the line
+properties are simply all properties that can be set using the
+:class:`LineProperties` class. Besides controlling the appearance of zero
+lines, you can display a grid and control the appearance of these lines.
+See below for more details.
+
 
 Adding a grid
 -------------
@@ -394,6 +451,7 @@ Note that the values for the lines are not necessarily sensible for grid
 lines. For a full list of possible properties, see the
 :class:`LineProperties` class. The same as shown here for a
 :class:`SinglePlotter` can be done for a :class:`MultiPlotter` accordingly.
+
 
 Adding a legend
 ---------------
