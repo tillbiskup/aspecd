@@ -216,6 +216,8 @@ programmatically within the ASpecD framework, using :doc:`recipe-driven data
 analysis <../recipes>` is highly recommended.
 
 
+.. _sec:plotting:tips_tricks:
+
 General tips and tricks
 =======================
 

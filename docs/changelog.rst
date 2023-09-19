@@ -59,6 +59,7 @@ Documentation
 -------------
 
 * New example: :doc:`Plotting FTIR spectra normalised to spectral feature <examples/ftir>`
+* Section with :ref:`general tips and tricks for styling plotters <sec:plotting:tips_tricks>`.
 
 
 Version 0.8.3
