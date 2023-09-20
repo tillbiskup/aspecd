@@ -29,8 +29,10 @@ for which dedicated classes are available within the ASpecD framework, are:
 * :class:`aspecd.annotation.Characteristic`.
 
 For other types of annotations, simply subclass the
-:class:`aspecd.annotation.Annotation` base class.
+:class:`aspecd.annotation.DatasetAnnotation` base class.
 
+
+.. _:sec:annotation:plot:
 
 Plot(ter) annotations
 =====================
@@ -40,6 +42,18 @@ one or multiple datasets, can be annotated as well. Plot annotations will
 always result in a graphical object of some kind added to the plot created
 by a :class:`aspecd.plotting.Plotter`. Additionally, each plotter has a list
 of annotations attached to it.
+
+While generally, it should not matter whether a plot annotation gets added
+to the plotter object before or after the actual plotting process, adding
+the graphical elements annotations consist eventually of to the plot is only
+possible once the :meth:`aspecd.plotting.Plotter.plot` method has been
+called and the respective :attr:`aspecd.plotting.Plotter.figure` and
+:attr:`aspecd.plotting.Plotter.axes` attributes are set. To this end, a plot
+annotation will only actually add graphical elements if the plot exists
+already, and the plotter will in turn add any annotations added prior to
+plotting when its :meth:`aspecd.plotting.Plotter.plot` method is called.
+This avoids side effects, as annotating a plotter does *not* create a
+graphical representation that did not exist before.
 
 All plot annotations inherit from the :class:`aspecd.annotation.PlotAnnotation`
 base class.
@@ -196,11 +210,11 @@ class DatasetAnnotation(ToDictMixin):
 
         Returns
         -------
-        history_record : :class:`aspecd.history.DatasetAnnotationHistoryRecord`
+        history_record : :class:`aspecd.history.AnnotationHistoryRecord`
             history record for annotation step
 
         """
-        history_record = aspecd.history.DatasetAnnotationHistoryRecord(
+        history_record = aspecd.history.AnnotationHistoryRecord(
             annotation=self, package=self.dataset.package_name)
         return history_record
 
@@ -358,25 +372,6 @@ class PlotAnnotation(ToDictMixin):
         if self.plotter.figure:
             self._perform_task()
         return self.plotter
-
-    def create_history_record(self):
-        """
-        Create history record to be added to the plotter.
-
-        Usually, this method gets called from within the
-        :meth:`aspecd.plotting.Plotter.annotate` method of the
-        :class:`aspecd.plotting.Plotter` class and ensures the history of
-        each annotation step to get written properly.
-
-        Returns
-        -------
-        history_record : :class:`aspecd.history.PlotAnnotationHistoryRecord`
-            history record for annotation step
-
-        """
-        history_record = aspecd.history.PlotAnnotationHistoryRecord(
-            annotation=self, package=aspecd.utils.package_name(self.plotter))
-        return history_record
 
     def _assign_plotter(self, plotter):
         if not plotter:

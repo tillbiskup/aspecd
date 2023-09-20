@@ -26,6 +26,10 @@ New features
 
   * Colorbar for 2D plotter
 
+  * Annotations for plots
+
+    For details, see :ref:`the documentation of plot annotations <:sec:annotation:plot>`.
+
 * Device data
 
   * New property :attr:`aspecd.dataset.Dataset.device_data` for storing additional/secondary (monitoring) data.

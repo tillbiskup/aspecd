@@ -226,10 +226,10 @@ class TestPlotter(unittest.TestCase):
         self.plotter.annotate(aspecd.annotation.PlotAnnotation())
         self.assertTrue(self.plotter.annotations)
 
-    def test_added_annotation_record_is_plotannotationhistoryrecord(self):
+    def test_added_annotation_record_is_plotannotation(self):
         self.plotter.annotate(aspecd.annotation.PlotAnnotation())
         self.assertIsInstance(self.plotter.annotations[-1],
-                              aspecd.history.PlotAnnotationHistoryRecord)
+                              aspecd.annotation.PlotAnnotation)
 
     def test_annotate_returns_annotation_object(self):
         annotation = self.plotter.annotate(aspecd.annotation.PlotAnnotation())

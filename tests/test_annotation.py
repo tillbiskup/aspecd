@@ -101,7 +101,7 @@ class TestDatasetAnnotation(unittest.TestCase):
         self.annotation.dataset = aspecd.dataset.Dataset()
         history_record = self.annotation.create_history_record()
         self.assertIsInstance(history_record,
-                              aspecd.history.DatasetAnnotationHistoryRecord)
+                              aspecd.history.AnnotationHistoryRecord)
 
 
 class TestComment(unittest.TestCase):
@@ -225,16 +225,6 @@ class TestPlotAnnotation(unittest.TestCase):
         test_plotter = self.annotation.annotate(aspecd.plotting.Plotter())
         self.assertTrue(isinstance(test_plotter, aspecd.plotting.Plotter))
 
-    def test_has_create_history_record_method(self):
-        self.assertTrue(hasattr(self.annotation, 'create_history_record'))
-        self.assertTrue(callable(self.annotation.create_history_record))
-
-    def test_create_history_record_returns_history_record(self):
-        self.annotation.plotter = aspecd.plotting.Plotter()
-        history_record = self.annotation.create_history_record()
-        self.assertIsInstance(history_record,
-                              aspecd.history.PlotAnnotationHistoryRecord)
-
 
 class TestVerticalLine(unittest.TestCase):
     def setUp(self):
@@ -250,3 +240,16 @@ class TestVerticalLine(unittest.TestCase):
         annotation = self.plotter.annotate(self.annotation)
         self.assertIn(annotation.drawings[0],
                       self.plotter.ax.get_children())
+
+    def test_annotate_adds_line_to_plotter_after_plotting(self):
+        self.annotation.parameters['positions'] = [.5]
+        annotation = self.plotter.annotate(self.annotation)
+        self.plotter.plot()
+        self.assertIn(annotation.drawings[0],
+                      self.plotter.ax.get_children())
+
+    def test_annotate_before_plotting_does_not_add_annotation_twice(self):
+        self.annotation.parameters['positions'] = [.5]
+        self.plotter.annotate(self.annotation)
+        self.plotter.plot()
+        self.assertEqual(1, len(self.plotter.annotations))

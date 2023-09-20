@@ -720,6 +720,12 @@ class Plotter(aspecd.utils.ToDictMixin):
     comment : :class:`str`
         User-supplied comment describing intent, purpose, reason, ...
 
+    annotations : :class:`list`
+        List of annotations added to the plotter.
+
+        Each annotation is an object of class
+        :class:`aspecd.annotation.PlotAnnotation`.
+
 
     Raises
     ------
@@ -787,6 +793,7 @@ class Plotter(aspecd.utils.ToDictMixin):
         self._set_style()
         self._create_figure_and_axes()
         self._create_plot()
+        self._add_annotations()
         self.properties.apply(plotter=self)
         self._set_legend()
         self._add_zero_lines()
@@ -829,8 +836,7 @@ class Plotter(aspecd.utils.ToDictMixin):
         # Important: Need a copy, not the reference to the original object
         annotation = copy.deepcopy(annotation)
         annotation.annotate(self, from_plotter=True)
-        history_record = annotation.create_history_record()
-        self.annotations.append(history_record)
+        self.annotations.append(annotation)
         return annotation
 
     def delete_annotation(self, index=None):
@@ -936,6 +942,10 @@ class Plotter(aspecd.utils.ToDictMixin):
         attribute of the plotter.
 
         """
+
+    def _add_annotations(self):
+        for annotation in self.annotations:
+            annotation.annotate(self, from_plotter=True)
 
     def save(self, saver=None):
         """Save the plot to a file.
