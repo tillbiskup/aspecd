@@ -2813,6 +2813,11 @@ class TestPlotAnnotationTask(unittest.TestCase):
         self.recipe_dict = {'settings': {'autosave_plots': False},
                             'datasets': self.dataset,
                             'tasks': [self.annotation_task]}
+        self.figure_filename = 'test.pdf'
+
+    def tearDown(self):
+        if os.path.exists(self.figure_filename):
+            os.remove(self.figure_filename)
 
     def prepare_recipe(self):
         dataset_factory = dataset.DatasetFactory()
@@ -2842,6 +2847,21 @@ class TestPlotAnnotationTask(unittest.TestCase):
         self.task.perform()
         plotter = self.recipe.plotters[self.plotter_name]
         self.assertTrue(plotter.annotations)
+
+    def test_perform_task_w_existing_plotter_saves_plot_again(self):
+        self.recipe_dict['tasks'].append(self.plotting_task)
+        self.prepare_recipe()
+        self.annotation_task['plotter'] = self.plotter_name
+        plot_task = tasks.SingleplotTask()
+        plot_task.from_dict(self.plotting_task)
+        plot_task.properties['filename'] = self.figure_filename
+        plot_task.recipe = self.recipe
+        plot_task.perform()
+        os.remove(self.figure_filename)
+        self.task.from_dict(self.annotation_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertTrue(os.path.exists(self.figure_filename))
 
     def test_perform_task_w_multiple_plotters_annotates_plots(self):
         self.prepare_recipe()
@@ -2906,6 +2926,13 @@ class TestPlotAnnotationTask(unittest.TestCase):
 
         plotter = self.recipe.plotters[self.plotter_name]
         self.assertTrue(plotter.annotations)
+
+    def test_apply_to_not_in_to_dict(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.annotation_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertNotIn('apply_to', self.task.to_dict())
 
 
 class TestReportTask(unittest.TestCase):

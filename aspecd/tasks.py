@@ -3563,6 +3563,7 @@ class PlotannotationTask(Task):
         self.plotter = ''
         self.result = ''
         self._module = 'annotation'
+        self._exclude_from_to_dict.append('apply_to')
 
     def _perform(self):
         task = self.get_object()
@@ -3573,6 +3574,10 @@ class PlotannotationTask(Task):
                 task.plotter = self.recipe.plotters[plotter]
                 # noinspection PyUnresolvedReferences
                 task.annotate()
+                if task.plotter.filename:
+                    saver = \
+                        aspecd.plotting.Saver(filename=task.plotter.filename)
+                    task.plotter.save(saver)
         elif self.result:
             self.recipe.plotannotations[self.result] = task
 

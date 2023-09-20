@@ -833,8 +833,7 @@ class Plotter(aspecd.utils.ToDictMixin):
             Annotation added to the plot(ter)
 
         """
-        # Important: Need a copy, not the reference to the original object
-        annotation = copy.deepcopy(annotation)
+        annotation = copy.copy(annotation)
         annotation.annotate(self, from_plotter=True)
         self.annotations.append(annotation)
         return annotation
