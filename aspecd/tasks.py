@@ -692,6 +692,8 @@ Currently, the following subclasses are implemented:
      * :class:`aspecd.tasks.MultiplotTask`
      * :class:`aspecd.tasks.CompositeplotTask`
 
+  * :class:`aspecd.tasks.PlotannotationTask`
+
   * :class:`aspecd.tasks.TabulateTask`
   * :class:`aspecd.tasks.ReportTask`
 
@@ -1146,6 +1148,7 @@ class Recipe:
         self.results = collections.OrderedDict()
         self.figures = collections.OrderedDict()
         self.plotters = collections.OrderedDict()
+        self.plotannotations = {}
         self.tasks = []
         self.format = {
             'type': 'ASpecD recipe',
@@ -2870,11 +2873,31 @@ class PlotTask(Task):
         key and a :obj:`aspecd.tasks.FigureRecord` object stored containing
         all information necessary for further handling the results of the plot.
 
+        .. note::
+
+            For those being confused what the differences are between
+            :attr:`PlotTask.label` and :attr:`PlotTask.result`: The label
+            refers to the *figure*, *i.e.* the result of a plotting task,
+            whereas the result is a reference to the actual *plotter* that has
+            been used to create the figure referenced with the *label*.
+
     result : :class:`str`
         Label for the plotter of a plotting step.
 
         This is useful in case of CompositePlotters, where different
         plotters need to be defined for each of the panels.
+
+        Internally, this label is used as key in the recipe's
+        :attr:`Recipe.plotters` dict to store the actual
+        :class:`aspecd.plotting.Plotter` object.
+
+        .. note::
+
+            For those being confused what the differences are between
+            :attr:`PlotTask.label` and :attr:`PlotTask.result`: The label
+            refers to the *figure*, *i.e.* the result of a plotting task,
+            whereas the result is a reference to the actual *plotter* that has
+            been used to create the figure referenced with the *label*.
 
     target : :class:`str`
         Label of an existing previous plotter the plot should be added to.
@@ -2889,9 +2912,18 @@ class PlotTask(Task):
         The result: Your plot will be a new figure window, but with the
         original plot contained and the new plot added on top of it.
 
+    annotations : :class:`list`
+        Labels of plot annotations that should be applied to the plot.
+
+        The labels need to be valid keys of the :attr:`Recipe.annotations`
+        attribute.
+
 
     .. versionchanged:: 0.4
         Added attribute :attr:`target`
+
+    .. versionchanged:: 0.9
+        Added attribute :attr:`annotations`
 
     """
 
@@ -2900,6 +2932,7 @@ class PlotTask(Task):
         self.label = ''
         self.result = ''
         self.target = ''
+        self.annotations = []
         self._module = 'plotting'
 
     # noinspection PyUnresolvedReferences
@@ -2939,7 +2972,7 @@ class PlotTask(Task):
         For details, see the method :meth:`aspecd.tasks.Task.perform` of the
         base class.
 
-        Additionally to what is done in the base class, a PlotTask adds a
+        Additionally, to what is done in the base class, a PlotTask adds a
         :obj:`aspecd.tasks.FigureRecord` object to the
         :attr:`aspecd.tasks.Recipe.figures` property of the underlying
         recipe in case an :attr:`aspecd.tasks.PlotTask.label` has been set.
@@ -2962,6 +2995,12 @@ class PlotTask(Task):
 
     def _add_plotter_to_recipe(self):
         self.recipe.plotters[self.result] = self._task
+
+    def _get_annotations(self):
+        for annotation in self.annotations:
+            self._task.annotations.append(
+                self.recipe.plotannotations[annotation]
+            )
 
     def save_plot(self, plot=None):
         """
@@ -3119,6 +3158,7 @@ class SingleplotTask(PlotTask):
                 self.properties.pop('filename')
             dataset = self.recipe.get_dataset(dataset_id)
             self._task = self.get_object()
+            self._get_annotations()
             self.set_colormap()
             if self.label and not self._task.label:
                 self._task.label = self.label
@@ -3223,6 +3263,7 @@ class MultiplotTask(PlotTask):
 
     def _perform(self):
         self._task = self.get_object()
+        self._get_annotations()
         self.set_colormap()
         if self.target:
             self._task.figure = self.recipe.plotters[self.target].figure
@@ -3398,6 +3439,142 @@ class CompositeplotTask(PlotTask):
         self._task.plot()
         # noinspection PyTypeChecker
         self.save_plot(plot=self._task)
+
+
+class PlotannotationTask(Task):
+    """
+    Plot annotation step defined as task in recipe-driven data analysis.
+
+    For more information on the underlying general class,
+    see :class:`aspecd.annotation.PlotAnnotation`.
+
+    Attributes
+    ----------
+    plotter : :class:`str`
+        Name of the plotter to add the annotation to
+
+        Needs to be a valid key of a plotter stored in the
+        :attr:`Recipe.plotters` attribute.
+
+    result : :class:`str`
+        Label the plot annotation should be stored with in the recipe
+
+        Used as key in the :attr:`Recipe.plotannotations` attribute to store
+        the actual :obj:`aspecd.annotation.PlotAnnotation` object. From
+        here, it can later be used in plot tasks to annotate the plots.
+
+    Examples
+    --------
+    For examples of how such a report task may be included into a recipe,
+    see below:
+
+    .. code-block:: yaml
+
+        - kind: multiplot
+          type: MultiPlotter1DStacked
+          properties:
+            filename: plot1Dstacked.pdf
+          result: plot1Dstacked
+
+        - kind: plotannotation
+          type: VerticalLine
+          properties:
+            parameters:
+              positions: [35, 42]
+            properties:
+              color: green
+              linewidth: 1
+              linestyle: dotted
+          plotter: plot1Dstacked
+
+
+    In this case, the plotter is defined first, and the annotation second.
+    To refer to the plotter from within the plotannotation task, you need to
+    set the ``result`` attribute in the plotting task and refer to it within
+    the ``plotter`` attribute of the plotannotation task. Although defining
+    the plotter before the annotation, the user still expects the annotation
+    to be included in the file containing the actual plot, despite the fact
+    that the figure has been saved (for the first time) before the
+    annotation has been added.
+
+    Sometimes, it might be convenient to go the other way round and first
+    define an annotation and afterwards add it to a plot(ter). This can be
+    done as well:
+
+    .. code-block:: yaml
+
+        - kind: plotannotation
+          type: VerticalLine
+          properties:
+            parameters:
+              positions:
+                - 21
+                - 42
+            properties:
+              color: green
+              linewidth: 1
+              linestyle: dotted
+          result: vlines
+
+        - kind: multiplot
+          type: MultiPlotter1DStacked
+          properties:
+            filename: plot1Dstacked.pdf
+          annotations:
+            - vlines
+
+
+    In this way, you can add the same annotation to several plots,
+    and be sure that each annotation is handled as a separate object.
+
+    Suppose you have more than one plotter you want to apply an annotation
+    to. In this case, the ``plotter`` property of the plotannotation task is
+    a list rather than a string:
+
+    .. code-block:: yaml
+
+        - kind: multiplot
+          type: MultiPlotter1DStacked
+          result: plot1
+
+        - kind: multiplot
+          type: MultiPlotter1DStacked
+          result: plot2
+
+        - kind: plotannotation
+          type: VerticalLine
+          properties:
+            parameters:
+              positions: [35, 42]
+          plotter:
+            - plot1
+            - plot2
+
+    In this case, the annotation will be applied to both plots
+    independently. Note that the example has been reduced to the key
+    aspects. In a real situation, the two plotters will differ much more.
+
+    .. versionadded:: 0.9
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.plotter = ''
+        self.result = ''
+        self._module = 'annotation'
+
+    def _perform(self):
+        task = self.get_object()
+        if self.plotter:
+            if not isinstance(self.plotter, list):
+                self.plotter = [self.plotter]
+            for plotter in self.plotter:
+                task.plotter = self.recipe.plotters[plotter]
+                # noinspection PyUnresolvedReferences
+                task.annotate()
+        elif self.result:
+            self.recipe.plotannotations[self.result] = task
 
 
 class ReportTask(Task):

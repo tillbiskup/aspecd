@@ -17,7 +17,8 @@ from matplotlib import pyplot as plt
 
 import aspecd.exceptions
 import aspecd.io
-from aspecd import dataset, plotting, processing, report, tasks, utils
+from aspecd import dataset, plotting, processing, report, tasks, utils, \
+    annotation
 
 
 class TestRecipe(unittest.TestCase):
@@ -2793,6 +2794,118 @@ class TestCompositePlotTask(unittest.TestCase):
         dict_ = self.task.to_dict()
         self.assertEqual(self.singleplotting_task['result'],
                          dict_['properties']['plotter'][0])
+
+
+class TestPlotAnnotationTask(unittest.TestCase):
+    def setUp(self):
+        self.task = tasks.PlotannotationTask()
+        self.recipe = tasks.Recipe()
+        self.dataset = ['foo']
+        self.plotter_name = 'plot'
+        self.plotting_task = {'kind': 'singleplot',
+                              'type': 'SinglePlotter',
+                              'result': self.plotter_name,
+                              'apply_to': self.dataset}
+        self.annotation_task = {'kind': 'plotannotation',
+                                'type': 'VerticalLine',
+                                'parameters': {'positions': [.5]},
+                                'apply_to': self.dataset}
+        self.recipe_dict = {'settings': {'autosave_plots': False},
+                            'datasets': self.dataset,
+                            'tasks': [self.annotation_task]}
+
+    def prepare_recipe(self):
+        dataset_factory = dataset.DatasetFactory()
+        dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
+        self.recipe.dataset_factory = dataset_factory
+        self.recipe.from_dict(self.recipe_dict)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_perform_task(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.annotation_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+
+    def test_perform_task_with_existing_plotter_annotates_plot(self):
+        self.recipe_dict['tasks'].append(self.plotting_task)
+        self.prepare_recipe()
+        self.annotation_task['plotter'] = self.plotter_name
+        plot_task = tasks.PlotTask()
+        plot_task.from_dict(self.plotting_task)
+        plot_task.recipe = self.recipe
+        plot_task.perform()
+        self.task.from_dict(self.annotation_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        plotter = self.recipe.plotters[self.plotter_name]
+        self.assertTrue(plotter.annotations)
+
+    def test_perform_task_w_multiple_plotters_annotates_plots(self):
+        self.prepare_recipe()
+        self.annotation_task['plotter'] = ['plot1', 'plot2']
+        for plot in self.annotation_task['plotter']:
+            plot_task = tasks.PlotTask()
+            self.plotting_task['result'] = plot
+            plot_task.from_dict(self.plotting_task)
+            plot_task.recipe = self.recipe
+            plot_task.perform()
+        self.task.from_dict(self.annotation_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        for plot in self.annotation_task['plotter']:
+            plotter = self.recipe.plotters[plot]
+            self.assertTrue(plotter.annotations)
+
+    def test_perform_task_with_result_adds_plotannotation_to_recipe(self):
+        self.prepare_recipe()
+        label = 'vline'
+        self.annotation_task['result'] = label
+        self.task.from_dict(self.annotation_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertIsInstance(self.recipe.plotannotations[label],
+                              aspecd.annotation.PlotAnnotation)
+
+    def test_singleplot_task_after_plotannotation_task_annotates_plot(self):
+        self.prepare_recipe()
+        label = 'vline'
+        self.annotation_task['result'] = label
+        self.task.from_dict(self.annotation_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+
+        self.plotting_task['annotations'] = [label]
+        plot_task = tasks.SingleplotTask()
+        plot_task.from_dict(self.plotting_task)
+        plot_task.recipe = self.recipe
+        plot_task.perform()
+
+        plotter = self.recipe.plotters[self.plotter_name]
+        self.assertTrue(plotter.annotations)
+
+    def test_multiplot_task_after_plotannotation_task_annotates_plot(self):
+        self.prepare_recipe()
+        label = 'vline'
+        self.annotation_task['result'] = label
+        self.task.from_dict(self.annotation_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+
+        plot_task = tasks.MultiplotTask()
+        plotting_task = {'kind': 'multiplot',
+                         'type': 'MultiPlotter',
+                         'result': self.plotter_name,
+                         'annotations': [label],
+                         'apply_to': self.dataset}
+        plot_task.from_dict(plotting_task)
+        plot_task.recipe = self.recipe
+        plot_task.perform()
+
+        plotter = self.recipe.plotters[self.plotter_name]
+        self.assertTrue(plotter.annotations)
 
 
 class TestReportTask(unittest.TestCase):

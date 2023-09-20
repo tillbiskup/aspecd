@@ -52,7 +52,9 @@ Similar to datasets, plots, *i.e.* graphical representations of the data of
 one or multiple datasets, can be annotated as well. Plot annotations will
 always result in a graphical object of some kind added to the plot created
 by a :class:`aspecd.plotting.Plotter`. Additionally, each plotter has a list
-of annotations attached to it.
+of annotations attached to it. As such, plot annotations are independent of
+individual datasets and can span multiple datasets in case of plotters
+involving the data of multiple datasets.
 
 While generally, it should not matter whether a plot annotation gets added
 to the plotter object before or after the actual plotting process, adding
