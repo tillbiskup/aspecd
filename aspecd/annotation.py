@@ -13,20 +13,31 @@ annotations may have graphical realisations as plot annotations.
 Dataset annotations
 ===================
 
-The simplest form of an annotation is a comment applying to an entire
-dataset, such as comments stored in the metadata written during data
-acquisition. Hence, those comments do *not* belong to the metadata part of
-a dataset, but to the annotations in form of a
+All dataset annotations inherit from the
+:class:`aspecd.annotation.DatasetAnnotation` base class.
+
+Concrete dataset annotations are:
 
 * :obj:`aspecd.annotation.Comment`
 
-object.
+    The simplest form of an annotation is a comment applying to an entire
+    dataset, such as comments stored in the metadata written during data
+    acquisition. Hence, those comments do *not* belong to the metadata part of
+    a dataset, but are stored as an annotation using this class.
 
 Other frequent types of annotations are artefacts and characteristics,
-for which dedicated classes are available within the ASpecD framework, are:
+for which dedicated classes are available within the ASpecD framework:
 
 * :class:`aspecd.annotation.Artefact`
 * :class:`aspecd.annotation.Characteristic`.
+
+
+.. todo::
+
+    Flesh out these additional DatasetAnnotation classes, particularly in
+    light of the newly created PlotAnnotation classes that may eventually be
+    a way to graphically display the dataset annotations.
+
 
 For other types of annotations, simply subclass the
 :class:`aspecd.annotation.DatasetAnnotation` base class.
@@ -62,6 +73,12 @@ Concrete plot annotations are:
 
 * :class:`aspecd.annotation.VerticalLine`
 
+    Add vertical line(s) to a plot(ter).
+
+* :class:`aspecd.annotation.HorizontalLine`
+
+    Add horizontal line(s) to a plot(ter).
+
 
 Module documentation
 ====================
@@ -70,6 +87,7 @@ Module documentation
 
 import aspecd.exceptions
 import aspecd.history
+import aspecd.plotting
 from aspecd.utils import ToDictMixin
 
 
@@ -371,6 +389,8 @@ class PlotAnnotation(ToDictMixin):
         self._call_from_plotter(from_plotter)
         if self.plotter.figure:
             self._perform_task()
+            for drawing in self.drawings:
+                self.properties.apply(drawing=drawing)
         return self.plotter
 
     def _assign_plotter(self, plotter):
@@ -389,7 +409,128 @@ class PlotAnnotation(ToDictMixin):
 
 
 class VerticalLine(PlotAnnotation):
+    # noinspection PyUnresolvedReferences
+    """
+    Vertical line(s) added to a plot.
+
+    Vertical lines are often useful to compare peak positions or as a
+    general guide to the eye of the observer.
+
+    The properties of the lines can be controlled in quite some detail using
+    the :attr:`properties` property. Note that all lines will share the same
+    properties. If you need to add lines with different properties to the
+    same plot, use several :class:`VerticalLine` objects and annotate
+    separately.
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for the annotation, implicit and explicit
+
+        The following keys exist:
+
+        positions : :class:`list`
+            List of the positions vertical lines should appear at
+
+            Values are in axis (data) units.
+
+        limits : :class:`list`
+            Limits of the vertical lines
+
+            If not given, the vertical lines will span the entire range of
+            the current axes.
+
+            Values are in relative units, within a range of [0, 1].
+
+    properties : :class:`aspecd.plotting.LineProperties`
+        Properties of the line(s) within a plot
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.LineProperties` class.
+
+
+    .. versionadded:: 0.9
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.parameters['positions'] = []
+        self.parameters['limits'] = []
+        self.properties = aspecd.plotting.LineProperties()
 
     def _perform_task(self):
-        line = self.plotter.ax.axvline(x=self.parameters['positions'][0])
-        self.drawings.append(line)
+        for position in self.parameters['positions']:
+            if self.parameters['limits']:
+                line = self.plotter.ax.axvline(
+                    x=position,
+                    ymin=self.parameters['limits'][0],
+                    ymax=self.parameters['limits'][1]
+                )
+            else:
+                line = self.plotter.ax.axvline(x=position)
+            self.drawings.append(line)
+
+
+class HorizontalLine(PlotAnnotation):
+    # noinspection PyUnresolvedReferences
+    """
+    Horizontal line(s) added to a plot.
+
+    Horizontal lines are often useful to compare peak positions or as a
+    general guide to the eye of the observer.
+
+    The properties of the lines can be controlled in quite some detail using
+    the :attr:`properties` property. Note that all lines will share the same
+    properties. If you need to add lines with different properties to the
+    same plot, use several :class:`HorizontalLine` objects and annotate
+    separately.
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for the annotation, implicit and explicit
+
+        The following keys exist:
+
+        positions : :class:`list`
+            List of the positions horizontal lines should appear at
+
+            Values are in axis (data) units.
+
+        limits : :class:`list`
+            Limits of the horizontal lines
+
+            If not given, the horizontal lines will span the entire range of
+            the current axes.
+
+            Values are in relative units, within a range of [0, 1].
+
+    properties : :class:`aspecd.plotting.LineProperties`
+        Properties of the line(s) within a plot
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.LineProperties` class.
+
+
+    .. versionadded:: 0.9
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.parameters['positions'] = []
+        self.parameters['limits'] = []
+        self.properties = aspecd.plotting.LineProperties()
+
+    def _perform_task(self):
+        for position in self.parameters['positions']:
+            if self.parameters['limits']:
+                line = self.plotter.ax.axhline(
+                    y=position,
+                    xmin=self.parameters['limits'][0],
+                    xmax=self.parameters['limits'][1]
+                )
+            else:
+                line = self.plotter.ax.axhline(y=position)
+            self.drawings.append(line)

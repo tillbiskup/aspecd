@@ -16,7 +16,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 import aspecd.exceptions
-from aspecd import plotting, utils, dataset, annotation, history
+from aspecd import plotting, utils, dataset, annotation
 
 
 class TestPlotter(unittest.TestCase):
