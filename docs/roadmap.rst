@@ -18,9 +18,11 @@ For next releases
 
     Similar to :class:`aspecd.plotting.MultiDeviceDataPlotter1D`, but with the different device data plotted in separate axes stacked vertically
 
-  * (Arbitrary) lines in plot, *e.g.* to compare peak positions
+  * Plot annotations
 
-    Need to decide whether this goes into plotter properties or gets handled as proper annotations; probably the former, but a good starting point to think about the latter.
+    * additional types of annotations, *e.g.* ``axvspan``, ``axhspan``, symbols
+    * ``zorder`` as attribute for annotations
+    * Add documentation of plot annotations to overview in plotting module
 
   * Quiver plots
 
