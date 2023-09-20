@@ -22,7 +22,6 @@ For next releases
 
     * additional types of annotations, *e.g.* ``axvspan``, ``axhspan``, symbols
     * ``zorder`` as attribute for annotations
-    * Add documentation of plot annotations to overview in plotting module
 
   * Quiver plots
 

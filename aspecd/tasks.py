@@ -986,6 +986,18 @@ class Recipe:
         result. This is mainly used for tasks involving CompositePlotters,
         to define the plotters for each individual plot panel.
 
+    plotannotations : :class:`dict`
+        Dictionary of plot annotations originating from plotannotation tasks
+
+        Each entry is an object of class
+        :class:`aspecd.annotation.PlotAnnotation`.
+
+        To end up in the list of plotannotations, the plotannotation task
+        needs to define a result. Thus you can first define plot
+        annotations before applying them to plotters, and you can even
+        apply one and the same plotannotation task to multiple plotters,
+        referring to the plotannotation by its label.
+
     dataset_factory : :class:`aspecd.dataset.DatasetFactory`
         Factory for datasets used to retrieve datasets
 

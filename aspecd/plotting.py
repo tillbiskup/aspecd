@@ -486,6 +486,108 @@ have a legend be shown. Of course, you need not set all (or even any) of the
 properties explicitly. For details, see the :class:`LegendProperties` class.
 
 
+Annotating plots
+----------------
+
+Annotations of plots are something that cannot be automated. However,
+they can be quite important for the analysis and hence for providing new
+scientific insight. Typical simple examples of plot annotations are
+horizontal or vertical lines to compare peak positions or intensities. You
+may as well think of highlighted areas or symbols pointing to distinct
+characteristics.
+
+When annotating plots, for obvious reasons you need to have both, a plot task
+and a plotannotation task. It does not really matter which task you define
+first, the plot or the plot annotation. There are only marginal
+differences, and both ways are shown below.
+
+.. code-block:: yaml
+
+    - kind: multiplot
+      type: MultiPlotter1DStacked
+      properties:
+        filename: plot1Dstacked.pdf
+      result: plot1Dstacked
+
+    - kind: plotannotation
+      type: VerticalLine
+      properties:
+        parameters:
+          positions: [35, 42]
+        properties:
+          color: green
+          linewidth: 1
+          linestyle: dotted
+      plotter: plot1Dstacked
+
+
+In this case, the plotter is defined first, and the annotation second.
+To refer to the plotter from within the plotannotation task, you need to
+set the ``result`` attribute in the plotting task and refer to it within
+the ``plotter`` attribute of the plotannotation task. Although defining
+the plotter before the annotation, the user still expects the annotation
+to be included in the file containing the actual plot, despite the fact
+that the figure has been saved (for the first time) before the
+annotation has been added.
+
+Sometimes, it might be convenient to go the other way round and first
+define an annotation and afterwards add it to a plot(ter). This can be
+done as well:
+
+.. code-block:: yaml
+
+    - kind: plotannotation
+      type: VerticalLine
+      properties:
+        parameters:
+          positions:
+            - 21
+            - 42
+        properties:
+          color: green
+          linewidth: 1
+          linestyle: dotted
+      result: vlines
+
+    - kind: multiplot
+      type: MultiPlotter1DStacked
+      properties:
+        filename: plot1Dstacked.pdf
+      annotations:
+        - vlines
+
+
+In this way, you can add the same annotation to several plots,
+and be sure that each annotation is handled as a separate object.
+
+Suppose you have more than one plotter you want to apply an annotation
+to. In this case, the ``plotter`` property of the plotannotation task is
+a list rather than a string:
+
+.. code-block:: yaml
+
+    - kind: multiplot
+      type: MultiPlotter1DStacked
+      result: plot1
+
+    - kind: multiplot
+      type: MultiPlotter1DStacked
+      result: plot2
+
+    - kind: plotannotation
+      type: VerticalLine
+      properties:
+        parameters:
+          positions: [35, 42]
+      plotter:
+        - plot1
+        - plot2
+
+In this case, the annotation will be applied to both plots
+independently. Note that the example has been reduced to the key
+aspects. In a real situation, the two plotters will differ much more.
+
+
 Adding a colorbar
 -----------------
 
