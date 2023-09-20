@@ -530,18 +530,19 @@ class DatasetAnnotationRecord(aspecd.utils.ToDictMixin):
     """Base class for annotation records stored in the dataset annotations.
 
     The annotation of a :class:`aspecd.dataset.Dataset` should *not* contain
-    references to :class:`aspecd.annotation.Annotation` objects, but rather
-    records that contain all necessary information to create the respective
-    objects inherited from :class:`aspecd.annotation.Annotation`. One
-    reason for this is simply that we want to import datasets containing
-    annotations in their analyses for which no corresponding annotation
-    class exists in the current installation of the application. Another is
-    to not have an infinite recursion of datasets, as the dataset is stored
-    in an :obj:`aspecd.annotation.Annotation` object.
+    references to :class:`aspecd.annotation.DatasetAnnotation` objects,
+    but rather records that contain all necessary information to create the
+    respective objects inherited from
+    :class:`aspecd.annotation.DatasetAnnotation`. One reason for this is
+    simply that we want to import datasets containing annotations in their
+    analyses for which no corresponding annotation class exists in the
+    current installation of the application. Another is to not have an
+    infinite recursion of datasets, as the dataset is stored in an
+    :obj:`aspecd.annotation.DatasetAnnotation` object.
 
     .. note::
         Each annotation entry in a dataset stores the annotation as a
-        :class:`aspecd.history.AnnotationRecord`, even in applications
+        :class:`aspecd.history.DatasetAnnotationRecord`, even in applications
         inheriting from the ASpecD framework. Hence, subclassing of this class
         should normally not be necessary.
 
@@ -551,6 +552,7 @@ class DatasetAnnotationRecord(aspecd.utils.ToDictMixin):
         Actual content of the annotation
 
         Generic place for more information
+
     class_name : :class:`str`
         Fully qualified name of the class of the corresponding annotation
 
@@ -560,7 +562,7 @@ class DatasetAnnotationRecord(aspecd.utils.ToDictMixin):
 
     Parameters
     ----------
-    annotation : :class:`aspecd.annotation.Annotation`
+    annotation : :class:`aspecd.annotation.DatasetAnnotation`
         Annotation the record should be created for.
 
     Raises
@@ -588,7 +590,7 @@ class DatasetAnnotationRecord(aspecd.utils.ToDictMixin):
 
         Parameters
         ----------
-        annotation : :obj:`aspecd.annotation.Annotation`
+        annotation : :obj:`aspecd.annotation.DatasetAnnotation`
             Object to obtain information from
 
         """
@@ -597,12 +599,12 @@ class DatasetAnnotationRecord(aspecd.utils.ToDictMixin):
         self.class_name = aspecd.utils.full_class_name(annotation)
 
     def create_annotation(self):
-        """Create an analysis step object from the parameters stored.
+        """Create an annotation object from the parameters stored.
 
         Returns
         -------
-        analysis_step : :class:`aspecd.analysis.SingleAnalysisStep`
-            actual analysis step object that can be used for analysis
+        annotation : :class:`aspecd.annotation.DatasetAnnotation`
+            actual annotation object that can be used for annotation
 
         """
         annotation = aspecd.utils.object_from_class_name(self.class_name)
@@ -628,16 +630,16 @@ class DatasetAnnotationRecord(aspecd.utils.ToDictMixin):
 
 
 class DatasetAnnotationHistoryRecord(HistoryRecord):
-    """History record for annotations of datasets or plots.
+    """History record for annotations of datasets.
 
     Attributes
     ----------
-    annotation : :class:`aspecd.annotation.Annotation`
+    annotation : :class:`aspecd.annotation.DatasetAnnotation`
         Annotation the history is saved for
 
     Parameters
     ----------
-    annotation : :class:`aspecd.annotation.AnnotationRecord`
+    annotation : :class:`aspecd.annotation.DatasetAnnotationRecord`
         Annotation the history is saved for
 
     package : :class:`str`
@@ -648,6 +650,130 @@ class DatasetAnnotationHistoryRecord(HistoryRecord):
     def __init__(self, annotation=None, package=''):
         super().__init__(package=package)
         self.annotation = DatasetAnnotationRecord(annotation)
+
+
+class PlotAnnotationRecord(aspecd.utils.ToDictMixin):
+    """Base class for annotation records stored in the plot annotations.
+
+    The annotation of a :class:`aspecd.plotting.Plotter` should *not* contain
+    references to :class:`aspecd.annotation.PlotAnnotation` objects, but rather
+    records that contain all necessary information to create the respective
+    objects inherited from :class:`aspecd.annotation.PlotAnnotation`. One
+    reason for this is simply that we want to import datasets containing
+    annotations in their plotters for which no corresponding annotation
+    class exists in the current installation of the application. Another is
+    to not have an infinite recursion of datasets, as the dataset is stored
+    in an :obj:`aspecd.annotation.PlotAnnotation` object.
+
+    .. note::
+        Each annotation entry in a dataset stores the annotation as a
+        :class:`aspecd.history.PlotAnnotationRecord`, even in applications
+        inheriting from the ASpecD framework. Hence, subclassing of this class
+        should normally not be necessary.
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        Parameters of the annotation
+
+    properties : :class:`aspecd.utils.Properties`
+        Properties of the annotation
+
+        An example would be line properties stored in an object of class
+        :class:`aspecd.plotting.LineProperties`.
+
+    class_name : :class:`str`
+        Fully qualified name of the class of the corresponding annotation
+
+    type : :class:`str`
+        Type of the annotation, usually similar to the class name but
+        human-readable and useful, *e.g.*, in reports.
+
+    Parameters
+    ----------
+    annotation : :class:`aspecd.annotation.PlotAnnotation`
+        Annotation the record should be created for.
+
+
+    .. versionadded:: 0.9
+
+    """
+
+    def __init__(self, annotation=None):
+        super().__init__()
+        self.class_name = ''
+        self.parameters = {}
+        self.properties = None
+        self._attributes_to_copy = ['parameters', 'properties', 'type']
+        if annotation:
+            self.from_annotation(annotation)
+
+    def from_annotation(self, annotation=None):
+        """Obtain information from annotation.
+
+        Parameters
+        ----------
+        annotation : :obj:`aspecd.annotation.PlotAnnotation`
+            Object to obtain information from
+
+        """
+        for attribute in self._attributes_to_copy:
+            setattr(self, attribute, getattr(annotation, attribute))
+        self.class_name = aspecd.utils.full_class_name(annotation)
+
+    def create_annotation(self):
+        """Create an annotation object from the parameters stored.
+
+        Returns
+        -------
+        annotation : :class:`aspecd.annotation.PlotAnnotation`
+            actual annotation object that can be used for annotation
+
+        """
+        annotation = aspecd.utils.object_from_class_name(self.class_name)
+        for attribute in self._attributes_to_copy:
+            setattr(annotation, attribute, getattr(self, attribute))
+        return annotation
+
+    def from_dict(self, dict_=None):
+        """
+        Set properties from dictionary.
+
+        Only parameters in the dictionary that are valid properties of the
+        class are set accordingly.
+
+        Parameters
+        ----------
+        dict_ : :class:`dict`
+            Dictionary containing properties to set
+
+        """
+        for key, value in dict_.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+
+
+class PlotAnnotationHistoryRecord(HistoryRecord):
+    """History record for annotations of plots.
+
+    Attributes
+    ----------
+    annotation : :class:`aspecd.annotation.PlotAnnotation`
+        Annotation the history is saved for
+
+    Parameters
+    ----------
+    annotation : :class:`aspecd.annotation.PlotAnnotationRecord`
+        Annotation the history is saved for
+
+    package : :class:`str`
+        Name of package the history record gets recorded for
+
+    """
+
+    def __init__(self, annotation=None, package=''):
+        super().__init__(package=package)
+        self.annotation = PlotAnnotationRecord(annotation)
 
 
 class PlotRecord(aspecd.utils.ToDictMixin):

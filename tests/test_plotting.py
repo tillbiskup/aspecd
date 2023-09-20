@@ -16,7 +16,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 import aspecd.exceptions
-from aspecd import plotting, utils, dataset
+from aspecd import plotting, utils, dataset, annotation, history
 
 
 class TestPlotter(unittest.TestCase):
@@ -217,6 +217,41 @@ class TestPlotter(unittest.TestCase):
 
     def test_plot_has_device_data_parameter(self):
         self.assertIn('device_data', self.plotter.parameters)
+
+    def test_has_annotate_method(self):
+        self.assertTrue(hasattr(self.plotter, 'annotate'))
+        self.assertTrue(callable(self.plotter.annotate))
+
+    def test_annotate_adds_annotation_record(self):
+        self.plotter.annotate(aspecd.annotation.PlotAnnotation())
+        self.assertTrue(self.plotter.annotations)
+
+    def test_added_annotation_record_is_plotannotationhistoryrecord(self):
+        self.plotter.annotate(aspecd.annotation.PlotAnnotation())
+        self.assertIsInstance(self.plotter.annotations[-1],
+                              aspecd.history.PlotAnnotationHistoryRecord)
+
+    def test_annotate_returns_annotation_object(self):
+        annotation = self.plotter.annotate(aspecd.annotation.PlotAnnotation())
+        self.assertIsInstance(annotation, aspecd.annotation.PlotAnnotation)
+
+    def test_has_delete_annotation_method(self):
+        self.assertTrue(hasattr(self.plotter, 'delete_annotation'))
+        self.assertTrue(callable(self.plotter.delete_annotation))
+
+    def test_delete_annotation_deletes_annotation_record(self):
+        self.plotter.annotate(aspecd.annotation.PlotAnnotation())
+        orig_len_annotations = len(self.plotter.annotations)
+        self.plotter.delete_annotation(0)
+        new_len_annotations = len(self.plotter.annotations)
+        self.assertGreater(orig_len_annotations, new_len_annotations)
+
+    def test_delete_annotation_deletes_correct_annotation_record(self):
+        self.plotter.annotate(aspecd.annotation.PlotAnnotation())
+        self.plotter.annotate(aspecd.annotation.PlotAnnotation())
+        annotation_step = self.plotter.annotations[-1]
+        self.plotter.delete_annotation(0)
+        self.assertIs(annotation_step, self.plotter.annotations[-1])
 
 
 class TestSinglePlotter(unittest.TestCase):

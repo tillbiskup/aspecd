@@ -17,7 +17,10 @@ The simplest form of an annotation is a comment applying to an entire
 dataset, such as comments stored in the metadata written during data
 acquisition. Hence, those comments do *not* belong to the metadata part of
 a dataset, but to the annotations in form of a
-:obj:`aspecd.annotation.Comment` object.
+
+* :obj:`aspecd.annotation.Comment`
+
+object.
 
 Other frequent types of annotations are artefacts and characteristics,
 for which dedicated classes are available within the ASpecD framework, are:
@@ -32,7 +35,18 @@ For other types of annotations, simply subclass the
 Plot(ter) annotations
 =====================
 
-TBD
+Similar to datasets, plots, *i.e.* graphical representations of the data of
+one or multiple datasets, can be annotated as well. Plot annotations will
+always result in a graphical object of some kind added to the plot created
+by a :class:`aspecd.plotting.Plotter`. Additionally, each plotter has a list
+of annotations attached to it.
+
+All plot annotations inherit from the :class:`aspecd.annotation.PlotAnnotation`
+base class.
+
+Concrete plot annotations are:
+
+* :class:`aspecd.annotation.VerticalLine`
 
 
 Module documentation
@@ -254,24 +268,53 @@ class PlotAnnotation(ToDictMixin):
     Whereas many processing steps of data can be fully automated, annotations
     are mostly the domain of human interaction, looking at the graphical
     representation of the data of a dataset and providing some sort of
-    comments, trying to make sense of the data.
+    comments, trying to make sense of the data. Often, being able to add
+    some kind of annotation to these graphical representations is both,
+    tremendously helpful and required for further analysis.
 
-    Annotations can have different types, such as ...
+    Annotations can have different types, such as horizontal and vertical
+    lines added to a plot for comparing different data.
 
     Each of these types is represented by a class on
     its own that is derived from the :class:`PlotAnnotation` base class.
     Additionally, the type is reflected in the "type" property that gets
     set automatically to the class name in lower-case letters.
 
+    While generally, it should not matter whether a plot annotation gets
+    added to the plotter object before or after the actual plotting process,
+    adding the graphical elements annotations consist eventually of to the
+    plot is only possible once the :meth:`aspecd.plotting.Plotter.plot`
+    method has been called and the respective
+    :attr:`aspecd.plotting.Plotter.figure` and
+    :attr:`aspecd.plotting.Plotter.axes` attributes are set. To this end,
+    a plot annotation will only actually add graphical elements if the plot
+    exists already, and the plotter will in turn add any annotations added
+    prior to plotting when its :meth:`aspecd.plotting.Plotter.plot` method
+    is called. This avoids side effects, as annotating a plotter does *not*
+    create a graphical representation that did not exist before.
+
     Attributes
     ----------
     plotter : :class:`aspecd.plotting.Plotter`
+        Plotter the annotation belongs to
 
     type : :class:`str`
+        Textual description of the type of annotation: lowercase class name
+
+        Set automatically, don't change
 
     parameters : :class:`dict`
+        All parameters necessary for the annotation, implicit and explicit
 
     properties : :class:`None`
+        Properties of the annotation, defining its appearance
+
+    drawings : :class:`list`
+        Actual graphical representations of the annotation within the plot
+
+
+    .. versionadded:: 0.9
+
     """
 
     def __init__(self):
@@ -280,9 +323,10 @@ class PlotAnnotation(ToDictMixin):
         self.type = self.__class__.__name__.lower()
         self.parameters = {}
         self.properties = None
-        self._exclude_from_to_dict = ['plotter', 'type']
+        self.drawings = []
+        self._exclude_from_to_dict = ['plotter', 'type', 'drawings']
 
-    def annotate(self, plotter=None):
+    def annotate(self, plotter=None, from_plotter=False):
         """
         Annotate a plot(ter) with the given annotation.
 
@@ -298,12 +342,21 @@ class PlotAnnotation(ToDictMixin):
         plotter : :class:`aspecd.plotting.Plotter`
             Plot(ter) to annotate
 
+        from_plotter : :class:`bool`
+            whether we are called from within a plotter
+
+            Defaults to "False" and shall never be set manually.
+
         Returns
         -------
         plotter : :class:`aspecd.plotting.Plotter`
             Plotter that has been annotated
 
         """
+        self._assign_plotter(plotter)
+        self._call_from_plotter(from_plotter)
+        if self.plotter.figure:
+            self._perform_task()
         return self.plotter
 
     def create_history_record(self):
@@ -324,3 +377,24 @@ class PlotAnnotation(ToDictMixin):
         history_record = aspecd.history.PlotAnnotationHistoryRecord(
             annotation=self, package=aspecd.utils.package_name(self.plotter))
         return history_record
+
+    def _assign_plotter(self, plotter):
+        if not plotter:
+            if not self.plotter:
+                raise aspecd.exceptions.MissingPlotterError
+        else:
+            self.plotter = plotter
+
+    def _call_from_plotter(self, from_plotter):
+        if not from_plotter:
+            self.plotter.annotate(self)
+
+    def _perform_task(self):
+        pass
+
+
+class VerticalLine(PlotAnnotation):
+
+    def _perform_task(self):
+        line = self.plotter.ax.axvline(x=self.parameters['positions'][0])
+        self.drawings.append(line)

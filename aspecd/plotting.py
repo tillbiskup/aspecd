@@ -760,6 +760,7 @@ class Plotter(aspecd.utils.ToDictMixin):
         self.label = ''
         self.style = ''
         self.comment = ''
+        self.annotations = []
         super().__init__()
         #
         self._original_rcparams = None
@@ -810,6 +811,38 @@ class Plotter(aspecd.utils.ToDictMixin):
 
         """
         return True
+
+    def annotate(self, annotation=None):
+        """Add annotation to dataset.
+
+        Parameters
+        ----------
+        annotation : :obj:`aspecd.annotation.PlotAnnotation`
+            Annotation to add to the plotter
+
+        Returns
+        -------
+        annotation : :class:`aspecd.annotation.PlotAnnotation`
+            Annotation added to the plot(ter)
+
+        """
+        # Important: Need a copy, not the reference to the original object
+        annotation = copy.deepcopy(annotation)
+        annotation.annotate(self, from_plotter=True)
+        history_record = annotation.create_history_record()
+        self.annotations.append(history_record)
+        return annotation
+
+    def delete_annotation(self, index=None):
+        """Remove annotation record from dataset.
+
+        Parameters
+        ----------
+        index : `int`
+            Number of analysis in analyses to delete
+
+        """
+        del self.annotations[index]
 
     def _set_style(self):
         self._original_rcparams = mpl.rcParams.copy()

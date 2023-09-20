@@ -496,7 +496,7 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         Parameters
         ----------
-        annotation_ : :obj:`aspecd.annotation.Annotation`
+        annotation_ : :obj:`aspecd.annotation.DatasetAnnotation`
             annotation to add to the dataset
 
         """

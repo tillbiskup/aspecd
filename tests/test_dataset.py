@@ -413,16 +413,16 @@ class TestDatasetAnnotation(unittest.TestCase):
         self.dataset.annotate(self.annotation)
         self.assertFalse(self.dataset.annotations == [])
 
-    def test_added_annotation_record_is_annotationhistoryrecord(self):
+    def test_added_annotation_record_is_datasetannotationhistoryrecord(self):
         self.dataset.annotate(self.annotation)
-        self.assertTrue(isinstance(self.dataset.annotations[-1],
-                                   aspecd.history.DatasetAnnotationHistoryRecord))
+        self.assertIsInstance(self.dataset.annotations[-1],
+                              aspecd.history.DatasetAnnotationHistoryRecord)
 
     def test_has_delete_annotation_method(self):
         self.assertTrue(hasattr(self.dataset, 'delete_annotation'))
         self.assertTrue(callable(self.dataset.delete_annotation))
 
-    def test_delete_annotation_deletes_analysis_record(self):
+    def test_delete_annotation_deletes_annotation_record(self):
         self.dataset.annotate(self.annotation)
         orig_len_annotations = len(self.dataset.annotations)
         self.dataset.delete_annotation(0)

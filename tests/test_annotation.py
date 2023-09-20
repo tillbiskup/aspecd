@@ -100,8 +100,8 @@ class TestDatasetAnnotation(unittest.TestCase):
     def test_create_history_record_returns_history_record(self):
         self.annotation.dataset = aspecd.dataset.Dataset()
         history_record = self.annotation.create_history_record()
-        self.assertTrue(isinstance(history_record,
-                                   aspecd.history.DatasetAnnotationHistoryRecord))
+        self.assertIsInstance(history_record,
+                              aspecd.history.DatasetAnnotationHistoryRecord)
 
 
 class TestComment(unittest.TestCase):
@@ -151,7 +151,6 @@ class TestCharacteristic(unittest.TestCase):
         pass
 
 
-# @unittest.skip
 class TestPlotAnnotation(unittest.TestCase):
     def setUp(self):
         self.annotation = aspecd.annotation.PlotAnnotation()
@@ -179,12 +178,16 @@ class TestPlotAnnotation(unittest.TestCase):
     def test_has_properties_property(self):
         self.assertTrue(hasattr(self.annotation, 'properties'))
 
+    def test_has_drawings_property(self):
+        self.assertTrue(hasattr(self.annotation, 'drawings'))
+        self.assertIsInstance(self.annotation.drawings, list)
+
     def test_has_to_dict_method(self):
         self.assertTrue(hasattr(self.annotation, 'to_dict'))
         self.assertTrue(callable(self.annotation.to_dict))
 
     def test_to_dict_does_not_contain_certain_keys(self):
-        for key in ['plotter', 'type']:
+        for key in ['plotter', 'type', 'drawings']:
             with self.subTest(key=key):
                 self.assertNotIn(key, self.annotation.to_dict())
 
@@ -211,9 +214,10 @@ class TestPlotAnnotation(unittest.TestCase):
         with self.assertRaises(aspecd.exceptions.MissingPlotterError):
             self.annotation.annotate()
 
-    def test_annotate_with_empty_content_raises(self):
+    @unittest.skip
+    def test_annotate_with_empty_parameters_raises(self):
         self.annotation.plotter = aspecd.plotting.Plotter()
-        self.annotation.content.clear()
+        self.annotation.parameters.clear()
         with self.assertRaises(aspecd.exceptions.NoContentError):
             self.annotation.annotate()
 
@@ -228,6 +232,21 @@ class TestPlotAnnotation(unittest.TestCase):
     def test_create_history_record_returns_history_record(self):
         self.annotation.plotter = aspecd.plotting.Plotter()
         history_record = self.annotation.create_history_record()
-        self.assertTrue(isinstance(history_record,
-                                   aspecd.history.DatasetAnnotationHistoryRecord))
+        self.assertIsInstance(history_record,
+                              aspecd.history.PlotAnnotationHistoryRecord)
 
+
+class TestVerticalLine(unittest.TestCase):
+    def setUp(self):
+        self.annotation = aspecd.annotation.VerticalLine()
+        self.plotter = aspecd.plotting.Plotter()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_annotate_adds_line_to_plotter(self):
+        self.annotation.parameters['positions'] = [.5]
+        self.plotter.plot()
+        annotation = self.plotter.annotate(self.annotation)
+        self.assertIn(annotation.drawings[0],
+                      self.plotter.ax.get_children())

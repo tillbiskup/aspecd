@@ -465,8 +465,101 @@ class TestDatasetAnnotationHistoryRecord(unittest.TestCase):
         self.assertTrue(hasattr(self.annotation_record, 'annotation'))
 
     def test_annotation_is_annotation_record(self):
-        self.assertTrue(isinstance(self.annotation_record.annotation,
-                                   aspecd.history.DatasetAnnotationRecord))
+        self.assertIsInstance(self.annotation_record.annotation,
+                              aspecd.history.DatasetAnnotationRecord)
+
+
+class TestPlotAnnotationRecord(unittest.TestCase):
+    def setUp(self):
+        self.annotation = aspecd.annotation.PlotAnnotation()
+        self.annotation_record = \
+            aspecd.history.PlotAnnotationRecord(self.annotation)
+
+    def test_instantiate_class(self):
+        aspecd.annotation.PlotAnnotation()
+
+    def test_instantiate_class_with_annotation(self):
+        aspecd.history.PlotAnnotationRecord(self.annotation)
+
+    def test_instantiate_parameters_from_annotation(self):
+        self.annotation.parameters = {'foo': 'bar'}
+        annotation_record = aspecd.history.PlotAnnotationRecord(self.annotation)
+        self.assertEqual(annotation_record.parameters,
+                         self.annotation.parameters)
+
+    def test_instantiate_properties_from_annotation(self):
+        self.annotation.properties = {'foo': 'bar'}
+        annotation_record = aspecd.history.PlotAnnotationRecord(self.annotation)
+        self.assertEqual(annotation_record.properties,
+                         self.annotation.properties)
+
+    def test_instantiate_class_name_from_annotation(self):
+        annotation_record = aspecd.history.PlotAnnotationRecord(self.annotation)
+        self.assertEqual(annotation_record.class_name,
+                         aspecd.utils.full_class_name(self.annotation))
+
+    def test_has_from_annotation_method(self):
+        self.assertTrue(hasattr(self.annotation_record, 'from_annotation'))
+        self.assertTrue(callable(self.annotation_record.from_annotation))
+
+    def test_has_create_annotation_method(self):
+        self.assertTrue(hasattr(self.annotation_record, 'create_annotation'))
+        self.assertTrue(callable(self.annotation_record.create_annotation))
+
+    def test_create_annotation_returns_annotation_object(self):
+        test_object = self.annotation_record.create_annotation()
+        self.assertTrue(isinstance(test_object,
+                                   aspecd.annotation.PlotAnnotation))
+
+    def test_annotation_object_has_correct_parameters(self):
+        self.annotation_record.parameters = {'foo': 'bar'}
+        test_object = self.annotation_record.create_annotation()
+        self.assertEqual(self.annotation_record.parameters,
+                         test_object.parameters)
+
+    def test_annotation_object_has_correct_properties(self):
+        self.annotation_record.properties = {'foo': 'bar'}
+        test_object = self.annotation_record.create_annotation()
+        self.assertEqual(self.annotation_record.properties,
+                         test_object.properties)
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.annotation_record, 'to_dict'))
+        self.assertTrue(callable(self.annotation_record.to_dict))
+
+    def test_from_dict(self):
+        orig_dict = self.annotation_record.to_dict()
+        orig_dict["parameters"]["foo"] = 'bar'
+        new_annotation_record = aspecd.history.PlotAnnotationRecord()
+        new_annotation_record.from_dict(orig_dict)
+        self.assertDictEqual(orig_dict["parameters"],
+                             new_annotation_record.to_dict()["parameters"])
+
+
+class TestPlotAnnotationHistoryRecord(unittest.TestCase):
+    def setUp(self):
+        self.annotation = aspecd.annotation.PlotAnnotation()
+        self.annotation_record = aspecd.history.PlotAnnotationHistoryRecord(
+            annotation=self.annotation)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_instantiate_class_with_package_name(self):
+        aspecd.history.PlotAnnotationHistoryRecord(
+            annotation=self.annotation, package="numpy")
+
+    def test_instantiate_class_with_package_name_sets_sysinfo(self):
+        annotation_step = aspecd.history.PlotAnnotationHistoryRecord(
+            annotation=self.annotation, package="numpy")
+        self.assertTrue("numpy" in annotation_step.sysinfo.packages.keys())
+
+    def test_has_annotation_property(self):
+        self.assertTrue(hasattr(self.annotation_record, 'annotation'))
+
+    def test_annotation_is_annotation_record(self):
+        self.assertIsInstance(self.annotation_record.annotation,
+                              aspecd.history.PlotAnnotationRecord)
 
 
 class TestPlotRecord(unittest.TestCase):
