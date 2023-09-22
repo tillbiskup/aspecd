@@ -157,6 +157,9 @@ class ToDictMixin:
         .. versionchanged:: 0.6
             New parameter `remove_empty`
 
+        .. versionchanged:: 0.9
+            Settings for properties to exclude and include are not traversed
+
         """
         if hasattr(self, '__odict__'):
             result = self._traverse_dict(self._clean_dict(self.__odict__))
@@ -170,7 +173,7 @@ class ToDictMixin:
         to_remove = []
         for key in dictionary:
             if (str(key).startswith('_')
-                and not key in self._include_in_to_dict) \
+                and key not in self._include_in_to_dict) \
                     or str(key) in self._exclude_from_to_dict:
                 to_remove.append(key)
         for key in to_remove:
@@ -182,12 +185,6 @@ class ToDictMixin:
     def _traverse_dict(self, instance_dict):
         output = collections.OrderedDict()
         for key, value in instance_dict.items():
-        #     if str(key).startswith('_') \
-        #             or str(key) in self._exclude_from_to_dict:
-        #         pass
-        #     else:
-        #         output[key] = self._traverse(key, value)
-        # for key in self._include_in_to_dict:
             output[key] = self._traverse(key, value)
         return output
 
