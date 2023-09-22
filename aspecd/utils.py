@@ -159,23 +159,36 @@ class ToDictMixin:
 
         """
         if hasattr(self, '__odict__'):
-            result = self._traverse_dict(self.__odict__)
+            result = self._traverse_dict(self._clean_dict(self.__odict__))
         else:
-            result = self._traverse_dict(self.__dict__)
+            result = self._traverse_dict(self._clean_dict(self.__dict__))
         if remove_empty:
             result = remove_empty_values_from_dict(result)
         return result
 
+    def _clean_dict(self, dictionary):
+        to_remove = []
+        for key in dictionary:
+            if (str(key).startswith('_')
+                and not key in self._include_in_to_dict) \
+                    or str(key) in self._exclude_from_to_dict:
+                to_remove.append(key)
+        for key in to_remove:
+            dictionary.pop(key, None)
+        for key in self._include_in_to_dict:
+            dictionary[key] = getattr(self, key)
+        return dictionary
+
     def _traverse_dict(self, instance_dict):
         output = collections.OrderedDict()
         for key, value in instance_dict.items():
-            if str(key).startswith('_') \
-                    or str(key) in self._exclude_from_to_dict:
-                pass
-            else:
-                output[key] = self._traverse(key, value)
-        for key in self._include_in_to_dict:
-            output[key] = self._traverse(key, getattr(self, key))
+        #     if str(key).startswith('_') \
+        #             or str(key) in self._exclude_from_to_dict:
+        #         pass
+        #     else:
+        #         output[key] = self._traverse(key, value)
+        # for key in self._include_in_to_dict:
+            output[key] = self._traverse(key, value)
         return output
 
     def _traverse(self, key, value):

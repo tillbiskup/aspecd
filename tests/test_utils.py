@@ -231,6 +231,80 @@ class TestToDictMixin(unittest.TestCase):
         self.assertEqual(['comment'],
                          list(obj.to_dict(remove_empty=True).keys()))
 
+    def test_properties_to_include_are_not_traversed(self):
+        class Test(utils.ToDictMixin):
+            def __init__(self):
+                super().__init__()
+                self.purpose = {}
+                self._foo = None
+                self._include_in_to_dict = ['_foo']
+
+        obj = Test()
+        self.assertNotIn('_foo', list(obj.to_dict()['purpose']))
+
+    def test_properties_to_exclude_are_not_traversed(self):
+        class Test(utils.ToDictMixin):
+            def __init__(self):
+                super().__init__()
+                self.purpose = {'operator': 'John Doe'}
+                self.operator = ''
+                self._exclude_from_to_dict = ['operator']
+
+        obj = Test()
+        self.assertIn('operator', obj.to_dict()['purpose'])
+
+    def test_properties_to_include_are_taken_from_object(self):
+        class TestProperty(utils.ToDictMixin):
+            def __init__(self):
+                super().__init__()
+                self.operator = 'John Doe'
+                self._bar = None
+                self._include_in_to_dict = ['_bar']
+
+        class Test(utils.ToDictMixin):
+            def __init__(self):
+                super().__init__()
+                self.purpose = TestProperty()
+                self._foo = None
+                self._include_in_to_dict = ['_foo']
+
+        obj = Test()
+        self.assertIn('_bar', list(obj.to_dict()['purpose']))
+
+    def test_properties_to_exclude_are_taken_from_object(self):
+        class TestProperty(utils.ToDictMixin):
+            def __init__(self):
+                super().__init__()
+                self.operator = 'John Doe'
+                self._bar = None
+                self._exclude_from_to_dict = ['_bar']
+
+        class Test(utils.ToDictMixin):
+            def __init__(self):
+                super().__init__()
+                self.purpose = {'operator': 'John Doe'}
+                self.operator = TestProperty()
+                self._exclude_from_to_dict = ['operator']
+
+        obj = Test()
+        self.assertNotIn('_bar', obj.to_dict()['purpose'])
+
+    def test_property_to_include_is_property(self):
+        class Test(utils.ToDictMixin):
+            def __init__(self):
+                super().__init__()
+                self.purpose = ''
+                self._prop = 'foo'
+                self._include_in_to_dict = ['prop']
+
+            @property
+            def prop(self):
+                return self._prop
+
+        obj = Test()
+        self.assertEqual(['purpose', 'prop'],
+                         list(obj.to_dict().keys()))
+
 
 class TestGetAspecdVersion(unittest.TestCase):
 

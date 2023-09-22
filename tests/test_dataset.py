@@ -661,6 +661,10 @@ class TestDatasetToDict(unittest.TestCase):
     def test_to_dict_includes_history_pointer(self):
         self.assertIn("_history_pointer", self.dataset.to_dict())
 
+    def test_to_dict_with_device_data(self):
+        self.dataset.device_data['foo'] = aspecd.dataset.DeviceData()
+        self.assertNotIn('_origdata', self.dataset.to_dict()['device_data'])
+
 
 class TestDatasetFromDict(unittest.TestCase):
     def setUp(self):

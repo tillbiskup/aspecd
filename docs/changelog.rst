@@ -28,7 +28,7 @@ New features
 
   * Annotations for plots
 
-    For details, see :ref:`the documentation of plot annotations <:sec:annotation:plot>`.
+    For details, see :ref:`the documentation of plot annotations <:sec:annotation:plot>` and the :mod:`aspecd.annotation` module.
 
 * Device data
 
@@ -66,6 +66,12 @@ Documentation
 
 * New example: :doc:`Plotting FTIR spectra normalised to spectral feature <examples/ftir>`
 * Section with :ref:`general tips and tricks for styling plotters <sec:plotting:tips_tricks>`.
+
+
+Fixes
+-----
+
+* :meth:`aspecd.utils.ToDictMixin.to_dict` does not traverse settings for properties to exclude and include.
 
 
 Version 0.8.3
