@@ -13,6 +13,7 @@ data:
       type: numpy.ndarray
       dtype: float64
       array: []
+    index: []
   - quantity: ''
     symbol: ''
     unit: ''
@@ -21,15 +22,7 @@ data:
       type: numpy.ndarray
       dtype: float64
       array: []
-metadata: {}
-history: []
-analyses: []
-annotations: []
-representations: []
-id: ''
-label: ''
-references: []
-tasks: []
+    index: []
 _origdata:
   calculated: false
   data:
@@ -45,6 +38,7 @@ _origdata:
       type: numpy.ndarray
       dtype: float64
       array: []
+    index: []
   - quantity: ''
     symbol: ''
     unit: ''
@@ -53,5 +47,16 @@ _origdata:
       type: numpy.ndarray
       dtype: float64
       array: []
-_package_name: aspecd
+    index: []
+device_data: {}
+metadata: {}
+history: []
 _history_pointer: -1
+analyses: []
+annotations: []
+representations: []
+id: ''
+label: ''
+references: []
+tasks: []
+_package_name: aspecd

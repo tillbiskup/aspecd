@@ -19,6 +19,8 @@ Basic dataset
 Experimental dataset
 ====================
 
+While generally, the propery ``device_data`` is empty when creating a dataset object, here, the structure of the ``device_data`` is shown explicitly for one device named ``example``. For more details regarding device data, see the :ref:`documentation in the dataset module <sec:dataset:device_data>`.
+
 .. literalinclude:: ExperimentalDataset.yaml
    :language: yaml
 
