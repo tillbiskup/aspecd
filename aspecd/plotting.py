@@ -4206,6 +4206,16 @@ class AxesProperties(aspecd.utils.Properties):
 
         Default: None
 
+    label_fontsize : :class:`int` or :class:`str`
+        Font size of the axes labels.
+
+        If numeric the size will be the absolute font size in points. String
+        values are relative to the current default font size. Valid string
+        values are: ``xx-small``, ``x-small``, ``small``, ``medium``,
+        ``large``, ``x-large``, ``xx-large``
+
+        Default: ``plt.rcParams['font.size']``
+
     invert: :class:`list` or :class:`str`
         Axes to invert
 
@@ -4235,6 +4245,9 @@ class AxesProperties(aspecd.utils.Properties):
     .. versionchanged:: 0.9
         New property ``invert``
 
+    .. versionchanged:: 0.9
+        New property ``label_fontsize``
+
     """
 
     # pylint: disable=too-many-instance-attributes
@@ -4256,6 +4269,7 @@ class AxesProperties(aspecd.utils.Properties):
         self.yticklabels = None
         self.yticklabelangle = 0.0
         self.yticks = None
+        self.label_fontsize = plt.rcParams['font.size']
         self.invert = None
 
     def apply(self, axes=None):
@@ -4284,6 +4298,7 @@ class AxesProperties(aspecd.utils.Properties):
             if hasattr(axes, 'set_' + property_):
                 getattr(axes, 'set_' + property_)(value)
         self._set_axes_ticks(axes)
+        self._set_axes_fonts(axes)
         if self.invert:
             self._invert_axes(axes)
 
@@ -4305,7 +4320,10 @@ class AxesProperties(aspecd.utils.Properties):
         all_properties = self.to_dict()
         properties = {}
         for prop in all_properties:
-            if prop.startswith(('xtick', 'ytick', 'invert')):
+            if (
+                    prop.startswith(('xtick', 'ytick', 'invert'))
+                    or "fontsize" in prop
+            ):
                 pass
             elif isinstance(all_properties[prop], np.ndarray):
                 if any(all_properties[prop]):
@@ -4327,6 +4345,10 @@ class AxesProperties(aspecd.utils.Properties):
             tick.set_rotation(self.xticklabelangle)
         for tick in axes.get_yticklabels():
             tick.set_rotation(self.yticklabelangle)
+
+    def _set_axes_fonts(self, axes):
+        axes.get_xaxis().get_label().set_fontsize(self.label_fontsize)
+        axes.get_yaxis().get_label().set_fontsize(self.label_fontsize)
 
     def _invert_axes(self, axes):
         if isinstance(self.invert, str):

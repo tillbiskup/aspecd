@@ -24,6 +24,8 @@ New features
 
   * New attribute :attr:`aspecd.plotting.AxesProperties.invert` for inverting axes. Helpful, *e.g.*, for plotting FTIR data without having to resort to explicitly provide descending axis limits.
 
+  * Setting font size of axes labels via ``label_fontsize`` property.
+
   * Colorbar for 2D plotter
 
   * Annotations for plots

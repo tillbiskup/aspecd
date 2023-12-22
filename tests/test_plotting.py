@@ -2648,6 +2648,22 @@ class TestAxesProperties(unittest.TestCase):
         self.assertTrue(plot.axes.yaxis_inverted())
         plt.close(plot.figure)
 
+    def test_label_fontsize_sets_label_fontsize(self):
+        fontsize = 'large'
+        self.axis_properties.label_fontsize = fontsize
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertEqual(
+            plt.rcParams['font.size'] * 1.2,
+            plot.axes.get_xaxis().get_label().get_fontsize()
+        )
+        self.assertEqual(
+            plt.rcParams['font.size'] * 1.2,
+            plot.axes.get_yaxis().get_label().get_fontsize()
+        )
+        plt.close(plot.figure)
+
 
 class TestLegendProperties(unittest.TestCase):
     def setUp(self):
