@@ -83,9 +83,10 @@ class TestReporter(unittest.TestCase):
 
     def test_render_with_template(self):
         with open(self.template, 'w+') as f:
-            f.write('')
+            f.write('Lorem ipsum')
         self.report.template = self.template
         self.report.render()
+        self.assertTrue(self.report.report)
 
     def test_render_adds_sysinfo_key_to_context(self):
         with open(self.template, 'w+') as f:
@@ -103,9 +104,10 @@ class TestReporter(unittest.TestCase):
 
     def test_render_with_template_with_absolute_path(self):
         with open(self.template2, 'w+') as f:
-            f.write('')
+            f.write('Lorem ipsum')
         self.report.template = self.template2
         self.report.render()
+        self.assertTrue(self.report.report)
 
     def test_render_sets_template_dir_in_context(self):
         with open(self.template2, 'w+') as f:
@@ -133,15 +135,17 @@ class TestReporter(unittest.TestCase):
 
     def test_render_with_template_with_relative_path(self):
         with open(self.template, 'w+') as f:
-            f.write('')
+            f.write('Lorem ipsum')
         self.report.template = '../tests/' + self.template
         self.report.render()
+        self.assertTrue(self.report.report)
 
     def test_render_with_template_provided_at_initialisation(self):
         with open(self.template, 'w+') as f:
-            f.write('')
+            f.write('Lorem ipsum')
         report_ = report.Reporter(template=self.template)
         report_.render()
+        self.assertTrue(report_.report)
 
     def test_render_fills_report_property(self):
         content = 'bla'
