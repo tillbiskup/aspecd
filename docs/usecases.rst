@@ -411,18 +411,19 @@ To give you a first impression of how a more detailed and explicit setting of pl
       - kind: singleplot
         type: SinglePlotter1D
         properties:
-          figure:
-            size: 6, 4.5
-            dpi: 300
-            title: My first figure
-          axes:
-            facecolor: '#cccccc'
-          drawing:
-            color: tab:red
-            linewidth: 2
-          legend:
-            location: upper right
-            frameon: False
+          properties:
+            figure:
+              size: 6, 4.5
+              dpi: 300
+              title: My first figure
+            axes:
+              facecolor: '#cccccc'
+            drawing:
+              color: tab:red
+              linewidth: 2
+            legend:
+              location: upper right
+              frameon: False
           filename:
             - dataset.pdf
 
