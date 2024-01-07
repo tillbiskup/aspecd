@@ -681,6 +681,61 @@ available plotter classes. This is what the
 works.
 
 
+For developers
+==============
+
+A bit of conceptual documentation for both, developers of the ASpecD
+framework and derived packages, including general hints how to implement
+plotters.
+
+
+.. _sec:plotting:developers_data:
+
+Access to data for plotting
+---------------------------
+
+Datasets may contain additional data as device data in
+:attr:`aspecd.dataset.Dataset.device_data`. For details, see the
+:ref:`section on device data in the dataset module
+<sec:dataset:device_data>`. When implementing a plotter, you should not
+need to care about whether device data or data should be plotted. For this
+to work, do *not* access :attr:`aspecd.dataset.Dataset.data` directly
+in your plotter, but use instead :attr:`aspecd.plotting.SinglePlotter.data`
+or :attr:`aspecd.plotting.MultiPlotter.data`, respectively.
+
+
+.. important::
+    Support for device data has been added in ASpecD v0.9. Developers of
+    packages based on the ASpecD framework should update their code
+    accordingly.
+
+
+In a simplistic scenario, your plotter (here, a class derived from
+:class:`SinglePlotter`) may contain the following code:
+
+.. code-block::
+
+    def _create_plot(self):
+        self.drawing, = self.axes.plot(self.data.axes[0].values,
+                                       self.data.data,
+                                       label=self.properties.drawing.label)
+
+
+A few comments on this code snippet:
+
+* All actual plotting is implemented in the private method
+  ``_create_plot()``.
+
+* The actual object returned by the plot function is stored in
+  ``self.drawing``.
+
+* The actual plot function gets the data to be plotted by accessing 
+  ``self.data`` (and *not* ``self.dataset.data``).
+
+Of course, usually there is more that is handled in a plotter. For
+details, have a look at the actual source code of different ASpecD plotters.
+
+
 Module API documentation
 ========================
 
@@ -1205,6 +1260,10 @@ class SinglePlotter(Plotter):
 
     aspecd.exceptions.NotApplicableToDatasetError
         Raised when processing step is not applicable to dataset
+
+
+    .. versionchanged:: 0.9
+        New attribute ''data''
 
     """
 
@@ -2506,6 +2565,15 @@ class MultiPlotter(Plotter):
     datasets : :class:`list`
         List of dataset the plotting should be done for
 
+    data : :class:`list`
+        List of actual data that should be plotted
+
+        Each element is of type :class:`aspecd.dataset.Data`.
+
+        Defaults to the primary data of a dataset, but can be the device
+        data. See the key ``device_data`` of :attr:`Plotter.parameters` for
+        details.
+
     parameters : :class:`dict`
         All parameters necessary for the plot, implicit and explicit
 
@@ -2528,6 +2596,10 @@ class MultiPlotter(Plotter):
         Raised when no dataset exists to act on
     aspecd.exceptions.NotApplicableToDatasetError
         Raised when processing step is not applicable to dataset
+
+
+    .. versionchanged:: 0.9
+        New attribute ''data''
 
     """
 

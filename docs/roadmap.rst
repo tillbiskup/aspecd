@@ -62,6 +62,8 @@ For next releases
 
 * Documentation:
 
+  * More developer documentation providing hints and "best practices" for how to develop classes either in ASpecD or in derived packages.
+
   * How to debug a recipe?
 
   * Better document command-line options of the "serve" command
