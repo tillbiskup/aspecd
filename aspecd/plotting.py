@@ -689,6 +689,55 @@ framework and derived packages, including general hints how to implement
 plotters.
 
 
+When and how to subclass plotters
+---------------------------------
+
+ASpecD comes with a list and hierarchy of plotters. For details, see the
+:ref:`section on types of concrete plotters
+<sec:plotting:concrete_plotters>`. The question therefore arises: when and
+how to subclass plotters, particularly in derived packages?
+
+Generally, you nearly always want to subclass directly one of the concrete
+plotters, such as :class:`SinglePlotter1D` or :class:`MultiPlotter1D`,
+but rarely if ever parent classes such as :class:`SinglePlotter` or even
+:class:`Plotter`. The reason is simply that only the concrete plotters can
+be used directly.
+
+Reasons for subclassing plotters in derived packages are:
+
+* Adding new kinds of (specific) plotters,
+* Adding functionality to otherwise generic plotters,
+* Change certain functionality to otherwise generic plotters.
+
+A typical use case for the last case would be to revert the *x* axis by
+default, perhaps depending on the axis unit. For this, you would
+probably want to subclass all relevant concrete ASpecD plotter, *i.e.*
+:class:`SinglePlotter1D`, :class:`SinglePlotter2D`,
+:class:`SinglePlotter2DStacked`, :class:`MultiPlotter1D`,
+and :class:`MultiPlotter1DStacked`. For each of these, there would only be
+a few relevant lines of code, and as this would look fairly similar for each
+of the plotters, the following stripped-down example shows just the case
+for the :class:`SinglePlotter1D`:
+
+.. code-block::
+
+    class SinglePlotter1D(aspecd.plotting.SinglePlotter1D):
+
+        def _create_plot(self):
+            super()._create_plot()
+            if self.data.axes[0].unit == "<Some Unit>":
+                self.properties.axes.invert = ["x"]
+
+
+Here, the unit of the *x* axis is checked and if it is set to a certain
+value (replace the placeholder ``<Some Unit>`` with a reasonable value in
+your code), the *x* axis is inverted. This is all functional code
+necessary to achieve the requested behaviour. In a real class, you would
+need to add a proper class docstring including examples how to use the
+class. Get inspiration from either the ASpecD framework itself or one of
+the derived packages.
+
+
 .. _sec:plotting:developers_data:
 
 Access to data for plotting
