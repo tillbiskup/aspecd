@@ -16,7 +16,7 @@ To this end, a series of tasks needs to be performed on each dataset:
 
 #. Plot both spectra in one axis for graphical display of recorded data, following the convention in FTIR to plot an inverse *x* axis.
 
-There are two ways to invert an axis: The preferred method is to explicitly set the axis property (note that you can specify which axis to invert or even both, if you provide a list). Alternatively, shown here as a comment, is to provide axis limits in descending order. While the latter method does do the trick, you need to explicitly provide axis limits in this case. This might, however, not be convenient.
+There are two ways to invert an axis: The preferred method is to explicitly set the axis property (note that you can specify which axis to invert or even both, if you provide a list). Alternatively, shown here as a comment, you can provide axis limits in descending order. While the latter method does do the trick, you need to explicitly provide axis limits in this case. This might, however, not be convenient.
 
 In case of the data used here, the *x* axis is recorded in descending order. Therefore, for the baseline correction step, the five percent fitting range are taken from the left part in the figure, *i.e.* at high wavenumbers. Depending on how your data were recorded and how you set your plot initially, this may be confusing and lead to unexpected results.
 
