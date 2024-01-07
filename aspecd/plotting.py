@@ -3465,7 +3465,9 @@ class Saver:
         """
         self._add_file_extension()
         try:
-            self.plotter.figure.savefig(self.filename, **self.parameters)
+            self.plotter.figure.savefig(self.filename,
+                                        dpi=self.plotter.figure.dpi,
+                                        **self.parameters)
         except OSError as os_error:
             if os_error.errno == errno.ENAMETOOLONG:
                 file_basename, file_extension = os.path.splitext(self.filename)

@@ -74,6 +74,7 @@ Fixes
 -----
 
 * :meth:`aspecd.utils.ToDictMixin.to_dict` does not traverse settings for properties to exclude and include.
+* Workaround for :meth:`matplotlib.figure.Figure.savefig` not correctly handling figure DPI settings.
 
 
 Version 0.8.3
