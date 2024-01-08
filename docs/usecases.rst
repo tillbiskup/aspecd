@@ -81,7 +81,19 @@ Therefore, in a recipe that is basically a YAML file, you will always find two k
       - ...
 
 
-There are, however, a few additional (optional) keys that may appear on the highest level, setting such things as the :ref:`default package to use <specific_packages>` (for packages derived from ASpecD), the default source directory for datasets and the default output directory for figures and reports.
+But what about the first block shown in the first example, the top-level ``format`` key? Let's have a look at it again:
+
+
+.. code-block:: yaml
+
+    format:
+      type: ASpecD recipe
+      version: '0.2'
+
+
+This first block of every ASpecD recipe simply describes the file format, *e.g.* an ASpecD recipe, and the version of the format. Note that regardless of the package based on the ASpecD framework, the format type will always be "ASpecD recipe" (at least for the time being), and the version number is *independent* of the version number of the ASpecD framework or any derived package, but is an independent version number of the recipe file format as such.
+
+Besides the two essential blocks (datasets and tasks) mentioned above, a few additional (optional) keys may appear on the highest level, setting such things as the :ref:`default package to use <specific_packages>` (for packages derived from ASpecD), the default source directory for datasets and the default output directory for figures and reports.
 
 
 .. code-block:: yaml
