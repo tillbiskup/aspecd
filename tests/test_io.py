@@ -8,7 +8,7 @@ import numpy as np
 
 import aspecd.exceptions
 import aspecd.processing
-from aspecd import io, dataset, tasks, utils
+from aspecd import io, dataset, tasks, utils, history
 
 
 class TestDatasetImporter(unittest.TestCase):
@@ -92,6 +92,16 @@ class TestDatasetExporter(unittest.TestCase):
         self.exporter.export_from(test_dataset)
         self.assertIs(self.exporter.dataset, test_dataset)
 
+    def test_has_create_history_record_method(self):
+        self.assertTrue(hasattr(self.exporter, 'create_history_record'))
+        self.assertTrue(callable(self.exporter.create_history_record))
+
+    def test_create_history_record_returns_history_record(self):
+        self.exporter.dataset = aspecd.dataset.Dataset()
+        history_record = self.exporter.create_history_record()
+        self.assertTrue(isinstance(history_record,
+                                   aspecd.history.DatasetExporterHistoryRecord))
+
 
 class TestDatasetImporterFactory(unittest.TestCase):
     def setUp(self):
@@ -146,6 +156,12 @@ class TestDatasetImporterFactory(unittest.TestCase):
         importer = self.factory.get_importer(source=source,
                                              parameters=parameters)
         self.assertDictEqual(parameters, importer.parameters)
+
+    def test_returning_abstract_importer_logs_warning(self):
+        with self.assertLogs(__package__, level='WARNING') as captured:
+            self.factory.get_importer(source=self.source)
+        self.assertEqual(len(captured.records), 1)
+        self.assertIn('default importer', captured.output[0].lower())
 
 
 class TestRecipeImporter(unittest.TestCase):

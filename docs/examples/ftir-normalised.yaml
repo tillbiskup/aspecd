@@ -1,0 +1,47 @@
+format:
+  type: ASpecD recipe
+  version: '0.2'
+
+datasets:
+  - source: AL-C1_1.csv
+    label: Substance 1
+    importer: TxtImporter
+    importer_parameters:
+      skiprows: 2
+      delimiter: ';'
+  - source: AL-C2_1.csv
+    label: Substance 2
+    importer: TxtImporter
+    importer_parameters:
+      skiprows: 2
+      delimiter: ';'
+
+tasks:
+  - kind: processing
+    type: BaselineCorrection
+    properties:
+      parameters:
+        fit_area: [5, 0]
+
+  - kind: processing
+    type: Normalisation
+    properties: 
+      parameters:
+        range: [1750, 1680]
+        range_unit: axis
+        kind: minimum
+
+  - kind: multiplot
+    type: MultiPlotter1D
+    properties:
+      properties:
+        axes: 
+          # xlim: [4000, 635]
+          invert: x
+          xlabel: '$wavenumber$ / cm$^{-1}$'
+          ylabel: '$normalised\ transmission$'
+      parameters: 
+        tight_layout: True
+        show_legend: True
+      filename: ftir-normalised.pdf
+ 

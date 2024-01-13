@@ -11,6 +11,7 @@ import datetime
 import hashlib
 import importlib
 import inspect
+import logging
 import os
 import pkgutil
 import re
@@ -156,25 +157,35 @@ class ToDictMixin:
         .. versionchanged:: 0.6
             New parameter `remove_empty`
 
+        .. versionchanged:: 0.9
+            Settings for properties to exclude and include are not traversed
+
         """
         if hasattr(self, '__odict__'):
-            result = self._traverse_dict(self.__odict__)
+            result = self._traverse_dict(self._clean_dict(self.__odict__))
         else:
-            result = self._traverse_dict(self.__dict__)
+            result = self._traverse_dict(self._clean_dict(self.__dict__))
         if remove_empty:
             result = remove_empty_values_from_dict(result)
         return result
 
+    def _clean_dict(self, dictionary):
+        to_remove = []
+        for key in dictionary:
+            if (str(key).startswith('_')
+                and key not in self._include_in_to_dict) \
+                    or str(key) in self._exclude_from_to_dict:
+                to_remove.append(key)
+        for key in to_remove:
+            dictionary.pop(key, None)
+        for key in self._include_in_to_dict:
+            dictionary[key] = getattr(self, key)
+        return dictionary
+
     def _traverse_dict(self, instance_dict):
         output = collections.OrderedDict()
         for key, value in instance_dict.items():
-            if str(key).startswith('_') \
-                    or str(key) in self._exclude_from_to_dict:
-                pass
-            else:
-                output[key] = self._traverse(key, value)
-        for key in self._include_in_to_dict:
-            output[key] = self._traverse(key, getattr(self, key))
+            output[key] = self._traverse(key, value)
         return output
 
     def _traverse(self, key, value):
@@ -1025,3 +1036,82 @@ def change_working_dir(path=''):  # pylint: disable=redefined-outer-name
         yield
     finally:
         os.chdir(oldpwd)
+
+
+def get_logger(name=''):
+    """
+    Get logger object for a given module.
+
+    Logging in libraries is slightly different from standard logging with
+    respect to the handler attached to the logger. The general advice from
+    the `Python Logging HOWTO <https://docs.python.org/3/howto/logging.html
+    #configuring-logging-for-a-library>`_ is to explicitly add the
+    :class:`logging.Nullhandler` as a handler.
+
+    Additionally, if you want to add loggers for a library that inherits
+    from/builds upon a framework, in this particular case a library/package
+    built atop the ASpecD framework, you want to have loggers being children
+    of the framework logger in order to have the framework catch the log
+    messages your library/package creates.
+
+    Why does this matter, particularly for the ASpecD framework? If you want
+    to have your log messages in a package based on the ASpecD framework appear
+    when using :doc:`recipe-driven data analysis </recipes>`, you need to
+    have your package loggers to be in the hierarchy below the root logger
+    of the ASpecD framework. For convenience and in order not to make any
+    informed guesses on how the ASpecD framework root logger is named,
+    simply use this function to create the loggers in the modules of your
+    package.
+
+    Parameters
+    ----------
+    name : :class:`str`
+        Name of the module to get the logger for.
+
+        Usually, this will be set to ``__name__``, as this returns the
+        current module (including the package name and separated with a
+        ``.`` if present).
+
+    Returns
+    -------
+    logger : :class:`logging.Logger`
+        Logger object for the module
+
+        The logger will have a :class:`logging.NullHandler` handler
+        attached, in line with the advice from the `Python Logging HOWTO
+        <https://docs.python.org/3/howto/logging.html#configuring-logging-for
+        -a-library>`_.
+
+
+    Examples
+    --------
+    To add a logger to a module in your library/package based on the ASpecD
+    framework, add something like this to the top of your module:
+
+    .. code-block::
+
+        import aspecd.utils
+
+
+        logger = aspecd.utils.get_logger(__name__)
+
+    The important aspect here is to use ``__name__`` as the name of the
+    logger. The reason is simple: ``__name__`` gets automatically expanded
+    to the name of the current module, with the name of all parent
+    modules/the package prefixed, using dot notation. The resulting logger
+    will be situated in the hierarchy below the ``aspecd`` package logger.
+    Suppose you have added the above lines to the module
+    ``mypackage.processing`` in the ``processing`` module of your package
+    ``mypackage``. This will result in a logger ``aspecd.mypackage.processing``.
+
+
+    .. versionadded:: 0.9
+
+    """
+    if not name:
+        name = package_name()
+    else:
+        name = ".".join([package_name(), name])
+    logger = logging.getLogger(name=name)
+    logger.addHandler(logging.NullHandler())
+    return logger

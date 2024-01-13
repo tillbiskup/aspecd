@@ -77,6 +77,12 @@ class TestDataset(unittest.TestCase):
     def test_has_tasks_property(self):
         self.assertTrue(hasattr(self.dataset, 'tasks'))
 
+    def test_has_device_data_property(self):
+        self.assertTrue(hasattr(self.dataset, 'device_data'))
+
+    def test_device_data_is_dict(self):
+        self.assertTrue(isinstance(self.dataset.device_data, dict))
+
 
 class TestDatasetProcessing(unittest.TestCase):
     def setUp(self):
@@ -396,7 +402,7 @@ class TestDatasetAnalysis(unittest.TestCase):
 class TestDatasetAnnotation(unittest.TestCase):
     def setUp(self):
         self.dataset = dataset.Dataset()
-        self.annotation = annotation.Annotation()
+        self.annotation = annotation.DatasetAnnotation()
         self.annotation.content = 'boo'
 
     def test_has_annotate_method(self):
@@ -407,16 +413,16 @@ class TestDatasetAnnotation(unittest.TestCase):
         self.dataset.annotate(self.annotation)
         self.assertFalse(self.dataset.annotations == [])
 
-    def test_added_annotation_record_is_annotationhistoryrecord(self):
+    def test_added_annotation_record_is_datasetannotationhistoryrecord(self):
         self.dataset.annotate(self.annotation)
-        self.assertTrue(isinstance(self.dataset.annotations[-1],
-                                   aspecd.history.AnnotationHistoryRecord))
+        self.assertIsInstance(self.dataset.annotations[-1],
+                              aspecd.history.AnnotationHistoryRecord)
 
     def test_has_delete_annotation_method(self):
         self.assertTrue(hasattr(self.dataset, 'delete_annotation'))
         self.assertTrue(callable(self.dataset.delete_annotation))
 
-    def test_delete_annotation_deletes_analysis_record(self):
+    def test_delete_annotation_deletes_annotation_record(self):
         self.dataset.annotate(self.annotation)
         orig_len_annotations = len(self.dataset.annotations)
         self.dataset.delete_annotation(0)
@@ -582,6 +588,19 @@ class TestDatasetExporting(unittest.TestCase):
         with self.assertRaises(aspecd.exceptions.MissingExporterError):
             self.dataset.export_to()
 
+    def test_export_adds_task(self):
+        self.dataset.export_to(self.exporter)
+        self.assertNotEqual(self.dataset.tasks, [])
+
+    def test_added_task_has_kind_export(self):
+        self.dataset.export_to(self.exporter)
+        self.assertEqual(self.dataset.tasks[0]['kind'], 'export')
+
+    def test_added_task_has_exporter_history_record(self):
+        self.dataset.export_to(self.exporter)
+        self.assertIsInstance(self.dataset.tasks[0]['task'],
+                              aspecd.history.DatasetExporterHistoryRecord)
+
 
 class TestDatasetToDict(unittest.TestCase):
     def setUp(self):
@@ -610,7 +629,7 @@ class TestDatasetToDict(unittest.TestCase):
         self.dataset.to_dict()
 
     def test_to_dict_with_annotation(self):
-        annotation_step = aspecd.annotation.Annotation()
+        annotation_step = aspecd.annotation.DatasetAnnotation()
         annotation_step.content = 'foo'
         self.dataset.annotate(annotation_step)
         self.dataset.to_dict()
@@ -641,6 +660,10 @@ class TestDatasetToDict(unittest.TestCase):
 
     def test_to_dict_includes_history_pointer(self):
         self.assertIn("_history_pointer", self.dataset.to_dict())
+
+    def test_to_dict_with_device_data(self):
+        self.dataset.device_data['foo'] = aspecd.dataset.DeviceData()
+        self.assertNotIn('_origdata', self.dataset.to_dict()['device_data'])
 
 
 class TestDatasetFromDict(unittest.TestCase):
@@ -704,7 +727,7 @@ class TestDatasetFromDict(unittest.TestCase):
                              new_dataset.analyses[0].to_dict())
 
     def test_from_dict_sets_annotations(self):
-        annotation_ = aspecd.annotation.Annotation()
+        annotation_ = aspecd.annotation.DatasetAnnotation()
         annotation_.content = {'foo': 'bar'}
         self.dataset.annotate(annotation_)
         dataset_dict = self.dataset.to_dict()
@@ -1297,3 +1320,34 @@ class TestAxis(unittest.TestCase):
         with self.assertRaisesRegex(IndexError, 'Values need to be '
                                                 'one-dimensional'):
             self.axis.values = np.zeros([0, 0])
+
+
+class TestDeviceData(unittest.TestCase):
+
+    def setUp(self):
+        self.device_data = dataset.DeviceData()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_data_property(self):
+        self.assertTrue(hasattr(self.device_data, 'data'))
+
+    def test_data_is_ndarray(self):
+        self.assertTrue(isinstance(self.device_data.data, np.ndarray))
+
+    def test_has_axes_property(self):
+        self.assertTrue(hasattr(self.device_data, 'axes'))
+
+    def test_axes_is_list(self):
+        self.assertTrue(isinstance(self.device_data.axes, list))
+
+    def test_has_metadata_property(self):
+        self.assertTrue(hasattr(self.device_data, 'metadata'))
+
+    def test_metadata_property_is_device_metadata(self):
+        self.assertIsInstance(self.device_data.metadata,
+                              aspecd.metadata.Device)
+
+    def test_calculated_is_false(self):
+        self.assertFalse(self.device_data.calculated)

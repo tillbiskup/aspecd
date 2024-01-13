@@ -9,3 +9,4 @@ Each example covers a specific aspect of working with data, is presented on its 
     :maxdepth: 1
 
     uvvis
+    ftir

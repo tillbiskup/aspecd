@@ -1,6 +1,13 @@
 """
 Plotting: Graphical representations of data extracted from datasets.
 
+.. sidebar:: Contents
+
+    .. contents::
+        :local:
+        :depth: 1
+
+
 Plotting relies on `matplotlib <https://matplotlib.org/>`_, and mainly its
 object-oriented interface should be used for the actual plotting. Each
 plotter contains references to the respective figure and axes created usually
@@ -11,6 +18,15 @@ by a call similar to::
 For convenience, short hands for the :attr:`figure` and :attr:`axes`
 properties of a plotter are available, named :attr:`fig` and :attr:`ax`,
 respectively. For details on handling (own) figure and axes objects, see below.
+
+
+Types of abstract plotters
+==========================
+
+Abstract plotters are the base classes for all plotters actually used to
+graphically display data. If you are mire interested in actually plotting
+data rather than the overall concepts, have a look at :ref:`the concrete
+plotters <sec:plotting:concrete_plotters>`.
 
 Generally, two types of plotters can be distinguished:
 
@@ -57,12 +73,13 @@ A note on array dimensions and axes
 ===================================
 
 Something often quite confusing is the apparent inconsistency between the
-order of array dimensions and the order of axes. While we are used to assign
+order of array dimensions and the order of axes. While we are used to assigning
 axes in the order *x*, *y*, *z*, and assuming *x* to be horizontal,
 *y* vertical (and *z* sticking out of the paper plane), arrays are usually
-indexed row-first, column-second. That means, however, that if you simply
-plot a 2D array in axes, your *first* dimension is along the *y* axis,
-the *second* dimension along the *x* axis.
+(at least in the C world as compared to the FORTRAN world) indexed row-first,
+column-second. That means, however, that if you simply plot a 2D array in
+axes, your *first* dimension is along the *y* axis, the *second* dimension
+along the *x* axis.
 
 Therefore, as the axes of your datasets will always correspond to the array
 dimensions of your data, in case of 2D plots you will need to *either* use
@@ -79,6 +96,8 @@ dealing with images will usually *revert* the direction of your *y* axis.
 Most probably, eventually you will have to check with real data and ensure
 the plotters to plot data and axes in a consistent fashion.
 
+
+.. _sec:plotting:concrete_plotters:
 
 Types of concrete plotters
 ==========================
@@ -118,6 +137,11 @@ Concrete plotters for single datasets
   Composite plotter for single datasets, allowing to plot different views of
   one and the same datasets by using existing plotters for single datasets.
 
+* :class:`aspecd.plotting.MultiDeviceDataPlotter1D`
+
+  Basic line plots for multiple device data of a single dataset, allowing to
+  plot a series of line-type plots, including (semi)log plots
+
 
 Concrete plotters for multiple datasets
 ---------------------------------------
@@ -131,6 +155,495 @@ Concrete plotters for multiple datasets
 
   Stacked line plots for multiple datasets, allowing to plot a series of
   line-type plots, including (semi)log plots
+
+
+Properties of plot(ter)s
+========================
+
+Plots can be controlled extensively regarding their appearance. While
+Matplotlib provides both, sensible defaults and an extensive list of
+customisation options for the plot appearance, the ASpecD framework tries
+to homogenise these settings and currently provides only a subset of the
+possibilities the underlying Matplotlib library would allow.
+
+The properties of plots and their individual components are reflected in a
+hierarchy of objects. Each plotter has a corresponding :attr:`properties`
+attribute that contains an object of the respective
+:class:`aspecd.plotting.PlotProperties` class.
+
+To give you an idea of the hierarchy of classes handling the plot
+properties, below is a (hopefully complete) list:
+
+  * :class:`aspecd.plotting.PlotProperties`
+
+    * :class:`aspecd.plotting.SinglePlotProperties`
+
+      * :class:`aspecd.plotting.SinglePlot1DProperties`
+      * :class:`aspecd.plotting.SinglePlot2DProperties`
+
+    * :class:`aspecd.plotting.MultiPlotProperties`
+
+      * :class:`aspecd.plotting.MultiPlot1DProperties`
+
+    * :class:`aspecd.plotting.CompositePlotProperties`
+
+  * :class:`aspecd.plotting.FigureProperties`
+
+  * :class:`aspecd.plotting.AxesProperties`
+
+  * :class:`aspecd.plotting.LegendProperties`
+
+  * :class:`aspecd.plotting.DrawingProperties`
+
+    * :class:`aspecd.plotting.LineProperties`
+    * :class:`aspecd.plotting.SurfaceProperties`
+
+  * :class:`aspecd.plotting.GridProperties`
+
+  * :class:`aspecd.plotting.ColorbarProperties`
+
+Each of the plot properties classes, *i.e.* all subclasses of
+:class:`aspecd.plotting.PlotProperties`, contain other properties classes as
+attributes.
+
+Getting and setting plot properties is somewhat complicated by the fact
+that Matplotlib usually allows setting properties only when instantiating
+objects, or sometimes with explicit setter methods. Similarly, there may
+or may not be getter methods for the relevant attributes.
+
+In any case, while you can set and get properties of plots
+programmatically within the ASpecD framework, using :doc:`recipe-driven data
+analysis <../recipes>` is highly recommended.
+
+
+.. _sec:plotting:tips_tricks:
+
+General tips and tricks
+=======================
+
+Plotting can become horribly complicated, simply due to the complexity of
+the matter involved and the parameters one can (and often want to) control.
+For the convenience of the user, a few more general cases are discussed
+below and example recipes provided for each case. For details on
+recipe-driven data analysis, see either the :doc:`introduction </recipes>`
+or the documentation of the :mod:`aspecd.tasks` module.
+
+
+Overall figure properties
+-------------------------
+
+On the figure level, *i.e.* the level of the overall graphical
+representation, only a few properties can be set, namely size (in inches),
+resolution (in dots per inch), and title:
+
+
+.. code-block:: yaml
+
+    - kind: singleplot
+      type: SinglePlotter1D
+      properties:
+        properties:
+          figure:
+            size: [8, 5]
+            resolution: 600
+            title: My fancy figure
+        filename: output.pdf
+
+
+.. important::
+
+    If you have a second axis on top of the axes, setting the figure title
+    will result in the figure title clashing with the upper axis. Hence,
+    in such case, try setting the axis title.
+
+
+
+Overall axes properties
+-----------------------
+
+Axes properties can be set for :class:`SinglePlotter` and
+:class:`MultiPlotter`, but for obvious reasons not for
+:class:`CompositePlotter`. In case of the latter, the properties of the axes
+are set for the individual plotters that are used to plot in the different
+axes.
+
+Below is a demonstration of just a subset of the properties that can be set.
+For further details, see the :class:`AxesProperties` class. Note in
+particular that all the settings shown here for the *x* axis can be applied to
+the *y* axis analogously.
+
+
+.. code-block:: yaml
+
+    - kind: singleplot
+      type: SinglePlotter1D
+      properties:
+        properties:
+          axes:
+            title: My fancy plot
+            aspect: equal
+            facecolor: darkgreen
+            xlabel: $foo$ / bar
+            xlim: [-5, 5]
+            xticklabelangle: 45
+            invert: True
+        filename: output.pdf
+
+
+.. important::
+
+    If you have a second axis on top of the axes, setting the figure title
+    will result in the figure title clashing with the upper axis. Hence,
+    in such case, try setting the axis title.
+
+
+
+Type of plot for 1D plotters
+----------------------------
+
+When plotting one-dimensional (1D) data, there is of course more than the
+usual line plot. For the actual types of plots that you can use, see the
+:attr:`SinglePlotter1D.allowed_types` and :attr:`MultiPlotter1D.allowed_types`
+attributes.
+
+To make a semilogy plot (*i.e.*, with logarithmic *y* axis), invoke the
+plotter as follows:
+
+.. code-block:: yaml
+
+    - kind: singleplot
+      type: SinglePlotter1D
+      properties:
+        type: semilogy
+        filename: output.pdf
+
+And analogous for the MultiPlot1D plotter:
+
+.. code-block:: yaml
+
+    - kind: multiplot
+      type: MultiPlotter1D
+      properties:
+        type: semilogy
+        filename: output.pdf
+
+
+.. important::
+
+    As the logarithm of negative values is not defined, usually having a
+    logarithmic axis with negative values will lead to unexpected
+    results. Matplotlib defaults to clipping the invalid values. To help
+    you with debugging the unexpected results, a warning will be logged
+    (and printed to the terminal when serving a recipe) in case a
+    logarithmic axis is affected by negative values. In such case,
+    the easiest is to add an offset to your data, using
+    :class:`aspecd.processing.ScalarAlgebra`.
+
+
+Appearance of individual drawings
+---------------------------------
+
+The individual drawings within the axes of a plot can be controlled in quite
+some detail. Depending on the overall type, be it a line or a surface,
+there are different classes responsible for setting the properties:
+:class:`LineProperties` and :class:`SurfaceProperties`. The general class is
+:class:`DrawingProperties`.
+
+Below is a (real-world) example of a multiplotter containing two lines,
+and in this particular case with standard settings.
+
+.. code-block:: yaml
+
+    - kind: multiplot
+      type: MultiPlotter1D
+      properties:
+        properties:
+          drawings:
+          - label: Substance 1
+            color: '#1f77b4'
+            drawstyle: default
+            linestyle: '-'
+            linewidth: 1.5
+            marker: None
+          - label: Substance 2
+            color: '#ff7f0e'
+            drawstyle: default
+            linestyle: '-'
+            linewidth: 1.5
+            marker: None
+
+
+Controlling the appearance of zero lines
+----------------------------------------
+
+While a grid is not shown by default, zero lines are, as long as the zero
+value is present in either or both axes ranges. While it is a sensible
+default to display zero lines, and switching them off is a matter of
+setting the parameter ``show_zero_lines`` to ``False``, controlling the
+appearance of these lines is often useful. Below is a (real-world) example
+of the available settings for the zero lines (with default values).
+
+.. code-block:: yaml
+
+    - kind: multiplot
+      type: MultiPlotter1D
+      properties:
+        parameters:
+          show_zero_lines: true
+        properties:
+          zero_lines:
+            label: ''
+            color: '#cccccc'
+            drawstyle: default
+            linestyle: solid
+            linewidth: 1.0
+            marker: ''
+
+
+While it rarely makes sense to set line markers for these lines, the line
+properties are simply all properties that can be set using the
+:class:`LineProperties` class. Besides controlling the appearance of zero
+lines, you can display a grid and control the appearance of these lines.
+See below for more details.
+
+
+Adding a grid
+-------------
+
+Particularly when comparing plots or when you want to extract values from a
+plot, a grid can come in quite handy. As a grid is already quite complicated
+-- for which axis (*x*, *y*, or both) to set the grid, for which ticks (minor,
+major, or both) -- and as you may even want to control the appearance of the
+grid lines, all these properties are handled by the :class:`GridProperties`
+class. You can add a grid to both, :class:`SinglePlotter` and
+:class:`MultiPlotter` instances.
+
+.. code-block:: yaml
+
+    - kind: singleplot
+      type: SinglePlotter1D
+      properties:
+        properties:
+          grid:
+            show: True
+            ticks: major
+            axis: both
+
+If you now even want to control the appearance of the grid lines (you can
+not, however, control individual grid lines, only all grid lines at once),
+things get even more complex:
+
+.. code-block:: yaml
+
+    - kind: singleplot
+      type: SinglePlotter1D
+      properties:
+        properties:
+          grid:
+            show: True
+            ticks: major
+            axis: both
+            lines:
+              color: #123456
+              linestyle: dashed
+              linewidth: 3
+              marker: triangle_up
+
+Note that the values for the lines are not necessarily sensible for grid
+lines. For a full list of possible properties, see the
+:class:`LineProperties` class. The same as shown here for a
+:class:`SinglePlotter` can be done for a :class:`MultiPlotter` accordingly.
+
+
+Adding a legend
+---------------
+
+As soon as there is more than one line in a plot, adding a legend comes in
+quite handy. Again, a legend can be controlled in quite some detail. An
+example showing some of the properties that can be set is given below:
+
+
+.. code-block:: yaml
+
+    - kind: singleplot
+      type: SinglePlotter1D
+      properties:
+        parameters:
+          show_legend: True
+        properties:
+          legend:
+            location: upper right
+            frameon: False
+            labelspacing: 0.75
+            fontsize: small
+            ncol: 2
+            title: some explanation
+
+
+Important here is to note that you need to set the ``show_legend`` parameter
+on a higher level of the overall plotter properties to ``True`` in order to
+have a legend be shown. Of course, you need not set all (or even any) of the
+properties explicitly. For details, see the :class:`LegendProperties` class.
+
+
+Annotating plots
+----------------
+
+Annotations of plots are something that cannot be automated. However,
+they can be quite important for the analysis and hence for providing new
+scientific insight. Typical simple examples of plot annotations are
+horizontal or vertical lines to compare peak positions or intensities. You
+may as well think of highlighted areas or symbols pointing to distinct
+characteristics.
+
+When annotating plots, for obvious reasons you need to have both, a plot task
+and a plotannotation task. It does not really matter which task you define
+first, the plot or the plot annotation. There are only marginal
+differences, and both ways are shown below.
+
+.. code-block:: yaml
+
+    - kind: multiplot
+      type: MultiPlotter1DStacked
+      properties:
+        filename: plot1Dstacked.pdf
+      result: plot1Dstacked
+
+    - kind: plotannotation
+      type: VerticalLine
+      properties:
+        parameters:
+          positions: [35, 42]
+        properties:
+          color: green
+          linewidth: 1
+          linestyle: dotted
+      plotter: plot1Dstacked
+
+
+In this case, the plotter is defined first, and the annotation second.
+To refer to the plotter from within the plotannotation task, you need to
+set the ``result`` attribute in the plotting task and refer to it within
+the ``plotter`` attribute of the plotannotation task. Although defining
+the plotter before the annotation, the user still expects the annotation
+to be included in the file containing the actual plot, despite the fact
+that the figure has been saved (for the first time) before the
+annotation has been added.
+
+Sometimes, it might be convenient to go the other way round and first
+define an annotation and afterwards add it to a plot(ter). This can be
+done as well:
+
+.. code-block:: yaml
+
+    - kind: plotannotation
+      type: VerticalLine
+      properties:
+        parameters:
+          positions:
+            - 21
+            - 42
+        properties:
+          color: green
+          linewidth: 1
+          linestyle: dotted
+      result: vlines
+
+    - kind: multiplot
+      type: MultiPlotter1DStacked
+      properties:
+        filename: plot1Dstacked.pdf
+      annotations:
+        - vlines
+
+
+In this way, you can add the same annotation to several plots,
+and be sure that each annotation is handled as a separate object.
+
+Suppose you have more than one plotter you want to apply an annotation
+to. In this case, the ``plotter`` property of the plotannotation task is
+a list rather than a string:
+
+.. code-block:: yaml
+
+    - kind: multiplot
+      type: MultiPlotter1DStacked
+      result: plot1
+
+    - kind: multiplot
+      type: MultiPlotter1DStacked
+      result: plot2
+
+    - kind: plotannotation
+      type: VerticalLine
+      properties:
+        parameters:
+          positions: [35, 42]
+      plotter:
+        - plot1
+        - plot2
+
+In this case, the annotation will be applied to both plots
+independently. Note that the example has been reduced to the key
+aspects. In a real situation, the two plotters will differ much more.
+
+
+Adding a colorbar
+-----------------
+
+For two-dimensional (2D) plots, adding a colorbar that provides some
+information on the intensity values encoded in different colors is usually a
+good idea. The properties of the colorbar can be set via the
+:class:`ColorbarProperties` class.
+
+
+.. code-block:: yaml
+
+    - kind: singleplot
+      type: SinglePlotter2D
+      properties:
+        parameters:
+          show_colorbar: True
+        properties:
+          colorbar:
+            location: top
+            fraction: 0.1
+            aspect: 30
+            pad: 0.2
+            format: "%4.2e"
+            label:
+              text: $intensity$ / a.u.
+              location: right
+
+
+Again, you need not to set any of the properties explicitly, besides setting
+the parameter ``show_colorbar`` to ``True``. If none of the properties are
+set explicitly, the defaults provided by Matplotlib will be used.
+
+
+Plotting device data rather than primary data
+---------------------------------------------
+
+Datasets may contain additional data as device data in
+:attr:`aspecd.dataset.Dataset.device_data`. For details,
+see the :ref:`section on device data in the dataset module
+<sec:dataset:device_data>`. To conveniently plot those device data instead
+of the primary data of the dataset, provide the key(s) to the device(s) the
+data should be plotted for:
+
+
+.. code-block:: yaml
+
+    - kind: singleplot
+      type: SinglePlotter1D
+      properties:
+        parameters:
+          device_data: timestamp
+        filename: output.pdf
+
+
+Basically, all plotters understand device data and will plot the device data
+rather than the primary data of the dataset accordingly.
 
 
 Plotting to existing axes
@@ -166,6 +679,110 @@ classes that create complex plots consisting of several subplots by reusing
 available plotter classes. This is what the
 :class:`aspecd.plotting.CompositePlotter` class is for, and how it basically
 works.
+
+
+For developers
+==============
+
+A bit of conceptual documentation for both, developers of the ASpecD
+framework and derived packages, including general hints how to implement
+plotters.
+
+
+When and how to subclass plotters
+---------------------------------
+
+ASpecD comes with a list and hierarchy of plotters. For details, see the
+:ref:`section on types of concrete plotters
+<sec:plotting:concrete_plotters>`. The question therefore arises: when and
+how to subclass plotters, particularly in derived packages?
+
+Generally, you nearly always want to subclass directly one of the concrete
+plotters, such as :class:`SinglePlotter1D` or :class:`MultiPlotter1D`,
+but rarely if ever parent classes such as :class:`SinglePlotter` or even
+:class:`Plotter`. The reason is simply that only the concrete plotters can
+be used directly.
+
+Reasons for subclassing plotters in derived packages are:
+
+* Adding new kinds of (specific) plotters,
+* Adding functionality to otherwise generic plotters,
+* Change certain functionality to otherwise generic plotters.
+
+A typical use case for the last case would be to revert the *x* axis by
+default, perhaps depending on the axis unit. For this, you would
+probably want to subclass all relevant concrete ASpecD plotter, *i.e.*
+:class:`SinglePlotter1D`, :class:`SinglePlotter2D`,
+:class:`SinglePlotter2DStacked`, :class:`MultiPlotter1D`,
+and :class:`MultiPlotter1DStacked`. For each of these, there would only be
+a few relevant lines of code, and as this would look fairly similar for each
+of the plotters, the following stripped-down example shows just the case
+for the :class:`SinglePlotter1D`:
+
+.. code-block::
+
+    class SinglePlotter1D(aspecd.plotting.SinglePlotter1D):
+
+        def _create_plot(self):
+            super()._create_plot()
+            if self.data.axes[0].unit == "<Some Unit>":
+                self.properties.axes.invert = ["x"]
+
+
+Here, the unit of the *x* axis is checked and if it is set to a certain
+value (replace the placeholder ``<Some Unit>`` with a reasonable value in
+your code), the *x* axis is inverted. This is all functional code
+necessary to achieve the requested behaviour. In a real class, you would
+need to add a proper class docstring including examples how to use the
+class. Get inspiration from either the ASpecD framework itself or one of
+the derived packages.
+
+
+.. _sec:plotting:developers_data:
+
+Access to data for plotting
+---------------------------
+
+Datasets may contain additional data as device data in
+:attr:`aspecd.dataset.Dataset.device_data`. For details, see the
+:ref:`section on device data in the dataset module
+<sec:dataset:device_data>`. When implementing a plotter, you should not
+need to care about whether device data or data should be plotted. For this
+to work, do *not* access :attr:`aspecd.dataset.Dataset.data` directly
+in your plotter, but use instead :attr:`aspecd.plotting.SinglePlotter.data`
+or :attr:`aspecd.plotting.MultiPlotter.data`, respectively.
+
+
+.. important::
+    Support for device data has been added in ASpecD v0.9. Developers of
+    packages based on the ASpecD framework should update their code
+    accordingly.
+
+
+In a simplistic scenario, your plotter (here, a class derived from
+:class:`SinglePlotter`) may contain the following code:
+
+.. code-block::
+
+    def _create_plot(self):
+        self.drawing, = self.axes.plot(self.data.axes[0].values,
+                                       self.data.data,
+                                       label=self.properties.drawing.label)
+
+
+A few comments on this code snippet:
+
+* All actual plotting is implemented in the private method
+  ``_create_plot()``.
+
+* The actual object returned by the plot function is stored in
+  ``self.drawing``.
+
+* The actual plot function gets the data to be plotted by accessing 
+  ``self.data`` (and *not* ``self.dataset.data``).
+
+Of course, usually there is more that is handled in a plotter. For
+details, have a look at the actual source code of different ASpecD plotters.
 
 
 Module API documentation
@@ -254,6 +871,22 @@ class Plotter(aspecd.utils.ToDictMixin):
 
             Default: False
 
+        device_data : :class:`str` or :class:`list`
+            Name(s) of the device(s) the data should be plotted for.
+
+            Datasets may contain additional data as device data in
+            :attr:`aspecd.dataset.Dataset.device_data`. For details,
+            see :class:`aspecd.dataset.DeviceData`. To conveniently plot
+            those device data instead of the primary data of the dataset,
+            provide the key(s) to the device(s) the data should be plotted
+            for.
+
+            Will be a string (*i.e.* data of a single device) in all cases
+            except of specific plotters for plotting data of multiple
+            devices.
+
+            Default: ''
+
     properties : :class:`aspecd.plotting.PlotProperties`
         Properties of the plot, defining its appearance
 
@@ -293,6 +926,12 @@ class Plotter(aspecd.utils.ToDictMixin):
     comment : :class:`str`
         User-supplied comment describing intent, purpose, reason, ...
 
+    annotations : :class:`list`
+        List of annotations added to the plotter.
+
+        Each annotation is an object of class
+        :class:`aspecd.annotation.PlotAnnotation`.
+
 
     Raises
     ------
@@ -309,6 +948,9 @@ class Plotter(aspecd.utils.ToDictMixin):
     .. versionchanged:: 0.6.4
         New attribute :attr:`comment`
 
+    .. versionchanged:: 0.9
+        New parameter ''device_data''
+
     """
 
     def __init__(self):
@@ -318,6 +960,7 @@ class Plotter(aspecd.utils.ToDictMixin):
             'show_legend': False,
             'show_zero_lines': True,
             'tight_layout': False,
+            'device_data': ''
         }
         self.properties = PlotProperties()
         self.description = 'Abstract plotting step'
@@ -329,6 +972,7 @@ class Plotter(aspecd.utils.ToDictMixin):
         self.label = ''
         self.style = ''
         self.comment = ''
+        self.annotations = []
         super().__init__()
         #
         self._original_rcparams = None
@@ -355,6 +999,7 @@ class Plotter(aspecd.utils.ToDictMixin):
         self._set_style()
         self._create_figure_and_axes()
         self._create_plot()
+        self._add_annotations()
         self.properties.apply(plotter=self)
         self._set_legend()
         self._add_zero_lines()
@@ -363,8 +1008,8 @@ class Plotter(aspecd.utils.ToDictMixin):
 
     # noinspection PyUnusedLocal
     @staticmethod
-    def applicable(dataset):  # pylint: disable=unused-argument
-        """Check whether plot is applicable to the given dataset.
+    def applicable(data):  # pylint: disable=unused-argument
+        """Check whether plot is applicable to the dataset.
 
         Returns `True` by default and needs to be implemented in classes
         inheriting from Plotter according to their needs.
@@ -379,6 +1024,36 @@ class Plotter(aspecd.utils.ToDictMixin):
 
         """
         return True
+
+    def annotate(self, annotation=None):
+        """Add annotation to dataset.
+
+        Parameters
+        ----------
+        annotation : :obj:`aspecd.annotation.PlotAnnotation`
+            Annotation to add to the plotter
+
+        Returns
+        -------
+        annotation : :class:`aspecd.annotation.PlotAnnotation`
+            Annotation added to the plot(ter)
+
+        """
+        annotation = copy.copy(annotation)
+        annotation.annotate(self, from_plotter=True)
+        self.annotations.append(annotation)
+        return annotation
+
+    def delete_annotation(self, index=None):
+        """Remove annotation record from dataset.
+
+        Parameters
+        ----------
+        index : `int`
+            Number of analysis in analyses to delete
+
+        """
+        del self.annotations[index]
 
     def _set_style(self):
         self._original_rcparams = mpl.rcParams.copy()
@@ -472,6 +1147,10 @@ class Plotter(aspecd.utils.ToDictMixin):
         attribute of the plotter.
 
         """
+
+    def _add_annotations(self):
+        for annotation in self.annotations:
+            annotation.annotate(self, from_plotter=True)
 
     def save(self, saver=None):
         """Save the plot to a file.
@@ -612,6 +1291,13 @@ class SinglePlotter(Plotter):
     dataset : :class:`aspecd.dataset.Dataset`
         Dataset the plotting should be done for
 
+    data : :class:`aspecd.dataset.Data`
+        Actual data that should be plotted
+
+        Defaults to the primary data of a dataset, but can be the device
+        data. See the key ``device_data`` of :attr:`Plotter.parameters` for
+        details.
+
     drawing : :class:`matplotlib.artist.Artist`
         Actual graphical representation of the data
 
@@ -624,16 +1310,21 @@ class SinglePlotter(Plotter):
     aspecd.exceptions.NotApplicableToDatasetError
         Raised when processing step is not applicable to dataset
 
+
+    .. versionchanged:: 0.9
+        New attribute ''data''
+
     """
 
     def __init__(self):
         super().__init__()
         self.properties = SinglePlotProperties()
         self.dataset = None
+        self.data = None
         self.drawing = None
         self.description = 'Abstract plotting step for single dataset'
         self.__kind__ = 'singleplot'
-        self._exclude_from_to_dict.extend(['dataset', 'drawing'])
+        self._exclude_from_to_dict.extend(['dataset', 'data', 'drawing'])
 
     def plot(self, dataset=None, from_dataset=False):
         """Perform the actual plotting on the given dataset.
@@ -677,6 +1368,7 @@ class SinglePlotter(Plotter):
 
         """
         self._assign_dataset(dataset)
+        self._assign_data()
         self._call_from_dataset(from_dataset)
         return self.dataset
 
@@ -718,8 +1410,17 @@ class SinglePlotter(Plotter):
             self._set_axes_labels()
             self.properties.apply(plotter=self)
 
+    def _assign_data(self):
+        if self.parameters["device_data"]:
+            device = self.parameters["device_data"]
+            if device not in self.dataset.device_data:
+                raise KeyError(f"Device '{device}' not found in dataset.")
+            self.data = self.dataset.device_data[device]
+        else:
+            self.data = self.dataset.data
+
     def _check_applicability(self):
-        if not self.applicable(self.dataset):
+        if not self.applicable(self.data):
             message = f"{self.name} not applicable to dataset with id " \
                       f"{self.dataset.id}"
             raise aspecd.exceptions.NotApplicableToDatasetError(message=message)
@@ -732,8 +1433,8 @@ class SinglePlotter(Plotter):
         If you ever need to change the handling of your axes labels,
         override this method in a child class.
         """
-        xlabel = self._create_axis_label_string(self.dataset.data.axes[0])
-        ylabel = self._create_axis_label_string(self.dataset.data.axes[1])
+        xlabel = self._create_axis_label_string(self.data.axes[0])
+        ylabel = self._create_axis_label_string(self.data.axes[1])
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel(ylabel)
 
@@ -807,6 +1508,30 @@ class SinglePlotter1D(SinglePlotter):
          properties:
            filename: output.pdf
 
+    Of course, line plots are not the only plot type available. Check the
+    :attr:`SinglePlotter1D.allowed_types` attribute for further details. To
+    make a semilogy plot (*i.e.*, with logarithmic *y* axis), invoke the
+    plotter as follows:
+
+    .. code-block:: yaml
+
+       - kind: singleplot
+         type: SinglePlotter1D
+         properties:
+           type: semilogy
+           filename: output.pdf
+
+    .. important::
+
+        As the logarithm of negative values is not defined, usually having a
+        logarithmic axis with negative values will lead to unexpected
+        results. Matplotlib defaults to clipping the invalid values. To help
+        you with debugging the unexpected results, a warning will be logged
+        (and printed to the terminal when serving a recipe) in case a
+        logarithmic axis is affected by negative values. In such case,
+        the easiest is to add an offset to your data, using
+        :class:`aspecd.processing.ScalarAlgebra`.
+
     Sometimes it is convenient to switch the *x* and *y* axes, *e.g.* in
     context of 2D datasets where slices along both dimensions should be
     displayed together with the 2D data and next to the respective axes. To
@@ -821,8 +1546,26 @@ class SinglePlotter1D(SinglePlotter):
              switch_axes: true
            filename: output.pdf
 
+    If the dataset contains additional device data, and you want to plot
+    data of a single device rather than the primary data of the dataset (
+    and the device data are 1D), provide the name of the device (*i.e.*,
+    the key the device data are stored in the dataset). Assuming the
+    device data are stored as ``timestamp`` in the dataset:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            parameters:
+              device_data: timestamp
+            filename: output.pdf
+
     .. versionchanged:: 0.7
         New parameter ``switch_axes``
+
+    .. versionchanged:: 0.9
+        Issue warning with log plotters and negative values
 
     """
 
@@ -862,6 +1605,9 @@ class SinglePlotter1D(SinglePlotter):
         """
         Return the allowed plot types.
 
+        Currently, the allowed types are: ``plot``, ``scatter``, ``step``,
+        ``loglog``, ``semilogx``, ``semilogy``, ``stemplot``.
+
         Returns
         -------
         allowed_types: :class:`list`
@@ -878,23 +1624,42 @@ class SinglePlotter1D(SinglePlotter):
 
     def _create_plot(self):
         plot_function = getattr(self.axes, self.type)
+        self._check_values_for_logplot()
         if not self.properties.drawing.label:
             self.properties.drawing.label = self.dataset.label
         if self.parameters['switch_axes']:
-            self.drawing, = plot_function(self.dataset.data.data,
-                                          self.dataset.data.axes[0].values,
+            self.drawing, = plot_function(self.data.data,
+                                          self.data.axes[0].values,
                                           label=self.properties.drawing.label)
         else:
-            self.drawing, = plot_function(self.dataset.data.axes[0].values,
-                                          self.dataset.data.data,
+            self.drawing, = plot_function(self.data.axes[0].values,
+                                          self.data.data,
                                           label=self.properties.drawing.label)
         if self.parameters['tight']:
             if self.parameters['tight'] in ('x', 'both'):
-                self.axes.set_xlim([self.dataset.data.axes[0].values.min(),
-                                    self.dataset.data.axes[0].values.max()])
+                self.axes.set_xlim([self.data.axes[0].values.min(),
+                                    self.data.axes[0].values.max()])
             if self.parameters['tight'] in ('y', 'both'):
-                self.axes.set_ylim([self.dataset.data.data.min(),
-                                    self.dataset.data.data.max()])
+                self.axes.set_ylim([self.data.data.min(),
+                                    self.data.data.max()])
+
+    def _check_values_for_logplot(self):
+        issue_warning = False
+        if self.parameters['switch_axes']:
+            xvalues = self.data.data
+            yvalues = self.data.axes[0].values
+        else:
+            xvalues = self.data.axes[0].values
+            yvalues = self.data.data
+        if 'semilogy' in self.type and np.min(yvalues) < 0:
+            issue_warning = True
+        if 'semilogx' in self.type and np.min(xvalues) < 0:
+            issue_warning = True
+        if 'loglog' in self.type \
+                and (np.min(xvalues) < 0 or np.min(yvalues) < 0):
+            issue_warning = True
+        if issue_warning:
+            logger.warning('Negative values with %s plot detected.', self.type)
 
     def _set_axes_labels(self):
         super()._set_axes_labels()
@@ -905,8 +1670,8 @@ class SinglePlotter1D(SinglePlotter):
             self.axes.set_ylabel(old_xlabel)
 
     @staticmethod
-    def applicable(dataset):
-        """Check whether plot is applicable to the given dataset.
+    def applicable(data):
+        """Check whether plot is applicable to the dataset.
 
         Checks for the dimension of the data of the dataset, i.e. the
         :attr:`aspecd.dataset.Data.data` attribute. Returns `True` if data
@@ -918,7 +1683,7 @@ class SinglePlotter1D(SinglePlotter):
             `True` if successful, `False` otherwise.
 
         """
-        return dataset.data.data.ndim == 1
+        return data.data.ndim == 1
 
 
 class SinglePlotter2D(SinglePlotter):
@@ -978,6 +1743,12 @@ class SinglePlotter2D(SinglePlotter):
 
         show_contour_lines : :class:`bool`
             Whether to show contour lines in case of contourf plot
+
+        show_colorbar : :class:`bool`
+            Whether to show a colorbar
+
+            .. versionadded:: 0.9
+
 
     properties : :class:`aspecd.plotting.SinglePlot2DProperties`
         Properties of the plot, defining its appearance
@@ -1085,7 +1856,9 @@ class SinglePlotter2D(SinglePlotter):
         # noinspection PyTypeChecker
         self.parameters['levels'] = None
         self.parameters['show_contour_lines'] = False
+        self.parameters['show_colorbar'] = False
         self.properties = SinglePlot2DProperties()
+        self.colorbar = None
         self._type = 'imshow'
         self._allowed_types = ['contour', 'contourf', 'imshow']
 
@@ -1114,6 +1887,8 @@ class SinglePlotter2D(SinglePlotter):
         """
         Return the allowed plot types.
 
+        Currently allowed types are: ``contour``, ``contourf``, ``imshow``
+
         Returns
         -------
         allowed_types: :class:`list`
@@ -1129,7 +1904,7 @@ class SinglePlotter2D(SinglePlotter):
         self._type = plot_type
 
     @staticmethod
-    def applicable(dataset):
+    def applicable(data):
         """Check whether plot is applicable to the given dataset.
 
         Checks for the dimension of the data of the dataset, i.e. the
@@ -1142,7 +1917,7 @@ class SinglePlotter2D(SinglePlotter):
             `True` if successful, `False` otherwise.
 
         """
-        return dataset.data.data.ndim == 2
+        return data.data.ndim == 2
 
     def _create_plot(self):
         """Create actual plot.
@@ -1153,13 +1928,27 @@ class SinglePlotter2D(SinglePlotter):
         plotting class.
 
         """
-        plot_function = getattr(self.axes, self.type)
-        data = self._shape_data()
         # matplotlib imshow and contour have incompatible properties
         if self.type == 'imshow':
-            self.drawing = plot_function(data, extent=self._get_extent(),
-                                         aspect='auto')
-            return
+            self._plot_imshow()
+        else:
+            self._plot_contour()
+        if self.parameters['show_colorbar']:
+            self.colorbar = self.fig.colorbar(
+                self.drawing,
+                ax=self.ax,
+                **self.properties.colorbar.kwargs
+            )
+
+    def _plot_imshow(self):
+        plot_function = getattr(self.axes, self.type)
+        data = self._shape_data()
+        self.drawing = plot_function(data, extent=self._get_extent(),
+                                     aspect='auto')
+
+    def _plot_contour(self):
+        plot_function = getattr(self.axes, self.type)
+        data = self._shape_data()
         if self.parameters['levels']:
             self.drawing = plot_function(data, extent=self._get_extent(),
                                          levels=self.parameters['levels'])
@@ -1171,24 +1960,24 @@ class SinglePlotter2D(SinglePlotter):
 
     def _shape_data(self):
         if self.parameters['switch_axes']:
-            data = self.dataset.data.data
+            data = self.data.data
         else:
-            data = self.dataset.data.data.T
+            data = self.data.data.T
         if self.type == 'imshow':
             data = np.flipud(data)
         return data
 
     def _get_extent(self):
         if self.parameters['switch_axes']:
-            extent = [self.dataset.data.axes[1].values[0],
-                      self.dataset.data.axes[1].values[-1],
-                      self.dataset.data.axes[0].values[0],
-                      self.dataset.data.axes[0].values[-1]]
+            extent = [self.data.axes[1].values[0],
+                      self.data.axes[1].values[-1],
+                      self.data.axes[0].values[0],
+                      self.data.axes[0].values[-1]]
         else:
-            extent = [self.dataset.data.axes[0].values[0],
-                      self.dataset.data.axes[0].values[-1],
-                      self.dataset.data.axes[1].values[0],
-                      self.dataset.data.axes[1].values[-1]]
+            extent = [self.data.axes[0].values[0],
+                      self.data.axes[0].values[-1],
+                      self.data.axes[1].values[0],
+                      self.data.axes[1].values[-1]]
         return extent
 
     def _set_axes_labels(self):
@@ -1208,11 +1997,11 @@ class SinglePlotter2D(SinglePlotter):
         override this method in a child class.
         """
         if self.parameters['switch_axes']:
-            xlabel = self._create_axis_label_string(self.dataset.data.axes[1])
-            ylabel = self._create_axis_label_string(self.dataset.data.axes[0])
+            xlabel = self._create_axis_label_string(self.data.axes[1])
+            ylabel = self._create_axis_label_string(self.data.axes[0])
         else:
-            xlabel = self._create_axis_label_string(self.dataset.data.axes[0])
-            ylabel = self._create_axis_label_string(self.dataset.data.axes[1])
+            xlabel = self._create_axis_label_string(self.data.axes[0])
+            ylabel = self._create_axis_label_string(self.data.axes[1])
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel(ylabel)
 
@@ -1383,8 +2172,8 @@ class SinglePlotter2DStacked(SinglePlotter):
         self.properties = SinglePlot1DProperties()
 
     @staticmethod
-    def applicable(dataset):
-        """Check whether plot is applicable to the given dataset.
+    def applicable(data):
+        """Check whether plot is applicable to the dataset.
 
         Checks for the dimension of the data of the dataset, i.e. the
         :attr:`aspecd.dataset.Data.data` attribute. Returns `True` if data
@@ -1396,32 +2185,32 @@ class SinglePlotter2DStacked(SinglePlotter):
             `True` if successful, `False` otherwise.
 
         """
-        return dataset.data.data.ndim == 2
+        return data.data.ndim == 2
 
     def _create_plot(self):
         if self.parameters['offset'] is None:
-            self.parameters['offset'] = self.dataset.data.data.max() * 1.05
+            self.parameters['offset'] = self.data.data.max() * 1.05
         yticks = []
         if self.parameters['stacking_dimension'] == 0:
             for idx in range(self.dataset.data.data.shape[0]):
                 # noinspection PyTypeChecker
-                handle = self.axes.plot(self.dataset.data.axes[1].values,
-                                        self.dataset.data.data[idx, :]
+                handle = self.axes.plot(self.data.axes[1].values,
+                                        self.data.data[idx, :]
                                         + idx * self.parameters['offset'])
                 self.drawing.append(handle[0])
                 # noinspection PyTypeChecker
                 yticks.append(idx * self.parameters['offset'])
-            yticklabels = self.dataset.data.axes[0].values.astype(float)
+            yticklabels = self.data.axes[0].values.astype(float)
         else:
-            for idx in range(self.dataset.data.data.shape[1]):
+            for idx in range(self.data.data.shape[1]):
                 # noinspection PyTypeChecker
-                handle = self.axes.plot(self.dataset.data.axes[0].values,
-                                        self.dataset.data.data[:, idx]
+                handle = self.axes.plot(self.data.axes[0].values,
+                                        self.data.data[:, idx]
                                         + idx * self.parameters['offset'])
                 self.drawing.append(handle[0])
                 # noinspection PyTypeChecker
                 yticks.append(idx * self.parameters['offset'])
-            yticklabels = self.dataset.data.axes[1].values.astype(float)
+            yticklabels = self.data.axes[1].values.astype(float)
         if self.parameters['ytickcount']:
             # noinspection PyTypeChecker
             ytickcount = min(len(self.drawing), self.parameters['ytickcount'])
@@ -1437,12 +2226,12 @@ class SinglePlotter2DStacked(SinglePlotter):
     def _handle_tight_settings(self):
         if self.parameters['tight']:
             if self.parameters['tight'] in ('x', 'both'):
-                self.axes.set_xlim([self.dataset.data.axes[0].values.min(),
-                                    self.dataset.data.axes[0].values.max()])
+                self.axes.set_xlim([self.data.axes[0].values.min(),
+                                    self.data.axes[0].values.max()])
             if self.parameters['tight'] in ('y', 'both'):
                 if self.parameters['offset'] == 0:
-                    self.axes.set_ylim([self.dataset.data.data.min(),
-                                        self.dataset.data.data.max()])
+                    self.axes.set_ylim([self.data.data.min(),
+                                        self.data.data.max()])
 
     def _format_yticklabels(self, yticklabels):
         if self.parameters['yticklabelformat']:
@@ -1468,26 +2257,336 @@ class SinglePlotter2DStacked(SinglePlotter):
         override this method in a child class.
         """
         if self.parameters['stacking_dimension'] == 0:
-            xlabel = self._create_axis_label_string(self.dataset.data.axes[1])
-            ylabel = self._create_axis_label_string(self.dataset.data.axes[0])
+            xlabel = self._create_axis_label_string(self.data.axes[1])
+            ylabel = self._create_axis_label_string(self.data.axes[0])
         else:
-            xlabel = self._create_axis_label_string(self.dataset.data.axes[0])
-            ylabel = self._create_axis_label_string(self.dataset.data.axes[1])
+            xlabel = self._create_axis_label_string(self.data.axes[0])
+            ylabel = self._create_axis_label_string(self.data.axes[1])
         if self.parameters["offset"] == 0:
-            ylabel = self._create_axis_label_string(self.dataset.data.axes[2])
+            ylabel = self._create_axis_label_string(self.data.axes[2])
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel(ylabel)
 
     def _add_zero_lines(self):
         if self.parameters['show_zero_lines']:
             dimension = self.parameters['stacking_dimension']
-            for idx in range(self.dataset.data.data.shape[dimension]):
+            for idx in range(self.data.data.shape[dimension]):
                 # noinspection PyTypeChecker
                 offset = idx * self.parameters['offset']
                 self.axes.axhline(
                     y=offset,
                     **self.properties.zero_lines.to_dict(),  # noqa
                     zorder=1)
+
+
+class MultiDeviceDataPlotter1D(SinglePlotter1D):
+    """1D plots of multiple device data of a single dataset.
+
+    Convenience class taking care of 1D plots of multiple device data
+    of a single dataset. The type of plot can be set in its
+    :attr:`SinglePlotter1D.type` attribute. Allowed types are stored in the
+    :attr:`SinglePlotter1D.allowed_types` attribute.
+
+    Quite a number of properties for figure, axes, and line can be set
+    using the :attr:`MultiDeviceDataPlotter1D.properties` attribute.
+    For details, see the documentation of its respective class,
+    :class:`MultiPlot1DProperties`.
+
+    To perform the plot, call the :meth:`plot` method of the dataset the plot
+    should be performed for, and provide a reference to the actual plotter
+    object to it.
+
+    Attributes
+    ----------
+    dataset : :class:`aspecd.dataset.Dataset`
+        Dataset the plotting should be done for
+
+    data : :class:`list`
+        Actual data that should be plotted.
+
+        List of :class:`aspecd.dataset.DeviceData` objects corresponding
+        to the device data selected using the parameter ``device_data``.
+
+    drawing : :class:`list`
+        List of :obj:`matplotlib.artist.Artist` objects, one for each of the
+        actual lines of the plot
+
+    properties : :class:`aspecd.plotting.MultiPlot1DProperties`
+        Properties of the plot, defining its appearance
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.MultiPlot1DProperties` class.
+
+    parameters : :class:`dict`
+        All parameters necessary for the plot, implicit and explicit
+
+        The following keys exist, in addition to those of the superclass:
+
+        axes : :class:`list`
+            List of objects of class :class:`aspecd.dataset.Axis`
+
+            There is two ways of setting axes labels: The user may provide
+            the information required here. Alternatively, if no such
+            information is provided, the axes of each dataset are checked
+            for consistency, and if they are found to be identical,
+            this information is used.
+
+        tight: :class:`str`
+            Whether to set the axes limits tight to the data
+
+            Possible values: 'x', 'y', 'both'
+
+            Default: ''
+
+        switch_axes : :class:`bool`
+            Whether to switch *x* and *y* axes
+
+            Normally, the first axis is used as *x* axis, and the second
+            as *y* axis. Sometimes, switching this assignment is
+            necessary or convenient.
+
+            Default: False
+
+
+    Raises
+    ------
+    TypeError
+        Raised when wrong plot type is set
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. Of course, all parameters settable
+    for the superclasses can be set as well. The examples focus each on a
+    single aspect.
+
+    In the simplest case, just invoke the plotter with default values.
+    Note, however, that in any case, you need to provide a list of devices
+    whose data should be plotted:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: MultiDeviceDataPlotter1D
+          properties:
+            parameters:
+              device_data:
+                - device_1
+                - device_2
+            filename: output.pdf
+
+    Often, it is convenient to have a legend to know for which devices the
+    data are plotted:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: MultiDeviceDataPlotter1D
+          properties:
+            parameters:
+              device_data:
+                - device_1
+                - device_2
+              show_legend: True
+            filename: output.pdf
+
+    Here, it is interesting to note what labels will be used: Usually,
+    the data for each device will have the attribute
+    :class:`aspecd.metadata.Device.label` set, and if so, this label will
+    be used as label in the legend. If this attribute is not set, and you
+    do not provide an alternative label in the
+    :attr:`MultiPlot1DProperties.drawing` attribute, the key the device
+    data are known within the dataset will be used in the legend.
+
+    To explicitly set (or override) the labels of your device data:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: MultiDeviceDataPlotter1D
+          properties:
+            parameters:
+              device_data:
+                - device_1
+                - device_2
+              show_legend: True
+            properties:
+              drawings:
+                - label: first device
+                - label: second device
+            filename: output.pdf
+
+    As axes are only labelled in case the axes of all devices are
+    compatible, there may be situations where you want to set the axes
+    properties explicitly:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: MultiDeviceDataPlotter1D
+          properties:
+            parameters:
+              device_data:
+                - device_1
+                - device_2
+              axes:
+                - quantity: time
+                  unit: s
+                - quantity: intensity
+                  unit: a.u.
+            filename: output.pdf
+
+    .. versionadded:: 0.9
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = '1D plotting step for multiple device data'
+        self.data = []
+        self.drawing = []
+        self.parameters['axes'] = [aspecd.dataset.Axis(),
+                                   aspecd.dataset.Axis()]
+        self.parameters['tight'] = ''
+        self.parameters['switch_axes'] = False
+        self.properties = MultiPlot1DProperties()
+
+    @property
+    def drawings(self):
+        """Alias for drawing property.
+
+        As the plotter uses :class:`MultiPlot1DProperties` as
+        :attr:`properties`, this alias is necessary to apply the drawings
+        settings.
+
+        """
+        return self.drawing
+
+    @staticmethod
+    def applicable(data):
+        """Check whether plot is applicable to the given dataset.
+
+        Checks for the dimension of the data of the dataset, i.e. the
+        :attr:`aspecd.dataset.Data.data` attribute. Returns `True` if data
+        are one-dimensional, and `False` otherwise.
+
+        Returns
+        -------
+        applicable : :class:`bool`
+            `True` if successful, `False` otherwise.
+
+        """
+        return data.data.ndim == 1
+
+    def _check_applicability(self):
+        for data in self.data:
+            if not self.applicable(data):
+                message = f"{self.name} not applicable to dataset with id " \
+                          f"{self.dataset.id}"
+                raise aspecd.exceptions.NotApplicableToDatasetError(
+                    message=message)
+
+    def _assign_data(self):
+        if not self.parameters["device_data"]:
+            raise KeyError("No device data provided")
+        if not isinstance(self.parameters["device_data"], list):
+            # noinspection PyTypedDict
+            self.parameters["device_data"] = [self.parameters["device_data"]]
+        devices = self.parameters["device_data"]
+        for device in devices:
+            if device not in self.dataset.device_data:
+                raise KeyError(f"Device '{device}' not found in dataset.")
+            self.data.append(self.dataset.device_data[device])
+
+    def _create_plot(self):
+        self._set_drawing_properties()
+        plot_function = getattr(self.axes, self.type)
+        for idx, data in enumerate(self.data):
+            label = data.metadata.label or self.parameters['device_data'][idx]
+            if not self.properties.drawings[idx].label:
+                self.properties.drawings[idx].label = label
+            if self.parameters['switch_axes']:
+                drawing, = plot_function(data.data,
+                                         data.axes[0].values,
+                                         label=label)
+            else:
+                drawing, = plot_function(data.axes[0].values,
+                                         data.data,
+                                         label=label)
+            self.drawing.append(drawing)
+        if self.parameters['tight']:
+            axes_limits = [min(data.axes[0].values.min()
+                               for data in self.data),
+                           max(data.axes[0].values.max()
+                               for data in self.data)]
+            data_limits = [min(data.data.min()
+                               for data in self.data),
+                           max(data.data.max()
+                               for data in self.data)]
+            if self.parameters['tight'] in ('x', 'both'):
+                if self.parameters['switch_axes']:
+                    self.axes.set_xlim(data_limits)
+                else:
+                    self.axes.set_xlim(axes_limits)
+            if self.parameters['tight'] in ('y', 'both'):
+                if self.parameters['switch_axes']:
+                    self.axes.set_ylim(axes_limits)
+                else:
+                    self.axes.set_ylim(data_limits)
+
+    def _set_drawing_properties(self):
+        for _ in range(len(self.properties.drawings), len(self.data)):
+            self.properties.add_drawing()
+
+    # noinspection PyUnresolvedReferences
+    def _set_axes_labels(self):
+        """Set axes labels from axes.
+
+        This method is called automatically by :meth:`plot`.
+
+        There is two ways of setting axes labels: The user may provide the
+        information required in the "axes" key of the
+        :attr:`aspecd.plotting.Plotter.parameters` property containing a
+        list of :obj:`aspecd.dataset.Axis` objects. Alternatively,
+        if no such information is provided, the axes of each dataset are
+        checked for consistency, and if they are found to be identical,
+        this information is used.
+
+        If you ever need to change the handling of your axes labels,
+        override this method in a child class.
+        """
+        xquantities = [data.axes[0].quantity for data in self.data]
+        xunits = [data.axes[0].unit for data in self.data]
+        yquantities = [data.axes[1].quantity for data in self.data]
+        yunits = [data.axes[1].unit for data in self.data]
+        if self.parameters['axes'][0].quantity:
+            xlabel = \
+                self._create_axis_label_string(self.parameters['axes'][0])
+        elif aspecd.utils.all_equal(xquantities) and \
+                aspecd.utils.all_equal(xunits):
+            xlabel = self._create_axis_label_string(self.data[0].axes[0])
+        elif self.properties.axes.xlabel:
+            xlabel = self.properties.axes.xlabel
+        else:
+            xlabel = ''
+        if self.parameters['axes'][1].quantity:
+            ylabel = \
+                self._create_axis_label_string(self.parameters['axes'][1])
+        elif aspecd.utils.all_equal(yquantities) and \
+                aspecd.utils.all_equal(yunits):
+            ylabel = self._create_axis_label_string(self.data[0].axes[1])
+        elif self.properties.axes.ylabel:
+            ylabel = self.properties.axes.ylabel
+        else:
+            ylabel = ''
+        self.axes.set_xlabel(xlabel)
+        self.axes.set_ylabel(ylabel)
+        if self.parameters['switch_axes']:
+            old_xlabel = self.axes.get_xlabel()
+            old_ylabel = self.axes.get_ylabel()
+            self.axes.set_xlabel(old_ylabel)
+            self.axes.set_ylabel(old_xlabel)
 
 
 class MultiPlotter(Plotter):
@@ -1511,8 +2610,34 @@ class MultiPlotter(Plotter):
     ----------
     properties : :class:`aspecd.plotting.MultiPlotProperties`
         Properties of the plot, defining its appearance
+
     datasets : :class:`list`
         List of dataset the plotting should be done for
+
+    data : :class:`list`
+        List of actual data that should be plotted
+
+        Each element is of type :class:`aspecd.dataset.Data`.
+
+        Defaults to the primary data of a dataset, but can be the device
+        data. See the key ``device_data`` of :attr:`Plotter.parameters` for
+        details.
+
+    parameters : :class:`dict`
+        All parameters necessary for the plot, implicit and explicit
+
+        The following keys exist, in addition to the keys inherited from the
+        superclass:
+
+        axes : :class:`list`
+            List of objects of class :class:`aspecd.dataset.Axis`
+
+            There is two ways of setting axes labels: The user may provide
+            the information required here. Alternatively, if no such
+            information is provided, the axes of each dataset are checked
+            for consistency, and if they are found to be identical,
+            this information is used.
+
 
     Raises
     ------
@@ -1521,18 +2646,23 @@ class MultiPlotter(Plotter):
     aspecd.exceptions.NotApplicableToDatasetError
         Raised when processing step is not applicable to dataset
 
+
+    .. versionchanged:: 0.9
+        New attribute ''data''
+
     """
 
     def __init__(self):
         super().__init__()
         self.properties = MultiPlotProperties()
         self.datasets = []
+        self.data = []
         self.description = 'Abstract plotting step for multiple dataset'
         # noinspection PyTypeChecker
         self.parameters['axes'] = [aspecd.dataset.Axis(),
                                    aspecd.dataset.Axis()]
         self.__kind__ = 'multiplot'
-        self._exclude_from_to_dict.extend(['datasets', 'drawings'])
+        self._exclude_from_to_dict.extend(['datasets', 'drawings', 'data'])
 
     def plot(self):
         """Perform the actual plotting on the given list of datasets.
@@ -1563,6 +2693,7 @@ class MultiPlotter(Plotter):
             Raised when no datasets exist to act on
 
         """
+        self._assign_data()
         self._check_for_applicability()
         self._set_drawing_properties()
         super().plot()
@@ -1571,10 +2702,22 @@ class MultiPlotter(Plotter):
         # Update/redraw legend after having set properties
         self._set_legend()
 
+    def _assign_data(self):
+        self.data = []  # Important, e.g., for CompositePlotter
+        if self.parameters["device_data"]:
+            device = self.parameters["device_data"]
+            for dataset in self.datasets:
+                if device not in dataset.device_data:
+                    raise KeyError(f"Device '{device}' not found in dataset.")
+                self.data.append(dataset.device_data[device])
+        else:
+            for dataset in self.datasets:
+                self.data.append(dataset.data)
+
     def _check_for_applicability(self):
         if not self.datasets:
             raise aspecd.exceptions.MissingDatasetError
-        if not all(self.applicable(dataset) for dataset in self.datasets):
+        if not all(self.applicable(data) for data in self.data):
             raise aspecd.exceptions.NotApplicableToDatasetError(
                 f'{self.name} not applicable to one or more datasets')
 
@@ -1722,6 +2865,30 @@ class MultiPlotter1D(MultiPlotter):
         ``#``, you need to explicitly tell YAML that these are strings,
         surrounding the values by quotation marks.
 
+    Of course, line plots are not the only plot type available. Check the
+    :attr:`MultiPlotter1D.allowed_types` attribute for further details. To
+    make a semilogy plot (*i.e.*, with logarithmic *y* axis), invoke the
+    plotter as follows:
+
+    .. code-block:: yaml
+
+       - kind: multiplot
+         type: MultiPlotter1D
+         properties:
+           type: semilogy
+           filename: output.pdf
+
+    .. important::
+
+        As the logarithm of negative values is not defined, usually having a
+        logarithmic axis with negative values will lead to unexpected
+        results. Matplotlib defaults to clipping the invalid values. To help
+        you with debugging the unexpected results, a warning will be logged
+        (and printed to the terminal when serving a recipe) in case a
+        logarithmic axis is affected by negative values. In such case,
+        the easiest is to add an offset to your data, using
+        :class:`aspecd.processing.ScalarAlgebra`.
+
     Sometimes it is convenient to switch the *x* and *y* axes, *e.g.* in
     context of 2D datasets where slices along both dimensions should be
     displayed together with the 2D data and next to the respective axes. To
@@ -1739,6 +2906,9 @@ class MultiPlotter1D(MultiPlotter):
 
     .. versionchanged:: 0.7
         New parameters ``switch_axes`` and ``tight``
+
+    .. versionchanged:: 0.9
+        Issue warning with log plotters and negative values
 
     """
 
@@ -1778,6 +2948,9 @@ class MultiPlotter1D(MultiPlotter):
         """
         Return the allowed plot types.
 
+        Currently, the allowed types are: ``plot``, ``step``, ``loglog``,
+        ``semilogx``, ``semilogy``.
+
         Returns
         -------
         allowed_types: :class:`list`
@@ -1793,7 +2966,7 @@ class MultiPlotter1D(MultiPlotter):
         self._type = plot_type
 
     @staticmethod
-    def applicable(dataset):
+    def applicable(data):
         """Check whether plot is applicable to the given dataset.
 
         Checks for the dimension of the data of the dataset, i.e. the
@@ -1806,35 +2979,36 @@ class MultiPlotter1D(MultiPlotter):
             `True` if successful, `False` otherwise.
 
         """
-        return dataset.data.data.ndim == 1
+        return data.data.ndim == 1
 
     def _create_plot(self):
         """Actual drawing of datasets"""
         plot_function = getattr(self.axes, self.type)
+        self._check_values_for_logplot()
         self.drawings = []
-        for idx, dataset in enumerate(self.datasets):
+        for idx, data in enumerate(self.data):
             if not self.properties.drawings[idx].label:
-                self.properties.drawings[idx].label = dataset.label
+                self.properties.drawings[idx].label = self.datasets[idx].label
             if self.parameters['switch_axes']:
                 drawing, = plot_function(
-                    dataset.data.data,
-                    dataset.data.axes[0].values,
+                    data.data,
+                    data.axes[0].values,
                     label=self.properties.drawings[idx].label)
             else:
                 drawing, = plot_function(
-                    dataset.data.axes[0].values,
-                    dataset.data.data,
+                    data.axes[0].values,
+                    data.data,
                     label=self.properties.drawings[idx].label)
             self.drawings.append(drawing)
         if self.parameters['tight']:
-            axes_limits = [min(dataset.data.axes[0].values.min()
-                               for dataset in self.datasets),
-                           max(dataset.data.axes[0].values.max()
-                               for dataset in self.datasets)]
-            data_limits = [min(dataset.data.data.min()
-                               for dataset in self.datasets),
-                           max(dataset.data.data.max()
-                               for dataset in self.datasets)]
+            axes_limits = [min(data.axes[0].values.min()
+                               for data in self.data),
+                           max(data.axes[0].values.max()
+                               for data in self.data)]
+            data_limits = [min(data.data.min()
+                               for data in self.data),
+                           max(data.data.max()
+                               for data in self.data)]
             if self.parameters['tight'] in ('x', 'both'):
                 if self.parameters['switch_axes']:
                     self.axes.set_xlim(data_limits)
@@ -1845,6 +3019,25 @@ class MultiPlotter1D(MultiPlotter):
                     self.axes.set_ylim(axes_limits)
                 else:
                     self.axes.set_ylim(data_limits)
+
+    def _check_values_for_logplot(self):
+        issue_warning = False
+        for data in self.data:
+            if self.parameters['switch_axes']:
+                xvalues = data.data
+                yvalues = data.axes[0].values
+            else:
+                xvalues = data.axes[0].values
+                yvalues = data.data
+            if 'semilogy' in self.type and np.min(yvalues) < 0:
+                issue_warning = True
+            if 'semilogx' in self.type and np.min(xvalues) < 0:
+                issue_warning = True
+            if 'loglog' in self.type \
+                    and (np.min(xvalues) < 0 or np.min(yvalues) < 0):
+                issue_warning = True
+        if issue_warning:
+            logger.warning('Negative values with %s plot detected.', self.type)
 
     def _set_axes_labels(self):
         super()._set_axes_labels()
@@ -2393,7 +3586,9 @@ class Saver:
         """
         self._add_file_extension()
         try:
-            self.plotter.figure.savefig(self.filename, **self.parameters)
+            self.plotter.figure.savefig(self.filename,
+                                        dpi=self.plotter.figure.dpi,
+                                        **self.parameters)
         except OSError as os_error:
             if os_error.errno == errno.ENAMETOOLONG:
                 file_basename, file_extension = os.path.splitext(self.filename)
@@ -2630,6 +3825,15 @@ class SinglePlot2DProperties(SinglePlotProperties):
         For the properties that can be set this way, see the documentation
         of the :class:`aspecd.plotting.SurfaceProperties` class.
 
+    colorbar : :class:`aspecd.plotting.ColorbarProperties`
+        Properties of the colorbar (optionally) added to a plot
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.ColorbarProperties` class.
+
+        .. versionadded:: 0.9
+
+
     Raises
     ------
     aspecd.exceptions.MissingPlotterError
@@ -2640,6 +3844,7 @@ class SinglePlot2DProperties(SinglePlotProperties):
     def __init__(self):
         super().__init__()
         self.drawing = SurfaceProperties()
+        self.colorbar = ColorbarProperties()
         self._colormap = ''
         self._include_in_to_dict = ['colormap']
 
@@ -2672,6 +3877,25 @@ class SinglePlot2DProperties(SinglePlotProperties):
     def colormap(self, colormap):
         self._colormap = colormap
         self.drawing.cmap = self._colormap
+
+    def apply(self, plotter=None):
+        """
+        Apply properties to plot.
+
+        Parameters
+        ----------
+        plotter: :class:`aspecd.plotting.SinglePlotter2D`
+            Plotter the properties should be applied to.
+
+        Raises
+        ------
+        aspecd.exceptions.MissingPlotterError
+            Raised if no plotter is provided.
+
+        """
+        super().apply(plotter=plotter)
+        if plotter.colorbar:
+            self.colorbar.apply(colorbar=plotter.colorbar)
 
 
 class MultiPlotProperties(PlotProperties):
@@ -2877,8 +4101,7 @@ class MultiPlot1DProperties(MultiPlotProperties):
         """
         super().apply(plotter=plotter)
         if hasattr(plotter, 'drawings') and self.colormap:
-            idx = len(self.drawings)
-            colors = plt.get_cmap(self.colormap, idx)
+            colors = plt.get_cmap(self.colormap, len(self.drawings))
             for idx, _ in enumerate(plotter.drawings):
                 self.drawings[idx].color = colors(idx)
 
@@ -2955,6 +4178,12 @@ class FigureProperties(aspecd.utils.Properties):
     title: :class:`str`
         Title for the figure as a whole
 
+        .. important::
+
+            If you have a second axis on top of the axes, setting the
+            figure title will result in the figure title clashing with the
+            upper axis. Hence, in such case, try setting the axis title.
+
     Raises
     ------
     aspecd.exceptions.MissingFigureError
@@ -3028,6 +4257,12 @@ class AxesProperties(aspecd.utils.Properties):
         Note that this is a per-axis title, unlike the figure title set for
         the whole figure.
 
+        .. important::
+
+            If you have a second axis on top of the axes, setting the
+            figure title will result in the figure title clashing with the
+            upper axis. Hence, in such case, try setting the axis title.
+
         Default: ''
 
     xlabel: :class:`str`
@@ -3094,6 +4329,33 @@ class AxesProperties(aspecd.utils.Properties):
 
         Default: None
 
+    label_fontsize : :class:`int` or :class:`str`
+        Font size of the axes labels.
+
+        If numeric the size will be the absolute font size in points. String
+        values are relative to the current default font size. Valid string
+        values are: ``xx-small``, ``x-small``, ``small``, ``medium``,
+        ``large``, ``x-large``, ``xx-large``
+
+        Default: ``plt.rcParams['font.size']``
+
+    invert: :class:`list` or :class:`str`
+        Axes to invert
+
+        Sometimes, inverted axes are the default, *e.g.* the wavenumber
+        axis in FTIR spectroscopy. While dedicated packages for such
+        method based on the ASpecD framework will take care of these
+        specialties, this option allows for full flexibility.
+
+        Can either be a single value, such as 'x' or 'y', or a list,
+        such as ['x'] or even ['x', 'y'].
+
+        .. note::
+
+            An alternative option to invert an axis is to provide
+            descending values for axis limits. However, this may be
+            inconvenient if you don't want to explicitly provide axis limits.
+
     Raises
     ------
     aspecd.exceptions.MissingAxisError
@@ -3103,8 +4365,15 @@ class AxesProperties(aspecd.utils.Properties):
     .. versionchanged:: 0.6
         New properties ``xticklabelangle`` and ``yticklabelangle``
 
+    .. versionchanged:: 0.9
+        New property ``invert``
+
+    .. versionchanged:: 0.9
+        New property ``label_fontsize``
+
     """
 
+    # pylint: disable=too-many-instance-attributes
     def __init__(self):
         super().__init__()
         self.aspect = ''
@@ -3123,6 +4392,8 @@ class AxesProperties(aspecd.utils.Properties):
         self.yticklabels = None
         self.yticklabelangle = 0.0
         self.yticks = None
+        self.label_fontsize = plt.rcParams['font.size']
+        self.invert = None
 
     def apply(self, axes=None):
         """
@@ -3149,18 +4420,10 @@ class AxesProperties(aspecd.utils.Properties):
         for property_, value in self._get_settable_properties().items():
             if hasattr(axes, 'set_' + property_):
                 getattr(axes, 'set_' + property_)(value)
-        if self.xticks is not None:
-            axes.xaxis.set_major_locator(ticker.FixedLocator(self.xticks))
-        if self.yticks is not None:
-            axes.yaxis.set_major_locator(ticker.FixedLocator(self.yticks))
-        if self.xticklabels is not None:
-            axes.set_xticklabels(self.xticklabels)
-        if self.yticklabels is not None:
-            axes.set_yticklabels(self.yticklabels)
-        for tick in axes.get_xticklabels():
-            tick.set_rotation(self.xticklabelangle)
-        for tick in axes.get_yticklabels():
-            tick.set_rotation(self.yticklabelangle)
+        self._set_axes_ticks(axes)
+        self._set_axes_fonts(axes)
+        if self.invert:
+            self._invert_axes(axes)
 
     def _get_settable_properties(self):
         """
@@ -3180,7 +4443,10 @@ class AxesProperties(aspecd.utils.Properties):
         all_properties = self.to_dict()
         properties = {}
         for prop in all_properties:
-            if prop.startswith(('xtick', 'ytick')):
+            if (
+                    prop.startswith(('xtick', 'ytick', 'invert'))
+                    or "fontsize" in prop
+            ):
                 pass
             elif isinstance(all_properties[prop], np.ndarray):
                 if any(all_properties[prop]):
@@ -3188,6 +4454,35 @@ class AxesProperties(aspecd.utils.Properties):
             elif all_properties[prop]:
                 properties[prop] = all_properties[prop]
         return properties
+
+    def _set_axes_ticks(self, axes):
+        if self.xticks is not None:
+            axes.xaxis.set_major_locator(ticker.FixedLocator(self.xticks))
+        if self.yticks is not None:
+            axes.yaxis.set_major_locator(ticker.FixedLocator(self.yticks))
+        if self.xticklabels is not None:
+            axes.set_xticklabels(self.xticklabels)
+        if self.yticklabels is not None:
+            axes.set_yticklabels(self.yticklabels)
+        for tick in axes.get_xticklabels():
+            tick.set_rotation(self.xticklabelangle)
+        for tick in axes.get_yticklabels():
+            tick.set_rotation(self.yticklabelangle)
+
+    def _set_axes_fonts(self, axes):
+        axes.get_xaxis().get_label().set_fontsize(self.label_fontsize)
+        axes.get_yaxis().get_label().set_fontsize(self.label_fontsize)
+
+    def _invert_axes(self, axes):
+        if isinstance(self.invert, str):
+            self.invert = [self.invert]
+        for axis in self.invert:
+            if axis.lower().startswith('x'):
+                if not axes.xaxis_inverted():
+                    axes.invert_xaxis()
+            if axis.lower().startswith('y'):
+                if not axes.yaxis_inverted():
+                    axes.invert_yaxis()
 
 
 class LegendProperties(aspecd.utils.Properties):
@@ -3229,6 +4524,11 @@ class LegendProperties(aspecd.utils.Properties):
 
         Default: 1
 
+    title : :class:`str`
+        Title of the legend
+
+        Default: empty
+
     Raises
     ------
     aspecd.exceptions.MissingLegendError
@@ -3241,6 +4541,9 @@ class LegendProperties(aspecd.utils.Properties):
     .. versionchanged:: 0.8
         Added attribute :attr:`ncol`
 
+    .. versionchanged:: 0.9
+        Added attribute :attr:`title`
+
     """
 
     def __init__(self):
@@ -3250,6 +4553,7 @@ class LegendProperties(aspecd.utils.Properties):
         self.labelspacing = 0.5
         self.fontsize = plt.rcParams['font.size']
         self.ncol = 1
+        self.title = ''
         self._exclude = ['location']
         self._exclude_from_to_dict = ['location']
 
@@ -3479,10 +4783,7 @@ class SurfaceProperties(DrawingProperties):
 
 class GridProperties(aspecd.utils.Properties):
     """
-    Properties of a line within a plot.
-
-    Basically, the attributes are a subset of what :mod:`matplotlib` defines
-    for :obj:`matplotlib.lines.Line2D` objects.
+    Properties of the grid of a plot.
 
     Attributes
     ----------
@@ -3554,3 +4855,148 @@ class GridProperties(aspecd.utils.Properties):
                           **self.lines.settable_properties())
             else:
                 axes.grid(True, **self.lines.settable_properties())
+
+
+class ColorbarProperties(aspecd.utils.Properties):
+    """
+    Properties of the colorbar of a plot.
+
+    Basically, a subset of what :meth:`matplotlib.figure.Figure.colorbar`
+    defines for a colorbar.
+
+    Note that Matplotlib does not usually have an interface that easily
+    allows to both, set and query properties. For colorbars in particular,
+    many parameters can only be set when instantiating the colorbar object.
+
+    Attributes
+    ----------
+    location : :class:`str`
+        Location of the colorbar.
+
+        Valid parameters: None or {'left', 'right', 'top', 'bottom'}
+
+    fraction : :class:`float`
+        Fraction of original axes to use for colorbar.
+
+        Default: 0.15
+
+    aspect : :class:`float`
+        Ratio of long to short dimensions.
+
+        Default: 20.
+
+    pad : :class:`float`
+        Fraction of original axes between colorbar and new image axes.
+
+        Default: 0.05 if vertical, 0.15 if horizontal
+
+    format : :class:`str`
+        Format of the tick labels
+
+    label : :class:`dict`
+        The label on the colorbar's long axis and its properties.
+
+        The following keys exist:
+
+        text : :class:`str`
+            The label text
+
+        location : :class:`str`
+            The location of the label
+
+            Valid values depend on the orientation of the colorbar.
+
+            * For horizontal orientation one of {'left', 'center', 'right'}
+            * For vertical orientation one of {'bottom', 'center', 'top'}
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class.
+
+    Generally, the ColorbarProperties are set within the properties of the
+    respective plotter.
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter2D
+          properties:
+            properties:
+              colorbar:
+                location: top
+                fraction: 0.1
+                pad: 0.1
+                format: "%4.2e"
+                label:
+                  text: $foo$ / bar
+                  location: left
+
+
+    .. versionadded:: 0.9
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.location = None
+        self.fraction = 0.15
+        self.aspect = 20.
+        self.pad = None
+        self.format = ''
+        self.label = {'text': '', 'location': None}
+        self._exclude_from_kwargs = ['label']
+
+    @property
+    def kwargs(self):
+        """
+        Properties that can/need to be set during colorbar object creation.
+
+        Many parameters can only be set when instantiating the colorbar
+        object. For convenience, this property returns a dict with the
+        subset of properties that can (and need to) be set this way.
+
+        Those properties of the class that cannot be set this way are listed
+        in the private attribute ``_exclude_from_kwargs``. Actually setting
+        the properties to a colorbar looks like:
+
+        .. code-block::
+
+            fig.colorbar(drawing, ax=ax, **kwargs)
+
+        Here, ``**kwargs`` is the expansion of the returned dictionary.
+
+        Returns
+        -------
+        kwargs : :class:`dict`
+            dict with kwargs that can be set when instantiating the colorbar.
+
+        """
+        kwargs = self.to_dict()
+        for key in self._exclude_from_kwargs:
+            kwargs.pop(key, None)
+        keys_to_drop = [key for key, value in kwargs.items() if not value]
+        for key in keys_to_drop:
+            kwargs.pop(key)
+        return kwargs
+
+    def apply(self, colorbar=None):
+        """
+        Apply properties to colorbar.
+
+        Parameters
+        ----------
+        colorbar: :class:`matplotlib.colorbar.Colorbar`
+            Colorbar the properties should be applied to.
+
+        """
+        self._set_colorbar_label(colorbar=colorbar)
+
+    def _set_colorbar_label(self, colorbar=None):
+        if "location" in self.label and self.label['location']:
+            location = self.label['location']
+        else:
+            location = None
+        colorbar.set_label(self.label['text'], loc=location)

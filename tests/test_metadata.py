@@ -399,6 +399,26 @@ class TestCalculation(unittest.TestCase):
             self.assertEqual(getattr(self.calculation, key), dict_[key])
 
 
+class TestDevice(unittest.TestCase):
+    def setUp(self):
+        self.device = metadata.Device()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_instantiate_properties_from_dict(self):
+        dict_ = {"label": "foo"}
+        device = metadata.Device(dict_)
+        for key in dict_:
+            self.assertEqual(getattr(device, key), dict_[key])
+
+    def test_set_properties_from_dict(self):
+        dict_ = {"label": "foo"}
+        self.device.from_dict(dict_)
+        for key in dict_:
+            self.assertEqual(getattr(self.device, key), dict_[key])
+
+
 class TestExperimentalDatasetMetadata(unittest.TestCase):
     def setUp(self):
         self.dataset_metadata = metadata.ExperimentalDatasetMetadata()

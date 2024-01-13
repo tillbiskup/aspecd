@@ -16,7 +16,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 import aspecd.exceptions
-from aspecd import plotting, utils, dataset
+from aspecd import plotting, utils, dataset, annotation
 
 
 class TestPlotter(unittest.TestCase):
@@ -215,6 +215,44 @@ class TestPlotter(unittest.TestCase):
             self.plotter.plot()
         mock.assert_called()
 
+    def test_plot_has_device_data_parameter(self):
+        self.assertIn('device_data', self.plotter.parameters)
+
+    def test_has_annotate_method(self):
+        self.assertTrue(hasattr(self.plotter, 'annotate'))
+        self.assertTrue(callable(self.plotter.annotate))
+
+    def test_annotate_adds_annotation_record(self):
+        self.plotter.annotate(aspecd.annotation.PlotAnnotation())
+        self.assertTrue(self.plotter.annotations)
+
+    def test_added_annotation_record_is_plotannotation(self):
+        self.plotter.annotate(aspecd.annotation.PlotAnnotation())
+        self.assertIsInstance(self.plotter.annotations[-1],
+                              aspecd.annotation.PlotAnnotation)
+
+    def test_annotate_returns_annotation_object(self):
+        annotation = self.plotter.annotate(aspecd.annotation.PlotAnnotation())
+        self.assertIsInstance(annotation, aspecd.annotation.PlotAnnotation)
+
+    def test_has_delete_annotation_method(self):
+        self.assertTrue(hasattr(self.plotter, 'delete_annotation'))
+        self.assertTrue(callable(self.plotter.delete_annotation))
+
+    def test_delete_annotation_deletes_annotation_record(self):
+        self.plotter.annotate(aspecd.annotation.PlotAnnotation())
+        orig_len_annotations = len(self.plotter.annotations)
+        self.plotter.delete_annotation(0)
+        new_len_annotations = len(self.plotter.annotations)
+        self.assertGreater(orig_len_annotations, new_len_annotations)
+
+    def test_delete_annotation_deletes_correct_annotation_record(self):
+        self.plotter.annotate(aspecd.annotation.PlotAnnotation())
+        self.plotter.annotate(aspecd.annotation.PlotAnnotation())
+        annotation_step = self.plotter.annotations[-1]
+        self.plotter.delete_annotation(0)
+        self.assertIs(annotation_step, self.plotter.annotations[-1])
+
 
 class TestSinglePlotter(unittest.TestCase):
     def setUp(self):
@@ -230,8 +268,11 @@ class TestSinglePlotter(unittest.TestCase):
     def test_has_drawing_property(self):
         self.assertTrue(hasattr(self.plotter, 'drawing'))
 
+    def test_has_data_property(self):
+        self.assertTrue(hasattr(self.plotter, 'data'))
+
     def test_to_dict_does_not_contain_certain_keys(self):
-        for key in ['dataset', 'drawing']:
+        for key in ['dataset', 'drawing', 'data']:
             with self.subTest(key=key):
                 self.assertNotIn(key, self.plotter.to_dict())
 
@@ -287,7 +328,7 @@ class TestSinglePlotter(unittest.TestCase):
         class MyPlotter(aspecd.plotting.SinglePlotter):
 
             @staticmethod
-            def applicable(dataset):
+            def applicable(data):
                 return False
 
         dataset = aspecd.dataset.Dataset()
@@ -299,7 +340,7 @@ class TestSinglePlotter(unittest.TestCase):
         class MyPlotter(aspecd.plotting.SinglePlotter):
 
             @staticmethod
-            def applicable(dataset):
+            def applicable(data):
                 return False
 
         dataset = aspecd.dataset.Dataset()
@@ -309,6 +350,33 @@ class TestSinglePlotter(unittest.TestCase):
         with self.assertRaisesRegex(
                 aspecd.exceptions.NotApplicableToDatasetError, message):
             dataset.plot(plotter)
+
+    def test_plot_from_dataset_sets_data(self):
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random(5)
+        plotter = test_dataset.plot(self.plotter)
+        self.assertListEqual(list(plotter.data.data),
+                             list(test_dataset.data.data))
+
+    def test_plot_from_dataset_with_device_data_sets_data(self):
+        test_dataset = dataset.Dataset()
+        device_data = dataset.DeviceData()
+        device_data.data = np.random.random(5)
+        test_dataset.device_data["test"] = device_data
+        self.plotter.parameters["device_data"] = "test"
+        plotter = test_dataset.plot(self.plotter)
+        self.assertListEqual(list(plotter.data.data), list(device_data.data))
+
+    def test_plot_from_dataset_with_non_existent_device_data_raises(self):
+        test_dataset = dataset.Dataset()
+        device_data = dataset.DeviceData()
+        device_data.data = np.random.random(5)
+        test_dataset.device_data["test"] = device_data
+        self.plotter.parameters["device_data"] = "nonexistent"
+        with self.assertRaises(KeyError) as context:
+            test_dataset.plot(self.plotter)
+        the_exception = context.exception
+        self.assertIn("not found in dataset", str(the_exception))
 
 
 class TestSinglePlotter1D(unittest.TestCase):
@@ -443,6 +511,83 @@ class TestSinglePlotter1D(unittest.TestCase):
             list(self.dataset.data.data),
             list(self.plotter.axes.lines[0].get_xdata())
         )
+
+    def test_plot_device_data_plots_device_data(self):
+        device_data = dataset.DeviceData()
+        device_data.data = np.random.random(5)
+        self.dataset.device_data["test"] = device_data
+        self.plotter.parameters["device_data"] = "test"
+        self.plotter.dataset = self.dataset
+        self.plotter.plot()
+        self.assertListEqual(
+            list(device_data.data),
+            list(self.plotter.axes.lines[0].get_ydata())
+        )
+
+    def test_plot_device_data_checks_applicability(self):
+        device_data = dataset.DeviceData()
+        device_data.data = np.random.random([5, 5])
+        self.dataset.device_data["test"] = device_data
+        self.plotter.parameters["device_data"] = "test"
+        self.plotter.dataset = self.dataset
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            self.plotter.plot()
+
+    def test_semilogy_plot_with_negative_values_logs_warning(self):
+        self.plotter.type = 'semilogy'
+        self.dataset.data.data = \
+            self.dataset.data.data - np.mean(self.dataset.data.data)
+        self.plotter.dataset = self.dataset
+        with self.assertLogs(__package__, level='WARNING') as cm:
+            self.plotter.plot()
+        self.assertIn('', cm.output[0])
+
+    def test_semilogx_plot_with_negative_axis_values_logs_warning(self):
+        self.plotter.type = 'semilogx'
+        self.dataset.data.axes[0].values = \
+            np.linspace(-2, 2, len(self.dataset.data.data))
+        self.plotter.dataset = self.dataset
+        with self.assertLogs(__package__, level='WARNING') as cm:
+            self.plotter.plot()
+        self.assertIn('Negative values', cm.output[0])
+
+    def test_loglog_plot_with_negative_values_logs_warning(self):
+        self.plotter.type = 'loglog'
+        self.dataset.data.data = \
+            self.dataset.data.data - np.mean(self.dataset.data.data)
+        self.plotter.dataset = self.dataset
+        with self.assertLogs(__package__, level='WARNING') as cm:
+            self.plotter.plot()
+        self.assertIn('Negative values', cm.output[0])
+
+    def test_loglog_plot_with_negative_axis_values_logs_warning(self):
+        self.plotter.type = 'loglog'
+        self.dataset.data.axes[0].values = \
+            np.linspace(-2, 2, len(self.dataset.data.data))
+        self.plotter.dataset = self.dataset
+        with self.assertLogs(__package__, level='WARNING') as cm:
+            self.plotter.plot()
+        self.assertIn('Negative values', cm.output[0])
+
+    def test_semilogy_plot_w_neg_axis_values_and_switch_axis_logs_warning(self):
+        self.plotter.type = 'semilogy'
+        self.plotter.parameters['switch_axes'] = True
+        self.dataset.data.axes[0].values = \
+            np.linspace(-2, 2, len(self.dataset.data.data))
+        self.plotter.dataset = self.dataset
+        with self.assertLogs(__package__, level='WARNING') as cm:
+            self.plotter.plot()
+        self.assertIn('', cm.output[0])
+
+    def test_semilogx_plot_w_neg_values_and_switch_axis_logs_warning(self):
+        self.plotter.type = 'semilogx'
+        self.plotter.parameters['switch_axes'] = True
+        self.dataset.data.data = \
+            self.dataset.data.data - np.mean(self.dataset.data.data)
+        self.plotter.dataset = self.dataset
+        with self.assertLogs(__package__, level='WARNING') as cm:
+            self.plotter.plot()
+        self.assertIn('Negative values', cm.output[0])
 
 
 class TestSinglePlotter2D(unittest.TestCase):
@@ -682,6 +827,50 @@ class TestSinglePlotter2D(unittest.TestCase):
         else:
             contour_color = list(contour_lines[0].get_facecolor()[0])
         self.assertListEqual([0., 0., 0., 1.], contour_color)
+
+    def test_plot_device_data_checks_applicability_of_device_data(self):
+        device_data = dataset.DeviceData()
+        device_data.data = np.random.random(5)
+        test_dataset = aspecd.dataset.CalculatedDataset()
+        test_dataset.device_data["test"] = device_data
+        self.plotter.parameters["device_data"] = "test"
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            plotter = test_dataset.plot(self.plotter)
+
+    def test_colorbar_sets_colorbar(self):
+        self.plotter.parameters['show_colorbar'] = True
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        plotter = test_dataset.plot(self.plotter)
+        self.assertIsInstance(plotter.colorbar, matplotlib.colorbar.Colorbar)
+
+    def test_colorbar_properties_affect_colorbar(self):
+        self.plotter.parameters['show_colorbar'] = True
+        self.plotter.properties.colorbar.location = 'top'
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        plotter = test_dataset.plot(self.plotter)
+        # Note: the location is not set in the colorbar, only the orientation
+        self.assertEqual('horizontal', plotter.colorbar.orientation)
+
+    def test_colorbar_with_label_sets_label(self):
+        self.plotter.parameters['show_colorbar'] = True
+        self.plotter.properties.colorbar.label = {'text': 'foo'}
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        plotter = test_dataset.plot(self.plotter)
+        self.assertEqual(self.plotter.properties.colorbar.label["text"],
+                         plotter.colorbar.ax.yaxis.label.get_text())
+
+    def test_colorbar_with_label_location_sets_label_location(self):
+        self.plotter.parameters['show_colorbar'] = True
+        self.plotter.properties.colorbar.label = \
+            {'text': 'foo', 'location': 'bottom'}
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        plotter = test_dataset.plot(self.plotter)
+        self.assertEqual(0,
+                         plotter.colorbar.ax.yaxis.label.get_position()[0])
 
 
 class TestSinglePlotter2DStacked(unittest.TestCase):
@@ -947,6 +1136,238 @@ class TestSinglePlotter2DStacked(unittest.TestCase):
         plotter = test_dataset.plot(self.plotter)
         self.assertEqual(5, len(plotter.axes.get_yticks()))
 
+    def test_plot_device_data_plots_device_data(self):
+        device_data = dataset.DeviceData()
+        device_data.data = np.random.random([5, 5])
+        test_dataset = aspecd.dataset.CalculatedDataset()
+        test_dataset.device_data["test"] = device_data
+        self.plotter.parameters["device_data"] = "test"
+        plotter = test_dataset.plot(self.plotter)
+        self.assertListEqual(
+            list(device_data.data[:, 0]),
+            list(plotter.axes.lines[0].get_ydata())
+        )
+
+    def test_plot_device_data_checks_applicability_of_device_data(self):
+        device_data = dataset.DeviceData()
+        device_data.data = np.random.random(5)
+        test_dataset = aspecd.dataset.CalculatedDataset()
+        test_dataset.device_data["test"] = device_data
+        self.plotter.parameters["device_data"] = "test"
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            test_dataset.plot(self.plotter)
+
+
+class TestMultiDeviceDataPlotter1D(unittest.TestCase):
+    def setUp(self):
+        self.plotter = plotting.MultiDeviceDataPlotter1D()
+        self.filename = 'foo.pdf'
+        self.dataset = None
+
+    def tearDown(self):
+        if self.plotter.fig:
+            plt.close(self.plotter.fig)
+        if os.path.exists(self.filename):
+            os.remove(self.filename)
+
+    def create_dataset(self, devices=('device1', 'device2')):
+        self.dataset = aspecd.dataset.CalculatedDataset()
+        xdata = np.linspace(0, 2*np.pi, 501)
+        for device in devices:
+            device_data = dataset.DeviceData()
+            device_data.data = np.sin(xdata + np.random.random())
+            device_data.axes[0].quantity = 'time'
+            device_data.axes[0].unit = 'ms'
+            device_data.axes[1].quantity = 'intensity'
+            device_data.axes[1].unit = 'a.u.'
+            self.dataset.device_data[device] = device_data
+        self.plotter.parameters["device_data"] = list(devices)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_class_has_sensible_description(self):
+        self.assertIn('multiple device data', self.plotter.description)
+
+    def test_plot_with_2D_device_data_raises(self):
+        test_dataset = aspecd.dataset.CalculatedDataset()
+        device_data = dataset.DeviceData()
+        device_data.data = np.random.random([5, 5])
+        test_dataset.device_data["test"] = device_data
+        self.plotter.parameters["device_data"] = "test"
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            test_dataset.plot(self.plotter)
+
+    def test_plot_with_one_2D_device_data_raises(self):
+        test_dataset = aspecd.dataset.CalculatedDataset()
+        device_data1 = dataset.DeviceData()
+        device_data1.data = np.random.random(5)
+        test_dataset.device_data["test1"] = device_data1
+        device_data2 = dataset.DeviceData()
+        device_data2.data = np.random.random([5, 5])
+        test_dataset.device_data["test2"] = device_data2
+        self.plotter.parameters["device_data"] = ["test1", "test2"]
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            test_dataset.plot(self.plotter)
+
+    def test_plot_without_datasets_raises(self):
+        with self.assertRaises(aspecd.exceptions.MissingDatasetError):
+            self.plotter.plot()
+
+    def test_plot_without_device_data_raises(self):
+        test_dataset = aspecd.dataset.CalculatedDataset()
+        with self.assertRaises(KeyError) as context:
+            test_dataset.plot(self.plotter)
+        the_exception = context.exception
+        self.assertIn("No device data provided", str(the_exception))
+
+    def test_plot_with_device_data_sets_data(self):
+        self.create_dataset()
+        self.dataset.plot(self.plotter)
+        self.assertEqual(len(self.plotter.parameters["device_data"]),
+                         len(self.plotter.data))
+
+    def test_parameters_have_axes_key(self):
+        self.assertIn('axes', self.plotter.parameters)
+
+    def test_parameters_axes_is_list_of_axes_objects(self):
+        self.assertTrue(isinstance(self.plotter.parameters['axes'], list))
+        self.assertTrue(self.plotter.parameters['axes'])
+        for axis in self.plotter.parameters['axes']:
+            self.assertTrue(isinstance(axis, dataset.Axis))
+
+    def test_plot_with_axes_in_parameters_sets_axes_labels(self):
+        self.plotter.parameters['axes'][0].quantity = 'foo'
+        self.plotter.parameters['axes'][0].unit = 'bar'
+        self.plotter.parameters['axes'][1].quantity = 'foo2'
+        self.plotter.parameters['axes'][1].unit = 'bar2'
+        xlabel = '$' + self.plotter.parameters['axes'][0].quantity + \
+                 '$' + ' / ' + self.plotter.parameters['axes'][0].unit
+        ylabel = '$' + self.plotter.parameters['axes'][1].quantity + \
+                 '$' + ' / ' + self.plotter.parameters['axes'][1].unit
+        self.create_dataset()
+        plotter = self.dataset.plot(self.plotter)
+        self.assertEqual(xlabel, plotter.axes.get_xlabel())
+        self.assertEqual(ylabel, plotter.axes.get_ylabel())
+
+    def test_plot_with_datasets_with_identical_axes_sets_axes_labels(self):
+        self.create_dataset()
+        device = self.plotter.parameters['device_data'][0]
+        device_data = self.dataset.device_data[device]
+        xlabel = '$' + device_data.axes[0].quantity + '$' + ' / ' + \
+                 device_data.axes[0].unit
+        ylabel = '$' + device_data.axes[1].quantity + '$' + ' / ' + \
+                 device_data.axes[1].unit
+        plotter = self.dataset.plot(self.plotter)
+        self.assertEqual(xlabel, plotter.axes.get_xlabel())
+        self.assertEqual(ylabel, plotter.axes.get_ylabel())
+
+    def test_axes_properties_set_axes_labels(self):
+        self.create_dataset()
+        self.plotter.properties.axes.xlabel = 'foo'
+        self.plotter.properties.axes.ylabel = 'bar'
+        plotter = self.dataset.plot(self.plotter)
+        self.assertEqual(plotter.properties.axes.xlabel,
+                         plotter.axes.get_xlabel())
+        self.assertEqual(plotter.properties.axes.ylabel,
+                         plotter.axes.get_ylabel())
+
+    def test_plot_consists_of_correct_number_of_lines(self):
+        self.create_dataset()
+        plotter = self.dataset.plot(self.plotter)
+        self.assertGreaterEqual(len(plotter.axes.get_lines()),
+                                len(self.plotter.parameters["device_data"]))
+
+    def test_plot_sets_drawings(self):
+        self.create_dataset()
+        self.dataset.plot(self.plotter)
+        self.assertEqual(len(self.plotter.parameters["device_data"]),
+                         len(self.plotter.drawing))
+
+    def test_plot_adds_drawing_properties(self):
+        self.create_dataset()
+        self.dataset.plot(self.plotter)
+        self.assertEqual(len(self.plotter.data),
+                         len(self.plotter.properties.drawings))
+
+    def test_plot_sets_label_from_device_metadata(self):
+        self.create_dataset()
+        devices = list(self.dataset.device_data.keys())
+        self.dataset.device_data[devices[0]].metadata.label = "device foo"
+        self.dataset.device_data[devices[1]].metadata.label = "device bar"
+        plotter = self.dataset.plot(self.plotter)
+        for idx, device in enumerate(devices):
+            self.assertEqual(
+                self.dataset.device_data[device].metadata.label,
+                plotter.drawing[idx].get_label()
+            )
+
+    def test_plot_sets_label_from_device_key_if_no_metadata_label(self):
+        self.create_dataset()
+        devices = list(self.dataset.device_data.keys())
+        plotter = self.dataset.plot(self.plotter)
+        for idx, device in enumerate(devices):
+            self.assertEqual(device, plotter.drawing[idx].get_label())
+
+    def test_axes_tight_x_sets_xlim_to_data_limits(self):
+        self.create_dataset()
+        self.plotter.parameters['tight'] = 'x'
+        plotter = self.dataset.plot(self.plotter)
+        self.assertAlmostEqual(plotter.data[0].axes[0].values[0],
+                               plotter.axes.get_xlim()[0],
+                               4)
+
+    def test_axes_tight_y_sets_ylim_to_data_limits(self):
+        self.create_dataset()
+        self.plotter.parameters['tight'] = 'y'
+        plotter = self.dataset.plot(self.plotter)
+        self.assertAlmostEqual(plotter.data[0].data.min(),
+                               plotter.axes.get_ylim()[0],
+                               4)
+
+    def test_axes_tight_both_sets_xlim_and_ylim_to_data_limits(self):
+        self.create_dataset()
+        self.plotter.parameters['tight'] = 'both'
+        plotter = self.dataset.plot(self.plotter)
+        self.assertAlmostEqual(plotter.data[0].axes[0].values[0],
+                               plotter.axes.get_xlim()[0],
+                               4)
+        self.assertAlmostEqual(plotter.data[0].data.min(),
+                               plotter.axes.get_ylim()[0],
+                               4)
+
+    def test_has_switch_axes_parameter(self):
+        self.assertTrue('switch_axes' in self.plotter.parameters)
+
+    def test_switch_axes_sets_correct_axes_labels(self):
+        self.create_dataset()
+        self.plotter.parameters['switch_axes'] = True
+        plotter = self.dataset.plot(self.plotter)
+        device_data = self.dataset.device_data[self.plotter.parameters[
+            "device_data"][0]]
+        self.assertIn(device_data.axes[1].quantity, plotter.ax.get_xlabel())
+        self.assertIn(device_data.axes[0].quantity, plotter.ax.get_ylabel())
+
+    def test_switch_axes_actually_switches_axes(self):
+        self.create_dataset()
+        self.plotter.parameters['switch_axes'] = True
+        plotter = self.dataset.plot(self.plotter)
+        device_data = self.dataset.device_data[self.plotter.parameters[
+            "device_data"][0]]
+        self.assertListEqual(
+            list(device_data.data),
+            list(plotter.axes.lines[0].get_xdata())
+        )
+
+    def test_plot_sets_correct_line_color(self):
+        self.create_dataset()
+        color1 = '#abcdef'
+        color2 = '#012345'
+        dict_ = {'drawings': [{'color': color1}, {'color': color2}]}
+        self.plotter.properties.from_dict(dict_)
+        plotter = self.dataset.plot(self.plotter)
+        self.assertEqual(color1, plotter.drawing[0].get_color())
+
 
 class TestMultiPlotter(unittest.TestCase):
     def setUp(self):
@@ -964,6 +1385,17 @@ class TestMultiPlotter(unittest.TestCase):
 
     def test_datasets_property_is_list(self):
         self.assertTrue(isinstance(self.plotter.datasets, list))
+
+    def test_has_data_property(self):
+        self.assertTrue(hasattr(self.plotter, 'data'))
+
+    def test_data_property_is_list(self):
+        self.assertTrue(isinstance(self.plotter.data, list))
+
+    def test_to_dict_does_not_contain_certain_keys(self):
+        for key in ['datasets', 'drawings', 'data']:
+            with self.subTest(key=key):
+                self.assertNotIn(key, self.plotter.to_dict())
 
     def test_plot_without_datasets_raises(self):
         with self.assertRaises(aspecd.exceptions.MissingDatasetError):
@@ -1017,7 +1449,7 @@ class TestMultiPlotter(unittest.TestCase):
         self.assertEqual(xlabel, self.plotter.axes.get_xlabel())
         self.assertEqual(ylabel, self.plotter.axes.get_ylabel())
 
-    def test_plot_with_datasets_with_identical_quantity_sets_axes_labels(self):
+    def test_plot_with_datasets_w_identical_quantity_sets_axes_labels(self):
         test_dataset0 = dataset.Dataset()
         test_dataset0.data.axes[0].quantity = 'foo'
         test_dataset0.data.axes[0].unit = ''
@@ -1096,10 +1528,24 @@ class TestMultiPlotter(unittest.TestCase):
                 aspecd.exceptions.NotApplicableToDatasetError, message):
             plotter.plot()
 
-    def test_to_dict_does_not_contain_certain_keys(self):
-        for key in ['datasets', 'drawings']:
-            with self.subTest(key=key):
-                self.assertNotIn(key, self.plotter.to_dict())
+    def test_plot_sets_data(self):
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random(5)
+        self.plotter.datasets.append(test_dataset)
+        self.plotter.plot()
+        self.assertListEqual(list(self.plotter.data[0].data),
+                             list(test_dataset.data.data))
+
+    def test_plot_with_device_data_sets_data(self):
+        device_data = dataset.DeviceData()
+        device_data.data = np.random.random(5)
+        test_dataset = dataset.Dataset()
+        test_dataset.device_data["test"] = device_data
+        self.plotter.datasets.append(test_dataset)
+        self.plotter.parameters["device_data"] = "test"
+        self.plotter.plot()
+        self.assertListEqual(list(self.plotter.data[0].data),
+                             list(device_data.data))
 
 
 class TestMultiPlotter1D(unittest.TestCase):
@@ -1248,6 +1694,83 @@ class TestMultiPlotter1D(unittest.TestCase):
                               max(self.dataset.data.data)],
                              list(self.plotter.ax.get_xlim()))
         self.assertListEqual([0, 4], list(self.plotter.ax.get_ylim()))
+
+    def test_plot_device_data_checks_applicability(self):
+        device_data = dataset.DeviceData()
+        device_data.data = np.random.random([5, 5])
+        self.dataset.device_data["test"] = device_data
+        self.plotter.parameters["device_data"] = "test"
+        self.plotter.datasets.append(self.dataset)
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            self.plotter.plot()
+
+    def test_plot_device_data_plots_device_data(self):
+        device_data = dataset.DeviceData()
+        device_data.data = np.random.random(5)
+        self.dataset.device_data["test"] = device_data
+        self.plotter.parameters["device_data"] = "test"
+        self.plotter.datasets.append(self.dataset)
+        self.plotter.plot()
+        self.assertListEqual(
+            list(device_data.data),
+            list(self.plotter.axes.lines[0].get_ydata())
+        )
+
+    def test_semilogy_plot_with_negative_values_logs_warning(self):
+        self.plotter.type = 'semilogy'
+        self.dataset.data.data = \
+            self.dataset.data.data - np.mean(self.dataset.data.data)
+        self.plotter.datasets.append(self.dataset)
+        with self.assertLogs(__package__, level='WARNING') as cm:
+            self.plotter.plot()
+        self.assertIn('', cm.output[0])
+
+    def test_semilogx_plot_with_negative_axis_values_logs_warning(self):
+        self.plotter.type = 'semilogx'
+        self.dataset.data.axes[0].values = \
+            np.linspace(-2, 2, len(self.dataset.data.data))
+        self.plotter.datasets.append(self.dataset)
+        with self.assertLogs(__package__, level='WARNING') as cm:
+            self.plotter.plot()
+        self.assertIn('Negative values', cm.output[0])
+
+    def test_loglog_plot_with_negative_values_logs_warning(self):
+        self.plotter.type = 'loglog'
+        self.dataset.data.data = \
+            self.dataset.data.data - np.mean(self.dataset.data.data)
+        self.plotter.datasets.append(self.dataset)
+        with self.assertLogs(__package__, level='WARNING') as cm:
+            self.plotter.plot()
+        self.assertIn('Negative values', cm.output[0])
+
+    def test_loglog_plot_with_negative_axis_values_logs_warning(self):
+        self.plotter.type = 'loglog'
+        self.dataset.data.axes[0].values = \
+            np.linspace(-2, 2, len(self.dataset.data.data))
+        self.plotter.datasets.append(self.dataset)
+        with self.assertLogs(__package__, level='WARNING') as cm:
+            self.plotter.plot()
+        self.assertIn('Negative values', cm.output[0])
+
+    def test_semilogy_plot_w_neg_axis_values_and_switch_axis_logs_warning(self):
+        self.plotter.type = 'semilogy'
+        self.plotter.parameters['switch_axes'] = True
+        self.dataset.data.axes[0].values = \
+            np.linspace(-2, 2, len(self.dataset.data.data))
+        self.plotter.datasets.append(self.dataset)
+        with self.assertLogs(__package__, level='WARNING') as cm:
+            self.plotter.plot()
+        self.assertIn('', cm.output[0])
+
+    def test_semilogx_plot_w_neg_values_and_switch_axis_logs_warning(self):
+        self.plotter.type = 'semilogx'
+        self.plotter.parameters['switch_axes'] = True
+        self.dataset.data.data = \
+            self.dataset.data.data - np.mean(self.dataset.data.data)
+        self.plotter.datasets.append(self.dataset)
+        with self.assertLogs(__package__, level='WARNING') as cm:
+            self.plotter.plot()
+        self.assertIn('Negative values', cm.output[0])
 
 
 class TestMultiPlotter1DStacked(unittest.TestCase):
@@ -1962,7 +2485,7 @@ class TestAxesProperties(unittest.TestCase):
         for prop in ['aspect', 'facecolor', 'position', 'title',
                      'xlabel', 'xlim', 'xscale', 'xticklabels', 'xticks',
                      'ylabel', 'ylim', 'yscale', 'yticklabels', 'yticks',
-                     'xticklabelangle', 'yticklabelangle',
+                     'xticklabelangle', 'yticklabelangle', 'invert'
                      ]:
             self.assertTrue(hasattr(self.axis_properties, prop))
 
@@ -2056,6 +2579,89 @@ class TestAxesProperties(unittest.TestCase):
         self.axis_properties.apply(axes=plot.axes)
         self.assertEqual(self.axis_properties.yticklabelangle,
                          plot.axes.get_yticklabels()[0].get_rotation())
+        plt.close(plot.figure)
+
+    def test_invert_x_axis_with_scalar_value(self):
+        self.axis_properties.invert = 'x'
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertTrue(plot.axes.xaxis_inverted())
+        plt.close(plot.figure)
+
+    def test_invert_y_axis_with_scalar_value(self):
+        self.axis_properties.invert = 'y'
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertTrue(plot.axes.yaxis_inverted())
+        plt.close(plot.figure)
+
+    def test_invert_x_axis_with_scalar_capital_value(self):
+        self.axis_properties.invert = 'X'
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertTrue(plot.axes.xaxis_inverted())
+        plt.close(plot.figure)
+
+    def test_invert_x_axis_with_string_starting_with_x(self):
+        self.axis_properties.invert = 'xaxis'
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertTrue(plot.axes.xaxis_inverted())
+        plt.close(plot.figure)
+
+    def test_invert_x_axis_with_list_value(self):
+        self.axis_properties.invert = ['x']
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertTrue(plot.axes.xaxis_inverted())
+        plt.close(plot.figure)
+
+    def test_invert_both_axes(self):
+        self.axis_properties.invert = ['x', 'y']
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertTrue(plot.axes.xaxis_inverted())
+        self.assertTrue(plot.axes.yaxis_inverted())
+        plt.close(plot.figure)
+
+    def test_invert_does_not_invert_already_inverted_x_axis(self):
+        self.axis_properties.invert = ['x']
+        plot = plotting.Plotter()
+        plot.plot()
+        plot.axes.invert_xaxis()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertTrue(plot.axes.xaxis_inverted())
+        plt.close(plot.figure)
+
+    def test_invert_does_not_invert_already_inverted_y_axis(self):
+        self.axis_properties.invert = ['y']
+        plot = plotting.Plotter()
+        plot.plot()
+        plot.axes.invert_yaxis()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertTrue(plot.axes.yaxis_inverted())
+        plt.close(plot.figure)
+
+    def test_label_fontsize_sets_label_fontsize(self):
+        fontsize = 'large'
+        self.axis_properties.label_fontsize = fontsize
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertEqual(
+            plt.rcParams['font.size'] * 1.2,
+            plot.axes.get_xaxis().get_label().get_fontsize()
+        )
+        self.assertEqual(
+            plt.rcParams['font.size'] * 1.2,
+            plot.axes.get_yaxis().get_label().get_fontsize()
+        )
         plt.close(plot.figure)
 
 
@@ -2181,6 +2787,18 @@ class TestLegendProperties(unittest.TestCase):
             self.assertEqual(ncol, legend._ncols)
         plt.close(plot.figure)
 
+    def test_title_sets_legend_title(self):
+        title = 'My fancy title'
+        self.legend_properties.title = title
+        plot = plotting.Plotter()
+        plot.properties.legend = self.legend_properties
+        plot.parameters['show_legend'] = True
+        with contextlib.redirect_stderr(io.StringIO()):
+            plot.plot()
+        legend = plot.legend
+        self.assertEqual(title, legend.get_title().get_text())
+        plt.close(plot.figure)
+
 
 class TestGridProperties(unittest.TestCase):
     def setUp(self):
@@ -2221,6 +2839,46 @@ class TestGridProperties(unittest.TestCase):
         self.assertEqual(self.grid_properties.lines.color,
                          plot.axes.xaxis.get_gridlines()[0].get_color())
         plt.close(plot.figure)
+
+
+class TestColorbarProperties(unittest.TestCase):
+    def setUp(self):
+        self.properties = plotting.ColorbarProperties()
+        fig, ax = plt.subplots()
+        self.colorbar = \
+            fig.colorbar(matplotlib.cm.ScalarMappable(cmap='viridis'), ax=ax)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.properties, 'to_dict'))
+        self.assertTrue(callable(self.properties.to_dict))
+
+    def test_has_from_dict_method(self):
+        self.assertTrue(hasattr(self.properties, 'from_dict'))
+        self.assertTrue(callable(self.properties.from_dict))
+
+    def test_has_properties(self):
+        for prop in ['location', 'fraction', 'aspect', 'pad', 'label',
+                     'format']:
+            self.assertTrue(hasattr(self.properties, prop))
+
+    def test_location_sets_legend_location(self):
+        location = 'top'
+        self.properties.location = location
+        plot = plotting.SinglePlotter2D()
+        plot.properties.colorbar = self.properties
+        plot.parameters['show_colorbar'] = True
+        dataset_ = dataset.Dataset()
+        dataset_.data.data = np.random.random([5, 5])
+        plot.plot(dataset=dataset_)
+        # Note: the location is not set in the colorbar, only the orientation
+        self.assertEqual('horizontal', plot.colorbar.orientation)
+        plt.close(plot.figure)
+
+    def test_kwargs_does_not_include_extra_parameters(self):
+        self.assertNotIn('label', self.properties.kwargs)
 
 
 class TestSinglePlotProperties(unittest.TestCase):
@@ -2303,6 +2961,10 @@ class TestSinglePlot2DProperties(unittest.TestCase):
     def test_instantiate_class(self):
         pass
 
+    def test_apply_without_argument_raises(self):
+        with self.assertRaises(aspecd.exceptions.MissingPlotterError):
+            self.plot_properties.apply()
+
     def test_apply_sets_drawing_properties(self):
         self.plot_properties.drawing.cmap = 'RdGy'
         plot = plotting.SinglePlotter2D()
@@ -2324,6 +2986,9 @@ class TestSinglePlot2DProperties(unittest.TestCase):
 
     def test_colormap_is_included_in_to_dict(self):
         self.assertIn('colormap', self.plot_properties.to_dict())
+
+    def test_has_colorbar_property(self):
+        self.assertTrue(hasattr(self.plot_properties, 'colorbar'))
 
 
 class TestMultiPlotProperties(unittest.TestCase):
