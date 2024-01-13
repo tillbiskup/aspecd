@@ -128,8 +128,8 @@ Writing own analysis steps
 ==========================
 
 Each real analysis step should inherit from either
-:class:`aspecd.processing.SingleProcessingStep` in case of operating on a
-single dataset only or from :class:`aspecd.processing.MultiProcessingStep` in
+:class:`aspecd.analysis.SingleAnalysisStep` in case of operating on a
+single dataset only or from :class:`aspecd.analysis.MultiAnalysisStep` in
 case of operating on several datasets at once. Furthermore, all analysis
 steps should be contained in one module named "analysis". This allows for
 easy automation and replay of analysis steps, particularly in context of
