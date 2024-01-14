@@ -1,7 +1,6 @@
 """Tests for system."""
-
+import getpass
 import importlib
-import os
 import pkg_resources
 import platform
 import sys
@@ -29,7 +28,7 @@ class TestSystemInfo(unittest.TestCase):
         self.assertEqual(self.sysinfo.platform, platform_)
 
     def test_user_property_login_key(self):
-        login_name = os.getlogin()
+        login_name = getpass.getuser()
         self.assertEqual(self.sysinfo.user["login"], login_name)
 
     def test_packages_property_contains_aspecd_key(self):
