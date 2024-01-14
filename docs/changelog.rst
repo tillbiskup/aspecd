@@ -6,7 +6,7 @@ This page contains a summary of changes between the official ASpecD releases. On
 
 
 Version 0.10.0
-=============
+==============
 
 Not yet released
 

@@ -10,6 +10,8 @@ For next releases
 
 * Plotting
 
+  * Support for device data (via `self.data`) in :class:`aspecd.plotting.CompositePlotter` and derived classes
+
   * :class:`aspecd.plotting.MultiDeviceDataPlotter1DStacked`
 
     Similar to :class:`aspecd.plotting.MultiDeviceDataPlotter1D`, but stacked display of the individual lines as in :class:`aspecd.plotting.SinglePlotter2DStacked`
