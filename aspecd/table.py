@@ -549,7 +549,7 @@ class Table(utils.ToDictMixin):
             )
         if self.dataset.data.data.size == 0:
             logger.warning(
-                "Dataset contains no data, hence nothing to " "tabulate."
+                "Dataset contains no data, hence nothing to tabulate."
             )
             return
         if from_dataset:

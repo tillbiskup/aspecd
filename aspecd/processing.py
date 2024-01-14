@@ -3012,8 +3012,18 @@ class Filtering(SingleProcessingStep):
         self.parameters["window_length"] = None
         self.parameters["order"] = None
         self._types = {
-            "uniform": ["uniform", "box", "boxcar", "moving-average", "car",],
-            "gaussian": ["gaussian", "binom", "binomial",],
+            "uniform": [
+                "uniform",
+                "box",
+                "boxcar",
+                "moving-average",
+                "car",
+            ],
+            "gaussian": [
+                "gaussian",
+                "binom",
+                "binomial",
+            ],
             "savitzky-golay": [
                 "savitzky-golay",
                 "savitzky_golay",

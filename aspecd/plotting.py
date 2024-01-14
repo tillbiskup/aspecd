@@ -4787,7 +4787,7 @@ class DrawingProperties(aspecd.utils.Properties):
             getattr(drawing, "".join(["set_", prop]))(getattr(self, prop))
         else:
             logger.debug(
-                '"%s" has no setter for attribute "%s", hence not ' "set",
+                '"%s" has no setter for attribute "%s", hence not set',
                 drawing.__class__,
                 prop,
             )

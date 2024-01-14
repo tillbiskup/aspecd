@@ -804,7 +804,7 @@ class FamilyOfCurves(Model):
     def __init__(self):
         super().__init__()
         self.description = (
-            "Family of curves for a model with one parameter " "varied"
+            "Family of curves for a model with one parameter varied"
         )
         self.model = None
         self.vary = {}

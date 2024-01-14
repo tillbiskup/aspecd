@@ -21,6 +21,13 @@ pylint:
     max-attributes: 16
     max-module-lines: 5000
 
+pycodestyle:
+  disable:
+    - E203
+    - W503
+  enable:
+    - W504
+
 pyroma:
   run: true
 
