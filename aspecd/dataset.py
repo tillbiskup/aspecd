@@ -258,14 +258,17 @@ class Dataset(aspecd.utils.ToDictMixin):
         self.analyses = []
         self.annotations = []
         self.representations = []
-        self.id = ''  # pylint: disable=invalid-name
-        self.label = ''
+        self.id = ""  # pylint: disable=invalid-name
+        self.label = ""
         self.references = []
         self.tasks = []
         # Package name is used to store the package version in history records
         self._package_name = aspecd.utils.package_name(self)
-        self._include_in_to_dict = ['_origdata', '_package_name',
-                                    '_history_pointer']
+        self._include_in_to_dict = [
+            "_origdata",
+            "_package_name",
+            "_history_pointer",
+        ]
 
     @property
     def package_name(self):
@@ -318,7 +321,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         processing_step.process(self, from_dataset=True)
         history_record = processing_step.create_history_record()
         self.append_history_record(history_record)
-        self._append_task(kind='processing', task=history_record)
+        self._append_task(kind="processing", task=history_record)
         self._handle_not_undoable(processing_step=processing_step)
         return processing_step
 
@@ -373,8 +376,9 @@ class Dataset(aspecd.utils.ToDictMixin):
         """
         if self._at_tip_of_history():
             raise aspecd.exceptions.RedoAlreadyAtLatestChangeError
-        processing_step_record = \
-            self.history[self._history_pointer + 1].processing
+        processing_step_record = self.history[
+            self._history_pointer + 1
+        ].processing
         processing_step = processing_step_record.create_processing_step()
         processing_step.process(self, from_dataset=True)
         self._increment_history_pointer()
@@ -406,10 +410,10 @@ class Dataset(aspecd.utils.ToDictMixin):
         self.history.append(history_record)
         self._increment_history_pointer()
 
-    def _append_task(self, kind='', task=None):
+    def _append_task(self, kind="", task=None):
         task = {
-            'kind': kind,
-            'task': task,
+            "kind": kind,
+            "task": task,
         }
         self.tasks.append(task)
 
@@ -421,7 +425,7 @@ class Dataset(aspecd.utils.ToDictMixin):
 
     def _replay_history(self):
         self.data = self._origdata
-        for history_entry in self.history[:self._history_pointer]:
+        for history_entry in self.history[: self._history_pointer]:
             history_entry.replay(self)
 
     def strip_history(self):
@@ -436,7 +440,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         """
         if not self._has_leading_history():
             return
-        del self.history[self._history_pointer + 1:]
+        del self.history[self._history_pointer + 1 :]
 
     def analyse(self, analysis_step=None):
         """Apply analysis to dataset.
@@ -467,7 +471,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         analysis_step.analyse(self, from_dataset=True)
         history_record = analysis_step.create_history_record()
         self.analyses.append(history_record)
-        self._append_task(kind='analysis', task=history_record)
+        self._append_task(kind="analysis", task=history_record)
         return analysis_step
 
     def analyze(self, analysis_step=None):
@@ -505,7 +509,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         annotation_.annotate(self, from_dataset=True)
         history_record = annotation_.create_history_record()
         self.annotations.append(history_record)
-        self._append_task(kind='annotation', task=history_record)
+        self._append_task(kind="annotation", task=history_record)
 
     def delete_annotation(self, index=None):
         """Remove annotation record from dataset.
@@ -554,7 +558,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         plotter.plot(dataset=self, from_dataset=True)
         plot_record = plotter.create_history_record()
         self.representations.append(plot_record)
-        self._append_task(kind='representation', task=plot_record)
+        self._append_task(kind="representation", task=plot_record)
         return plotter
 
     def tabulate(self, table=None):
@@ -584,11 +588,11 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         """
         if not table:
-            raise TypeError('tabulate needs a Table object')
+            raise TypeError("tabulate needs a Table object")
         table.tabulate(dataset=self, from_dataset=True)
         table_record = table.create_history_record()
         self.representations.append(table_record)
-        self._append_task(kind='representation', task=table_record)
+        self._append_task(kind="representation", task=table_record)
         return table
 
     def delete_representation(self, index=None):
@@ -648,7 +652,9 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         """
         if not importer:
-            raise aspecd.exceptions.MissingImporterError("No importer provided")
+            raise aspecd.exceptions.MissingImporterError(
+                "No importer provided"
+            )
         importer.import_into(self)
         self._origdata = copy.deepcopy(self.data)
 
@@ -675,10 +681,12 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         """
         if not exporter:
-            raise aspecd.exceptions.MissingExporterError("No exporter provided")
+            raise aspecd.exceptions.MissingExporterError(
+                "No exporter provided"
+            )
         exporter.export_from(self)
         exporter_record = exporter.create_history_record()
-        self._append_task(kind='export', task=exporter_record)
+        self._append_task(kind="export", task=exporter_record)
 
     def add_reference(self, dataset=None):
         """
@@ -755,8 +763,7 @@ class Dataset(aspecd.utils.ToDictMixin):
                 attribute = getattr(self, key)
                 if key == "history":
                     for element in dict_[key]:
-                        record = \
-                            aspecd.history.ProcessingHistoryRecord()
+                        record = aspecd.history.ProcessingHistoryRecord()
                         record.from_dict(element)
                         self.history.append(record)
                 elif key == "analyses":
@@ -766,8 +773,7 @@ class Dataset(aspecd.utils.ToDictMixin):
                         self.analyses.append(record)
                 elif key == "annotations":
                     for element in dict_[key]:
-                        record = \
-                            aspecd.history.AnnotationHistoryRecord()
+                        record = aspecd.history.AnnotationHistoryRecord()
                         record.from_dict(element)
                         self.annotations.append(record)
                 elif key == "representations":
@@ -783,21 +789,28 @@ class Dataset(aspecd.utils.ToDictMixin):
                 elif key == "tasks":
                     for element in dict_[key]:
                         if element["kind"] == "representation":
-                            record_class_name = \
-                                'aspecd.history.PlotHistoryRecord'
+                            record_class_name = (
+                                "aspecd.history.PlotHistoryRecord"
+                            )
                         elif element["kind"] == "annotation":
-                            record_class_name = \
-                                'aspecd.history.AnnotationHistoryRecord'
+                            record_class_name = (
+                                "aspecd.history.AnnotationHistoryRecord"
+                            )
                         else:
-                            record_class_name = 'aspecd.history.' \
-                                + element["kind"].capitalize() + 'HistoryRecord'
+                            record_class_name = (
+                                "aspecd.history."
+                                + element["kind"].capitalize()
+                                + "HistoryRecord"
+                            )
                         record = aspecd.utils.object_from_class_name(
-                            record_class_name)
+                            record_class_name
+                        )
                         # noinspection PyUnresolvedReferences
                         record.from_dict(element["task"])
-                        self.tasks.append({'kind': element["kind"],
-                                           'task': record})
-                elif hasattr(attribute, 'from_dict'):
+                        self.tasks.append(
+                            {"kind": element["kind"], "task": record}
+                        )
+                elif hasattr(attribute, "from_dict"):
                     attribute.from_dict(dict_[key])
                 else:
                     setattr(self, key, dict_[key])
@@ -888,8 +901,8 @@ class DatasetReference(aspecd.utils.ToDictMixin):
 
     def __init__(self):
         super().__init__()
-        self.type = ''
-        self.id = ''  # pylint: disable=invalid-name
+        self.type = ""
+        self.id = ""  # pylint: disable=invalid-name
         self.history = []
 
     def from_dataset(self, dataset=None):
@@ -987,7 +1000,7 @@ class DatasetFactory:
     def __init__(self):
         self.importer_factory = None
 
-    def get_dataset(self, source='', importer='', parameters=None):
+    def get_dataset(self, source="", importer="", parameters=None):
         """
         Return dataset object for dataset specified by its source.
 
@@ -1034,21 +1047,23 @@ class DatasetFactory:
         """
         if not source:
             raise aspecd.exceptions.MissingSourceError(
-                'A source is required to return a dataset')
+                "A source is required to return a dataset"
+            )
         if not self.importer_factory:
             raise aspecd.exceptions.MissingImporterFactoryError(
-                'An ImporterFactory is required to return a dataset')
+                "An ImporterFactory is required to return a dataset"
+            )
         dataset_ = self._create_dataset(source=source)
-        importer = self.importer_factory.get_importer(source=source,
-                                                      importer=importer,
-                                                      parameters=parameters)
+        importer = self.importer_factory.get_importer(
+            source=source, importer=importer, parameters=parameters
+        )
         dataset_.import_from(importer)
         return dataset_
 
     # noinspection PyUnusedLocal
     # pylint: disable=unused-argument
     @staticmethod
-    def _create_dataset(source=''):
+    def _create_dataset(source=""):
         """
         Non-public method creating the actual (empty) dataset object.
 
@@ -1122,7 +1137,7 @@ class Data(aspecd.utils.ToDictMixin):
         else:
             self.axes = axes
         self.calculated = calculated
-        self._include_in_to_dict = ['data', 'axes']
+        self._include_in_to_dict = ["data", "axes"]
 
     @property
     def data(self):
@@ -1196,8 +1211,9 @@ class Data(aspecd.utils.ToDictMixin):
             self._axes.append(Axis())
         for index in range(self.data.ndim):
             if len(self.axes[index].values) != data_shape[index]:
-                self.axes[index].values = np.arange(data_shape[index],
-                                                    dtype=np.float64)
+                self.axes[index].values = np.arange(
+                    data_shape[index], dtype=np.float64
+                )
 
     def _check_axes(self):
         if len(self._axes) > self.data.ndim + 1:
@@ -1278,11 +1294,11 @@ class Axis(aspecd.utils.ToDictMixin):
         self._values = np.zeros(0)
         self._index = []
         self._equidistant = None
-        self.quantity = ''
-        self.symbol = ''
-        self.unit = ''
-        self.label = ''
-        self._include_in_to_dict = ['values', 'index']
+        self.quantity = ""
+        self.symbol = ""
+        self.unit = ""
+        self.label = ""
+        self._include_in_to_dict = ["values", "index"]
 
     @property
     def values(self):
@@ -1308,12 +1324,16 @@ class Axis(aspecd.utils.ToDictMixin):
     def values(self, values):
         if not isinstance(values, type(self._values)):
             values = np.asarray(values)
-            if not isinstance(values, type(self._values)) or \
-                    values.dtype != self._values.dtype:
-                raise ValueError(f'Wrong type: expected {self._values.dtype}, '
-                                 f'got {values.dtype}')
+            if (
+                not isinstance(values, type(self._values))
+                or values.dtype != self._values.dtype
+            ):
+                raise ValueError(
+                    f"Wrong type: expected {self._values.dtype}, "
+                    f"got {values.dtype}"
+                )
         if values.ndim > 1:
-            raise IndexError('Values need to be one-dimensional')
+            raise IndexError("Values need to be one-dimensional")
         self._values = values
         self._set_equidistant_property()
         self._set_index()
@@ -1346,11 +1366,11 @@ class Axis(aspecd.utils.ToDictMixin):
     @index.setter
     def index(self, index):
         if len(index) != len(self._values):
-            raise IndexError('index and values need to be of same length')
+            raise IndexError("index and values need to be of same length")
         self._index = index
 
     def _set_index(self):
-        self._index = ['' for _ in self.values]
+        self._index = ["" for _ in self.values]
 
     @property
     def equidistant(self):

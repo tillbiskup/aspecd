@@ -49,7 +49,7 @@ class SystemInfo(aspecd.utils.ToDictMixin):
 
     """
 
-    def __init__(self, package=''):
+    def __init__(self, package=""):
         super().__init__()
         self.python = {}
         self.packages = {}
@@ -68,11 +68,16 @@ class SystemInfo(aspecd.utils.ToDictMixin):
         self.user["login"] = getpass.getuser()
 
     def _add_requirements_to_packages(self, package="aspecd"):
-        requirements = [requirement.name for requirement in
-                        pkg_resources.get_distribution(package).requires()]
+        requirements = [
+            requirement.name
+            for requirement in pkg_resources.get_distribution(
+                package
+            ).requires()
+        ]
         for requirement in requirements:
-            self.packages[requirement] = \
-                pkg_resources.get_distribution(requirement).version
+            self.packages[requirement] = pkg_resources.get_distribution(
+                requirement
+            ).version
 
     def from_dict(self, dict_=None):
         """

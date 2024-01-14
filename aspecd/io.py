@@ -403,7 +403,8 @@ class DatasetImporter:
                 self.dataset.import_from(self)
             else:
                 raise aspecd.exceptions.MissingDatasetError(
-                    "No dataset provided")
+                    "No dataset provided"
+                )
         else:
             self.dataset = dataset
         self._import()
@@ -478,7 +479,7 @@ class DatasetImporterFactory:
     def __init__(self):
         self.source = None
 
-    def get_importer(self, source='', importer='', parameters=None):
+    def get_importer(self, source="", importer="", parameters=None):
         """
         Return importer object for dataset specified by its source.
 
@@ -532,16 +533,19 @@ class DatasetImporterFactory:
         """
         if not source:
             raise aspecd.exceptions.MissingSourceError(
-                'A source is required to return an appropriate importer')
+                "A source is required to return an appropriate importer"
+            )
         self.source = source
         if not self.source.startswith(os.pathsep):
-            self.source = os.path.join(os.path.abspath(os.curdir), self.source)
+            self.source = os.path.join(
+                os.path.abspath(os.curdir), self.source
+            )
         if importer:
             package_name = aspecd.utils.package_name(self)
             # Currently untested
-            if not package_name.endswith('io'):
-                package_name = '.'.join([package_name, 'io'])
-            full_class_name = '.'.join([package_name, importer])
+            if not package_name.endswith("io"):
+                package_name = ".".join([package_name, "io"])
+            full_class_name = ".".join([package_name, importer])
             importer = aspecd.utils.object_from_class_name(full_class_name)
             importer.source = self.source
         if not importer:
@@ -574,14 +578,16 @@ class DatasetImporterFactory:
 
     def _get_aspecd_importer(self):
         _, file_extension = os.path.splitext(self.source)
-        if file_extension == '.adf':
+        if file_extension == ".adf":
             return AdfImporter(source=self.source)
-        if file_extension == '.asdf':
+        if file_extension == ".asdf":
             return AsdfImporter(source=self.source)
-        if file_extension == '.txt':
+        if file_extension == ".txt":
             return TxtImporter(source=self.source)
-        logger.warning('No importer found. Using default importer. This may '
-                       'result in downstream problems.')
+        logger.warning(
+            "No importer found. Using default importer. This may "
+            "result in downstream problems."
+        )
         return DatasetImporter(source=self.source)
 
 
@@ -627,7 +633,7 @@ class DatasetExporter:
     def __init__(self, target=None):
         self.target = target
         self.dataset = None
-        self.comment = ''
+        self.comment = ""
 
     def export_from(self, dataset=None):
         """Perform the actual export from the given dataset.
@@ -662,7 +668,8 @@ class DatasetExporter:
                 self.dataset.export_to(self)
             else:
                 raise aspecd.exceptions.MissingDatasetError(
-                    "No dataset provided")
+                    "No dataset provided"
+                )
         else:
             self.dataset = dataset
         self._export()
@@ -699,7 +706,8 @@ class DatasetExporter:
 
         """
         history_record = aspecd.history.DatasetExporterHistoryRecord(
-            package=self.dataset.package_name, exporter=self)
+            package=self.dataset.package_name, exporter=self
+        )
         return history_record
 
 
@@ -744,7 +752,7 @@ class RecipeImporter:
 
     """
 
-    def __init__(self, source=''):
+    def __init__(self, source=""):
         self.source = source
         self.recipe = None
 
@@ -780,7 +788,9 @@ class RecipeImporter:
             if self.recipe:
                 self.recipe.import_from(self)
             else:
-                raise aspecd.exceptions.MissingRecipeError("No recipe provided")
+                raise aspecd.exceptions.MissingRecipeError(
+                    "No recipe provided"
+                )
         else:
             self.recipe = recipe
         self.recipe.filename = self.source
@@ -832,7 +842,7 @@ class RecipeExporter:
 
     """
 
-    def __init__(self, target=''):
+    def __init__(self, target=""):
         self.target = target
         self.recipe = None
 
@@ -868,7 +878,9 @@ class RecipeExporter:
             if self.recipe:
                 self.recipe.export_to(self)
             else:
-                raise aspecd.exceptions.MissingRecipeError("No recipe provided")
+                raise aspecd.exceptions.MissingRecipeError(
+                    "No recipe provided"
+                )
         else:
             self.recipe = recipe
         self._export()
@@ -906,8 +918,8 @@ class RecipeYamlImporter(RecipeImporter):
 
     """
 
-    def __init__(self, source=''):
-        self.recipe_version = ''
+    def __init__(self, source=""):
+        self.recipe_version = ""
         self._recipe_dict = None
         super().__init__(source=source)
 
@@ -927,20 +939,26 @@ class RecipeYamlImporter(RecipeImporter):
         self._map_recipe_structure()
 
     def _get_recipe_version(self):
-        self.recipe_version = self.recipe.format['version']
-        if 'format' in self._recipe_dict \
-                and 'version' in self._recipe_dict['format']:
-            self.recipe_version = self._recipe_dict['format']['version']
-        deprecated_keys = ['default_package', 'autosave_plots',
-                           'output_directory', 'datasets_source_directory']
+        self.recipe_version = self.recipe.format["version"]
+        if (
+            "format" in self._recipe_dict
+            and "version" in self._recipe_dict["format"]
+        ):
+            self.recipe_version = self._recipe_dict["format"]["version"]
+        deprecated_keys = [
+            "default_package",
+            "autosave_plots",
+            "output_directory",
+            "datasets_source_directory",
+        ]
         if any(key in self._recipe_dict for key in deprecated_keys):
-            self.recipe_version = '0.1'
+            self.recipe_version = "0.1"
 
     def _map_recipe_structure(self):
         mapper = aspecd.metadata.MetadataMapper()
         mapper.version = self.recipe_version
         mapper.metadata = self._recipe_dict
-        mapper.recipe_filename = 'recipe_mapper.yaml'
+        mapper.recipe_filename = "recipe_mapper.yaml"
         mapper.map()
         self._recipe_dict = mapper.metadata
 
@@ -959,7 +977,7 @@ class RecipeYamlExporter(RecipeExporter):
 
     """
 
-    def __init__(self, target=''):
+    def __init__(self, target=""):
         super().__init__(target=target)
 
     def _export(self):
@@ -998,15 +1016,15 @@ class AdfExporter(DatasetExporter):
 
     def __init__(self, target=None):
         super().__init__(target=target)
-        self.extension = '.adf'
+        self.extension = ".adf"
         self._filenames = {
-            'dataset': 'dataset.yaml',
-            'version': 'VERSION',
-            'readme': 'README',
+            "dataset": "dataset.yaml",
+            "version": "VERSION",
+            "readme": "README",
         }
-        self._bin_dir = 'binaryData'
-        self._tempdir_name = ''
-        self._version = '1.0.0'
+        self._bin_dir = "binaryData"
+        self._tempdir_name = ""
+        self._version = "1.0.0"
 
     def _export(self):
         if not self.target:
@@ -1017,19 +1035,23 @@ class AdfExporter(DatasetExporter):
             self._create_zip_archive()
 
     def _create_zip_archive(self):
-        with zipfile.ZipFile(self.target + self.extension, 'w') as zipped_file:
+        with zipfile.ZipFile(
+            self.target + self.extension, "w"
+        ) as zipped_file:
             for filename in self._filenames.values():
                 zipped_file.write(
                     filename=os.path.join(self._tempdir_name, filename),
-                    arcname=filename)
+                    arcname=filename,
+                )
             bin_dir_path = os.path.join(self._tempdir_name, self._bin_dir)
             zipped_file.write(
-                filename=os.path.join(bin_dir_path),
-                arcname=self._bin_dir)
+                filename=os.path.join(bin_dir_path), arcname=self._bin_dir
+            )
             for filename in os.listdir(bin_dir_path):
                 zipped_file.write(
                     filename=os.path.join(bin_dir_path, filename),
-                    arcname=os.path.join(self._bin_dir, filename))
+                    arcname=os.path.join(self._bin_dir, filename),
+                )
 
     def _create_files(self):
         self._create_dataset_yaml()
@@ -1043,13 +1065,18 @@ class AdfExporter(DatasetExporter):
         yaml.binary_directory = bin_dir_path
         yaml.dict = self.dataset.to_dict()
         yaml.serialise_numpy_arrays()
-        yaml.write_to(filename=os.path.join(self._tempdir_name,
-                                            self._filenames["dataset"]))
+        yaml.write_to(
+            filename=os.path.join(
+                self._tempdir_name, self._filenames["dataset"]
+            )
+        )
 
     def _create_version_file(self):
-        with open(os.path.join(self._tempdir_name,
-                               self._filenames["version"]),
-                  'w+', encoding="utf8") as file:
+        with open(
+            os.path.join(self._tempdir_name, self._filenames["version"]),
+            "w+",
+            encoding="utf8",
+        ) as file:
             file.write(self._version)
 
     def _create_readme_file(self):
@@ -1084,9 +1111,11 @@ class AdfExporter(DatasetExporter):
             "ASpecD package documentation:\n\n"
             "https://docs.aspecd.de/adf.html\n"
         )
-        with open(os.path.join(self._tempdir_name,
-                               self._filenames["readme"]),
-                  'w+', encoding="utf8") as file:
+        with open(
+            os.path.join(self._tempdir_name, self._filenames["readme"]),
+            "w+",
+            encoding="utf8",
+        ) as file:
             file.write(readme_contents)
 
 
@@ -1101,19 +1130,21 @@ class AdfImporter(DatasetImporter):
 
     def __init__(self, source=None):
         super().__init__(source=source)
-        self.extension = '.adf'
-        self._dataset_yaml_filename = 'dataset.yaml'
-        self._bin_dir = 'binaryData'
+        self.extension = ".adf"
+        self._dataset_yaml_filename = "dataset.yaml"
+        self._bin_dir = "binaryData"
 
     def _import(self):
         with tempfile.TemporaryDirectory() as tempdir:
-            with zipfile.ZipFile(self.source + self.extension, 'r') as \
-                    zipped_file:
+            with zipfile.ZipFile(
+                self.source + self.extension, "r"
+            ) as zipped_file:
                 zipped_file.extractall(path=tempdir)
                 yaml = aspecd.utils.Yaml()
                 yaml.binary_directory = os.path.join(tempdir, self._bin_dir)
-                yaml.read_from(os.path.join(tempdir,
-                                            self._dataset_yaml_filename))
+                yaml.read_from(
+                    os.path.join(tempdir, self._dataset_yaml_filename)
+                )
                 yaml.deserialise_numpy_arrays()
         self.dataset.from_dict(yaml.dict)
 
@@ -1130,7 +1161,7 @@ class AsdfExporter(DatasetExporter):
 
     def __init__(self, target=None):
         super().__init__(target=target)
-        self.extension = '.asdf'
+        self.extension = ".asdf"
 
     def _export(self):
         if not self.target:
@@ -1154,11 +1185,12 @@ class AsdfImporter(DatasetImporter):
 
     def __init__(self, source=None):
         super().__init__(source=source)
-        self.extension = '.asdf'
+        self.extension = ".asdf"
 
     def _import(self):
-        with asdf.open(self.source + self.extension, lazy_load=False,
-                       copy_arrays=True) as asdf_file:
+        with asdf.open(
+            self.source + self.extension, lazy_load=False, copy_arrays=True
+        ) as asdf_file:
             dataset_dict = asdf_file.tree
             dataset_dict["history"] = dataset_dict.pop("dataset_history")
             self.dataset.from_dict(dataset_dict)
@@ -1231,7 +1263,7 @@ class TxtImporter(DatasetImporter):
 
     def __init__(self, source=None):
         super().__init__(source=source)
-        self.extension = '.txt'
+        self.extension = ".txt"
         self.parameters["skiprows"] = 0
         self.parameters["delimiter"] = None
         self.parameters["comments"] = "#"
@@ -1245,7 +1277,7 @@ class TxtImporter(DatasetImporter):
         if separator:
             with open(self.source, encoding="utf8") as file:
                 contents = file.read()
-            contents = contents.replace(separator, '.')
+            contents = contents.replace(separator, ".")
             # noinspection PyTypeChecker
             data = np.loadtxt(io.StringIO(contents), **self.parameters)
         else:
@@ -1317,15 +1349,16 @@ class TxtExporter(DatasetExporter):
 
     def __init__(self, target=None):
         super().__init__(target=target)
-        self.extension = '.txt'
+        self.extension = ".txt"
 
     def _export(self):
         if not self.target:
             raise aspecd.exceptions.MissingTargetError
 
         if len(self.dataset.data.axes) == 2:
-            data = np.asarray([self.dataset.data.axes[0].values,
-                               self.dataset.data.data]).T
+            data = np.asarray(
+                [self.dataset.data.axes[0].values, self.dataset.data.data]
+            ).T
         else:
             data = np.zeros(np.asarray(self.dataset.data.data.shape) + 1)
             data[1:, 0] = self.dataset.data.axes[0].values

@@ -360,12 +360,16 @@ class ProcessingStep(aspecd.utils.ToDictMixin):
         self.name = aspecd.utils.full_class_name(self)
         self.parameters = {}
         self.info = {}
-        self.description = 'Abstract processing step'
-        self.comment = ''
+        self.description = "Abstract processing step"
+        self.comment = ""
         self.references = []
-        self.__kind__ = 'processing'
-        self._exclude_from_to_dict = \
-            ['undoable', 'name', 'description', 'references']
+        self.__kind__ = "processing"
+        self._exclude_from_to_dict = [
+            "undoable",
+            "name",
+            "description",
+            "references",
+        ]
 
     def process(self):
         """Perform the actual processing step.
@@ -508,7 +512,7 @@ class SingleProcessingStep(ProcessingStep):
 
     def __init__(self):
         super().__init__()
-        self.description = 'Abstract singleprocessing step'
+        self.description = "Abstract singleprocessing step"
         self.dataset = None
 
     def to_dict(self, remove_empty=False):
@@ -536,7 +540,7 @@ class SingleProcessingStep(ProcessingStep):
         """
         dict_ = super().to_dict(remove_empty=remove_empty)
         # noinspection PyUnresolvedReferences
-        dict_.pop('dataset')
+        dict_.pop("dataset")
         return dict_
 
     def process(self, dataset=None, from_dataset=False):
@@ -606,9 +610,13 @@ class SingleProcessingStep(ProcessingStep):
 
     def _check_applicability(self):
         if not self.applicable(self.dataset):
-            message = f"{self.name} not applicable to dataset with id " \
-                      f"{self.dataset.id}"
-            raise aspecd.exceptions.NotApplicableToDatasetError(message=message)
+            message = (
+                f"{self.name} not applicable to dataset with id "
+                f"{self.dataset.id}"
+            )
+            raise aspecd.exceptions.NotApplicableToDatasetError(
+                message=message
+            )
 
     def create_history_record(self):
         """
@@ -626,7 +634,8 @@ class SingleProcessingStep(ProcessingStep):
 
         """
         history_record = aspecd.history.ProcessingHistoryRecord(
-            package=self.dataset.package_name, processing_step=self)
+            package=self.dataset.package_name, processing_step=self
+        )
         return history_record
 
 
@@ -686,10 +695,10 @@ class MultiProcessingStep(ProcessingStep):
 
     def __init__(self):
         super().__init__()
-        self.description = 'Abstract multiprocessing step'
+        self.description = "Abstract multiprocessing step"
         self.datasets = []
-        self.__kind__ = 'multiprocessing'
-        self._exclude_from_to_dict.extend(['datasets'])
+        self.__kind__ = "multiprocessing"
+        self._exclude_from_to_dict.extend(["datasets"])
 
     def process(self):
         """Perform the actual processing step.
@@ -721,10 +730,13 @@ class MultiProcessingStep(ProcessingStep):
     def _check_applicability(self):
         for dataset in self.datasets:
             if not self.applicable(dataset):
-                message = f"{self.name} not applicable to dataset with id " \
-                          f"{dataset.id}"
+                message = (
+                    f"{self.name} not applicable to dataset with id "
+                    f"{dataset.id}"
+                )
                 raise aspecd.exceptions.NotApplicableToDatasetError(
-                    message=message)
+                    message=message
+                )
 
     def create_history_record(self):
         """
@@ -742,7 +754,8 @@ class MultiProcessingStep(ProcessingStep):
 
         """
         history_record = aspecd.history.ProcessingHistoryRecord(
-            package=self.datasets[0].package_name, processing_step=self)
+            package=self.datasets[0].package_name, processing_step=self
+        )
         return history_record
 
 
@@ -940,8 +953,8 @@ class Normalisation(SingleProcessingStep):
     def __init__(self):
         super().__init__()
         self.undoable = True
-        self.description = 'Normalise data'
-        self.parameters["kind"] = 'maximum'
+        self.description = "Normalise data"
+        self.parameters["kind"] = "maximum"
         self.parameters["range"] = None
         self.parameters["range_unit"] = "index"
         self.parameters["noise_range"] = None
@@ -953,36 +966,44 @@ class Normalisation(SingleProcessingStep):
         if self.parameters["range"]:
             range_extraction = RangeExtraction()
             range_extraction.parameters["range"] = self.parameters["range"]
-            range_extraction.parameters["unit"] = self.parameters["range_unit"]
+            range_extraction.parameters["unit"] = self.parameters[
+                "range_unit"
+            ]
             dataset_copy = copy.deepcopy(self.dataset)
             dataset_copy.process(range_extraction)
             data = dataset_copy.data.data
         else:
             data = self.dataset.data.data
         if "max" in self.parameters["kind"].lower():
-            self.dataset.data.data /= (data.max() - self._noise_amplitude / 2)
-            self.dataset.data.axes[-1].unit = ''
+            self.dataset.data.data /= data.max() - self._noise_amplitude / 2
+            self.dataset.data.axes[-1].unit = ""
         elif "min" in self.parameters["kind"].lower():
-            self.dataset.data.data /= (abs(data.min())
-                                       - self._noise_amplitude / 2)
-            self.dataset.data.axes[-1].unit = ''
+            self.dataset.data.data /= (
+                abs(data.min()) - self._noise_amplitude / 2
+            )
+            self.dataset.data.axes[-1].unit = ""
         elif "amp" in self.parameters["kind"].lower():
-            self.dataset.data.data /= ((data.max() - data.min()) -
-                                       self._noise_amplitude)
-            self.dataset.data.axes[-1].unit = ''
+            self.dataset.data.data /= (
+                data.max() - data.min()
+            ) - self._noise_amplitude
+            self.dataset.data.axes[-1].unit = ""
         elif "area" in self.parameters["kind"].lower():
             self.dataset.data.data /= np.sum(np.abs(data))
-            self.dataset.data.axes[-1].unit = ''
+            self.dataset.data.axes[-1].unit = ""
         else:
-            raise ValueError(f'Kind {self.parameters["kind"]} not recognised.')
+            raise ValueError(
+                f'Kind {self.parameters["kind"]} not recognised.'
+            )
 
     def _determine_noise_amplitude(self):
         if self.parameters["noise_range"]:
             range_extraction = RangeExtraction()
-            range_extraction.parameters["unit"] = \
-                self.parameters["noise_range_unit"]
-            range_extraction.parameters["range"] = \
-                self.parameters["noise_range"]
+            range_extraction.parameters["unit"] = self.parameters[
+                "noise_range_unit"
+            ]
+            range_extraction.parameters["range"] = self.parameters[
+                "noise_range"
+            ]
             dataset_copy = copy.deepcopy(self.dataset)
             dataset_copy.process(range_extraction)
             data_range = dataset_copy.data.data
@@ -1023,12 +1044,13 @@ class Integration(SingleProcessingStep):
     def __init__(self):
         super().__init__()
         self.undoable = True
-        self.description = 'Integrate data'
+        self.description = "Integrate data"
 
     def _perform_task(self):
         dim = np.ndim(self.dataset.data.data)
-        self.dataset.data.data = \
-            np.cumsum(self.dataset.data.data, axis=dim - 1)
+        self.dataset.data.data = np.cumsum(
+            self.dataset.data.data, axis=dim - 1
+        )
 
 
 class Differentiation(SingleProcessingStep):
@@ -1069,7 +1091,7 @@ class Differentiation(SingleProcessingStep):
     def __init__(self):
         super().__init__()
         self.undoable = True
-        self.description = 'Differentiate data'
+        self.description = "Differentiate data"
 
     def _perform_task(self):
         if self.dataset.data.data.ndim == 1:
@@ -1135,36 +1157,39 @@ class ScalarAlgebra(SingleProcessingStep):
     def __init__(self):
         super().__init__()
         self.undoable = True
-        self.description = 'Perform scalar algebra on one dataset.'
-        self.parameters['kind'] = None
-        self.parameters['value'] = 1.0
+        self.description = "Perform scalar algebra on one dataset."
+        self.parameters["kind"] = None
+        self.parameters["value"] = 1.0
         self._kinds = {
-            'plus': operator.add,
-            'add': operator.add,
-            '+': operator.add,
-            'minus': operator.sub,
-            'subtract': operator.sub,
-            '-': operator.sub,
-            'times': operator.mul,
-            'multiply': operator.mul,
-            '*': operator.mul,
-            'by': operator.truediv,
-            'divide': operator.truediv,
-            '/': operator.truediv
+            "plus": operator.add,
+            "add": operator.add,
+            "+": operator.add,
+            "minus": operator.sub,
+            "subtract": operator.sub,
+            "-": operator.sub,
+            "times": operator.mul,
+            "multiply": operator.mul,
+            "*": operator.mul,
+            "by": operator.truediv,
+            "divide": operator.truediv,
+            "/": operator.truediv,
         }
 
     def _sanitise_parameters(self):
-        if not self.parameters['kind']:
-            raise ValueError('No kind of scalar operation given')
-        if self.parameters['kind'].lower() not in self._kinds:
+        if not self.parameters["kind"]:
+            raise ValueError("No kind of scalar operation given")
+        if self.parameters["kind"].lower() not in self._kinds:
             # pylint: disable=consider-using-f-string
-            raise ValueError('Scalar operation "%s" not understood'
-                             % self.parameters['kind'])
+            raise ValueError(
+                'Scalar operation "%s" not understood'
+                % self.parameters["kind"]
+            )
 
     def _perform_task(self):
-        operator_ = self._kinds[self.parameters['kind'].lower()]
-        self.dataset.data.data = operator_(self.dataset.data.data,
-                                           self.parameters['value'])
+        operator_ = self._kinds[self.parameters["kind"].lower()]
+        self.dataset.data.data = operator_(
+            self.dataset.data.data, self.parameters["value"]
+        )
 
 
 class Projection(SingleProcessingStep):
@@ -1237,9 +1262,10 @@ class Projection(SingleProcessingStep):
     def __init__(self):
         super().__init__()
         self.undoable = True
-        self.description = \
-            'Project data, i.e. reduce dimensions along one axis.'
-        self.parameters['axis'] = 0
+        self.description = (
+            "Project data, i.e. reduce dimensions along one axis."
+        )
+        self.parameters["axis"] = 0
 
     @staticmethod
     def applicable(dataset):
@@ -1263,12 +1289,13 @@ class Projection(SingleProcessingStep):
         return len(dataset.data.axes) > 2
 
     def _perform_task(self):
-        self.dataset.data.data = np.average(self.dataset.data.data,
-                                            axis=self.parameters['axis'])
-        del self.dataset.data.axes[self.parameters['axis']]
+        self.dataset.data.data = np.average(
+            self.dataset.data.data, axis=self.parameters["axis"]
+        )
+        del self.dataset.data.axes[self.parameters["axis"]]
 
     def _sanitise_parameters(self):
-        if self.parameters['axis'] > self.dataset.data.data.ndim - 1:
+        if self.parameters["axis"] > self.dataset.data.data.ndim - 1:
             raise IndexError(f"Axis {self.parameters['axis']} out of bounds")
 
 
@@ -1433,10 +1460,10 @@ class SliceExtraction(SingleProcessingStep):
     def __init__(self):
         super().__init__()
         self.undoable = True
-        self.description = 'Extract slice from dataset'
-        self.parameters['position'] = None
-        self.parameters['axis'] = 0
-        self.parameters['unit'] = 'index'
+        self.description = "Extract slice from dataset"
+        self.parameters["position"] = None
+        self.parameters["axis"] = 0
+        self.parameters["unit"] = "index"
 
     @staticmethod
     def applicable(dataset):
@@ -1460,22 +1487,31 @@ class SliceExtraction(SingleProcessingStep):
         return len(dataset.data.axes) >= 3
 
     def _sanitise_parameters(self):
-        if not self.parameters['position'] and self.parameters['position'] != 0:
-            raise IndexError('No position provided for slice extraction')
-        self.parameters['position'] = np.atleast_1d(self.parameters['position'])
-        self.parameters['axis'] = np.atleast_1d(self.parameters['axis'])
-        if self.parameters['axis'].size > self.dataset.data.data.ndim - 1:
+        if (
+            not self.parameters["position"]
+            and self.parameters["position"] != 0
+        ):
+            raise IndexError("No position provided for slice extraction")
+        self.parameters["position"] = np.atleast_1d(
+            self.parameters["position"]
+        )
+        self.parameters["axis"] = np.atleast_1d(self.parameters["axis"])
+        if self.parameters["axis"].size > self.dataset.data.data.ndim - 1:
             # pylint: disable=consider-using-f-string
-            raise ValueError("Too many axes (%i) provided for %iD dataset" %
-                             (self.parameters['axis'].size,
-                              self.dataset.data.data.ndim))
-        if self.parameters['axis'].size != self.parameters['position'].size:
-            raise ValueError('Need same number of values for position and axis')
-        for axis in self.parameters['axis']:
+            raise ValueError(
+                "Too many axes (%i) provided for %iD dataset"
+                % (self.parameters["axis"].size, self.dataset.data.data.ndim)
+            )
+        if self.parameters["axis"].size != self.parameters["position"].size:
+            raise ValueError(
+                "Need same number of values for position and axis"
+            )
+        for axis in self.parameters["axis"]:
             if axis > self.dataset.data.data.ndim - 1:
                 # pylint: disable=consider-using-f-string
-                raise IndexError("Axis %i out of bounds" %
-                                 self.parameters['axis'])
+                raise IndexError(
+                    "Axis %i out of bounds" % self.parameters["axis"]
+                )
         self.parameters["unit"] = self.parameters["unit"].lower()
         if self.parameters["unit"] not in ["index", "axis"]:
             raise ValueError("Wrong unit, needs to be either index or axis.")
@@ -1498,8 +1534,9 @@ class SliceExtraction(SingleProcessingStep):
                 if abs(position) > axis_length:
                     out_of_range = True
             else:
-                if position < min(self.dataset.data.axes[axis].values) \
-                        or position > max(self.dataset.data.axes[axis].values):
+                if position < min(
+                    self.dataset.data.axes[axis].values
+                ) or position > max(self.dataset.data.axes[axis].values):
                     out_of_range = True
         return out_of_range
 
@@ -1513,8 +1550,10 @@ class SliceExtraction(SingleProcessingStep):
             if self.parameters["unit"] == "index":
                 slice_ = self.parameters["position"][idx]
             else:
-                slice_ = self._get_index(self.dataset.data.axes[axis].values,
-                                         self.parameters["position"][idx])
+                slice_ = self._get_index(
+                    self.dataset.data.axes[axis].values,
+                    self.parameters["position"][idx],
+                )
             slice_object[axis] = slice_
         return tuple(slice_object)
 
@@ -1523,16 +1562,19 @@ class SliceExtraction(SingleProcessingStep):
         return np.abs(vector - value).argmin()
 
     def _set_dataset_label(self):
-        label = ''
+        label = ""
         for idx, axis in enumerate(self.parameters["axis"]):
             if label:
-                label += ', '
+                label += ", "
             if self.parameters["unit"] == "index":
                 value = self.dataset.data.axes[axis].values[
-                    self.parameters["position"][idx]]
+                    self.parameters["position"][idx]
+                ]
             else:
-                index = self._get_index(self.dataset.data.axes[axis].values,
-                                        self.parameters["position"][idx])
+                index = self._get_index(
+                    self.dataset.data.axes[axis].values,
+                    self.parameters["position"][idx],
+                )
                 value = self.dataset.data.axes[axis].values[index]
             label += f"{value} {self.dataset.data.axes[axis].unit}"
         return label
@@ -1664,11 +1706,11 @@ class SliceRemoval(SingleProcessingStep):
 
     def __init__(self):
         super().__init__()
-        self.description = 'Remove slice from data of dataset'
+        self.description = "Remove slice from data of dataset"
         self.undoable = True
-        self.parameters['position'] = None
-        self.parameters['axis'] = 0
-        self.parameters['unit'] = 'index'
+        self.parameters["position"] = None
+        self.parameters["axis"] = 0
+        self.parameters["unit"] = "index"
 
     @staticmethod
     def applicable(dataset):
@@ -1692,12 +1734,16 @@ class SliceRemoval(SingleProcessingStep):
         return len(dataset.data.axes) >= 3
 
     def _sanitise_parameters(self):
-        if not self.parameters['position'] and self.parameters['position'] != 0:
-            raise IndexError('No position provided for slice extraction')
-        if self.parameters['axis'] > self.dataset.data.data.ndim - 1:
+        if (
+            not self.parameters["position"]
+            and self.parameters["position"] != 0
+        ):
+            raise IndexError("No position provided for slice extraction")
+        if self.parameters["axis"] > self.dataset.data.data.ndim - 1:
             # pylint: disable=consider-using-f-string
-            raise IndexError("Axis %i out of bounds" %
-                             self.parameters['axis'])
+            raise IndexError(
+                "Axis %i out of bounds" % self.parameters["axis"]
+            )
         self.parameters["unit"] = self.parameters["unit"].lower()
         if self.parameters["unit"] not in ["index", "axis"]:
             raise ValueError("Wrong unit, needs to be either index or axis.")
@@ -1706,29 +1752,30 @@ class SliceRemoval(SingleProcessingStep):
 
     def _out_of_range(self):
         out_of_range = False
-        position = self.parameters['position']
-        axis = self.parameters['axis']
+        position = self.parameters["position"]
+        axis = self.parameters["axis"]
         if self.parameters["unit"] == "index":
             axis_length = self.dataset.data.data.shape[axis]
             if abs(position) > axis_length:
                 out_of_range = True
         else:
-            if position < min(self.dataset.data.axes[axis].values) \
-                    or position > max(self.dataset.data.axes[axis].values):
+            if position < min(
+                self.dataset.data.axes[axis].values
+            ) or position > max(self.dataset.data.axes[axis].values):
                 out_of_range = True
         return out_of_range
 
     def _perform_task(self):
-        axis = self.parameters['axis']
+        axis = self.parameters["axis"]
         if self.parameters["unit"] == "index":
             position = self.parameters["position"]
         else:
-            position = self._get_index(self.dataset.data.axes[axis].values,
-                                       self.parameters["position"])
+            position = self._get_index(
+                self.dataset.data.axes[axis].values,
+                self.parameters["position"],
+            )
         self.dataset.data.data = np.delete(
-            self.dataset.data.data,
-            position,
-            axis
+            self.dataset.data.data, position, axis
         )
 
     @staticmethod
@@ -1865,18 +1912,20 @@ class RangeExtraction(SingleProcessingStep):
 
     def __init__(self):
         super().__init__()
-        self.description = 'Extract range from data of dataset'
+        self.description = "Extract range from data of dataset"
         self.undoable = True
         self.parameters["range"] = []
-        self.parameters["unit"] = 'index'
+        self.parameters["unit"] = "index"
 
     def _sanitise_parameters(self):
         if not self.parameters["range"]:
-            raise IndexError('No range provided for range extraction')
+            raise IndexError("No range provided for range extraction")
         self.parameters["range"] = np.atleast_2d(self.parameters["range"])
         if len(self.parameters["range"]) < self.dataset.data.data.ndim:
-            raise IndexError(f'Got only {len(self.parameters["range"])} range '
-                             f'for {self.dataset.data.data.ndim}D data')
+            raise IndexError(
+                f'Got only {len(self.parameters["range"])} range '
+                f"for {self.dataset.data.data.ndim}D data"
+            )
         self.parameters["unit"] = self.parameters["unit"].lower()
         if self.parameters["unit"] not in ["index", "axis", "percentage"]:
             raise ValueError("Wrong unit, needs to be either index or axis.")
@@ -1886,32 +1935,50 @@ class RangeExtraction(SingleProcessingStep):
     def _perform_task(self):
         slice_object = []
         for dim in range(self.dataset.data.data.ndim):
-            if len(self.parameters["range"][dim]) > 2 \
-                    and self.parameters["unit"] == "index":
-                slice_ = slice(self.parameters["range"][dim][0],
-                               self.parameters["range"][dim][1],
-                               self.parameters["range"][dim][2])
+            if (
+                len(self.parameters["range"][dim]) > 2
+                and self.parameters["unit"] == "index"
+            ):
+                slice_ = slice(
+                    self.parameters["range"][dim][0],
+                    self.parameters["range"][dim][1],
+                    self.parameters["range"][dim][2],
+                )
             else:
                 if self.parameters["unit"] == "index":
-                    slice_ = slice(self.parameters["range"][dim][0],
-                                   self.parameters["range"][dim][1])
+                    slice_ = slice(
+                        self.parameters["range"][dim][0],
+                        self.parameters["range"][dim][1],
+                    )
                 elif self.parameters["unit"] == "axis":
-                    start = self._get_index(self.dataset.data.axes[dim].values,
-                                            self.parameters["range"][dim][0])
-                    stop = self._get_index(self.dataset.data.axes[dim].values,
-                                           self.parameters["range"][dim][1])
+                    start = self._get_index(
+                        self.dataset.data.axes[dim].values,
+                        self.parameters["range"][dim][0],
+                    )
+                    stop = self._get_index(
+                        self.dataset.data.axes[dim].values,
+                        self.parameters["range"][dim][1],
+                    )
                     slice_ = slice(start, stop)
                 else:
-                    start = math.ceil(self.dataset.data.axes[dim].values.size
-                                      * self.parameters["range"][dim][0]
-                                      / 100.0)
-                    stop = math.ceil(self.dataset.data.axes[dim].values.size
-                                     * self.parameters["range"][dim][1]
-                                     / 100.0) + 1
+                    start = math.ceil(
+                        self.dataset.data.axes[dim].values.size
+                        * self.parameters["range"][dim][0]
+                        / 100.0
+                    )
+                    stop = (
+                        math.ceil(
+                            self.dataset.data.axes[dim].values.size
+                            * self.parameters["range"][dim][1]
+                            / 100.0
+                        )
+                        + 1
+                    )
                     slice_ = slice(start, stop)
             # Important: Change axes first, then data
-            self.dataset.data.axes[dim].values = \
-                self.dataset.data.axes[dim].values[slice_]
+            self.dataset.data.axes[dim].values = self.dataset.data.axes[
+                dim
+            ].values[slice_]
             slice_object.append(slice_)
         self.dataset.data.data = self.dataset.data.data[tuple(slice_object)]
 
@@ -1920,13 +1987,18 @@ class RangeExtraction(SingleProcessingStep):
         for dim in range(len(self.parameters["range"])):
             for index in self.parameters["range"][dim]:
                 if self.parameters["unit"] == "index":
-                    if abs(index) > self.dataset.data.axes[dim].values.size + 1:
+                    if (
+                        abs(index)
+                        > self.dataset.data.axes[dim].values.size + 1
+                    ):
                         out_of_range = True
                 elif self.parameters["unit"] == "axis":
                     axis_values = self.dataset.data.axes[dim].values
                     for value in self.parameters["range"][dim]:
-                        if value < axis_values.min() \
-                                or value > axis_values.max():
+                        if (
+                            value < axis_values.min()
+                            or value > axis_values.max()
+                        ):
                             out_of_range = True
                 else:
                     for value in self.parameters["range"][dim]:
@@ -2065,12 +2137,12 @@ class BaselineCorrection(SingleProcessingStep):
     def __init__(self):
         super().__init__()
         self.undoable = True
-        self.description = 'Correct baseline of dataset'
-        self.parameters['kind'] = 'polynomial'
-        self.parameters['order'] = 0
-        self.parameters['coefficients'] = []
-        self.parameters['fit_area'] = [10, 10]
-        self.parameters['axis'] = 0
+        self.description = "Correct baseline of dataset"
+        self.parameters["kind"] = "polynomial"
+        self.parameters["order"] = 0
+        self.parameters["coefficients"] = []
+        self.parameters["fit_area"] = [10, 10]
+        self.parameters["axis"] = 0
         self._data_points_left = None
         self._data_points_right = None
         self._axis_values = []
@@ -2098,20 +2170,23 @@ class BaselineCorrection(SingleProcessingStep):
         return len(dataset.data.axes) < 4
 
     def _sanitise_parameters(self):
-        if isinstance(self.parameters['fit_area'], (float, int)):
-            fit_area = self.parameters['fit_area']
-            self.parameters['fit_area'] = [fit_area, fit_area]
-        if isinstance(self.parameters['fit_area'], list) \
-                and len(self.parameters['fit_area']) == 1:
-            fit_area = self.parameters['fit_area'][0]
-            self.parameters['fit_area'] = [fit_area, fit_area]
-        if sum(self.parameters['fit_area']) > 100:
+        if isinstance(self.parameters["fit_area"], (float, int)):
+            fit_area = self.parameters["fit_area"]
+            self.parameters["fit_area"] = [fit_area, fit_area]
+        if (
+            isinstance(self.parameters["fit_area"], list)
+            and len(self.parameters["fit_area"]) == 1
+        ):
+            fit_area = self.parameters["fit_area"][0]
+            self.parameters["fit_area"] = [fit_area, fit_area]
+        if sum(self.parameters["fit_area"]) > 100:
             # pylint: disable=consider-using-f-string,logging-not-lazy
             logger.warning(
                 "Baseline to consider spans over %s %%. It "
-                "has been readjusted to 50 %% on each side." %
-                sum(self.parameters['fit_area']))
-            self.parameters['fit_area'] = [50, 50]
+                "has been readjusted to 50 %% on each side."
+                % sum(self.parameters["fit_area"])
+            )
+            self.parameters["fit_area"] = [50, 50]
 
     def _perform_task(self):
         self._get_fit_range()
@@ -2135,39 +2210,43 @@ class BaselineCorrection(SingleProcessingStep):
 
     def _get_fit_range(self):
         number_of_points = len(self.dataset.data.data)
-        self._data_points_left = \
-            math.ceil(number_of_points
-                      * self.parameters["fit_area"][0] / 100.0)
-        self._data_points_right = \
-            math.ceil(number_of_points
-                      * self.parameters["fit_area"][1] / 100.0)
+        self._data_points_left = math.ceil(
+            number_of_points * self.parameters["fit_area"][0] / 100.0
+        )
+        self._data_points_right = math.ceil(
+            number_of_points * self.parameters["fit_area"][1] / 100.0
+        )
 
     # pylint: disable=invalid-unary-operand-type
     def _get_axis_values(self):
         left_values = right_values = []
         axis = self.parameters["axis"]
         if self._data_points_left:
-            left_values = \
-                self.dataset.data.axes[axis].values[:self._data_points_left]
+            left_values = self.dataset.data.axes[axis].values[
+                : self._data_points_left
+            ]
         if self._data_points_right:
-            right_values = \
-                self.dataset.data.axes[axis].values[-self._data_points_right:]
+            right_values = self.dataset.data.axes[axis].values[
+                -self._data_points_right :
+            ]
         self._axis_values = np.concatenate((left_values, right_values))
 
     def _get_intensity_values(self, data):
         left_values = right_values = []
         if self._data_points_left:
-            left_values = data[:self._data_points_left]
+            left_values = data[: self._data_points_left]
         if self._data_points_right:
-            right_values = data[-self._data_points_right:]
+            right_values = data[-self._data_points_right :]
         self._intensity_values = np.concatenate((left_values, right_values))
 
     # noinspection PyUnresolvedReferences,PyCallingNonCallable
     def _get_values_to_subtract(self):
-        polynomial = np.polynomial.Polynomial.fit(self._axis_values,
-                                                  self._intensity_values,
-                                                  self.parameters['order'])
-        self.parameters['coefficients'] = polynomial.convert().coef
+        polynomial = np.polynomial.Polynomial.fit(
+            self._axis_values,
+            self._intensity_values,
+            self.parameters["order"],
+        )
+        self.parameters["coefficients"] = polynomial.convert().coef
         axis = self.parameters["axis"]
         return polynomial(self.dataset.data.axes[axis].values)
 
@@ -2287,11 +2366,10 @@ class Averaging(SingleProcessingStep):
     def __init__(self):
         super().__init__()
         self.undoable = True
-        self.description = \
-            'Average data over given range along given axis.'
+        self.description = "Average data over given range along given axis."
         self.parameters["range"] = None
-        self.parameters['axis'] = 0
-        self.parameters['unit'] = "index"
+        self.parameters["axis"] = 0
+        self.parameters["unit"] = "index"
 
     @staticmethod
     def applicable(dataset):
@@ -2316,9 +2394,11 @@ class Averaging(SingleProcessingStep):
     def _sanitise_parameters(self):
         if not self.parameters["range"]:
             raise ValueError("No range given in parameters to average over.")
-        if self.parameters['axis'] > self.dataset.data.data.ndim - 1:
+        if self.parameters["axis"] > self.dataset.data.data.ndim - 1:
             # pylint: disable=consider-using-f-string
-            raise IndexError("Axis %i out of bounds" % self.parameters['axis'])
+            raise IndexError(
+                "Axis %i out of bounds" % self.parameters["axis"]
+            )
         self.parameters["unit"] = self.parameters["unit"].lower()
         if self.parameters["unit"] not in ["index", "axis"]:
             raise ValueError("Wrong unit, needs to be either index or axis.")
@@ -2329,34 +2409,40 @@ class Averaging(SingleProcessingStep):
         self.dataset.label = self._set_dataset_label()
         range_ = self._get_range()
         if self.parameters["axis"] == 0:
-            self.dataset.data.data = \
-                np.average(self.dataset.data.data[range_[0]:range_[1], :],
-                           axis=self.parameters["axis"])
+            self.dataset.data.data = np.average(
+                self.dataset.data.data[range_[0] : range_[1], :],
+                axis=self.parameters["axis"],
+            )
         else:
-            self.dataset.data.data = \
-                np.average(self.dataset.data.data[:, range_[0]:range_[1]],
-                           axis=self.parameters["axis"])
-        del self.dataset.data.axes[self.parameters['axis']]
+            self.dataset.data.data = np.average(
+                self.dataset.data.data[:, range_[0] : range_[1]],
+                axis=self.parameters["axis"],
+            )
+        del self.dataset.data.axes[self.parameters["axis"]]
 
     def _out_of_range(self):
         out_of_range = False
         if self.parameters["unit"] == "index":
-            axis_length = self.dataset.data.data.shape[self.parameters["axis"]]
+            axis_length = self.dataset.data.data.shape[
+                self.parameters["axis"]
+            ]
             if abs(self.parameters["range"][0]) > axis_length:
                 out_of_range = True
             elif self.parameters["range"][1] > axis_length:
                 out_of_range = True
         else:
             axis = self.parameters["axis"]
-            if self.parameters["range"][0] < \
-                    min(self.dataset.data.axes[axis].values) \
-                    or self.parameters["range"][0] > \
-                    max(self.dataset.data.axes[axis].values):
+            if self.parameters["range"][0] < min(
+                self.dataset.data.axes[axis].values
+            ) or self.parameters["range"][0] > max(
+                self.dataset.data.axes[axis].values
+            ):
                 out_of_range = True
-            if self.parameters["range"][1] < \
-                    min(self.dataset.data.axes[axis].values) \
-                    or self.parameters["range"][1] > \
-                    max(self.dataset.data.axes[axis].values):
+            if self.parameters["range"][1] < min(
+                self.dataset.data.axes[axis].values
+            ) or self.parameters["range"][1] > max(
+                self.dataset.data.axes[axis].values
+            ):
                 out_of_range = True
         return out_of_range
 
@@ -2368,10 +2454,15 @@ class Averaging(SingleProcessingStep):
         else:
             axis = self.parameters["axis"]
             range_ = [
-                self._get_index(self.dataset.data.axes[axis].values,
-                                self.parameters["range"][0]),
-                self._get_index(self.dataset.data.axes[axis].values,
-                                self.parameters["range"][1]) + 1
+                self._get_index(
+                    self.dataset.data.axes[axis].values,
+                    self.parameters["range"][0],
+                ),
+                self._get_index(
+                    self.dataset.data.axes[axis].values,
+                    self.parameters["range"][1],
+                )
+                + 1,
             ]
         return range_
 
@@ -2382,9 +2473,11 @@ class Averaging(SingleProcessingStep):
     def _set_dataset_label(self):
         range_ = self._get_range()
         range_[1] -= 1
-        values = self.dataset.data.axes[self.parameters["axis"]].values[range_]
+        values = self.dataset.data.axes[self.parameters["axis"]].values[
+            range_
+        ]
         unit = self.dataset.data.axes[self.parameters["axis"]].unit
-        label = f'{values[0]}-{values[1]} {unit}'
+        label = f"{values[0]}-{values[1]} {unit}"
         return label
 
 
@@ -2454,42 +2547,44 @@ class ScalarAxisAlgebra(SingleProcessingStep):
 
     def __init__(self):
         super().__init__()
-        self.description = 'Scalar algebra on the axis of a dataset'
+        self.description = "Scalar algebra on the axis of a dataset"
         self.undoable = True
-        self.parameters['kind'] = None
-        self.parameters['axis'] = 0
-        self.parameters['value'] = None
+        self.parameters["kind"] = None
+        self.parameters["axis"] = 0
+        self.parameters["value"] = None
         self._kinds = {
-            'plus': operator.add,
-            'add': operator.add,
-            '+': operator.add,
-            'minus': operator.sub,
-            'subtract': operator.sub,
-            '-': operator.sub,
-            'times': operator.mul,
-            'multiply': operator.mul,
-            '*': operator.mul,
-            'by': operator.truediv,
-            'divide': operator.truediv,
-            '/': operator.truediv,
-            'power': operator.pow,
-            'pow': operator.pow,
-            '**': operator.pow,
+            "plus": operator.add,
+            "add": operator.add,
+            "+": operator.add,
+            "minus": operator.sub,
+            "subtract": operator.sub,
+            "-": operator.sub,
+            "times": operator.mul,
+            "multiply": operator.mul,
+            "*": operator.mul,
+            "by": operator.truediv,
+            "divide": operator.truediv,
+            "/": operator.truediv,
+            "power": operator.pow,
+            "pow": operator.pow,
+            "**": operator.pow,
         }
 
     def _sanitise_parameters(self):
-        if not self.parameters['kind']:
-            raise ValueError('No kind of scalar operation given')
-        if self.parameters['kind'].lower() not in self._kinds:
+        if not self.parameters["kind"]:
+            raise ValueError("No kind of scalar operation given")
+        if self.parameters["kind"].lower() not in self._kinds:
             # pylint: disable=consider-using-f-string
-            raise ValueError('Scalar operation "%s" not understood'
-                             % self.parameters['kind'])
+            raise ValueError(
+                'Scalar operation "%s" not understood'
+                % self.parameters["kind"]
+            )
 
     def _perform_task(self):
-        operator_ = self._kinds[self.parameters['kind'].lower()]
-        self.dataset.data.axes[self.parameters['axis']].values = \
-            operator_(self.dataset.data.axes[0].values,
-                      self.parameters['value'])
+        operator_ = self._kinds[self.parameters["kind"].lower()]
+        self.dataset.data.axes[self.parameters["axis"]].values = operator_(
+            self.dataset.data.axes[0].values, self.parameters["value"]
+        )
 
 
 class DatasetAlgebra(SingleProcessingStep):
@@ -2582,41 +2677,48 @@ class DatasetAlgebra(SingleProcessingStep):
 
     def __init__(self):
         super().__init__()
-        self.description = 'Perform algebra using two datasets'
+        self.description = "Perform algebra using two datasets"
         self.parameters["dataset"] = None
-        self.parameters["kind"] = ''
+        self.parameters["kind"] = ""
         self._kinds = {
-            'plus': operator.add,
-            'add': operator.add,
-            '+': operator.add,
-            'minus': operator.sub,
-            'subtract': operator.sub,
-            '-': operator.sub,
+            "plus": operator.add,
+            "add": operator.add,
+            "+": operator.add,
+            "minus": operator.sub,
+            "subtract": operator.sub,
+            "-": operator.sub,
         }
 
     def _sanitise_parameters(self):
         if not self.parameters["dataset"]:
             raise aspecd.exceptions.MissingDatasetError
         if not self.parameters["kind"]:
-            raise ValueError('No kind of scalar operation given')
-        if self.parameters['kind'].lower() not in self._kinds:
+            raise ValueError("No kind of scalar operation given")
+        if self.parameters["kind"].lower() not in self._kinds:
             # pylint: disable=consider-using-f-string
-            raise ValueError('Scalar operation "%s" not understood'
-                             % self.parameters['kind'])
+            raise ValueError(
+                'Scalar operation "%s" not understood'
+                % self.parameters["kind"]
+            )
 
     def _perform_task(self):
         self._check_shape()
-        operator_ = self._kinds[self.parameters['kind'].lower()]
-        self.dataset.data.data = operator_(self.dataset.data.data,
-                                           self.parameters['dataset'].data.data)
-        self.parameters["dataset"] = self.parameters['dataset'].id
+        operator_ = self._kinds[self.parameters["kind"].lower()]
+        self.dataset.data.data = operator_(
+            self.dataset.data.data, self.parameters["dataset"].data.data
+        )
+        self.parameters["dataset"] = self.parameters["dataset"].id
 
     def _check_shape(self):
-        if self.dataset.data.data.shape \
-                != self.parameters["dataset"].data.data.shape:
-            raise ValueError(f"Data of datasets have different shapes: "
-                             f"{self.dataset.data.data.shape}, "
-                             f"{self.parameters['dataset'].data.data.shape}.")
+        if (
+            self.dataset.data.data.shape
+            != self.parameters["dataset"].data.data.shape
+        ):
+            raise ValueError(
+                f"Data of datasets have different shapes: "
+                f"{self.dataset.data.data.shape}, "
+                f"{self.parameters['dataset'].data.data.shape}."
+            )
 
 
 class Interpolation(SingleProcessingStep):
@@ -2732,7 +2834,7 @@ class Interpolation(SingleProcessingStep):
 
     def __init__(self):
         super().__init__()
-        self.description = 'Interpolate data of dataset'
+        self.description = "Interpolate data of dataset"
         self.undoable = True
         self.parameters["range"] = None
         self.parameters["npoints"] = None
@@ -2741,9 +2843,11 @@ class Interpolation(SingleProcessingStep):
 
     def _sanitise_parameters(self):
         if not self.parameters["range"]:
-            raise ValueError('No range provided to interpolate for')
+            raise ValueError("No range provided to interpolate for")
         if not self.parameters["npoints"]:
-            raise ValueError('No number of points provided to interpolate for')
+            raise ValueError(
+                "No number of points provided to interpolate for"
+            )
         if self.parameters["unit"] not in ("index", "axis"):
             raise ValueError(f'Unknown unit {self.parameters["unit"]}')
         self.parameters["range"] = np.atleast_2d(self.parameters["range"])
@@ -2753,15 +2857,15 @@ class Interpolation(SingleProcessingStep):
         if len(self.parameters["npoints"]) < self.dataset.data.data.ndim:
             raise IndexError("List of npoints does not fit data dimensions")
         if self._out_of_range():
-            raise IndexError('Range out of range.')
+            raise IndexError("Range out of range.")
 
     def _perform_task(self):
         self._get_axis_values()
         interp = interpolate.RegularGridInterpolator(
             [x.values for x in self.dataset.data.axes[:-1]],
-            self.dataset.data.data
+            self.dataset.data.data,
         )
-        grid = np.meshgrid(*self._axis_values, indexing='ij')
+        grid = np.meshgrid(*self._axis_values, indexing="ij")
         test_points = np.array([x.ravel() for x in grid]).T
         shape = [len(x) for x in self._axis_values]
         self.dataset.data.data = interp(test_points).reshape(shape)
@@ -2788,9 +2892,10 @@ class Interpolation(SingleProcessingStep):
                 start = self.dataset.data.axes[dim].values[range_[0]]
                 stop = self.dataset.data.axes[dim].values[range_[1]]
             else:
-                start, stop = self.parameters['range'][dim]
+                start, stop = self.parameters["range"][dim]
             self._axis_values.append(
-                np.linspace(start, stop, self.parameters["npoints"][dim]))
+                np.linspace(start, stop, self.parameters["npoints"][dim])
+            )
 
 
 class Filtering(SingleProcessingStep):
@@ -2901,16 +3006,21 @@ class Filtering(SingleProcessingStep):
 
     def __init__(self):
         super().__init__()
-        self.description = 'Apply filter to data'
+        self.description = "Apply filter to data"
         self.undoable = True
         self.parameters["type"] = None
         self.parameters["window_length"] = None
         self.parameters["order"] = None
         self._types = {
-            'uniform': ['uniform', 'box', 'boxcar', 'moving-average', 'car'],
-            'gaussian': ['gaussian', 'binom', 'binomial'],
-            'savitzky-golay': ['savitzky-golay', 'savitzky_golay',
-                               'savitzky golay', 'savgol', 'savitzky']
+            "uniform": ["uniform", "box", "boxcar", "moving-average", "car",],
+            "gaussian": ["gaussian", "binom", "binomial",],
+            "savitzky-golay": [
+                "savitzky-golay",
+                "savitzky_golay",
+                "savitzky golay",
+                "savgol",
+                "savitzky",
+            ],
         }
 
     def _sanitise_parameters(self):
@@ -2921,19 +3031,25 @@ class Filtering(SingleProcessingStep):
             raise ValueError(f'Wrong filter type {self.parameters["type"]}')
         if not self.parameters["window_length"]:
             raise ValueError("Missing filter window length")
-        if self.parameters["window_length"] > min(self.dataset.data.data.shape):
+        if self.parameters["window_length"] > min(
+            self.dataset.data.data.shape
+        ):
             raise ValueError("Filter window outside data range")
-        if self.parameters["type"] == "savitzky-golay" \
-                and not self.parameters["order"]:
+        if (
+            self.parameters["type"] == "savitzky-golay"
+            and not self.parameters["order"]
+        ):
             raise ValueError("Missing order for this filter")
 
     def _perform_task(self):
         if self.parameters["type"] == "uniform":
             self.dataset.data.data = scipy.ndimage.uniform_filter(
-                self.dataset.data.data, self.parameters["window_length"])
+                self.dataset.data.data, self.parameters["window_length"]
+            )
         elif self.parameters["type"] == "gaussian":
             self.dataset.data.data = scipy.ndimage.gaussian_filter(
-                self.dataset.data.data, self.parameters["window_length"])
+                self.dataset.data.data, self.parameters["window_length"]
+            )
         elif self.parameters["type"] == "savitzky-golay":
             # Ensure window length to be odd
             if not self.parameters["window_length"] % 2:
@@ -2941,7 +3057,7 @@ class Filtering(SingleProcessingStep):
             self.dataset.data.data = scipy.signal.savgol_filter(
                 self.dataset.data.data,
                 self.parameters["window_length"],
-                self.parameters["order"]
+                self.parameters["order"],
             )
 
     def _convert_filter_type(self):
@@ -3080,7 +3196,7 @@ class CommonRangeExtraction(MultiProcessingStep):
 
     def __init__(self):
         super().__init__()
-        self.description = 'Extract common data range of several datasets'
+        self.description = "Extract common data range of several datasets"
         self.undoable = True
         self.parameters["ignore_units"] = False
         self.parameters["common_range"] = []
@@ -3103,8 +3219,10 @@ class CommonRangeExtraction(MultiProcessingStep):
         for dataset in self.datasets:
             new_dimension = dataset.data.data.ndim
             if old_dimension and old_dimension != new_dimension:
-                raise ValueError(f"Datasets have different dimensions: "
-                                 f"{old_dimension} vs. {new_dimension}")
+                raise ValueError(
+                    f"Datasets have different dimensions: "
+                    f"{old_dimension} vs. {new_dimension}"
+                )
             old_dimension = new_dimension
 
     def _check_common_range(self):
@@ -3115,10 +3233,13 @@ class CommonRangeExtraction(MultiProcessingStep):
                 minima.append(dataset.data.axes[dim].values[0])
                 maxima.append(dataset.data.axes[dim].values[-1])
             if np.amax(minima) > np.amin(maxima):
-                raise ValueError(f"Datasets have disjoint axes values: "
-                                 f"{np.amax(minima)} > {np.amin(maxima)}")
-            self.parameters["common_range"].append([np.amax(minima),
-                                                    np.amin(maxima)])
+                raise ValueError(
+                    f"Datasets have disjoint axes values: "
+                    f"{np.amax(minima)} > {np.amin(maxima)}"
+                )
+            self.parameters["common_range"].append(
+                [np.amax(minima), np.amin(maxima)]
+            )
 
     def _check_axes_units(self):
         old_units = None
@@ -3127,8 +3248,10 @@ class CommonRangeExtraction(MultiProcessingStep):
             for axis in dataset.data.axes[:-1]:
                 new_units.append(axis.unit)
             if old_units and old_units != new_units:
-                raise ValueError(f"Datasets have axes with different units: "
-                                 f"{old_units} vs. {new_units}")
+                raise ValueError(
+                    f"Datasets have axes with different units: "
+                    f"{old_units} vs. {new_units}"
+                )
             old_units = new_units
 
     def _calculate_number_of_points(self):
@@ -3139,8 +3262,9 @@ class CommonRangeExtraction(MultiProcessingStep):
                 values = dataset.data.axes[dim].values
                 # noinspection PyUnresolvedReferences
                 number_of_points.append(
-                    (values <= common_range[1]).nonzero()[0][-1] -
-                    (values >= common_range[0]).nonzero()[0][0] + 1
+                    (values <= common_range[1]).nonzero()[0][-1]
+                    - (values >= common_range[0]).nonzero()[0][0]
+                    + 1
                 )
             # TODO: Make this adjustable, not always taking the minimum (
             #  i.e., coarsest grid)
@@ -3149,7 +3273,9 @@ class CommonRangeExtraction(MultiProcessingStep):
     def _interpolate(self):
         for dataset in self.datasets:
             interpolation = Interpolation()
-            interpolation.parameters["range"] = self.parameters["common_range"]
+            interpolation.parameters["range"] = self.parameters[
+                "common_range"
+            ]
             interpolation.parameters["npoints"] = self.parameters["npoints"]
             interpolation.parameters["unit"] = "axis"
             dataset.process(interpolation)
@@ -3317,26 +3443,26 @@ class Noise(SingleProcessingStep):
 
     def __init__(self):
         super().__init__()
-        self.description = 'Add (coloured) noise to data'
+        self.description = "Add (coloured) noise to data"
         self.undoable = True
         self.parameters["exponent"] = -1
         self.parameters["normalise"] = False
         self.parameters["amplitude"] = None
         self.references = [
             bib.Article(
-                author=['J. Timmer', 'M. König'],
+                author=["J. Timmer", "M. König"],
                 title="On generating power law noise",
                 journal="Astronomy and Astrophysics",
                 volume="300",
                 pages="707--710",
-                year="1995"
+                year="1995",
             )
         ]
 
     def _perform_task(self):
         noise = self._generate_noise()
         if self.parameters["normalise"] or self.parameters["amplitude"]:
-            noise /= (noise.max() - noise.min())
+            noise /= noise.max() - noise.min()
         if self.parameters["amplitude"]:
             noise *= self.parameters["amplitude"]
         self.dataset.data.data += noise
@@ -3362,7 +3488,7 @@ class Noise(SingleProcessingStep):
         # DC component is real
         phase[0, ...] = 0
 
-        components = power + 1J * phase
+        components = power + 1j * phase
 
         noise = np.fft.irfft(components, n=samples, axis=0)
         return noise
@@ -3475,7 +3601,7 @@ class ChangeAxesValues(SingleProcessingStep):
 
     def __init__(self):
         super().__init__()
-        self.description = 'Change axis values to given range'
+        self.description = "Change axis values to given range"
         self.undoable = True
         self.parameters["range"] = None
         self.parameters["axes"] = None
@@ -3484,7 +3610,9 @@ class ChangeAxesValues(SingleProcessingStep):
         if not isinstance(self.parameters["range"][0], list):
             self.parameters["range"] = [self.parameters["range"]]
         if self.parameters["axes"] is None:
-            self.parameters["axes"] = list(range(len(self.parameters["range"])))
+            self.parameters["axes"] = list(
+                range(len(self.parameters["range"]))
+            )
         if not isinstance(self.parameters["axes"], list):
             self.parameters["axes"] = [self.parameters["axes"]]
         if max(self.parameters["axes"]) > (len(self.dataset.data.axes) - 2):
@@ -3496,10 +3624,11 @@ class ChangeAxesValues(SingleProcessingStep):
     def _perform_task(self):
         for idx in range(len(self.parameters["range"])):
             axis = self.parameters["axes"][idx]
-            self.dataset.data.axes[axis].values = \
-                np.linspace(self.parameters["range"][idx][0],
-                            self.parameters["range"][idx][1],
-                            len(self.dataset.data.axes[axis].values))
+            self.dataset.data.axes[axis].values = np.linspace(
+                self.parameters["range"][idx][0],
+                self.parameters["range"][idx][1],
+                len(self.dataset.data.axes[axis].values),
+            )
 
 
 class RelativeAxis(SingleProcessingStep):
@@ -3585,26 +3714,31 @@ class RelativeAxis(SingleProcessingStep):
 
     def __init__(self):
         super().__init__()
-        self.description = 'Change axis to relative axis'
+        self.description = "Change axis to relative axis"
         self.undoable = True
-        self.parameters['origin'] = None
-        self.parameters['axis'] = 0
+        self.parameters["origin"] = None
+        self.parameters["axis"] = 0
 
     def _perform_task(self):
-        axis = self.parameters['axis']
-        if not self.parameters['origin']:
+        axis = self.parameters["axis"]
+        if not self.parameters["origin"]:
             origin_index = int(len(self.dataset.data.axes[axis].values) / 2)
-            self.parameters['origin'] = \
-                self.dataset.data.axes[axis].values[origin_index]
-        self.dataset.data.axes[axis].values -= self.parameters['origin']
-        if not self._value_within_range(self.parameters['origin'],
-                                        self.dataset.data.axes[axis].values):
-            logger.warning('origin %f outside axis range [%f %f].',
-                           self.parameters['origin'],
-                           self.dataset.data.axes[axis].values[0],
-                           self.dataset.data.axes[axis].values[-1])
-        self.dataset.data.axes[axis].quantity = \
-            'Δ' + self.dataset.data.axes[axis].quantity
+            self.parameters["origin"] = self.dataset.data.axes[axis].values[
+                origin_index
+            ]
+        self.dataset.data.axes[axis].values -= self.parameters["origin"]
+        if not self._value_within_range(
+            self.parameters["origin"], self.dataset.data.axes[axis].values
+        ):
+            logger.warning(
+                "origin %f outside axis range [%f %f].",
+                self.parameters["origin"],
+                self.dataset.data.axes[axis].values[0],
+                self.dataset.data.axes[axis].values[-1],
+            )
+        self.dataset.data.axes[axis].quantity = (
+            "Δ" + self.dataset.data.axes[axis].quantity
+        )
 
     @staticmethod
     def _value_within_range(value, range_):

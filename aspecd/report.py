@@ -336,21 +336,26 @@ class Reporter(aspecd.utils.ToDictMixin):
 
     """
 
-    def __init__(self, template='', filename=''):
+    def __init__(self, template="", filename=""):
         super().__init__()
         self.template = template
         self.filename = filename
         self.context = collections.OrderedDict()
         self.environment = GenericEnvironment()
-        self.report = ''
-        self.package = ''
-        self.package_path = ''
-        self.language = ''
-        self.comment = ''
+        self.report = ""
+        self.package = ""
+        self.package_path = ""
+        self.language = ""
+        self.comment = ""
         self._jinja_template = None
-        self.__kind__ = 'report'
-        self._exclude_from_to_dict = ['context', 'environment', 'report',
-                                      'package', 'package_path']
+        self.__kind__ = "report"
+        self._exclude_from_to_dict = [
+            "context",
+            "environment",
+            "report",
+            "package",
+            "package_path",
+        ]
 
     def render(self):
         """Render the template.
@@ -371,7 +376,7 @@ class Reporter(aspecd.utils.ToDictMixin):
 
         """
         if not self.template:
-            raise FileNotFoundError('No template provided')
+            raise FileNotFoundError("No template provided")
         # noinspection PyTypeChecker
         self._add_package_loader()
         self._set_language()
@@ -383,8 +388,7 @@ class Reporter(aspecd.utils.ToDictMixin):
         if self.package:
             if self.package_path:
                 self.environment.add_package_loader(
-                    package_name=self.package,
-                    package_path=self.package_path
+                    package_name=self.package, package_path=self.package_path
                 )
             else:
                 self.environment.add_package_loader(package_name=self.package)
@@ -395,20 +399,27 @@ class Reporter(aspecd.utils.ToDictMixin):
             self.environment.set_language()
 
     def _add_to_context(self):
-        self.context['sysinfo'] = \
-            aspecd.system.SystemInfo(package=self.package).to_dict()
-        self.context['template_dir'] = os.path.split(self.template)[0]
-        if self.context['template_dir']:
-            self.context['template_dir'] += os.path.sep
+        self.context["sysinfo"] = aspecd.system.SystemInfo(
+            package=self.package
+        ).to_dict()
+        self.context["template_dir"] = os.path.split(self.template)[0]
+        if self.context["template_dir"]:
+            self.context["template_dir"] += os.path.sep
         # noinspection PyTypeChecker
-        self.context['timestamp'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        self.context["timestamp"] = datetime.now().strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
 
     def _get_jinja_template(self):
         try:
-            self._jinja_template = self.environment.get_template(self.template)
+            self._jinja_template = self.environment.get_template(
+                self.template
+            )
         except jinja2.exceptions.TemplateError:
             self.template = os.path.realpath(self.template)
-            self._jinja_template = self.environment.get_template(self.template)
+            self._jinja_template = self.environment.get_template(
+                self.template
+            )
 
     def _render(self):
         """Perform the actual rendering of the template.
@@ -439,8 +450,9 @@ class Reporter(aspecd.utils.ToDictMixin):
         """
         if not self.filename:
             raise aspecd.exceptions.MissingFilenameError(
-                'No output file for report')
-        with open(self.filename, mode='w+', encoding="utf8") as output_file:
+                "No output file for report"
+            )
+        with open(self.filename, mode="w+", encoding="utf8") as output_file:
             output_file.write(self.report)
 
     def create(self):
@@ -484,7 +496,7 @@ class TxtReporter(Reporter):
 
     """
 
-    def __init__(self, template='', filename=''):
+    def __init__(self, template="", filename=""):
         super().__init__(template=template, filename=filename)
         self.environment = TxtEnvironment()
 
@@ -563,15 +575,15 @@ class LaTeXReporter(Reporter):
 
     """
 
-    def __init__(self, template='', filename=''):
+    def __init__(self, template="", filename=""):
         super().__init__(template=template, filename=filename)
         self.environment = LaTeXEnvironment()
         self.includes = []
-        self.latex_executable = 'pdflatex'
+        self.latex_executable = "pdflatex"
 
         self._temp_dir = tempfile.mkdtemp()
         self._pwd = os.getcwd()
-        self._exclude_from_to_dict.extend(['latex_executable'])
+        self._exclude_from_to_dict.extend(["latex_executable"])
 
     def _render(self):
         """Perform the actual rendering of the template.
@@ -591,10 +603,11 @@ class LaTeXReporter(Reporter):
         for key, value in dict_.items():
             if isinstance(value, dict):
                 dict_[key] = self._change_keys_in_dict_recursively(value)
-            if '_' in key:
-                tmp_key = \
-                    ''.join([x.capitalize() for x in key.split(sep='_')])
-                tmp_key = ''.join([tmp_key[0].lower(), tmp_key[1:]])
+            if "_" in key:
+                tmp_key = "".join(
+                    [x.capitalize() for x in key.split(sep="_")]
+                )
+                tmp_key = "".join([tmp_key[0].lower(), tmp_key[1:]])
             else:
                 tmp_key = key
             tmp_dict[tmp_key] = dict_[key]
@@ -634,12 +647,14 @@ class LaTeXReporter(Reporter):
         Takes care of relative or absolute paths of both, report and includes.
         """
         _, filename_wo_path = os.path.split(self.filename)
-        shutil.copy2(self.filename,
-                     os.path.join(self._temp_dir, filename_wo_path))
+        shutil.copy2(
+            self.filename, os.path.join(self._temp_dir, filename_wo_path)
+        )
         for filename in self.includes:
             _, filename_wo_path = os.path.split(filename)
-            shutil.copy2(filename,
-                         os.path.join(self._temp_dir, filename_wo_path))
+            shutil.copy2(
+                filename, os.path.join(self._temp_dir, filename_wo_path)
+            )
 
     def _compile(self):
         """Actual compiling of the report.
@@ -654,12 +669,17 @@ class LaTeXReporter(Reporter):
         with aspecd.utils.change_working_dir(self._temp_dir):
             _, filename_wo_path = os.path.split(self.filename)
             # Path stripped, there should be no security implications.
-            process = subprocess.run([self.latex_executable,  # nosec
-                                      '-output-directory', self._temp_dir,
-                                      '-interaction=nonstopmode',
-                                      filename_wo_path],
-                                     check=False,
-                                     capture_output=True)
+            process = subprocess.run(
+                [
+                    self.latex_executable,  # nosec
+                    "-output-directory",
+                    self._temp_dir,
+                    "-interaction=nonstopmode",
+                    filename_wo_path,
+                ],
+                check=False,
+                capture_output=True,
+            )
             print(process.stdout.decode())
             print(process.stderr.decode())
 
@@ -671,13 +691,17 @@ class LaTeXReporter(Reporter):
         """
         basename, _ = os.path.splitext(self.filename)
         path, basename = os.path.split(basename)
-        pdf_filename = ".".join([basename, 'pdf'])
+        pdf_filename = ".".join([basename, "pdf"])
         if os.path.isabs(path):
-            shutil.copy2(os.path.join(self._temp_dir, pdf_filename),
-                         os.path.join(path, pdf_filename))
+            shutil.copy2(
+                os.path.join(self._temp_dir, pdf_filename),
+                os.path.join(path, pdf_filename),
+            )
         else:
-            shutil.copy2(os.path.join(self._temp_dir, pdf_filename),
-                         os.path.join(self._pwd, path, pdf_filename))
+            shutil.copy2(
+                os.path.join(self._temp_dir, pdf_filename),
+                os.path.join(self._pwd, path, pdf_filename),
+            )
 
     def _remove_temp_dir(self):
         """Remove temporary directory used for compile step.
@@ -761,17 +785,16 @@ class GenericEnvironment(jinja2.Environment):
         self.language = lang
         if not env:
             env = {
-                "loader": jinja2.ChoiceLoader([
-                    jinja2.FileSystemLoader(
-                        [
-                            os.path.abspath('.'),
-                            os.path.abspath('/')
-                        ]
-                    ),
-                    jinja2.PackageLoader(
-                        "aspecd", package_path=self.path
-                    )
-                ])
+                "loader": jinja2.ChoiceLoader(
+                    [
+                        jinja2.FileSystemLoader(
+                            [os.path.abspath("."), os.path.abspath("/")]
+                        ),
+                        jinja2.PackageLoader(
+                            "aspecd", package_path=self.path
+                        ),
+                    ]
+                )
             }
         super().__init__(**env)
         self.set_language()
@@ -792,17 +815,18 @@ class GenericEnvironment(jinja2.Environment):
                 if isinstance(loader, jinja2.PackageLoader):
                     package_name = loader.package_name
                     package_path = loader.package_path
-                    if package_path.endswith('en'):
-                        package_path = package_path.rstrip('/en')
+                    if package_path.endswith("en"):
+                        package_path = package_path.rstrip("/en")
                     package_path = "/".join([package_path, self.language])
-                    if pkg_resources.resource_exists(package_name,
-                                                     package_path):
+                    if pkg_resources.resource_exists(
+                        package_name, package_path
+                    ):
                         self.loader.loaders[idx] = jinja2.PackageLoader(
                             package_name=package_name,
-                            package_path=package_path
+                            package_path=package_path,
                         )
 
-    def add_package_loader(self, package_name='', package_path=''):
+    def add_package_loader(self, package_name="", package_path=""):
         """
         Add a package loader for a given package name.
 
@@ -836,8 +860,7 @@ class GenericEnvironment(jinja2.Environment):
             package_path = "/".join([package_path, self.language])
         if pkg_resources.resource_exists(package_name, package_path):
             package_loader = jinja2.PackageLoader(
-                package_name=package_name,
-                package_path=package_path
+                package_name=package_name, package_path=package_path
             )
             self.loader.loaders.insert(-1, package_loader)
 
@@ -872,18 +895,18 @@ class TxtEnvironment(GenericEnvironment):
 
     def __init__(self, lang=None):
         self.package_path = "templates/report/txt/"
-        self.lang = lang or 'en'
+        self.lang = lang or "en"
         env = {
-            "loader": jinja2.ChoiceLoader([
-                jinja2.FileSystemLoader(
-                    [
-                        os.path.abspath('.'),
-                        os.path.abspath('/')
-                    ]
-                ),
-                jinja2.PackageLoader(
-                    "aspecd", package_path=self.package_path)
-            ])
+            "loader": jinja2.ChoiceLoader(
+                [
+                    jinja2.FileSystemLoader(
+                        [os.path.abspath("."), os.path.abspath("/")]
+                    ),
+                    jinja2.PackageLoader(
+                        "aspecd", package_path=self.package_path
+                    ),
+                ]
+            )
         }
         super().__init__(env=env, path=self.package_path, lang=self.lang)
 
@@ -944,27 +967,27 @@ class LaTeXEnvironment(GenericEnvironment):
 
     def __init__(self, lang=None):
         self.package_path = "templates/report/latex/"
-        self.lang = lang or 'en'
+        self.lang = lang or "en"
         env = {
-            "block_start_string": '%{',
-            "block_end_string": '}%',
-            "variable_start_string": '{@',
-            "variable_end_string": '}',
-            "comment_start_string": '%#{',
-            "comment_end_string": '}',
-            "line_statement_prefix": '%%',
-            "line_comment_prefix": '%#',
+            "block_start_string": "%{",
+            "block_end_string": "}%",
+            "variable_start_string": "{@",
+            "variable_end_string": "}",
+            "comment_start_string": "%#{",
+            "comment_end_string": "}",
+            "line_statement_prefix": "%%",
+            "line_comment_prefix": "%#",
             "trim_blocks": True,
             "autoescape": False,
-            "loader": jinja2.ChoiceLoader([
-                jinja2.FileSystemLoader(
-                    [
-                        os.path.abspath('.'),
-                        os.path.abspath('/')
-                    ]
-                ),
-                jinja2.PackageLoader(
-                    "aspecd", package_path=self.package_path),
-            ])
+            "loader": jinja2.ChoiceLoader(
+                [
+                    jinja2.FileSystemLoader(
+                        [os.path.abspath("."), os.path.abspath("/")]
+                    ),
+                    jinja2.PackageLoader(
+                        "aspecd", package_path=self.package_path
+                    ),
+                ]
+            ),
         }
         super().__init__(env=env, path=self.package_path, lang=self.lang)

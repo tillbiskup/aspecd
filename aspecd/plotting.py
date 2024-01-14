@@ -798,6 +798,7 @@ import os
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+
 # pylint: disable=unused-import
 import matplotlib.collections
 from matplotlib import ticker
@@ -957,27 +958,32 @@ class Plotter(aspecd.utils.ToDictMixin):
         # Name defaults always to the full class name, don't change!
         self.name = aspecd.utils.full_class_name(self)
         self.parameters = {
-            'show_legend': False,
-            'show_zero_lines': True,
-            'tight_layout': False,
-            'device_data': ''
+            "show_legend": False,
+            "show_zero_lines": True,
+            "tight_layout": False,
+            "device_data": "",
         }
         self.properties = PlotProperties()
-        self.description = 'Abstract plotting step'
+        self.description = "Abstract plotting step"
         self.figure = None
         self.axes = None
-        self.filename = ''
+        self.filename = ""
         self.caption = Caption()
         self.legend = None
-        self.label = ''
-        self.style = ''
-        self.comment = ''
+        self.label = ""
+        self.style = ""
+        self.comment = ""
         self.annotations = []
         super().__init__()
         #
         self._original_rcparams = None
-        self._exclude_from_to_dict = \
-            ['name', 'description', 'figure', 'axes', 'legend']
+        self._exclude_from_to_dict = [
+            "name",
+            "description",
+            "figure",
+            "axes",
+            "legend",
+        ]
 
     @property
     def fig(self):
@@ -1058,10 +1064,10 @@ class Plotter(aspecd.utils.ToDictMixin):
     def _set_style(self):
         self._original_rcparams = mpl.rcParams.copy()
         if self.style:
-            if self.style not in plt.style.available + ['default', 'xkcd']:
+            if self.style not in plt.style.available + ["default", "xkcd"]:
                 message = f'Cannot find matplotlib style "{self.style}".'
                 raise aspecd.exceptions.StyleNotFoundError(message=message)
-            if self.style == 'xkcd':
+            if self.style == "xkcd":
                 self._set_xkcd_style()
             else:
                 plt.style.use(self.style)
@@ -1084,26 +1090,35 @@ class Plotter(aspecd.utils.ToDictMixin):
 
         """
         from matplotlib import patheffects  # noqa
-        mpl.rcParams.update({
-            'font.family': ['xkcd', 'xkcd Script', 'Humor Sans', 'Comic Neue',
-                            'Comic Sans MS'],
-            'font.size': 14.0,
-            'path.sketch': (1, 100, 2),  # (scale, length, randomness),
-            'path.effects': [
-                patheffects.withStroke(linewidth=4, foreground="w")],
-            'axes.linewidth': 1.5,
-            'lines.linewidth': 2.0,
-            'figure.facecolor': 'white',
-            'grid.linewidth': 0.0,
-            'axes.grid': False,
-            'axes.unicode_minus': False,
-            'axes.edgecolor': 'black',
-            'xtick.major.size': 8,
-            'xtick.major.width': 3,
-            'ytick.major.size': 8,
-            'ytick.major.width': 3,
-            'text.usetex': False,
-        })
+
+        mpl.rcParams.update(
+            {
+                "font.family": [
+                    "xkcd",
+                    "xkcd Script",
+                    "Humor Sans",
+                    "Comic Neue",
+                    "Comic Sans MS",
+                ],
+                "font.size": 14.0,
+                "path.sketch": (1, 100, 2),  # (scale, length, randomness),
+                "path.effects": [
+                    patheffects.withStroke(linewidth=4, foreground="w")
+                ],
+                "axes.linewidth": 1.5,
+                "lines.linewidth": 2.0,
+                "figure.facecolor": "white",
+                "grid.linewidth": 0.0,
+                "axes.grid": False,
+                "axes.unicode_minus": False,
+                "axes.edgecolor": "black",
+                "xtick.major.size": 8,
+                "xtick.major.width": 3,
+                "ytick.major.size": 8,
+                "ytick.major.width": 3,
+                "text.usetex": False,
+            }
+        )
 
     def _create_figure_and_axes(self):
         """Create figure and axes and assign to attributes.
@@ -1127,7 +1142,9 @@ class Plotter(aspecd.utils.ToDictMixin):
         :attr:`figure` and :attr:`axes` properties of the plotter class.
         """
         if not self.figure and not self.axes:
-            mpl.interactive(False)  # Mac OS X: prevent plot window from opening
+            mpl.interactive(
+                False
+            )  # Mac OS X: prevent plot window from opening
             self.figure, self.axes = plt.subplots()
 
     def _create_plot(self):
@@ -1210,45 +1227,49 @@ class Plotter(aspecd.utils.ToDictMixin):
             label for the axis
 
         """
-        label = ''
+        label = ""
         if axis.quantity:
-            if self.style == 'xkcd':
+            if self.style == "xkcd":
                 label = axis.quantity
             else:
-                label = '$' + axis.quantity.replace(' ', '\\ ') + '$'
+                label = "$" + axis.quantity.replace(" ", "\\ ") + "$"
             if axis.unit:
-                label += ' / ' + axis.unit
+                label += " / " + axis.unit
         return label
 
     def _set_legend(self):
-        if self.parameters['show_legend']:
+        if self.parameters["show_legend"]:
             # noinspection PyArgumentList
             self.legend = self.axes.legend(**self.properties.legend.to_dict())
 
     def _add_zero_lines(self):
-        if self.parameters['show_zero_lines']:
+        if self.parameters["show_zero_lines"]:
             if isinstance(self.axes, list):
                 for axes in self.axes:
                     if axes.get_ylim()[0] <= 0 <= axes.get_ylim()[1]:
                         # noinspection PyArgumentList
-                        axes.axhline(**self.properties.zero_lines.to_dict(),
-                                     zorder=1)
+                        axes.axhline(
+                            **self.properties.zero_lines.to_dict(), zorder=1
+                        )
                     if axes.get_xlim()[0] <= 0 <= axes.get_xlim()[1]:
                         # noinspection PyArgumentList
-                        axes.axvline(**self.properties.zero_lines.to_dict(),
-                                     zorder=1)
+                        axes.axvline(
+                            **self.properties.zero_lines.to_dict(), zorder=1
+                        )
             else:
                 if self.axes.get_ylim()[0] <= 0 <= self.axes.get_ylim()[1]:
                     # noinspection PyArgumentList
-                    self.axes.axhline(**self.properties.zero_lines.to_dict(),
-                                      zorder=1)
+                    self.axes.axhline(
+                        **self.properties.zero_lines.to_dict(), zorder=1
+                    )
                 if self.axes.get_xlim()[0] <= 0 <= self.axes.get_xlim()[1]:
                     # noinspection PyArgumentList
-                    self.axes.axvline(**self.properties.zero_lines.to_dict(),
-                                      zorder=1)
+                    self.axes.axvline(
+                        **self.properties.zero_lines.to_dict(), zorder=1
+                    )
 
     def _tight_layout(self):
-        if self.parameters['tight_layout']:
+        if self.parameters["tight_layout"]:
             self.figure.set_tight_layout(True)
 
 
@@ -1322,9 +1343,9 @@ class SinglePlotter(Plotter):
         self.dataset = None
         self.data = None
         self.drawing = None
-        self.description = 'Abstract plotting step for single dataset'
-        self.__kind__ = 'singleplot'
-        self._exclude_from_to_dict.extend(['dataset', 'data', 'drawing'])
+        self.description = "Abstract plotting step for single dataset"
+        self.__kind__ = "singleplot"
+        self._exclude_from_to_dict.extend(["dataset", "data", "drawing"])
 
     def plot(self, dataset=None, from_dataset=False):
         """Perform the actual plotting on the given dataset.
@@ -1387,11 +1408,13 @@ class SinglePlotter(Plotter):
             history record for plotting step
 
         """
-        history_record = \
-            aspecd.history.PlotHistoryRecord(package=self.dataset.package_name)
+        history_record = aspecd.history.PlotHistoryRecord(
+            package=self.dataset.package_name
+        )
         history_record.plot = aspecd.history.SinglePlotRecord(plotter=self)
         history_record.plot.preprocessing = copy.deepcopy(
-            self.dataset.history)
+            self.dataset.history
+        )
         return history_record
 
     def _assign_dataset(self, dataset):
@@ -1421,9 +1444,13 @@ class SinglePlotter(Plotter):
 
     def _check_applicability(self):
         if not self.applicable(self.data):
-            message = f"{self.name} not applicable to dataset with id " \
-                      f"{self.dataset.id}"
-            raise aspecd.exceptions.NotApplicableToDatasetError(message=message)
+            message = (
+                f"{self.name} not applicable to dataset with id "
+                f"{self.dataset.id}"
+            )
+            raise aspecd.exceptions.NotApplicableToDatasetError(
+                message=message
+            )
 
     def _set_axes_labels(self):
         """Set axes labels from axes in dataset.
@@ -1571,14 +1598,21 @@ class SinglePlotter1D(SinglePlotter):
 
     def __init__(self):
         super().__init__()
-        self.description = '1D plotting step for single dataset'
+        self.description = "1D plotting step for single dataset"
         self.properties = SinglePlot1DProperties()
         # noinspection PyTypeChecker
-        self.parameters['tight'] = ''
-        self.parameters['switch_axes'] = False
-        self._type = 'plot'
-        self._allowed_types = ['plot', 'scatter', 'step', 'loglog',
-                               'semilogx', 'semilogy', 'stemplot']
+        self.parameters["tight"] = ""
+        self.parameters["switch_axes"] = False
+        self._type = "plot"
+        self._allowed_types = [
+            "plot",
+            "scatter",
+            "step",
+            "loglog",
+            "semilogx",
+            "semilogy",
+            "stemplot",
+        ]
 
     @property
     def type(self):
@@ -1627,43 +1661,55 @@ class SinglePlotter1D(SinglePlotter):
         self._check_values_for_logplot()
         if not self.properties.drawing.label:
             self.properties.drawing.label = self.dataset.label
-        if self.parameters['switch_axes']:
-            self.drawing, = plot_function(self.data.data,
-                                          self.data.axes[0].values,
-                                          label=self.properties.drawing.label)
+        if self.parameters["switch_axes"]:
+            (self.drawing,) = plot_function(
+                self.data.data,
+                self.data.axes[0].values,
+                label=self.properties.drawing.label,
+            )
         else:
-            self.drawing, = plot_function(self.data.axes[0].values,
-                                          self.data.data,
-                                          label=self.properties.drawing.label)
-        if self.parameters['tight']:
-            if self.parameters['tight'] in ('x', 'both'):
-                self.axes.set_xlim([self.data.axes[0].values.min(),
-                                    self.data.axes[0].values.max()])
-            if self.parameters['tight'] in ('y', 'both'):
-                self.axes.set_ylim([self.data.data.min(),
-                                    self.data.data.max()])
+            (self.drawing,) = plot_function(
+                self.data.axes[0].values,
+                self.data.data,
+                label=self.properties.drawing.label,
+            )
+        if self.parameters["tight"]:
+            if self.parameters["tight"] in ("x", "both"):
+                self.axes.set_xlim(
+                    [
+                        self.data.axes[0].values.min(),
+                        self.data.axes[0].values.max(),
+                    ]
+                )
+            if self.parameters["tight"] in ("y", "both"):
+                self.axes.set_ylim(
+                    [self.data.data.min(), self.data.data.max()]
+                )
 
     def _check_values_for_logplot(self):
         issue_warning = False
-        if self.parameters['switch_axes']:
+        if self.parameters["switch_axes"]:
             xvalues = self.data.data
             yvalues = self.data.axes[0].values
         else:
             xvalues = self.data.axes[0].values
             yvalues = self.data.data
-        if 'semilogy' in self.type and np.min(yvalues) < 0:
+        if "semilogy" in self.type and np.min(yvalues) < 0:
             issue_warning = True
-        if 'semilogx' in self.type and np.min(xvalues) < 0:
+        if "semilogx" in self.type and np.min(xvalues) < 0:
             issue_warning = True
-        if 'loglog' in self.type \
-                and (np.min(xvalues) < 0 or np.min(yvalues) < 0):
+        if "loglog" in self.type and (
+            np.min(xvalues) < 0 or np.min(yvalues) < 0
+        ):
             issue_warning = True
         if issue_warning:
-            logger.warning('Negative values with %s plot detected.', self.type)
+            logger.warning(
+                "Negative values with %s plot detected.", self.type
+            )
 
     def _set_axes_labels(self):
         super()._set_axes_labels()
-        if self.parameters['switch_axes']:
+        if self.parameters["switch_axes"]:
             old_xlabel = self.axes.get_xlabel()
             old_ylabel = self.axes.get_ylabel()
             self.axes.set_xlabel(old_ylabel)
@@ -1851,16 +1897,16 @@ class SinglePlotter2D(SinglePlotter):
 
     def __init__(self):
         super().__init__()
-        self.description = '2D plotting step for single dataset'
-        self.parameters['switch_axes'] = False
+        self.description = "2D plotting step for single dataset"
+        self.parameters["switch_axes"] = False
         # noinspection PyTypeChecker
-        self.parameters['levels'] = None
-        self.parameters['show_contour_lines'] = False
-        self.parameters['show_colorbar'] = False
+        self.parameters["levels"] = None
+        self.parameters["show_contour_lines"] = False
+        self.parameters["show_colorbar"] = False
         self.properties = SinglePlot2DProperties()
         self.colorbar = None
-        self._type = 'imshow'
-        self._allowed_types = ['contour', 'contourf', 'imshow']
+        self._type = "imshow"
+        self._allowed_types = ["contour", "contourf", "imshow"]
 
     @property
     def type(self):
@@ -1929,55 +1975,62 @@ class SinglePlotter2D(SinglePlotter):
 
         """
         # matplotlib imshow and contour have incompatible properties
-        if self.type == 'imshow':
+        if self.type == "imshow":
             self._plot_imshow()
         else:
             self._plot_contour()
-        if self.parameters['show_colorbar']:
+        if self.parameters["show_colorbar"]:
             self.colorbar = self.fig.colorbar(
-                self.drawing,
-                ax=self.ax,
-                **self.properties.colorbar.kwargs
+                self.drawing, ax=self.ax, **self.properties.colorbar.kwargs
             )
 
     def _plot_imshow(self):
         plot_function = getattr(self.axes, self.type)
         data = self._shape_data()
-        self.drawing = plot_function(data, extent=self._get_extent(),
-                                     aspect='auto')
+        self.drawing = plot_function(
+            data, extent=self._get_extent(), aspect="auto"
+        )
 
     def _plot_contour(self):
         plot_function = getattr(self.axes, self.type)
         data = self._shape_data()
-        if self.parameters['levels']:
-            self.drawing = plot_function(data, extent=self._get_extent(),
-                                         levels=self.parameters['levels'])
+        if self.parameters["levels"]:
+            self.drawing = plot_function(
+                data,
+                extent=self._get_extent(),
+                levels=self.parameters["levels"],
+            )
         else:
             self.drawing = plot_function(data, extent=self._get_extent())
-        if self.type == 'contourf' and self.parameters['show_contour_lines']:
-            self.axes.contour(self.drawing, colors='k', linewidths=0.5,
-                              linestyles='-')
+        if self.type == "contourf" and self.parameters["show_contour_lines"]:
+            self.axes.contour(
+                self.drawing, colors="k", linewidths=0.5, linestyles="-"
+            )
 
     def _shape_data(self):
-        if self.parameters['switch_axes']:
+        if self.parameters["switch_axes"]:
             data = self.data.data
         else:
             data = self.data.data.T
-        if self.type == 'imshow':
+        if self.type == "imshow":
             data = np.flipud(data)
         return data
 
     def _get_extent(self):
-        if self.parameters['switch_axes']:
-            extent = [self.data.axes[1].values[0],
-                      self.data.axes[1].values[-1],
-                      self.data.axes[0].values[0],
-                      self.data.axes[0].values[-1]]
+        if self.parameters["switch_axes"]:
+            extent = [
+                self.data.axes[1].values[0],
+                self.data.axes[1].values[-1],
+                self.data.axes[0].values[0],
+                self.data.axes[0].values[-1],
+            ]
         else:
-            extent = [self.data.axes[0].values[0],
-                      self.data.axes[0].values[-1],
-                      self.data.axes[1].values[0],
-                      self.data.axes[1].values[-1]]
+            extent = [
+                self.data.axes[0].values[0],
+                self.data.axes[0].values[-1],
+                self.data.axes[1].values[0],
+                self.data.axes[1].values[-1],
+            ]
         return extent
 
     def _set_axes_labels(self):
@@ -1996,7 +2049,7 @@ class SinglePlotter2D(SinglePlotter):
         If you ever need to change the handling of your axes labels,
         override this method in a child class.
         """
-        if self.parameters['switch_axes']:
+        if self.parameters["switch_axes"]:
             xlabel = self._create_axis_label_string(self.data.axes[1])
             ylabel = self._create_axis_label_string(self.data.axes[0])
         else:
@@ -2157,17 +2210,19 @@ class SinglePlotter2DStacked(SinglePlotter):
     # noinspection PyTypeChecker
     def __init__(self):
         super().__init__()
-        self.description = '2D stackplot for a single dataset'
+        self.description = "2D stackplot for a single dataset"
         self.dataset = None
-        self.parameters.update({
-            'show_legend': False,
-            'show_zero_lines': False,
-            'stacking_dimension': 1,
-            'offset': None,
-            'yticklabelformat': None,
-            'ytickcount': None,
-            'tight': '',
-        })
+        self.parameters.update(
+            {
+                "show_legend": False,
+                "show_zero_lines": False,
+                "stacking_dimension": 1,
+                "offset": None,
+                "yticklabelformat": None,
+                "ytickcount": None,
+                "tight": "",
+            }
+        )
         self.drawing = []
         self.properties = SinglePlot1DProperties()
 
@@ -2188,54 +2243,63 @@ class SinglePlotter2DStacked(SinglePlotter):
         return data.data.ndim == 2
 
     def _create_plot(self):
-        if self.parameters['offset'] is None:
-            self.parameters['offset'] = self.data.data.max() * 1.05
+        if self.parameters["offset"] is None:
+            self.parameters["offset"] = self.data.data.max() * 1.05
         yticks = []
-        if self.parameters['stacking_dimension'] == 0:
+        if self.parameters["stacking_dimension"] == 0:
             for idx in range(self.dataset.data.data.shape[0]):
                 # noinspection PyTypeChecker
-                handle = self.axes.plot(self.data.axes[1].values,
-                                        self.data.data[idx, :]
-                                        + idx * self.parameters['offset'])
+                handle = self.axes.plot(
+                    self.data.axes[1].values,
+                    self.data.data[idx, :] + idx * self.parameters["offset"],
+                )
                 self.drawing.append(handle[0])
                 # noinspection PyTypeChecker
-                yticks.append(idx * self.parameters['offset'])
+                yticks.append(idx * self.parameters["offset"])
             yticklabels = self.data.axes[0].values.astype(float)
         else:
             for idx in range(self.data.data.shape[1]):
                 # noinspection PyTypeChecker
-                handle = self.axes.plot(self.data.axes[0].values,
-                                        self.data.data[:, idx]
-                                        + idx * self.parameters['offset'])
+                handle = self.axes.plot(
+                    self.data.axes[0].values,
+                    self.data.data[:, idx] + idx * self.parameters["offset"],
+                )
                 self.drawing.append(handle[0])
                 # noinspection PyTypeChecker
-                yticks.append(idx * self.parameters['offset'])
+                yticks.append(idx * self.parameters["offset"])
             yticklabels = self.data.axes[1].values.astype(float)
-        if self.parameters['ytickcount']:
+        if self.parameters["ytickcount"]:
             # noinspection PyTypeChecker
-            ytickcount = min(len(self.drawing), self.parameters['ytickcount'])
-            yticklabels = np.linspace(yticklabels[0], yticklabels[-1],
-                                      num=ytickcount)
+            ytickcount = min(len(self.drawing), self.parameters["ytickcount"])
+            yticklabels = np.linspace(
+                yticklabels[0], yticklabels[-1], num=ytickcount
+            )
             yticks = np.linspace(yticks[0], yticks[-1], num=ytickcount)
-        if self.parameters['offset']:
+        if self.parameters["offset"]:
             self.properties.axes.yticks = yticks
-            self.properties.axes.yticklabels = \
-                self._format_yticklabels(yticklabels)
+            self.properties.axes.yticklabels = self._format_yticklabels(
+                yticklabels
+            )
         self._handle_tight_settings()
 
     def _handle_tight_settings(self):
-        if self.parameters['tight']:
-            if self.parameters['tight'] in ('x', 'both'):
-                self.axes.set_xlim([self.data.axes[0].values.min(),
-                                    self.data.axes[0].values.max()])
-            if self.parameters['tight'] in ('y', 'both'):
-                if self.parameters['offset'] == 0:
-                    self.axes.set_ylim([self.data.data.min(),
-                                        self.data.data.max()])
+        if self.parameters["tight"]:
+            if self.parameters["tight"] in ("x", "both"):
+                self.axes.set_xlim(
+                    [
+                        self.data.axes[0].values.min(),
+                        self.data.axes[0].values.max(),
+                    ]
+                )
+            if self.parameters["tight"] in ("y", "both"):
+                if self.parameters["offset"] == 0:
+                    self.axes.set_ylim(
+                        [self.data.data.min(), self.data.data.max()]
+                    )
 
     def _format_yticklabels(self, yticklabels):
-        if self.parameters['yticklabelformat']:
-            formatting = self.parameters['yticklabelformat']
+        if self.parameters["yticklabelformat"]:
+            formatting = self.parameters["yticklabelformat"]
             # noinspection PyUnresolvedReferences
             yticklabels = [formatting % label for label in yticklabels]
         return yticklabels
@@ -2256,7 +2320,7 @@ class SinglePlotter2DStacked(SinglePlotter):
         If you ever need to change the handling of your axes labels,
         override this method in a child class.
         """
-        if self.parameters['stacking_dimension'] == 0:
+        if self.parameters["stacking_dimension"] == 0:
             xlabel = self._create_axis_label_string(self.data.axes[1])
             ylabel = self._create_axis_label_string(self.data.axes[0])
         else:
@@ -2268,15 +2332,16 @@ class SinglePlotter2DStacked(SinglePlotter):
         self.axes.set_ylabel(ylabel)
 
     def _add_zero_lines(self):
-        if self.parameters['show_zero_lines']:
-            dimension = self.parameters['stacking_dimension']
+        if self.parameters["show_zero_lines"]:
+            dimension = self.parameters["stacking_dimension"]
             for idx in range(self.data.data.shape[dimension]):
                 # noinspection PyTypeChecker
-                offset = idx * self.parameters['offset']
+                offset = idx * self.parameters["offset"]
                 self.axes.axhline(
                     y=offset,
                     **self.properties.zero_lines.to_dict(),  # noqa
-                    zorder=1)
+                    zorder=1,
+                )
 
 
 class MultiDeviceDataPlotter1D(SinglePlotter1D):
@@ -2443,13 +2508,15 @@ class MultiDeviceDataPlotter1D(SinglePlotter1D):
 
     def __init__(self):
         super().__init__()
-        self.description = '1D plotting step for multiple device data'
+        self.description = "1D plotting step for multiple device data"
         self.data = []
         self.drawing = []
-        self.parameters['axes'] = [aspecd.dataset.Axis(),
-                                   aspecd.dataset.Axis()]
-        self.parameters['tight'] = ''
-        self.parameters['switch_axes'] = False
+        self.parameters["axes"] = [
+            aspecd.dataset.Axis(),
+            aspecd.dataset.Axis(),
+        ]
+        self.parameters["tight"] = ""
+        self.parameters["switch_axes"] = False
         self.properties = MultiPlot1DProperties()
 
     @property
@@ -2482,10 +2549,13 @@ class MultiDeviceDataPlotter1D(SinglePlotter1D):
     def _check_applicability(self):
         for data in self.data:
             if not self.applicable(data):
-                message = f"{self.name} not applicable to dataset with id " \
-                          f"{self.dataset.id}"
+                message = (
+                    f"{self.name} not applicable to dataset with id "
+                    f"{self.dataset.id}"
+                )
                 raise aspecd.exceptions.NotApplicableToDatasetError(
-                    message=message)
+                    message=message
+                )
 
     def _assign_data(self):
         if not self.parameters["device_data"]:
@@ -2503,34 +2573,34 @@ class MultiDeviceDataPlotter1D(SinglePlotter1D):
         self._set_drawing_properties()
         plot_function = getattr(self.axes, self.type)
         for idx, data in enumerate(self.data):
-            label = data.metadata.label or self.parameters['device_data'][idx]
+            label = data.metadata.label or self.parameters["device_data"][idx]
             if not self.properties.drawings[idx].label:
                 self.properties.drawings[idx].label = label
-            if self.parameters['switch_axes']:
-                drawing, = plot_function(data.data,
-                                         data.axes[0].values,
-                                         label=label)
+            if self.parameters["switch_axes"]:
+                (drawing,) = plot_function(
+                    data.data, data.axes[0].values, label=label
+                )
             else:
-                drawing, = plot_function(data.axes[0].values,
-                                         data.data,
-                                         label=label)
+                (drawing,) = plot_function(
+                    data.axes[0].values, data.data, label=label
+                )
             self.drawing.append(drawing)
-        if self.parameters['tight']:
-            axes_limits = [min(data.axes[0].values.min()
-                               for data in self.data),
-                           max(data.axes[0].values.max()
-                               for data in self.data)]
-            data_limits = [min(data.data.min()
-                               for data in self.data),
-                           max(data.data.max()
-                               for data in self.data)]
-            if self.parameters['tight'] in ('x', 'both'):
-                if self.parameters['switch_axes']:
+        if self.parameters["tight"]:
+            axes_limits = [
+                min(data.axes[0].values.min() for data in self.data),
+                max(data.axes[0].values.max() for data in self.data),
+            ]
+            data_limits = [
+                min(data.data.min() for data in self.data),
+                max(data.data.max() for data in self.data),
+            ]
+            if self.parameters["tight"] in ("x", "both"):
+                if self.parameters["switch_axes"]:
                     self.axes.set_xlim(data_limits)
                 else:
                     self.axes.set_xlim(axes_limits)
-            if self.parameters['tight'] in ('y', 'both'):
-                if self.parameters['switch_axes']:
+            if self.parameters["tight"] in ("y", "both"):
+                if self.parameters["switch_axes"]:
                     self.axes.set_ylim(axes_limits)
                 else:
                     self.axes.set_ylim(data_limits)
@@ -2560,29 +2630,33 @@ class MultiDeviceDataPlotter1D(SinglePlotter1D):
         xunits = [data.axes[0].unit for data in self.data]
         yquantities = [data.axes[1].quantity for data in self.data]
         yunits = [data.axes[1].unit for data in self.data]
-        if self.parameters['axes'][0].quantity:
-            xlabel = \
-                self._create_axis_label_string(self.parameters['axes'][0])
-        elif aspecd.utils.all_equal(xquantities) and \
-                aspecd.utils.all_equal(xunits):
+        if self.parameters["axes"][0].quantity:
+            xlabel = self._create_axis_label_string(
+                self.parameters["axes"][0]
+            )
+        elif aspecd.utils.all_equal(xquantities) and aspecd.utils.all_equal(
+            xunits
+        ):
             xlabel = self._create_axis_label_string(self.data[0].axes[0])
         elif self.properties.axes.xlabel:
             xlabel = self.properties.axes.xlabel
         else:
-            xlabel = ''
-        if self.parameters['axes'][1].quantity:
-            ylabel = \
-                self._create_axis_label_string(self.parameters['axes'][1])
-        elif aspecd.utils.all_equal(yquantities) and \
-                aspecd.utils.all_equal(yunits):
+            xlabel = ""
+        if self.parameters["axes"][1].quantity:
+            ylabel = self._create_axis_label_string(
+                self.parameters["axes"][1]
+            )
+        elif aspecd.utils.all_equal(yquantities) and aspecd.utils.all_equal(
+            yunits
+        ):
             ylabel = self._create_axis_label_string(self.data[0].axes[1])
         elif self.properties.axes.ylabel:
             ylabel = self.properties.axes.ylabel
         else:
-            ylabel = ''
+            ylabel = ""
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel(ylabel)
-        if self.parameters['switch_axes']:
+        if self.parameters["switch_axes"]:
             old_xlabel = self.axes.get_xlabel()
             old_ylabel = self.axes.get_ylabel()
             self.axes.set_xlabel(old_ylabel)
@@ -2657,12 +2731,14 @@ class MultiPlotter(Plotter):
         self.properties = MultiPlotProperties()
         self.datasets = []
         self.data = []
-        self.description = 'Abstract plotting step for multiple dataset'
+        self.description = "Abstract plotting step for multiple dataset"
         # noinspection PyTypeChecker
-        self.parameters['axes'] = [aspecd.dataset.Axis(),
-                                   aspecd.dataset.Axis()]
-        self.__kind__ = 'multiplot'
-        self._exclude_from_to_dict.extend(['datasets', 'drawings', 'data'])
+        self.parameters["axes"] = [
+            aspecd.dataset.Axis(),
+            aspecd.dataset.Axis(),
+        ]
+        self.__kind__ = "multiplot"
+        self._exclude_from_to_dict.extend(["datasets", "drawings", "data"])
 
     def plot(self):
         """Perform the actual plotting on the given list of datasets.
@@ -2719,12 +2795,12 @@ class MultiPlotter(Plotter):
             raise aspecd.exceptions.MissingDatasetError
         if not all(self.applicable(data) for data in self.data):
             raise aspecd.exceptions.NotApplicableToDatasetError(
-                f'{self.name} not applicable to one or more datasets')
+                f"{self.name} not applicable to one or more datasets"
+            )
 
     def _set_drawing_properties(self):
         if len(self.properties.drawings) < len(self.datasets):
-            for _ in range(len(self.properties.drawings),
-                           len(self.datasets)):
+            for _ in range(len(self.properties.drawings), len(self.datasets)):
                 self.properties.add_drawing()
 
     # noinspection PyUnresolvedReferences
@@ -2748,28 +2824,34 @@ class MultiPlotter(Plotter):
         xunits = [ds.data.axes[0].unit for ds in self.datasets]
         yquantities = [ds.data.axes[1].quantity for ds in self.datasets]
         yunits = [ds.data.axes[1].unit for ds in self.datasets]
-        if self.parameters['axes'][0].quantity:
-            xlabel = \
-                self._create_axis_label_string(self.parameters['axes'][0])
-        elif aspecd.utils.all_equal(xquantities) and \
-                aspecd.utils.all_equal(xunits):
-            xlabel = \
-                self._create_axis_label_string(self.datasets[0].data.axes[0])
+        if self.parameters["axes"][0].quantity:
+            xlabel = self._create_axis_label_string(
+                self.parameters["axes"][0]
+            )
+        elif aspecd.utils.all_equal(xquantities) and aspecd.utils.all_equal(
+            xunits
+        ):
+            xlabel = self._create_axis_label_string(
+                self.datasets[0].data.axes[0]
+            )
         elif self.properties.axes.xlabel:
             xlabel = self.properties.axes.xlabel
         else:
-            xlabel = ''
-        if self.parameters['axes'][1].quantity:
-            ylabel = \
-                self._create_axis_label_string(self.parameters['axes'][1])
-        elif aspecd.utils.all_equal(yquantities) and \
-                aspecd.utils.all_equal(yunits):
-            ylabel = \
-                self._create_axis_label_string(self.datasets[0].data.axes[1])
+            xlabel = ""
+        if self.parameters["axes"][1].quantity:
+            ylabel = self._create_axis_label_string(
+                self.parameters["axes"][1]
+            )
+        elif aspecd.utils.all_equal(yquantities) and aspecd.utils.all_equal(
+            yunits
+        ):
+            ylabel = self._create_axis_label_string(
+                self.datasets[0].data.axes[1]
+            )
         elif self.properties.axes.ylabel:
             ylabel = self.properties.axes.ylabel
         else:
-            ylabel = ''
+            ylabel = ""
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel(ylabel)
 
@@ -2914,14 +2996,19 @@ class MultiPlotter1D(MultiPlotter):
 
     def __init__(self):
         super().__init__()
-        self.description = '1D plotting step for multiple datasets'
+        self.description = "1D plotting step for multiple datasets"
         self.drawings = []
         self.properties = MultiPlot1DProperties()
-        self.parameters['switch_axes'] = False
-        self.parameters['tight'] = ''
-        self._type = 'plot'
-        self._allowed_types = ['plot', 'step', 'loglog', 'semilogx',
-                               'semilogy', ]
+        self.parameters["switch_axes"] = False
+        self.parameters["tight"] = ""
+        self._type = "plot"
+        self._allowed_types = [
+            "plot",
+            "step",
+            "loglog",
+            "semilogx",
+            "semilogy",
+        ]
 
     @property
     def type(self):
@@ -2989,33 +3076,35 @@ class MultiPlotter1D(MultiPlotter):
         for idx, data in enumerate(self.data):
             if not self.properties.drawings[idx].label:
                 self.properties.drawings[idx].label = self.datasets[idx].label
-            if self.parameters['switch_axes']:
-                drawing, = plot_function(
+            if self.parameters["switch_axes"]:
+                (drawing,) = plot_function(
                     data.data,
                     data.axes[0].values,
-                    label=self.properties.drawings[idx].label)
+                    label=self.properties.drawings[idx].label,
+                )
             else:
-                drawing, = plot_function(
+                (drawing,) = plot_function(
                     data.axes[0].values,
                     data.data,
-                    label=self.properties.drawings[idx].label)
+                    label=self.properties.drawings[idx].label,
+                )
             self.drawings.append(drawing)
-        if self.parameters['tight']:
-            axes_limits = [min(data.axes[0].values.min()
-                               for data in self.data),
-                           max(data.axes[0].values.max()
-                               for data in self.data)]
-            data_limits = [min(data.data.min()
-                               for data in self.data),
-                           max(data.data.max()
-                               for data in self.data)]
-            if self.parameters['tight'] in ('x', 'both'):
-                if self.parameters['switch_axes']:
+        if self.parameters["tight"]:
+            axes_limits = [
+                min(data.axes[0].values.min() for data in self.data),
+                max(data.axes[0].values.max() for data in self.data),
+            ]
+            data_limits = [
+                min(data.data.min() for data in self.data),
+                max(data.data.max() for data in self.data),
+            ]
+            if self.parameters["tight"] in ("x", "both"):
+                if self.parameters["switch_axes"]:
                     self.axes.set_xlim(data_limits)
                 else:
                     self.axes.set_xlim(axes_limits)
-            if self.parameters['tight'] in ('y', 'both'):
-                if self.parameters['switch_axes']:
+            if self.parameters["tight"] in ("y", "both"):
+                if self.parameters["switch_axes"]:
                     self.axes.set_ylim(axes_limits)
                 else:
                     self.axes.set_ylim(data_limits)
@@ -3023,25 +3112,28 @@ class MultiPlotter1D(MultiPlotter):
     def _check_values_for_logplot(self):
         issue_warning = False
         for data in self.data:
-            if self.parameters['switch_axes']:
+            if self.parameters["switch_axes"]:
                 xvalues = data.data
                 yvalues = data.axes[0].values
             else:
                 xvalues = data.axes[0].values
                 yvalues = data.data
-            if 'semilogy' in self.type and np.min(yvalues) < 0:
+            if "semilogy" in self.type and np.min(yvalues) < 0:
                 issue_warning = True
-            if 'semilogx' in self.type and np.min(xvalues) < 0:
+            if "semilogx" in self.type and np.min(xvalues) < 0:
                 issue_warning = True
-            if 'loglog' in self.type \
-                    and (np.min(xvalues) < 0 or np.min(yvalues) < 0):
+            if "loglog" in self.type and (
+                np.min(xvalues) < 0 or np.min(yvalues) < 0
+            ):
                 issue_warning = True
         if issue_warning:
-            logger.warning('Negative values with %s plot detected.', self.type)
+            logger.warning(
+                "Negative values with %s plot detected.", self.type
+            )
 
     def _set_axes_labels(self):
         super()._set_axes_labels()
-        if self.parameters['switch_axes']:
+        if self.parameters["switch_axes"]:
             old_xlabel = self.axes.get_xlabel()
             old_ylabel = self.axes.get_ylabel()
             self.axes.set_xlabel(old_ylabel)
@@ -3138,14 +3230,16 @@ class MultiPlotter1DStacked(MultiPlotter1D):
 
     def __init__(self):
         super().__init__()
-        self.description = '1D plotter for stacked display of multiple datasets'
+        self.description = (
+            "1D plotter for stacked display of multiple datasets"
+        )
         self.parameters["show_zero_lines"] = False
         # noinspection PyTypeChecker
         self.parameters["offset"] = None
 
     def _create_plot(self):
         """Actual drawing of datasets"""
-        if not self.parameters['offset']:
+        if not self.parameters["offset"]:
             offset = abs(self.datasets[0].data.data.min()) * 1.05
             self.parameters["offset"] = offset
         else:
@@ -3155,48 +3249,63 @@ class MultiPlotter1DStacked(MultiPlotter1D):
         for idx, dataset in enumerate(self.datasets):
             if not self.properties.drawings[idx].label:
                 self.properties.drawings[idx].label = dataset.label
-            if self.parameters['switch_axes']:
-                drawing, = plot_function(
+            if self.parameters["switch_axes"]:
+                (drawing,) = plot_function(
                     dataset.data.data - idx * offset,
                     dataset.data.axes[0].values,
-                    label=self.properties.drawings[idx].label)
+                    label=self.properties.drawings[idx].label,
+                )
             else:
-                drawing, = plot_function(
+                (drawing,) = plot_function(
                     dataset.data.axes[0].values,
                     dataset.data.data - idx * offset,
-                    label=self.properties.drawings[idx].label)
+                    label=self.properties.drawings[idx].label,
+                )
             self.drawings.append(drawing)
-        self.axes.tick_params(axis='y', which='both', left=False,
-                              right=False, labelleft=False, labelright=False)
-        if self.parameters['tight']:
-            axes_limits = [min(dataset.data.axes[0].values.min()
-                               for dataset in self.datasets),
-                           max(dataset.data.axes[0].values.max()
-                               for dataset in self.datasets)]
-            data_limits = [min(dataset.data.data.min()
-                               for dataset in self.datasets),
-                           max(dataset.data.data.max()
-                               for dataset in self.datasets)]
-            data_limits[0] -= (offset * (len(self.datasets) - 1))
-            if self.parameters['tight'] in ('x', 'both'):
-                if self.parameters['switch_axes']:
+        self.axes.tick_params(
+            axis="y",
+            which="both",
+            left=False,
+            right=False,
+            labelleft=False,
+            labelright=False,
+        )
+        if self.parameters["tight"]:
+            axes_limits = [
+                min(
+                    dataset.data.axes[0].values.min()
+                    for dataset in self.datasets
+                ),
+                max(
+                    dataset.data.axes[0].values.max()
+                    for dataset in self.datasets
+                ),
+            ]
+            data_limits = [
+                min(dataset.data.data.min() for dataset in self.datasets),
+                max(dataset.data.data.max() for dataset in self.datasets),
+            ]
+            data_limits[0] -= offset * (len(self.datasets) - 1)
+            if self.parameters["tight"] in ("x", "both"):
+                if self.parameters["switch_axes"]:
                     self.axes.set_xlim(data_limits)
                 else:
                     self.axes.set_xlim(axes_limits)
-            if self.parameters['tight'] in ('y', 'both'):
-                if self.parameters['switch_axes']:
+            if self.parameters["tight"] in ("y", "both"):
+                if self.parameters["switch_axes"]:
                     self.axes.set_ylim(axes_limits)
                 else:
                     self.axes.set_ylim(data_limits)
 
     def _add_zero_lines(self):
-        if self.parameters['show_zero_lines']:
+        if self.parameters["show_zero_lines"]:
             for idx in range(len(self.datasets)):
-                offset = -idx * self.parameters['offset']
+                offset = -idx * self.parameters["offset"]
                 self.axes.axhline(
                     y=offset,
                     **self.properties.zero_lines.to_dict(),  # noqa
-                    zorder=1)
+                    zorder=1,
+                )
 
 
 class CompositePlotter(Plotter):
@@ -3333,23 +3442,29 @@ class CompositePlotter(Plotter):
 
     def __init__(self):
         super().__init__()
-        self.description = 'Composite plotter displaying several axes'
+        self.description = "Composite plotter displaying several axes"
         self.axes = []
         self.grid_dimensions = [1, 1]
         self.subplot_locations = [[0, 0, 1, 1]]
         self.axes_positions = []
         self.plotter = []
         self.properties = CompositePlotProperties()
-        self.__kind__ = 'compositeplot'
+        self.__kind__ = "compositeplot"
 
     def _create_figure_and_axes(self):
         self.figure = plt.figure()
-        grid_spec = self.figure.add_gridspec(self.grid_dimensions[0],
-                                             self.grid_dimensions[1])
+        grid_spec = self.figure.add_gridspec(
+            self.grid_dimensions[0], self.grid_dimensions[1]
+        )
         for subplot in self.subplot_locations:
-            self.axes.append(self.figure.add_subplot(
-                grid_spec[subplot[0]:subplot[0] + subplot[2],
-                          subplot[1]:subplot[1] + subplot[3]]))
+            self.axes.append(
+                self.figure.add_subplot(
+                    grid_spec[
+                        subplot[0] : subplot[0] + subplot[2],
+                        subplot[1] : subplot[1] + subplot[3],
+                    ]
+                )
+            )
 
     def _create_plot(self):
         if not self.plotter or len(self.plotter) < len(self.axes):
@@ -3363,8 +3478,10 @@ class CompositePlotter(Plotter):
         for idx, position in enumerate(self.axes_positions):
             left, bottom, width, height = self.axes[idx].get_position().bounds
             new_position = [
-                left + position[0] * width, bottom + position[1] * height,
-                position[2] * width, position[3] * height
+                left + position[0] * width,
+                bottom + position[1] * height,
+                position[2] * width,
+                position[3] * height,
             ]
             self.axes[idx].set_position(new_position)
 
@@ -3403,7 +3520,7 @@ class SingleCompositePlotter(CompositePlotter):
     def __init__(self):
         super().__init__()
         self.dataset = None
-        self.description = 'Composite plotter for single dataset'
+        self.description = "Composite plotter for single dataset"
 
     def plot(self, dataset=None, from_dataset=False):
         """Perform the actual plotting on the given dataset.
@@ -3460,11 +3577,13 @@ class SingleCompositePlotter(CompositePlotter):
             history record for plotting step
 
         """
-        history_record = \
-            aspecd.history.PlotHistoryRecord(package=self.dataset.package_name)
+        history_record = aspecd.history.PlotHistoryRecord(
+            package=self.dataset.package_name
+        )
         history_record.plot = aspecd.history.SinglePlotRecord(plotter=self)
         history_record.plot.preprocessing = copy.deepcopy(
-            self.dataset.history)
+            self.dataset.history
+        )
         return history_record
 
     def _assign_dataset(self, dataset):
@@ -3474,7 +3593,7 @@ class SingleCompositePlotter(CompositePlotter):
         else:
             self.dataset = dataset
         for plotter in self.plotter:
-            if hasattr(plotter, 'dataset'):
+            if hasattr(plotter, "dataset"):
                 plotter.dataset = self.dataset
 
     def _call_from_dataset(self, from_dataset):
@@ -3490,9 +3609,13 @@ class SingleCompositePlotter(CompositePlotter):
 
     def _check_applicability(self):
         if not self.applicable(self.dataset):
-            message = f"{self.name} not applicable to dataset with id " \
-                      f"{self.dataset.id}"
-            raise aspecd.exceptions.NotApplicableToDatasetError(message=message)
+            message = (
+                f"{self.name} not applicable to dataset with id "
+                f"{self.dataset.id}"
+            )
+            raise aspecd.exceptions.NotApplicableToDatasetError(
+                message=message
+            )
 
 
 class Saver:
@@ -3586,17 +3709,22 @@ class Saver:
         """
         self._add_file_extension()
         try:
-            self.plotter.figure.savefig(self.filename,
-                                        dpi=self.plotter.figure.dpi,
-                                        **self.parameters)
+            self.plotter.figure.savefig(
+                self.filename, dpi=self.plotter.figure.dpi, **self.parameters
+            )
         except OSError as os_error:
             if os_error.errno == errno.ENAMETOOLONG:
-                file_basename, file_extension = os.path.splitext(self.filename)
-                self.filename = ''.join([
-                    hashlib.md5(file_basename.encode(),
-                                usedforsecurity=False).hexdigest(),
-                    file_extension
-                ])
+                file_basename, file_extension = os.path.splitext(
+                    self.filename
+                )
+                self.filename = "".join(
+                    [
+                        hashlib.md5(
+                            file_basename.encode(), usedforsecurity=False
+                        ).hexdigest(),
+                        file_extension,
+                    ]
+                )
             else:
                 raise
 
@@ -3620,11 +3748,13 @@ class Saver:
         file_basename, file_extension = os.path.splitext(self.filename)
         if "format" in self.parameters:
             if file_extension != self.parameters["format"]:
-                self.filename = '.'.join([file_basename,
-                                          self.parameters["format"]])
+                self.filename = ".".join(
+                    [file_basename, self.parameters["format"]]
+                )
             elif not file_extension:
-                self.filename = '.'.join([self.filename,
-                                          self.parameters["format"]])
+                self.filename = ".".join(
+                    [self.filename, self.parameters["format"]]
+                )
 
 
 class Caption(aspecd.utils.Properties):
@@ -3656,8 +3786,8 @@ class Caption(aspecd.utils.Properties):
 
     def __init__(self):
         super().__init__()
-        self.title = ''
-        self.text = ''
+        self.title = ""
+        self.text = ""
         self.parameters = []
 
 
@@ -3703,7 +3833,7 @@ class PlotProperties(aspecd.utils.Properties):
         self.legend = LegendProperties()
         self.zero_lines = LineProperties()
         # Set default properties
-        self.zero_lines.color = '#cccccc'
+        self.zero_lines.color = "#cccccc"
 
     def apply(self, plotter=None):
         """
@@ -3845,8 +3975,8 @@ class SinglePlot2DProperties(SinglePlotProperties):
         super().__init__()
         self.drawing = SurfaceProperties()
         self.colorbar = ColorbarProperties()
-        self._colormap = ''
-        self._include_in_to_dict = ['colormap']
+        self._colormap = ""
+        self._include_in_to_dict = ["colormap"]
 
     @property
     def colormap(self):
@@ -3965,12 +4095,12 @@ class MultiPlotProperties(PlotProperties):
             Raised if no dict is provided.
 
         """
-        if 'drawings' in dict_:
-            for idx in range(len(self.drawings), len(dict_['drawings'])):
+        if "drawings" in dict_:
+            for idx in range(len(self.drawings), len(dict_["drawings"])):
                 self.add_drawing()
-            for idx, drawing in enumerate(dict_['drawings']):
+            for idx, drawing in enumerate(dict_["drawings"]):
                 self.drawings[idx].from_dict(drawing)
-            dict_.pop('drawings')
+            dict_.pop("drawings")
         if dict_:
             super().from_dict(dict_)
 
@@ -4014,9 +4144,9 @@ class MultiPlotProperties(PlotProperties):
         super().apply(plotter=plotter)
         self.axes.apply(axes=plotter.axes)
         self.grid.apply(axes=plotter.axes)
-        if hasattr(plotter, 'legend') and plotter.legend:
+        if hasattr(plotter, "legend") and plotter.legend:
             self.legend.apply(legend=plotter.legend)
-        if hasattr(plotter, 'drawings'):
+        if hasattr(plotter, "drawings"):
             for idx, drawing in enumerate(plotter.drawings):
                 self.drawings[idx].apply(drawing=drawing)
 
@@ -4069,13 +4199,13 @@ class MultiPlot1DProperties(MultiPlotProperties):
         self.drawings.append(drawing_properties)
 
     def _set_default_properties(self, drawing_properties):
-        property_cycle = mpl.rcParams['axes.prop_cycle'].by_key()
+        property_cycle = mpl.rcParams["axes.prop_cycle"].by_key()
         length_properties = len(property_cycle["color"])
         idx = len(self.drawings)
         for key, value in property_cycle.items():
             setattr(drawing_properties, key, value[idx % length_properties])
-        for key in ['linewidth', 'linestyle', 'marker']:
-            rc_property = 'lines.' + key
+        for key in ["linewidth", "linestyle", "marker"]:
+            rc_property = "lines." + key
             if rc_property in mpl.rcParams.keys():
                 setattr(drawing_properties, key, mpl.rcParams[rc_property])
 
@@ -4100,7 +4230,7 @@ class MultiPlot1DProperties(MultiPlotProperties):
 
         """
         super().apply(plotter=plotter)
-        if hasattr(plotter, 'drawings') and self.colormap:
+        if hasattr(plotter, "drawings") and self.colormap:
             colors = plt.get_cmap(self.colormap, len(self.drawings))
             for idx, _ in enumerate(plotter.drawings):
                 self.drawings[idx].color = colors(idx)
@@ -4149,7 +4279,7 @@ class CompositePlotProperties(PlotProperties):
 
         """
         super().apply(plotter=plotter)
-        if hasattr(plotter, 'axes'):
+        if hasattr(plotter, "axes"):
             for axes in plotter.axes:
                 self.axes.apply(axes=axes)
 
@@ -4197,9 +4327,9 @@ class FigureProperties(aspecd.utils.Properties):
 
     def __init__(self):
         super().__init__()
-        self.size = (6., 4.)
+        self.size = (6.0, 4.0)
         self.dpi = 100.0
-        self.title = ''
+        self.title = ""
 
     def apply(self, figure=None):
         """
@@ -4376,23 +4506,23 @@ class AxesProperties(aspecd.utils.Properties):
     # pylint: disable=too-many-instance-attributes
     def __init__(self):
         super().__init__()
-        self.aspect = ''
+        self.aspect = ""
         self.facecolor = None
         self.position = []
-        self.title = ''
-        self.xlabel = ''
+        self.title = ""
+        self.xlabel = ""
         self.xlim = []
-        self.xscale = ''
+        self.xscale = ""
         self.xticklabels = None
         self.xticklabelangle = 0.0
         self.xticks = None
-        self.ylabel = ''
+        self.ylabel = ""
         self.ylim = []
-        self.yscale = ''
+        self.yscale = ""
         self.yticklabels = None
         self.yticklabelangle = 0.0
         self.yticks = None
-        self.label_fontsize = plt.rcParams['font.size']
+        self.label_fontsize = plt.rcParams["font.size"]
         self.invert = None
 
     def apply(self, axes=None):
@@ -4418,8 +4548,8 @@ class AxesProperties(aspecd.utils.Properties):
             raise aspecd.exceptions.MissingAxisError
         axes.update(self._get_settable_properties())
         for property_, value in self._get_settable_properties().items():
-            if hasattr(axes, 'set_' + property_):
-                getattr(axes, 'set_' + property_)(value)
+            if hasattr(axes, "set_" + property_):
+                getattr(axes, "set_" + property_)(value)
         self._set_axes_ticks(axes)
         self._set_axes_fonts(axes)
         if self.invert:
@@ -4444,8 +4574,8 @@ class AxesProperties(aspecd.utils.Properties):
         properties = {}
         for prop in all_properties:
             if (
-                    prop.startswith(('xtick', 'ytick', 'invert'))
-                    or "fontsize" in prop
+                prop.startswith(("xtick", "ytick", "invert"))
+                or "fontsize" in prop
             ):
                 pass
             elif isinstance(all_properties[prop], np.ndarray):
@@ -4477,10 +4607,10 @@ class AxesProperties(aspecd.utils.Properties):
         if isinstance(self.invert, str):
             self.invert = [self.invert]
         for axis in self.invert:
-            if axis.lower().startswith('x'):
+            if axis.lower().startswith("x"):
                 if not axes.xaxis_inverted():
                     axes.invert_xaxis()
-            if axis.lower().startswith('y'):
+            if axis.lower().startswith("y"):
                 if not axes.yaxis_inverted():
                     axes.invert_yaxis()
 
@@ -4548,14 +4678,14 @@ class LegendProperties(aspecd.utils.Properties):
 
     def __init__(self):
         super().__init__()
-        self.loc = 'best'
+        self.loc = "best"
         self.frameon = True
         self.labelspacing = 0.5
-        self.fontsize = plt.rcParams['font.size']
+        self.fontsize = plt.rcParams["font.size"]
         self.ncol = 1
-        self.title = ''
-        self._exclude = ['location']
-        self._exclude_from_to_dict = ['location']
+        self.title = ""
+        self._exclude = ["location"]
+        self._exclude_from_to_dict = ["location"]
 
     @property
     def location(self):
@@ -4563,7 +4693,7 @@ class LegendProperties(aspecd.utils.Properties):
         return self.loc
 
     @location.setter
-    def location(self, value=''):
+    def location(self, value=""):
         self.loc = value
 
     def apply(self, legend=None):
@@ -4608,7 +4738,7 @@ class DrawingProperties(aspecd.utils.Properties):
 
     def __init__(self):
         super().__init__()
-        self.label = ''
+        self.label = ""
 
     def apply(self, drawing=None):
         """
@@ -4653,11 +4783,14 @@ class DrawingProperties(aspecd.utils.Properties):
             name of the property to set
 
         """
-        if hasattr(drawing, ''.join(['set_', prop])):
-            getattr(drawing, ''.join(['set_', prop]))(getattr(self, prop))
+        if hasattr(drawing, "".join(["set_", prop])):
+            getattr(drawing, "".join(["set_", prop]))(getattr(self, prop))
         else:
-            logger.debug('"%s" has no setter for attribute "%s", hence not '
-                         'set', drawing.__class__, prop)
+            logger.debug(
+                '"%s" has no setter for attribute "%s", hence not ' "set",
+                drawing.__class__,
+                prop,
+            )
 
 
 class LineProperties(DrawingProperties):
@@ -4701,11 +4834,11 @@ class LineProperties(DrawingProperties):
 
     def __init__(self):
         super().__init__()
-        self.color = '#000000'
-        self.drawstyle = 'default'
-        self.linestyle = 'solid'
+        self.color = "#000000"
+        self.drawstyle = "default"
+        self.linestyle = "solid"
         self.linewidth = 1.0
-        self.marker = ''
+        self.marker = ""
 
     def settable_properties(self):
         """
@@ -4753,7 +4886,7 @@ class SurfaceProperties(DrawingProperties):
 
     def __init__(self):
         super().__init__()
-        self.cmap = 'viridis'
+        self.cmap = "viridis"
         self.linewidths = None
         self.linestyles = None
         self.colors = None
@@ -4771,8 +4904,13 @@ class SurfaceProperties(DrawingProperties):
         super().apply(drawing=drawing)
         children = drawing.axes.get_children()
         for child in children:
-            if isinstance(child, (mpl.collections.LineCollection,
-                                  mpl.collections.PathCollection)):
+            if isinstance(
+                child,
+                (
+                    mpl.collections.LineCollection,
+                    mpl.collections.PathCollection,
+                ),
+            ):
                 if self.linewidths:
                     child.set_linewidths(self.linewidths)
                 if self.linestyles:
@@ -4814,11 +4952,11 @@ class GridProperties(aspecd.utils.Properties):
     def __init__(self):
         super().__init__()
         self.show = False
-        self.ticks = ''
-        self.axis = ''
+        self.ticks = ""
+        self.axis = ""
         self.lines = LineProperties()
         # Set default properties
-        self.lines.color = '#cccccc'
+        self.lines.color = "#cccccc"
 
     def apply(self, axes=None):
         """
@@ -4839,20 +4977,26 @@ class GridProperties(aspecd.utils.Properties):
 
         """
         if not axes:
-            raise TypeError('Missing 1 positional argument: axes')
+            raise TypeError("Missing 1 positional argument: axes")
         # Partly untested code: no plan how to test that a grid is present
         if not self.show:
             axes.grid(False)
         else:
             if self.ticks and self.axis:
-                axes.grid(True, which=self.ticks, axis=self.axis,
-                          **self.lines.settable_properties())
+                axes.grid(
+                    True,
+                    which=self.ticks,
+                    axis=self.axis,
+                    **self.lines.settable_properties(),
+                )
             elif self.ticks:
-                axes.grid(True, which=self.ticks,
-                          **self.lines.settable_properties())
+                axes.grid(
+                    True, which=self.ticks, **self.lines.settable_properties()
+                )
             elif self.axis:
-                axes.grid(True, axis=self.axis,
-                          **self.lines.settable_properties())
+                axes.grid(
+                    True, axis=self.axis, **self.lines.settable_properties()
+                )
             else:
                 axes.grid(True, **self.lines.settable_properties())
 
@@ -4943,11 +5087,11 @@ class ColorbarProperties(aspecd.utils.Properties):
         super().__init__()
         self.location = None
         self.fraction = 0.15
-        self.aspect = 20.
+        self.aspect = 20.0
         self.pad = None
-        self.format = ''
-        self.label = {'text': '', 'location': None}
-        self._exclude_from_kwargs = ['label']
+        self.format = ""
+        self.label = {"text": "", "location": None}
+        self._exclude_from_kwargs = ["label"]
 
     @property
     def kwargs(self):
@@ -4995,8 +5139,8 @@ class ColorbarProperties(aspecd.utils.Properties):
         self._set_colorbar_label(colorbar=colorbar)
 
     def _set_colorbar_label(self, colorbar=None):
-        if "location" in self.label and self.label['location']:
-            location = self.label['location']
+        if "location" in self.label and self.label["location"]:
+            location = self.label["location"]
         else:
             location = None
-        colorbar.set_label(self.label['text'], loc=location)
+        colorbar.set_label(self.label["text"], loc=location)

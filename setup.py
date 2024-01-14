@@ -10,9 +10,9 @@ def read(fname):
 
 setuptools.setup(
     name="aspecd",
-    version=read('VERSION').strip(),
+    version=read("VERSION").strip(),
     description="Framework for handling spectroscopic data.",
-    long_description=read('README.rst'),
+    long_description=read("README.rst"),
     long_description_content_type="text/x-rst",
     author="Till Biskup",
     author_email="till@till-biskup.de",
@@ -21,8 +21,8 @@ setuptools.setup(
         "Documentation": "https://docs.aspecd.de/",
         "Source": "https://github.com/tillbiskup/aspecd",
     },
-    packages=setuptools.find_packages(exclude=('tests', 'docs')),
-    license='BSD',
+    packages=setuptools.find_packages(exclude=("tests", "docs")),
+    license="BSD",
     keywords=[
         "spectroscopy",
         "data processing and analysis",
@@ -43,29 +43,38 @@ setuptools.setup(
         "Topic :: Scientific/Engineering",
         "Topic :: Scientific/Engineering :: Chemistry",
         "Topic :: Scientific/Engineering :: Physics",
-        "Topic :: Software Development :: Libraries :: Application Frameworks"
+        "Topic :: Software Development :: Libraries :: Application Frameworks",
     ],
     install_requires=[
-        'jinja2>=3.0',
-        'matplotlib',
-        'numpy',
-        'scipy>=0.14',
-        'oyaml',
-        'asdf',
-        'bibrecord',
+        "jinja2>=3.0",
+        "matplotlib",
+        "numpy",
+        "scipy>=0.14",
+        "oyaml",
+        "asdf",
+        "bibrecord",
     ],
     extras_require={
-        'dev': ['prospector', "pyroma", "bandit", "black", ],
-        'docs': ['sphinx', 'sphinx-rtd-theme', 'sphinx-multiversion',],
+        "dev": [
+            "prospector",
+            "pyroma",
+            "bandit",
+            "black",
+        ],
+        "docs": [
+            "sphinx",
+            "sphinx-rtd-theme",
+            "sphinx-multiversion",
+        ],
         "deployment": [
             "build",
             "twine",
         ],
     },
-    python_requires='>=3.7',
+    python_requires=">=3.7",
     entry_points={
-        'console_scripts': [
-            'serve = aspecd.tasks:serve',
+        "console_scripts": [
+            "serve = aspecd.tasks:serve",
         ],
     },
     include_package_data=True,
