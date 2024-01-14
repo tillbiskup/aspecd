@@ -55,8 +55,12 @@ setuptools.setup(
         'bibrecord',
     ],
     extras_require={
-        'dev': ['prospector'],
-        'docs': ['sphinx', 'sphinx-rtd-theme', 'sphinx-multiversion'],
+        'dev': ['prospector', "pyroma", "bandit", "black", ],
+        'docs': ['sphinx', 'sphinx-rtd-theme', 'sphinx-multiversion',],
+        "deployment": [
+            "build",
+            "twine",
+        ],
     },
     python_requires='>=3.7',
     entry_points={
