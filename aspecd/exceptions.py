@@ -25,7 +25,7 @@ class MissingParameterError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -40,7 +40,7 @@ class MissingPlotterError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -55,7 +55,7 @@ class MissingDatasetError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -70,7 +70,7 @@ class MissingSaverError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -85,7 +85,7 @@ class MissingFilenameError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -100,7 +100,7 @@ class MissingPlotError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -115,7 +115,7 @@ class MissingFigureError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -130,7 +130,7 @@ class MissingAxisError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -145,7 +145,7 @@ class MissingLegendError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -160,7 +160,7 @@ class MissingDrawingError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -175,7 +175,7 @@ class MissingTargetError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -190,7 +190,7 @@ class MissingRecipeError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -205,7 +205,7 @@ class MissingSourceError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -220,7 +220,7 @@ class MissingProcessingStepError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -235,7 +235,7 @@ class MissingAnalysisStepError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -250,7 +250,7 @@ class UndoWithEmptyHistoryError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -265,7 +265,7 @@ class UndoAtBeginningOfHistoryError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -280,7 +280,7 @@ class UndoStepUndoableError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -295,7 +295,7 @@ class RedoAlreadyAtLatestChangeError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -310,7 +310,7 @@ class ProcessingWithLeadingHistoryError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -325,7 +325,7 @@ class MissingImporterFactoryError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -340,7 +340,7 @@ class AxesCountError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -355,7 +355,7 @@ class AxesValuesInconsistentWithDataError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -370,7 +370,7 @@ class MissingImporterError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -385,7 +385,7 @@ class MissingExporterError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -400,7 +400,7 @@ class NoContentError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -415,7 +415,7 @@ class UnknownScopeError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -430,7 +430,7 @@ class MissingAnnotationError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -445,7 +445,7 @@ class InfofileTypeError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -460,7 +460,7 @@ class InfofileEmptyError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -475,7 +475,7 @@ class NotApplicableToDatasetError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -490,7 +490,7 @@ class StyleNotFoundError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -505,7 +505,7 @@ class LaTeXExecutableNotFoundError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -520,7 +520,7 @@ class MissingDictError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -535,7 +535,7 @@ class MissingDatasetFactoryError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -550,7 +550,7 @@ class MissingTaskFactoryError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -565,7 +565,7 @@ class MissingTaskDescriptionError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message
 
@@ -580,6 +580,6 @@ class MissingDatasetIdentifierError(Error):
 
     """
 
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
         self.message = message

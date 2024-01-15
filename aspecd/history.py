@@ -125,7 +125,7 @@ class HistoryRecord(aspecd.utils.ToDictMixin):
 
     """
 
-    def __init__(self, package=''):
+    def __init__(self, package=""):
         self.date = datetime.today()
         self.sysinfo = aspecd.system.SystemInfo(package=package)
         super().__init__()
@@ -153,12 +153,13 @@ class HistoryRecord(aspecd.utils.ToDictMixin):
             if hasattr(self, key):
                 attribute = getattr(self, key)
                 if key == "date":
-                    if hasattr(datetime, 'fromisoformat'):
+                    if hasattr(datetime, "fromisoformat"):
                         self.date = datetime.fromisoformat(value)
                     else:
-                        self.date = datetime.strptime(value,
-                                                      '%Y-%m-%d %H:%M:%S.%f')
-                elif hasattr(attribute, 'from_dict'):
+                        self.date = datetime.strptime(
+                            value, "%Y-%m-%d %H:%M:%S.%f"
+                        )
+                elif hasattr(attribute, "from_dict"):
                     attribute.from_dict(value)
                 else:
                     setattr(self, key, value)
@@ -224,13 +225,18 @@ class ProcessingStepRecord(aspecd.utils.ToDictMixin):
     def __init__(self, processing_step=None):
         super().__init__()
         self.undoable = False
-        self.description = ''
+        self.description = ""
         self.parameters = {}
-        self.comment = ''
+        self.comment = ""
         self.references = []
-        self.class_name = ''
-        self._attributes_to_copy = ['description', 'parameters', 'undoable',
-                                    'comment', 'references']
+        self.class_name = ""
+        self._attributes_to_copy = [
+            "description",
+            "parameters",
+            "undoable",
+            "comment",
+            "references",
+        ]
         if processing_step:
             self.from_processing_step(processing_step)
 
@@ -302,7 +308,7 @@ class ProcessingHistoryRecord(HistoryRecord):
 
     """
 
-    def __init__(self, processing_step=None, package=''):
+    def __init__(self, processing_step=None, package=""):
         super().__init__(package=package)
         self.processing = ProcessingStepRecord(processing_step)
 
@@ -383,14 +389,19 @@ class AnalysisStepRecord(aspecd.utils.ToDictMixin):
 
     def __init__(self, analysis_step=None):
         super().__init__()
-        self.description = ''
+        self.description = ""
         self.parameters = {}
-        self.comment = ''
+        self.comment = ""
         self.references = []
-        self.class_name = ''
+        self.class_name = ""
         self.result = None
-        self._attributes_to_copy = ['description', 'parameters', 'comment',
-                                    'references', 'result']
+        self._attributes_to_copy = [
+            "description",
+            "parameters",
+            "comment",
+            "references",
+            "result",
+        ]
         if analysis_step:
             self.from_analysis_step(analysis_step)
 
@@ -509,7 +520,7 @@ class AnalysisHistoryRecord(HistoryRecord):
 
     """
 
-    def __init__(self, analysis_step=None, package=''):
+    def __init__(self, analysis_step=None, package=""):
         super().__init__(package=package)
         self.analysis = SingleAnalysisStepRecord(analysis_step)
 
@@ -579,9 +590,9 @@ class AnnotationRecord(aspecd.utils.ToDictMixin):
     def __init__(self, annotation=None):
         super().__init__()
         self.content = {}
-        self.class_name = ''
-        self.type = ''
-        self._attributes_to_copy = ['content', 'type']
+        self.class_name = ""
+        self.type = ""
+        self._attributes_to_copy = ["content", "type"]
         if annotation:
             self.from_annotation(annotation)
 
@@ -647,7 +658,7 @@ class AnnotationHistoryRecord(HistoryRecord):
 
     """
 
-    def __init__(self, annotation=None, package=''):
+    def __init__(self, annotation=None, package=""):
         super().__init__(package=package)
         self.annotation = AnnotationRecord(annotation)
 
@@ -712,16 +723,21 @@ class PlotRecord(aspecd.utils.ToDictMixin):
 
     def __init__(self, plotter=None):
         super().__init__()
-        self.class_name = ''
-        self.description = ''
+        self.class_name = ""
+        self.description = ""
         self.parameters = {}
         self.properties = None
         self.caption = None
-        self.label = ''
-        self.filename = ''
-        self._attributes_to_copy = ['description', 'parameters',
-                                    'properties', 'caption', 'filename',
-                                    'label']
+        self.label = ""
+        self.filename = ""
+        self._attributes_to_copy = [
+            "description",
+            "parameters",
+            "properties",
+            "caption",
+            "filename",
+            "label",
+        ]
         if plotter:
             self.from_plotter(plotter=plotter)
 
@@ -830,7 +846,7 @@ class PlotHistoryRecord(HistoryRecord):
 
     """
 
-    def __init__(self, package=''):
+    def __init__(self, package=""):
         super().__init__(package=package)
         self.plot = SinglePlotRecord()
 
@@ -877,13 +893,17 @@ class TableRecord(aspecd.utils.ToDictMixin):
 
     def __init__(self, table=None):
         super().__init__()
-        self.class_name = ''
+        self.class_name = ""
         self.caption = None
-        self.format = ''
+        self.format = ""
         self.column_format = []
-        self.filename = ''
-        self._attributes_to_copy = ['caption', 'format', 'column_format',
-                                    'filename']
+        self.filename = ""
+        self._attributes_to_copy = [
+            "caption",
+            "format",
+            "column_format",
+            "filename",
+        ]
         if table:
             self.from_table(table=table)
 
@@ -902,7 +922,7 @@ class TableRecord(aspecd.utils.ToDictMixin):
 
         """
         if not table:
-            raise TypeError('from_table needs a Table object')
+            raise TypeError("from_table needs a Table object")
         for attribute in self._attributes_to_copy:
             setattr(self, attribute, getattr(table, attribute))
         self.class_name = table.name
@@ -957,7 +977,7 @@ class TableHistoryRecord(HistoryRecord):
 
     """
 
-    def __init__(self, table=None, package=''):
+    def __init__(self, table=None, package=""):
         super().__init__(package=package)
         self.table = TableRecord(table)
 
@@ -1001,10 +1021,10 @@ class DatasetExporterRecord(aspecd.utils.ToDictMixin):
 
     def __init__(self, exporter=None):
         super().__init__()
-        self.class_name = ''
-        self.target = ''
-        self.comment = ''
-        self._attributes_to_copy = ['target', 'comment']
+        self.class_name = ""
+        self.target = ""
+        self.comment = ""
+        self._attributes_to_copy = ["target", "comment"]
         if exporter:
             self.from_exporter(exporter)
 
@@ -1037,7 +1057,7 @@ class DatasetExporterRecord(aspecd.utils.ToDictMixin):
 
         """
         if not exporter:
-            raise TypeError('from_exporter needs a DatasetExporter object')
+            raise TypeError("from_exporter needs a DatasetExporter object")
         self.class_name = aspecd.utils.full_class_name(exporter)
         for attribute in self._attributes_to_copy:
             setattr(self, attribute, getattr(exporter, attribute))
@@ -1081,6 +1101,6 @@ class DatasetExporterHistoryRecord(HistoryRecord):
 
     """
 
-    def __init__(self, exporter=None, package=''):
+    def __init__(self, exporter=None, package=""):
         super().__init__(package)
         self.exporter = DatasetExporterRecord(exporter=exporter)

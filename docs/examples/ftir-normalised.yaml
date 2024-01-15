@@ -3,13 +3,13 @@ format:
   version: '0.2'
 
 datasets:
-  - source: AL-C1_1.csv
+  - source: FTIR-C1_1.csv
     label: Substance 1
     importer: TxtImporter
     importer_parameters:
       skiprows: 2
       delimiter: ';'
-  - source: AL-C2_1.csv
+  - source: FTIR-C2_1.csv
     label: Substance 2
     importer: TxtImporter
     importer_parameters:

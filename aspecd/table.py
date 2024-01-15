@@ -509,15 +509,15 @@ class Table(utils.ToDictMixin):
         self.dataset = None
         self.caption = Caption()
         self.table = None
-        self.format = ''
+        self.format = ""
         self.column_format = []
-        self.filename = ''
+        self.filename = ""
         self._format = Format()
         self._columns = []
         self._rows = []
         self._column_widths = []
-        self.__kind__ = 'tabulate'
-        self._exclude_from_to_dict = ['name', 'dataset', 'table']
+        self.__kind__ = "tabulate"
+        self._exclude_from_to_dict = ["name", "dataset", "table"]
 
     def tabulate(self, dataset=None, from_dataset=False):
         """
@@ -545,10 +545,12 @@ class Table(utils.ToDictMixin):
             raise aspecd.exceptions.MissingDatasetError
         if self.dataset.data.data.ndim > 2:
             raise aspecd.exceptions.NotApplicableToDatasetError(
-                message='Tables work only with 1D and 2D data')
+                message="Tables work only with 1D and 2D data"
+            )
         if self.dataset.data.data.size == 0:
-            logger.warning('Dataset contains no data, hence nothing to '
-                           'tabulate.')
+            logger.warning(
+                "Dataset contains no data, hence nothing to tabulate."
+            )
             return
         if from_dataset:
             self._set_format()
@@ -556,7 +558,7 @@ class Table(utils.ToDictMixin):
             self._format_rows()
             self._add_rules()
             self._add_opening_and_closing()
-            self.table = '\n'.join(self._rows)
+            self.table = "\n".join(self._rows)
         else:
             self.dataset.tabulate(table=self)
 
@@ -571,7 +573,7 @@ class Table(utils.ToDictMixin):
         """
         if not self.table:
             return
-        with open(self.filename, 'w', encoding="utf8") as file:
+        with open(self.filename, "w", encoding="utf8") as file:
             file.write(self.table)
 
     def create_history_record(self):
@@ -589,14 +591,15 @@ class Table(utils.ToDictMixin):
             history record for tabulating step
 
         """
-        history_record = \
-            history.TableHistoryRecord(package=self.dataset.package_name)
+        history_record = history.TableHistoryRecord(
+            package=self.dataset.package_name
+        )
         history_record.table = history.TableRecord(table=self)
         return history_record
 
     def _set_format(self):
-        format_class = self.format.lower().capitalize() + 'Format'
-        format_class = '.'.join(['aspecd.table', format_class])
+        format_class = self.format.lower().capitalize() + "Format"
+        format_class = ".".join(["aspecd.table", format_class])
         self._format = utils.object_from_class_name(format_class)
 
     def _format_columns(self):
@@ -604,7 +607,7 @@ class Table(utils.ToDictMixin):
         if any(self.dataset.data.axes[0].index):
             row_indices = []
             if any(self.dataset.data.axes[1].index):
-                row_indices.append('')
+                row_indices.append("")
             row_indices.extend(self.dataset.data.axes[0].index)
             self._columns.append(self._adjust_column_width(row_indices))
         if self.dataset.data.data.ndim == 2:
@@ -612,10 +615,12 @@ class Table(utils.ToDictMixin):
                 current_column = []
                 if any(self.dataset.data.axes[1].index):
                     current_column.append(
-                        self.dataset.data.axes[1].index[column])
+                        self.dataset.data.axes[1].index[column]
+                    )
                 for row in self.dataset.data.data[:, column]:
-                    current_column.append(self._format_number(row,
-                                                              column=column))
+                    current_column.append(
+                        self._format_number(row, column=column)
+                    )
                 current_column = self._adjust_column_width(current_column)
                 self._columns.append(current_column)
         else:
@@ -638,49 +643,52 @@ class Table(utils.ToDictMixin):
             except IndexError:
                 string_format = self.column_format[-1]
             # pylint: disable=consider-using-f-string
-            formatted_number = \
-                '{:{format}}'.format(number, format=string_format)
+            formatted_number = "{:{format}}".format(
+                number, format=string_format
+            )
         else:
-            formatted_number = f'{number}'
+            formatted_number = f"{number}"
         return formatted_number
 
     def _format_rows(self):
         self._rows = []
         for row in range(len(self._columns[0])):
             current_row = []
-            padding = self._format.padding * ' '
+            padding = self._format.padding * " "
             for column in self._columns:
                 current_row.append(column[row])
             if any(self.dataset.data.axes[1].index) and row == 0:
-                separator = '{padding}{separator}{padding}'.format(
+                separator = "{padding}{separator}{padding}".format(
                     padding=padding, separator=self._format.header_separator
                 )
                 if any(self.dataset.data.axes[0].index):
                     prefix = self._format.column_prefix
                 else:
                     prefix = self._format.header_prefix
-                formatted_row = \
-                    '{prefix}{padding}{row}{padding}{postfix}'.format(
+                formatted_row = (
+                    "{prefix}{padding}{row}{padding}{postfix}".format(
                         prefix=prefix,
                         padding=padding,
                         row=separator.join(current_row),
-                        postfix=self._format.header_postfix
+                        postfix=self._format.header_postfix,
                     )
+                )
             else:
-                separator = '{padding}{separator}{padding}'.format(
+                separator = "{padding}{separator}{padding}".format(
                     padding=padding, separator=self._format.column_separator
                 )
                 if any(self.dataset.data.axes[0].index):
                     prefix = self._format.header_prefix
                 else:
                     prefix = self._format.column_prefix
-                formatted_row = \
-                    '{prefix}{padding}{row}{padding}{postfix}'.format(
+                formatted_row = (
+                    "{prefix}{padding}{row}{padding}{postfix}".format(
                         prefix=prefix,
                         padding=padding,
                         row=separator.join(current_row),
-                        postfix=self._format.column_postfix
+                        postfix=self._format.column_postfix,
                     )
+                )
             self._rows.append(formatted_row)
 
     def _add_rules(self):
@@ -688,18 +696,21 @@ class Table(utils.ToDictMixin):
         if top_rule:
             self._rows.insert(0, top_rule)
         if any(self.dataset.data.axes[1].index):
-            middle_rule = \
-                self._format.middle_rule(column_widths=self._column_widths)
+            middle_rule = self._format.middle_rule(
+                column_widths=self._column_widths
+            )
             if middle_rule:
                 self._rows.insert(2, middle_rule)
-        bottom_rule = \
-            self._format.bottom_rule(column_widths=self._column_widths)
+        bottom_rule = self._format.bottom_rule(
+            column_widths=self._column_widths
+        )
         if bottom_rule:
             self._rows.append(bottom_rule)
 
     def _add_opening_and_closing(self):
-        opening = self._format.opening(columns=len(self._columns),
-                                       caption=self.caption)
+        opening = self._format.opening(
+            columns=len(self._columns), caption=self.caption
+        )
         if opening:
             self._rows.insert(0, opening)
         closing = self._format.closing(caption=self.caption)
@@ -766,12 +777,12 @@ class Format:
 
     def __init__(self):
         self.padding = 0
-        self.column_separator = ' '
-        self.column_prefix = ''
-        self.column_postfix = ''
-        self.header_separator = ' '
-        self.header_prefix = ''
-        self.header_postfix = ''
+        self.column_separator = " "
+        self.column_prefix = ""
+        self.column_postfix = ""
+        self.header_separator = " "
+        self.header_prefix = ""
+        self.header_postfix = ""
 
     # noinspection PyUnusedLocal,PyMethodMayBeStatic
     # pylint: disable=unused-argument
@@ -800,7 +811,7 @@ class Format:
             Default: ''
 
         """
-        return ''
+        return ""
 
     # noinspection PyUnusedLocal,PyMethodMayBeStatic
     def middle_rule(self, column_widths=None):
@@ -828,7 +839,7 @@ class Format:
             Default: ''
 
         """
-        return ''
+        return ""
 
     # noinspection PyUnusedLocal,PyMethodMayBeStatic
     def bottom_rule(self, column_widths=None):
@@ -856,7 +867,7 @@ class Format:
             Default: ''
 
         """
-        return ''
+        return ""
 
     # noinspection PyUnusedLocal,PyMethodMayBeStatic
     def opening(self, columns=None, caption=None):
@@ -899,15 +910,15 @@ class Format:
             Default: ''
 
         """
-        opening = ''
+        opening = ""
         if caption and (caption.title or caption.text):
             opening = self._caption_content(caption)
         return opening
 
     @staticmethod
     def _caption_content(caption=None):
-        caption_text = ' '.join([caption.title, caption.text]).rstrip()
-        return '\n'.join(textwrap.wrap(caption_text)) + '\n'
+        caption_text = " ".join([caption.title, caption.text]).rstrip()
+        return "\n".join(textwrap.wrap(caption_text)) + "\n"
 
     # noinspection PyMethodMayBeStatic
     def closing(self, caption=None):
@@ -943,7 +954,7 @@ class Format:
             Default: ''
 
         """
-        return ''
+        return ""
 
 
 class TextFormat(Format):
@@ -981,15 +992,15 @@ class TextFormat(Format):
     def __init__(self):
         super().__init__()
         self.padding = 1
-        self.rule_character = '-'
-        self.rule_edge_character = '+'
-        self.rule_separator_character = '+'
-        self.column_separator = '|'
-        self.column_prefix = '|'
-        self.column_postfix = '|'
-        self.header_separator = '|'
-        self.header_prefix = '|'
-        self.header_postfix = '|'
+        self.rule_character = "-"
+        self.rule_edge_character = "+"
+        self.rule_separator_character = "+"
+        self.column_separator = "|"
+        self.column_prefix = "|"
+        self.column_postfix = "|"
+        self.header_separator = "|"
+        self.header_prefix = "|"
+        self.header_postfix = "|"
 
     def top_rule(self, column_widths=None):
         """
@@ -1021,8 +1032,9 @@ class TextFormat(Format):
         for width in column_widths:
             segments.append((width + 2 * self.padding) * self.rule_character)
         rule = self.rule_separator_character.join(segments)
-        return '{edge}{rule}{edge}'.format(edge=self.rule_edge_character,
-                                           rule=rule)
+        return "{edge}{rule}{edge}".format(
+            edge=self.rule_edge_character, rule=rule
+        )
 
     def middle_rule(self, column_widths=None):
         """
@@ -1098,15 +1110,15 @@ class RstFormat(TextFormat):
     def __init__(self):
         super().__init__()
         self.padding = 0
-        self.rule_character = '='
-        self.rule_edge_character = ''
-        self.rule_separator_character = ' '
-        self.column_separator = ' '
-        self.column_prefix = ''
-        self.column_postfix = ''
-        self.header_separator = ' '
-        self.header_prefix = ''
-        self.header_postfix = ''
+        self.rule_character = "="
+        self.rule_edge_character = ""
+        self.rule_separator_character = " "
+        self.column_separator = " "
+        self.column_prefix = ""
+        self.column_postfix = ""
+        self.header_separator = " "
+        self.header_prefix = ""
+        self.header_postfix = ""
 
 
 class DokuwikiFormat(Format):
@@ -1143,12 +1155,12 @@ class DokuwikiFormat(Format):
     def __init__(self):
         super().__init__()
         self.padding = 1
-        self.column_separator = '|'
-        self.column_prefix = '|'
-        self.column_postfix = '|'
-        self.header_separator = '^'
-        self.header_prefix = '^'
-        self.header_postfix = '^'
+        self.column_separator = "|"
+        self.column_prefix = "|"
+        self.column_postfix = "|"
+        self.header_separator = "^"
+        self.header_prefix = "^"
+        self.header_postfix = "^"
 
     def opening(self, columns=None, caption=None):
         """
@@ -1192,21 +1204,23 @@ class DokuwikiFormat(Format):
             Code for opening the environment
 
         """
-        opening = ''
+        opening = ""
         if caption and (caption.title or caption.text):
-            opening = '\n'.join([
-                '<table>',
-                f'<caption>{self._caption_string(caption)}</caption>'
-            ])
+            opening = "\n".join(
+                [
+                    "<table>",
+                    f"<caption>{self._caption_string(caption)}</caption>",
+                ]
+            )
         return opening
 
     @staticmethod
     def _caption_string(caption=None):
         caption_string = []
         if caption.title:
-            caption_string.append(f'*{caption.title}*')
+            caption_string.append(f"*{caption.title}*")
         caption_string.append(caption.text)
-        return ' '.join(caption_string).rstrip()
+        return " ".join(caption_string).rstrip()
 
     def closing(self, caption=None):
         """
@@ -1246,9 +1260,9 @@ class DokuwikiFormat(Format):
             Code for closing the environment
 
         """
-        closing = ''
+        closing = ""
         if caption and (caption.title or caption.text):
-            closing = '</table>'
+            closing = "</table>"
         return closing
 
 
@@ -1287,12 +1301,12 @@ class LatexFormat(Format):
     def __init__(self):
         super().__init__()
         self.padding = 0
-        self.column_separator = ' & '
-        self.column_prefix = ''
-        self.column_postfix = r' \\'
-        self.header_separator = ' & '
-        self.header_prefix = ''
-        self.header_postfix = r' \\'
+        self.column_separator = " & "
+        self.column_prefix = ""
+        self.column_postfix = r" \\"
+        self.header_separator = " & "
+        self.header_prefix = ""
+        self.header_postfix = r" \\"
 
     def top_rule(self, column_widths=None):
         """
@@ -1313,7 +1327,7 @@ class LatexFormat(Format):
             Actual rule that gets added to the table output
 
         """
-        return r'\toprule'
+        return r"\toprule"
 
     def middle_rule(self, column_widths=None):
         """
@@ -1334,7 +1348,7 @@ class LatexFormat(Format):
             Actual rule that gets added to the table output
 
         """
-        return r'\midrule'
+        return r"\midrule"
 
     def bottom_rule(self, column_widths=None):
         """
@@ -1355,7 +1369,7 @@ class LatexFormat(Format):
             Actual rule that gets added to the table output
 
         """
-        return r'\bottomrule'
+        return r"\bottomrule"
 
     def opening(self, columns=None, caption=None):
         r"""
@@ -1396,21 +1410,26 @@ class LatexFormat(Format):
             Code for opening the environment
 
         """
-        opening = r'\begin{tabular}{' + columns * 'l' + r'}'
+        opening = r"\begin{tabular}{" + columns * "l" + r"}"
         if caption and (caption.title or caption.text):
-            opening = '\n'.join([
-                r'\begin{table}',
-                r'\caption{' + self._caption_string(caption=caption) + r'}',
-                opening])
+            opening = "\n".join(
+                [
+                    r"\begin{table}",
+                    r"\caption{"
+                    + self._caption_string(caption=caption)
+                    + r"}",
+                    opening,
+                ]
+            )
         return opening
 
     @staticmethod
     def _caption_string(caption):
         caption_string = []
         if caption.title:
-            caption_string.append(r'\textbf{' + caption.title + r'}')
+            caption_string.append(r"\textbf{" + caption.title + r"}")
         caption_string.append(caption.text)
-        return ' '.join(caption_string).rstrip()
+        return " ".join(caption_string).rstrip()
 
     def closing(self, caption=None):
         r"""
@@ -1444,9 +1463,9 @@ class LatexFormat(Format):
             Code for closing the environment
 
         """
-        closing = r'\end{tabular}'
+        closing = r"\end{tabular}"
         if caption and (caption.title or caption.text):
-            closing = '\n'.join([closing, r'\end{table}'])
+            closing = "\n".join([closing, r"\end{table}"])
         return closing
 
 
@@ -1476,5 +1495,5 @@ class Caption(utils.Properties):
 
     def __init__(self):
         super().__init__()
-        self.title = ''
-        self.text = ''
+        self.title = ""
+        self.text = ""

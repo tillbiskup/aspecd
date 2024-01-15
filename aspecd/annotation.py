@@ -142,14 +142,19 @@ class DatasetAnnotation(ToDictMixin):
         self.content = {}
         self.dataset = None
         # Scope of the annotation; see list of allowed scopes below
-        self._scope = ''
+        self._scope = ""
         # List of allowed scopes
-        self._allowed_scopes = ['dataset', 'slice', 'point', 'area',
-                                'distance']
+        self._allowed_scopes = [
+            "dataset",
+            "slice",
+            "point",
+            "area",
+            "distance",
+        ]
         # Default scope if none is set explicitly
         self._default_scope = self._allowed_scopes[0]
-        self._exclude_from_to_dict = ['dataset', 'type']
-        self.__kind__ = 'annotation'
+        self._exclude_from_to_dict = ["dataset", "type"]
+        self.__kind__ = "annotation"
 
     @property
     def scope(self):
@@ -172,7 +177,8 @@ class DatasetAnnotation(ToDictMixin):
     def scope(self, scope):
         if scope not in self._allowed_scopes:
             raise aspecd.exceptions.UnknownScopeError(
-                "Allowed scopes are: " + ' '.join(self._allowed_scopes))
+                "Allowed scopes are: " + " ".join(self._allowed_scopes)
+            )
         self._scope = scope
 
     def annotate(self, dataset=None, from_dataset=False):
@@ -235,7 +241,8 @@ class DatasetAnnotation(ToDictMixin):
 
         """
         history_record = aspecd.history.AnnotationHistoryRecord(
-            annotation=self, package=self.dataset.package_name)
+            annotation=self, package=self.dataset.package_name
+        )
         return history_record
 
     def _check_prerequisites(self):
@@ -263,7 +270,7 @@ class Comment(DatasetAnnotation):
 
     def __init__(self):
         super().__init__()
-        self.content['comment'] = ''
+        self.content["comment"] = ""
 
     @property
     def comment(self):
@@ -276,11 +283,11 @@ class Comment(DatasetAnnotation):
             Actual comment string
 
         """
-        return self.content['comment']
+        return self.content["comment"]
 
     @comment.setter
-    def comment(self, comment=''):
-        self.content['comment'] = comment
+    def comment(self, comment=""):
+        self.content["comment"] = comment
 
 
 class Artefact(DatasetAnnotation):
@@ -288,7 +295,7 @@ class Artefact(DatasetAnnotation):
 
     def __init__(self):
         super().__init__()
-        self.content['comment'] = ''
+        self.content["comment"] = ""
 
 
 class Characteristic(DatasetAnnotation):
@@ -449,7 +456,7 @@ class PlotAnnotation(ToDictMixin):
         self.parameters = {}
         self.properties = None
         self.drawings = []
-        self._exclude_from_to_dict = ['plotter', 'type', 'drawings']
+        self._exclude_from_to_dict = ["plotter", "type", "drawings"]
 
     def annotate(self, plotter=None, from_plotter=False):
         """
@@ -647,17 +654,17 @@ class VerticalLine(PlotAnnotation):
 
     def __init__(self):
         super().__init__()
-        self.parameters['positions'] = []
-        self.parameters['limits'] = []
+        self.parameters["positions"] = []
+        self.parameters["limits"] = []
         self.properties = aspecd.plotting.LineProperties()
 
     def _perform_task(self):
-        for position in self.parameters['positions']:
-            if self.parameters['limits']:
+        for position in self.parameters["positions"]:
+            if self.parameters["limits"]:
                 line = self.plotter.ax.axvline(
                     x=position,
-                    ymin=self.parameters['limits'][0],
-                    ymax=self.parameters['limits'][1]
+                    ymin=self.parameters["limits"][0],
+                    ymax=self.parameters["limits"][1],
                 )
             else:
                 line = self.plotter.ax.axvline(x=position)
@@ -810,17 +817,17 @@ class HorizontalLine(PlotAnnotation):
 
     def __init__(self):
         super().__init__()
-        self.parameters['positions'] = []
-        self.parameters['limits'] = []
+        self.parameters["positions"] = []
+        self.parameters["limits"] = []
         self.properties = aspecd.plotting.LineProperties()
 
     def _perform_task(self):
-        for position in self.parameters['positions']:
-            if self.parameters['limits']:
+        for position in self.parameters["positions"]:
+            if self.parameters["limits"]:
                 line = self.plotter.ax.axhline(
                     y=position,
-                    xmin=self.parameters['limits'][0],
-                    xmax=self.parameters['limits'][1]
+                    xmin=self.parameters["limits"][0],
+                    xmax=self.parameters["limits"][1],
                 )
             else:
                 line = self.plotter.ax.axhline(y=position)

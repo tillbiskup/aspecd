@@ -5,6 +5,24 @@ Changelog
 This page contains a summary of changes between the official ASpecD releases. Only the biggest changes are listed here. A complete and detailed log of all changes is available through the `GitHub Repository Browser <https://github.com/tillbiskup/aspecd/commits/master>`_.
 
 
+Version 0.9.1
+==============
+
+Released 2024-01-15
+
+
+Fixes
+-----
+
+* :class:`aspecd.utils.ToDictMixin` does no longer modify the ``__dict__`` or ``__odict__`` property of a class directly, what may have resulted in unexpected behaviour, but operates on a (deep)copy.
+
+
+Changes
+-------
+
+* Use Black for automatic code formatting
+
+
 Version 0.9.0
 =============
 

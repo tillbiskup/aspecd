@@ -7,6 +7,7 @@ modules of the ASpecD package, but it can be imported into every other module.
 
 import collections
 import contextlib
+import copy
 import datetime
 import hashlib
 import importlib
@@ -38,8 +39,9 @@ def full_class_name(object_):
         string with full class name of object
 
     """
-    class_name = ''.join([object_.__class__.__module__, '.',
-                          object_.__class__.__name__])
+    class_name = "".join(
+        [object_.__class__.__module__, ".", object_.__class__.__name__]
+    )
     return class_name
 
 
@@ -63,7 +65,7 @@ def object_from_class_name(full_class_name_string):
     """
     class_name_parts = full_class_name_string.split(".")
     class_name = class_name_parts[-1]
-    module_name = '.'.join(class_name_parts[0:-1])
+    module_name = ".".join(class_name_parts[0:-1])
     module = importlib.import_module(module_name)
     object_ = getattr(module, class_name)()
     return object_
@@ -113,7 +115,7 @@ class ToDictMixin:
 
     def __init__(self):
         super().__init__()
-        if '__odict__' not in self.__dict__:
+        if "__odict__" not in self.__dict__:
             self.__odict__ = collections.OrderedDict()
         self._exclude_from_to_dict = []
         self._include_in_to_dict = []
@@ -130,8 +132,8 @@ class ToDictMixin:
             Value of attribute
 
         """
-        if '__odict__' not in self.__dict__:
-            super().__setattr__('__odict__', collections.OrderedDict())
+        if "__odict__" not in self.__dict__:
+            super().__setattr__("__odict__", collections.OrderedDict())
         self.__odict__[attribute] = value
         super().__setattr__(attribute, value)
 
@@ -160,26 +162,54 @@ class ToDictMixin:
         .. versionchanged:: 0.9
             Settings for properties to exclude and include are not traversed
 
+        .. versionchanged:: 0.9.1
+            Dictionaries get copied before traversing, as otherwise,
+            the special variables ``__dict__`` and  ``__0dict__`` are
+            modified, what may result in strange behaviour.
+
         """
-        if hasattr(self, '__odict__'):
-            result = self._traverse_dict(self._clean_dict(self.__odict__))
+        if hasattr(self, "__odict__"):
+            result = self._traverse_dict(
+                self._clean_dict(
+                    self._return_copy(self.__odict__), traversing=False
+                )
+            )
         else:
-            result = self._traverse_dict(self._clean_dict(self.__dict__))
+            result = self._traverse_dict(
+                self._clean_dict(
+                    self._return_copy(self.__dict__), traversing=False
+                )
+            )
         if remove_empty:
             result = remove_empty_values_from_dict(result)
         return result
 
-    def _clean_dict(self, dictionary):
+    @staticmethod
+    def _return_copy(dictionary):
+        # Not all objects allow a deepcopy, hence check and recover
+        try:
+            dictionary = copy.deepcopy(dictionary)
+        except ValueError:
+            dictionary = copy.copy(dictionary)
+        return dictionary
+
+    def _clean_dict(self, dictionary, traversing=True):
         to_remove = []
         for key in dictionary:
-            if (str(key).startswith('_')
-                and key not in self._include_in_to_dict) \
-                    or str(key) in self._exclude_from_to_dict:
+            if (
+                (
+                    str(key).startswith("_")
+                    and key not in self._include_in_to_dict
+                )
+                or str(key) in self._exclude_from_to_dict
+                and not traversing
+            ):
                 to_remove.append(key)
         for key in to_remove:
             dictionary.pop(key, None)
-        for key in self._include_in_to_dict:
-            dictionary[key] = getattr(self, key)
+        if not traversing:
+            for key in self._include_in_to_dict:
+                dictionary[key] = getattr(self, key)
         return dictionary
 
     def _traverse_dict(self, instance_dict):
@@ -192,15 +222,16 @@ class ToDictMixin:
         if isinstance(value, ToDictMixin):
             result = value.to_dict()
         elif isinstance(value, (dict, collections.OrderedDict)):
-            result = self._traverse_dict(value)
-        elif hasattr(value, '__odict__'):
-            result = self._traverse_dict(value.__odict__)
-        elif hasattr(value, '__dict__'):
-            result = self._traverse_dict(value.__dict__)
+            result = self._traverse_dict(self._clean_dict(value))
+        elif hasattr(value, "__odict__"):
+            result = self._traverse_dict(self._clean_dict(value.__odict__))
+        elif hasattr(value, "__dict__"):
+            result = self._traverse_dict(self._clean_dict(value.__dict__))
         elif isinstance(value, list):
             result = [self._traverse(key, i) for i in value]
-        elif isinstance(value, (datetime.datetime, datetime.date,
-                                datetime.time)):
+        elif isinstance(
+            value, (datetime.datetime, datetime.date, datetime.time)
+        ):
             result = str(value)
         else:
             result = value
@@ -220,8 +251,9 @@ def get_aspecd_version():
         Version number as string
 
     """
-    version_file_path = os.path.join(os.path.dirname(__file__),
-                                     "..", 'VERSION')
+    version_file_path = os.path.join(
+        os.path.dirname(__file__), "..", "VERSION"
+    )
     if os.path.exists(version_file_path):
         with open(version_file_path, encoding="utf8") as version_file:
             version = version_file.read().strip()
@@ -230,7 +262,7 @@ def get_aspecd_version():
     return version
 
 
-def package_version(name=''):
+def package_version(name=""):
     """
     Get version of arbitrary package.
 
@@ -294,8 +326,7 @@ def config_dir():
 
     """
     config_dir_ = os.environ.get(
-        'XDG_CONFIG_HOME',
-        os.path.join(os.path.expanduser('~'), '.config')
+        "XDG_CONFIG_HOME", os.path.join(os.path.expanduser("~"), ".config")
     )
     return config_dir_
 
@@ -377,26 +408,30 @@ class Yaml:
 
     def __init__(self):
         self.binary_files = []
-        self.binary_directory = ''
+        self.binary_directory = ""
         self.dict = collections.OrderedDict()
         self.numpy_array_size_threshold = 100
         self.numpy_array_to_list = False
         self.loader = yaml.SafeLoader
         self.dumper = yaml.SafeDumper
         self.loader.add_implicit_resolver(
-            'tag:yaml.org,2002:float',
-            re.compile('''^(?:
+            "tag:yaml.org,2002:float",
+            re.compile(
+                """^(?:
              [-+]?(?:[0-9][0-9_]*)\\.[0-9_]*(?:[eE][-+]?[0-9]+)?
             |[-+]?(?:[0-9][0-9_]*)(?:[eE][-+]?[0-9]+)
             |\\.[0-9_]+(?:[eE][-+][0-9]+)?
             |[-+]?[0-9][0-9_]*(?::[0-5]?[0-9])+\\.[0-9_]*
             |[-+]?\\.(?:inf|Inf|INF)
-            |\\.(?:nan|NaN|NAN))$''', re.X),
-            list('-+0123456789.'))
+            |\\.(?:nan|NaN|NAN))$""",
+                re.X,
+            ),
+            list("-+0123456789."),
+        )
         self.dumper.add_representer(np.float64, self._numpy_float_representer)
         self.dumper.add_representer(np.int64, self._numpy_int_representer)
 
-    def read_from(self, filename=''):
+    def read_from(self, filename=""):
         """
         Read from YAML file.
 
@@ -413,10 +448,10 @@ class Yaml:
         """
         if not filename:
             raise aspecd.exceptions.MissingFilenameError
-        with open(filename, 'r', encoding="utf8") as file:
+        with open(filename, "r", encoding="utf8") as file:
             self.dict = yaml.load(file, Loader=self.loader)
 
-    def write_to(self, filename=''):
+    def write_to(self, filename=""):
         """
         Write to YAML file.
 
@@ -433,7 +468,7 @@ class Yaml:
         """
         if not filename:
             raise aspecd.exceptions.MissingFilenameError
-        with open(filename, 'w', encoding="utf8") as file:
+        with open(filename, "w", encoding="utf8") as file:
             yaml.dump(self.dict, file, Dumper=self.dumper)
 
     def read_stream(self, stream=None):
@@ -504,23 +539,33 @@ class Yaml:
                 if dict_[key].size > self.numpy_array_size_threshold:
                     self._create_binary_directory()
                     try:
-                        filename = \
-                            hashlib.sha256(dict_[key]).hexdigest() + '.npy'
+                        filename = (
+                            hashlib.sha256(dict_[key]).hexdigest() + ".npy"
+                        )
                     except ValueError:
-                        filename = hashlib.sha256(
-                            dict_[key].copy()).hexdigest() + '.npy'
-                    np.save(os.path.join(self.binary_directory, filename),
-                            dict_[key], allow_pickle=False)
-                    dict_[key] = {'type': 'numpy.ndarray',
-                                  'dtype': str(dict_[key].dtype),
-                                  'file': filename}
+                        filename = (
+                            hashlib.sha256(dict_[key].copy()).hexdigest()
+                            + ".npy"
+                        )
+                    np.save(
+                        os.path.join(self.binary_directory, filename),
+                        dict_[key],
+                        allow_pickle=False,
+                    )
+                    dict_[key] = {
+                        "type": "numpy.ndarray",
+                        "dtype": str(dict_[key].dtype),
+                        "file": filename,
+                    }
                     self.binary_files.append(filename)
                 elif self.numpy_array_to_list:
                     dict_[key] = dict_[key].tolist()
                 else:
-                    dict_[key] = {'type': 'numpy.ndarray',
-                                  'dtype': str(dict_[key].dtype),
-                                  'array': dict_[key].tolist()}
+                    dict_[key] = {
+                        "type": "numpy.ndarray",
+                        "dtype": str(dict_[key].dtype),
+                        "array": dict_[key].tolist(),
+                    }
             elif isinstance(dict_[key], (dict, collections.OrderedDict)):
                 self._traverse_serialise_numpy_arrays(dict_=dict_[key])
             # make list of binary_files unique
@@ -554,12 +599,17 @@ class Yaml:
                     if type(element) in [dict, collections.OrderedDict]:
                         self._traverse_deserialise_numpy_arrays(dict_=element)
             elif isinstance(dict_[key], (dict, collections.OrderedDict)):
-                if 'type' in dict_[key].keys() \
-                        and dict_[key]["type"] == 'numpy.ndarray':
-                    if 'file' in dict_[key].keys():
+                if (
+                    "type" in dict_[key].keys()
+                    and dict_[key]["type"] == "numpy.ndarray"
+                ):
+                    if "file" in dict_[key].keys():
                         self._create_binary_directory()
-                        dict_[key] = np.load(os.path.join(
-                            self.binary_directory, dict_[key]['file']))
+                        dict_[key] = np.load(
+                            os.path.join(
+                                self.binary_directory, dict_[key]["file"]
+                            )
+                        )
                     else:
                         dict_[key] = np.asarray(dict_[key]["array"])
                 else:
@@ -575,7 +625,8 @@ class Yaml:
 
     def _create_binary_directory(self):
         if self.binary_directory and not os.path.exists(
-                self.binary_directory):
+            self.binary_directory
+        ):
             os.mkdir(self.binary_directory)
 
     @staticmethod
@@ -620,10 +671,12 @@ def replace_value_in_dict(replacement=None, target=None):  # noqa: MC0001
             if target[key]:
                 for list_index, list_element in enumerate(target[key]):
                     if isinstance(list_element, dict):
-                        target[key][list_index] = \
-                            replace_value_in_dict(replacement, list_element)
-                    elif list_element.__hash__ and list_element in \
-                            replacement:
+                        target[key][list_index] = replace_value_in_dict(
+                            replacement, list_element
+                        )
+                    elif (
+                        list_element.__hash__ and list_element in replacement
+                    ):
                         target[key][list_index] = replacement[list_element]
                     else:
                         target[key][list_index] = list_element
@@ -661,8 +714,9 @@ def copy_values_between_dicts(source=None, target=None):
     for key in target:
         if isinstance(target[key], dict):
             if key in source and isinstance(source[key], dict):
-                target[key] = copy_values_between_dicts(source[key],
-                                                        target[key])
+                target[key] = copy_values_between_dicts(
+                    source[key], target[key]
+                )
             else:
                 target[key] = copy_values_between_dicts(source, target[key])
         elif key in source:
@@ -696,8 +750,11 @@ def copy_keys_between_dicts(source=None, target=None):
 
     """
     for key in source:
-        if key in target and isinstance(target[key], dict) \
-                and isinstance(source[key], dict):
+        if (
+            key in target
+            and isinstance(target[key], dict)
+            and isinstance(source[key], dict)
+        ):
             target[key] = copy_keys_between_dicts(source[key], target[key])
         else:
             target[key] = source[key]
@@ -723,9 +780,11 @@ def remove_empty_values_from_dict(dict_):
 
     """
     if isinstance(dict_, dict):
-        dict_ = dict((key, remove_empty_values_from_dict(value)) for
-                     key, value in dict_.items() if
-                     value and remove_empty_values_from_dict(value))
+        dict_ = dict(
+            (key, remove_empty_values_from_dict(value))
+            for key, value in dict_.items()
+            if value and remove_empty_values_from_dict(value)
+        )
     return dict_
 
 
@@ -751,7 +810,7 @@ def convert_keys_to_variable_names(dict_):
     """
     new_dict = {}
     for key, value in dict_.items():
-        new_key = key.replace(' ', '_').lower()
+        new_key = key.replace(" ", "_").lower()
         if isinstance(value, dict):
             new_dict[new_key] = convert_keys_to_variable_names(dict_[key])
         else:
@@ -808,7 +867,7 @@ class Properties(ToDictMixin):
             raise aspecd.exceptions.MissingDictError
         for key, value in dict_.items():
             if hasattr(self, key):
-                if hasattr(getattr(self, key), 'from_dict'):
+                if hasattr(getattr(self, key), "from_dict"):
                     getattr(self, key).from_dict(value)
                 elif isinstance(getattr(self, key), list):
                     if isinstance(value, list):
@@ -830,8 +889,8 @@ class Properties(ToDictMixin):
 
         """
         props = []
-        for prop in list(self.__dict__['__odict__'].keys()):
-            if not str(prop).startswith('_') and prop not in self._exclude:
+        for prop in list(self.__dict__["__odict__"].keys()):
+            if not str(prop).startswith("_") and prop not in self._exclude:
                 props.append(prop)
         return props
 
@@ -905,8 +964,9 @@ def not_zero(value):
     .. versionadded:: 0.3
 
     """
-    return np.copysign(max(abs(value), np.finfo(np.float64).resolution),
-                       value)
+    return np.copysign(
+        max(abs(value), np.finfo(np.float64).resolution), value
+    )
 
 
 def isiterable(variable):
@@ -935,7 +995,7 @@ def isiterable(variable):
     return answer
 
 
-def get_package_data(name='', directory=''):
+def get_package_data(name="", directory=""):
     """
     Obtain contents from a non-code file ("package data").
 
@@ -987,17 +1047,17 @@ def get_package_data(name='', directory=''):
 
     """
     if not name:
-        raise ValueError('No filename given.')
+        raise ValueError("No filename given.")
     package = __package__
-    if '@' in name:
-        package, name = name.split('@')
-    contents = pkgutil.get_data(package, '/'.join([directory, name])).decode()
+    if "@" in name:
+        package, name = name.split("@")
+    contents = pkgutil.get_data(package, "/".join([directory, name])).decode()
     return contents
 
 
 # noinspection PyShadowingNames
 @contextlib.contextmanager
-def change_working_dir(path=''):  # pylint: disable=redefined-outer-name
+def change_working_dir(path=""):  # pylint: disable=redefined-outer-name
     """
     Context manager for temporarily changing the working directory.
 
@@ -1038,7 +1098,7 @@ def change_working_dir(path=''):  # pylint: disable=redefined-outer-name
         os.chdir(oldpwd)
 
 
-def get_logger(name=''):
+def get_logger(name=""):
     """
     Get logger object for a given module.
 
