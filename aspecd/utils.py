@@ -7,6 +7,7 @@ modules of the ASpecD package, but it can be imported into every other module.
 
 import collections
 import contextlib
+import copy
 import datetime
 import hashlib
 import importlib
@@ -161,27 +162,54 @@ class ToDictMixin:
         .. versionchanged:: 0.9
             Settings for properties to exclude and include are not traversed
 
+        .. versionchanged:: 0.9.1
+            Dictionaries get copied before traversing, as otherwise,
+            the special variables ``__dict__`` and  ``__0dict__`` are
+            modified, what may result in strange behaviour.
+
         """
         if hasattr(self, "__odict__"):
-            result = self._traverse_dict(self._clean_dict(self.__odict__))
+            result = self._traverse_dict(
+                self._clean_dict(
+                    self._return_copy(self.__odict__), traversing=False
+                )
+            )
         else:
-            result = self._traverse_dict(self._clean_dict(self.__dict__))
+            result = self._traverse_dict(
+                self._clean_dict(
+                    self._return_copy(self.__dict__), traversing=False
+                )
+            )
         if remove_empty:
             result = remove_empty_values_from_dict(result)
         return result
 
-    def _clean_dict(self, dictionary):
+    @staticmethod
+    def _return_copy(dictionary):
+        # Not all objects allow a deepcopy, hence check and recover
+        try:
+            dictionary = copy.deepcopy(dictionary)
+        except ValueError:
+            dictionary = copy.copy(dictionary)
+        return dictionary
+
+    def _clean_dict(self, dictionary, traversing=True):
         to_remove = []
         for key in dictionary:
             if (
-                str(key).startswith("_")
-                and key not in self._include_in_to_dict
-            ) or str(key) in self._exclude_from_to_dict:
+                (
+                    str(key).startswith("_")
+                    and key not in self._include_in_to_dict
+                )
+                or str(key) in self._exclude_from_to_dict
+                and not traversing
+            ):
                 to_remove.append(key)
         for key in to_remove:
             dictionary.pop(key, None)
-        for key in self._include_in_to_dict:
-            dictionary[key] = getattr(self, key)
+        if not traversing:
+            for key in self._include_in_to_dict:
+                dictionary[key] = getattr(self, key)
         return dictionary
 
     def _traverse_dict(self, instance_dict):
@@ -194,11 +222,11 @@ class ToDictMixin:
         if isinstance(value, ToDictMixin):
             result = value.to_dict()
         elif isinstance(value, (dict, collections.OrderedDict)):
-            result = self._traverse_dict(value)
+            result = self._traverse_dict(self._clean_dict(value))
         elif hasattr(value, "__odict__"):
-            result = self._traverse_dict(value.__odict__)
+            result = self._traverse_dict(self._clean_dict(value.__odict__))
         elif hasattr(value, "__dict__"):
-            result = self._traverse_dict(value.__dict__)
+            result = self._traverse_dict(self._clean_dict(value.__dict__))
         elif isinstance(value, list):
             result = [self._traverse(key, i) for i in value]
         elif isinstance(

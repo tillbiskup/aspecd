@@ -11,6 +11,18 @@ Version 0.10.0
 Not yet released
 
 
+Version 0.9.1
+==============
+
+Not yet released
+
+
+Fixes
+-----
+
+* :class:`aspecd.utils.ToDictMixin` does no longer modify the ``__dict__`` or ``__odict__`` property of a class directly, what may have resulted in unexpected behaviour, but operates on a (deep)copy.
+
+
 Version 0.9.0
 =============
 
