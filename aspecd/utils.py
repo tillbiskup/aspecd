@@ -189,7 +189,7 @@ class ToDictMixin:
         # Not all objects allow a deepcopy, hence check and recover
         try:
             dictionary = copy.deepcopy(dictionary)
-        except ValueError:
+        except (ValueError, KeyError, AttributeError):
             dictionary = copy.copy(dictionary)
         return dictionary
 
