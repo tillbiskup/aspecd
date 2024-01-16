@@ -764,6 +764,7 @@ class TestSinglePlotter2D(unittest.TestCase):
                 (
                     matplotlib.collections.LineCollection,
                     matplotlib.collections.PathCollection,
+                    matplotlib.contour.QuadContourSet,
                 ),
             )
             for x in plotter.ax.get_children()
@@ -785,6 +786,7 @@ class TestSinglePlotter2D(unittest.TestCase):
                 (
                     matplotlib.collections.LineCollection,
                     matplotlib.collections.PathCollection,
+                    matplotlib.contour.QuadContourSet,
                 ),
             )
         ]
@@ -808,6 +810,7 @@ class TestSinglePlotter2D(unittest.TestCase):
                 (
                     matplotlib.collections.LineCollection,
                     matplotlib.collections.PathCollection,
+                    matplotlib.contour.QuadContourSet,
                 ),
             )
         ]
@@ -831,6 +834,7 @@ class TestSinglePlotter2D(unittest.TestCase):
                 (
                     matplotlib.collections.LineCollection,
                     matplotlib.collections.PathCollection,
+                    matplotlib.contour.QuadContourSet,
                 ),
             )
         ]
@@ -856,6 +860,7 @@ class TestSinglePlotter2D(unittest.TestCase):
                 (
                     matplotlib.collections.LineCollection,
                     matplotlib.collections.PathCollection,
+                    matplotlib.contour.QuadContourSet,
                 ),
             )
         ]
@@ -880,6 +885,7 @@ class TestSinglePlotter2D(unittest.TestCase):
                 (
                     matplotlib.collections.LineCollection,
                     matplotlib.collections.PathCollection,
+                    matplotlib.contour.QuadContourSet,
                 ),
             )
         ]
@@ -904,6 +910,7 @@ class TestSinglePlotter2D(unittest.TestCase):
                 (
                     matplotlib.collections.LineCollection,
                     matplotlib.collections.PathCollection,
+                    matplotlib.contour.QuadContourSet,
                 ),
             )
         ]

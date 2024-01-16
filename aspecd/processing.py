@@ -1509,9 +1509,7 @@ class SliceExtraction(SingleProcessingStep):
         for axis in self.parameters["axis"]:
             if axis > self.dataset.data.data.ndim - 1:
                 # pylint: disable=consider-using-f-string
-                raise IndexError(
-                    "Axis %i out of bounds" % self.parameters["axis"]
-                )
+                raise IndexError("Axis %i out of bounds" % axis)
         self.parameters["unit"] = self.parameters["unit"].lower()
         if self.parameters["unit"] not in ["index", "axis"]:
             raise ValueError("Wrong unit, needs to be either index or axis.")

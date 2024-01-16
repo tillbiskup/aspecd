@@ -4784,7 +4784,14 @@ class DrawingProperties(aspecd.utils.Properties):
 
         """
         if hasattr(drawing, "".join(["set_", prop])):
-            getattr(drawing, "".join(["set_", prop]))(getattr(self, prop))
+            try:
+                getattr(drawing, "".join(["set_", prop]))(getattr(self, prop))
+            except TypeError:
+                logger.debug(
+                    'Cannot set attribute "%s" for "%s"',
+                    prop,
+                    drawing.__class__,
+                )
         else:
             logger.debug(
                 '"%s" has no setter for attribute "%s", hence not set',
@@ -4909,12 +4916,13 @@ class SurfaceProperties(DrawingProperties):
                 (
                     mpl.collections.LineCollection,
                     mpl.collections.PathCollection,
+                    mpl.contour.QuadContourSet,
                 ),
             ):
                 if self.linewidths:
-                    child.set_linewidths(self.linewidths)
+                    child.set_linewidth(self.linewidths)
                 if self.linestyles:
-                    child.set_linestyles(self.linestyles)
+                    child.set_linestyle(self.linestyles)
                 if self.colors:
                     child.set_color(self.colors)
 
