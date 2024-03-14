@@ -100,6 +100,54 @@ datasets before exporting them, and you see that recipes come in quite handy
 here.
 
 
+More control over imports
+-------------------------
+
+Sometimes there is the need to have more control over the import,
+be it that you would want to set labels for datasets explicitly upon load,
+determine which importer to use, or provide additional parameters for an
+importer (a frequent use case for the rather generic :class:`TxtImporter`).
+
+This is an excerpt of an example recipe importing ASCII exports of a
+common UV/Vis spectrometer and showing many of the options possible:
+
+.. code-block:: yaml
+
+    datasets:
+      - source: cbztbt.txt
+        label: D-A
+        id: Cbz-TBT
+        importer: TxtImporter
+        importer_parameters:
+          skiprows: 2
+          separator: ','
+
+So what's happening here? Lets go through step by step:
+
+* Datasets are a list, as usual, but this time, it is not a list of
+  filenames, but a list of (hierarchical) key--value pairs.
+* The ``source`` key sets the filename (and can include a path, as usual).
+* The ``label`` key sets the label used for the dataset, *e.g.*,
+  in a figure legend.
+* The ``id`` key sets the (unique) identifier (ID) the dataset can be
+  referred to throughout the recipe. This is often useful if you want to
+  restrict certain tasks to only a subset of the loaded datasets.
+* The ``importer`` key sets the importer class to use. This class needs to
+  be available from within your current package. You can prefix the class
+  name with a package if you like.
+* The ``importer_parameters`` key is a series of key--value pairs (*i.e.*,
+  a :class:`dict` in Python language) setting additional parameters for the
+  specific importer. See the documentation of the respective importer class
+  for further details.
+
+Of course, you need not use all of these parameters. Usually, if you want
+to specify importer parameters, it is a good idea to be explicit about the
+importer as well. However, even that is not strictly necessary. The only
+thing that is strictly necessary: As soon as you want to provide more than
+a filename/path per dataset, you need to switch from a list of strings (
+*i.e.*, filenames/paths) to a key--value approach, with ``source`` being
+the key for the filename/path.
+
 
 Importers for specific file formats
 -----------------------------------
