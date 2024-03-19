@@ -23,6 +23,7 @@ Fixes
 * Revert changes in :class:`aspecd.utils.ToDictMixin` from version 0.9.1, as it caused problems with Matplotlib.
 * Updates on contour plots to work with Matplotlib 3.8
 * Updates to prevent deprecation warning for NumPy 1.25
+* :class:`aspecd.processing.RangeExtraction` extracts correct range for axis values.
 
 
 Version 0.9.1

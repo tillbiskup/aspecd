@@ -1824,6 +1824,9 @@ class RangeExtraction(SingleProcessingStep):
 
     .. versionadded:: 0.2
 
+    .. versionchanged:: 0.9.2
+        Range extraction with axis values sets correct upper boundary
+
 
     Examples
     --------
@@ -1869,7 +1872,7 @@ class RangeExtraction(SingleProcessingStep):
              range: [5, 10, 2]
 
     This is equivalent to ``data[5:10:2]`` or ``data[(slice(5, 10, 2))]``,
-    accordingly.
+    accordingly. Note that in Python, ranges *exclude* the upper limit.
 
     Sometimes, it is more convenient to give ranges in axis values rather
     than indices. This can be achieved by setting the parameter ``unit`` to
@@ -1886,7 +1889,10 @@ class RangeExtraction(SingleProcessingStep):
 
     Note that in this case, setting a step is meaningless and will be
     silently ignored. Furthermore, the nearest axis values will be used for
-    the range.
+    the range. Furthermore, for more intuitive use, the given range
+    *includes* the upper limit, in contrast to using indices. This is to be
+    consistent with Python's handling of ranges as weell as  with the
+    intuition of most scientists regarding the ranges for axis values.
 
     In some cases you may want to extract a range by providing percentages
     instead of indices or axis values. Even this can be done:
@@ -1957,7 +1963,7 @@ class RangeExtraction(SingleProcessingStep):
                         self.dataset.data.axes[dim].values,
                         self.parameters["range"][dim][1],
                     )
-                    slice_ = slice(start, stop)
+                    slice_ = slice(start, stop + 1)
                 else:
                     start = math.ceil(
                         self.dataset.data.axes[dim].values.size

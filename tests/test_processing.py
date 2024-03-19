@@ -1227,10 +1227,14 @@ class TestRangeExtraction(unittest.TestCase):
     def test_extract_range_with_axis_units(self):
         origdata = self.dataset.data.data
         self.dataset.data.axes[0].values = np.linspace(0, 18, 10)
+        origaxis = self.dataset.data.axes[0].values
         self.processing.parameters["range"] = [6, 12]
         self.processing.parameters["unit"] = "axis"
         self.dataset.process(self.processing)
-        np.testing.assert_allclose(origdata[3:6], self.dataset.data.data)
+        np.testing.assert_allclose(origdata[3:7], self.dataset.data.data)
+        np.testing.assert_allclose(
+            origaxis[3:7], self.dataset.data.axes[0].values
+        )
 
     def test_extract_range_with_percentage_units(self):
         origdata = self.dataset.data.data
