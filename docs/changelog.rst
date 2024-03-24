@@ -5,6 +5,156 @@ Changelog
 This page contains a summary of changes between the official ASpecD releases. Only the biggest changes are listed here. A complete and detailed log of all changes is available through the `GitHub Repository Browser <https://github.com/tillbiskup/aspecd/commits/master>`_.
 
 
+Version 0.9.2
+==============
+
+Released 2024-03-24
+
+
+Fixes
+-----
+
+* Revert changes in :class:`aspecd.utils.ToDictMixin` from version 0.9.1, as it caused problems with Matplotlib.
+* Updates on contour plots to work with Matplotlib 3.8
+* Updates to prevent deprecation warning for NumPy 1.25
+* :class:`aspecd.processing.RangeExtraction` extracts correct range for axis values.
+
+
+Version 0.9.1
+==============
+
+Released 2024-01-15
+
+
+Fixes
+-----
+
+* :class:`aspecd.utils.ToDictMixin` does no longer modify the ``__dict__`` or ``__odict__`` property of a class directly, what may have resulted in unexpected behaviour, but operates on a (deep)copy.
+
+
+Changes
+-------
+
+* Use Black for automatic code formatting
+
+
+Version 0.9.0
+=============
+
+Released 2024-01-13
+
+
+New features
+------------
+
+* Processing steps
+
+  * :class:`aspecd.processing.CommonRangeExtraction` works for *N*\ D datasets with arbitrary dimension *N*
+
+* Plotting
+
+  * Legend title can be set from recipes
+
+  * New attribute :attr:`aspecd.plotting.AxesProperties.invert` for inverting axes. Helpful, *e.g.*, for plotting FTIR data without having to resort to explicitly provide descending axis limits.
+
+  * Setting font size of axes labels via ``label_fontsize`` property.
+
+  * Colorbar for 2D plotter
+
+  * Annotations for plots
+
+    For details, see :ref:`the documentation of plot annotations <:sec:annotation:plot>` and the :mod:`aspecd.annotation` module.
+
+* Device data
+
+  * New property :attr:`aspecd.dataset.Dataset.device_data` for storing additional/secondary (monitoring) data.
+
+  * New class :class:`aspecd.dataset.DeviceData` for device data.
+  * New class :class:`aspecd.analysis.DeviceDataExtraction` for extracting device data from a dataset as a separate dataset. This allows to proceed with the extracted datasets as with any other dataset.
+  * New class :class:`aspecd.plotting.MultiDeviceDataPlotter1D` for plotting multiple device data of a single dataset.
+
+  * New parameter ``device_data`` in :class:`aspecd.plotting.Plotter` for plotting device data rather than primary data of a dataset/datasets
+
+* Logging
+
+  * New function :func:`aspecd.utils.get_logger` to get a logger object for a given module with the logger within the hierarchy of the ASpecD root logger. Important for packages derived from the ASpecD framework in order to get their log messages being captured, *e.g.* during recipe-driven data analysis.
+
+
+Changes
+-------
+
+* Plotters can now handle device data instead of the primary data of a dataset (see above). This means, however, that instead of accessing ``self.dataset.data`` (or ``self.datasets[#].data``), plotters need to access ``self.data.data`` (or ``self.data[#].data``) instead.
+
+  **Authors of derived packages should update their plotters accordingly.** See the :ref:`hints for developers on device data in the plotting module <sec:plotting:developers_data>`.
+
+* Serving recipes logs messages from all ASpecD modules, not only from the :mod:`aspecd.tasks` module.
+
+* :class:`aspecd.io.DatasetImporterFactory` logs warning if no concrete importer could be found for a given dataset, as this will usually result in (sometimes hard to detect) downstream problems.
+
+* :class:`aspecd.io.DatasetExporter` adds a history record to :attr:`aspecd.dataset.Dataset.tasks`.
+
+* :class:`aspecd.plotting.SinglePlotter1D` and :class:`aspecd.plotting.MultiPlotter1D` issue warning with log plotters and negative values.
+
+* :class:`aspecd.annotation.DatasetAnnotation` has been renamed from ``Annotation`` to reflect the fact that there are now plot annotations as well.
+
+
+Documentation
+-------------
+
+* New example: :doc:`Plotting FTIR spectra normalised to spectral feature <examples/ftir>`
+* Section with :ref:`general tips and tricks for styling plotters <sec:plotting:tips_tricks>`.
+
+
+Fixes
+-----
+
+* :meth:`aspecd.utils.ToDictMixin.to_dict` does not traverse settings for properties to exclude and include.
+* Workaround for :meth:`matplotlib.figure.Figure.savefig` not correctly handling figure DPI settings.
+
+
+Version 0.8.3
+=============
+
+Released 2023-09-08
+
+Fixes
+-----
+
+* Exporter tasks (:class:`aspecd.tasks.ExportTask`) automatically save datasets with default name if no target is provided.
+* Correct setting of contour plot properties with newer versions of Matplotlib
+
+
+Changes
+-------
+
+* :class:`aspecd.processing.Interpolation` changed interpolation method for 2D data from deprecated :class:`scipy.interpolate.interp2d` to :class:`scipy.interpolate.RegularGridInterpolator`
+
+
+New features
+------------
+
+* :class:`aspecd.processing.Interpolation` works for *N*\ D datasets with arbitrary dimension *N*
+* :class:`aspecd.tasks.Recipe` with new setting ``autosave_datasets`` (default: ``True``)
+
+
+Version 0.8.2
+=============
+
+Released 2023-08-24
+
+Fixes
+-----
+
+* Handling of too long filenames when saving plots: the filename is replaced by its MD5 hash.
+
+
+New features
+------------
+
+* New setting ``default_colormap`` in recipes.
+* Property ``colormap`` in :class:`aspecd.plotting.SinglePlot2DProperties`, allowing for consistently setting (default) colormaps for 2D surface plots within a recipe.
+
+
 Version 0.8.1
 =============
 

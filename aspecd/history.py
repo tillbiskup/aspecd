@@ -2,7 +2,7 @@
 
 Reproducibility is an essential aspect of good scientific practice. In the
 context of data processing and analysis, this means that each processing
-step performed on data (of a dataset) should be stored in an reproducible
+step performed on data (of a dataset) should be stored in a reproducible
 way and preferably in a consistent format.
 
 To be of actual use, an entry of the history needs to contain all
@@ -12,6 +12,74 @@ the complete list of necessary parameters for that routine, and a unique
 version information of the routine. Additional useful aspects contain
 information about the operating system used, the name of the operator,
 and the date the processing step has been performed.
+
+Furthermore, for reproducing data processing and analysis tasks in a
+modular fashion, there should be a way to create the actual objects for
+operating on a dataset from the history records stored in the history of
+the dataset. Furthermore, it is important to not store the actual objects
+(or a representation) of the individual tasks. Firstly, this would easily
+result in an infinite regress, as the dataset is referenced from within
+the task objects, and secondly, importing a stored dataset with a history
+would not work if during import the actual objects of the individual tasks
+need to be restored and the class has changed or does not exist (anymore).
+Thus, operating with history records is the most modular and robust way.
+
+
+Types of history records
+========================
+
+In addition, to handle the history contained within a dataset, there is a
+series of classes for storing history records:
+
+  * :class:`HistoryRecord`
+
+    Generic base class for all kinds of history records.
+
+    For all classes operating on datasets, such as
+    :class:`aspecd.processing.SingleProcessingStep`,
+    :class:`aspecd.analysis.SingleAnalysisStep` and others, there exist at
+    least two "representations": (i) the generic one not (necessarily) tied
+    to any concrete dataset, thus portable, and (ii) a concrete one having
+    operated on a dataset and thus being accompanied with information about
+    who has done what when how to what dataset.
+
+    For this second type, a history class derived from
+    :class:`aspecd.dataset.HistoryRecord` gets used, and it is this second type
+    that is stored inside the Dataset object.
+
+  * :class:`ProcessingHistoryRecord`
+
+    History record for processing steps on datasets.
+
+  * :class:`AnalysisHistoryRecord`
+
+    History record for analysis steps on datasets.
+
+  * :class:`AnnotationHistoryRecord`
+
+    History record for annotations of datasets.
+
+  * :class:`PlotHistoryRecord`
+
+    History record for plots of datasets.
+
+  * :class:`TableHistoryRecord`
+
+    History record for tables created from datasets.
+
+  * :class:`DatasetExporterHistoryRecord`
+
+    History record for exporters operating on datasets.
+
+
+.. todo::
+
+    Clarifly the difference between the HistoryRecord and Record classes,
+    and explain which is used when and how.
+
+
+Module documentation
+====================
 
 """
 
@@ -57,7 +125,7 @@ class HistoryRecord(aspecd.utils.ToDictMixin):
 
     """
 
-    def __init__(self, package=''):
+    def __init__(self, package=""):
         self.date = datetime.today()
         self.sysinfo = aspecd.system.SystemInfo(package=package)
         super().__init__()
@@ -85,12 +153,13 @@ class HistoryRecord(aspecd.utils.ToDictMixin):
             if hasattr(self, key):
                 attribute = getattr(self, key)
                 if key == "date":
-                    if hasattr(datetime, 'fromisoformat'):
+                    if hasattr(datetime, "fromisoformat"):
                         self.date = datetime.fromisoformat(value)
                     else:
-                        self.date = datetime.strptime(value,
-                                                      '%Y-%m-%d %H:%M:%S.%f')
-                elif hasattr(attribute, 'from_dict'):
+                        self.date = datetime.strptime(
+                            value, "%Y-%m-%d %H:%M:%S.%f"
+                        )
+                elif hasattr(attribute, "from_dict"):
                     attribute.from_dict(value)
                 else:
                     setattr(self, key, value)
@@ -110,7 +179,7 @@ class ProcessingStepRecord(aspecd.utils.ToDictMixin):
 
     .. note::
         Each history entry in a dataset stores the processing as a
-        :class:`aspecd.processing.ProcessingStepRecord`, even in applications
+        :class:`aspecd.history.ProcessingStepRecord`, even in applications
         inheriting from the ASpecD framework. Hence, subclassing of this class
         should normally not be necessary.
 
@@ -156,13 +225,18 @@ class ProcessingStepRecord(aspecd.utils.ToDictMixin):
     def __init__(self, processing_step=None):
         super().__init__()
         self.undoable = False
-        self.description = ''
-        self.parameters = dict()
-        self.comment = ''
+        self.description = ""
+        self.parameters = {}
+        self.comment = ""
         self.references = []
-        self.class_name = ''
-        self._attributes_to_copy = ['description', 'parameters', 'undoable',
-                                    'comment', 'references']
+        self.class_name = ""
+        self._attributes_to_copy = [
+            "description",
+            "parameters",
+            "undoable",
+            "comment",
+            "references",
+        ]
         if processing_step:
             self.from_processing_step(processing_step)
 
@@ -234,7 +308,7 @@ class ProcessingHistoryRecord(HistoryRecord):
 
     """
 
-    def __init__(self, processing_step=None, package=''):
+    def __init__(self, processing_step=None, package=""):
         super().__init__(package=package)
         self.processing = ProcessingStepRecord(processing_step)
 
@@ -315,14 +389,19 @@ class AnalysisStepRecord(aspecd.utils.ToDictMixin):
 
     def __init__(self, analysis_step=None):
         super().__init__()
-        self.description = ''
-        self.parameters = dict()
-        self.comment = ''
+        self.description = ""
+        self.parameters = {}
+        self.comment = ""
         self.references = []
-        self.class_name = ''
+        self.class_name = ""
         self.result = None
-        self._attributes_to_copy = ['description', 'parameters', 'comment',
-                                    'references', 'result']
+        self._attributes_to_copy = [
+            "description",
+            "parameters",
+            "comment",
+            "references",
+            "result",
+        ]
         if analysis_step:
             self.from_analysis_step(analysis_step)
 
@@ -387,7 +466,7 @@ class SingleAnalysisStepRecord(AnalysisStepRecord):
 
     .. note::
         Each analyses entry in a dataset stores the analysis step as a
-        :class:`aspecd.analysis.SingleAnalysisStepRecord`, even in applications
+        :class:`aspecd.history.SingleAnalysisStepRecord`, even in applications
         inheriting from the ASpecD framework. Hence, subclassing of this class
         should normally not be necessary.
 
@@ -431,13 +510,6 @@ class AnalysisHistoryRecord(HistoryRecord):
     analysis : :class:`aspecd.analysis.SingleAnalysisStep`
         Analysis step the history is saved for
 
-    package : :class:`str`
-        Name of package the history record gets recorded for
-
-        Prerequisite for reproducibility, gets stored in the
-        :attr:`aspecd.dataset.HistoryRecord.sysinfo` attribute.
-        Will usually be provided automatically by the dataset.
-
     Parameters
     ----------
     analysis_step : :class:`aspecd.analysis.SingleAnalysisStep`
@@ -448,7 +520,7 @@ class AnalysisHistoryRecord(HistoryRecord):
 
     """
 
-    def __init__(self, analysis_step=None, package=''):
+    def __init__(self, analysis_step=None, package=""):
         super().__init__(package=package)
         self.analysis = SingleAnalysisStepRecord(analysis_step)
 
@@ -469,18 +541,19 @@ class AnnotationRecord(aspecd.utils.ToDictMixin):
     """Base class for annotation records stored in the dataset annotations.
 
     The annotation of a :class:`aspecd.dataset.Dataset` should *not* contain
-    references to :class:`aspecd.annotation.Annotation` objects, but rather
-    records that contain all necessary information to create the respective
-    objects inherited from :class:`aspecd.annotation.Annotation`. One
-    reason for this is simply that we want to import datasets containing
-    annotations in their analyses for which no corresponding annotation
-    class exists in the current installation of the application. Another is
-    to not have an infinite recursion of datasets, as the dataset is stored
-    in an :obj:`aspecd.analysis.SingleAnalysisStep` object.
+    references to :class:`aspecd.annotation.DatasetAnnotation` objects,
+    but rather records that contain all necessary information to create the
+    respective objects inherited from
+    :class:`aspecd.annotation.DatasetAnnotation`. One reason for this is
+    simply that we want to import datasets containing annotations in their
+    analyses for which no corresponding annotation class exists in the
+    current installation of the application. Another is to not have an
+    infinite recursion of datasets, as the dataset is stored in an
+    :obj:`aspecd.annotation.DatasetAnnotation` object.
 
     .. note::
         Each annotation entry in a dataset stores the annotation as a
-        :class:`aspecd.annotation.AnnotationRecord`, even in applications
+        :class:`aspecd.history.AnnotationRecord`, even in applications
         inheriting from the ASpecD framework. Hence, subclassing of this class
         should normally not be necessary.
 
@@ -490,6 +563,7 @@ class AnnotationRecord(aspecd.utils.ToDictMixin):
         Actual content of the annotation
 
         Generic place for more information
+
     class_name : :class:`str`
         Fully qualified name of the class of the corresponding annotation
 
@@ -499,7 +573,7 @@ class AnnotationRecord(aspecd.utils.ToDictMixin):
 
     Parameters
     ----------
-    annotation : :class:`aspecd.annotation.Annotation`
+    annotation : :class:`aspecd.annotation.DatasetAnnotation`
         Annotation the record should be created for.
 
     Raises
@@ -515,10 +589,10 @@ class AnnotationRecord(aspecd.utils.ToDictMixin):
 
     def __init__(self, annotation=None):
         super().__init__()
-        self.content = dict()
-        self.class_name = ''
-        self.type = ''
-        self._attributes_to_copy = ['content', 'type']
+        self.content = {}
+        self.class_name = ""
+        self.type = ""
+        self._attributes_to_copy = ["content", "type"]
         if annotation:
             self.from_annotation(annotation)
 
@@ -527,7 +601,7 @@ class AnnotationRecord(aspecd.utils.ToDictMixin):
 
         Parameters
         ----------
-        annotation : :obj:`aspecd.annotation.Annotation`
+        annotation : :obj:`aspecd.annotation.DatasetAnnotation`
             Object to obtain information from
 
         """
@@ -536,12 +610,12 @@ class AnnotationRecord(aspecd.utils.ToDictMixin):
         self.class_name = aspecd.utils.full_class_name(annotation)
 
     def create_annotation(self):
-        """Create an analysis step object from the parameters stored.
+        """Create an annotation object from the parameters stored.
 
         Returns
         -------
-        analysis_step : :class:`aspecd.analysis.SingleAnalysisStep`
-            actual analysis step object that can be used for analysis
+        annotation : :class:`aspecd.annotation.DatasetAnnotation`
+            actual annotation object that can be used for annotation
 
         """
         annotation = aspecd.utils.object_from_class_name(self.class_name)
@@ -571,15 +645,8 @@ class AnnotationHistoryRecord(HistoryRecord):
 
     Attributes
     ----------
-    annotation : :class:`aspecd.annotation.Annotation`
+    annotation : :class:`aspecd.annotation.DatasetAnnotation`
         Annotation the history is saved for
-
-    package : :class:`str`
-        Name of package the history record gets recorded for
-
-        Prerequisite for reproducibility, gets stored in the
-        :attr:`aspecd.dataset.HistoryRecord.sysinfo` attribute.
-        Will usually be provided automatically by the dataset.
 
     Parameters
     ----------
@@ -591,7 +658,7 @@ class AnnotationHistoryRecord(HistoryRecord):
 
     """
 
-    def __init__(self, annotation=None, package=''):
+    def __init__(self, annotation=None, package=""):
         super().__init__(package=package)
         self.annotation = AnnotationRecord(annotation)
 
@@ -656,16 +723,21 @@ class PlotRecord(aspecd.utils.ToDictMixin):
 
     def __init__(self, plotter=None):
         super().__init__()
-        self.class_name = ''
-        self.description = ''
-        self.parameters = dict()
+        self.class_name = ""
+        self.description = ""
+        self.parameters = {}
         self.properties = None
         self.caption = None
-        self.label = ''
-        self.filename = ''
-        self._attributes_to_copy = ['description', 'parameters',
-                                    'properties', 'caption', 'filename',
-                                    'label']
+        self.label = ""
+        self.filename = ""
+        self._attributes_to_copy = [
+            "description",
+            "parameters",
+            "properties",
+            "caption",
+            "filename",
+            "label",
+        ]
         if plotter:
             self.from_plotter(plotter=plotter)
 
@@ -730,7 +802,7 @@ class SinglePlotRecord(PlotRecord):
     """
 
     def __init__(self, plotter=None):
-        self.preprocessing = list()
+        self.preprocessing = []
         super().__init__(plotter=plotter)
 
 
@@ -754,7 +826,7 @@ class MultiPlotRecord(PlotRecord):
     """
 
     def __init__(self, plotter=None):
-        self.datasets = list()
+        self.datasets = []
         super().__init__(plotter=plotter)
 
 
@@ -766,16 +838,15 @@ class PlotHistoryRecord(HistoryRecord):
     plot : :class:`aspecd.plotting.SinglePlotRecord`
         Plot the history is saved for
 
+
+    Parameters
+    ----------
     package : :class:`str`
         Name of package the history record gets recorded for
 
-        Prerequisite for reproducibility, gets stored in the
-        :attr:`aspecd.dataset.HistoryRecord.sysinfo` attribute.
-        Will usually be provided automatically by the dataset.
-
     """
 
-    def __init__(self, package=''):
+    def __init__(self, package=""):
         super().__init__(package=package)
         self.plot = SinglePlotRecord()
 
@@ -822,13 +893,17 @@ class TableRecord(aspecd.utils.ToDictMixin):
 
     def __init__(self, table=None):
         super().__init__()
-        self.class_name = ''
+        self.class_name = ""
         self.caption = None
-        self.format = ''
+        self.format = ""
         self.column_format = []
-        self.filename = ''
-        self._attributes_to_copy = ['caption', 'format', 'column_format',
-                                    'filename']
+        self.filename = ""
+        self._attributes_to_copy = [
+            "caption",
+            "format",
+            "column_format",
+            "filename",
+        ]
         if table:
             self.from_table(table=table)
 
@@ -847,7 +922,7 @@ class TableRecord(aspecd.utils.ToDictMixin):
 
         """
         if not table:
-            raise TypeError('from_table needs a Table object')
+            raise TypeError("from_table needs a Table object")
         for attribute in self._attributes_to_copy:
             setattr(self, attribute, getattr(table, attribute))
         self.class_name = table.name
@@ -892,13 +967,6 @@ class TableHistoryRecord(HistoryRecord):
     table : :class:`aspecd.table.Table`
         Table the history is saved for
 
-    package : :class:`str`
-        Name of package the history record gets recorded for
-
-        Prerequisite for reproducibility, gets stored in the
-        :attr:`aspecd.dataset.HistoryRecord.sysinfo` attribute.
-        Will usually be provided automatically by the dataset.
-
     Parameters
     ----------
     table : :class:`aspecd.table.Table`
@@ -909,6 +977,130 @@ class TableHistoryRecord(HistoryRecord):
 
     """
 
-    def __init__(self, table=None, package=''):
+    def __init__(self, table=None, package=""):
         super().__init__(package=package)
         self.table = TableRecord(table)
+
+
+class DatasetExporterRecord(aspecd.utils.ToDictMixin):
+    """Base class for dataset exporter records stored in the dataset tasks.
+
+    The tasks list of a :class:`aspecd.dataset.Dataset` should *not* contain
+    references to :class:`aspecd.io.DatasetExporter` objects, but rather
+    records that contain all necessary information to create the respective
+    objects inherited from :class:`aspecd.io.DatasetExporter`. One
+    reason for this is simply that we want to import datasets containing
+    export tasks for which no corresponding exporter class exists in the
+    current installation of the application.
+
+    Attributes
+    ----------
+    class_name : :class:`str`
+        Fully qualified name of the class of the corresponding annotation
+
+    target : :class:`str`
+        specifier of the target the data and metadata were written to
+
+    comment : :class:`str`
+        User-supplied comment describing intent, purpose, reason, ...
+
+    Parameters
+    ----------
+    exporter : :class:`aspecd.io.DatasetExporter`
+        Dataset exporter the record should be created for.
+
+    Raises
+    ------
+    TypeError
+        Raised when no exporter exists to act on
+
+
+    .. versionadded:: 0.9
+
+    """
+
+    def __init__(self, exporter=None):
+        super().__init__()
+        self.class_name = ""
+        self.target = ""
+        self.comment = ""
+        self._attributes_to_copy = ["target", "comment"]
+        if exporter:
+            self.from_exporter(exporter)
+
+    def create_exporter(self):
+        """Create a dataset exporter object from the parameters stored.
+
+        Returns
+        -------
+        exporter : :class:`aspecd.io.DatasetExporter`
+            actual exporter object that can be used for exporting the dataset
+
+        """
+        exporter = aspecd.utils.object_from_class_name(self.class_name)
+        for attribute in self._attributes_to_copy:
+            setattr(self, attribute, getattr(exporter, attribute))
+        return exporter
+
+    def from_exporter(self, exporter=None):
+        """Obtain information from dataset exporter.
+
+        Parameters
+        ----------
+        exporter : :obj:`aspecd.io.DatasetExporter`
+            Dataset exporter object to obtain information from
+
+        Raises
+        ------
+        TypeError
+            Raised if no exporter is provided.
+
+        """
+        if not exporter:
+            raise TypeError("from_exporter needs a DatasetExporter object")
+        self.class_name = aspecd.utils.full_class_name(exporter)
+        for attribute in self._attributes_to_copy:
+            setattr(self, attribute, getattr(exporter, attribute))
+
+    def from_dict(self, dict_=None):
+        """
+        Set properties from dictionary.
+
+        Only parameters in the dictionary that are valid properties of the
+        class are set accordingly.
+
+        Parameters
+        ----------
+        dict_ : :class:`dict`
+            Dictionary containing properties to set
+
+        """
+        for key, value in dict_.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+
+
+class DatasetExporterHistoryRecord(HistoryRecord):
+    """History record for dataset exporters created from datasets.
+
+    Attributes
+    ----------
+    exporter : :class:`aspecd.io.DatasetExporter`
+        Dataset exporter the history is saved for
+
+    Parameters
+    ----------
+    exporter : :class:`aspecd.table.DatasetExporter`
+        Dataset exporter the history is saved for
+
+    package : :class:`str`
+        Name of package the history record gets recorded for
+
+
+    .. versionadded:: 0.9
+
+    """
+
+    def __init__(self, exporter=None, package=""):
+        super().__init__(package)
+        self.exporter = DatasetExporterRecord(exporter=exporter)

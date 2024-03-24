@@ -66,10 +66,6 @@ And to make it even more convenient for users and future-proof:
 * `Extensive user and API documentation <https://docs.aspecd.de/>`_
 
 
-.. warning::
-  The ASpecD framework is currently under active development and still considered in Beta development state. Therefore, expect changes in features and public APIs that may break your own code. Nevertheless, feedback as well as feature requests are highly welcome.
-
-
 Target audience
 ---------------
 
@@ -81,9 +77,9 @@ How to cite
 
 ASpecD is free software. However, if you use ASpecD for your own research, please cite both, the article describing it and the software itself:
 
-  * Jara Popp, Till Biskup. ASpecD: A Modular Framework for the Analysis of Spectroscopic Data Focussing on Reproducibility and Good Scientific Practice. *Chemistry--Methods* **2**:e202100097, 2022. `doi:10.1002/cmtd.202100097 <https://doi.org/10.1002/cmtd.202100097>`_
+* Jara Popp, Till Biskup. ASpecD: A Modular Framework for the Analysis of Spectroscopic Data Focussing on Reproducibility and Good Scientific Practice. *Chemistry--Methods* **2**:e202100097, 2022. `doi:10.1002/cmtd.202100097 <https://doi.org/10.1002/cmtd.202100097>`_
 
-  * Till Biskup. ASpecD (2022). `doi:10.5281/zenodo.4717937 <https://doi.org/10.5281/zenodo.4717937>`_
+* Till Biskup. ASpecD (2022). `doi:10.5281/zenodo.4717937 <https://doi.org/10.5281/zenodo.4717937>`_
 
 To make things easier, ASpecD has a `DOI <https://doi.org/10.5281/zenodo.4717937>`_ provided by `Zenodo <https://zenodo.org/>`_, and you may click on the badge below to directly access the record associated with it. Note that this DOI refers to the package as such and always forwards to the most current version.
 
@@ -98,7 +94,7 @@ There is a number of related packages that are based on the ASpecD framework and
 
 * `trepr <https://docs.trepr.de/>`_
 
-  Package for processing and analysing time-resolved electron paramagnetic resonance (TREPR) data, developed by J. Popp and maintained by T. Biskup.
+  Package for processing and analysing time-resolved electron paramagnetic resonance (TREPR) data, developed by J. Popp, currently developed and maintained by M. Schröder and T. Biskup.
 
 * `cwepr <https://docs.cwepr.de/>`_
 

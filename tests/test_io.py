@@ -8,7 +8,7 @@ import numpy as np
 
 import aspecd.exceptions
 import aspecd.processing
-from aspecd import io, dataset, tasks, utils
+from aspecd import io, dataset, tasks, utils, history
 
 
 class TestDatasetImporter(unittest.TestCase):
@@ -19,12 +19,12 @@ class TestDatasetImporter(unittest.TestCase):
         pass
 
     def test_instantiate_with_source_sets_source(self):
-        source = 'filename'
+        source = "filename"
         importer = io.DatasetImporter(source)
         self.assertEqual(importer.source, source)
 
     def test_has_import_into_method(self):
-        self.assertTrue(hasattr(self.importer, 'import_into'))
+        self.assertTrue(hasattr(self.importer, "import_into"))
         self.assertTrue(callable(self.importer.import_into))
 
     def test_import_into_without_dataset_raises(self):
@@ -33,35 +33,36 @@ class TestDatasetImporter(unittest.TestCase):
 
     def test_import_into_with_dataset_sets_dataset(self):
         test_dataset = dataset.Dataset()
-        self.importer.source = 'filename'
+        self.importer.source = "filename"
         self.importer.import_into(test_dataset)
         self.assertIs(self.importer.dataset, test_dataset)
 
     def test_import_into_with_dataset_sets_id(self):
         test_dataset = dataset.Dataset()
-        self.importer.source = 'filename'
+        self.importer.source = "filename"
         self.importer.import_into(test_dataset)
         self.assertEqual(test_dataset.id, self.importer.source)
 
     def test_import_into_with_dataset_sets_label(self):
         test_dataset = dataset.Dataset()
-        self.importer.source = 'filename'
+        self.importer.source = "filename"
         self.importer.import_into(test_dataset)
         self.assertEqual(test_dataset.label, self.importer.source)
 
     def test_import_into_sets_label_without_path(self):
         test_dataset = dataset.Dataset()
-        self.importer.source = '/path/to/filename.ext'
+        self.importer.source = "/path/to/filename.ext"
         self.importer.import_into(test_dataset)
-        self.assertEqual(test_dataset.label, os.path.split(
-            self.importer.source)[-1])
+        self.assertEqual(
+            test_dataset.label, os.path.split(self.importer.source)[-1]
+        )
 
     def test_import_into_does_not_override_label(self):
         test_dataset = dataset.Dataset()
-        test_dataset.label = 'foobar'
-        self.importer.source = '/path/to/filename.ext'
+        test_dataset.label = "foobar"
+        self.importer.source = "/path/to/filename.ext"
         self.importer.import_into(test_dataset)
-        self.assertEqual('foobar', test_dataset.label)
+        self.assertEqual("foobar", test_dataset.label)
 
 
 class TestDatasetExporter(unittest.TestCase):
@@ -72,15 +73,15 @@ class TestDatasetExporter(unittest.TestCase):
         pass
 
     def test_has_comment_property(self):
-        self.assertTrue(hasattr(self.exporter, 'comment'))
+        self.assertTrue(hasattr(self.exporter, "comment"))
 
     def test_instantiate_with_target_sets_target(self):
-        target = 'filename'
+        target = "filename"
         exporter = io.DatasetExporter(target=target)
         self.assertEqual(exporter.target, target)
 
     def test_has_export_from_method(self):
-        self.assertTrue(hasattr(self.exporter, 'export_from'))
+        self.assertTrue(hasattr(self.exporter, "export_from"))
         self.assertTrue(callable(self.exporter.export_from))
 
     def test_export_from_without_dataset_raises(self):
@@ -92,11 +93,24 @@ class TestDatasetExporter(unittest.TestCase):
         self.exporter.export_from(test_dataset)
         self.assertIs(self.exporter.dataset, test_dataset)
 
+    def test_has_create_history_record_method(self):
+        self.assertTrue(hasattr(self.exporter, "create_history_record"))
+        self.assertTrue(callable(self.exporter.create_history_record))
+
+    def test_create_history_record_returns_history_record(self):
+        self.exporter.dataset = aspecd.dataset.Dataset()
+        history_record = self.exporter.create_history_record()
+        self.assertTrue(
+            isinstance(
+                history_record, aspecd.history.DatasetExporterHistoryRecord
+            )
+        )
+
 
 class TestDatasetImporterFactory(unittest.TestCase):
     def setUp(self):
         self.factory = io.DatasetImporterFactory()
-        self.source = '/foo'
+        self.source = "/foo"
 
     def test_instantiate_class(self):
         pass
@@ -110,7 +124,7 @@ class TestDatasetImporterFactory(unittest.TestCase):
         self.assertEqual(self.source, importer.source)
 
     def test_get_importer_with_relative_source_sets_absolute_path(self):
-        source = 'foo'
+        source = "foo"
         root_path = os.path.abspath(os.curdir)
         importer = self.factory.get_importer(source=source)
         self.assertEqual(os.path.join(root_path, source), importer.source)
@@ -120,38 +134,45 @@ class TestDatasetImporterFactory(unittest.TestCase):
             self.factory.get_importer()
 
     def test_get_importer_with_adf_extension_returns_adf_importer(self):
-        source = '/foo.adf'
+        source = "/foo.adf"
         importer = self.factory.get_importer(source=source)
         self.assertTrue(isinstance(importer, io.AdfImporter))
 
     def test_get_importer_with_asdf_extension_returns_asdf_importer(self):
-        source = '/foo.asdf'
+        source = "/foo.asdf"
         importer = self.factory.get_importer(source=source)
         self.assertTrue(isinstance(importer, io.AsdfImporter))
 
     def test_get_importer_with_txt_extension_returns_txt_importer(self):
-        source = '/foo.txt'
+        source = "/foo.txt"
         importer = self.factory.get_importer(source=source)
         self.assertTrue(isinstance(importer, io.TxtImporter))
 
     def test_get_importer_with_importer_returns_specific_importer(self):
-        source = '/foo'
-        importer = 'TxtImporter'
+        source = "/foo"
+        importer = "TxtImporter"
         importer = self.factory.get_importer(source=source, importer=importer)
         self.assertTrue(isinstance(importer, io.TxtImporter))
 
     def test_get_importer_with_parameters_sets_parameters(self):
-        source = '/foo'
-        parameters = {'foo': 'bla', 'bar': 'blub'}
-        importer = self.factory.get_importer(source=source,
-                                             parameters=parameters)
+        source = "/foo"
+        parameters = {"foo": "bla", "bar": "blub"}
+        importer = self.factory.get_importer(
+            source=source, parameters=parameters
+        )
         self.assertDictEqual(parameters, importer.parameters)
+
+    def test_returning_abstract_importer_logs_warning(self):
+        with self.assertLogs(__package__, level="WARNING") as captured:
+            self.factory.get_importer(source=self.source)
+        self.assertEqual(len(captured.records), 1)
+        self.assertIn("default importer", captured.output[0].lower())
 
 
 class TestRecipeImporter(unittest.TestCase):
     def setUp(self):
         self.importer = io.RecipeImporter()
-        self.source = 'filename'
+        self.source = "filename"
 
     def test_instantiate_class(self):
         pass
@@ -161,7 +182,7 @@ class TestRecipeImporter(unittest.TestCase):
         self.assertEqual(importer.source, self.source)
 
     def test_has_import_into_method(self):
-        self.assertTrue(hasattr(self.importer, 'import_into'))
+        self.assertTrue(hasattr(self.importer, "import_into"))
         self.assertTrue(callable(self.importer.import_into))
 
     def test_import_into_without_recipe_raises(self):
@@ -190,7 +211,7 @@ class TestRecipeImporter(unittest.TestCase):
 class TestRecipeExporter(unittest.TestCase):
     def setUp(self):
         self.exporter = io.RecipeExporter()
-        self.target = 'filename'
+        self.target = "filename"
 
     def test_instantiate_class(self):
         pass
@@ -200,7 +221,7 @@ class TestRecipeExporter(unittest.TestCase):
         self.assertEqual(exporter.target, self.target)
 
     def test_has_export_from_method(self):
-        self.assertTrue(hasattr(self.exporter, 'export_from'))
+        self.assertTrue(hasattr(self.exporter, "export_from"))
         self.assertTrue(callable(self.exporter.export_from))
 
     def test_export_from_without_recipe_raises(self):
@@ -216,7 +237,7 @@ class TestRecipeExporter(unittest.TestCase):
 class TestRecipeYamlImporter(unittest.TestCase):
     def setUp(self):
         self.importer = io.RecipeYamlImporter()
-        self.recipe_filename = 'filename'
+        self.recipe_filename = "filename"
         self.recipe_dict = dict()
 
     def tearDown(self):
@@ -225,9 +246,14 @@ class TestRecipeYamlImporter(unittest.TestCase):
 
     def create_recipe(self):
         self.recipe_dict = {
-            'datasets': ['foo'],
-            'tasks': [{'kind': 'singleplot', 'type': 'SinglePlotter',
-                       'properties': {'filename': 'foo'}}],
+            "datasets": ["foo"],
+            "tasks": [
+                {
+                    "kind": "singleplot",
+                    "type": "SinglePlotter",
+                    "properties": {"filename": "foo"},
+                }
+            ],
         }
         yaml = utils.Yaml()
         yaml.dict = self.recipe_dict
@@ -235,9 +261,14 @@ class TestRecipeYamlImporter(unittest.TestCase):
 
     def create_recipe_with_numpy_array(self):
         self.recipe_dict = {
-            'datasets': ['foo'],
-            'tasks': [{'kind': 'processing', 'type': 'ScalarAlgebra',
-                       'properties': {'value': np.random.random(1)}}],
+            "datasets": ["foo"],
+            "tasks": [
+                {
+                    "kind": "processing",
+                    "type": "ScalarAlgebra",
+                    "properties": {"value": np.random.random(1)},
+                }
+            ],
         }
         yaml = utils.Yaml()
         yaml.dict = copy.deepcopy(self.recipe_dict)
@@ -267,8 +298,10 @@ class TestRecipeYamlImporter(unittest.TestCase):
         self.importer.source = self.recipe_filename
         recipe = tasks.Recipe()
         recipe.import_from(self.importer)
-        self.assertEqual(self.recipe_dict['tasks'][0]['properties']['value'],
-                         recipe.tasks[0].properties['value'])
+        self.assertEqual(
+            self.recipe_dict["tasks"][0]["properties"]["value"],
+            recipe.tasks[0].properties["value"],
+        )
 
     def test_import_sets_recipe_version(self):
         self.create_recipe()
@@ -278,64 +311,92 @@ class TestRecipeYamlImporter(unittest.TestCase):
         self.assertTrue(self.importer.recipe_version)
 
     def test_import_old_version_detects_old_version(self):
-        old_keys = ['default_package', 'autosave_plots', 'output_directory',
-                    'datasets_source_directory']
+        old_keys = [
+            "default_package",
+            "autosave_plots",
+            "output_directory",
+            "datasets_source_directory",
+        ]
         for key in old_keys:
             with self.subTest(key=key):
                 self.recipe_dict = {
-                    key: '',
-                    'datasets': ['foo'],
-                    'tasks': [{'kind': 'singleplot', 'type': 'SinglePlotter',
-                               'properties': {'filename': 'foo'}}],
+                    key: "",
+                    "datasets": ["foo"],
+                    "tasks": [
+                        {
+                            "kind": "singleplot",
+                            "type": "SinglePlotter",
+                            "properties": {"filename": "foo"},
+                        }
+                    ],
                 }
                 self.create_recipe_from_dict()
                 self.importer.source = self.recipe_filename
                 recipe = tasks.Recipe()
                 self.importer.import_into(recipe)
-                self.assertEqual('0.1', self.importer.recipe_version)
+                self.assertEqual("0.1", self.importer.recipe_version)
 
     def test_import_with_explicit_version_sets_recipe_version(self):
         self.recipe_dict = {
-            'format': {'version': '0.1'},
-            'datasets': ['foo'],
-            'tasks': [{'kind': 'singleplot', 'type': 'SinglePlotter',
-                       'properties': {'filename': 'foo'}}],
+            "format": {"version": "0.1"},
+            "datasets": ["foo"],
+            "tasks": [
+                {
+                    "kind": "singleplot",
+                    "type": "SinglePlotter",
+                    "properties": {"filename": "foo"},
+                }
+            ],
         }
         self.create_recipe_from_dict()
         self.importer.source = self.recipe_filename
         recipe = tasks.Recipe()
         self.importer.import_into(recipe)
-        self.assertEqual(self.recipe_dict['format']['version'],
-                         self.importer.recipe_version)
+        self.assertEqual(
+            self.recipe_dict["format"]["version"],
+            self.importer.recipe_version,
+        )
 
     def test_import_version_0_1_converts_to_current_version(self):
         self.recipe_dict = {
-            'default_package': 'aspecd',
-            'autosave_plots': False,
-            'output_directory': '/bar',
-            'datasets_source_directory': '/foobar',
-            'datasets': ['foo'],
-            'tasks': [{'kind': 'singleplot', 'type': 'SinglePlotter',
-                       'properties': {'filename': 'foo'}}],
+            "default_package": "aspecd",
+            "autosave_plots": False,
+            "output_directory": "/bar",
+            "datasets_source_directory": "/foobar",
+            "datasets": ["foo"],
+            "tasks": [
+                {
+                    "kind": "singleplot",
+                    "type": "SinglePlotter",
+                    "properties": {"filename": "foo"},
+                }
+            ],
         }
         self.create_recipe_from_dict()
         self.importer.source = self.recipe_filename
         recipe = tasks.Recipe()
         recipe.import_from(self.importer)
-        self.assertEqual(self.recipe_dict['default_package'],
-                         recipe.settings['default_package'])
-        self.assertEqual(self.recipe_dict['autosave_plots'],
-                         recipe.settings['autosave_plots'])
-        self.assertEqual(self.recipe_dict['output_directory'],
-                         recipe.directories['output'])
-        self.assertEqual(self.recipe_dict['datasets_source_directory'],
-                         recipe.directories['datasets_source'])
+        self.assertEqual(
+            self.recipe_dict["default_package"],
+            recipe.settings["default_package"],
+        )
+        self.assertEqual(
+            self.recipe_dict["autosave_plots"],
+            recipe.settings["autosave_plots"],
+        )
+        self.assertEqual(
+            self.recipe_dict["output_directory"], recipe.directories["output"]
+        )
+        self.assertEqual(
+            self.recipe_dict["datasets_source_directory"],
+            recipe.directories["datasets_source"],
+        )
 
 
 class TestRecipeYamlExporter(unittest.TestCase):
     def setUp(self):
         self.exporter = io.RecipeYamlExporter()
-        self.recipe_filename = 'filename'
+        self.recipe_filename = "filename"
 
     def tearDown(self):
         if os.path.exists(self.recipe_filename):
@@ -349,9 +410,14 @@ class TestRecipeYamlExporter(unittest.TestCase):
 
     def test_export_can_be_reimported(self):
         recipe_dict = {
-            'datasets': ['foo'],
-            'tasks': [{'kind': 'singleplot', 'type': 'SinglePlotter',
-                       'properties': {'filename': 'foo'}}],
+            "datasets": ["foo"],
+            "tasks": [
+                {
+                    "kind": "singleplot",
+                    "type": "SinglePlotter",
+                    "properties": {"filename": "foo"},
+                }
+            ],
         }
         recipe = tasks.Recipe()
         recipe.from_dict(recipe_dict)
@@ -364,9 +430,14 @@ class TestRecipeYamlExporter(unittest.TestCase):
 
     def test_export_with_numpy_array_can_be_reimported(self):
         recipe_dict = {
-            'datasets': ['foo'],
-            'tasks': [{'kind': 'processing', 'type': 'ScalarAlgebra',
-                       'properties': {'value': np.random.random(1)}}],
+            "datasets": ["foo"],
+            "tasks": [
+                {
+                    "kind": "processing",
+                    "type": "ScalarAlgebra",
+                    "properties": {"value": np.random.random(1)},
+                }
+            ],
         }
         recipe = tasks.Recipe()
         recipe.from_dict(recipe_dict)
@@ -379,9 +450,14 @@ class TestRecipeYamlExporter(unittest.TestCase):
 
     def test_export_with_small_numpy_array_converts_array_to_list(self):
         recipe_dict = {
-            'datasets': ['foo'],
-            'tasks': [{'kind': 'processing', 'type': 'ScalarAlgebra',
-                       'properties': {'value': np.random.random(1)}}],
+            "datasets": ["foo"],
+            "tasks": [
+                {
+                    "kind": "processing",
+                    "type": "ScalarAlgebra",
+                    "properties": {"value": np.random.random(1)},
+                }
+            ],
         }
         recipe = tasks.Recipe()
         recipe.from_dict(recipe_dict)
@@ -389,16 +465,17 @@ class TestRecipeYamlExporter(unittest.TestCase):
         recipe.export_to(self.exporter)
         yaml = utils.Yaml()
         yaml.read_from(self.recipe_filename)
-        self.assertIsInstance(yaml.dict['tasks'][0]['properties']['value'],
-                              list)
+        self.assertIsInstance(
+            yaml.dict["tasks"][0]["properties"]["value"], list
+        )
 
 
 class TestAdfExporter(unittest.TestCase):
     def setUp(self):
         self.exporter = io.AdfExporter()
         self.dataset = dataset.Dataset()
-        self.target = 'target'
-        self.extension = '.adf'
+        self.target = "target"
+        self.extension = ".adf"
 
     def tearDown(self):
         if os.path.exists(self.target + self.extension):
@@ -424,10 +501,16 @@ class TestAdfExporter(unittest.TestCase):
     def test_created_zipfile_contains_correct_files(self):
         self.exporter.target = self.target
         self.exporter.export_from(self.dataset)
-        expected_list_of_files = ['dataset.yaml', 'VERSION', 'README',
-                                  'binaryData/']
+        expected_list_of_files = [
+            "dataset.yaml",
+            "VERSION",
+            "README",
+            "binaryData/",
+        ]
         expected_list_of_files.sort()
-        with zipfile.ZipFile(self.target + self.extension, 'r') as zipped_file:
+        with zipfile.ZipFile(
+            self.target + self.extension, "r"
+        ) as zipped_file:
             actual_list_of_files = zipped_file.namelist()
         actual_list_of_files.sort()
         self.assertListEqual(expected_list_of_files, actual_list_of_files)
@@ -436,23 +519,31 @@ class TestAdfExporter(unittest.TestCase):
         self.exporter.target = self.target
         self.dataset.data.data = np.random.random(1001)
         self.exporter.export_from(self.dataset)
-        with zipfile.ZipFile(self.target + self.extension, 'r') as zipped_file:
+        with zipfile.ZipFile(
+            self.target + self.extension, "r"
+        ) as zipped_file:
             list_of_files = zipped_file.namelist()
-        binary_files = [x for x in list_of_files if x.startswith('binaryData')]
+        binary_files = [
+            x for x in list_of_files if x.startswith("binaryData")
+        ]
         self.assertEqual(3, len(binary_files))
 
     def test_export_sets_version(self):
         self.exporter.target = self.target
         self.exporter.export_from(self.dataset)
-        with zipfile.ZipFile(self.target + self.extension, 'r') as zipped_file:
-            version = zipped_file.read('VERSION')
-        self.assertEqual(self.exporter._version, version.decode('ascii'))
+        with zipfile.ZipFile(
+            self.target + self.extension, "r"
+        ) as zipped_file:
+            version = zipped_file.read("VERSION")
+        self.assertEqual(self.exporter._version, version.decode("ascii"))
 
     def test_export_writes_readme(self):
         self.exporter.target = self.target
         self.exporter.export_from(self.dataset)
-        with zipfile.ZipFile(self.target + self.extension, 'r') as zipped_file:
-            readme = zipped_file.read('README')
+        with zipfile.ZipFile(
+            self.target + self.extension, "r"
+        ) as zipped_file:
+            readme = zipped_file.read("README")
         self.assertTrue(readme)
 
 
@@ -460,8 +551,8 @@ class TestAdfImporter(unittest.TestCase):
     def setUp(self):
         self.importer = io.AdfImporter()
         self.dataset = dataset.ExperimentalDataset()
-        self.source = 'target'
-        self.extension = '.adf'
+        self.source = "target"
+        self.extension = ".adf"
         self.exporter = io.AdfExporter()
         self.exporter.target = self.source
 
@@ -474,8 +565,8 @@ class TestAdfImporter(unittest.TestCase):
 
     def test_import_sets_data_and_origdata(self):
         dataset_ = dataset.Dataset()
-        dataset_.data.data = np.asarray([1.])
-        dataset_._origdata.data = np.asarray([1.])
+        dataset_.data.data = np.asarray([1.0])
+        dataset_._origdata.data = np.asarray([1.0])
         dataset_.export_to(self.exporter)
 
         self.importer.source = self.source
@@ -485,23 +576,25 @@ class TestAdfImporter(unittest.TestCase):
 
     def test_import_sets_metadata(self):
         dataset_ = dataset.ExperimentalDataset()
-        dataset_.metadata.sample.name = 'foo'
+        dataset_.metadata.sample.name = "foo"
         dataset_.export_to(self.exporter)
         self.importer.source = self.source
         self.dataset.import_from(self.importer)
-        self.assertEqual(dataset_.metadata.sample.name,
-                         self.dataset.metadata.sample.name)
+        self.assertEqual(
+            dataset_.metadata.sample.name, self.dataset.metadata.sample.name
+        )
 
     def test_import_sets_history(self):
         dataset_ = dataset.ExperimentalDataset()
         processing_step = aspecd.processing.SingleProcessingStep()
-        processing_step.comment = 'foo'
+        processing_step.comment = "foo"
         dataset_.process(processing_step)
         dataset_.export_to(self.exporter)
         self.importer.source = self.source
         self.dataset.import_from(self.importer)
-        self.assertDictEqual(dataset_.history[0].to_dict(),
-                             self.dataset.history[0].to_dict())
+        self.assertDictEqual(
+            dataset_.history[0].to_dict(), self.dataset.history[0].to_dict()
+        )
 
     def test_import_with_large_array(self):
         dataset_ = dataset.Dataset()
@@ -517,8 +610,8 @@ class TestAsdfExporter(unittest.TestCase):
     def setUp(self):
         self.exporter = io.AsdfExporter()
         self.dataset = dataset.Dataset()
-        self.target = 'target'
-        self.extension = '.asdf'
+        self.target = "target"
+        self.extension = ".asdf"
 
     def tearDown(self):
         if os.path.exists(self.target + self.extension):
@@ -541,8 +634,8 @@ class TestAsdfImporter(unittest.TestCase):
     def setUp(self):
         self.importer = io.AsdfImporter()
         self.dataset = dataset.ExperimentalDataset()
-        self.source = 'target'
-        self.extension = '.asdf'
+        self.source = "target"
+        self.extension = ".asdf"
         self.exporter = io.AsdfExporter()
         self.exporter.target = self.source
 
@@ -555,8 +648,8 @@ class TestAsdfImporter(unittest.TestCase):
 
     def test_import_sets_data_and_origdata(self):
         dataset_ = dataset.Dataset()
-        dataset_.data.data = np.asarray([1.])
-        dataset_._origdata.data = np.asarray([1.])
+        dataset_.data.data = np.asarray([1.0])
+        dataset_._origdata.data = np.asarray([1.0])
         dataset_.export_to(self.exporter)
 
         self.importer.source = self.source
@@ -566,30 +659,32 @@ class TestAsdfImporter(unittest.TestCase):
 
     def test_import_sets_metadata(self):
         dataset_ = dataset.ExperimentalDataset()
-        dataset_.metadata.sample.name = 'foo'
+        dataset_.metadata.sample.name = "foo"
         dataset_.export_to(self.exporter)
         self.importer.source = self.source
         self.dataset.import_from(self.importer)
-        self.assertEqual(dataset_.metadata.sample.name,
-                         self.dataset.metadata.sample.name)
+        self.assertEqual(
+            dataset_.metadata.sample.name, self.dataset.metadata.sample.name
+        )
 
     def test_import_sets_history(self):
         dataset_ = dataset.ExperimentalDataset()
         processing_step = aspecd.processing.SingleProcessingStep()
-        processing_step.comment = 'foo'
+        processing_step.comment = "foo"
         dataset_.process(processing_step)
         dataset_.export_to(self.exporter)
         self.importer.source = self.source
         self.dataset.import_from(self.importer)
-        self.assertDictEqual(dataset_.history[0].to_dict(),
-                             self.dataset.history[0].to_dict())
+        self.assertDictEqual(
+            dataset_.history[0].to_dict(), self.dataset.history[0].to_dict()
+        )
 
 
 class TestTxtImporter(unittest.TestCase):
     def setUp(self):
         self.importer = io.TxtImporter()
         self.dataset = dataset.ExperimentalDataset()
-        self.source = 'target.txt'
+        self.source = "target.txt"
 
     def tearDown(self):
         if os.path.exists(self.source):
@@ -613,14 +708,16 @@ class TestTxtImporter(unittest.TestCase):
 
         self.importer.source = self.source
         self.dataset.import_from(self.importer)
-        self.assertListEqual(list(data[:, 1]),
-                             list(self.dataset.data.data))
-        self.assertListEqual(list(data[:, 1]),
-                             list(self.dataset._origdata.data))
-        self.assertListEqual(list(data[:, 0]),
-                             list(self.dataset.data.axes[0].values))
-        self.assertListEqual(list(data[:, 0]),
-                             list(self.dataset._origdata.axes[0].values))
+        self.assertListEqual(list(data[:, 1]), list(self.dataset.data.data))
+        self.assertListEqual(
+            list(data[:, 1]), list(self.dataset._origdata.data)
+        )
+        self.assertListEqual(
+            list(data[:, 0]), list(self.dataset.data.axes[0].values)
+        )
+        self.assertListEqual(
+            list(data[:, 0]), list(self.dataset._origdata.axes[0].values)
+        )
 
     def test_import_with_skiprows(self):
         data = np.random.random([5, 1])
@@ -633,8 +730,8 @@ class TestTxtImporter(unittest.TestCase):
         self.assertEqual(len(data) - skiprows, len(self.dataset.data.data))
 
     def test_import_with_delimiter(self):
-        with open(self.source, 'w+') as file:
-            file.write('1;5;1\n2;6;2\n3;7;3\n4;8;4\n5;9;5\n')
+        with open(self.source, "w+") as file:
+            file.write("1;5;1\n2;6;2\n3;7;3\n4;8;4\n5;9;5\n")
 
         self.importer.source = self.source
         self.importer.parameters["delimiter"] = ";"
@@ -642,8 +739,8 @@ class TestTxtImporter(unittest.TestCase):
         self.assertEqual((5, 3), self.dataset.data.data.shape)
 
     def test_import_with_comments(self):
-        with open(self.source, 'w+') as file:
-            file.write('% Lorem ipsum\n1 5 1\n2 6 2\n3 7 3\n4 8 4\n5 9 5\n')
+        with open(self.source, "w+") as file:
+            file.write("% Lorem ipsum\n1 5 1\n2 6 2\n3 7 3\n4 8 4\n5 9 5\n")
 
         self.importer.source = self.source
         self.importer.parameters["comments"] = "%"
@@ -651,20 +748,20 @@ class TestTxtImporter(unittest.TestCase):
         self.assertEqual((5, 3), self.dataset.data.data.shape)
 
     def test_import_with_separator(self):
-        with open(self.source, 'w+') as file:
-            file.write('1,1\n2,2\n3,3\n4,4\n5,5\n')
+        with open(self.source, "w+") as file:
+            file.write("1,1\n2,2\n3,3\n4,4\n5,5\n")
 
         self.importer.source = self.source
         self.importer.parameters["separator"] = ","
         self.dataset.import_from(self.importer)
-        self.assertEqual((5, ), self.dataset.data.data.shape)
+        self.assertEqual((5,), self.dataset.data.data.shape)
 
 
 class TestTxtExporter(unittest.TestCase):
     def setUp(self):
         self.exporter = io.TxtExporter()
         self.dataset = dataset.ExperimentalDataset()
-        self.target = 'target.txt'
+        self.target = "target.txt"
 
     def tearDown(self):
         if os.path.exists(self.target):
@@ -691,10 +788,10 @@ class TestTxtExporter(unittest.TestCase):
         self.dataset.data.data = np.linspace(3, 4, 11)
         self.exporter.target = self.target
         self.exporter.export_from(self.dataset)
-        with open(self.target, 'r') as file:
+        with open(self.target, "r") as file:
             first_line = file.readline()
-        self.assertTrue(first_line.startswith('0.'))
-        self.assertIn('3.', first_line)
+        self.assertTrue(first_line.startswith("0."))
+        self.assertIn("3.", first_line)
 
     def test_export_with_3D_dataset_raises(self):
         self.dataset.data.data = np.random.random([3, 3, 3])
@@ -706,11 +803,11 @@ class TestTxtExporter(unittest.TestCase):
         self.dataset.data.data = np.random.random([3, 4])
         self.exporter.target = self.target
         self.exporter.export_from(self.dataset)
-        with open(self.target, 'r') as file:
+        with open(self.target, "r") as file:
             first_line = file.readline()
             second_line = file.readline()
             third_line = file.readline()
-        self.assertTrue(first_line.startswith('0.'))
-        self.assertIn('3.', first_line)
-        self.assertTrue(second_line.startswith('0.'))
-        self.assertTrue(third_line.startswith('1.'))
+        self.assertTrue(first_line.startswith("0."))
+        self.assertIn("3.", first_line)
+        self.assertTrue(second_line.startswith("0."))
+        self.assertTrue(third_line.startswith("1."))

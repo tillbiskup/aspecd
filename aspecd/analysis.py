@@ -113,13 +113,23 @@ independently.
   Perform linear regression without fitting the intercept on 1D data. Note
   that this is mathematically different from a polynomial fit of first order.
 
+* :class:`DeviceDataExtraction`
+
+  Extract device data as separate dataset.
+
+  Datasets may contain additional data as device data in
+  :attr:`aspecd.dataset.Dataset.device_data`. For details,
+  see :class:`aspecd.dataset.DeviceData`. To further process and analyse
+  these device data, the most general way is to extract them as
+  individual dataset and perform all further tasks on it.
+
 
 Writing own analysis steps
 ==========================
 
 Each real analysis step should inherit from either
-:class:`aspecd.processing.SingleProcessingStep` in case of operating on a
-single dataset only or from :class:`aspecd.processing.MultiProcessingStep` in
+:class:`aspecd.analysis.SingleAnalysisStep` in case of operating on a
+single dataset only or from :class:`aspecd.analysis.MultiAnalysisStep` in
 case of operating on several datasets at once. Furthermore, all analysis
 steps should be contained in one module named "analysis". This allows for
 easy automation and replay of analysis steps, particularly in context of
@@ -323,15 +333,19 @@ class AnalysisStep(aspecd.utils.ToDictMixin):
     def __init__(self):
         super().__init__()
         self.name = aspecd.utils.full_class_name(self)
-        self.parameters = dict()
+        self.parameters = {}
         self.result = None
         self.index = []
-        self.dataset_type = 'aspecd.dataset.CalculatedDataset'
-        self.description = 'Abstract analysis step'
-        self.comment = ''
+        self.dataset_type = "aspecd.dataset.CalculatedDataset"
+        self.description = "Abstract analysis step"
+        self.comment = ""
         self.references = []
-        self._exclude_from_to_dict = ['name', 'description', 'references',
-                                      'result']
+        self._exclude_from_to_dict = [
+            "name",
+            "description",
+            "references",
+            "result",
+        ]
 
     def analyse(self):
         """Perform the actual analysis step on the given dataset.
@@ -481,12 +495,11 @@ class SingleAnalysisStep(AnalysisStep):
         super().__init__()
         # self.name = aspecd.utils.full_class_name(self)
         self.preprocessing = []
-        self.description = 'Abstract single analysis step'
+        self.description = "Abstract single analysis step"
         self.dataset = None
-        self.__kind__ = 'singleanalysis'
-        self._exclude_from_to_dict.extend(['dataset'])
+        self.__kind__ = "singleanalysis"
+        self._exclude_from_to_dict.extend(["dataset"])
 
-    # pylint: disable=arguments-differ
     def analyse(self, dataset=None, from_dataset=False):
         """Perform the actual analysis step on the given dataset.
 
@@ -560,9 +573,13 @@ class SingleAnalysisStep(AnalysisStep):
 
     def _check_applicability(self):
         if not self.applicable(self.dataset):
-            message = "%s not applicable to dataset with id %s" \
-                      % (self.name, self.dataset.id)
-            raise aspecd.exceptions.NotApplicableToDatasetError(message=message)
+            message = (
+                f"{self.name} not applicable to dataset with id "
+                f"{self.dataset.id}"
+            )
+            raise aspecd.exceptions.NotApplicableToDatasetError(
+                message=message
+            )
 
     def analyze(self, dataset=None, from_dataset=False):
         """Perform the actual analysis step on the given dataset.
@@ -606,10 +623,11 @@ class SingleAnalysisStep(AnalysisStep):
 
         """
         history_record = AnalysisHistoryRecord(
-            analysis_step=self,
-            package=self.dataset.package_name)
+            analysis_step=self, package=self.dataset.package_name
+        )
         history_record.analysis.preprocessing = copy.deepcopy(
-            self.dataset.history)
+            self.dataset.history
+        )
         return history_record
 
 
@@ -639,9 +657,9 @@ class MultiAnalysisStep(AnalysisStep):
     def __init__(self):
         super().__init__()
         self.datasets = []
-        self.description = 'Abstract analysis step for multiple datasets'
-        self.__kind__ = 'multianalysis'
-        self._exclude_from_to_dict.extend(['datasets'])
+        self.description = "Abstract analysis step for multiple datasets"
+        self.__kind__ = "multianalysis"
+        self._exclude_from_to_dict.extend(["datasets"])
 
     def analyse(self):
         """Perform the actual analysis on the given list of datasets.
@@ -678,10 +696,13 @@ class MultiAnalysisStep(AnalysisStep):
     def _check_applicability(self):
         for dataset in self.datasets:
             if not self.applicable(dataset):
-                message = "%s not applicable to dataset with id %s" \
-                          % (self.name, dataset.id)
+                message = (
+                    f"{self.name} not applicable to dataset with id "
+                    f"{dataset.id}"
+                )
                 raise aspecd.exceptions.NotApplicableToDatasetError(
-                    message=message)
+                    message=message
+                )
 
 
 class AggregatedAnalysisStep(AnalysisStep):
@@ -747,12 +768,12 @@ class AggregatedAnalysisStep(AnalysisStep):
     def __init__(self):
         super().__init__()
         self.datasets = []
-        self.analysis_step = ''
-        self.description = 'Aggregated analysis step for multiple datasets'
+        self.analysis_step = ""
+        self.description = "Aggregated analysis step for multiple datasets"
         self.result = self.create_dataset()
         self._analysis_object = None
-        self.__kind__ = 'aggregatedanalysis'
-        self._exclude_from_to_dict.extend(['datasets', 'result'])
+        self.__kind__ = "aggregatedanalysis"
+        self._exclude_from_to_dict.extend(["datasets", "result"])
 
     def analyse(self):
         """
@@ -769,14 +790,16 @@ class AggregatedAnalysisStep(AnalysisStep):
         index = []
         for dataset in self.datasets:
             analysis_done = dataset.analyse(self._analysis_object)
-            self.result.data.data = np.append(self.result.data.data,
-                                              analysis_done.result)
+            self.result.data.data = np.append(
+                self.result.data.data, analysis_done.result
+            )
             index.append(dataset.label)
         n_datasets = len(self.datasets)
         # noinspection PyUnboundLocalVariable
         if isinstance(analysis_done.result, list):
-            self.result.data.data = \
-                np.reshape(self.result.data.data, (n_datasets, -1))
+            self.result.data.data = np.reshape(
+                self.result.data.data, (n_datasets, -1)
+            )
         self.result.data.axes[0].index = index
         self._assign_origdata_in_dataset()
 
@@ -787,17 +810,19 @@ class AggregatedAnalysisStep(AnalysisStep):
             raise aspecd.exceptions.MissingAnalysisStepError
         self._get_analysis_object()
         if isinstance(self._analysis_object.result, aspecd.dataset.Dataset):
-            raise ValueError('Analysis step "%s" returns dataset' %
-                             self.analysis_step)
+            raise ValueError(
+                f'Analysis step "{self.analysis_step}" returns ' f"dataset"
+            )
 
     def _get_analysis_object(self):
         try:
             self._analysis_object = aspecd.utils.object_from_class_name(
-                self.analysis_step)
+                self.analysis_step
+            )
         except ValueError:
             self._analysis_object = aspecd.utils.object_from_class_name(
-                '.'.join(
-                    ['aspecd.analysis', self.analysis_step]))
+                ".".join(["aspecd.analysis", self.analysis_step])
+            )
         for key, value in self.parameters.items():
             # noinspection PyUnresolvedReferences
             self._analysis_object.parameters[key] = value
@@ -952,37 +977,47 @@ class BasicCharacteristics(SingleAnalysisStep):
 
     def __init__(self):
         super().__init__()
-        self.description = 'Obtain basic characteristics'
+        self.description = "Obtain basic characteristics"
         self.parameters["kind"] = None
         self.parameters["output"] = "value"
 
     def _sanitise_parameters(self):
         if not self.parameters["kind"]:
             raise ValueError("No kind of characteristics given")
-        if self.parameters["kind"] not in ['min', 'max', 'amplitude', 'area',
-                                           'all']:
-            raise ValueError("Unknown kind %s" % self.parameters["kind"])
-        if self.parameters["output"] not in ['value', 'axes', 'indices']:
-            raise ValueError("Unknown output type %s"
-                             % self.parameters["output"])
-        if self.parameters["output"] in ["axes", "indices"] and \
-                self.parameters["kind"] in ["area", "amplitude"]:
-            raise ValueError("Output %s not available for characteristic %s."
-                             % (self.parameters["output"],
-                                self.parameters["kind"]))
+        if self.parameters["kind"] not in [
+            "min",
+            "max",
+            "amplitude",
+            "area",
+            "all",
+        ]:
+            raise ValueError(f"Unknown kind {self.parameters['kind']}")
+        if self.parameters["output"] not in ["value", "axes", "indices"]:
+            raise ValueError(
+                f"Unknown output type {self.parameters['output']}"
+            )
+        if self.parameters["output"] in [
+            "axes",
+            "indices",
+        ] and self.parameters["kind"] in ["area", "amplitude"]:
+            raise ValueError(
+                f"Output {self.parameters['output']} not "
+                f"available for characteristic "
+                f"{self.parameters['kind']}."
+            )
 
     def _perform_task(self):
-        if self.parameters["kind"] in ['min', 'max', 'amplitude', 'area']:
+        if self.parameters["kind"] in ["min", "max", "amplitude", "area"]:
             self.result = self._get_characteristic(
-                kind=self.parameters["kind"],
-                output=self.parameters["output"])
+                kind=self.parameters["kind"], output=self.parameters["output"]
+            )
         if self.parameters["kind"] == "all":
             self.result = []
-            for kind in ['min', 'max', 'amplitude', 'area']:
+            for kind in ["min", "max", "amplitude", "area"]:
                 self.result.append(self._get_characteristic(kind))
 
     def _get_characteristic(self, kind=None, output="value"):
-        function = getattr(self, '_get_characteristic_' + output)
+        function = getattr(self, "_get_characteristic_" + output)
         return function(kind=kind)
 
     def _get_characteristic_value(self, kind=None):
@@ -1002,34 +1037,46 @@ class BasicCharacteristics(SingleAnalysisStep):
         result = None
         if kind == "min":
             result = []
-            idx = np.unravel_index(self.dataset.data.data.argmin(),
-                                   self.dataset.data.data.shape)
+            idx = np.unravel_index(
+                self.dataset.data.data.argmin(), self.dataset.data.data.shape
+            )
             for dim in range(self.dataset.data.data.ndim):
                 result.append(self.dataset.data.axes[dim].values[idx[dim]])
                 self.index.append(
-                    '{}({})'.format(kind, self.dataset.data.axes[dim].quantity))
+                    f"{kind}({self.dataset.data.axes[dim].quantity})"
+                )
         if kind == "max":
             result = []
-            idx = np.unravel_index(self.dataset.data.data.argmax(),
-                                   self.dataset.data.data.shape)
+            idx = np.unravel_index(
+                self.dataset.data.data.argmax(), self.dataset.data.data.shape
+            )
             for dim in range(self.dataset.data.data.ndim):
                 result.append(self.dataset.data.axes[dim].values[idx[dim]])
                 self.index.append(
-                    '{}({})'.format(kind, self.dataset.data.axes[dim].quantity))
+                    f"{kind}({self.dataset.data.axes[dim].quantity})"
+                )
         return result
 
     def _get_characteristic_indices(self, kind=None):
         result = None
         if kind == "min":
-            result = list(np.unravel_index(self.dataset.data.data.argmin(),
-                                           self.dataset.data.data.shape))
+            result = list(
+                np.unravel_index(
+                    self.dataset.data.data.argmin(),
+                    self.dataset.data.data.shape,
+                )
+            )
             for dim in range(self.dataset.data.data.ndim):
-                self.index.append('{}(index{})'.format(kind, dim))
+                self.index.append(f"{kind}(index{dim})")
         if kind == "max":
-            result = list(np.unravel_index(self.dataset.data.data.argmax(),
-                                           self.dataset.data.data.shape))
+            result = list(
+                np.unravel_index(
+                    self.dataset.data.data.argmax(),
+                    self.dataset.data.data.shape,
+                )
+            )
             for dim in range(self.dataset.data.data.ndim):
-                self.index.append('{}(index{})'.format(kind, dim))
+                self.index.append(f"{kind}(index{dim})")
         return result
 
 
@@ -1091,14 +1138,14 @@ class BasicStatistics(SingleAnalysisStep):
 
     def __init__(self):
         super().__init__()
-        self.description = 'Obtain basic statistics'
+        self.description = "Obtain basic statistics"
         self.parameters["kind"] = None
 
     def _sanitise_parameters(self):
         if not self.parameters["kind"]:
             raise ValueError("No kind of statistics given")
-        if self.parameters["kind"] not in ['mean', 'median', 'std', 'var']:
-            raise ValueError("Unknown kind %s" % self.parameters["kind"])
+        if self.parameters["kind"] not in ["mean", "median", "std", "var"]:
+            raise ValueError(f"Unknown kind {self.parameters['kind']}")
 
     def _perform_task(self):
         function = getattr(np, self.parameters["kind"])
@@ -1234,28 +1281,36 @@ class BlindSNREstimation(SingleAnalysisStep):
 
     def __init__(self):
         super().__init__()
-        self.description = 'Blind signal-to-noise ratio estimation'
+        self.description = "Blind signal-to-noise ratio estimation"
         self.parameters["method"] = None
 
     def _sanitise_parameters(self):
         if not self.parameters["method"]:
             self.parameters["method"] = "simple"
-        if self.parameters["method"] == "der_snr" \
-                and len(self.dataset.data.data) < 4:
+        if (
+            self.parameters["method"] == "der_snr"
+            and len(self.dataset.data.data) < 4
+        ):
             raise ValueError("Too few samples")
 
     def _perform_task(self):
         if self.parameters["method"] == "simple":
-            self.result = \
+            self.result = (
                 self.dataset.data.data.mean() / self.dataset.data.data.std()
+            )
         if self.parameters["method"] == "simple_squared":
-            self.result = self.dataset.data.data.mean()**2 \
-                / self.dataset.data.data.std()**2
+            self.result = (
+                self.dataset.data.data.mean() ** 2
+                / self.dataset.data.data.std() ** 2
+            )
         if self.parameters["method"] == "der_snr":
             data = self.dataset.data.data
             signal = np.median(data)
-            noise = 1.482602 / np.sqrt(6) \
+            noise = (
+                1.482602
+                / np.sqrt(6)
                 * np.median(np.abs(2 * data[2:-2] - data[0:-4] - data[4:]))
+            )
             self.result = signal / noise
 
 
@@ -1441,7 +1496,7 @@ class PeakFinding(SingleAnalysisStep):
 
     def __init__(self):
         super().__init__()
-        self.description = 'Peak finding in 1D'
+        self.description = "Peak finding in 1D"
         self.parameters["negative_peaks"] = False
         self.parameters["return_properties"] = False
         self.parameters["return_dataset"] = False
@@ -1494,12 +1549,15 @@ class PeakFinding(SingleAnalysisStep):
             dataset = self.create_dataset()
             dataset.data.data = self.dataset.data.data[peaks]
             dataset.data.axes[0] = self.dataset.data.axes[0]
-            dataset.data.axes[0].values = \
-                self.dataset.data.axes[0].values[peaks]
+            dataset.data.axes[0].values = self.dataset.data.axes[0].values[
+                peaks
+            ]
             dataset.data.axes[1] = self.dataset.data.axes[1]
             self.result = dataset
-        elif self.parameters["return_properties"] \
-                and not self.parameters["negative_peaks"]:
+        elif (
+            self.parameters["return_properties"]
+            and not self.parameters["negative_peaks"]
+        ):
             self.result = (peaks, properties)
         else:
             self.result = self.dataset.data.axes[0].values[peaks]
@@ -1636,7 +1694,7 @@ class PowerDensitySpectrum(SingleAnalysisStep):
 
     def __init__(self):
         super().__init__()
-        self.description = 'Calculate power density spectrum'
+        self.description = "Calculate power density spectrum"
         self.result = aspecd.dataset.CalculatedDataset()
         self.parameters["method"] = "periodogram"
 
@@ -1665,8 +1723,8 @@ class PowerDensitySpectrum(SingleAnalysisStep):
         frequencies, psd = method(self.dataset.data.data)
         self.result.data.data = np.log10(psd[1:])
         self.result.data.axes[0].values = np.log10(frequencies[1:])
-        self.result.data.axes[0].quantity = 'log frequency'
-        self.result.data.axes[1].quantity = 'log power'
+        self.result.data.axes[0].quantity = "log frequency"
+        self.result.data.axes[1].quantity = "log power"
 
 
 class PolynomialFit(SingleAnalysisStep):
@@ -1746,7 +1804,7 @@ class PolynomialFit(SingleAnalysisStep):
 
     def __init__(self):
         super().__init__()
-        self.description = 'Polynomial fit'
+        self.description = "Polynomial fit"
         self.parameters["order"] = 1
 
     @staticmethod
@@ -1773,7 +1831,8 @@ class PolynomialFit(SingleAnalysisStep):
         polynomial = np.polynomial.Polynomial.fit(
             self.dataset.data.axes[0].values,
             self.dataset.data.data,
-            deg=self.parameters['order'])
+            deg=self.parameters["order"],
+        )
         # noinspection PyUnresolvedReferences
         self.result = list(polynomial.convert().coef)
 
@@ -1918,7 +1977,7 @@ class LinearRegressionWithFixedIntercept(SingleAnalysisStep):
 
     def __init__(self):
         super().__init__()
-        self.description = 'Linear regression without intercept'
+        self.description = "Linear regression without intercept"
         self.parameters["offset"] = 0
         self.parameters["polynomial_coefficients"] = False
 
@@ -1948,6 +2007,113 @@ class LinearRegressionWithFixedIntercept(SingleAnalysisStep):
         ydata = self.dataset.data.data - self.parameters["offset"]
         results = np.linalg.lstsq(xdata, ydata, rcond=None)
         if self.parameters["polynomial_coefficients"]:
-            self.result = [self.parameters["offset"], float(results[0])]
+            self.result = [
+                self.parameters["offset"],
+                float(results[0].item()),
+            ]
         else:
-            self.result = float(results[0])
+            self.result = float(results[0].item())
+
+
+class DeviceDataExtraction(SingleAnalysisStep):
+    """
+    Extract device data as separate dataset.
+
+    Datasets may contain additional data as device data in
+    :attr:`aspecd.dataset.Dataset.device_data`. For details,
+    see :class:`aspecd.dataset.DeviceData`. To further process and analyse
+    these device data, the most general way is to extract them as
+    individual dataset and perform all further tasks on it.
+
+    A reference to the original dataset is stored in
+    :attr:`aspecd.dataset.Dataset.references`.
+
+    Attributes
+    ----------
+    result : :class:`aspecd.dataset.CalculatedDataset`
+        Dataset containing the device data.
+
+        The device the data are extracted for is provided by the parameter
+        ``device``, see below.
+
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        device : :class:`str`
+            Name of the device the data should be extracted for.
+
+            Raises a :class:`KeyError` if the device does not exist.
+
+            Default: ''
+
+    Raises
+    ------
+    KeyError
+        Raised if device is not present in
+        :attr:`aspecd.dataset.Dataset.device_data`
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Suppose you have a dataset that contains device data referenced with
+    the key "timestamp", and you want to extract those device data and
+    make them accessible from within the recipe using the name "timestamp"
+    as well:
+
+    .. code-block:: yaml
+
+       - kind: singleanalysis
+         type: DeviceDataExtraction
+         properties:
+           parameters:
+             device: timestamp
+         result: timestamp
+
+
+    .. versionadded:: 0.9
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = "Extract device data"
+        self.parameters["device"] = ""
+
+    @staticmethod
+    def applicable(dataset):
+        """
+        Check whether analysis step is applicable to the given dataset.
+
+        Device data extraction is only possible if device data are present.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            Dataset to check
+
+        Returns
+        -------
+        applicable : :class:`bool`
+            Whether dataset is applicable
+
+        """
+        return dataset.device_data
+
+    def _sanitise_parameters(self):
+        device = self.parameters["device"]
+        if device not in self.dataset.device_data.keys():
+            raise KeyError(f"Device '{device}' not found in dataset")
+
+    def _perform_task(self):
+        device = self.parameters["device"]
+        dataset = self.create_dataset()
+        dataset.data = copy.deepcopy(self.dataset.device_data[device])
+        reference = aspecd.dataset.DatasetReference()
+        reference.from_dataset(self.dataset)
+        dataset.references.append(reference)
+        self.result = dataset

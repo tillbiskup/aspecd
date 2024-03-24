@@ -88,15 +88,15 @@ class Infofile:
     def __init__(self, filename=None):
         self.parameters = collections.OrderedDict()
         self.filename = filename
-        self.infofile_info = dict()
+        self.infofile_info = {}
 
-        self.infofile_info['kind'] = ''
-        self.infofile_info['version'] = ''
-        self.infofile_info['date'] = ''
+        self.infofile_info["kind"] = ""
+        self.infofile_info["version"] = ""
+        self.infofile_info["date"] = ""
 
         self._file_contents = []
-        self._comment_char = '%'
-        self._escape_char = '\\'
+        self._comment_char = "%"
+        self._escape_char = "\\"
 
     def parse(self):
         """Parse info file.
@@ -121,9 +121,9 @@ class Infofile:
         self._parse_infofile_body()
 
     def _parse_infofile_body(self):  # noqa: MC0001
-        blockname = ''
-        key = ''
-        value = ''
+        blockname = ""
+        key = ""
+        value = ""
         tmp_block = collections.OrderedDict()
 
         # Start with second line of file, omitting format and version info
@@ -132,8 +132,9 @@ class Infofile:
                 if blockname not in self.parameters:
                     self.parameters[blockname] = line.rstrip()
                 else:
-                    self.parameters[blockname] = \
-                        " ".join([self.parameters[blockname], line.rstrip()])
+                    self.parameters[blockname] = " ".join(
+                        [self.parameters[blockname], line.rstrip()]
+                    )
                 continue
             if self._is_comment_line(line):
                 continue
@@ -146,13 +147,13 @@ class Infofile:
             if not line:
                 if blockname:
                     self.parameters[blockname] = tmp_block
-                    blockname = ''
+                    blockname = ""
                     tmp_block = collections.OrderedDict()
                 continue
             if not blockname:
                 blockname = line.strip()
                 continue
-            [key, value] = [i.strip() for i in line.split(':', maxsplit=1)]
+            [key, value] = [i.strip() for i in line.split(":", maxsplit=1)]
             tmp_block[key] = value
         # In case last block has not been assigned
         # (file didn't end with COMMENT block or empty line)
@@ -161,29 +162,30 @@ class Infofile:
                 self.parameters[blockname] = tmp_block
             # noinspection PyUnboundLocalVariable
             # pylint: disable=undefined-loop-variable
-            if self._is_comment_block(blockname) and \
-                    self._is_comment_block(line):
-                self.parameters[blockname] = ''
+            if self._is_comment_block(blockname) and self._is_comment_block(
+                line
+            ):
+                self.parameters[blockname] = ""
 
     def _is_infofile(self):
-        return 'info file' in self._file_contents[0].lower()
+        return "info file" in self._file_contents[0].lower()
 
     def _read(self):
         if not self.filename:
             raise FileExistsError
         if not os.path.exists(self.filename):
             raise FileNotFoundError
-        with open(self.filename) as file:
+        with open(self.filename, encoding="utf8") as file:
             file_contents = list(file)
         return file_contents
 
     def _parse_infofile_info(self):
         info_line = self._file_contents[0]
-        info_parts = info_line.split(' - ')
+        info_parts = info_line.split(" - ")
         _, version, version_date = info_parts[1].split()
-        self.infofile_info['kind'] = info_parts[0].strip()
-        self.infofile_info['version'] = version
-        self.infofile_info['date'] = version_date[1:-1]
+        self.infofile_info["kind"] = info_parts[0].strip()
+        self.infofile_info["version"] = version
+        self.infofile_info["date"] = version_date[1:-1]
 
     def _is_comment_line(self, line):
         return line.strip().startswith(self._comment_char)
@@ -195,10 +197,12 @@ class Infofile:
         occur = [i for i in occur if line[i - 1] != self._escape_char]
         # If there is an inline comment, remove it from line
         if occur:
-            line = line[:occur[0]]
+            line = line[: occur[0]]
         # Replace escaped comment char with comment char
-        return line.replace("".join([self._escape_char, self._comment_char]),
-                            self._comment_char)
+        return line.replace(
+            "".join([self._escape_char, self._comment_char]),
+            self._comment_char,
+        )
 
     @staticmethod
     def _is_continuation_line(line):
@@ -206,10 +210,10 @@ class Infofile:
 
     @staticmethod
     def _is_comment_block(blockname):
-        return blockname.lower() == 'comment'
+        return blockname.lower() == "comment"
 
 
-def parse(filename=''):
+def parse(filename=""):
     """Parse info file.
 
     Conventional interface provided for convenience that gives easy access

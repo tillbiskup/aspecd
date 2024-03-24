@@ -1,16 +1,20 @@
 """Datasets: units containing data and metadata.
 
-The dataset is one key concept of the ASpecD framework, consisting of the
-data as well as the corresponding metadata. Storing metadata in a
-structured way is a prerequisite for a semantic understanding within the
-routines. Furthermore, a history of every processing, analysis and
-annotation step is recorded as well, aiming at a maximum of
-reproducibility. This is part of how the ASpecD framework tries to support
-good scientific practice.
+The dataset is one :doc:`key concept <../concepts>` of the ASpecD framework,
+consisting of the data as well as the corresponding metadata. Storing
+metadata in a structured way is a prerequisite for a semantic
+understanding within the routines. Furthermore, a history of every
+processing, analysis and annotation step is recorded as well, aiming at a
+maximum of reproducibility. This is part of how the ASpecD framework tries
+to support good scientific practice.
 
 Therefore, each processing and analysis step of data should always be
 performed using the respective methods of a dataset, at least as long as it
 can be performed on a single dataset.
+
+
+Types of datasets
+=================
 
 Generally, there are two types of datasets: Those containing experimental
 data and those containing calculated data. Therefore, two corresponding
@@ -19,6 +23,13 @@ inherit from either of them:
 
   * :class:`aspecd.dataset.ExperimentalDataset`
   * :class:`aspecd.dataset.CalculatedDataset`
+
+Calculated datasets can either be the result of actual simulations or
+dummy datasets used for testing purposes.
+
+
+Classes used by the dataset
+===========================
 
 Additional classes used within the dataset that are normally not necessary
 to implement directly on your own in packages building upon the ASpecD
@@ -39,6 +50,16 @@ framework, are:
     necessary to create axis labels and to make sense of the numerical
     information.
 
+  * :class:`aspecd.dataset.DeviceData`
+
+    Additional data from devices recorded parallel to the actual data.
+
+    The dataset concept (see :class:`aspecd.dataset.Dataset`) rests on the
+    assumption that there is one particular set of data that can be
+    regarded as the actual or primary data of the dataset. However,
+    in many cases, parallel to these actual data, other data are recorded
+    as well, be it readouts from monitors or alike.
+
   * :class:`aspecd.dataset.DatasetReference`
 
     Reference to a dataset.
@@ -52,40 +73,54 @@ framework, are:
     more) simulations.
 
 
-In addition, to handle the history contained within a dataset, there is a
-series of classes for storing history records:
+.. _sec:dataset:device_data:
 
-  * :class:`aspecd.dataset.HistoryRecord`
+Device data
+===========
 
-    Generic base class for all kinds of history records.
+The dataset concept (see :class:`aspecd.dataset.Dataset`) rests on the
+assumption that there is one particular set of data that can be
+regarded as the actual or primary data of the dataset. However,
+in many cases, parallel to these actual data, other data are recorded
+as well, be it readouts from monitors or alike.
 
-    For all classes operating on datasets, such as
-    :class:`aspecd.processing.SingleProcessingStep`,
-    :class:`aspecd.analysis.SingleAnalysisStep` and others, there exist at
-    least two "representations": (i) the generic one not (necessarily) tied
-    to any concrete dataset, thus portable, and (ii) a concrete one having
-    operated on a dataset and thus being accompanied with information about
-    who has done what when how to what dataset.
+Usually, these additional data will share one axis with the
+primary data of the dataset. However, this is not necessarily the
+case. Furthermore, one dataset may contain an arbitrary number of
+additional device data entries.
 
-    For this second type, a history class derived from
-    :class:`aspecd.dataset.HistoryRecord` gets used, and it is this second type
-    that is stored inside the Dataset object.
+Technically speaking, :class:`aspecd.dataset.DeviceData` are a special
+or extended type of :class:`aspecd.dataset.Data`, *i.e.* a unit
+containing both numerical data and corresponding axes. However,
+this class extends that with metadata specific for the device the
+additional data have been recorded with. Why storing metadata here and
+not in the :attr:`aspecd.dataset.Dataset.metadata` property? The
+latter is more concerned with an overall description of the
+experimental setup in sufficient detail, while the metadata contained
+in this class are more device-specific. Potential contents of the
+metadata here are internal device IDs, addresses for communication,
+and alike. Eventually, the metadata contained herein are those that
+can be relevant mainly for debugging purposes or sanity checks of
+experiments.
 
-  * :class:`aspecd.dataset.ProcessingHistoryRecord`
+.. admonition:: Example
 
-    History record for processing steps on datasets.
+    A real example for additional data recorded in spectroscopy comes
+    from time-resolved EPR (tr-EPR) spectroscopy: Here, you usually
+    record 2D data as function of magnetic field and time, *i.e.* a
+    full time profile per magnetic field point. As this is a
+    non-standard method, often setups are controlled by lab-written
+    software and allow for monitoring parameters not usually recorded
+    with commercial setups. In this particular case, this can be the
+    time stamp and microwave frequency for each individual recorded
+    time trace, and the `Python trEPR package
+    <https://docs.trepr.de/>`_ not only handles tr-EPR data, but is
+    capable of dealing with both additional types of data for analysis
+    purposes.
 
-  * :class:`aspecd.dataset.AnalysisHistoryRecord`
 
-    History record for analysis steps on datasets.
-
-  * :class:`aspecd.dataset.AnnotationHistoryRecord`
-
-    History record for annotations of datasets.
-
-  * :class:`aspecd.dataset.PlotHistoryRecord`
-
-    History record for plots of datasets.
+Module documentation
+====================
 
 """
 
@@ -132,6 +167,25 @@ class Dataset(aspecd.utils.ToDictMixin):
 
     data : :obj:`aspecd.dataset.Data`
         numeric data and axes
+
+    device_data : :class:`dict`
+        Additional data from devices recorded parallel to the actual data.
+
+        For details and a bit of background, see
+        :class:`aspecd.dataset.DeviceData`.
+
+        In a real dataset with actual device data, the key typically
+        identifies the device (type) and the value is of type
+        :class:`aspecd.dataset.DeviceData`.
+
+        .. note::
+
+            To further process and analyse these device data, the most
+            general way is to extract them as individual dataset each and
+            perform all further tasks on it, respectively. See
+            :class:`aspecd.analysis.DeviceDataExtraction` for details.
+
+        .. versionadded:: 0.9
 
     metadata : :obj:`aspecd.metadata.DatasetMetadata`
         hierarchical key-value store of metadata
@@ -197,20 +251,24 @@ class Dataset(aspecd.utils.ToDictMixin):
         super().__init__()
         self.data = Data()
         self._origdata = Data()
+        self.device_data = {}
         self.metadata = aspecd.metadata.DatasetMetadata()
         self.history = []
         self._history_pointer = -1
         self.analyses = []
         self.annotations = []
         self.representations = []
-        self.id = ''  # pylint: disable=invalid-name
-        self.label = ''
+        self.id = ""  # pylint: disable=invalid-name
+        self.label = ""
         self.references = []
         self.tasks = []
         # Package name is used to store the package version in history records
         self._package_name = aspecd.utils.package_name(self)
-        self._include_in_to_dict = ['_origdata', '_package_name',
-                                    '_history_pointer']
+        self._include_in_to_dict = [
+            "_origdata",
+            "_package_name",
+            "_history_pointer",
+        ]
 
     @property
     def package_name(self):
@@ -263,7 +321,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         processing_step.process(self, from_dataset=True)
         history_record = processing_step.create_history_record()
         self.append_history_record(history_record)
-        self._append_task(kind='processing', task=history_record)
+        self._append_task(kind="processing", task=history_record)
         self._handle_not_undoable(processing_step=processing_step)
         return processing_step
 
@@ -318,8 +376,9 @@ class Dataset(aspecd.utils.ToDictMixin):
         """
         if self._at_tip_of_history():
             raise aspecd.exceptions.RedoAlreadyAtLatestChangeError
-        processing_step_record = \
-            self.history[self._history_pointer + 1].processing
+        processing_step_record = self.history[
+            self._history_pointer + 1
+        ].processing
         processing_step = processing_step_record.create_processing_step()
         processing_step.process(self, from_dataset=True)
         self._increment_history_pointer()
@@ -351,10 +410,10 @@ class Dataset(aspecd.utils.ToDictMixin):
         self.history.append(history_record)
         self._increment_history_pointer()
 
-    def _append_task(self, kind='', task=None):
+    def _append_task(self, kind="", task=None):
         task = {
-            'kind': kind,
-            'task': task,
+            "kind": kind,
+            "task": task,
         }
         self.tasks.append(task)
 
@@ -366,7 +425,7 @@ class Dataset(aspecd.utils.ToDictMixin):
 
     def _replay_history(self):
         self.data = self._origdata
-        for history_entry in self.history[:self._history_pointer]:
+        for history_entry in self.history[: self._history_pointer]:
             history_entry.replay(self)
 
     def strip_history(self):
@@ -381,7 +440,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         """
         if not self._has_leading_history():
             return
-        del self.history[self._history_pointer + 1:]
+        del self.history[self._history_pointer + 1 :]
 
     def analyse(self, analysis_step=None):
         """Apply analysis to dataset.
@@ -412,7 +471,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         analysis_step.analyse(self, from_dataset=True)
         history_record = analysis_step.create_history_record()
         self.analyses.append(history_record)
-        self._append_task(kind='analysis', task=history_record)
+        self._append_task(kind="analysis", task=history_record)
         return analysis_step
 
     def analyze(self, analysis_step=None):
@@ -441,7 +500,7 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         Parameters
         ----------
-        annotation_ : :obj:`aspecd.annotation.Annotation`
+        annotation_ : :obj:`aspecd.annotation.DatasetAnnotation`
             annotation to add to the dataset
 
         """
@@ -450,7 +509,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         annotation_.annotate(self, from_dataset=True)
         history_record = annotation_.create_history_record()
         self.annotations.append(history_record)
-        self._append_task(kind='annotation', task=history_record)
+        self._append_task(kind="annotation", task=history_record)
 
     def delete_annotation(self, index=None):
         """Remove annotation record from dataset.
@@ -499,7 +558,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         plotter.plot(dataset=self, from_dataset=True)
         plot_record = plotter.create_history_record()
         self.representations.append(plot_record)
-        self._append_task(kind='representation', task=plot_record)
+        self._append_task(kind="representation", task=plot_record)
         return plotter
 
     def tabulate(self, table=None):
@@ -529,11 +588,11 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         """
         if not table:
-            raise TypeError('tabulate needs a Table object')
+            raise TypeError("tabulate needs a Table object")
         table.tabulate(dataset=self, from_dataset=True)
         table_record = table.create_history_record()
         self.representations.append(table_record)
-        self._append_task(kind='representation', task=table_record)
+        self._append_task(kind="representation", task=table_record)
         return table
 
     def delete_representation(self, index=None):
@@ -593,7 +652,9 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         """
         if not importer:
-            raise aspecd.exceptions.MissingImporterError("No importer provided")
+            raise aspecd.exceptions.MissingImporterError(
+                "No importer provided"
+            )
         importer.import_into(self)
         self._origdata = copy.deepcopy(self.data)
 
@@ -620,8 +681,12 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         """
         if not exporter:
-            raise aspecd.exceptions.MissingExporterError("No exporter provided")
+            raise aspecd.exceptions.MissingExporterError(
+                "No exporter provided"
+            )
         exporter.export_from(self)
+        exporter_record = exporter.create_history_record()
+        self._append_task(kind="export", task=exporter_record)
 
     def add_reference(self, dataset=None):
         """
@@ -698,8 +763,7 @@ class Dataset(aspecd.utils.ToDictMixin):
                 attribute = getattr(self, key)
                 if key == "history":
                     for element in dict_[key]:
-                        record = \
-                            aspecd.history.ProcessingHistoryRecord()
+                        record = aspecd.history.ProcessingHistoryRecord()
                         record.from_dict(element)
                         self.history.append(record)
                 elif key == "analyses":
@@ -709,8 +773,7 @@ class Dataset(aspecd.utils.ToDictMixin):
                         self.analyses.append(record)
                 elif key == "annotations":
                     for element in dict_[key]:
-                        record = \
-                            aspecd.history.AnnotationHistoryRecord()
+                        record = aspecd.history.AnnotationHistoryRecord()
                         record.from_dict(element)
                         self.annotations.append(record)
                 elif key == "representations":
@@ -726,18 +789,28 @@ class Dataset(aspecd.utils.ToDictMixin):
                 elif key == "tasks":
                     for element in dict_[key]:
                         if element["kind"] == "representation":
-                            record_class_name = \
-                                'aspecd.history.PlotHistoryRecord'
+                            record_class_name = (
+                                "aspecd.history.PlotHistoryRecord"
+                            )
+                        elif element["kind"] == "annotation":
+                            record_class_name = (
+                                "aspecd.history.AnnotationHistoryRecord"
+                            )
                         else:
-                            record_class_name = 'aspecd.history.' \
-                                + element["kind"].capitalize() + 'HistoryRecord'
+                            record_class_name = (
+                                "aspecd.history."
+                                + element["kind"].capitalize()
+                                + "HistoryRecord"
+                            )
                         record = aspecd.utils.object_from_class_name(
-                            record_class_name)
+                            record_class_name
+                        )
                         # noinspection PyUnresolvedReferences
                         record.from_dict(element["task"])
-                        self.tasks.append({'kind': element["kind"],
-                                           'task': record})
-                elif hasattr(attribute, 'from_dict'):
+                        self.tasks.append(
+                            {"kind": element["kind"], "task": record}
+                        )
+                elif hasattr(attribute, "from_dict"):
                     attribute.from_dict(dict_[key])
                 else:
                     setattr(self, key, dict_[key])
@@ -828,9 +901,9 @@ class DatasetReference(aspecd.utils.ToDictMixin):
 
     def __init__(self):
         super().__init__()
-        self.type = ''
-        self.id = ''  # pylint: disable=invalid-name
-        self.history = list()
+        self.type = ""
+        self.id = ""  # pylint: disable=invalid-name
+        self.history = []
 
     def from_dataset(self, dataset=None):
         """
@@ -927,7 +1000,7 @@ class DatasetFactory:
     def __init__(self):
         self.importer_factory = None
 
-    def get_dataset(self, source='', importer='', parameters=None):
+    def get_dataset(self, source="", importer="", parameters=None):
         """
         Return dataset object for dataset specified by its source.
 
@@ -974,21 +1047,23 @@ class DatasetFactory:
         """
         if not source:
             raise aspecd.exceptions.MissingSourceError(
-                'A source is required to return a dataset')
+                "A source is required to return a dataset"
+            )
         if not self.importer_factory:
             raise aspecd.exceptions.MissingImporterFactoryError(
-                'An ImporterFactory is required to return a dataset')
+                "An ImporterFactory is required to return a dataset"
+            )
         dataset_ = self._create_dataset(source=source)
-        importer = self.importer_factory.get_importer(source=source,
-                                                      importer=importer,
-                                                      parameters=parameters)
+        importer = self.importer_factory.get_importer(
+            source=source, importer=importer, parameters=parameters
+        )
         dataset_.import_from(importer)
         return dataset_
 
     # noinspection PyUnusedLocal
     # pylint: disable=unused-argument
     @staticmethod
-    def _create_dataset(source=''):
+    def _create_dataset(source=""):
         """
         Non-public method creating the actual (empty) dataset object.
 
@@ -1062,7 +1137,7 @@ class Data(aspecd.utils.ToDictMixin):
         else:
             self.axes = axes
         self.calculated = calculated
-        self._include_in_to_dict = ['data', 'axes']
+        self._include_in_to_dict = ["data", "axes"]
 
     @property
     def data(self):
@@ -1136,8 +1211,9 @@ class Data(aspecd.utils.ToDictMixin):
             self._axes.append(Axis())
         for index in range(self.data.ndim):
             if len(self.axes[index].values) != data_shape[index]:
-                self.axes[index].values = np.arange(data_shape[index],
-                                                    dtype=np.float64)
+                self.axes[index].values = np.arange(
+                    data_shape[index], dtype=np.float64
+                )
 
     def _check_axes(self):
         if len(self._axes) > self.data.ndim + 1:
@@ -1218,11 +1294,11 @@ class Axis(aspecd.utils.ToDictMixin):
         self._values = np.zeros(0)
         self._index = []
         self._equidistant = None
-        self.quantity = ''
-        self.symbol = ''
-        self.unit = ''
-        self.label = ''
-        self._include_in_to_dict = ['values', 'index']
+        self.quantity = ""
+        self.symbol = ""
+        self.unit = ""
+        self.label = ""
+        self._include_in_to_dict = ["values", "index"]
 
     @property
     def values(self):
@@ -1248,12 +1324,16 @@ class Axis(aspecd.utils.ToDictMixin):
     def values(self, values):
         if not isinstance(values, type(self._values)):
             values = np.asarray(values)
-            if not isinstance(values, type(self._values)) or \
-                    values.dtype != self._values.dtype:
-                raise ValueError('Wrong type: expected %s, got %s' %
-                                 (self._values.dtype, values.dtype))
+            if (
+                not isinstance(values, type(self._values))
+                or values.dtype != self._values.dtype
+            ):
+                raise ValueError(
+                    f"Wrong type: expected {self._values.dtype}, "
+                    f"got {values.dtype}"
+                )
         if values.ndim > 1:
-            raise IndexError('Values need to be one-dimensional')
+            raise IndexError("Values need to be one-dimensional")
         self._values = values
         self._set_equidistant_property()
         self._set_index()
@@ -1286,11 +1366,11 @@ class Axis(aspecd.utils.ToDictMixin):
     @index.setter
     def index(self, index):
         if len(index) != len(self._values):
-            raise IndexError('index and values need to be of same length')
+            raise IndexError("index and values need to be of same length")
         self._index = index
 
     def _set_index(self):
-        self._index = ['' for _ in self.values]
+        self._index = ["" for _ in self.values]
 
     @property
     def equidistant(self):
@@ -1332,3 +1412,75 @@ class Axis(aspecd.utils.ToDictMixin):
         for key in dict_:
             if hasattr(self, key):
                 setattr(self, key, dict_[key])
+
+
+class DeviceData(Data):
+    """
+    Additional data from devices recorded parallel to the actual data.
+
+    The dataset concept (see :class:`aspecd.dataset.Dataset`) rests on the
+    assumption that there is one particular set of data that can be
+    regarded as the actual or primary data of the dataset. However,
+    in many cases, parallel to these actual data, other data are recorded
+    as well, be it readouts from monitors or alike.
+
+    Usually, these additional data will share one axis with the
+    primary data of the dataset. However, this is not necessarily the
+    case. Furthermore, one dataset may contain an arbitrary number of
+    additional device data entries.
+
+    Technically speaking, :class:`aspecd.dataset.DeviceData` are a special
+    or extended type of :class:`aspecd.dataset.Data`, *i.e.* a unit
+    containing both numerical data and corresponding axes. However,
+    this class extends that with metadata specific for the device the
+    additional data have been recorded with. Why storing metadata here and
+    not in the :attr:`aspecd.dataset.Dataset.metadata` property? The
+    latter is more concerned with an overall description of the
+    experimental setup in sufficient detail, while the metadata contained
+    in this class are more device-specific. Potential contents of the
+    metadata here are internal device IDs, addresses for communication,
+    and alike. Eventually, the metadata contained herein are those that
+    can be relevant mainly for debugging purposes or sanity checks of
+    experiments.
+
+    .. admonition:: Example
+
+        A real example for additional data recorded in spectroscopy comes
+        from time-resolved EPR (tr-EPR) spectroscopy: Here, you usually
+        record 2D data as function of magnetic field and time, *i.e.* a
+        full time profile per magnetic field point. As this is a
+        non-standard method, often setups are controlled by lab-written
+        software and allow for monitoring parameters not usually recorded
+        with commercial setups. In this particular case, this can be the
+        time stamp and microwave frequency for each individual recorded
+        time trace, and the `Python trEPR package
+        <https://docs.trepr.de/>`_ not only handles tr-EPR data, but is
+        capable of dealing with both additional types of data for analysis
+        purposes.
+
+
+    Attributes
+    ----------
+    metadata : :class:`aspecd.metadata.Device`
+        Metadata of the device used to record the additional data
+
+        .. note::
+            For actual devices you will want to create dedicated classes
+            inheriting from :class:`aspecd.metadata.Device` and extending
+            the available attributes.
+
+    calculated : :class:`bool`
+        Indicator for the origin of the numerical data (calculation or
+        experiment).
+
+        Default: `False`
+
+
+    .. versionadded:: 0.9
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.metadata = aspecd.metadata.Device()
+        self.calculated = False

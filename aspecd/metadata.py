@@ -221,22 +221,22 @@ class PhysicalQuantity(aspecd.utils.ToDictMixin):
 
     def __init__(self, string=None, value=None, unit=None):
         super().__init__()
-        self._value = 0.
-        self.unit = ''
-        self.dimension = ''
-        self.name = ''
+        self._value = 0.0
+        self.unit = ""
+        self.dimension = ""
+        self.name = ""
         if string:
             self._set_value_unit_from_string(string)
         if value:
             self.value = value
         if unit:
             self.unit = unit
-        self._include_in_to_dict = ['value']
+        self._include_in_to_dict = ["value"]
 
     def __str__(self):
         """String representation of object."""
         if self.value == 0.0 and not self.unit:
-            string = ''
+            string = ""
         else:
             string = " ".join([str(self.value), self.unit])
         return string
@@ -289,12 +289,19 @@ class PhysicalQuantity(aspecd.utils.ToDictMixin):
 
         """
         commensurable = False
-        if self.unit and hasattr(physical_quantity, 'unit') and \
-                physical_quantity.unit and self.unit == physical_quantity.unit:
+        if (
+            self.unit
+            and hasattr(physical_quantity, "unit")
+            and physical_quantity.unit
+            and self.unit == physical_quantity.unit
+        ):
             commensurable = True
-        if self.dimension and hasattr(physical_quantity, 'dimension') and \
-                physical_quantity.dimension and self.dimension\
-                == physical_quantity.dimension:
+        if (
+            self.dimension
+            and hasattr(physical_quantity, "dimension")
+            and physical_quantity.dimension
+            and self.dimension == physical_quantity.dimension
+        ):
             commensurable = True
         return commensurable
 
@@ -318,8 +325,8 @@ class PhysicalQuantity(aspecd.utils.ToDictMixin):
         if string and not string.lower() == "n/a":
             self._set_value_unit_from_string(string)
         else:
-            self.value = 0.
-            self.unit = ''
+            self.value = 0.0
+            self.unit = ""
 
     def from_dict(self, dict_=None):
         """
@@ -384,9 +391,11 @@ class Metadata(aspecd.utils.ToDictMixin):
 
         """
         for key in dict_:
-            attribute_name = key.replace(' ', '_').lower()
+            attribute_name = key.replace(" ", "_").lower()
             if hasattr(self, attribute_name):
-                if isinstance(getattr(self, attribute_name), PhysicalQuantity):
+                if isinstance(
+                    getattr(self, attribute_name), PhysicalQuantity
+                ):
                     if isinstance(dict_[key], dict):
                         getattr(self, attribute_name).from_dict(dict_[key])
                     else:
@@ -411,7 +420,7 @@ class TemperatureControl(Metadata):
 
     """
 
-    def __init__(self, dict_=None, temperature=''):
+    def __init__(self, dict_=None, temperature=""):
         """
         Instantiate TemperatureControl object.
 
@@ -427,7 +436,7 @@ class TemperatureControl(Metadata):
 
         """
         self.temperature = PhysicalQuantity(temperature)
-        self.controller = ''
+        self.controller = ""
         super().__init__(dict_=dict_)
 
     @property
@@ -465,10 +474,10 @@ class TemperatureControl(Metadata):
             del dict_["controlled"]
         else:
             controlled = False
-        super(TemperatureControl, self).from_dict(dict_)
+        super().from_dict(dict_)
         # Checking "controlled" needs to be done after assigning other keys
         if controlled_in_dict and not controlled:
-            self.temperature.from_string('')
+            self.temperature.from_string("")
 
 
 class Measurement(Metadata):
@@ -499,9 +508,9 @@ class Measurement(Metadata):
     def __init__(self, dict_=None):
         self.start = None
         self.end = None
-        self.purpose = ''
-        self.operator = ''
-        self.labbook_entry = ''
+        self.purpose = ""
+        self.operator = ""
+        self.labbook_entry = ""
         super().__init__(dict_=dict_)
 
     def from_dict(self, dict_=None):
@@ -540,7 +549,7 @@ class Measurement(Metadata):
                     self._set_datetime_from_string(key, dict_.pop(key))
         super().from_dict(dict_=dict_)
 
-    def _set_datetime_from_dict(self, key='', dict_=None):
+    def _set_datetime_from_dict(self, key="", dict_=None):
         """
         Set start and end properties from dictionary containing values.
 
@@ -563,7 +572,7 @@ class Measurement(Metadata):
         datetime_string = " ".join([dict_["date"], dict_["time"]])
         self._set_datetime_from_string(key=key, string=datetime_string)
 
-    def _set_datetime_from_string(self, key='', string=''):
+    def _set_datetime_from_string(self, key="", string=""):
         """
         Set start and end properties from string containing values.
 
@@ -607,9 +616,9 @@ class Sample(Metadata):
     """
 
     def __init__(self, dict_=None):
-        self.name = ''
+        self.name = ""
         self.id = None  # pylint: disable=invalid-name
-        self.loi = ''
+        self.loi = ""
         super().__init__(dict_=dict_)
 
 
@@ -632,8 +641,47 @@ class Calculation(Metadata):
     """
 
     def __init__(self, dict_=None):
-        self.type = ''
-        self.parameters = dict()
+        self.type = ""
+        self.parameters = {}
+        super().__init__(dict_=dict_)
+
+
+class Device(Metadata):
+    """
+    Information on the device contributing device data.
+
+    The dataset concept (see :class:`aspecd.dataset.Dataset`) rests on the
+    assumption that there is one particular set of data that can be
+    regarded as the actual or primary data of the dataset. However,
+    in many cases, parallel to these actual data, other data are recorded
+    as well, be it readouts from monitors or alike.
+
+    This class contains the metadata of the corresponding devices whose
+    data are of type :class:`aspecd.dataset.DeviceData`. That class
+    contains an attribute :attr:`aspecd.dataset.DeviceData.metadata`.
+
+    .. note::
+        You will usually need to implement derived classes for concrete
+        devices, as this class only contains a minimum set of attributes.
+
+
+    Attributes
+    ----------
+    label : :class:`str`
+        Label of the device
+
+    Parameters
+    ----------
+    dict_ : :class:`dict`
+        Dictionary containing fields corresponding to attributes of the class
+
+
+    .. versionadded:: 0.9
+
+    """
+
+    def __init__(self, dict_=None):
+        self.label = ""
         super().__init__(dict_=dict_)
 
 
@@ -678,7 +726,7 @@ class DatasetMetadata(aspecd.utils.ToDictMixin):
 
         """
         for key in dict_:
-            attr = key.replace(' ', '_').lower()
+            attr = key.replace(" ", "_").lower()
             if hasattr(self, attr):
                 getattr(self, attr).from_dict(dict_[key])
 
@@ -859,14 +907,14 @@ class MetadataMapper:
     """
 
     def __init__(self):
-        self.metadata = dict()
+        self.metadata = {}
         self.mappings = []
-        self.version = ''
-        self.recipe_filename = ''
+        self.version = ""
+        self.recipe_filename = ""
         self._mapping_recipes = None
         self._mapping_recipe = None
 
-    def rename_key(self, old_key='', new_key=''):
+    def rename_key(self, old_key="", new_key=""):
         """
         Rename key in dictionary.
 
@@ -884,14 +932,14 @@ class MetadataMapper:
         self._rename_key_in_dict(old_key, new_key, self.metadata)
 
     @staticmethod
-    def _rename_key_in_dict(old_key='', new_key='', dict_=None):
+    def _rename_key_in_dict(old_key="", new_key="", dict_=None):
         if old_key in dict_:
             dict_[new_key] = dict_.pop(old_key)
         else:
             logger.debug('Key "%s" not found', old_key)
         return dict_
 
-    def combine_items(self, old_keys=None, new_key='', pattern=''):
+    def combine_items(self, old_keys=None, new_key="", pattern=""):
         """
         Combine two items in a dictionary.
 
@@ -910,9 +958,10 @@ class MetadataMapper:
         self._combine_items_in_dict(old_keys, new_key, pattern, self.metadata)
 
     @staticmethod
-    def _combine_items_in_dict(old_keys=None, new_key='', pattern='',
-                               dict_=None):
-        value_tmp = list()
+    def _combine_items_in_dict(
+        old_keys=None, new_key="", pattern="", dict_=None
+    ):
+        value_tmp = []
         for key in old_keys:
             value_tmp.append(dict_.pop(key))
         dict_[new_key] = pattern.join(value_tmp)
@@ -933,13 +982,12 @@ class MetadataMapper:
     def _traverse_keys_to_variable_names(self, dict_=None):
         for key, value in dict_.copy().items():
             if isinstance(value, dict):
-                dict_[key] = \
-                    self._traverse_keys_to_variable_names(value)
-            new_key = key.replace(' ', '_').lower()
+                dict_[key] = self._traverse_keys_to_variable_names(value)
+            new_key = key.replace(" ", "_").lower()
             dict_[new_key] = dict_.pop(key)
         return dict_
 
-    def copy_key(self, old_key='', new_key=''):
+    def copy_key(self, old_key="", new_key=""):
         """
         Copy key in dictionary to new key.
 
@@ -955,15 +1003,21 @@ class MetadataMapper:
             Name of new key to be added
 
         """
-        self._copy_key_in_dict(old_key=old_key, new_key=new_key,
-                               dict_=self.metadata)
+        self._copy_key_in_dict(
+            old_key=old_key, new_key=new_key, dict_=self.metadata
+        )
 
     @staticmethod
-    def _copy_key_in_dict(old_key='', new_key='', dict_=None):
+    def _copy_key_in_dict(old_key="", new_key="", dict_=None):
         dict_[new_key] = dict_[old_key]
 
-    def move_item(self, key='', source_dict_name='', target_dict_name='',
-                  create_target_dict=False):
+    def move_item(
+        self,
+        key="",
+        source_dict_name="",
+        target_dict_name="",
+        create_target_dict=False,
+    ):
         """
         Move item (i.e., key-value pair) between dictionaries.
 
@@ -986,16 +1040,22 @@ class MetadataMapper:
             Whether to create target dictionary if it doesn't exist
 
         """
-        self._move_item_in_dict(key=key,
-                                source_dict_name=source_dict_name,
-                                target_dict_name=target_dict_name,
-                                create_target_dict=create_target_dict,
-                                dict_=self.metadata)
+        self._move_item_in_dict(
+            key=key,
+            source_dict_name=source_dict_name,
+            target_dict_name=target_dict_name,
+            create_target_dict=create_target_dict,
+            dict_=self.metadata,
+        )
 
     @staticmethod
-    def _move_item_in_dict(key='', source_dict_name='',
-                           target_dict_name='',
-                           create_target_dict=False, dict_=None):
+    def _move_item_in_dict(
+        key="",
+        source_dict_name="",
+        target_dict_name="",
+        create_target_dict=False,
+        dict_=None,
+    ):
         if create_target_dict and target_dict_name not in dict_:
             dict_[target_dict_name] = {}
         if source_dict_name:
@@ -1075,7 +1135,7 @@ class MetadataMapper:
             self.create_mappings()
         for mapping in self.mappings:
             if mapping[0]:
-                method = getattr(self, ''.join(['_', mapping[1], '_in_dict']))
+                method = getattr(self, "".join(["_", mapping[1], "_in_dict"]))
                 if mapping[0] in self.metadata:
                     method(*mapping[2], dict_=self.metadata[mapping[0]])
                 else:
@@ -1178,7 +1238,8 @@ class MetadataMapper:
         if not self.recipe_filename:
             raise aspecd.exceptions.MissingFilenameError(
                 message="You need to provide a recipe filename in "
-                        "self.recipe_filename")
+                "self.recipe_filename"
+            )
         self._load_mapping_recipe_from_file()
         self._choose_mapping_recipe()
         self._add_mappings_from_recipe()
@@ -1187,55 +1248,66 @@ class MetadataMapper:
         yaml_file = aspecd.utils.Yaml()
         # noinspection PyTypeChecker
         yaml_file.read_stream(
-            aspecd.utils.get_package_data(self.recipe_filename))
+            aspecd.utils.get_package_data(self.recipe_filename)
+        )
         self._mapping_recipes = yaml_file.dict
 
     def _choose_mapping_recipe(self):
         for key in self._mapping_recipes.keys():
-            if key != 'format':
-                if self.version in \
-                        self._mapping_recipes[key]['metadata file versions']:
+            if key != "format":
+                if (
+                    self.version
+                    in self._mapping_recipes[key]["metadata file versions"]
+                ):
                     self._mapping_recipe = self._mapping_recipes[key]
         if not self._mapping_recipe:
             raise aspecd.exceptions.MissingRecipeError(
-                message='No matching recipe found.')
+                message="No matching recipe found."
+            )
 
     def _add_mappings_from_recipe(self):
-        if 'copy key' in self._mapping_recipe.keys():
-            for i in range(len(self._mapping_recipe['copy key'])):
-                mapping = \
-                    [self._mapping_recipe['copy key'][i]['in dict'],
-                     'copy_key',
-                     [self._mapping_recipe['copy key'][i]['old key'],
-                      self._mapping_recipe['copy key'][i]['new key']
-                      ]
-                     ]
-                self.mappings.append(mapping)
-        if 'combine items' in self._mapping_recipe.keys():
-            for i in range(len(self._mapping_recipe['combine items'])):
-                mapping = \
-                    [self._mapping_recipe['combine items'][i]['in dict'],
-                     'combine_items',
-                     [self._mapping_recipe['combine items'][i]['old keys'],
-                      self._mapping_recipe['combine items'][i]['new key'],
-                      self._mapping_recipe['combine items'][i]['pattern']]]
-                self.mappings.append(mapping)
-        if 'rename key' in self._mapping_recipe.keys():
-            for i in range(len(self._mapping_recipe['rename key'])):
-                mapping = \
-                    [self._mapping_recipe['rename key'][i]['in dict'],
-                     'rename_key',
-                     [self._mapping_recipe['rename key'][i]['old key'],
-                      self._mapping_recipe['rename key'][i]['new key']]]
-                self.mappings.append(mapping)
-        if 'move item' in self._mapping_recipe.keys():
-            for i in range(len(self._mapping_recipe['move item'])):
-                sub_mapping = [
-                    self._mapping_recipe['move item'][i]['key'],
-                    self._mapping_recipe['move item'][i]['source dict'],
-                    self._mapping_recipe['move item'][i]['target dict'],
+        if "copy key" in self._mapping_recipe.keys():
+            for i in range(len(self._mapping_recipe["copy key"])):
+                mapping = [
+                    self._mapping_recipe["copy key"][i]["in dict"],
+                    "copy_key",
+                    [
+                        self._mapping_recipe["copy key"][i]["old key"],
+                        self._mapping_recipe["copy key"][i]["new key"],
+                    ],
                 ]
-                if "create target" in self._mapping_recipe['move item'][i]:
+                self.mappings.append(mapping)
+        if "combine items" in self._mapping_recipe.keys():
+            for i in range(len(self._mapping_recipe["combine items"])):
+                mapping = [
+                    self._mapping_recipe["combine items"][i]["in dict"],
+                    "combine_items",
+                    [
+                        self._mapping_recipe["combine items"][i]["old keys"],
+                        self._mapping_recipe["combine items"][i]["new key"],
+                        self._mapping_recipe["combine items"][i]["pattern"],
+                    ],
+                ]
+                self.mappings.append(mapping)
+        if "rename key" in self._mapping_recipe.keys():
+            for i in range(len(self._mapping_recipe["rename key"])):
+                mapping = [
+                    self._mapping_recipe["rename key"][i]["in dict"],
+                    "rename_key",
+                    [
+                        self._mapping_recipe["rename key"][i]["old key"],
+                        self._mapping_recipe["rename key"][i]["new key"],
+                    ],
+                ]
+                self.mappings.append(mapping)
+        if "move item" in self._mapping_recipe.keys():
+            for i in range(len(self._mapping_recipe["move item"])):
+                sub_mapping = [
+                    self._mapping_recipe["move item"][i]["key"],
+                    self._mapping_recipe["move item"][i]["source dict"],
+                    self._mapping_recipe["move item"][i]["target dict"],
+                ]
+                if "create target" in self._mapping_recipe["move item"][i]:
                     sub_mapping.append(True)
-                mapping = ['', 'move_item', sub_mapping]
+                mapping = ["", "move_item", sub_mapping]
                 self.mappings.append(mapping)

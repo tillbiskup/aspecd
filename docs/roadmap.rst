@@ -5,49 +5,53 @@ Roadmap
 A few ideas how to develop the project further, currently a list as a reminder for the main developers themselves, in no particular order, though with a tendency to list more important aspects first:
 
 
-For version 0.9
-===============
-
-* Usability
-
-  * Importer/ImporterFactory should issue a warning if no dataset could be loaded, rather than silently continuing, as this often leads to downstream problems and exceptions thrown.
+For next releases
+=================
 
 * Plotting
 
-  * Colorbar for 2D plotter
-  * (Arbitrary) lines in plot, *e.g.* to compare peak positions
+  * Support for device data (via `self.data`) in :class:`aspecd.plotting.CompositePlotter` and derived classes
 
-    Need to decide whether this goes into plotter properties or gets handled as proper annotations; probably the former, but a good starting point to think about the latter.
-  * If figure is plotted twice using automatically generated filenames, use different filenames (e.g. increment number).
-  * Axis direction can be switched (*e.g.*, for FTIR data, hence not needing to set axis limits in reverse order)
-  * Bugfix: Title of figure and axis label overlap when adding an axis on the top side of the figure
-  * Allow to add a legend title in recipes.
+  * :class:`aspecd.plotting.MultiDeviceDataPlotter1DStacked`
+
+    Similar to :class:`aspecd.plotting.MultiDeviceDataPlotter1D`, but stacked display of the individual lines as in :class:`aspecd.plotting.SinglePlotter2DStacked`
+
+  * :class:`aspecd.plotting.MultiDeviceDataPlotter1DSeparated`
+
+    Similar to :class:`aspecd.plotting.MultiDeviceDataPlotter1D`, but with the different device data plotted in separate axes stacked vertically
+
+  * Plot annotations
+
+    * additional types of annotations, *e.g.* ``axvspan``, ``axhspan``, symbols
+    * ``zorder`` as attribute for annotations
+
+  * Quiver plots
+
+    https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.quiver.html
 
 * Processing
 
-  * CombineDatasets: combine data from several datasets into a single dataset; parameters allowing to define the axis values/quantity/unit, possibly even from given metadata; to decide: How to handle metadata that might be invalidated?
+  * DatasetCombination: combine data from several datasets into a single dataset; parameters allowing to define the axis values/quantity/unit, possibly even from given metadata; to decide: How to handle metadata that might be invalidated?
 
   * MetadataUpdate/MetadataChange: Change metadata of a given dataset from within a recipe. Useful in case datasets contain (known) spurious or otherwise inappropriate metadata. (Metadata are provided manually and are therefore prone to human errors).
 
   * :class:`aspecd.processing.BaselineCorrection` with ``fit_area`` definable as axis range, and arbitrary parts of the axis (*e.g.*, in the middle of a dataset or with separate fit areas)
 
-* Logging
-
-  * Add loggers from other modules (than task) and derived packages
-
-    Probably this means to switch to package-wide logging and documenting that derived packages need to log to the ASpecD logger as well.
-
-* Add export tasks to dataset tasks
-
 * Recipe-driven data analysis:
 
   * Better handling of automatically generated filenames for saving plots and reports: unique filenames; using the label rather than the source (id) of the dataset
+
+  * If figure is plotted twice using automatically generated filenames, use different filenames (e.g. increment number).
+
+   Points towards reworking the :class:`aspecd.plotting.Saver` class, allowing for an additional optional parameter ``suffix`` or else. Would make handling too long filenames easier as well.
 
   * Handling of results: automatically add datasets to dataset list? How to deal with result labels identical to existing datasets?
 
   * Sub-recipes that can be included in recipes
 
     Allows for creating a library of recipes for rather complex tasks that can simply be called as single step from another recipe
+
+  * Static (syntax) checker for recipes prior to their execution
 
 * Report task:
 
@@ -59,6 +63,8 @@ For version 0.9
   * Looking for templates in user directory
 
 * Documentation:
+
+  * More developer documentation providing hints and "best practices" for how to develop classes either in ASpecD or in derived packages.
 
   * How to debug a recipe?
 
@@ -72,7 +78,6 @@ For later versions
 
 * Plot styles
 
-  * Switch in recipe settings for applying a style to all plots
   * user-defined styles
 
 * Annotations
@@ -87,7 +92,6 @@ For later versions
 
 * Interpolation
 
-  * for ND with N>2
   * different types of interpolation
 
 * Templates for creating derived packages

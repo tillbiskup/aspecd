@@ -348,6 +348,22 @@ Of course, this only gets you started, and until now, we have not tested a singl
 Of course, you need to import numpy in this case, for having the data assigned random numbers in this case, but you will anyway often use numpy for your actual processing. Furthermore, you can see here why not defining the standard parameters for a processing step in the ``setUp`` method is quite helpful, as it helps you see in your tests explicitly how to actually use your class. Using ``assertRaisesRegex`` is a good idea to enforce sensible error messages of the exceptions raised. For more details, you may have a look into the test classes of the ASpecD framework for now.
 
 
+Logging
+=======
+
+Logging gets quite important as soon as you implement more complex functionality. In order to have your logging play seamlessly with the ASpecD framework, and particularly with :doc:`recipe-driven data analysis </recipes>`, you need to have the loggers for your modules to be below the root logger of the ASpecD framework. Hence, whenever you need a logger in a module of your package, create one using the :func:`aspecd.utils.get_logger` function. This is most conveniently done by adding the following lines of code towards the top of your module:
+
+.. code-block::
+
+    import aspecd.utils
+
+
+    logger = aspecd.utils.get_logger(__name__)
+
+
+This will both, create a logger that is located below the root logger of the ASpecD framework in the logger hierarchy, and with a :class:`logging.NullHandler` handler added, as advocated for in the `Python Logging HOWTO <https://docs.python.org/3/howto/logging.html#configuring-logging-for -a-library>`_.
+
+
 What's next?
 ============
 

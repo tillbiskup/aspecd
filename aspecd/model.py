@@ -307,16 +307,16 @@ class Model(ToDictMixin):
     def __init__(self):
         super().__init__()
         self.name = aspecd.utils.full_class_name(self)
-        self.parameters = dict()
+        self.parameters = {}
         self.variables = []
-        self.description = 'Abstract model'
+        self.description = "Abstract model"
         self.references = []
-        self.label = ''
+        self.label = ""
         self.axes = []
         self._dataset = aspecd.dataset.CalculatedDataset()
         self._axes_from_dataset = []
-        self.__kind__ = 'model'
-        self._exclude_from_to_dict = ['name', 'description', 'references']
+        self.__kind__ = "model"
+        self._exclude_from_to_dict = ["name", "description", "references"]
 
     def create(self):
         """
@@ -429,7 +429,8 @@ class Model(ToDictMixin):
         """
         if not dict_:
             raise aspecd.exceptions.MissingDictError(
-                'Need a dict to read from, but none given')
+                "Need a dict to read from, but none given"
+            )
         for key, value in dict_.items():
             if hasattr(self, key):
                 setattr(self, key, value)
@@ -437,10 +438,12 @@ class Model(ToDictMixin):
     def _check_prerequisites(self):
         if not self.parameters:
             raise aspecd.exceptions.MissingParameterError(
-                'No parameters for model provided')
+                "No parameters for model provided"
+            )
         if len(self.variables) == 0:
             raise aspecd.exceptions.MissingParameterError(
-                'No variables to evaluate model for provided')
+                "No variables to evaluate model for provided"
+            )
 
     def _sanitise_parameters(self):
         """Ensure parameters provided for model are correct.
@@ -474,21 +477,24 @@ class Model(ToDictMixin):
             self._dataset.data.axes = self._axes_from_dataset
         else:
             if isinstance(self.variables[0], (list, np.ndarray)):
-                for index in range(len(self.variables)):
-                    self._dataset.data.axes[index].values = \
-                        self.variables[index]
+                for index, _ in enumerate(self.variables):
+                    self._dataset.data.axes[index].values = self.variables[
+                        index
+                    ]
             else:
                 self._dataset.data.axes[0].values = np.asarray(self.variables)
-            self._dataset.data.axes[-1].quantity = 'amplitude'
-            self._dataset.data.axes[-1].unit = 'a.u.'
+            self._dataset.data.axes[-1].quantity = "amplitude"
+            self._dataset.data.axes[-1].unit = "a.u."
         if self.axes:
             if len(self.axes) != len(self._dataset.data.axes):
-                message = "Number of axes and dataset axes need to be identical"
+                message = (
+                    "Number of axes and dataset axes need to be identical"
+                )
                 raise IndexError(message)
             for idx, axis in enumerate(self._dataset.data.axes):
                 if self.axes[idx]:
-                    axis.quantity = self.axes[idx]['quantity']
-                    axis.unit = self.axes[idx]['unit']
+                    axis.quantity = self.axes[idx]["quantity"]
+                    axis.unit = self.axes[idx]["unit"]
 
     def _set_dataset_metadata(self):
         """
@@ -639,8 +645,9 @@ class CompositeModel(Model):
 
     def __init__(self):
         super().__init__()
-        self.description = \
-            'Composite model consisting of several weighted models'
+        self.description = (
+            "Composite model consisting of several weighted models"
+        )
         self.models = []
         self.parameters = []
         self.weights = []
@@ -651,15 +658,15 @@ class CompositeModel(Model):
             self.weights = np.ones(len(self.models))
         if not self.operators:
             for _ in self.models:
-                self.operators.append('+')
+                self.operators.append("+")
         else:
-            self.operators.insert(0, '+')
+            self.operators.insert(0, "+")
         if len(self.parameters) != len(self.models):
-            raise IndexError('Models and parameters count differs')
+            raise IndexError("Models and parameters count differs")
         if len(self.weights) != len(self.models):
-            raise IndexError('Models and weights count differs')
+            raise IndexError("Models and weights count differs")
         if len(self.operators) != len(self.models):
-            raise IndexError('Models and operators count differs')
+            raise IndexError("Models and operators count differs")
 
     def _perform_task(self):
         if isinstance(self.variables, list):
@@ -675,9 +682,9 @@ class CompositeModel(Model):
             # noinspection PyUnresolvedReferences
             dataset = model.create()
             data = data.reshape(dataset.data.data.shape)
-            if self.operators[idx] in ('+', 'plus', 'add'):
+            if self.operators[idx] in ("+", "plus", "add"):
                 data += dataset.data.data * self.weights[idx]
-            if self.operators[idx] in ('*', 'times', 'multiply'):
+            if self.operators[idx] in ("*", "times", "multiply"):
                 data *= dataset.data.data * self.weights[idx]
         self._dataset.data.data = data
 
@@ -686,8 +693,9 @@ class CompositeModel(Model):
         try:
             model = aspecd.utils.object_from_class_name(model_name)
         except (ValueError, AttributeError):
-            model = aspecd.utils.object_from_class_name('aspecd.model.' +
-                                                        model_name)
+            model = aspecd.utils.object_from_class_name(
+                "aspecd.model." + model_name
+            )
         return model
 
 
@@ -795,14 +803,15 @@ class FamilyOfCurves(Model):
 
     def __init__(self):
         super().__init__()
-        self.description = 'Family of curves for a model with one parameter ' \
-                           'varied'
+        self.description = (
+            "Family of curves for a model with one parameter varied"
+        )
         self.model = None
-        self.vary = dict()
+        self.vary = {}
 
     def _sanitise_parameters(self):
         if not self.model:
-            raise ValueError('Missing a model')
+            raise ValueError("Missing a model")
         if not isiterable(self.vary["values"]):
             self.vary["values"] = [self.vary["values"]]
         if not self.parameters:
@@ -810,20 +819,22 @@ class FamilyOfCurves(Model):
 
     # noinspection PyUnresolvedReferences
     def _perform_task(self):
-        self._dataset.data.data = \
-            np.zeros([len(self.variables[0]), len(self.vary["values"])])
+        self._dataset.data.data = np.zeros(
+            [len(self.variables[0]), len(self.vary["values"])]
+        )
         model = self._get_model(self.model)
         model.variables = self.variables
-        for key in self.parameters:
-            model.parameters[key] = self.parameters[key]
+        for key, value in self.parameters.items():
+            model.parameters[key] = value
         for idx, value in enumerate(self.vary["values"]):
             model.parameters[self.vary["parameter"]] = value
             dataset = model.create()
             self._dataset.data.data[:, idx] = dataset.data.data
         if len(self.vary["values"]) > 1:
             self._dataset.data.axes[-2].quantity = self.vary["parameter"]
-            self._dataset.data.axes[-2].values = \
-                [float(x) for x in self.vary["values"]]
+            self._dataset.data.axes[-2].values = [
+                float(x) for x in self.vary["values"]
+            ]
         if self._axes_from_dataset:
             self._axes_from_dataset.insert(-1, self._dataset.data.axes[-2])
 
@@ -832,8 +843,9 @@ class FamilyOfCurves(Model):
         try:
             model = aspecd.utils.object_from_class_name(model_name)
         except (ValueError, AttributeError):
-            model = aspecd.utils.object_from_class_name('aspecd.model.' +
-                                                        model_name)
+            model = aspecd.utils.object_from_class_name(
+                "aspecd.model." + model_name
+            )
         return model
 
 
@@ -974,13 +986,16 @@ class Zeros(Model):
             self.variables = [0]
             if not self.parameters["shape"]:
                 raise aspecd.exceptions.MissingParameterError(
-                    message="Parameter 'shape' missing")
+                    message="Parameter 'shape' missing"
+                )
         if not self.parameters["shape"]:
             self.parameters["shape"] = []
             if isiterable(self.variables[0]):
-                for index in range(len(self.variables)):
+                for index, _ in enumerate(self.variables):
                     # noinspection PyTypeChecker
-                    self.parameters["shape"].append(len(self.variables[index]))
+                    self.parameters["shape"].append(
+                        len(self.variables[index])
+                    )
             else:
                 self.parameters["shape"] = len(self.variables)
         if not isiterable(self.parameters["shape"]):
@@ -989,7 +1004,7 @@ class Zeros(Model):
             if not isiterable(self.parameters["range"][0]):
                 self.parameters["range"] = [self.parameters["range"]]
             if len(self.parameters["shape"]) != len(self.parameters["range"]):
-                raise IndexError('Shape and range must be compatible')
+                raise IndexError("Shape and range must be compatible")
 
     def _perform_task(self):
         self._dataset.data.data = np.zeros(self.parameters["shape"])
@@ -1001,8 +1016,9 @@ class Zeros(Model):
         shape = self.parameters["shape"]
         range_ = self.parameters["range"]
         for dim in range(self._dataset.data.data.ndim):
-            axis_values = \
-                np.linspace(range_[dim][0], range_[dim][1], shape[dim])
+            axis_values = np.linspace(
+                range_[dim][0], range_[dim][1], shape[dim]
+            )
             self.variables.append(axis_values)
 
 
@@ -1143,13 +1159,16 @@ class Ones(Model):
             self.variables = [0]
             if not self.parameters["shape"]:
                 raise aspecd.exceptions.MissingParameterError(
-                    message="Parameter 'shape' missing")
+                    message="Parameter 'shape' missing"
+                )
         if not self.parameters["shape"]:
             self.parameters["shape"] = []
             if isiterable(self.variables[0]):
-                for index in range(len(self.variables)):
+                for index, _ in enumerate(self.variables):
                     # noinspection PyTypeChecker
-                    self.parameters["shape"].append(len(self.variables[index]))
+                    self.parameters["shape"].append(
+                        len(self.variables[index])
+                    )
             else:
                 self.parameters["shape"] = len(self.variables)
         if not isiterable(self.parameters["shape"]):
@@ -1158,7 +1177,7 @@ class Ones(Model):
             if not isiterable(self.parameters["range"][0]):
                 self.parameters["range"] = [self.parameters["range"]]
             if len(self.parameters["shape"]) != len(self.parameters["range"]):
-                raise IndexError('Shape and range must be compatible')
+                raise IndexError("Shape and range must be compatible")
 
     def _perform_task(self):
         self._dataset.data.data = np.ones(self.parameters["shape"])
@@ -1170,8 +1189,9 @@ class Ones(Model):
         shape = self.parameters["shape"]
         range_ = self.parameters["range"]
         for dim in range(self._dataset.data.data.ndim):
-            axis_values = \
-                np.linspace(range_[dim][0], range_[dim][1], shape[dim])
+            axis_values = np.linspace(
+                range_[dim][0], range_[dim][1], shape[dim]
+            )
             self.variables.append(axis_values)
 
 
@@ -1264,7 +1284,8 @@ class Polynomial(Model):
     def _sanitise_parameters(self):
         if not self.parameters["coefficients"]:
             raise aspecd.exceptions.MissingParameterError(
-                message="Parameter 'coefficients' missing")
+                message="Parameter 'coefficients' missing"
+            )
 
     def _perform_task(self):
         polynomial = np.polynomial.Polynomial(self.parameters["coefficients"])
@@ -1386,8 +1407,9 @@ class Gaussian(Model):
         amplitude = self.parameters["amplitude"]
         position = self.parameters["position"]
         width = self.parameters["width"]
-        gaussian = \
-            amplitude * np.exp(-(x - position)**2 / not_zero(2 * width**2))
+        gaussian = amplitude * np.exp(
+            -((x - position) ** 2) / not_zero(2 * width**2)
+        )
         self._dataset.data.data = gaussian
 
 
@@ -1507,8 +1529,9 @@ class NormalisedGaussian(Model):
         position = self.parameters["position"]
         width = self.parameters["width"]
         amplitude = 1 / not_zero(width * np.sqrt(2 * np.pi))
-        gaussian = \
-            amplitude * np.exp(-(x - position)**2 / not_zero(2 * width**2))
+        gaussian = amplitude * np.exp(
+            -((x - position) ** 2) / not_zero(2 * width**2)
+        )
         self._dataset.data.data = gaussian
 
 
@@ -1628,8 +1651,9 @@ class Lorentzian(Model):
         amplitude = self.parameters["amplitude"]
         position = self.parameters["position"]
         width = self.parameters["width"]
-        lorentzian = \
-            amplitude * (width**2 / ((x - position)**2 + not_zero(width**2)))
+        lorentzian = amplitude * (
+            width**2 / ((x - position) ** 2 + not_zero(width**2))
+        )
         self._dataset.data.data = lorentzian
 
 
@@ -1731,7 +1755,9 @@ class NormalisedLorentzian(Model):
 
     def __init__(self):
         super().__init__()
-        self.description = "Normalised Lorentzian, PDF of a Cauchy distribution"
+        self.description = (
+            "Normalised Lorentzian, PDF of a Cauchy distribution"
+        )
         self.parameters["position"] = 0
         self.parameters["width"] = 1
 
@@ -1740,8 +1766,9 @@ class NormalisedLorentzian(Model):
         position = self.parameters["position"]
         width = self.parameters["width"]
         amplitude = 1 / (np.pi * not_zero(width))
-        lorentzian = \
-            amplitude * (width**2 / ((x - position)**2 + not_zero(width**2)))
+        lorentzian = amplitude * (
+            width**2 / ((x - position) ** 2 + not_zero(width**2))
+        )
         self._dataset.data.data = lorentzian
 
 
@@ -1845,10 +1872,10 @@ class Sine(Model):
 
     def __init__(self):
         super().__init__()
-        self.description = 'Sine function'
-        self.parameters['amplitude'] = 1
-        self.parameters['frequency'] = 1
-        self.parameters['phase'] = 0
+        self.description = "Sine function"
+        self.parameters["amplitude"] = 1
+        self.parameters["frequency"] = 1
+        self.parameters["phase"] = 0
 
     def _perform_task(self):
         x = np.asarray(self.variables[0])  # pylint: disable=invalid-name
@@ -1951,7 +1978,7 @@ class Exponential(Model):
 
     def __init__(self):
         super().__init__()
-        self.description = 'Exponential function'
+        self.description = "Exponential function"
         self.parameters["prefactor"] = 1
         self.parameters["rate"] = 1
 
