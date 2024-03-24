@@ -14,7 +14,7 @@ Not yet released
 Version 0.9.2
 ==============
 
-Not yet released
+Released 2024-03-24
 
 
 Fixes
