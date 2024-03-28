@@ -11,6 +11,12 @@ Version 0.10.0
 Not yet released
 
 
+Fixes
+-----
+
+* Templates for LaTeX dataset report: escape ``_`` and ``#`` in dataset label.
+
+
 Version 0.9.2
 ==============
 
