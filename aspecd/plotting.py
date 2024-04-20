@@ -286,7 +286,7 @@ the *y* axis analogously.
             xlabel: $foo$ / bar
             xlim: [-5, 5]
             xticklabelangle: 45
-            invert: True
+            invert: x
         filename: output.pdf
 
 
@@ -2887,7 +2887,7 @@ class MultiPlotter1D(MultiPlotter):
     parameters : :class:`dict`
         All parameters necessary for this step.
 
-        Additionally to those from :class:`aspecd.plotting.MultiPlotter`,
+        Additionally, to those from :class:`aspecd.plotting.MultiPlotter`,
         the following parameters are allowed:
 
         switch_axes : :class:`bool`
