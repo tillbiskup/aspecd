@@ -780,7 +780,8 @@ class Normalisation(SingleProcessingStep):
 
     * area
 
-      Data are divided by the sum of their *absolute* values
+      Data are divided by the sum of their *absolute* values, the number of
+      points is also taken into account.
 
     You can set these kinds using the attribute :attr:`parameters["kind"]`.
 
@@ -988,6 +989,8 @@ class Normalisation(SingleProcessingStep):
             ) - self._noise_amplitude
             self.dataset.data.axes[-1].unit = ""
         elif "area" in self.parameters["kind"].lower():
+            # might be written better
+            self.dataset.data.data /= np.sum(np.abs(data))/data.shape[0]
             self.dataset.data.data /= np.sum(np.abs(data))
             self.dataset.data.axes[-1].unit = ""
         else:
@@ -1978,7 +1981,7 @@ class RangeExtraction(SingleProcessingStep):
                         )
                         + 1
                     )
-                    slice_ = slice(start, stop)
+                    slice_ = slice(start, stop+1)
             # Important: Change axes first, then data
             self.dataset.data.axes[dim].values = self.dataset.data.axes[
                 dim

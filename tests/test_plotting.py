@@ -1085,6 +1085,12 @@ class TestSinglePlotter2DStacked(unittest.TestCase):
             max(plotter.axes.get_lines()[0].get_ydata()) * 10,
         )
 
+    def test_plot_calculates_offset_accordingly(self):
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.random.random([5, 10]) - 10
+        plotter = dataset_.plot(self.plotter)
+        self.assertAlmostEqual(10*1.05, self.plotter.parameters['offset'], 1)
+
     def test_plot_sets_drawings(self):
         dataset_ = aspecd.dataset.CalculatedDataset()
         dataset_.data.data = np.random.random([5, 10]) - 0.5

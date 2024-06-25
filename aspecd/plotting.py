@@ -2244,7 +2244,7 @@ class SinglePlotter2DStacked(SinglePlotter):
 
     def _create_plot(self):
         if self.parameters["offset"] is None:
-            self.parameters["offset"] = self.data.data.max() * 1.05
+            self.parameters["offset"] = abs(self.data.data).max() * 1.05
         yticks = []
         if self.parameters["stacking_dimension"] == 0:
             for idx in range(self.dataset.data.data.shape[0]):

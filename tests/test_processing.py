@@ -372,6 +372,21 @@ class TestNormalisation(unittest.TestCase):
     def test_normalise_to_area(self):
         self.processing.parameters["kind"] = "area"
         self.dataset.process(self.processing)
+        dataset2 = aspecd.dataset.Dataset()
+        dataset2.data.data = (
+            np.sin(np.linspace(0, 3 * np.pi, num=200)) * 2
+        )
+        dataset2.process(self.processing)
+        # noinspection PyTypeChecker
+        self.assertAlmostEqual(1, np.sum(np.abs(self.dataset.data.data)), 4)
+        self.assertAlmostEqual(1, np.sum(np.abs(dataset2.data.data)), 4)
+
+        self.assertAlmostEqual(abs(self.dataset.data.data).max(),
+                abs(dataset2.data.data.max()), 2)
+
+    def test_normalise_to_with_different_number_of_points(self):
+        self.processing.parameters["kind"] = "area"
+        self.dataset.process(self.processing)
         # noinspection PyTypeChecker
         self.assertAlmostEqual(1, np.sum(np.abs(self.dataset.data.data)), 4)
 
@@ -441,6 +456,7 @@ class TestNormalisation(unittest.TestCase):
         )
 
     def test_normalise_to_maximum_with_noisy_2d_data(self):
+        # sometimes fails but not always
         data = np.concatenate(
             (np.zeros(50), self.dataset.data.data, np.zeros(50))
         )
