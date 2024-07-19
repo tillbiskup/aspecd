@@ -987,7 +987,7 @@ class Plotter(aspecd.utils.ToDictMixin):
 
     @property
     def fig(self):
-        """Short hand for :attr:`figure`."""
+        """Shorthand for :attr:`figure`."""
         return self.figure
 
     @property
@@ -4398,6 +4398,9 @@ class AxesProperties(aspecd.utils.Properties):
     xlabel: :class:`str`
         label for the x-axis
 
+        To remove the xlabel entirely, set it to ``None`` (or ``null`` in
+        YAML).
+
         Default: ''
 
     xlim: :class:`list`
@@ -4429,6 +4432,9 @@ class AxesProperties(aspecd.utils.Properties):
 
     ylabel: :class:`str`
         label for the y-axis
+
+        To remove the xlabel entirely, set it to ``None`` (or ``null`` in
+        YAML).
 
         Default: ''
 
@@ -4501,6 +4507,10 @@ class AxesProperties(aspecd.utils.Properties):
     .. versionchanged:: 0.9
         New property ``label_fontsize``
 
+    .. versionchanged:: 0.9.3
+        Properties ``xlabel`` and ``ylabel`` can be removed by setting to
+        ``Null``
+
     """
 
     # pylint: disable=too-many-instance-attributes
@@ -4564,6 +4574,9 @@ class AxesProperties(aspecd.utils.Properties):
         :class:`aspecd.plotting.AxesProperties` are reduced accordingly to
         those properties that are neither None nor empty.
 
+        Currently, the only exception are those properties ending with
+        "label" and set to ``None``, to be able to remove x or y axis labels.
+
         Returns
         -------
         properties: :class:`dict`
@@ -4582,6 +4595,8 @@ class AxesProperties(aspecd.utils.Properties):
                 if any(all_properties[prop]):
                     properties[prop] = all_properties[prop]
             elif all_properties[prop]:
+                properties[prop] = all_properties[prop]
+            elif prop.endswith("label") and all_properties[prop] is None:
                 properties[prop] = all_properties[prop]
         return properties
 

@@ -11,14 +11,21 @@ Version 0.10.0
 Not yet released
 
 
+Version 0.9.3
+=============
+
+Not yet released
+
+
 Fixes
 -----
 
 * Templates for LaTeX dataset report: escape ``_`` and ``#`` in dataset label.
+* Axis labels can be removed by setting one or both of ``xlabel`` and ``ylabel`` to ``None`` (or ``null`` in YAML/recipe).
 
 
 Version 0.9.2
-==============
+=============
 
 Released 2024-03-24
 
@@ -33,7 +40,7 @@ Fixes
 
 
 Version 0.9.1
-==============
+=============
 
 Released 2024-01-15
 
