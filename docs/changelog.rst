@@ -20,6 +20,8 @@ Not yet released
 Fixes
 -----
 
+* Correct method for area normalization: take number of points into account.
+* Adjust stacking in ``SinglePlotter2DStacked`` for data with larger minima than maxima.
 * Templates for LaTeX dataset report: escape ``_`` and ``#`` in dataset label.
 * Axis labels can be removed by setting one or both of ``xlabel`` and ``ylabel`` to ``None`` (or ``null`` in YAML/recipe).
 
