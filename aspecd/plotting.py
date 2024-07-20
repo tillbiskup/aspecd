@@ -297,6 +297,31 @@ the *y* axis analogously.
     in such case, try setting the axis title.
 
 
+Removing axes labels
+--------------------
+
+Generally, axes labels are set according to the settings in the dataset
+plotted. However, sometimes you would like to remove a label entirely. To
+do so, set the label to ``None``. The equivalent in YAML, hence in
+recipes, is ``null``. Hence, removing the *y* axis label in a plot
+translates to:
+
+
+.. code-block:: yaml
+
+    - kind: singleplot
+      type: SinglePlotter1D
+      properties:
+        properties:
+          axes:
+            ylabel: null
+
+
+Of course, you can do the same with the *x* axis label and with all kinds
+of plotters.
+
+.. versionadded:: 0.9.3
+
 
 Type of plot for 1D plotters
 ----------------------------
