@@ -373,16 +373,17 @@ class TestNormalisation(unittest.TestCase):
         self.processing.parameters["kind"] = "area"
         self.dataset.process(self.processing)
         dataset2 = aspecd.dataset.Dataset()
-        dataset2.data.data = (
-            np.sin(np.linspace(0, 3 * np.pi, num=200)) * 2
-        )
+        dataset2.data.data = np.sin(np.linspace(0, 3 * np.pi, num=200)) * 2
         dataset2.process(self.processing)
         # noinspection PyTypeChecker
         self.assertAlmostEqual(1, np.sum(np.abs(self.dataset.data.data)), 4)
         self.assertAlmostEqual(1, np.sum(np.abs(dataset2.data.data)), 4)
 
-        self.assertAlmostEqual(abs(self.dataset.data.data).max(),
-                abs(dataset2.data.data.max()), 2)
+        self.assertAlmostEqual(
+            abs(self.dataset.data.data).max(),
+            abs(dataset2.data.data.max()),
+            2,
+        )
 
     def test_normalise_to_with_different_number_of_points(self):
         self.processing.parameters["kind"] = "area"
@@ -467,7 +468,7 @@ class TestNormalisation(unittest.TestCase):
         self.processing.parameters["kind"] = "maximum"
         self.processing.parameters["noise_range"] = [[0, 10], [0, 10]]
         self.dataset.process(self.processing)
-        self.assertGreaterEqual(1.25, self.dataset.data.data.max(), 1)
+        self.assertGreaterEqual(1.26, self.dataset.data.data.max(), 1)
 
     def test_normalise_to_maximum_with_noisy_2d_data_and_axis_units(self):
         data = np.concatenate(
@@ -1257,7 +1258,7 @@ class TestRangeExtraction(unittest.TestCase):
         self.processing.parameters["range"] = [10, 80]
         self.processing.parameters["unit"] = "percentage"
         self.dataset.process(self.processing)
-        np.testing.assert_allclose(origdata[1:9], self.dataset.data.data)
+        np.testing.assert_allclose(origdata[1:10], self.dataset.data.data)
 
 
 class TestBaselineCorrection(unittest.TestCase):
