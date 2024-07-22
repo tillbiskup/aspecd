@@ -18,7 +18,7 @@
 \hspace*{1.5cm}\=\kill
 Source:\>\texttt{{@ dataset.id | replace("_", "\\_") | replace("#", "\\#") }}
 \\
-Label:\>{@ dataset.label }
+Label:\>{@ dataset.label | replace("_", "\\_") | replace("#", "\\#") }
 \end{tabbing}
 
 This is %{ if dataset.data.calculated }%

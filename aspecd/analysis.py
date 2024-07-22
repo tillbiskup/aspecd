@@ -2007,9 +2007,12 @@ class LinearRegressionWithFixedIntercept(SingleAnalysisStep):
         ydata = self.dataset.data.data - self.parameters["offset"]
         results = np.linalg.lstsq(xdata, ydata, rcond=None)
         if self.parameters["polynomial_coefficients"]:
-            self.result = [self.parameters["offset"], float(results[0])]
+            self.result = [
+                self.parameters["offset"],
+                float(results[0].item()),
+            ]
         else:
-            self.result = float(results[0])
+            self.result = float(results[0].item())
 
 
 class DeviceDataExtraction(SingleAnalysisStep):

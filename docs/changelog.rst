@@ -5,8 +5,38 @@ Changelog
 This page contains a summary of changes between the official ASpecD releases. Only the biggest changes are listed here. A complete and detailed log of all changes is available through the `GitHub Repository Browser <https://github.com/tillbiskup/aspecd/commits/master>`_.
 
 
+Version 0.9.3
+=============
+
+Released 2024-07-22
+
+
+Fixes
+-----
+
+* Correct method for area normalization: take number of points into account.
+* Adjust stacking in ``SinglePlotter2DStacked`` for data with larger minima than maxima.
+* Templates for LaTeX dataset report: escape ``_`` and ``#`` in dataset label.
+* Axis labels can be removed by setting one or both of ``xlabel`` and ``ylabel`` to ``None`` (or ``null`` in YAML/recipe).
+
+
+Version 0.9.2
+=============
+
+Released 2024-03-24
+
+
+Fixes
+-----
+
+* Revert changes in :class:`aspecd.utils.ToDictMixin` from version 0.9.1, as it caused problems with Matplotlib.
+* Updates on contour plots to work with Matplotlib 3.8
+* Updates to prevent deprecation warning for NumPy 1.25
+* :class:`aspecd.processing.RangeExtraction` extracts correct range for axis values.
+
+
 Version 0.9.1
-==============
+=============
 
 Released 2024-01-15
 

@@ -340,6 +340,18 @@ class TestSinglePlotter(unittest.TestCase):
         self.assertEqual(xlabel, plotter.axes.get_xlabel())
         self.assertEqual(ylabel, plotter.axes.get_ylabel())
 
+    def test_plot_with_dataset_with_label_properties_sets_axes_labels(self):
+        test_dataset = dataset.Dataset()
+        test_dataset.data.axes[0].quantity = "foo"
+        test_dataset.data.axes[0].unit = "bar"
+        test_dataset.data.axes[1].quantity = "foo"
+        test_dataset.data.axes[1].unit = "bar"
+        self.plotter.properties.axes.xlabel = None
+        self.plotter.properties.axes.ylabel = None
+        plotter = test_dataset.plot(self.plotter)
+        self.assertEqual("", plotter.axes.get_xlabel())
+        self.assertEqual("", plotter.axes.get_ylabel())
+
     def test_plot_returns_dataset(self):
         test_dataset = self.plotter.plot(dataset=dataset.Dataset())
         self.assertTrue(isinstance(test_dataset, dataset.Dataset))
@@ -764,6 +776,7 @@ class TestSinglePlotter2D(unittest.TestCase):
                 (
                     matplotlib.collections.LineCollection,
                     matplotlib.collections.PathCollection,
+                    matplotlib.contour.QuadContourSet,
                 ),
             )
             for x in plotter.ax.get_children()
@@ -785,6 +798,7 @@ class TestSinglePlotter2D(unittest.TestCase):
                 (
                     matplotlib.collections.LineCollection,
                     matplotlib.collections.PathCollection,
+                    matplotlib.contour.QuadContourSet,
                 ),
             )
         ]
@@ -808,6 +822,7 @@ class TestSinglePlotter2D(unittest.TestCase):
                 (
                     matplotlib.collections.LineCollection,
                     matplotlib.collections.PathCollection,
+                    matplotlib.contour.QuadContourSet,
                 ),
             )
         ]
@@ -831,6 +846,7 @@ class TestSinglePlotter2D(unittest.TestCase):
                 (
                     matplotlib.collections.LineCollection,
                     matplotlib.collections.PathCollection,
+                    matplotlib.contour.QuadContourSet,
                 ),
             )
         ]
@@ -856,6 +872,7 @@ class TestSinglePlotter2D(unittest.TestCase):
                 (
                     matplotlib.collections.LineCollection,
                     matplotlib.collections.PathCollection,
+                    matplotlib.contour.QuadContourSet,
                 ),
             )
         ]
@@ -880,6 +897,7 @@ class TestSinglePlotter2D(unittest.TestCase):
                 (
                     matplotlib.collections.LineCollection,
                     matplotlib.collections.PathCollection,
+                    matplotlib.contour.QuadContourSet,
                 ),
             )
         ]
@@ -904,6 +922,7 @@ class TestSinglePlotter2D(unittest.TestCase):
                 (
                     matplotlib.collections.LineCollection,
                     matplotlib.collections.PathCollection,
+                    matplotlib.contour.QuadContourSet,
                 ),
             )
         ]
@@ -1076,6 +1095,14 @@ class TestSinglePlotter2DStacked(unittest.TestCase):
         self.assertGreater(
             max(plotter.axes.get_lines()[5].get_ydata()),
             max(plotter.axes.get_lines()[0].get_ydata()) * 10,
+        )
+
+    def test_plot_calculates_offset_accordingly(self):
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.random.random([5, 10]) - 10
+        plotter = dataset_.plot(self.plotter)
+        self.assertAlmostEqual(
+            10 * 1.05, self.plotter.parameters["offset"], 1
         )
 
     def test_plot_sets_drawings(self):
@@ -2779,6 +2806,14 @@ class TestAxesProperties(unittest.TestCase):
         plot.plot()
         self.axis_properties.apply(axes=plot.axes)
         self.assertEqual(self.axis_properties.xlabel, plot.axes.get_xlabel())
+        plt.close(plot.figure)
+
+    def test_set_empty_axis_ylabel(self):
+        self.axis_properties.ylabel = ""
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertEqual(self.axis_properties.ylabel, plot.axes.get_ylabel())
         plt.close(plot.figure)
 
     def test_apply_properties_from_dict_sets_axis_properties(self):

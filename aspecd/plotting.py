@@ -286,7 +286,7 @@ the *y* axis analogously.
             xlabel: $foo$ / bar
             xlim: [-5, 5]
             xticklabelangle: 45
-            invert: True
+            invert: x
         filename: output.pdf
 
 
@@ -296,6 +296,31 @@ the *y* axis analogously.
     will result in the figure title clashing with the upper axis. Hence,
     in such case, try setting the axis title.
 
+
+Removing axes labels
+--------------------
+
+Generally, axes labels are set according to the settings in the dataset
+plotted. However, sometimes you would like to remove a label entirely. To
+do so, set the label to ``None``. The equivalent in YAML, hence in
+recipes, is ``null``. Hence, removing the *y* axis label in a plot
+translates to:
+
+
+.. code-block:: yaml
+
+    - kind: singleplot
+      type: SinglePlotter1D
+      properties:
+        properties:
+          axes:
+            ylabel: null
+
+
+Of course, you can do the same with the *x* axis label and with all kinds
+of plotters.
+
+.. versionadded:: 0.9.3
 
 
 Type of plot for 1D plotters
@@ -987,7 +1012,7 @@ class Plotter(aspecd.utils.ToDictMixin):
 
     @property
     def fig(self):
-        """Short hand for :attr:`figure`."""
+        """Shorthand for :attr:`figure`."""
         return self.figure
 
     @property
@@ -2244,7 +2269,7 @@ class SinglePlotter2DStacked(SinglePlotter):
 
     def _create_plot(self):
         if self.parameters["offset"] is None:
-            self.parameters["offset"] = self.data.data.max() * 1.05
+            self.parameters["offset"] = abs(self.data.data).max() * 1.05
         yticks = []
         if self.parameters["stacking_dimension"] == 0:
             for idx in range(self.dataset.data.data.shape[0]):
@@ -2887,7 +2912,7 @@ class MultiPlotter1D(MultiPlotter):
     parameters : :class:`dict`
         All parameters necessary for this step.
 
-        Additionally to those from :class:`aspecd.plotting.MultiPlotter`,
+        Additionally, to those from :class:`aspecd.plotting.MultiPlotter`,
         the following parameters are allowed:
 
         switch_axes : :class:`bool`
@@ -4398,6 +4423,9 @@ class AxesProperties(aspecd.utils.Properties):
     xlabel: :class:`str`
         label for the x-axis
 
+        To remove the xlabel entirely, set it to ``None`` (or ``null`` in
+        YAML).
+
         Default: ''
 
     xlim: :class:`list`
@@ -4429,6 +4457,9 @@ class AxesProperties(aspecd.utils.Properties):
 
     ylabel: :class:`str`
         label for the y-axis
+
+        To remove the xlabel entirely, set it to ``None`` (or ``null`` in
+        YAML).
 
         Default: ''
 
@@ -4501,6 +4532,10 @@ class AxesProperties(aspecd.utils.Properties):
     .. versionchanged:: 0.9
         New property ``label_fontsize``
 
+    .. versionchanged:: 0.9.3
+        Properties ``xlabel`` and ``ylabel`` can be removed by setting to
+        ``Null``
+
     """
 
     # pylint: disable=too-many-instance-attributes
@@ -4564,6 +4599,9 @@ class AxesProperties(aspecd.utils.Properties):
         :class:`aspecd.plotting.AxesProperties` are reduced accordingly to
         those properties that are neither None nor empty.
 
+        Currently, the only exception are those properties ending with
+        "label" and set to ``None``, to be able to remove x or y axis labels.
+
         Returns
         -------
         properties: :class:`dict`
@@ -4582,6 +4620,8 @@ class AxesProperties(aspecd.utils.Properties):
                 if any(all_properties[prop]):
                     properties[prop] = all_properties[prop]
             elif all_properties[prop]:
+                properties[prop] = all_properties[prop]
+            elif prop.endswith("label") and all_properties[prop] is None:
                 properties[prop] = all_properties[prop]
         return properties
 
@@ -4784,7 +4824,14 @@ class DrawingProperties(aspecd.utils.Properties):
 
         """
         if hasattr(drawing, "".join(["set_", prop])):
-            getattr(drawing, "".join(["set_", prop]))(getattr(self, prop))
+            try:
+                getattr(drawing, "".join(["set_", prop]))(getattr(self, prop))
+            except TypeError:
+                logger.debug(
+                    'Cannot set attribute "%s" for "%s"',
+                    prop,
+                    drawing.__class__,
+                )
         else:
             logger.debug(
                 '"%s" has no setter for attribute "%s", hence not set',
@@ -4909,12 +4956,13 @@ class SurfaceProperties(DrawingProperties):
                 (
                     mpl.collections.LineCollection,
                     mpl.collections.PathCollection,
+                    mpl.contour.QuadContourSet,
                 ),
             ):
                 if self.linewidths:
-                    child.set_linewidths(self.linewidths)
+                    child.set_linewidth(self.linewidths)
                 if self.linestyles:
-                    child.set_linestyles(self.linestyles)
+                    child.set_linestyle(self.linestyles)
                 if self.colors:
                     child.set_color(self.colors)
 

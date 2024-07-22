@@ -7,7 +7,6 @@ modules of the ASpecD package, but it can be imported into every other module.
 
 import collections
 import contextlib
-import copy
 import datetime
 import hashlib
 import importlib
@@ -167,6 +166,11 @@ class ToDictMixin:
             the special variables ``__dict__`` and  ``__0dict__`` are
             modified, what may result in strange behaviour.
 
+        .. versionchanged:: 0.9.2
+            Dictionaries do not get copied by default, but there is a
+            private method that can be overridden in derived classes to
+            copy the dictionary.
+
         """
         if hasattr(self, "__odict__"):
             result = self._traverse_dict(
@@ -186,11 +190,24 @@ class ToDictMixin:
 
     @staticmethod
     def _return_copy(dictionary):
-        # Not all objects allow a deepcopy, hence check and recover
-        try:
-            dictionary = copy.deepcopy(dictionary)
-        except ValueError:
-            dictionary = copy.copy(dictionary)
+        """
+        Return (a copy of) the dictionary.
+
+        Some derived classes need to operate on a (deep)copy of the
+        dictionary, while others don't. Generally, (deep)copying slows down
+        things, hence should be avoided wherever possible.
+
+        Parameters
+        ----------
+        dictionary : :class:`dict`
+            The dictionary to be copied
+
+        Returns
+        -------
+        dictionary : class:`dict`
+            The (copy of the) dictionary
+
+        """
         return dictionary
 
     def _clean_dict(self, dictionary, traversing=True):
