@@ -1112,16 +1112,18 @@ class TestSinglePlotter2DStacked(unittest.TestCase):
         self.assertEqual(10, len(self.plotter.drawing))
 
     def test_plot_applies_drawing_properties_to_all_drawings(self):
-        self.plotter.properties.drawing.color = "#aaccee"
+        color = "#aaccee"
+        dict_ = {"drawing": {"color": color}}
+        self.plotter.properties.from_dict(dict_)
         dataset_ = aspecd.dataset.CalculatedDataset()
         dataset_.data.data = np.random.random([5, 10]) - 0.5
         plotter = dataset_.plot(self.plotter)
         self.assertEqual(
-            self.plotter.properties.drawing.color,
+            self.plotter.properties.drawing[0].color,
             plotter.axes.get_lines()[0]._color,
         )
         self.assertEqual(
-            self.plotter.properties.drawing.color,
+            self.plotter.properties.drawing[0].color,
             plotter.axes.get_lines()[4]._color,
         )
 
@@ -1129,10 +1131,13 @@ class TestSinglePlotter2DStacked(unittest.TestCase):
         color = "#aaccee"
         properties = {"drawing": {"color": color}}
         self.plotter.properties.from_dict(properties)
-        self.assertEqual(color, self.plotter.properties.drawing.color)
+        self.assertEqual(color, self.plotter.properties.drawing[0].color)
 
     def test_save_plot_with_set_color_does_not_raise(self):
-        self.plotter.properties.drawing.color = "#aaccee"
+        # self.plotter.properties.drawing[0].color = "#aaccee"
+        color = "#aaccee"
+        dict_ = {"drawing": {"color": color}}
+        self.plotter.properties.from_dict(dict_)
         dataset_ = aspecd.dataset.CalculatedDataset()
         dataset_.data.data = np.random.random([5, 10]) - 0.5
         plotter = dataset_.plot(self.plotter)
@@ -3517,6 +3522,14 @@ class TestMultiPlot1DProperties(unittest.TestCase):
         )
         # plt.show()
         plt.close(plotter.figure)
+
+
+class TestSinglePlot2DStackedProperties(unittest.TestCase):
+    def setUp(self):
+        self.plot_properties = plotting.SinglePlot2DStackedProperties()
+
+    def test_instantiate_class(self):
+        pass
 
 
 class TestCompositePlotProperties(unittest.TestCase):

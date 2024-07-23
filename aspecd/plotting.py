@@ -2097,7 +2097,9 @@ class SinglePlotter2DStacked(SinglePlotter):
         Dataset the plotting should be done for
 
     drawing : :class:`list`
-        list of :obj:`matplotlib.artist.Artist` objects, one for each of the
+        Actual graphical representation of the data.
+
+        List of :obj:`matplotlib.artist.Artist` objects, one for each of the
         actual lines of the plot
 
     parameters : :class:`dict`
@@ -2168,11 +2170,11 @@ class SinglePlotter2DStacked(SinglePlotter):
 
             Default: ''
 
-    properties : :class:`aspecd.plotting.SinglePlot1DProperties`
+    properties : :class:`aspecd.plotting.SinglePlot2DStackedProperties`
         Properties of the plot, defining its appearance
 
         For the properties that can be set this way, see the documentation
-        of the :class:`aspecd.plotting.SinglePlot1DProperties` class.
+        of the :class:`aspecd.plotting.SinglePlot2DStackedProperties` class.
 
 
     Examples
@@ -2224,11 +2226,52 @@ class SinglePlotter2DStacked(SinglePlotter):
            parameters:
              show_zero_lines: True
 
+    As always, you can set the appearance of the plot in quite some detail.
+    If you would like to style the individual lines, *i.e.* ``drawings``,
+    provide a list of properties for each individual drawing and make sure
+    to provide as many items in the list as there are lines in the plot:
+
+    .. code-block:: yaml
+
+       - kind: singleplot
+         type: SinglePlotter2DStacked
+         properties:
+           properties:
+             drawings:
+               - color: '#FF0000'
+                 label: foo
+               - color: '#00FF00'
+                 label: bar
+               - color: '#0000FF'
+                 label: foobar
+
+    .. important::
+        If you set colours using the hexadecimal RGB triple prefixed by
+        ``#``, you need to explicitly tell YAML that these are strings,
+        surrounding the values by quotation marks.
+
+    Suppose you want to set identical properties for all lines. This is
+    possible as well, by not providing the ``drawings`` key (plural) but
+    the ``drawing`` key (singular) - and of course, this time not a list:
+
+    .. code-block:: yaml
+
+       - kind: singleplot
+         type: SinglePlotter2DStacked
+         properties:
+           properties:
+             drawing:
+               color: '#FF0000'
+
+
     .. versionchanged:: 0.6
         ylabel is set to third axis if offset = 0; new parameter "tight"
 
     .. versionchanged:: 0.6.2
         New parameter ``ytickcount``
+
+    .. versionchanged:: 0.10
+        Properties changed to :class:`SinglePlot2DStackedProperties`
 
     """
 
@@ -2249,7 +2292,29 @@ class SinglePlotter2DStacked(SinglePlotter):
             }
         )
         self.drawing = []
-        self.properties = SinglePlot1DProperties()
+        self.properties = SinglePlot2DStackedProperties()
+
+    @property
+    def drawings(self):
+        """
+        Actual graphical representation of the data.
+
+        List of :obj:`matplotlib.artist.Artist` objects, one for each of the
+        actual lines of the plot
+
+        This is identical to :attr:`drawing` and has been added to work
+        conveniently with :class:`SinglePlot2DStackedProperties`.
+
+        Returns
+        -------
+        drawings : :class:`list`
+            Actual graphical representation of the data.
+
+
+        .. versionadded:: 0.10
+
+        """
+        return self.drawing
 
     @staticmethod
     def applicable(data):
@@ -2266,6 +2331,11 @@ class SinglePlotter2DStacked(SinglePlotter):
 
         """
         return data.data.ndim == 2
+
+    def _set_drawing_properties(self):
+        if len(self.properties.drawings) < len(self.drawing):
+            for _ in range(len(self.properties.drawings), len(self.drawing)):
+                self.properties.add_drawing()
 
     def _create_plot(self):
         if self.parameters["offset"] is None:
@@ -2306,6 +2376,7 @@ class SinglePlotter2DStacked(SinglePlotter):
                 yticklabels
             )
         self._handle_tight_settings()
+        self._set_drawing_properties()
 
     def _handle_tight_settings(self):
         if self.parameters["tight"]:
@@ -2971,6 +3042,19 @@ class MultiPlotter1D(MultiPlotter):
         If you set colours using the hexadecimal RGB triple prefixed by
         ``#``, you need to explicitly tell YAML that these are strings,
         surrounding the values by quotation marks.
+
+    Suppose you want to set identical properties for all lines. This is
+    possible as well, by not providing the ``drawings`` key (plural) but
+    the ``drawing`` key (singular) - and of course, this time not a list:
+
+    .. code-block:: yaml
+
+       - kind: multiplot
+         type: MultiPlotter1D
+         properties:
+           properties:
+             drawing:
+               color: '#FF0000'
 
     Of course, line plots are not the only plot type available. Check the
     :attr:`MultiPlotter1D.allowed_types` attribute for further details. To
@@ -4096,8 +4180,8 @@ class MultiPlotProperties(PlotProperties):
         """
         Set attributes from dictionary.
 
-        The key ``drawing`` is handled in a special way: First of all,
-        :attr:`aspecd.plotting.MultiPlotProperties.drawing` is a list,
+        The key ``drawings`` is handled in a special way: First of all,
+        :attr:`aspecd.plotting.MultiPlotProperties.drawings` is a list,
         hence we need to iterate over the entries of the list. Furthermore,
         a new element of the list is appended only if it does not exist
         already.
@@ -4210,6 +4294,33 @@ class MultiPlot1DProperties(MultiPlotProperties):
     def __init__(self):
         super().__init__()
         self.colormap = None
+        self._drawing = False
+
+    def from_dict(self, dict_=None):
+        """
+        Set attributes from dictionary.
+
+        The key ``drawing`` (singular!) is handled in a special way: If it
+        exists in the dictionary, it gets used to set *all* drawings to
+        this one set of properties.
+
+        Otherwise, the behaviour is identical to that of the superclass
+        method: see :meth:`MultiPLotProperties.from_dict` for details.
+
+        Parameters
+        ----------
+        dict_ : :class:`dict`
+            Dictionary containing information of a task.
+
+
+        .. versionadded:: 0.10
+
+        """
+        if "drawing" in dict_:
+            self._drawing = True
+            dict_["drawings"] = [dict_["drawing"]]
+            dict_.pop("drawing")
+        super().from_dict(dict_=dict_)
 
     def add_drawing(self):
         """
@@ -4218,9 +4329,24 @@ class MultiPlot1DProperties(MultiPlotProperties):
         The default properties are set as well, as obtained from
         :obj:`matplotlib.pyplot.rcParams`. These contain at least colour,
         width, marker, and style of a line.
+
+        .. note::
+
+            If you provide a key "drawing" (singular!) in the dictionary with
+            the properties, instead of setting default properties the
+            properties of this dict will be set to *all* drawings.
+            Thus, you can conveniently set identical settings for all lines.
+
+
+        .. versionchanged:: 0.10
+            Handling of the ``drawing`` key.
+
         """
-        drawing_properties = LineProperties()
-        self._set_default_properties(drawing_properties)
+        if self._drawing and self.drawings:
+            drawing_properties = self.drawings[-1]
+        else:
+            drawing_properties = LineProperties()
+            self._set_default_properties(drawing_properties)
         self.drawings.append(drawing_properties)
 
     def _set_default_properties(self, drawing_properties):
@@ -4259,6 +4385,61 @@ class MultiPlot1DProperties(MultiPlotProperties):
             colors = plt.get_cmap(self.colormap, len(self.drawings))
             for idx, _ in enumerate(plotter.drawings):
                 self.drawings[idx].color = colors(idx)
+
+
+class SinglePlot2DStackedProperties(MultiPlot1DProperties):
+    """
+    Properties of a 2D stacked singleplot, defining its appearance.
+
+    drawings : :class:`list`
+        Properties of the lines within a plot.
+
+        Each element is a :obj:`aspecd.plotting.LineProperties` object
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.LineProperties` class.
+
+    colormap : :class:`str`
+        Name of the colormap to use for colouring the individual drawings
+
+        For a full list of colormaps available with Matplotlib, see
+        https://matplotlib.org/stable/gallery/color/colormap_reference.html.
+
+        Note that appending ``_r`` to the name of a colormap will reverse it.
+
+    Raises
+    ------
+    aspecd.exceptions.MissingPlotterError
+        Raised if no plotter is provided.
+
+
+    .. versionadded:: 0.10
+
+    """
+
+    @property
+    def drawing(self):
+        """
+        Properties of the lines within a plot.
+
+        Each element is a :obj:`aspecd.plotting.LineProperties` object
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.LineProperties` class.
+
+        This is identical to :attr:`drawings` and has been added to work
+        conveniently with :class:`SinglePlotter2DStacked`.
+
+        Returns
+        -------
+        drawing : :class:`list`
+            Properties of the lines within a plot.
+
+
+        .. versionadded:: 0.10
+
+        """
+        return self.drawings
 
 
 class CompositePlotProperties(PlotProperties):

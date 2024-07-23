@@ -11,6 +11,15 @@ Version 0.10.0
 Not yet released
 
 
+New features
+------------
+
+* Plotting
+
+  * Set individual properties for each of the lines of a :class:`aspecd.plotting.SinglePlotter2DStacked`
+  * Conveniently set identical properties for all lines of :class:`aspecd.plotting.SinglePlotter2DStacked` and :class:`aspecd.plotting.MultiPlotter1D`
+
+
 Version 0.9.3
 =============
 
