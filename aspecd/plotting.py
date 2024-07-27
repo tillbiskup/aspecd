@@ -20,6 +20,52 @@ properties of a plotter are available, named :attr:`fig` and :attr:`ax`,
 respectively. For details on handling (own) figure and axes objects, see below.
 
 
+Overview
+========
+
+As there are a lot of different plotters available, each for different
+purposes, :numref:`Fig. %s <fig-uml_plotting.plotter-overview_api>` gives a
+first overview of the different :class:`Plotter` classes.
+
+
+.. _fig-uml_plotting.plotter-overview_api:
+
+.. figure:: /uml/aspecd.plotting.Plotter-overview.*
+    :align: center
+
+    First overview of the different :class:`Plotter` classes available in
+    the :mod:`plotting <aspecd.plotting>` module. The three classes marked
+    as abstract (with the "A", *i.e.* :class:`Plotter`,
+    :class:`SinglePlotter`, and :class:`MultiPlotter`) are not true abstract
+    classes, but nevertheless base classes that shall not used directly for
+    plotting purposes.
+
+
+For each :class:`Plotter` class, there exists a dedicated
+:class:`PlotProperties` class, besides further properties classes for those
+plot elements independent of a concrete plotter. For a first overview,
+see :numref:`Fig. %s <fig-uml_plotting.plotproperties-overview_api>`.
+
+
+.. _fig-uml_plotting.plotproperties-overview_api:
+
+.. figure:: /uml/aspecd.plotting.PlotProperties-overview.*
+    :align: center
+
+    First overview of the different :class:`PlotProperties` classes
+    available in the :mod:`plotting <aspecd.plotting>` module. For each
+    :class:`Plotter`, there is a separate :class:`PlotProperties` class.
+    Furthermore, there are additional classes for properties of elements of
+    plots, such as :class:`FigureProperties` and :class:`DrawingProperties`.
+    Note that :class:`SinglePlot2DStackedProperties` inherits from
+    :class:`MultiPlot1DProperties`. This is due to the very similar
+    behaviour of the two plotters, with respect to the resulting plots.
+
+
+For more explanation and details on the individual classes and how to best
+make use of them, continue reading.
+
+
 Types of abstract plotters
 ==========================
 
