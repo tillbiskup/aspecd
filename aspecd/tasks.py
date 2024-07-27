@@ -3052,7 +3052,8 @@ class PlotTask(Task):
 
         """
         obj = super().get_object()
-        if hasattr(obj.properties, "drawing"):
+        if hasattr(obj.properties, "drawing") and not isinstance(
+                obj.properties.drawing, list):
             if not isinstance(obj.properties.drawing.label, str):
                 obj.properties.drawing.label = (
                     self._replace_object_with_label(

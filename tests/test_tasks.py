@@ -2778,6 +2778,22 @@ class TestSinglePlotTask(unittest.TestCase):
             dict_["properties"]["properties"]["drawing"]["label"],
         )
 
+    def test_label_as_dataset_gets_replaced_by_label_w_2dstackedplotter(self):
+        self.plotting_task["properties"] = {
+            "properties": {"drawing": {"label": self.dataset[0]}}
+        }
+        self.plotting_task["type"] = "SinglePlotter2DStacked"
+        self.prepare_recipe()
+        self.task.recipe = self.recipe
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe.datasets["foo"].data.data = np.random.random([5, 5])
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(
+            self.dataset[0],
+            dict_["properties"]["properties"]["drawings"][0]["label"],
+        )
+
     def test_default_colormap_gets_set_to_plotter(self):
         colormap = "viridis"
         self.prepare_recipe()
