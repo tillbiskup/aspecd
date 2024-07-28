@@ -870,7 +870,7 @@ class Text(PlotAnnotation):
 
             Values are in axis (data) units.
 
-        xpositions : :class:`list` or :class:`float`
+        xpositions : :class:`list`
             List of the *x* positions texts should appear at.
 
             This allows to set *x* positions from the result of other tasks,
@@ -882,10 +882,22 @@ class Text(PlotAnnotation):
             to match the number of *x* positions, *i.e.*, all texts will
             appear with the same *y* position.
 
+            If you provide both, ``positions`` and
+            ``xpositions``/``ypositions``, the latter couple wins.
+
             Values are in axis (data) units.
 
-        ypositions : :class:`list`
+        ypositions : :class:`list` or :class:`float`
             List of the *y* positions texts should appear at.
+
+            If ``xpositions`` is set, you need to set ``ypositions`` as well.
+            However, you can set either a single element or even a scalar
+            (not a list). In this case, the single *y* position is expanded
+            to match the number of *x* positions, *i.e.*, all texts will
+            appear with the same *y* position.
+
+            If you provide both, ``positions`` and
+            ``xpositions``/``ypositions``, the latter couple wins.
 
             Values are in axis (data) units.
 
