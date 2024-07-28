@@ -91,6 +91,8 @@ Module documentation
 
 """
 
+import numpy as np
+
 import aspecd.exceptions
 import aspecd.history
 import aspecd.plotting
@@ -868,6 +870,25 @@ class Text(PlotAnnotation):
 
             Values are in axis (data) units.
 
+        xpositions : :class:`list` or :class:`float`
+            List of the *x* positions texts should appear at.
+
+            This allows to set *x* positions from the result of other tasks,
+            *e.g.* a peak finding analysis step.
+
+            If ``xpositions`` is set, you need to set ``ypositions`` as well.
+            However, you can set either a single element or even a scalar
+            (not a list). In this case, the single *y* position is expanded
+            to match the number of *x* positions, *i.e.*, all texts will
+            appear with the same *y* position.
+
+            Values are in axis (data) units.
+
+        ypositions : :class:`list`
+            List of the *y* positions texts should appear at.
+
+            Values are in axis (data) units.
+
         texts : :class:`list`
             Texts that should appear at the individual positions.
 
@@ -911,6 +932,9 @@ class Text(PlotAnnotation):
                 - "dolor sit amet"
             properties:
               color: green
+              fontsize: large
+              fontstyle: oblique
+              rotation: 30
           plotter: plot1D
 
 
@@ -941,6 +965,9 @@ class Text(PlotAnnotation):
                 - "dolor sit amet"
             properties:
               color: green
+              fontsize: large
+              fontstyle: oblique
+              rotation: 30
           result: text
 
         - kind: singleplot
@@ -948,7 +975,7 @@ class Text(PlotAnnotation):
           properties:
             filename: plot1D.pdf
           annotations:
-            - hlines
+            - text
 
 
     In this way, you can add the same annotation to several plots,
@@ -994,11 +1021,25 @@ class Text(PlotAnnotation):
     def __init__(self):
         super().__init__()
         self.parameters["positions"] = []
+        self.parameters["xpositions"] = []
+        self.parameters["ypositions"] = []
         self.parameters["texts"] = []
         self.properties = aspecd.plotting.TextProperties()
 
     def _perform_task(self):
-        for idx, position in enumerate(self.parameters["positions"]):
+        if self.parameters["xpositions"] and self.parameters["ypositions"]:
+            xpositions = self.parameters["xpositions"]
+            ypositions = self.parameters["ypositions"]
+            if np.isscalar(ypositions):
+                ypositions = [ypositions] * len(xpositions)
+            if len(ypositions) == 1:
+                ypositions = ypositions * len(xpositions)
+            positions = []
+            for idx in range(len(xpositions)):
+                positions.append([xpositions[idx], ypositions[idx]])
+        else:
+            positions = self.parameters["positions"]
+        for idx, position in enumerate(positions):
             text = self.plotter.ax.text(
                 position[0], position[1], self.parameters["texts"][idx]
             )

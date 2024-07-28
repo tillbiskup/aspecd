@@ -3706,3 +3706,16 @@ class TestTextProperties(unittest.TestCase):
         self.properties.backgroundcolor = None
         self.properties.apply(drawing=text)
         self.assertFalse(text.get_bbox_patch())
+
+    def test_apply_without_backgroundcolor_removes_background_color(self):
+        text = matplotlib.text.Text(0, 0, "Lorem ipsum")
+        self.properties.apply(drawing=text)
+        self.assertFalse(text.get_bbox_patch())
+
+    def test_apply_with_usetex_none_uses_rcparams_value(self):
+        text = matplotlib.text.Text(0, 0, "Lorem ipsum")
+        self.properties.usetex = None
+        self.properties.apply(drawing=text)
+        self.assertEqual(
+            matplotlib.rcParams["text.usetex"], text.get_usetex()
+        )

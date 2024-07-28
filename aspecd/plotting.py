@@ -5528,7 +5528,7 @@ class TextProperties(DrawingProperties):
     usetex : :class:`bool` or :class:`None`
         Whether to render using TeX
 
-        None means to use rcParams["text.usetex"] (default: False).
+        None means to use ``rcParams["text.usetex"]`` (default: False).
 
     verticalalignment : :class:`str`
         Vertical alignment of the text
