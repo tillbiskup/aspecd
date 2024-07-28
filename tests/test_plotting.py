@@ -3620,6 +3620,7 @@ class TestTextProperties(unittest.TestCase):
 
     def test_has_properties(self):
         for prop in [
+            "alpha",
             "backgroundcolor",
             "color",
             "fontfamily",
@@ -3653,6 +3654,7 @@ class TestTextProperties(unittest.TestCase):
 
     def test_apply_sets_properties(self):
         properties = {
+            "alpha": 0.5,
             "color": "#ff0000",
             "fontsize": 20,
             "fontstyle": "oblique",
@@ -3669,14 +3671,14 @@ class TestTextProperties(unittest.TestCase):
             "wrap": True,
             "zorder": 5,
         }
-        for property, value in properties.items():
-            with self.subTest(key=property, val=value):
+        for prop, value in properties.items():
+            with self.subTest(key=prop, val=value):
                 text = matplotlib.text.Text(0, 0, "Lorem ipsum")
-                setattr(self.properties, property, value)
+                setattr(self.properties, prop, value)
                 self.properties.apply(drawing=text)
                 self.assertEqual(
-                    getattr(self.properties, property),
-                    getattr(text, f"get_{property}")(),
+                    getattr(self.properties, prop),
+                    getattr(text, f"get_{prop}")(),
                 )
 
     def test_apply_sets_font_family(self):
@@ -3698,3 +3700,9 @@ class TestTextProperties(unittest.TestCase):
             self.properties.fontstretch,
             text.get_stretch(),
         )
+
+    def test_apply_with_backgroundcolor_none_removes_background_color(self):
+        text = matplotlib.text.Text(0, 0, "Lorem ipsum")
+        self.properties.backgroundcolor = None
+        self.properties.apply(drawing=text)
+        self.assertFalse(text.get_bbox_patch())

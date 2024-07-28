@@ -5434,8 +5434,16 @@ class TextProperties(DrawingProperties):
 
     Attributes
     ----------
+    alpha : :class:`float`
+        Alpha value used for blending
+
+        Must be within the 0-1 range, inclusive, or :class:`None`.
+
     backgroundcolor : :class:`str`
         Color used as background for the text
+
+        If set to :class:`None`, no background will be set (and the bbox
+        removed from the Matplotlib artist)
 
     color : :class:`str`
         Color used for the text
@@ -5552,6 +5560,7 @@ class TextProperties(DrawingProperties):
     # pylint: disable=too-many-instance-attributes
     def __init__(self):
         super().__init__()
+        self.alpha = None
         self.backgroundcolor = None
         self.color = "#000000"
         self.fontfamily = None
@@ -5572,3 +5581,8 @@ class TextProperties(DrawingProperties):
         self.verticalalignment = "bottom"
         self.wrap = None
         self.zorder = None
+
+    def apply(self, drawing=None):
+        super().apply(drawing=drawing)
+        if self.backgroundcolor is None:
+            drawing._bbox_patch = None
