@@ -18,6 +18,11 @@ New features
 
   * Set individual properties for each of the lines of a :class:`aspecd.plotting.SinglePlotter2DStacked`
   * Conveniently set identical properties for all lines of :class:`aspecd.plotting.SinglePlotter2DStacked` and :class:`aspecd.plotting.MultiPlotter1D`
+  * :class:`aspecd.plotting.TextProerties`
+
+* Plot annotations
+
+  * :class:`aspecd.annotations.Text` for text annotations to plot(ter)s
 
 
 Version 0.9.3

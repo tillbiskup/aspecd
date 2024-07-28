@@ -24,6 +24,15 @@ class SinglePlot2DStackedProperties extends MultiPlot1DProperties {
 class MultiPlot1DProperties extends MultiPlotProperties{
 }
 
+class DrawingProperties {
+}
+class LineProperties extends DrawingProperties {
+}
+class SurfaceProperties extends DrawingProperties {
+}
+class TextProperties extends DrawingProperties {
+}
+
 class AxesProperties {
 }
 class ColorbarProperties {
@@ -35,20 +44,15 @@ class GridProperties {
 class LegendProperties {
 }
 
-class DrawingProperties {
-}
-class LineProperties extends DrawingProperties {
-}
-class SurfaceProperties extends DrawingProperties {
-}
-
 SinglePlotProperties -[hidden]> MultiPlotProperties
 MultiPlotProperties -[hidden]> CompositePlotProperties
 
+SinglePlot2DStackedProperties -[hidden]-> DrawingProperties
+
 FigureProperties -[hidden]> AxesProperties
 AxesProperties -[hidden]> LegendProperties
-SinglePlot2DStackedProperties -[hidden]-> LegendProperties
-LegendProperties -[hidden]> DrawingProperties
+SurfaceProperties -[hidden]-> LegendProperties
+
 FigureProperties -[hidden]-> GridProperties
 GridProperties -[hidden]> ColorbarProperties
 @enduml

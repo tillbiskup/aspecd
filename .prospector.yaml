@@ -3,6 +3,9 @@
 
 autodetect: false
 
+ignore-paths:
+  - build
+
 inherits:
   - strictness_high
 

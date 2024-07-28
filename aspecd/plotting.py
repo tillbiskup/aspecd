@@ -231,6 +231,8 @@ properties, below is a (hopefully complete) list:
 
       * :class:`aspecd.plotting.MultiPlot1DProperties`
 
+        * :class:`aspecd.plotting.SinglePlot2DStackedProperties`
+
     * :class:`aspecd.plotting.CompositePlotProperties`
 
   * :class:`aspecd.plotting.FigureProperties`
@@ -243,6 +245,7 @@ properties, below is a (hopefully complete) list:
 
     * :class:`aspecd.plotting.LineProperties`
     * :class:`aspecd.plotting.SurfaceProperties`
+    * :class:`aspecd.plotting.TextProperties`
 
   * :class:`aspecd.plotting.GridProperties`
 
@@ -5419,3 +5422,153 @@ class ColorbarProperties(aspecd.utils.Properties):
         else:
             location = None
         colorbar.set_label(self.label["text"], loc=location)
+
+
+class TextProperties(DrawingProperties):
+    """
+    Properties of text within a plot.
+
+    Basically, the attributes are a subset of what :mod:`matplotlib` defines
+    for :obj:`matplotlib.text.Text` objects.
+
+
+    Attributes
+    ----------
+    backgroundcolor : :class:`str`
+        Color used as background for the text
+
+    color : :class:`str`
+        Color used for the text
+
+    fontfamily : :class:`str`
+        Font family or font name
+
+        Font family can be one of: 'serif', 'sans-serif', 'cursive', 'fantasy',
+        'monospace'
+
+    fontsize : :class:`float` or :class:`str`
+        Size of the font
+
+        Either a numeric value or one of 'xx-small', 'x-small', 'small',
+        'medium', 'large', 'x-large', 'xx-large'
+
+    fontstretch : :class:`int` or :class:`str`
+        Stretch of the font
+
+        A numeric value in range 0-1000 or one of 'ultra-condensed',
+        'extra-condensed', 'condensed', 'semi-condensed', 'normal',
+        'semi-expanded', 'expanded', 'extra-expanded', 'ultra-expanded'
+
+    fontstyle : :class:`str`
+        Style of the font
+
+        One of: 'normal', 'italic', 'oblique'
+
+    fontvariant : :class:``
+        Variant of the font
+
+        One of: 'normal', 'small-caps'
+
+    fontweight : :class:`int` or :class:`str`
+        Weight of the font
+
+        A numeric value in range 0-1000 or one of 'ultralight', 'light',
+        'normal', 'regular', 'book', 'medium', 'roman', 'semibold',
+        'demibold', 'demi', 'bold', 'heavy', 'extra bold', 'black'.
+
+    horizontalalignment : :class:`str`
+        Horizontal alignment of the text
+
+        One of: 'left', 'center', 'right'
+
+    in_layout : :class:`bool`
+        Set if artist is to be included in layout calculations.
+
+    linespacing : :class:`float`
+        Line spacing of the text
+
+        The value is interpreted as multiple of the font size
+
+    math_fontfamily : :class:`str`
+        Font family or fontname used for math fonts
+
+    multialignment : :class:`str`
+        Text alignment for multiline texts
+
+        One of: 'left', 'right', 'center'
+
+    parse_math : :class:`bool`
+        Set mathtext parsing for text
+
+        If False, no mathtext will be used. If True, mathtext will be used if
+        there is an even number of unescaped dollar signs.
+
+    rotation : :class:`float` or :class:`str`
+        Rotation of the text
+
+        Either a scalar number or one of: 'vertical', 'horizontal'
+
+    rotation_mode : :class:`str`
+        Rotation mode of the text
+
+        One of: 'default', 'anchor'
+
+        If "default", the text will be first rotated, then aligned according
+        to their horizontal and vertical alignments. If "anchor",
+        then alignment occurs before rotation.
+
+    usetex : :class:`bool` or :class:`None`
+        Whether to render using TeX
+
+        None means to use rcParams["text.usetex"] (default: False).
+
+    verticalalignment : :class:`str`
+        Vertical alignment of the text
+
+        One of: 'baseline', 'bottom', 'center', 'center_baseline', 'top'
+
+    wrap : :class:`bool`
+        Set whether the text can be wrapped.
+
+        Wrapping makes sure the text is confined to the (sub)figure box. It
+        does not take into account any other artists.
+
+    zorder : :class:`int`
+        Zorder for the artist.
+
+        Artists with lower zorder values are drawn first.
+
+
+    Raises
+    ------
+    aspecd.exceptions.MissingDrawingError
+        Raised if no text is provided.
+
+
+    .. versionadded:: 0.10
+
+    """
+
+    # pylint: disable=too-many-instance-attributes
+    def __init__(self):
+        super().__init__()
+        self.backgroundcolor = None
+        self.color = "#000000"
+        self.fontfamily = None
+        self.fontsize = None
+        self.fontstretch = None
+        self.fontstyle = None
+        self.fontvariant = None
+        self.fontweight = None
+        self.horizontalalignment = "left"
+        self.in_layout = True
+        self.linespacing = None
+        self.math_fontfamily = None
+        self.multialignment = "left"
+        self.parse_math = None
+        self.rotation = None
+        self.rotation_mode = None
+        self.usetex = False
+        self.verticalalignment = "bottom"
+        self.wrap = None
+        self.zorder = None

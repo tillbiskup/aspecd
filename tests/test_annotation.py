@@ -2,7 +2,7 @@
 
 import unittest
 
-import aspecd.annotation
+import aspecd.annotation as annotation
 import aspecd.dataset
 import aspecd.exceptions
 import aspecd.history
@@ -11,7 +11,7 @@ import aspecd.plotting
 
 class TestDatasetAnnotation(unittest.TestCase):
     def setUp(self):
-        self.annotation = aspecd.annotation.DatasetAnnotation()
+        self.annotation = annotation.DatasetAnnotation()
         self.annotation.content["foo"] = "bar"
 
     def test_instantiate_class(self):
@@ -108,7 +108,7 @@ class TestDatasetAnnotation(unittest.TestCase):
 
 class TestComment(unittest.TestCase):
     def setUp(self):
-        self.comment = aspecd.annotation.Comment()
+        self.comment = annotation.Comment()
 
     def test_instantiate_class(self):
         pass
@@ -137,7 +137,7 @@ class TestComment(unittest.TestCase):
 
 class TestArtefact(unittest.TestCase):
     def setUp(self):
-        self.artefact = aspecd.annotation.Artefact()
+        self.artefact = annotation.Artefact()
 
     def test_instantiate_class(self):
         pass
@@ -148,7 +148,7 @@ class TestArtefact(unittest.TestCase):
 
 class TestCharacteristic(unittest.TestCase):
     def setUp(self):
-        self.characteristic = aspecd.annotation.Characteristic()
+        self.characteristic = annotation.Characteristic()
 
     def test_instantiate_class(self):
         pass
@@ -156,7 +156,7 @@ class TestCharacteristic(unittest.TestCase):
 
 class TestPlotAnnotation(unittest.TestCase):
     def setUp(self):
-        self.annotation = aspecd.annotation.PlotAnnotation()
+        self.annotation = annotation.PlotAnnotation()
 
     def test_instantiate_class(self):
         pass
@@ -232,7 +232,7 @@ class TestPlotAnnotation(unittest.TestCase):
 
 class TestVerticalLine(unittest.TestCase):
     def setUp(self):
-        self.annotation = aspecd.annotation.VerticalLine()
+        self.annotation = annotation.VerticalLine()
         self.plotter = aspecd.plotting.Plotter()
 
     def test_instantiate_class(self):
@@ -241,33 +241,34 @@ class TestVerticalLine(unittest.TestCase):
     def test_annotate_adds_line_to_plotter(self):
         self.annotation.parameters["positions"] = [0.5]
         self.plotter.plot()
-        annotation = self.plotter.annotate(self.annotation)
-        self.assertIn(annotation.drawings[0], self.plotter.ax.get_children())
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertIn(annotation_.drawings[0], self.plotter.ax.get_children())
 
     def test_annotate_adds_line_at_correct_position(self):
         self.annotation.parameters["positions"] = [0.5]
         self.plotter.plot()
-        annotation = self.plotter.annotate(self.annotation)
+        annotation_ = self.plotter.annotate(self.annotation)
         self.assertEqual(
-            annotation.parameters["positions"][0],
-            annotation.drawings[0].get_xdata()[0],
+            annotation_.parameters["positions"][0],
+            annotation_.drawings[0].get_xdata()[0],
         )
 
     def test_annotate_adds_lines_to_plotter(self):
         self.annotation.parameters["positions"] = [0.25, 0.5, 0.75]
         self.plotter.plot()
-        annotation = self.plotter.annotate(self.annotation)
+        annotation_ = self.plotter.annotate(self.annotation)
         self.assertEqual(
-            len(annotation.parameters["positions"]), len(annotation.drawings)
+            len(annotation_.parameters["positions"]),
+            len(annotation_.drawings),
         )
-        for drawing in annotation.drawings:
+        for drawing in annotation_.drawings:
             self.assertIn(drawing, self.plotter.ax.get_children())
 
     def test_annotate_adds_line_to_plotter_after_plotting(self):
         self.annotation.parameters["positions"] = [0.5]
-        annotation = self.plotter.annotate(self.annotation)
+        annotation_ = self.plotter.annotate(self.annotation)
         self.plotter.plot()
-        self.assertIn(annotation.drawings[0], self.plotter.ax.get_children())
+        self.assertIn(annotation_.drawings[0], self.plotter.ax.get_children())
 
     def test_annotate_before_plotting_does_not_add_annotation_twice(self):
         self.annotation.parameters["positions"] = [0.5]
@@ -287,8 +288,8 @@ class TestVerticalLine(unittest.TestCase):
         self.annotation.properties.from_dict(properties)
         self.plotter.plot()
         self.annotation.parameters["positions"] = [0.5]
-        annotation = self.plotter.annotate(self.annotation)
-        self.assertEqual(color, annotation.drawings[0].get_color())
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertEqual(color, annotation_.drawings[0].get_color())
 
     def test_annotate_sets_correct_line_color_for_each_line(self):
         color = "#cccccc"
@@ -296,24 +297,24 @@ class TestVerticalLine(unittest.TestCase):
         self.annotation.properties.from_dict(properties)
         self.plotter.plot()
         self.annotation.parameters["positions"] = [0.25, 0.5, 0.75]
-        annotation = self.plotter.annotate(self.annotation)
-        for drawing in annotation.drawings:
+        annotation_ = self.plotter.annotate(self.annotation)
+        for drawing in annotation_.drawings:
             self.assertEqual(color, drawing.get_color())
 
     def test_annotate_with_limits_sets_limits(self):
         self.annotation.parameters["positions"] = [0.5]
         self.annotation.parameters["limits"] = [0.25, 0.75]
         self.plotter.plot()
-        annotation = self.plotter.annotate(self.annotation)
+        annotation_ = self.plotter.annotate(self.annotation)
         self.assertListEqual(
-            annotation.parameters["limits"],
-            annotation.drawings[0].get_ydata(),
+            annotation_.parameters["limits"],
+            annotation_.drawings[0].get_ydata(),
         )
 
 
 class TestHorizontalLine(unittest.TestCase):
     def setUp(self):
-        self.annotation = aspecd.annotation.HorizontalLine()
+        self.annotation = annotation.HorizontalLine()
         self.plotter = aspecd.plotting.Plotter()
 
     def test_instantiate_class(self):
@@ -322,33 +323,34 @@ class TestHorizontalLine(unittest.TestCase):
     def test_annotate_adds_line_to_plotter(self):
         self.annotation.parameters["positions"] = [0.5]
         self.plotter.plot()
-        annotation = self.plotter.annotate(self.annotation)
-        self.assertIn(annotation.drawings[0], self.plotter.ax.get_children())
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertIn(annotation_.drawings[0], self.plotter.ax.get_children())
 
     def test_annotate_adds_line_at_correct_position(self):
         self.annotation.parameters["positions"] = [0.5]
         self.plotter.plot()
-        annotation = self.plotter.annotate(self.annotation)
+        annotation_ = self.plotter.annotate(self.annotation)
         self.assertEqual(
-            annotation.parameters["positions"][0],
-            annotation.drawings[0].get_ydata()[0],
+            annotation_.parameters["positions"][0],
+            annotation_.drawings[0].get_ydata()[0],
         )
 
     def test_annotate_adds_lines_to_plotter(self):
         self.annotation.parameters["positions"] = [0.25, 0.5, 0.75]
         self.plotter.plot()
-        annotation = self.plotter.annotate(self.annotation)
+        annotation_ = self.plotter.annotate(self.annotation)
         self.assertEqual(
-            len(annotation.parameters["positions"]), len(annotation.drawings)
+            len(annotation_.parameters["positions"]),
+            len(annotation_.drawings),
         )
-        for drawing in annotation.drawings:
+        for drawing in annotation_.drawings:
             self.assertIn(drawing, self.plotter.ax.get_children())
 
     def test_annotate_adds_line_to_plotter_after_plotting(self):
         self.annotation.parameters["positions"] = [0.5]
-        annotation = self.plotter.annotate(self.annotation)
+        annotation_ = self.plotter.annotate(self.annotation)
         self.plotter.plot()
-        self.assertIn(annotation.drawings[0], self.plotter.ax.get_children())
+        self.assertIn(annotation_.drawings[0], self.plotter.ax.get_children())
 
     def test_set_line_colour_from_dict(self):
         line_colour = "#cccccc"
@@ -362,8 +364,8 @@ class TestHorizontalLine(unittest.TestCase):
         self.annotation.properties.from_dict(properties)
         self.plotter.plot()
         self.annotation.parameters["positions"] = [0.5]
-        annotation = self.plotter.annotate(self.annotation)
-        self.assertEqual(color, annotation.drawings[0].get_color())
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertEqual(color, annotation_.drawings[0].get_color())
 
     def test_annotate_sets_correct_line_color_for_each_line(self):
         color = "#cccccc"
@@ -371,16 +373,68 @@ class TestHorizontalLine(unittest.TestCase):
         self.annotation.properties.from_dict(properties)
         self.plotter.plot()
         self.annotation.parameters["positions"] = [0.25, 0.5, 0.75]
-        annotation = self.plotter.annotate(self.annotation)
-        for drawing in annotation.drawings:
+        annotation_ = self.plotter.annotate(self.annotation)
+        for drawing in annotation_.drawings:
             self.assertEqual(color, drawing.get_color())
 
     def test_annotate_with_limits_sets_limits(self):
         self.annotation.parameters["positions"] = [0.5]
         self.annotation.parameters["limits"] = [0.25, 0.75]
         self.plotter.plot()
-        annotation = self.plotter.annotate(self.annotation)
+        annotation_ = self.plotter.annotate(self.annotation)
         self.assertListEqual(
-            annotation.parameters["limits"],
-            annotation.drawings[0].get_xdata(),
+            annotation_.parameters["limits"],
+            annotation_.drawings[0].get_xdata(),
         )
+
+
+class TestText(unittest.TestCase):
+    def setUp(self):
+        self.annotation = annotation.Text()
+        self.plotter = aspecd.plotting.Plotter()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_annotate_adds_text_to_plotter(self):
+        self.annotation.parameters["positions"] = [[0.5, 0.5]]
+        self.annotation.parameters["texts"] = ["foo"]
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertIn(annotation_.drawings[0], self.plotter.ax.get_children())
+
+    def test_annotate_adds_text_at_correct_position(self):
+        self.annotation.parameters["positions"] = [[0.5, 0.5]]
+        self.annotation.parameters["texts"] = ["foo"]
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertListEqual(
+            annotation_.parameters["positions"][0],
+            list(annotation_.drawings[0].get_position()),
+        )
+
+    def test_annotate_adds_correct_text(self):
+        self.annotation.parameters["positions"] = [[0.5, 0.5]]
+        self.annotation.parameters["texts"] = ["foo"]
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        result = [
+            item
+            for item in self.plotter.ax.get_children()
+            if item is annotation_.drawings[0]
+        ][0]
+        self.assertEqual(
+            annotation_.parameters["texts"][0], result.get_text()
+        )
+
+    def test_annotate_adds_texts_to_plotter(self):
+        self.annotation.parameters["positions"] = [[0.5, 0.5], [0.7, 0.7]]
+        self.annotation.parameters["texts"] = ["foo", "bar"]
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertEqual(
+            len(annotation_.parameters["positions"]),
+            len(annotation_.drawings),
+        )
+        for drawing in annotation_.drawings:
+            self.assertIn(drawing, self.plotter.ax.get_children())

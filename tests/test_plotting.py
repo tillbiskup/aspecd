@@ -1,4 +1,5 @@
 """Tests for plotting."""
+
 import contextlib
 import hashlib
 import io
@@ -3608,3 +3609,92 @@ class TestCompositePlotProperties(unittest.TestCase):
             self.plot_properties.axes.xlabel, plot.axes[0].get_xlabel()
         )
         plt.close(plot.figure)
+
+
+class TestTextProperties(unittest.TestCase):
+    def setUp(self):
+        self.properties = plotting.TextProperties()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_properties(self):
+        for prop in [
+            "backgroundcolor",
+            "color",
+            "fontfamily",
+            "fontsize",
+            "fontstretch",
+            "fontstyle",
+            "fontvariant",
+            "fontweight",
+            "horizontalalignment",
+            "in_layout",
+            "linespacing",
+            "math_fontfamily",
+            "multialignment",
+            "parse_math",
+            "rotation",
+            "rotation_mode",
+            "usetex",
+            "verticalalignment",
+            "wrap",
+            "zorder",
+        ]:
+            self.assertTrue(hasattr(self.properties, prop))
+
+    def test_has_apply_method(self):
+        self.assertTrue(hasattr(self.properties, "apply"))
+        self.assertTrue(callable(self.properties.apply))
+
+    def test_apply_without_argument_raises(self):
+        with self.assertRaises(aspecd.exceptions.MissingDrawingError):
+            self.properties.apply()
+
+    def test_apply_sets_properties(self):
+        properties = {
+            "color": "#ff0000",
+            "fontsize": 20,
+            "fontstyle": "oblique",
+            "fontvariant": "small-caps",
+            "fontweight": "heavy",
+            "horizontalalignment": "center",
+            "in_layout": False,
+            "math_fontfamily": "cm",
+            "parse_math": True,
+            "rotation": 30,
+            "rotation_mode": "anchor",
+            "usetex": True,
+            "verticalalignment": "top",
+            "wrap": True,
+            "zorder": 5,
+        }
+        for property, value in properties.items():
+            with self.subTest(key=property, val=value):
+                text = matplotlib.text.Text(0, 0, "Lorem ipsum")
+                setattr(self.properties, property, value)
+                self.properties.apply(drawing=text)
+                self.assertEqual(
+                    getattr(self.properties, property),
+                    getattr(text, f"get_{property}")(),
+                )
+
+    def test_apply_sets_font_family(self):
+        # Note: matplotlib.text.Text.get_fontfamily returns a list
+        text = matplotlib.text.Text(0, 0, "Lorem ipsum")
+        self.properties.fontfamily = "fantasy"
+        self.properties.apply(drawing=text)
+        self.assertEqual(
+            self.properties.fontfamily,
+            text.get_fontfamily()[0],
+        )
+
+    def test_apply_sets_font_stretch(self):
+        # Note: matplotlib.text.Text has no get_fontstretch method
+        text = matplotlib.text.Text(0, 0, "Lorem ipsum")
+        self.properties.fontstretch = "ultra-condensed"
+        self.properties.apply(drawing=text)
+        self.assertEqual(
+            self.properties.fontstretch,
+            text.get_stretch(),
+        )
