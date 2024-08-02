@@ -881,6 +881,7 @@ Module documentation
     * Potentially reuse the :meth:`_sanitise_parameters` method.
 
 """
+
 import argparse
 import collections
 import copy
@@ -2198,10 +2199,11 @@ class Task(aspecd.utils.ToDictMixin):
                             if hasattr(element, "from_dict"):
                                 element.from_dict(source[key][idx])
                             elif isinstance(element, dict):
-                                target[key][
-                                    idx
-                                ] = self._set_attributes_in_dict(
-                                    source=source[key][idx], target=element
+                                target[key][idx] = (
+                                    self._set_attributes_in_dict(
+                                        source=source[key][idx],
+                                        target=element,
+                                    )
                                 )
                             else:
                                 target[key][idx] = source[key][idx]
@@ -2765,9 +2767,9 @@ class SingleanalysisTask(AnalysisTask):
                 if result_labels:
                     if isinstance(self._task.result, aspecd.dataset.Dataset):
                         self._task.result.id = self.result[number]
-                    self.recipe.results[
-                        self.result[number]
-                    ] = self._task.result
+                    self.recipe.results[self.result[number]] = (
+                        self._task.result
+                    )
                 else:
                     if isinstance(self._task.result, aspecd.dataset.Dataset):
                         self._task.result.id = self.result
@@ -2967,8 +2969,8 @@ class PlotTask(Task):
 
         This label will be used to refer to the plot later on when
         further processing the recipe. Actually, in the recipe's
-        :attr:`aspecd.tasks.Recipe.figures` dict, this label is used as a
-        key and a :obj:`aspecd.tasks.FigureRecord` object stored containing
+        :attr:`Recipe.figures` dict, this label is used as a
+        key and a :obj:`FigureRecord` object stored containing
         all information necessary for further handling the results of the plot.
 
         .. note::
@@ -3053,7 +3055,8 @@ class PlotTask(Task):
         """
         obj = super().get_object()
         if hasattr(obj.properties, "drawing") and not isinstance(
-                obj.properties.drawing, list):
+            obj.properties.drawing, list
+        ):
             if not isinstance(obj.properties.drawing.label, str):
                 obj.properties.drawing.label = (
                     self._replace_object_with_label(
@@ -3067,26 +3070,6 @@ class PlotTask(Task):
                         drawing.label
                     )
         return obj
-
-    def perform(self):
-        """
-        Call the appropriate method of the underlying object.
-
-        For details, see the method :meth:`aspecd.tasks.Task.perform` of the
-        base class.
-
-        Additionally, to what is done in the base class, a PlotTask adds a
-        :obj:`aspecd.tasks.FigureRecord` object to the
-        :attr:`aspecd.tasks.Recipe.figures` property of the underlying
-        recipe in case an :attr:`aspecd.tasks.PlotTask.label` has been set.
-
-        """
-        if not self.label:
-            self.label = f"fig{len(self.recipe.figures) + 1}"
-        super().perform()
-        self._add_figure_to_recipe()
-        if self.result:
-            self._add_plotter_to_recipe()
 
     def _add_figure_to_recipe(self):
         figure_record = FigureRecord()
@@ -3254,6 +3237,34 @@ class SingleplotTask(PlotTask):
 
     """
 
+    def perform(self):
+        """
+        Call the appropriate method of the underlying object.
+
+        For details, see the method :meth:`aspecd.tasks.Task.perform` of the
+        base class.
+
+        Additionally, to what is done in the base class, a PlotTask adds a
+        :obj:`aspecd.tasks.FigureRecord` object to the
+        :attr:`aspecd.tasks.Recipe.figures` property of the underlying
+        recipe in case an :attr:`aspecd.tasks.PlotTask.label` has been set.
+
+        """
+        super().perform()
+        if self.result:
+            self._add_plotter_to_recipe()
+
+    def _add_figure_to_recipe(self, label=""):
+        figure_record = FigureRecord()
+        # noinspection PyTypeChecker
+        figure_record.from_plotter(self._task)
+        if label:
+            figure_record.label = label
+        self.recipe.figures[label] = figure_record
+
+    def _add_plotter_to_recipe(self):
+        self.recipe.plotters[self.result] = self._task
+
     def _perform(self):
         filenames = []
         save_filenames = []
@@ -3264,6 +3275,17 @@ class SingleplotTask(PlotTask):
         ):
             filenames = self.properties["filename"]
         autosave_filename = False
+        if not self.label:
+            if len(self.apply_to) > 1:
+                self.label = []
+                for number, _ in enumerate(self.apply_to):
+                    self.label.append(
+                        f"fig{len(self.recipe.figures) + 1}_{number}"
+                    )
+            else:
+                self.label = [f"fig{len(self.recipe.figures) + 1}"]
+        if self.label and not isinstance(self.label, list):
+            self.label = [self.label]
         for number, dataset_id in enumerate(self.apply_to):
             if autosave_filename:
                 self.properties.pop("filename")
@@ -3272,7 +3294,7 @@ class SingleplotTask(PlotTask):
             self._get_annotations()
             self.set_colormap()
             if self.label and not self._task.label:
-                self._task.label = self.label
+                self._task.label = self.label[number]
             if self.target:
                 self._task.figure = self.recipe.plotters[self.target].figure
                 self._task.axes = self.recipe.plotters[self.target].axes
@@ -3299,6 +3321,7 @@ class SingleplotTask(PlotTask):
             if not self.result:
                 # noinspection PyUnresolvedReferences
                 plt.close(self._task.figure)
+            self._add_figure_to_recipe(label=self.label[number])
         if len(self.apply_to) > 1 and save_filenames:
             self._task.filename = save_filenames
 
@@ -3375,6 +3398,26 @@ class MultiplotTask(PlotTask):
     ``settings`` dict of your recipe and set it to False.
 
     """
+
+    def perform(self):
+        """
+        Call the appropriate method of the underlying object.
+
+        For details, see the method :meth:`aspecd.tasks.Task.perform` of the
+        base class.
+
+        Additionally, to what is done in the base class, a PlotTask adds a
+        :obj:`aspecd.tasks.FigureRecord` object to the
+        :attr:`aspecd.tasks.Recipe.figures` property of the underlying
+        recipe in case an :attr:`aspecd.tasks.PlotTask.label` has been set.
+
+        """
+        if not self.label:
+            self.label = f"fig{len(self.recipe.figures) + 1}"
+        super().perform()
+        self._add_figure_to_recipe()
+        if self.result:
+            self._add_plotter_to_recipe()
 
     def _perform(self):
         self._task = self.get_object()
@@ -3553,6 +3596,26 @@ class CompositeplotTask(PlotTask):
                 if plotter is value:
                     self.properties["plotter"][idx] = key
         return super().to_dict(remove_empty=remove_empty)
+
+    def perform(self):
+        """
+        Call the appropriate method of the underlying object.
+
+        For details, see the method :meth:`aspecd.tasks.Task.perform` of the
+        base class.
+
+        Additionally, to what is done in the base class, a PlotTask adds a
+        :obj:`aspecd.tasks.FigureRecord` object to the
+        :attr:`aspecd.tasks.Recipe.figures` property of the underlying
+        recipe in case an :attr:`aspecd.tasks.PlotTask.label` has been set.
+
+        """
+        if not self.label:
+            self.label = f"fig{len(self.recipe.figures) + 1}"
+        super().perform()
+        self._add_figure_to_recipe()
+        if self.result:
+            self._add_plotter_to_recipe()
 
     def _perform(self):
         self._task = self.get_object()
