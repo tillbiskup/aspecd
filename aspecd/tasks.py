@@ -3251,8 +3251,6 @@ class SingleplotTask(PlotTask):
 
         """
         super().perform()
-        if self.result:
-            self._add_plotter_to_recipe()
 
     def _add_figure_to_recipe(self, label=""):
         figure_record = FigureRecord()
@@ -3261,9 +3259,6 @@ class SingleplotTask(PlotTask):
         if label:
             figure_record.label = label
         self.recipe.figures[label] = figure_record
-
-    def _add_plotter_to_recipe(self):
-        self.recipe.plotters[self.result] = self._task
 
     def _perform(self):
         filenames = []
@@ -3275,17 +3270,7 @@ class SingleplotTask(PlotTask):
         ):
             filenames = self.properties["filename"]
         autosave_filename = False
-        if not self.label:
-            if len(self.apply_to) > 1:
-                self.label = []
-                for number, _ in enumerate(self.apply_to):
-                    self.label.append(
-                        f"fig{len(self.recipe.figures) + 1}_{number}"
-                    )
-            else:
-                self.label = [f"fig{len(self.recipe.figures) + 1}"]
-        if self.label and not isinstance(self.label, list):
-            self.label = [self.label]
+        self._set_figure_label()
         for number, dataset_id in enumerate(self.apply_to):
             if autosave_filename:
                 self.properties.pop("filename")
@@ -3318,12 +3303,33 @@ class SingleplotTask(PlotTask):
             # noinspection PyTypeChecker
             save_filename = self.save_plot(plot=self._task)
             save_filenames.append(save_filename)
-            if not self.result:
-                # noinspection PyUnresolvedReferences
-                plt.close(self._task.figure)
+            self._add_plotter_to_recipe(number)
             self._add_figure_to_recipe(label=self.label[number])
         if len(self.apply_to) > 1 and save_filenames:
             self._task.filename = save_filenames
+
+    def _add_plotter_to_recipe(self, number=None):
+        if self.result:
+            if isinstance(self.result, list):
+                self.recipe.plotters[self.result[number]] = self._task
+            else:
+                self.recipe.plotters[self.result] = self._task
+        else:
+            # noinspection PyUnresolvedReferences
+            plt.close(self._task.figure)
+
+    def _set_figure_label(self):
+        if not self.label:
+            if len(self.apply_to) > 1:
+                self.label = []
+                for number, _ in enumerate(self.apply_to):
+                    self.label.append(
+                        f"fig{len(self.recipe.figures) + 1}_{number}"
+                    )
+            else:
+                self.label = [f"fig{len(self.recipe.figures) + 1}"]
+        if self.label and not isinstance(self.label, list):
+            self.label = [self.label]
 
 
 class MultiplotTask(PlotTask):

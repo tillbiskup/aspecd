@@ -2468,6 +2468,30 @@ class TestSinglePlotTask(unittest.TestCase):
         self.task.perform()
         self.assertTrue(len(self.recipe.plotters))
 
+    def test_perform_task_with_results_adds_individual_plotter(self):
+        self.plotting_task = {
+            "kind": "singleplot",
+            "type": "SinglePlotter",
+            "apply_to": self.datasets,
+            "result": ["plot1", "plot2"],
+        }
+        dataset_factory = dataset.DatasetFactory()
+        dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
+        self.recipe.dataset_factory = dataset_factory
+        recipe_dict = {
+            "datasets": self.datasets,
+            "tasks": [self.plotting_task],
+        }
+        self.recipe.from_dict(recipe_dict)
+        # noinspection PyTypeChecker
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertEqual(len(self.datasets), len(self.recipe.plotters))
+        self.assertNotEqual(
+            self.recipe.plotters["plot1"], self.recipe.plotters["plot2"]
+        )
+
     def test_perform_task_with_filename_saves_plot(self):
         self.prepare_recipe()
         # noinspection PyTypeChecker
