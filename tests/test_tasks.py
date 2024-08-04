@@ -2673,7 +2673,27 @@ class TestSinglePlotTask(unittest.TestCase):
         self.task.perform()
         self.assertEqual(len(self.datasets), len(self.recipe.figures))
 
-    @unittest.skip
+    def test_perform_task_w_datasets_wo_label_sets_default_labels(self):
+        self.plotting_task = {
+            "kind": "singleplot",
+            "type": "SinglePlotter",
+            "apply_to": self.datasets,
+        }
+        dataset_factory = dataset.DatasetFactory()
+        dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
+        self.recipe.dataset_factory = dataset_factory
+        recipe_dict = {
+            "datasets": self.datasets,
+            "tasks": [self.plotting_task],
+        }
+        self.recipe.from_dict(recipe_dict)
+        # noinspection PyTypeChecker
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        for idx, record in enumerate(self.recipe.figures):
+            self.assertEqual(f"fig1_{idx}", record)
+
     def test_perform_task_autosaving_adds_filenames_to_figure_record(self):
         self.plotting_task = {
             "kind": "singleplot",
@@ -2697,9 +2717,8 @@ class TestSinglePlotTask(unittest.TestCase):
         self.task.from_dict(self.plotting_task)
         self.task.recipe = self.recipe
         self.task.perform()
-        self.assertListEqual(
-            self.figure_filenames, self.recipe.figures["fig1"].filename
-        )
+        for idx, record in enumerate(self.recipe.figures.values()):
+            self.assertEqual(self.figure_filenames[idx], record.filename)
 
     def test_perform_task_wo_filename_wo_autosave_does_not_save_plot(self):
         self.figure_filename = "".join(
