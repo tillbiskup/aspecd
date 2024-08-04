@@ -25,6 +25,17 @@ New features
   * :class:`aspecd.annotations.Text` for text annotations to plot(ter)s
 
 
+Fixes
+-----
+
+* Tasks
+
+  * :class:`aspecd.tasks.SingleplotTask` allows to set as many results as datasets, to allow for adding an individual plotter (for one of the datasets) to a :class:`aspecd.tasks.CompositeplotTask`. (`#3 <https://github.com/tillbiskup/aspecd/issues/3>`_)
+  * :class:`aspecd.tasks.MultiplotTask` preserves order of datasets the task is applied to, regardless whether the datasets are originally imported or result from prior tasks (via ``result`` property). (`#2 <https://github.com/tillbiskup/aspecd/issues/2>`_)
+  * :meth:`aspecd.tasks.Recipe.get_datasets` preserves order of datasets, regardless whether the datasets are originally imported or result from prior tasks (via ``result`` property).
+  * :meth:`aspecd.tasks.Chef.cook` closes open figures.
+
+
 Version 0.9.3
 =============
 

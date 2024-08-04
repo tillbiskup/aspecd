@@ -5583,6 +5583,7 @@ class TextProperties(DrawingProperties):
         self.zorder = None
 
     def apply(self, drawing=None):
+        """Apply properties to text."""
         super().apply(drawing=drawing)
         if self.backgroundcolor is None:
-            drawing._bbox_patch = None
+            drawing._bbox_patch = None  # pylint: disable=protected-access

@@ -13,6 +13,7 @@ import unittest
 from unittest.mock import patch
 import warnings
 
+import matplotlib
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -897,6 +898,23 @@ class TestChef(unittest.TestCase):
         self.chef.cook(recipe=recipe)
         self.assertIn("autosave_plots", self.chef.history["settings"])
         self.assertTrue(self.chef.history["settings"]["autosave_plots"])
+
+    def test_cook_closes_open_figures_at_end(self):
+        recipe = self.recipe
+        plotting_task = {
+            "kind": "singleplot",
+            "type": "SinglePlotter",
+            "apply_to": self.dataset,
+            "result": "foo",
+        }
+        recipe_dict = {
+            "datasets": [self.dataset],
+            "tasks": [plotting_task],
+        }
+        recipe.from_dict(recipe_dict)
+        self.chef.cook(recipe=recipe)
+        for plotter in self.chef.recipe.plotters.values():
+            self.assertFalse(plt.fignum_exists(plotter.figure.number))
 
 
 class TestTask(unittest.TestCase):
@@ -2343,6 +2361,10 @@ class TestPlotTask(unittest.TestCase):
             "apply_to": self.dataset,
         }
 
+    def tearDown(self):
+        for fignum in plt.get_fignums():
+            plt.close(fignum)
+
     def prepare_recipe(self):
         dataset_factory = dataset.DatasetFactory()
         dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
@@ -2429,6 +2451,8 @@ class TestSinglePlotTask(unittest.TestCase):
                         os.remove(filename)
             elif os.path.exists(self.task._task.filename):
                 os.remove(self.task._task.filename)
+        for fignum in plt.get_fignums():
+            plt.close(fignum)
 
     def prepare_recipe(self):
         dataset_factory = dataset.DatasetFactory()
@@ -2927,14 +2951,18 @@ class TestMultiPlotTask(unittest.TestCase):
             self.task.properties["filename"]
         ):
             os.remove(self.task.properties["filename"])
+        for fignum in plt.get_fignums():
+            plt.close(fignum)
 
-    def prepare_recipe(self):
+    def prepare_recipe(self, task_list=None):
+        if not task_list:
+            task_list = [self.plotting_task]
         dataset_factory = dataset.DatasetFactory()
         dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
         self.recipe.dataset_factory = dataset_factory
         recipe_dict = {
             "datasets": self.dataset,
-            "tasks": [self.plotting_task],
+            "tasks": task_list,
         }
         self.recipe.from_dict(recipe_dict)
 
@@ -3177,6 +3205,37 @@ class TestMultiPlotTask(unittest.TestCase):
             self.recipe.figures[label].caption.title,
         )
 
+    def test_plot_obeys_sequence_of_to_apply(self):
+        processing_task = {
+            "kind": "singleprocessing",
+            "type": "ScalarAlgebra",
+            "properties": {
+                "parameters": {
+                    "kind": "add",
+                    "value": 42,
+                },
+            },
+            "apply_to": self.dataset,
+            "result": "result",
+        }
+        self.plotting_task = {
+            "kind": "multiplot",
+            "type": "MultiPlotter1D",
+            "apply_to": ["result", self.dataset[0]],
+        }
+        self.prepare_recipe(task_list=[processing_task, self.plotting_task])
+        self.recipe.datasets[self.dataset[0]].data.data = np.zeros(16)
+        self.recipe.tasks[0].perform()
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        lines = [
+            item
+            for item in self.task._task.axes.get_children()
+            if isinstance(item, matplotlib.lines.Line2D)
+        ]
+        self.assertGreater(lines[0].get_ydata()[0], lines[1].get_ydata()[0])
+
 
 class TestCompositePlotTask(unittest.TestCase):
     def setUp(self):
@@ -3220,6 +3279,8 @@ class TestCompositePlotTask(unittest.TestCase):
                         os.remove(filename)
             elif os.path.exists(self.pretask._task.filename):
                 os.remove(self.pretask._task.filename)
+        for fignum in plt.get_fignums():
+            plt.close(fignum)
 
     def prepare_recipe(self):
         dataset_factory = dataset.DatasetFactory()

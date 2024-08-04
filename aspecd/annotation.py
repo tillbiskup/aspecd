@@ -1047,8 +1047,8 @@ class Text(PlotAnnotation):
             if len(ypositions) == 1:
                 ypositions = ypositions * len(xpositions)
             positions = []
-            for idx in range(len(xpositions)):
-                positions.append([xpositions[idx], ypositions[idx]])
+            for idx, xposition in enumerate(xpositions):
+                positions.append([xposition, ypositions[idx]])
         else:
             positions = self.parameters["positions"]
         for idx, position in enumerate(positions):

@@ -2,6 +2,8 @@
 
 import unittest
 
+from matplotlib import pyplot as plt
+
 import aspecd.annotation as annotation
 import aspecd.dataset
 import aspecd.exceptions
@@ -235,6 +237,10 @@ class TestVerticalLine(unittest.TestCase):
         self.annotation = annotation.VerticalLine()
         self.plotter = aspecd.plotting.Plotter()
 
+    def tearDown(self):
+        if self.plotter.figure:
+            plt.close(self.plotter.figure)
+
     def test_instantiate_class(self):
         pass
 
@@ -317,6 +323,10 @@ class TestHorizontalLine(unittest.TestCase):
         self.annotation = annotation.HorizontalLine()
         self.plotter = aspecd.plotting.Plotter()
 
+    def tearDown(self):
+        if self.plotter.figure:
+            plt.close(self.plotter.figure)
+
     def test_instantiate_class(self):
         pass
 
@@ -392,6 +402,10 @@ class TestText(unittest.TestCase):
     def setUp(self):
         self.annotation = annotation.Text()
         self.plotter = aspecd.plotting.Plotter()
+
+    def tearDown(self):
+        if self.plotter.figure:
+            plt.close(self.plotter.figure)
 
     def test_instantiate_class(self):
         pass
