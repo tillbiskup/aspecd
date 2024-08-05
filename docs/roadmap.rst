@@ -46,6 +46,10 @@ For next releases
 
 * Recipe-driven data analysis:
 
+  * Tasks can be "recycled" with only few properties changed.
+
+    * Most useful, probably, for plots where you want to change, *e.g.*, the title of a more complex plot for individual datasets, but don't want to copy&paste the plotting task in the recipe for each dataset independently. (`#4 <https://github.com/tillbiskup/aspecd/issues/4>`_)
+
   * Better handling of automatically generated filenames for saving plots and reports: unique filenames; using the label rather than the source (id) of the dataset
 
   * If figure is plotted twice using automatically generated filenames, use different filenames (e.g. increment number).

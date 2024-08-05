@@ -5016,6 +5016,8 @@ class DrawingProperties(aspecd.utils.Properties):
         documentation <https://matplotlib.org/stable/gallery/misc
         /zorder_demo.html>`_
 
+        .. versionadded:: 0.10
+
     Raises
     ------
     aspecd.exceptions.MissingDrawingError
@@ -5023,7 +5025,7 @@ class DrawingProperties(aspecd.utils.Properties):
 
 
     .. versionchanged:: 0.10
-        New property ``zorder``
+        New property :attr:`zorder`
 
     """
 
