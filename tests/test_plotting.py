@@ -28,8 +28,6 @@ class TestPlotter(unittest.TestCase):
     def tearDown(self):
         if os.path.isfile(self.filename):
             os.remove(self.filename)
-        if self.plotter.fig:
-            plt.close(self.plotter.fig)
 
     def test_instantiate_class(self):
         pass
@@ -269,10 +267,6 @@ class TestSinglePlotter(unittest.TestCase):
     def setUp(self):
         self.plotter = plotting.SinglePlotter()
 
-    def tearDown(self):
-        if self.plotter.fig:
-            plt.close(self.plotter.fig)
-
     def test_instantiate_class(self):
         pass
 
@@ -421,10 +415,6 @@ class TestSinglePlotter1D(unittest.TestCase):
         self.dataset.data.axes[0].unit = "mT"
         self.dataset.data.axes[1].quantity = "intensity"
         self.dataset.data.axes[1].unit = "V"
-
-    def tearDown(self):
-        if self.plotter.fig:
-            plt.close(self.plotter.fig)
 
     def test_instantiate_class(self):
         pass
@@ -634,10 +624,6 @@ class TestSinglePlotter1D(unittest.TestCase):
 class TestSinglePlotter2D(unittest.TestCase):
     def setUp(self):
         self.plotter = plotting.SinglePlotter2D()
-
-    def tearDown(self):
-        if self.plotter.fig:
-            plt.close(self.plotter.fig)
 
     def test_instantiate_class(self):
         pass
@@ -987,8 +973,6 @@ class TestSinglePlotter2DStacked(unittest.TestCase):
         self.filename = "foo.pdf"
 
     def tearDown(self):
-        if self.plotter.fig:
-            plt.close(self.plotter.fig)
         if os.path.exists(self.filename):
             os.remove(self.filename)
 
@@ -1304,8 +1288,6 @@ class TestMultiDeviceDataPlotter1D(unittest.TestCase):
         self.dataset = None
 
     def tearDown(self):
-        if self.plotter.fig:
-            plt.close(self.plotter.fig)
         if os.path.exists(self.filename):
             os.remove(self.filename)
 
@@ -1542,10 +1524,6 @@ class TestMultiPlotter(unittest.TestCase):
     def setUp(self):
         self.plotter = plotting.MultiPlotter()
 
-    def tearDown(self):
-        if self.plotter.fig:
-            plt.close(self.plotter.fig)
-
     def test_instantiate_class(self):
         pass
 
@@ -1752,10 +1730,6 @@ class TestMultiPlotter1D(unittest.TestCase):
         self.dataset.data.axes[0].unit = "mT"
         self.dataset.data.axes[1].quantity = "intensity"
         self.dataset.data.axes[1].unit = "V"
-
-    def tearDown(self):
-        if self.plotter.fig:
-            plt.close(self.plotter.fig)
 
     def test_instantiate_class(self):
         pass
@@ -1995,10 +1969,6 @@ class TestMultiPlotter1DStacked(unittest.TestCase):
         self.plotter.datasets.append(dataset_)
         self.plotter.datasets.append(dataset_)
 
-    def tearDown(self):
-        if self.plotter.fig:
-            plt.close(self.plotter.fig)
-
     def test_instantiate_class(self):
         pass
 
@@ -2186,10 +2156,6 @@ class TestCompositePlotter(unittest.TestCase):
         self.dataset = aspecd.dataset.CalculatedDataset()
         self.dataset.data.data = np.sin(np.linspace(0, 2 * np.pi, 101))
 
-    def tearDown(self):
-        if self.plotter.fig:
-            plt.close(self.plotter.fig)
-
     def test_instantiate_class(self):
         pass
 
@@ -2312,10 +2278,6 @@ class TestCompositePlotter(unittest.TestCase):
 class TestSingleCompositePlotter(unittest.TestCase):
     def setUp(self):
         self.plotter = plotting.SingleCompositePlotter()
-
-    def tearDown(self):
-        if self.plotter.fig:
-            plt.close(self.plotter.fig)
 
     def test_instantiate_class(self):
         pass
