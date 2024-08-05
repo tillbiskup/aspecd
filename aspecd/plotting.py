@@ -5002,10 +5002,23 @@ class DrawingProperties(aspecd.utils.Properties):
     A drawing is the most abstract object representing data within axes,
     such as a line, contour, etcetera.
 
+    While a base class for more specific kinds of drawings, such as lines,
+    surfaces, or even text, drawing properties come with two essential
+    attributes: a label and the zorder.
+
+    The latter means that you can control the z stacking of the different
+    parts of a plot. Artists with lower zorder are drawn first.
+
+    For specific kinds of drawings and their respective properties,
+    see :class:`LineProperties`, :class:`SurfaceProperties`,
+    and :class:`TextProperties`.
+
     Attributes
     ----------
     label: :class:`str`
-        label of a line that gets used within a legend, default: ''
+        Label of a drawing that gets used within a legend.
+
+         Default: ''
 
     zorder : :class:`float`
         Zorder for the artist.
@@ -5022,6 +5035,31 @@ class DrawingProperties(aspecd.utils.Properties):
     ------
     aspecd.exceptions.MissingDrawingError
         Raised if no drawing is provided.
+
+
+    Examples
+    --------
+    Drawing properties are always set in context of concrete plotters,
+    and furthermore, the individual main elements of a plot are always
+    referred to as ``drawing`` or ``drawings`` within their respective
+    :class:`PlotProperties`.
+
+    An example for setting the drawing properties of a
+    :class:`SinglePlotter1D` are given below:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            properties:
+              drawings:
+                label: Substance 1
+                zorder: 3
+
+    In context of a plotter with a legend, the label would appear in this
+    legend, and in this particular case, the zorder is set to 3, *i.e.*
+    the line in the plotter would appear behind other elements.
 
 
     .. versionchanged:: 0.10
@@ -5126,10 +5164,49 @@ class LineProperties(DrawingProperties):
 
         For details see :mod:`matplotlib.markers`
 
+    zorder : :class:`float`
+        Zorder for the artist.
+
+        Artists with lower zorder are drawn first.
+
+        For a summary of the default zorder values, see the `Matplotlib
+        documentation <https://matplotlib.org/stable/gallery/misc
+        /zorder_demo.html>`_
+
+        .. versionadded:: 0.10
+
     Raises
     ------
     aspecd.exceptions.MissingDrawingError
         Raised if no line is provided.
+
+
+    Examples
+    --------
+    Drawing properties are always set in context of concrete plotters,
+    and furthermore, the individual main elements of a plot are always
+    referred to as ``drawing`` or ``drawings`` within their respective
+    :class:`PlotProperties`.
+
+    An example for setting the line properties of a
+    :class:`SinglePlotter1D` are given below:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            properties:
+              drawings:
+                label: Substance 1
+                zorder: 3
+                color: '#1f77b4'
+                drawstyle: default
+                linestyle: '-'
+                linewidth: 1.5
+                marker: None
+
+    Here, all currently possible properties are shown.
 
     """
 
@@ -5182,6 +5259,17 @@ class SurfaceProperties(DrawingProperties):
 
     colors : :class:`str`
         Colour of the contour lines (if present)
+
+    zorder : :class:`float`
+        Zorder for the artist.
+
+        Artists with lower zorder are drawn first.
+
+        For a summary of the default zorder values, see the `Matplotlib
+        documentation <https://matplotlib.org/stable/gallery/misc
+        /zorder_demo.html>`_
+
+        .. versionadded:: 0.10
 
     """
 
