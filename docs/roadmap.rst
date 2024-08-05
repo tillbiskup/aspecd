@@ -11,7 +11,6 @@ For version 0.10
 * Plotting
 
   * Text annotations
-  * Individual labels for plotters in recipes
 
 
 For next releases
@@ -32,7 +31,6 @@ For next releases
   * Plot annotations
 
     * additional types of annotations, *e.g.* ``axvspan``, ``axhspan``, symbols
-    * ``zorder`` as attribute for annotations
 
   * Quiver plots
 

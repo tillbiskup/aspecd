@@ -19,10 +19,16 @@ New features
   * Set individual properties for each of the lines of a :class:`aspecd.plotting.SinglePlotter2DStacked`
   * Conveniently set identical properties for all lines of :class:`aspecd.plotting.SinglePlotter2DStacked` and :class:`aspecd.plotting.MultiPlotter1D`
   * :class:`aspecd.plotting.TextProerties`
+  * :class:`aspecd.plotting.DrawingProperties` has attribute ``zorder``.
+
 
 * Plot annotations
 
   * :class:`aspecd.annotations.Text` for text annotations to plot(ter)s
+
+* Tasks
+
+  * :class:`aspecd.tasks.SingleplotTask` allows to set as many results as datasets, to allow for adding an individual plotter (for one of the datasets) to a :class:`aspecd.tasks.CompositeplotTask`. (`#3 <https://github.com/tillbiskup/aspecd/issues/3>`_)
 
 
 Fixes
@@ -30,7 +36,6 @@ Fixes
 
 * Tasks
 
-  * :class:`aspecd.tasks.SingleplotTask` allows to set as many results as datasets, to allow for adding an individual plotter (for one of the datasets) to a :class:`aspecd.tasks.CompositeplotTask`. (`#3 <https://github.com/tillbiskup/aspecd/issues/3>`_)
   * :class:`aspecd.tasks.MultiplotTask` preserves order of datasets the task is applied to, regardless whether the datasets are originally imported or result from prior tasks (via ``result`` property). (`#2 <https://github.com/tillbiskup/aspecd/issues/2>`_)
   * :meth:`aspecd.tasks.Recipe.get_datasets` preserves order of datasets, regardless whether the datasets are originally imported or result from prior tasks (via ``result`` property).
   * :meth:`aspecd.tasks.Chef.cook` closes open figures.

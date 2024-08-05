@@ -1321,26 +1321,30 @@ class Plotter(aspecd.utils.ToDictMixin):
             if isinstance(self.axes, list):
                 for axes in self.axes:
                     if axes.get_ylim()[0] <= 0 <= axes.get_ylim()[1]:
+                        properties = self.properties.zero_lines.to_dict()
+                        # noinspection PyUnresolvedReferences
+                        properties.update({"zorder": 1})
                         # noinspection PyArgumentList
-                        axes.axhline(
-                            **self.properties.zero_lines.to_dict(), zorder=1
-                        )
+                        axes.axhline(**properties)
                     if axes.get_xlim()[0] <= 0 <= axes.get_xlim()[1]:
+                        properties = self.properties.zero_lines.to_dict()
+                        # noinspection PyUnresolvedReferences
+                        properties.update({"zorder": 1})
                         # noinspection PyArgumentList
-                        axes.axvline(
-                            **self.properties.zero_lines.to_dict(), zorder=1
-                        )
+                        axes.axvline(**properties)
             else:
                 if self.axes.get_ylim()[0] <= 0 <= self.axes.get_ylim()[1]:
+                    properties = self.properties.zero_lines.to_dict()
+                    # noinspection PyUnresolvedReferences
+                    properties.update({"zorder": 1})
                     # noinspection PyArgumentList
-                    self.axes.axhline(
-                        **self.properties.zero_lines.to_dict(), zorder=1
-                    )
+                    self.axes.axhline(**properties)
                 if self.axes.get_xlim()[0] <= 0 <= self.axes.get_xlim()[1]:
+                    properties = self.properties.zero_lines.to_dict()
+                    # noinspection PyUnresolvedReferences
+                    properties.update({"zorder": 1})
                     # noinspection PyArgumentList
-                    self.axes.axvline(
-                        **self.properties.zero_lines.to_dict(), zorder=1
-                    )
+                    self.axes.axvline(**properties)
 
     def _tight_layout(self):
         if self.parameters["tight_layout"]:
@@ -2482,10 +2486,12 @@ class SinglePlotter2DStacked(SinglePlotter):
             for idx in range(self.data.data.shape[dimension]):
                 # noinspection PyTypeChecker
                 offset = idx * self.parameters["offset"]
+                properties = self.properties.zero_lines.to_dict()
+                # noinspection PyUnresolvedReferences
+                properties.update({"zorder": 1})
                 self.axes.axhline(
                     y=offset,
-                    **self.properties.zero_lines.to_dict(),  # noqa
-                    zorder=1,
+                    **properties,  # noqa
                 )
 
 
@@ -3459,10 +3465,12 @@ class MultiPlotter1DStacked(MultiPlotter1D):
         if self.parameters["show_zero_lines"]:
             for idx in range(len(self.datasets)):
                 offset = -idx * self.parameters["offset"]
+                properties = self.properties.zero_lines.to_dict()
+                # noinspection PyUnresolvedReferences
+                properties.update({"zorder": 1})
                 self.axes.axhline(
                     y=offset,
-                    **self.properties.zero_lines.to_dict(),  # noqa
-                    zorder=1,
+                    **properties,  # noqa
                 )
 
 
@@ -4999,16 +5007,30 @@ class DrawingProperties(aspecd.utils.Properties):
     label: :class:`str`
         label of a line that gets used within a legend, default: ''
 
+    zorder : :class:`float`
+        Zorder for the artist.
+
+        Artists with lower zorder are drawn first.
+
+        For a summary of the default zorder values, see the `Matplotlib
+        documentation <https://matplotlib.org/stable/gallery/misc
+        /zorder_demo.html>`_
+
     Raises
     ------
     aspecd.exceptions.MissingDrawingError
         Raised if no drawing is provided.
+
+
+    .. versionchanged:: 0.10
+        New property ``zorder`
 
     """
 
     def __init__(self):
         super().__init__()
         self.label = ""
+        self.zorder = 2
 
     def apply(self, drawing=None):
         """
@@ -5541,10 +5563,14 @@ class TextProperties(DrawingProperties):
         Wrapping makes sure the text is confined to the (sub)figure box. It
         does not take into account any other artists.
 
-    zorder : :class:`int`
+    zorder : :class:`float`
         Zorder for the artist.
 
         Artists with lower zorder values are drawn first.
+
+        For a summary of the default zorder values, see the `Matplotlib
+        documentation <https://matplotlib.org/stable/gallery/misc
+        /zorder_demo.html>`_
 
 
     Raises

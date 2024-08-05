@@ -2560,7 +2560,7 @@ class TestDrawingProperties(unittest.TestCase):
         self.assertTrue(callable(self.drawing_properties.from_dict))
 
     def test_has_properties(self):
-        for prop in ["label"]:
+        for prop in ["label", "zorder"]:
             self.assertTrue(hasattr(self.drawing_properties, prop))
 
     def test_has_apply_method(self):
@@ -2571,11 +2571,17 @@ class TestDrawingProperties(unittest.TestCase):
         with self.assertRaises(aspecd.exceptions.MissingDrawingError):
             self.drawing_properties.apply()
 
-    def test_apply_sets_properties(self):
+    def test_apply_sets_label(self):
         self.drawing_properties.label = "foo"
         line = matplotlib.lines.Line2D([0, 1], [0, 0])
         self.drawing_properties.apply(drawing=line)
         self.assertEqual(self.drawing_properties.label, line.get_label())
+
+    def test_apply_sets_zorder(self):
+        self.drawing_properties.zorder = 42
+        line = matplotlib.lines.Line2D([0, 1], [0, 0])
+        self.drawing_properties.apply(drawing=line)
+        self.assertEqual(self.drawing_properties.zorder, line.get_zorder())
 
     def test_apply_with_nonexisting_property_issues_log_message(self):
         self.drawing_properties.foobar = "foo"
