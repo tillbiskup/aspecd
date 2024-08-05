@@ -5023,7 +5023,7 @@ class DrawingProperties(aspecd.utils.Properties):
 
 
     .. versionchanged:: 0.10
-        New property ``zorder`
+        New property ``zorder``
 
     """
 
