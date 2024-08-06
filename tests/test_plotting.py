@@ -2300,6 +2300,18 @@ class TestCompositePlotter(unittest.TestCase):
         self.plotter.plot()
         self.assertEqual(10, len(single_plotter.drawings))
 
+    def test_plot_applies_grid_spec_properties(self):
+        self.plotter.grid_dimensions = [1, 1]
+        self.plotter.subplot_locations = [[0, 0, 1, 1]]
+        single_plotter = plotting.SinglePlotter1D()
+        single_plotter.dataset = self.dataset
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.properties.grid_spec.left = 0.5
+        self.plotter.plot()
+        self.assertTrue(
+            self.plotter.grid_spec.locally_modified_subplot_params()
+        )
+
 
 class TestSingleCompositePlotter(unittest.TestCase):
     def setUp(self):
@@ -3540,6 +3552,9 @@ class TestCompositePlotProperties(unittest.TestCase):
     def test_has_axes_property(self):
         self.assertTrue(hasattr(self.plot_properties, "axes"))
 
+    def test_has_grid_spec_property(self):
+        self.assertTrue(hasattr(self.plot_properties, "grid_spec"))
+
     def test_has_to_dict_method(self):
         self.assertTrue(hasattr(self.plot_properties, "to_dict"))
         self.assertTrue(callable(self.plot_properties.to_dict))
@@ -3713,3 +3728,32 @@ class TestTextProperties(unittest.TestCase):
         self.assertEqual(
             matplotlib.rcParams["text.usetex"], text.get_usetex()
         )
+
+
+class TestSubplotGridSpecs(unittest.TestCase):
+    def setUp(self):
+        self.properties = plotting.SubplotGridSpecs()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_properties(self):
+        for prop in [
+            "left",
+            "bottom",
+            "right",
+            "top",
+            "wspace",
+            "hspace",
+            "width_ratios",
+            "height_ratios",
+        ]:
+            self.assertTrue(hasattr(self.properties, prop))
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.properties, "to_dict"))
+        self.assertTrue(callable(self.properties.to_dict))
+
+    def test_has_from_dict_method(self):
+        self.assertTrue(hasattr(self.properties, "from_dict"))
+        self.assertTrue(callable(self.properties.from_dict))

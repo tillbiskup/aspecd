@@ -3549,6 +3549,13 @@ class CompositePlotter(Plotter):
 
         Default: [1, 1]
 
+    grid_spec : :class:`matplotlib.gridspec.GridSpec`
+        Grid layout used to place the subplots within the figure.
+
+        The properties of the grid layout can be controlled using the
+        :attr:`CompositePlotProperties.grid_spec` attribute that is part of
+        :attr:`properties` attribute.
+
     subplot_locations : :class:`list`
         List of subplot locations
 
@@ -3615,6 +3622,7 @@ class CompositePlotter(Plotter):
         self.description = "Composite plotter displaying several axes"
         self.axes = []
         self.grid_dimensions = [1, 1]
+        self.grid_spec = None
         self.subplot_locations = [[0, 0, 1, 1]]
         self.axes_positions = []
         self.plotter = []
@@ -3623,13 +3631,16 @@ class CompositePlotter(Plotter):
 
     def _create_figure_and_axes(self):
         self.figure = plt.figure()
-        grid_spec = self.figure.add_gridspec(
-            self.grid_dimensions[0], self.grid_dimensions[1]
+        # noinspection PyArgumentList
+        self.grid_spec = self.figure.add_gridspec(
+            self.grid_dimensions[0],
+            self.grid_dimensions[1],
+            **self.properties.grid_spec.to_dict(),
         )
         for subplot in self.subplot_locations:
             self.axes.append(
                 self.figure.add_subplot(
-                    grid_spec[
+                    self.grid_spec[
                         subplot[0] : subplot[0] + subplot[2],
                         subplot[1] : subplot[1] + subplot[3],
                     ]
@@ -4509,9 +4520,11 @@ class CompositePlotProperties(PlotProperties):
     """
     Properties of a composite plot, defining its appearance.
 
+    For the plotter class, see :class:`CompositePlotter`.
+
     Attributes
     ----------
-    axes : :class:`aspecd.plotting.AxesProperties`
+    axes : :class:`AxesProperties`
         Properties for all axes of the CompositePlotter.
 
         This property is used to set properties for all axes of a
@@ -4519,18 +4532,34 @@ class CompositePlotProperties(PlotProperties):
         individual plotters.
 
         For the properties that can be set this way, see the documentation
-        of the :class:`aspecd.plotting.AxesProperties` class.
+        of the :class:`AxesProperties` class.
+
+    grid_spec : :class:`SubplotGridSpecs`
+        Properties for the subplot grid specs.
+
+        This property is used to set properties for the subplot grid.
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`SubplotGridSpecs` class.
+
+        .. versionadded:: 0.10
+
 
     Raises
     ------
     aspecd.exceptions.MissingPlotterError
         Raised if no plotter is provided.
 
+
+    .. versionchanged:: 0.10
+        Property :attr:`grid_spec` added.
+
     """
 
     def __init__(self):
         super().__init__()
         self.axes = AxesProperties()
+        self.grid_spec = SubplotGridSpecs()
 
     def apply(self, plotter=None):
         """
@@ -5709,3 +5738,113 @@ class TextProperties(DrawingProperties):
         super().apply(drawing=drawing)
         if self.backgroundcolor is None:
             drawing._bbox_patch = None  # pylint: disable=protected-access
+
+
+class SubplotGridSpecs(aspecd.utils.Properties):
+    """
+    Properties for the subplot grid specs.
+
+    This class is used to set properties for the subplot grid of
+    the :class:`CompositePlotter` class. As such, it is part of the
+    :class:`CompositePlotProperties` class. For further details, see the
+    :class:`matplotlib.gridspec.GridSpec` documentation.
+
+
+    Attributes
+    ----------
+    left : :class:`float`
+        Left extent of the subplots as a fraction of figure width.
+
+        Left cannot be larger than right, and bottom cannot be larger than
+        top. If not given, the values will be inferred from a figure or
+        rcParams at draw time.
+
+    bottom : :class:`float`
+        Bottom extent of the subplots as a fraction of figure height.
+
+        Left cannot be larger than right, and bottom cannot be larger than
+        top. If not given, the values will be inferred from a figure or
+        rcParams at draw time.
+
+    right : :class:`float`
+        Right extent of the subplots as a fraction of figure width.
+
+        Left cannot be larger than right, and bottom cannot be larger than
+        top. If not given, the values will be inferred from a figure or
+        rcParams at draw time.
+
+    top : :class:`float`
+        Top extent of the subplots as a fraction of figure height.
+
+        Left cannot be larger than right, and bottom cannot be larger than
+        top. If not given, the values will be inferred from a figure or
+        rcParams at draw time.
+
+    wspace : :class:`float`
+        The amount of width reserved for space between subplots.
+
+        Expressed as a fraction of the average axis width. If not given,
+        the values will be inferred from a figure or rcParams when necessary.
+
+    hspace : :class:`float`
+        The amount of height reserved for space between subplots.
+
+        Expressed as a fraction of the average axis height. If not given,
+        the values will be inferred from a figure or rcParams when necessary.
+
+    width_ratios : :class:`list`
+        Relative width of the columns.
+
+        Each column gets a relative width of
+        ``width_ratios[i] / sum(width_ratios)``.
+        If not given, all columns will have the same width.
+
+    height_ratios : :class:`list`
+        Relative height of the rows.
+
+        Each row gets a relative height of
+        ``height_ratios[i] / sum(height_ratios)``.
+        If not given, all rows will have the same height.
+
+    Examples
+    --------
+    Subplot grid spec properties are always set in context of a concrete
+    :class:`CompositePlotter`.
+
+    An example for setting the subplot grid specs of a
+    :class:`CompositePlotter` are given below:
+
+    .. code-block:: yaml
+
+        - kind: compositeplot
+          type: CompositePlotter
+          properties:
+            properties:
+              grid_spec:
+                wspace: 0
+                hspace: 0
+            plotter:
+            - raw-data
+            - processed-data
+            filename: comparison.pdf
+            grid_dimensions: [1, 2]
+            subplot_locations:
+            - [0, 0, 1, 1]
+            - [0, 1, 1, 1]
+
+
+    .. versionadded:: 0.10
+
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.left = None
+        self.bottom = None
+        self.right = None
+        self.top = None
+        self.wspace = None
+        self.hspace = None
+        self.width_ratios = None
+        self.height_ratios = None
