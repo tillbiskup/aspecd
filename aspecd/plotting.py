@@ -2369,6 +2369,10 @@ class SinglePlotter2DStacked(SinglePlotter):
         """
         return self.drawing
 
+    @drawings.setter
+    def drawings(self, drawings=None):
+        self.drawing = drawings
+
     @staticmethod
     def applicable(data):
         """Check whether plot is applicable to the dataset.
@@ -3637,6 +3641,8 @@ class CompositePlotter(Plotter):
             raise aspecd.exceptions.MissingPlotterError
         for plotter in self.plotter:
             plotter.style = self.style
+            if hasattr(plotter, "drawings"):
+                plotter.drawings = []
         for idx, axes in enumerate(self.axes):
             self.plotter[idx].figure = self.figure
             self.plotter[idx].axes = axes

@@ -1096,6 +1096,21 @@ class TestSinglePlotter2DStacked(unittest.TestCase):
         dataset_.plot(self.plotter)
         self.assertEqual(10, len(self.plotter.drawing))
 
+    def test_plot_with_show_legend_sets_legend_label(self):
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.random.random([5, 10]) - 0.5
+        self.plotter.parameters["show_legend"] = True
+        labels = ["foo", "bar", "baz", "foobar", "barbaz"]
+        for label in labels:
+            line_properties = aspecd.plotting.LineProperties()
+            line_properties.label = label
+            self.plotter.properties.drawings.append(line_properties)
+        plotter = dataset_.plot(self.plotter)
+        for idx, label in enumerate(labels):
+            self.assertEqual(
+                label, plotter.legend.get_texts()[idx].get_text()
+            )
+
     def test_plot_applies_drawing_properties_to_all_drawings(self):
         color = "#aaccee"
         dict_ = {"drawing": {"color": color}}
@@ -2273,6 +2288,17 @@ class TestCompositePlotter(unittest.TestCase):
         with contextlib.redirect_stderr(io.StringIO()):
             self.plotter.plot()
         self.assertEqual(self.plotter.style, self.plotter.plotter[0].style)
+
+    def test_plot_does_not_multiply_drawings_of_contained_plotters(self):
+        self.plotter.grid_dimensions = [1, 1]
+        self.plotter.subplot_locations = [[0, 0, 1, 1]]
+        single_plotter = plotting.SinglePlotter2DStacked()
+        self.dataset.data.data = np.random.random([10, 10])
+        single_plotter.dataset = self.dataset
+        single_plotter.plot()
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plot()
+        self.assertEqual(10, len(single_plotter.drawings))
 
 
 class TestSingleCompositePlotter(unittest.TestCase):
