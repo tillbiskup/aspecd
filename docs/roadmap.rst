@@ -5,12 +5,20 @@ Roadmap
 A few ideas how to develop the project further, currently a list as a reminder for the main developers themselves, in no particular order, though with a tendency to list more important aspects first:
 
 
-For version 0.10
+For version 0.11
 ================
 
 * Plotting
 
-  * Text annotations
+  * Plot annotations
+
+    * Text annotations with additional lines/arrows
+    * additional types of annotations, *e.g.* ``axvspan``, ``axhspan``, symbols
+
+* Example recipes
+
+  * A series of example recipes, starting with models for generating artificial data.
+  * Show-off of different plotters and the possibilities there.
 
 
 For next releases
@@ -27,10 +35,6 @@ For next releases
   * :class:`aspecd.plotting.MultiDeviceDataPlotter1DSeparated`
 
     Similar to :class:`aspecd.plotting.MultiDeviceDataPlotter1D`, but with the different device data plotted in separate axes stacked vertically
-
-  * Plot annotations
-
-    * additional types of annotations, *e.g.* ``axvspan``, ``axhspan``, symbols
 
   * Quiver plots
 

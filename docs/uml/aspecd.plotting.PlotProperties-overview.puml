@@ -43,6 +43,8 @@ class GridProperties {
 }
 class LegendProperties {
 }
+class SubplotGridSpecs {
+}
 
 SinglePlotProperties -[hidden]> MultiPlotProperties
 MultiPlotProperties -[hidden]> CompositePlotProperties
@@ -53,6 +55,7 @@ FigureProperties -[hidden]> AxesProperties
 AxesProperties -[hidden]> LegendProperties
 SurfaceProperties -[hidden]-> LegendProperties
 
-FigureProperties -[hidden]-> GridProperties
+LegendProperties -[hidden]-> SubplotGridSpecs
 GridProperties -[hidden]> ColorbarProperties
+ColorbarProperties -[hidden]> SubplotGridSpecs
 @enduml

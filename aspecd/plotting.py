@@ -251,6 +251,8 @@ properties, below is a (hopefully complete) list:
 
   * :class:`aspecd.plotting.ColorbarProperties`
 
+  * :class:`aspecd.plotting.SubplotGridSpecs`
+
 Each of the plot properties classes, *i.e.* all subclasses of
 :class:`aspecd.plotting.PlotProperties`, contain other properties classes as
 attributes.
@@ -839,9 +841,11 @@ In a simplistic scenario, your plotter (here, a class derived from
 .. code-block::
 
     def _create_plot(self):
-        self.drawing, = self.axes.plot(self.data.axes[0].values,
-                                       self.data.data,
-                                       label=self.properties.drawing.label)
+        self.drawing, = self.axes.plot(
+            self.data.axes[0].values,
+            self.data.data,
+            label=self.properties.drawing.label
+        )
 
 
 A few comments on this code snippet:
@@ -3533,6 +3537,64 @@ class CompositePlotter(Plotter):
             - [0, 0, 1, 1]
             - [0, 1, 1, 1]
 
+    Suppose you have a more complex plot with three axes, and you want to
+    share the *x* axes only for those axes in the same column(s).
+
+    .. code-block:: yaml
+
+        - kind: compositeplot
+          type: CompositePlotter
+          properties:
+            properties:
+              grid_specs:
+                hspace: 0
+            plotter:
+            - plotter1
+            - plotter2
+            - plotter3
+            filename: comparison.pdf
+            grid_dimensions: [2, 2]
+            subplot_locations:
+            - [0, 0, 1, 1]
+            - [1, 0, 1, 1]
+            - [0, 1, 2, 1]
+            sharex: True
+
+    In this case, only the two axes in the left column will share their
+    *x* axes, and as you have defined the top axes *first*, the axes below
+    will share their *x* axis with the top axes. Further note that
+    ``hspace``, *i.e.* the vertial space between the axes, has been set
+    to zero (the property starts with a "h" for height).
+
+    You could do the same for three axes where you would like to have the
+    *y* axes of those plots in the same row shared:
+
+    .. code-block:: yaml
+
+        - kind: compositeplot
+          type: CompositePlotter
+          properties:
+            properties:
+              grid_specs:
+                wspace: 0
+            plotter:
+            - plotter1
+            - plotter2
+            - plotter3
+            filename: comparison.pdf
+            grid_dimensions: [2, 2]
+            subplot_locations:
+            - [0, 0, 1, 1]
+            - [1, 1, 1, 1]
+            - [1, 0, 1, 2]
+            sharey: True
+
+    In this case, only the two axes in the top row will share their *y*
+    axes, and as you have defined the left axes *first*, the axes to the
+    right will share their *y* axis with the left axes. Further note that
+    ``wspace``, *i.e.* the horizontal space between the axes, has been set
+    to zero (the property starts with a "w" for width).
+
     Attributes
     ----------
     axes : :class:`list`
@@ -3599,6 +3661,30 @@ class CompositePlotter(Plotter):
             processing. To prevent this, assign the result of the processing
             step a unique name.
 
+    sharex : :class:`bool`
+        Whether to share the *x* axes of all plots in each column.
+
+        If set, all axes starting with the first defined axes in each
+        column will share their *x* axes. At the same time, only the outer
+        axes will be shown.
+
+        Typically, you will want to set the ``hspace`` property in
+        :attr:`CompositePlotProperties.grid_spec` to a small value.
+
+        .. versionadded:: 0.10
+
+    sharey : :class:`bool`
+        Whether to share the *y* axes of all plots in each row.
+
+        If set, all axes starting with the first defined axes in each
+        row will share their *y* axes. At the same time, only the outer
+        axes will be shown.
+
+        Typically, you will want to set the ``wspace`` property in
+        :attr:`CompositePlotProperties.grid_spec` to a small value.
+
+        .. versionadded:: 0.10
+
     properties : :class:`aspecd.plotting.CompositePlotProperties`
         Properties of the plot, defining its appearance
 
@@ -3626,6 +3712,8 @@ class CompositePlotter(Plotter):
         self.subplot_locations = [[0, 0, 1, 1]]
         self.axes_positions = []
         self.plotter = []
+        self.sharex = False
+        self.sharey = False
         self.properties = CompositePlotProperties()
         self.__kind__ = "compositeplot"
 
@@ -3696,6 +3784,43 @@ class CompositePlotter(Plotter):
                 position[3] * height,
             ]
             self.axes[idx].set_position(new_position)
+
+        if self.sharex:
+            self._sharex()
+        if self.sharey:
+            self._sharey()
+
+    def _sharex(self):
+        columns = []
+        for col in range(self.grid_dimensions[1]):
+            axes = []
+            for idx, location in enumerate(self.subplot_locations):
+                if location[1] == col:
+                    axes.append(self.ax[idx])
+            columns.append(axes)
+
+        for column in columns:
+            if len(column) > 1:
+                for axes in column:
+                    axes.label_outer()
+                for axes in column[1:]:
+                    column[0].sharex(axes)
+
+    def _sharey(self):
+        rows = []
+        for row in range(self.grid_dimensions[0]):
+            axes = []
+            for idx, location in enumerate(self.subplot_locations):
+                if location[0] == row:
+                    axes.append(self.ax[idx])
+            rows.append(axes)
+
+        for row in rows:
+            if len(row) > 1:
+                for axes in row:
+                    axes.label_outer()
+                for axes in row[1:]:
+                    row[0].sharey(axes)
 
 
 class SingleCompositePlotter(CompositePlotter):

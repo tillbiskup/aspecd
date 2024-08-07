@@ -21,7 +21,7 @@ New features
   * :class:`aspecd.plotting.TextProerties`
   * :class:`aspecd.plotting.DrawingProperties` has attribute ``zorder``.
   * :class:`aspecd.plotting.SubplotGridSpecs` for properties of the subplot grid of a CompositePlotter.
-
+  * :class:`aspecd.plotting.CompositePlotter` allows to share *x* and *y* axes.
 
 * Plot annotations
 
@@ -40,6 +40,10 @@ Fixes
   * :class:`aspecd.tasks.MultiplotTask` preserves order of datasets the task is applied to, regardless whether the datasets are originally imported or result from prior tasks (via ``result`` property). (`#2 <https://github.com/tillbiskup/aspecd/issues/2>`_)
   * :meth:`aspecd.tasks.Recipe.get_datasets` preserves order of datasets, regardless whether the datasets are originally imported or result from prior tasks (via ``result`` property).
   * :meth:`aspecd.tasks.Chef.cook` closes open figures.
+
+* Plotting
+
+  * :class:`CompositePlotter` does not add additional drawings any more to the plotters used. (`#5 <https://github.com/tillbiskup/aspecd/issues/5>`_)
 
 
 Version 0.9.3

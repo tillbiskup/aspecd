@@ -2184,17 +2184,18 @@ class TestCompositePlotter(unittest.TestCase):
     def test_description_is_sensible(self):
         self.assertIn("Composite", self.plotter.description)
 
-    def test_has_grid_dimensions_property(self):
-        self.assertTrue(hasattr(self.plotter, "grid_dimensions"))
-
-    def test_has_subplot_locations_property(self):
-        self.assertTrue(hasattr(self.plotter, "subplot_locations"))
-
-    def test_has_axes_positions_property(self):
-        self.assertTrue(hasattr(self.plotter, "axes_positions"))
-
-    def test_has_plotter_property(self):
-        self.assertTrue(hasattr(self.plotter, "plotter"))
+    def test_has_properties(self):
+        properties = [
+            "grid_dimensions",
+            "grid_spec",
+            "subplot_locations",
+            "axes_positions",
+            "plotter",
+            "sharex",
+            "sharey",
+        ]
+        for property in properties:
+            self.assertTrue(hasattr(self.plotter, property))
 
     def test_plot_with_single_subplot_adds_axis_to_axes(self):
         self.plotter.grid_dimensions = [1, 1]
@@ -2328,6 +2329,38 @@ class TestCompositePlotter(unittest.TestCase):
         self.plotter.plot()
         dict_ = self.plotter.to_dict()
         self.assertIsInstance(dict_, dict)
+
+    def test_plot_with_sharex_shares_axes(self):
+        self.plotter.grid_dimensions = [2, 2]
+        self.plotter.subplot_locations = [
+            [0, 0, 1, 1],
+            [1, 0, 1, 1],
+            [0, 1, 2, 1],
+        ]
+        self.plotter.sharex = True
+        single_plotter = plotting.SinglePlotter1D()
+        single_plotter.dataset = self.dataset
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plot()
+        self.assertTrue(self.plotter.axes[0]._sharex)
+
+    def test_plot_with_sharey_shares_axes(self):
+        self.plotter.grid_dimensions = [2, 2]
+        self.plotter.subplot_locations = [
+            [0, 0, 1, 1],
+            [0, 1, 1, 1],
+            [1, 0, 1, 2],
+        ]
+        self.plotter.sharey = True
+        single_plotter = plotting.SinglePlotter1D()
+        single_plotter.dataset = self.dataset
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plot()
+        self.assertTrue(self.plotter.axes[0]._sharey)
 
 
 class TestSingleCompositePlotter(unittest.TestCase):
