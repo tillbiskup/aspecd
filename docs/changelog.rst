@@ -20,6 +20,7 @@ New features
   * Conveniently set identical properties for all lines of :class:`aspecd.plotting.SinglePlotter2DStacked` and :class:`aspecd.plotting.MultiPlotter1D`
   * :class:`aspecd.plotting.TextProerties`
   * :class:`aspecd.plotting.DrawingProperties` has attribute ``zorder``.
+  * :class:`aspecd.plotting.SubplotGridSpecs` for properties of the subplot grid of a CompositePlotter.
 
 
 * Plot annotations

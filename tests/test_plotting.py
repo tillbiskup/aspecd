@@ -2164,6 +2164,13 @@ class TestMultiPlotter1DStacked(unittest.TestCase):
         )
         self.assertListEqual(data_limits, list(self.plotter.ax.get_xlim()))
 
+    def test_plot_to_dict_returns_dict(self):
+        self.plotter.parameters["tight"] = "y"
+        self.plotter.parameters["switch_axes"] = True
+        self.plotter.plot()
+        dict_ = self.plotter.to_dict()
+        self.assertIsInstance(dict_, dict)
+
 
 class TestCompositePlotter(unittest.TestCase):
     def setUp(self):
@@ -2311,6 +2318,16 @@ class TestCompositePlotter(unittest.TestCase):
         self.assertTrue(
             self.plotter.grid_spec.locally_modified_subplot_params()
         )
+
+    def test_plot_to_dict_returns_dict(self):
+        self.plotter.grid_dimensions = [1, 1]
+        self.plotter.subplot_locations = [[0, 0, 1, 1]]
+        single_plotter = plotting.SinglePlotter1D()
+        single_plotter.dataset = self.dataset
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plot()
+        dict_ = self.plotter.to_dict()
+        self.assertIsInstance(dict_, dict)
 
 
 class TestSingleCompositePlotter(unittest.TestCase):

@@ -3629,6 +3629,35 @@ class CompositePlotter(Plotter):
         self.properties = CompositePlotProperties()
         self.__kind__ = "compositeplot"
 
+    def to_dict(self, remove_empty=False):
+        """
+        Create dictionary containing public attributes of an object.
+
+        For some reason, :class:`matplotlib.gridspec.GridSpec` leads to an
+        infinite recursion, hence the attribute is emptied before creating
+        the dict, and afterwards readded.
+
+        Parameters
+        ----------
+        remove_empty : :class:`bool`
+            Whether to remove keys with empty values
+
+            Default: False
+
+        Returns
+        -------
+        public_attributes : :class:`collections.OrderedDict`
+            Ordered dictionary containing the public attributes of the object
+
+            The order of attribute definition is preserved
+
+        """
+        grid_spec = copy.copy(self.grid_spec)
+        self.grid_spec = []
+        dict_ = super().to_dict(remove_empty=remove_empty)
+        self.grid_spec = grid_spec
+        return dict_
+
     def _create_figure_and_axes(self):
         self.figure = plt.figure()
         # noinspection PyArgumentList
