@@ -3803,8 +3803,8 @@ class CompositePlotter(Plotter):
             if len(column) > 1:
                 for axes in column:
                     axes.label_outer()
-                for axes in column[1:]:
-                    column[0].sharex(axes)
+                for idx, axes in enumerate(column[1:]):
+                    column[idx - 1].sharex(axes)
 
     def _sharey(self):
         rows = []
@@ -3819,8 +3819,8 @@ class CompositePlotter(Plotter):
             if len(row) > 1:
                 for axes in row:
                     axes.label_outer()
-                for axes in row[1:]:
-                    row[0].sharey(axes)
+                for idx, axes in enumerate(row[1:]):
+                    row[idx - 1].sharey(axes)
 
 
 class SingleCompositePlotter(CompositePlotter):

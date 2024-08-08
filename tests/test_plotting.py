@@ -2346,6 +2346,28 @@ class TestCompositePlotter(unittest.TestCase):
         self.plotter.plot()
         self.assertTrue(self.plotter.axes[0]._sharex)
 
+    def test_plot_with_sharex_and_more_axes_shares_axes(self):
+        self.plotter.grid_dimensions = [3, 2]
+        self.plotter.subplot_locations = [
+            [0, 0, 1, 1],
+            [1, 0, 1, 1],
+            [0, 1, 1, 1],
+            [1, 1, 1, 1],
+            [2, 0, 1, 1],
+            [2, 1, 1, 1],
+        ]
+        self.plotter.sharex = True
+        single_plotter = plotting.SinglePlotter1D()
+        single_plotter.dataset = self.dataset
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plot()
+        self.assertTrue(self.plotter.axes[0]._sharex)
+
     def test_plot_with_sharey_shares_axes(self):
         self.plotter.grid_dimensions = [2, 2]
         self.plotter.subplot_locations = [
@@ -2356,6 +2378,28 @@ class TestCompositePlotter(unittest.TestCase):
         self.plotter.sharey = True
         single_plotter = plotting.SinglePlotter1D()
         single_plotter.dataset = self.dataset
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plot()
+        self.assertTrue(self.plotter.axes[0]._sharey)
+
+    def test_plot_with_sharey_and_more_axes_shares_axes(self):
+        self.plotter.grid_dimensions = [2, 3]
+        self.plotter.subplot_locations = [
+            [0, 0, 1, 1],
+            [0, 1, 1, 1],
+            [0, 2, 1, 1],
+            [1, 0, 1, 1],
+            [1, 1, 1, 1],
+            [1, 2, 1, 1],
+        ]
+        self.plotter.sharey = True
+        single_plotter = plotting.SinglePlotter1D()
+        single_plotter.dataset = self.dataset
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
         self.plotter.plotter.append(single_plotter)
         self.plotter.plotter.append(single_plotter)
         self.plotter.plotter.append(single_plotter)
