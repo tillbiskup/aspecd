@@ -3546,7 +3546,7 @@ class CompositePlotter(Plotter):
           type: CompositePlotter
           properties:
             properties:
-              grid_specs:
+              grid_spec:
                 hspace: 0
             plotter:
             - plotter1
@@ -3563,7 +3563,7 @@ class CompositePlotter(Plotter):
     In this case, only the two axes in the left column will share their
     *x* axes, and as you have defined the top axes *first*, the axes below
     will share their *x* axis with the top axes. Further note that
-    ``hspace``, *i.e.* the vertial space between the axes, has been set
+    ``hspace``, *i.e.* the vertical space between the axes, has been set
     to zero (the property starts with a "h" for height).
 
     You could do the same for three axes where you would like to have the
@@ -3575,7 +3575,7 @@ class CompositePlotter(Plotter):
           type: CompositePlotter
           properties:
             properties:
-              grid_specs:
+              grid_spec:
                 wspace: 0
             plotter:
             - plotter1
