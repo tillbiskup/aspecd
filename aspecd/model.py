@@ -1670,7 +1670,8 @@ class NormalisedLorentzian(Model):
 
     .. math::
 
-        f(x) = \frac{1}{\pi b} \left[\frac{c^2}{(x-b)^2 + c^2}\right]
+        f(x) = \frac{1}{\pi c} \left[\frac{c^2}{(x-b)^2 + c^2}\right] =
+        \frac{c}{\pi[(x-b)^2 + c^2]}
 
     with :math:`b` being the position and :math:`c` the width of the
     Lorentzian.
