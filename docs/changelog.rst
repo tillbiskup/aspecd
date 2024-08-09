@@ -31,6 +31,10 @@ New features
 
   * :class:`aspecd.tasks.SingleplotTask` allows to set as many results as datasets, to allow for adding an individual plotter (for one of the datasets) to a :class:`aspecd.tasks.CompositeplotTask`. (`#3 <https://github.com/tillbiskup/aspecd/issues/3>`_)
 
+* Models
+
+    * :class:`aspecd.model.Voigtian` for creating Voigt profiles frequently used in spectroscopy to describe line shapes.
+
 
 Fixes
 -----
