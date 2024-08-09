@@ -1780,8 +1780,8 @@ class Voigtian(Model):
 
     The Voigt profile (after Woldemar Voigt) is a probability distribution
     given by a convolution of a Cauchy-Lorentz distribution (with half-width
-    at half-maximum ``gamma``) and a Gaussian distribution with standard
-    deviation ``sigma``. It is often used in analyzing spectroscopic data.
+    at half-maximum ``gamma``) and a Gaussian distribution (with standard
+    deviation ``sigma``). It is often used for analyzing spectroscopic data.
 
     In spectroscopy, a Voigt profile results from the convolution of two
     broadening mechanisms: life-time broadening (Lorentzian part) and
@@ -1851,7 +1851,7 @@ class Voigtian(Model):
     ``from_dataset``, without needing to create a dummy dataset first.
 
     Of course, you can control position and widths of Gaussian and
-    Lorentzian contribututions explicitly:
+    Lorentzian contributions explicitly:
 
     .. code-block:: yaml
 

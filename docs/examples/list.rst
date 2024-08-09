@@ -10,3 +10,4 @@ Each example covers a specific aspect of working with data, is presented on its 
 
     uvvis
     ftir
+    model-voigt
