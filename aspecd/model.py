@@ -107,6 +107,11 @@ define more specific models as well.
   Normalised Lorentzian with an integral of one, identical to the probability
   density function (PDF) of the Cauchy distribution.
 
+* :class:`aspecd.model.Voigtian`
+
+  Voigt profile: convolution of (normalised) Lorentzian and (normalised)
+  Gaussian, often used to describe spectroscopic data.
+
 * :class:`aspecd.model.Sine`
 
   Sine wave with adjustable amplitude, frequency, and phase.
