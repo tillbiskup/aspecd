@@ -1,0 +1,165 @@
+format:
+  type: ASpecD recipe
+  version: '0.2'
+
+tasks:
+  - kind: model
+    type: Zeros
+    properties:
+      parameters:
+        shape: 1001
+        range: [-10, 10]
+    result: dummy
+
+  - kind: model
+    type: Voigtian
+    from_dataset: dummy
+    result: voigtian
+    comment: >
+      Create Voigt profile with default parameters
+
+  - kind: singleplot
+    type: SinglePlotter1D
+    properties:
+      properties:
+        axes:
+          ylim: [-0.01, 0.22]
+          ylabel: Null
+      parameters:
+        tight_layout: True
+      filename: model-voigt-profile.pdf
+    apply_to: voigtian
+    comment: >
+      Plot Voigt profile with default parameters
+
+  - kind: model
+    type: NormalisedGaussian
+    from_dataset: dummy
+    result: gaussian
+    comment: >
+      Create normalised Gaussian to compare with Voigt with gamma = 0
+
+  - kind: model
+    type: NormalisedLorentzian
+    from_dataset: dummy
+    result: lorentzian
+    comment: >
+      Create normalised Lorentzian to compare with Voigt with sigma = 0
+
+  - kind: model
+    type: Voigtian
+    from_dataset: dummy
+    properties:
+      parameters:
+        gamma: 0
+    result: voigtian_gamma_0
+    comment: >
+      Create Voigt profile with gamma = 0, i.e., purely Gaussian line shape
+
+  - kind: model
+    type: Voigtian
+    from_dataset: dummy
+    properties:
+      parameters:
+        sigma: 0
+    result: voigtian_sigma_0
+    comment: >
+      Create Voigt profile with sigma = 0, i.e., purely Lorentzian line shape
+
+  - kind: multiplot
+    type: MultiPlotter1D
+    properties:
+      properties:
+        axes:
+          ylim: [-0.01, 0.33]
+          ylabel: Null
+        drawings:
+          - label: Voigt
+          - label: Lorentz
+      parameters:
+        tight_layout: True
+        show_legend: True
+      filename: model-voigt-compare-lorentz.pdf
+    apply_to:
+      - voigtian_sigma_0
+      - lorentzian
+    comment: >
+      Compare Voigt profile with sigma = 0 to Lorentzian
+
+  - kind: multiplot
+    type: MultiPlotter1D
+    properties:
+      properties:
+        axes:
+          ylim: [-0.01, 0.41]
+          ylabel: Null
+        drawings:
+          - label: Voigt
+          - label: Gauss
+      parameters:
+        tight_layout: True
+        show_legend: True
+      filename: model-voigt-compare-gauss.pdf
+    apply_to:
+      - voigtian_gamma_0
+      - gaussian
+    comment: >
+      Compare Voigt profile with gamma = 0 to Gaussian
+
+  - kind: model
+    type: Voigtian
+    from_dataset: dummy
+    properties:
+      parameters:
+        sigma: 1.5
+        gamma: 0
+    result: voigtian_sigma_1_5_gamma_0
+    comment: >
+      Create Voigt profile with sigma = 1.5, gamma = 0
+
+  - kind: model
+    type: Voigtian
+    from_dataset: dummy
+    properties:
+      parameters:
+        sigma: 1.3
+        gamma: 0.5
+    result: voigtian_sigma_1_3_gamma_0_5
+    comment: >
+      Create Voigt profile with sigma = 1.3, gamma = 0.5
+
+  - kind: model
+    type: Voigtian
+    from_dataset: dummy
+    properties:
+      parameters:
+        sigma: 0
+        gamma: 1.8
+    result: voigtian_sigma_0_gamma_1.8
+    comment: >
+      Create Voigt profile with sigma = 0, gamma = 1.8
+
+  - kind: multiplot
+    type: MultiPlotter1D
+    properties:
+      properties:
+        axes:
+          ylim: [-0.01, 0.28]
+          ylabel: Null
+        drawings:
+          - label: $\sigma = 1.5, \gamma = 0.0$
+          - label: $\sigma = 1.3, \gamma = 0.5$
+          - label: $\sigma = 0.0, \gamma = 1.8$
+          - label: $\sigma = 1.0, \gamma = 1.0$
+      parameters:
+        tight_layout: True
+        show_legend: True
+      filename: model-voigt-variations.pdf
+    apply_to:
+      - voigtian_sigma_1_5_gamma_0
+      - voigtian_sigma_1_3_gamma_0_5
+      - voigtian_sigma_0_gamma_1.8
+      - voigtian
+    comment: >
+      Compare Voigt profiles as shown in scipy.special.voigt_profile example
+

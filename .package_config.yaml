@@ -1,0 +1,36 @@
+package:
+  name: 'aspecd'
+  author: 'Till Biskup'
+  author_email: 'till@till-biskup.de'
+  year: '2018-24'
+  description: 'Framework for handling spectroscopic data..'
+  urls:
+    main: 'https://www.aspecd.de/'
+    documentation: 'https://docs.aspecd.de/'
+    source: 'https://github.com/tillbiskup/aspecd'
+  keywords: [
+    'spectroscopy',
+    'data processing and analysis',
+    'reproducible science',
+    'reproducible research',
+    'good scientific practice',
+    'recipe-driven data analysis',
+  ]
+  install_requires: [
+    'jinja2>=3.0',
+    'matplotlib',
+    'numpy',
+    'scipy>=0.14',
+    'oyaml',
+    'asdf',
+    'bibrecord',
+  ]
+  license: BSD
+documentation:
+  logo: 'aspecd-logo.png'
+  favicon: 'favicon.ico'
+  language: en
+options:
+  logging: true
+  git: true
+  gui: false

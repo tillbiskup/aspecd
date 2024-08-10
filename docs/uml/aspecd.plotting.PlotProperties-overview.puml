@@ -1,0 +1,61 @@
+@startuml
+
+class PlotProperties {
+}
+
+class SinglePlotProperties extends PlotProperties {
+}
+
+class MultiPlotProperties extends PlotProperties {
+}
+
+class CompositePlotProperties extends PlotProperties {
+}
+
+class SinglePlot1DProperties extends SinglePlotProperties {
+}
+
+class SinglePlot2DProperties extends SinglePlotProperties{
+}
+
+class SinglePlot2DStackedProperties extends MultiPlot1DProperties {
+}
+
+class MultiPlot1DProperties extends MultiPlotProperties{
+}
+
+class DrawingProperties {
+}
+class LineProperties extends DrawingProperties {
+}
+class SurfaceProperties extends DrawingProperties {
+}
+class TextProperties extends DrawingProperties {
+}
+
+class AxesProperties {
+}
+class ColorbarProperties {
+}
+class FigureProperties {
+}
+class GridProperties {
+}
+class LegendProperties {
+}
+class SubplotGridSpecs {
+}
+
+SinglePlotProperties -[hidden]> MultiPlotProperties
+MultiPlotProperties -[hidden]> CompositePlotProperties
+
+SinglePlot2DStackedProperties -[hidden]-> DrawingProperties
+
+FigureProperties -[hidden]> AxesProperties
+AxesProperties -[hidden]> LegendProperties
+SurfaceProperties -[hidden]-> LegendProperties
+
+LegendProperties -[hidden]-> SubplotGridSpecs
+GridProperties -[hidden]> ColorbarProperties
+ColorbarProperties -[hidden]> SubplotGridSpecs
+@enduml

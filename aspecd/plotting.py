@@ -20,6 +20,52 @@ properties of a plotter are available, named :attr:`fig` and :attr:`ax`,
 respectively. For details on handling (own) figure and axes objects, see below.
 
 
+Overview
+========
+
+As there are a lot of different plotters available, each for different
+purposes, :numref:`Fig. %s <fig-uml_plotting.plotter-overview_api>` gives a
+first overview of the different :class:`Plotter` classes.
+
+
+.. _fig-uml_plotting.plotter-overview_api:
+
+.. figure:: /uml/aspecd.plotting.Plotter-overview.*
+    :align: center
+
+    First overview of the different :class:`Plotter` classes available in
+    the :mod:`plotting <aspecd.plotting>` module. The three classes marked
+    as abstract (with the "A", *i.e.* :class:`Plotter`,
+    :class:`SinglePlotter`, and :class:`MultiPlotter`) are not true abstract
+    classes, but nevertheless base classes that shall not used directly for
+    plotting purposes.
+
+
+For each :class:`Plotter` class, there exists a dedicated
+:class:`PlotProperties` class, besides further properties classes for those
+plot elements independent of a concrete plotter. For a first overview,
+see :numref:`Fig. %s <fig-uml_plotting.plotproperties-overview_api>`.
+
+
+.. _fig-uml_plotting.plotproperties-overview_api:
+
+.. figure:: /uml/aspecd.plotting.PlotProperties-overview.*
+    :align: center
+
+    First overview of the different :class:`PlotProperties` classes
+    available in the :mod:`plotting <aspecd.plotting>` module. For each
+    :class:`Plotter`, there is a separate :class:`PlotProperties` class.
+    Furthermore, there are additional classes for properties of elements of
+    plots, such as :class:`FigureProperties` and :class:`DrawingProperties`.
+    Note that :class:`SinglePlot2DStackedProperties` inherits from
+    :class:`MultiPlot1DProperties`. This is due to the very similar
+    behaviour of the two plotters, with respect to the resulting plots.
+
+
+For more explanation and details on the individual classes and how to best
+make use of them, continue reading.
+
+
 Types of abstract plotters
 ==========================
 
@@ -185,6 +231,8 @@ properties, below is a (hopefully complete) list:
 
       * :class:`aspecd.plotting.MultiPlot1DProperties`
 
+        * :class:`aspecd.plotting.SinglePlot2DStackedProperties`
+
     * :class:`aspecd.plotting.CompositePlotProperties`
 
   * :class:`aspecd.plotting.FigureProperties`
@@ -197,10 +245,13 @@ properties, below is a (hopefully complete) list:
 
     * :class:`aspecd.plotting.LineProperties`
     * :class:`aspecd.plotting.SurfaceProperties`
+    * :class:`aspecd.plotting.TextProperties`
 
   * :class:`aspecd.plotting.GridProperties`
 
   * :class:`aspecd.plotting.ColorbarProperties`
+
+  * :class:`aspecd.plotting.SubplotGridSpecs`
 
 Each of the plot properties classes, *i.e.* all subclasses of
 :class:`aspecd.plotting.PlotProperties`, contain other properties classes as
@@ -286,7 +337,7 @@ the *y* axis analogously.
             xlabel: $foo$ / bar
             xlim: [-5, 5]
             xticklabelangle: 45
-            invert: True
+            invert: x
         filename: output.pdf
 
 
@@ -296,6 +347,31 @@ the *y* axis analogously.
     will result in the figure title clashing with the upper axis. Hence,
     in such case, try setting the axis title.
 
+
+Removing axes labels
+--------------------
+
+Generally, axes labels are set according to the settings in the dataset
+plotted. However, sometimes you would like to remove a label entirely. To
+do so, set the label to ``None``. The equivalent in YAML, hence in
+recipes, is ``null``. Hence, removing the *y* axis label in a plot
+translates to:
+
+
+.. code-block:: yaml
+
+    - kind: singleplot
+      type: SinglePlotter1D
+      properties:
+        properties:
+          axes:
+            ylabel: null
+
+
+Of course, you can do the same with the *x* axis label and with all kinds
+of plotters.
+
+.. versionadded:: 0.9.3
 
 
 Type of plot for 1D plotters
@@ -765,9 +841,11 @@ In a simplistic scenario, your plotter (here, a class derived from
 .. code-block::
 
     def _create_plot(self):
-        self.drawing, = self.axes.plot(self.data.axes[0].values,
-                                       self.data.data,
-                                       label=self.properties.drawing.label)
+        self.drawing, = self.axes.plot(
+            self.data.axes[0].values,
+            self.data.data,
+            label=self.properties.drawing.label
+        )
 
 
 A few comments on this code snippet:
@@ -987,7 +1065,7 @@ class Plotter(aspecd.utils.ToDictMixin):
 
     @property
     def fig(self):
-        """Short hand for :attr:`figure`."""
+        """Shorthand for :attr:`figure`."""
         return self.figure
 
     @property
@@ -1247,26 +1325,30 @@ class Plotter(aspecd.utils.ToDictMixin):
             if isinstance(self.axes, list):
                 for axes in self.axes:
                     if axes.get_ylim()[0] <= 0 <= axes.get_ylim()[1]:
+                        properties = self.properties.zero_lines.to_dict()
+                        # noinspection PyUnresolvedReferences
+                        properties.update({"zorder": 1})
                         # noinspection PyArgumentList
-                        axes.axhline(
-                            **self.properties.zero_lines.to_dict(), zorder=1
-                        )
+                        axes.axhline(**properties)
                     if axes.get_xlim()[0] <= 0 <= axes.get_xlim()[1]:
+                        properties = self.properties.zero_lines.to_dict()
+                        # noinspection PyUnresolvedReferences
+                        properties.update({"zorder": 1})
                         # noinspection PyArgumentList
-                        axes.axvline(
-                            **self.properties.zero_lines.to_dict(), zorder=1
-                        )
+                        axes.axvline(**properties)
             else:
                 if self.axes.get_ylim()[0] <= 0 <= self.axes.get_ylim()[1]:
+                    properties = self.properties.zero_lines.to_dict()
+                    # noinspection PyUnresolvedReferences
+                    properties.update({"zorder": 1})
                     # noinspection PyArgumentList
-                    self.axes.axhline(
-                        **self.properties.zero_lines.to_dict(), zorder=1
-                    )
+                    self.axes.axhline(**properties)
                 if self.axes.get_xlim()[0] <= 0 <= self.axes.get_xlim()[1]:
+                    properties = self.properties.zero_lines.to_dict()
+                    # noinspection PyUnresolvedReferences
+                    properties.update({"zorder": 1})
                     # noinspection PyArgumentList
-                    self.axes.axvline(
-                        **self.properties.zero_lines.to_dict(), zorder=1
-                    )
+                    self.axes.axvline(**properties)
 
     def _tight_layout(self):
         if self.parameters["tight_layout"]:
@@ -2072,7 +2154,9 @@ class SinglePlotter2DStacked(SinglePlotter):
         Dataset the plotting should be done for
 
     drawing : :class:`list`
-        list of :obj:`matplotlib.artist.Artist` objects, one for each of the
+        Actual graphical representation of the data.
+
+        List of :obj:`matplotlib.artist.Artist` objects, one for each of the
         actual lines of the plot
 
     parameters : :class:`dict`
@@ -2143,11 +2227,11 @@ class SinglePlotter2DStacked(SinglePlotter):
 
             Default: ''
 
-    properties : :class:`aspecd.plotting.SinglePlot1DProperties`
+    properties : :class:`aspecd.plotting.SinglePlot2DStackedProperties`
         Properties of the plot, defining its appearance
 
         For the properties that can be set this way, see the documentation
-        of the :class:`aspecd.plotting.SinglePlot1DProperties` class.
+        of the :class:`aspecd.plotting.SinglePlot2DStackedProperties` class.
 
 
     Examples
@@ -2199,11 +2283,52 @@ class SinglePlotter2DStacked(SinglePlotter):
            parameters:
              show_zero_lines: True
 
+    As always, you can set the appearance of the plot in quite some detail.
+    If you would like to style the individual lines, *i.e.* ``drawings``,
+    provide a list of properties for each individual drawing and make sure
+    to provide as many items in the list as there are lines in the plot:
+
+    .. code-block:: yaml
+
+       - kind: singleplot
+         type: SinglePlotter2DStacked
+         properties:
+           properties:
+             drawings:
+               - color: '#FF0000'
+                 label: foo
+               - color: '#00FF00'
+                 label: bar
+               - color: '#0000FF'
+                 label: foobar
+
+    .. important::
+        If you set colours using the hexadecimal RGB triple prefixed by
+        ``#``, you need to explicitly tell YAML that these are strings,
+        surrounding the values by quotation marks.
+
+    Suppose you want to set identical properties for all lines. This is
+    possible as well, by not providing the ``drawings`` key (plural) but
+    the ``drawing`` key (singular) - and of course, this time not a list:
+
+    .. code-block:: yaml
+
+       - kind: singleplot
+         type: SinglePlotter2DStacked
+         properties:
+           properties:
+             drawing:
+               color: '#FF0000'
+
+
     .. versionchanged:: 0.6
         ylabel is set to third axis if offset = 0; new parameter "tight"
 
     .. versionchanged:: 0.6.2
         New parameter ``ytickcount``
+
+    .. versionchanged:: 0.10
+        Properties changed to :class:`SinglePlot2DStackedProperties`
 
     """
 
@@ -2224,7 +2349,33 @@ class SinglePlotter2DStacked(SinglePlotter):
             }
         )
         self.drawing = []
-        self.properties = SinglePlot1DProperties()
+        self.properties = SinglePlot2DStackedProperties()
+
+    @property
+    def drawings(self):
+        """
+        Actual graphical representation of the data.
+
+        List of :obj:`matplotlib.artist.Artist` objects, one for each of the
+        actual lines of the plot
+
+        This is identical to :attr:`drawing` and has been added to work
+        conveniently with :class:`SinglePlot2DStackedProperties`.
+
+        Returns
+        -------
+        drawings : :class:`list`
+            Actual graphical representation of the data.
+
+
+        .. versionadded:: 0.10
+
+        """
+        return self.drawing
+
+    @drawings.setter
+    def drawings(self, drawings=None):
+        self.drawing = drawings
 
     @staticmethod
     def applicable(data):
@@ -2242,9 +2393,14 @@ class SinglePlotter2DStacked(SinglePlotter):
         """
         return data.data.ndim == 2
 
+    def _set_drawing_properties(self):
+        if len(self.properties.drawings) < len(self.drawing):
+            for _ in range(len(self.properties.drawings), len(self.drawing)):
+                self.properties.add_drawing()
+
     def _create_plot(self):
         if self.parameters["offset"] is None:
-            self.parameters["offset"] = self.data.data.max() * 1.05
+            self.parameters["offset"] = abs(self.data.data).max() * 1.05
         yticks = []
         if self.parameters["stacking_dimension"] == 0:
             for idx in range(self.dataset.data.data.shape[0]):
@@ -2281,6 +2437,7 @@ class SinglePlotter2DStacked(SinglePlotter):
                 yticklabels
             )
         self._handle_tight_settings()
+        self._set_drawing_properties()
 
     def _handle_tight_settings(self):
         if self.parameters["tight"]:
@@ -2337,10 +2494,12 @@ class SinglePlotter2DStacked(SinglePlotter):
             for idx in range(self.data.data.shape[dimension]):
                 # noinspection PyTypeChecker
                 offset = idx * self.parameters["offset"]
+                properties = self.properties.zero_lines.to_dict()
+                # noinspection PyUnresolvedReferences
+                properties.update({"zorder": 1})
                 self.axes.axhline(
                     y=offset,
-                    **self.properties.zero_lines.to_dict(),  # noqa
-                    zorder=1,
+                    **properties,  # noqa
                 )
 
 
@@ -2887,7 +3046,7 @@ class MultiPlotter1D(MultiPlotter):
     parameters : :class:`dict`
         All parameters necessary for this step.
 
-        Additionally to those from :class:`aspecd.plotting.MultiPlotter`,
+        Additionally, to those from :class:`aspecd.plotting.MultiPlotter`,
         the following parameters are allowed:
 
         switch_axes : :class:`bool`
@@ -2946,6 +3105,19 @@ class MultiPlotter1D(MultiPlotter):
         If you set colours using the hexadecimal RGB triple prefixed by
         ``#``, you need to explicitly tell YAML that these are strings,
         surrounding the values by quotation marks.
+
+    Suppose you want to set identical properties for all lines. This is
+    possible as well, by not providing the ``drawings`` key (plural) but
+    the ``drawing`` key (singular) - and of course, this time not a list:
+
+    .. code-block:: yaml
+
+       - kind: multiplot
+         type: MultiPlotter1D
+         properties:
+           properties:
+             drawing:
+               color: '#FF0000'
 
     Of course, line plots are not the only plot type available. Check the
     :attr:`MultiPlotter1D.allowed_types` attribute for further details. To
@@ -3301,10 +3473,12 @@ class MultiPlotter1DStacked(MultiPlotter1D):
         if self.parameters["show_zero_lines"]:
             for idx in range(len(self.datasets)):
                 offset = -idx * self.parameters["offset"]
+                properties = self.properties.zero_lines.to_dict()
+                # noinspection PyUnresolvedReferences
+                properties.update({"zorder": 1})
                 self.axes.axhline(
                     y=offset,
-                    **self.properties.zero_lines.to_dict(),  # noqa
-                    zorder=1,
+                    **properties,  # noqa
                 )
 
 
@@ -3363,6 +3537,64 @@ class CompositePlotter(Plotter):
             - [0, 0, 1, 1]
             - [0, 1, 1, 1]
 
+    Suppose you have a more complex plot with three axes, and you want to
+    share the *x* axes only for those axes in the same column(s).
+
+    .. code-block:: yaml
+
+        - kind: compositeplot
+          type: CompositePlotter
+          properties:
+            properties:
+              grid_spec:
+                hspace: 0
+            plotter:
+            - plotter1
+            - plotter2
+            - plotter3
+            filename: comparison.pdf
+            grid_dimensions: [2, 2]
+            subplot_locations:
+            - [0, 0, 1, 1]
+            - [1, 0, 1, 1]
+            - [0, 1, 2, 1]
+            sharex: True
+
+    In this case, only the two axes in the left column will share their
+    *x* axes, and as you have defined the top axes *first*, the axes below
+    will share their *x* axis with the top axes. Further note that
+    ``hspace``, *i.e.* the vertical space between the axes, has been set
+    to zero (the property starts with a "h" for height).
+
+    You could do the same for three axes where you would like to have the
+    *y* axes of those plots in the same row shared:
+
+    .. code-block:: yaml
+
+        - kind: compositeplot
+          type: CompositePlotter
+          properties:
+            properties:
+              grid_spec:
+                wspace: 0
+            plotter:
+            - plotter1
+            - plotter2
+            - plotter3
+            filename: comparison.pdf
+            grid_dimensions: [2, 2]
+            subplot_locations:
+            - [0, 0, 1, 1]
+            - [1, 1, 1, 1]
+            - [1, 0, 1, 2]
+            sharey: True
+
+    In this case, only the two axes in the top row will share their *y*
+    axes, and as you have defined the left axes *first*, the axes to the
+    right will share their *y* axis with the left axes. Further note that
+    ``wspace``, *i.e.* the horizontal space between the axes, has been set
+    to zero (the property starts with a "w" for width).
+
     Attributes
     ----------
     axes : :class:`list`
@@ -3378,6 +3610,13 @@ class CompositePlotter(Plotter):
         two elements: number of rows, number of columns
 
         Default: [1, 1]
+
+    grid_spec : :class:`matplotlib.gridspec.GridSpec`
+        Grid layout used to place the subplots within the figure.
+
+        The properties of the grid layout can be controlled using the
+        :attr:`CompositePlotProperties.grid_spec` attribute that is part of
+        :attr:`properties` attribute.
 
     subplot_locations : :class:`list`
         List of subplot locations
@@ -3422,6 +3661,30 @@ class CompositePlotter(Plotter):
             processing. To prevent this, assign the result of the processing
             step a unique name.
 
+    sharex : :class:`bool`
+        Whether to share the *x* axes of all plots in each column.
+
+        If set, all axes starting with the first defined axes in each
+        column will share their *x* axes. At the same time, only the outer
+        axes will be shown.
+
+        Typically, you will want to set the ``hspace`` property in
+        :attr:`CompositePlotProperties.grid_spec` to a small value.
+
+        .. versionadded:: 0.10
+
+    sharey : :class:`bool`
+        Whether to share the *y* axes of all plots in each row.
+
+        If set, all axes starting with the first defined axes in each
+        row will share their *y* axes. At the same time, only the outer
+        axes will be shown.
+
+        Typically, you will want to set the ``wspace`` property in
+        :attr:`CompositePlotProperties.grid_spec` to a small value.
+
+        .. versionadded:: 0.10
+
     properties : :class:`aspecd.plotting.CompositePlotProperties`
         Properties of the plot, defining its appearance
 
@@ -3445,21 +3708,56 @@ class CompositePlotter(Plotter):
         self.description = "Composite plotter displaying several axes"
         self.axes = []
         self.grid_dimensions = [1, 1]
+        self.grid_spec = None
         self.subplot_locations = [[0, 0, 1, 1]]
         self.axes_positions = []
         self.plotter = []
+        self.sharex = False
+        self.sharey = False
         self.properties = CompositePlotProperties()
         self.__kind__ = "compositeplot"
 
+    def to_dict(self, remove_empty=False):
+        """
+        Create dictionary containing public attributes of an object.
+
+        For some reason, :class:`matplotlib.gridspec.GridSpec` leads to an
+        infinite recursion, hence the attribute is emptied before creating
+        the dict, and afterwards readded.
+
+        Parameters
+        ----------
+        remove_empty : :class:`bool`
+            Whether to remove keys with empty values
+
+            Default: False
+
+        Returns
+        -------
+        public_attributes : :class:`collections.OrderedDict`
+            Ordered dictionary containing the public attributes of the object
+
+            The order of attribute definition is preserved
+
+        """
+        grid_spec = copy.copy(self.grid_spec)
+        self.grid_spec = []
+        dict_ = super().to_dict(remove_empty=remove_empty)
+        self.grid_spec = grid_spec
+        return dict_
+
     def _create_figure_and_axes(self):
         self.figure = plt.figure()
-        grid_spec = self.figure.add_gridspec(
-            self.grid_dimensions[0], self.grid_dimensions[1]
+        # noinspection PyArgumentList
+        self.grid_spec = self.figure.add_gridspec(
+            self.grid_dimensions[0],
+            self.grid_dimensions[1],
+            **self.properties.grid_spec.to_dict(),
         )
         for subplot in self.subplot_locations:
             self.axes.append(
                 self.figure.add_subplot(
-                    grid_spec[
+                    self.grid_spec[
                         subplot[0] : subplot[0] + subplot[2],
                         subplot[1] : subplot[1] + subplot[3],
                     ]
@@ -3471,6 +3769,8 @@ class CompositePlotter(Plotter):
             raise aspecd.exceptions.MissingPlotterError
         for plotter in self.plotter:
             plotter.style = self.style
+            if hasattr(plotter, "drawings"):
+                plotter.drawings = []
         for idx, axes in enumerate(self.axes):
             self.plotter[idx].figure = self.figure
             self.plotter[idx].axes = axes
@@ -3484,6 +3784,43 @@ class CompositePlotter(Plotter):
                 position[3] * height,
             ]
             self.axes[idx].set_position(new_position)
+
+        if self.sharex:
+            self._sharex()
+        if self.sharey:
+            self._sharey()
+
+    def _sharex(self):
+        columns = []
+        for col in range(self.grid_dimensions[1]):
+            axes = []
+            for idx, location in enumerate(self.subplot_locations):
+                if location[1] == col:
+                    axes.append(self.ax[idx])
+            columns.append(axes)
+
+        for column in columns:
+            if len(column) > 1:
+                for axes in column:
+                    axes.label_outer()
+                for idx, axes in enumerate(column[1:]):
+                    column[idx - 1].sharex(axes)
+
+    def _sharey(self):
+        rows = []
+        for row in range(self.grid_dimensions[0]):
+            axes = []
+            for idx, location in enumerate(self.subplot_locations):
+                if location[0] == row:
+                    axes.append(self.ax[idx])
+            rows.append(axes)
+
+        for row in rows:
+            if len(row) > 1:
+                for axes in row:
+                    axes.label_outer()
+                for idx, axes in enumerate(row[1:]):
+                    row[idx - 1].sharey(axes)
 
 
 class SingleCompositePlotter(CompositePlotter):
@@ -4071,8 +4408,8 @@ class MultiPlotProperties(PlotProperties):
         """
         Set attributes from dictionary.
 
-        The key ``drawing`` is handled in a special way: First of all,
-        :attr:`aspecd.plotting.MultiPlotProperties.drawing` is a list,
+        The key ``drawings`` is handled in a special way: First of all,
+        :attr:`aspecd.plotting.MultiPlotProperties.drawings` is a list,
         hence we need to iterate over the entries of the list. Furthermore,
         a new element of the list is appended only if it does not exist
         already.
@@ -4185,6 +4522,33 @@ class MultiPlot1DProperties(MultiPlotProperties):
     def __init__(self):
         super().__init__()
         self.colormap = None
+        self._drawing = False
+
+    def from_dict(self, dict_=None):
+        """
+        Set attributes from dictionary.
+
+        The key ``drawing`` (singular!) is handled in a special way: If it
+        exists in the dictionary, it gets used to set *all* drawings to
+        this one set of properties.
+
+        Otherwise, the behaviour is identical to that of the superclass
+        method: see :meth:`MultiPLotProperties.from_dict` for details.
+
+        Parameters
+        ----------
+        dict_ : :class:`dict`
+            Dictionary containing information of a task.
+
+
+        .. versionadded:: 0.10
+
+        """
+        if "drawing" in dict_:
+            self._drawing = True
+            dict_["drawings"] = [dict_["drawing"]]
+            dict_.pop("drawing")
+        super().from_dict(dict_=dict_)
 
     def add_drawing(self):
         """
@@ -4193,9 +4557,24 @@ class MultiPlot1DProperties(MultiPlotProperties):
         The default properties are set as well, as obtained from
         :obj:`matplotlib.pyplot.rcParams`. These contain at least colour,
         width, marker, and style of a line.
+
+        .. note::
+
+            If you provide a key "drawing" (singular!) in the dictionary with
+            the properties, instead of setting default properties the
+            properties of this dict will be set to *all* drawings.
+            Thus, you can conveniently set identical settings for all lines.
+
+
+        .. versionchanged:: 0.10
+            Handling of the ``drawing`` key.
+
         """
-        drawing_properties = LineProperties()
-        self._set_default_properties(drawing_properties)
+        if self._drawing and self.drawings:
+            drawing_properties = self.drawings[-1]
+        else:
+            drawing_properties = LineProperties()
+            self._set_default_properties(drawing_properties)
         self.drawings.append(drawing_properties)
 
     def _set_default_properties(self, drawing_properties):
@@ -4236,13 +4615,70 @@ class MultiPlot1DProperties(MultiPlotProperties):
                 self.drawings[idx].color = colors(idx)
 
 
+class SinglePlot2DStackedProperties(MultiPlot1DProperties):
+    """
+    Properties of a 2D stacked singleplot, defining its appearance.
+
+    drawings : :class:`list`
+        Properties of the lines within a plot.
+
+        Each element is a :obj:`aspecd.plotting.LineProperties` object
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.LineProperties` class.
+
+    colormap : :class:`str`
+        Name of the colormap to use for colouring the individual drawings
+
+        For a full list of colormaps available with Matplotlib, see
+        https://matplotlib.org/stable/gallery/color/colormap_reference.html.
+
+        Note that appending ``_r`` to the name of a colormap will reverse it.
+
+    Raises
+    ------
+    aspecd.exceptions.MissingPlotterError
+        Raised if no plotter is provided.
+
+
+    .. versionadded:: 0.10
+
+    """
+
+    @property
+    def drawing(self):
+        """
+        Properties of the lines within a plot.
+
+        Each element is a :obj:`aspecd.plotting.LineProperties` object
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.LineProperties` class.
+
+        This is identical to :attr:`drawings` and has been added to work
+        conveniently with :class:`SinglePlotter2DStacked`.
+
+        Returns
+        -------
+        drawing : :class:`list`
+            Properties of the lines within a plot.
+
+
+        .. versionadded:: 0.10
+
+        """
+        return self.drawings
+
+
 class CompositePlotProperties(PlotProperties):
     """
     Properties of a composite plot, defining its appearance.
 
+    For the plotter class, see :class:`CompositePlotter`.
+
     Attributes
     ----------
-    axes : :class:`aspecd.plotting.AxesProperties`
+    axes : :class:`AxesProperties`
         Properties for all axes of the CompositePlotter.
 
         This property is used to set properties for all axes of a
@@ -4250,18 +4686,34 @@ class CompositePlotProperties(PlotProperties):
         individual plotters.
 
         For the properties that can be set this way, see the documentation
-        of the :class:`aspecd.plotting.AxesProperties` class.
+        of the :class:`AxesProperties` class.
+
+    grid_spec : :class:`SubplotGridSpecs`
+        Properties for the subplot grid specs.
+
+        This property is used to set properties for the subplot grid.
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`SubplotGridSpecs` class.
+
+        .. versionadded:: 0.10
+
 
     Raises
     ------
     aspecd.exceptions.MissingPlotterError
         Raised if no plotter is provided.
 
+
+    .. versionchanged:: 0.10
+        Property :attr:`grid_spec` added.
+
     """
 
     def __init__(self):
         super().__init__()
         self.axes = AxesProperties()
+        self.grid_spec = SubplotGridSpecs()
 
     def apply(self, plotter=None):
         """
@@ -4398,6 +4850,9 @@ class AxesProperties(aspecd.utils.Properties):
     xlabel: :class:`str`
         label for the x-axis
 
+        To remove the xlabel entirely, set it to ``None`` (or ``null`` in
+        YAML).
+
         Default: ''
 
     xlim: :class:`list`
@@ -4429,6 +4884,9 @@ class AxesProperties(aspecd.utils.Properties):
 
     ylabel: :class:`str`
         label for the y-axis
+
+        To remove the xlabel entirely, set it to ``None`` (or ``null`` in
+        YAML).
 
         Default: ''
 
@@ -4501,6 +4959,10 @@ class AxesProperties(aspecd.utils.Properties):
     .. versionchanged:: 0.9
         New property ``label_fontsize``
 
+    .. versionchanged:: 0.9.3
+        Properties ``xlabel`` and ``ylabel`` can be removed by setting to
+        ``Null``
+
     """
 
     # pylint: disable=too-many-instance-attributes
@@ -4564,6 +5026,9 @@ class AxesProperties(aspecd.utils.Properties):
         :class:`aspecd.plotting.AxesProperties` are reduced accordingly to
         those properties that are neither None nor empty.
 
+        Currently, the only exception are those properties ending with
+        "label" and set to ``None``, to be able to remove x or y axis labels.
+
         Returns
         -------
         properties: :class:`dict`
@@ -4582,6 +5047,8 @@ class AxesProperties(aspecd.utils.Properties):
                 if any(all_properties[prop]):
                     properties[prop] = all_properties[prop]
             elif all_properties[prop]:
+                properties[prop] = all_properties[prop]
+            elif prop.endswith("label") and all_properties[prop] is None:
                 properties[prop] = all_properties[prop]
         return properties
 
@@ -4724,21 +5191,75 @@ class DrawingProperties(aspecd.utils.Properties):
     A drawing is the most abstract object representing data within axes,
     such as a line, contour, etcetera.
 
+    While a base class for more specific kinds of drawings, such as lines,
+    surfaces, or even text, drawing properties come with two essential
+    attributes: a label and the zorder.
+
+    The latter means that you can control the z stacking of the different
+    parts of a plot. Artists with lower zorder are drawn first.
+
+    For specific kinds of drawings and their respective properties,
+    see :class:`LineProperties`, :class:`SurfaceProperties`,
+    and :class:`TextProperties`.
+
     Attributes
     ----------
     label: :class:`str`
-        label of a line that gets used within a legend, default: ''
+        Label of a drawing that gets used within a legend.
+
+         Default: ''
+
+    zorder : :class:`float`
+        Zorder for the artist.
+
+        Artists with lower zorder are drawn first.
+
+        For a summary of the default zorder values, see the `Matplotlib
+        documentation <https://matplotlib.org/stable/gallery/misc
+        /zorder_demo.html>`_
+
+        .. versionadded:: 0.10
 
     Raises
     ------
     aspecd.exceptions.MissingDrawingError
         Raised if no drawing is provided.
 
+
+    Examples
+    --------
+    Drawing properties are always set in context of concrete plotters,
+    and furthermore, the individual main elements of a plot are always
+    referred to as ``drawing`` or ``drawings`` within their respective
+    :class:`PlotProperties`.
+
+    An example for setting the drawing properties of a
+    :class:`SinglePlotter1D` are given below:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            properties:
+              drawings:
+                label: Substance 1
+                zorder: 3
+
+    In context of a plotter with a legend, the label would appear in this
+    legend, and in this particular case, the zorder is set to 3, *i.e.*
+    the line in the plotter would appear behind other elements.
+
+
+    .. versionchanged:: 0.10
+        New property :attr:`zorder`
+
     """
 
     def __init__(self):
         super().__init__()
         self.label = ""
+        self.zorder = 2
 
     def apply(self, drawing=None):
         """
@@ -4832,10 +5353,49 @@ class LineProperties(DrawingProperties):
 
         For details see :mod:`matplotlib.markers`
 
+    zorder : :class:`float`
+        Zorder for the artist.
+
+        Artists with lower zorder are drawn first.
+
+        For a summary of the default zorder values, see the `Matplotlib
+        documentation <https://matplotlib.org/stable/gallery/misc
+        /zorder_demo.html>`_
+
+        .. versionadded:: 0.10
+
     Raises
     ------
     aspecd.exceptions.MissingDrawingError
         Raised if no line is provided.
+
+
+    Examples
+    --------
+    Drawing properties are always set in context of concrete plotters,
+    and furthermore, the individual main elements of a plot are always
+    referred to as ``drawing`` or ``drawings`` within their respective
+    :class:`PlotProperties`.
+
+    An example for setting the line properties of a
+    :class:`SinglePlotter1D` are given below:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            properties:
+              drawings:
+                label: Substance 1
+                zorder: 3
+                color: '#1f77b4'
+                drawstyle: default
+                linestyle: '-'
+                linewidth: 1.5
+                marker: None
+
+    Here, all currently possible properties are shown.
 
     """
 
@@ -4888,6 +5448,17 @@ class SurfaceProperties(DrawingProperties):
 
     colors : :class:`str`
         Colour of the contour lines (if present)
+
+    zorder : :class:`float`
+        Zorder for the artist.
+
+        Artists with lower zorder are drawn first.
+
+        For a summary of the default zorder values, see the `Matplotlib
+        documentation <https://matplotlib.org/stable/gallery/misc
+        /zorder_demo.html>`_
+
+        .. versionadded:: 0.10
 
     """
 
@@ -5152,3 +5723,282 @@ class ColorbarProperties(aspecd.utils.Properties):
         else:
             location = None
         colorbar.set_label(self.label["text"], loc=location)
+
+
+class TextProperties(DrawingProperties):
+    """
+    Properties of text within a plot.
+
+    Basically, the attributes are a subset of what :mod:`matplotlib` defines
+    for :obj:`matplotlib.text.Text` objects.
+
+
+    Attributes
+    ----------
+    alpha : :class:`float`
+        Alpha value used for blending
+
+        Must be within the 0-1 range, inclusive, or :class:`None`.
+
+    backgroundcolor : :class:`str`
+        Color used as background for the text
+
+        If set to :class:`None`, no background will be set (and the bbox
+        removed from the Matplotlib artist)
+
+    color : :class:`str`
+        Color used for the text
+
+    fontfamily : :class:`str`
+        Font family or font name
+
+        Font family can be one of: 'serif', 'sans-serif', 'cursive', 'fantasy',
+        'monospace'
+
+    fontsize : :class:`float` or :class:`str`
+        Size of the font
+
+        Either a numeric value or one of 'xx-small', 'x-small', 'small',
+        'medium', 'large', 'x-large', 'xx-large'
+
+    fontstretch : :class:`int` or :class:`str`
+        Stretch of the font
+
+        A numeric value in range 0-1000 or one of 'ultra-condensed',
+        'extra-condensed', 'condensed', 'semi-condensed', 'normal',
+        'semi-expanded', 'expanded', 'extra-expanded', 'ultra-expanded'
+
+    fontstyle : :class:`str`
+        Style of the font
+
+        One of: 'normal', 'italic', 'oblique'
+
+    fontvariant : :class:``
+        Variant of the font
+
+        One of: 'normal', 'small-caps'
+
+    fontweight : :class:`int` or :class:`str`
+        Weight of the font
+
+        A numeric value in range 0-1000 or one of 'ultralight', 'light',
+        'normal', 'regular', 'book', 'medium', 'roman', 'semibold',
+        'demibold', 'demi', 'bold', 'heavy', 'extra bold', 'black'.
+
+    horizontalalignment : :class:`str`
+        Horizontal alignment of the text
+
+        One of: 'left', 'center', 'right'
+
+    in_layout : :class:`bool`
+        Set if artist is to be included in layout calculations.
+
+    linespacing : :class:`float`
+        Line spacing of the text
+
+        The value is interpreted as multiple of the font size
+
+    math_fontfamily : :class:`str`
+        Font family or fontname used for math fonts
+
+    multialignment : :class:`str`
+        Text alignment for multiline texts
+
+        One of: 'left', 'right', 'center'
+
+    parse_math : :class:`bool`
+        Set mathtext parsing for text
+
+        If False, no mathtext will be used. If True, mathtext will be used if
+        there is an even number of unescaped dollar signs.
+
+    rotation : :class:`float` or :class:`str`
+        Rotation of the text
+
+        Either a scalar number or one of: 'vertical', 'horizontal'
+
+    rotation_mode : :class:`str`
+        Rotation mode of the text
+
+        One of: 'default', 'anchor'
+
+        If "default", the text will be first rotated, then aligned according
+        to their horizontal and vertical alignments. If "anchor",
+        then alignment occurs before rotation.
+
+    usetex : :class:`bool` or :class:`None`
+        Whether to render using TeX
+
+        None means to use ``rcParams["text.usetex"]`` (default: False).
+
+    verticalalignment : :class:`str`
+        Vertical alignment of the text
+
+        One of: 'baseline', 'bottom', 'center', 'center_baseline', 'top'
+
+    wrap : :class:`bool`
+        Set whether the text can be wrapped.
+
+        Wrapping makes sure the text is confined to the (sub)figure box. It
+        does not take into account any other artists.
+
+    zorder : :class:`float`
+        Zorder for the artist.
+
+        Artists with lower zorder values are drawn first.
+
+        For a summary of the default zorder values, see the `Matplotlib
+        documentation <https://matplotlib.org/stable/gallery/misc
+        /zorder_demo.html>`_
+
+
+    Raises
+    ------
+    aspecd.exceptions.MissingDrawingError
+        Raised if no text is provided.
+
+
+    .. versionadded:: 0.10
+
+    """
+
+    # pylint: disable=too-many-instance-attributes
+    def __init__(self):
+        super().__init__()
+        self.alpha = None
+        self.backgroundcolor = None
+        self.color = "#000000"
+        self.fontfamily = None
+        self.fontsize = None
+        self.fontstretch = None
+        self.fontstyle = None
+        self.fontvariant = None
+        self.fontweight = None
+        self.horizontalalignment = "left"
+        self.in_layout = True
+        self.linespacing = None
+        self.math_fontfamily = None
+        self.multialignment = "left"
+        self.parse_math = None
+        self.rotation = None
+        self.rotation_mode = None
+        self.usetex = False
+        self.verticalalignment = "bottom"
+        self.wrap = None
+        self.zorder = None
+
+    def apply(self, drawing=None):
+        """Apply properties to text."""
+        super().apply(drawing=drawing)
+        if self.backgroundcolor is None:
+            drawing._bbox_patch = None  # pylint: disable=protected-access
+
+
+class SubplotGridSpecs(aspecd.utils.Properties):
+    """
+    Properties for the subplot grid specs.
+
+    This class is used to set properties for the subplot grid of
+    the :class:`CompositePlotter` class. As such, it is part of the
+    :class:`CompositePlotProperties` class. For further details, see the
+    :class:`matplotlib.gridspec.GridSpec` documentation.
+
+
+    Attributes
+    ----------
+    left : :class:`float`
+        Left extent of the subplots as a fraction of figure width.
+
+        Left cannot be larger than right, and bottom cannot be larger than
+        top. If not given, the values will be inferred from a figure or
+        rcParams at draw time.
+
+    bottom : :class:`float`
+        Bottom extent of the subplots as a fraction of figure height.
+
+        Left cannot be larger than right, and bottom cannot be larger than
+        top. If not given, the values will be inferred from a figure or
+        rcParams at draw time.
+
+    right : :class:`float`
+        Right extent of the subplots as a fraction of figure width.
+
+        Left cannot be larger than right, and bottom cannot be larger than
+        top. If not given, the values will be inferred from a figure or
+        rcParams at draw time.
+
+    top : :class:`float`
+        Top extent of the subplots as a fraction of figure height.
+
+        Left cannot be larger than right, and bottom cannot be larger than
+        top. If not given, the values will be inferred from a figure or
+        rcParams at draw time.
+
+    wspace : :class:`float`
+        The amount of width reserved for space between subplots.
+
+        Expressed as a fraction of the average axis width. If not given,
+        the values will be inferred from a figure or rcParams when necessary.
+
+    hspace : :class:`float`
+        The amount of height reserved for space between subplots.
+
+        Expressed as a fraction of the average axis height. If not given,
+        the values will be inferred from a figure or rcParams when necessary.
+
+    width_ratios : :class:`list`
+        Relative width of the columns.
+
+        Each column gets a relative width of
+        ``width_ratios[i] / sum(width_ratios)``.
+        If not given, all columns will have the same width.
+
+    height_ratios : :class:`list`
+        Relative height of the rows.
+
+        Each row gets a relative height of
+        ``height_ratios[i] / sum(height_ratios)``.
+        If not given, all rows will have the same height.
+
+    Examples
+    --------
+    Subplot grid spec properties are always set in context of a concrete
+    :class:`CompositePlotter`.
+
+    An example for setting the subplot grid specs of a
+    :class:`CompositePlotter` are given below:
+
+    .. code-block:: yaml
+
+        - kind: compositeplot
+          type: CompositePlotter
+          properties:
+            properties:
+              grid_spec:
+                wspace: 0
+                hspace: 0
+            plotter:
+            - raw-data
+            - processed-data
+            filename: comparison.pdf
+            grid_dimensions: [1, 2]
+            subplot_locations:
+            - [0, 0, 1, 1]
+            - [0, 1, 1, 1]
+
+
+    .. versionadded:: 0.10
+
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.left = None
+        self.bottom = None
+        self.right = None
+        self.top = None
+        self.wspace = None
+        self.hspace = None
+        self.width_ratios = None
+        self.height_ratios = None

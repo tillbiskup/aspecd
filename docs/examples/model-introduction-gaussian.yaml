@@ -1,0 +1,50 @@
+format:
+  type: ASpecD recipe
+  version: '0.2'
+
+tasks:
+  - kind: model
+    type: Zeros
+    properties:
+      parameters:
+        shape: 1001
+        range: [-10, 10]
+    result: dummy
+    comment: >
+      Add some 1/f noise
+
+  - kind: model
+    type: Gaussian
+    from_dataset: dummy
+    properties:
+      parameters:
+        amplitude: 2
+        position: 0.5
+        width: 1.5
+    result: gaussian
+    comment: >
+      Create Gaussian with some parameters set explicitly
+
+  - kind: processing
+    type: Noise
+    properties:
+      parameters:
+        amplitude: 0.3
+    apply_to: gaussian
+    result: noisy-gaussian
+
+  - kind: multiplot
+    type: MultiPlotter1D
+    properties:
+      properties:
+        drawings:
+          - color: "#999999"
+          - color: "#000000"
+      parameters:
+        tight_layout: True
+      filename: model-introduction-gaussian.pdf
+    apply_to:
+      - noisy-gaussian
+      - gaussian
+    comment: >
+      Plot both, noisy and original Gaussian

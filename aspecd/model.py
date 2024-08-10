@@ -107,6 +107,11 @@ define more specific models as well.
   Normalised Lorentzian with an integral of one, identical to the probability
   density function (PDF) of the Cauchy distribution.
 
+* :class:`aspecd.model.Voigtian`
+
+  Voigt profile: convolution of (normalised) Lorentzian and (normalised)
+  Gaussian, often used to describe spectroscopic data.
+
 * :class:`aspecd.model.Sine`
 
   Sine wave with adjustable amplitude, frequency, and phase.
@@ -222,6 +227,7 @@ Module documentation
 import copy
 
 import numpy as np
+import scipy.special
 
 import aspecd.dataset
 import aspecd.exceptions
@@ -1670,7 +1676,8 @@ class NormalisedLorentzian(Model):
 
     .. math::
 
-        f(x) = \frac{1}{\pi b} \left[\frac{c^2}{(x-b)^2 + c^2}\right]
+        f(x) = \frac{1}{\pi c} \left[\frac{c^2}{(x-b)^2 + c^2}\right] =
+        \frac{c}{\pi[(x-b)^2 + c^2]}
 
     with :math:`b` being the position and :math:`c` the width of the
     Lorentzian.
@@ -1770,6 +1777,123 @@ class NormalisedLorentzian(Model):
             width**2 / ((x - position) ** 2 + not_zero(width**2))
         )
         self._dataset.data.data = lorentzian
+
+
+class Voigtian(Model):
+    """
+    Voigt profile.
+
+    The Voigt profile (after Woldemar Voigt) is a probability distribution
+    given by a convolution of a Cauchy-Lorentz distribution (with half-width
+    at half-maximum ``gamma``) and a Gaussian distribution (with standard
+    deviation ``sigma``). It is often used for analyzing spectroscopic data.
+
+    In spectroscopy, a Voigt profile results from the convolution of two
+    broadening mechanisms: life-time broadening (Lorentzian part) and
+    inhomogeneous broadening (Gaussian part).
+
+    If ``sigma = 0``, the PDF of the Cauchy distribution is returned.
+    Conversely, if ``gamma = 0``, the PDF of the Normal distribution is
+    returned. If ``sigma = gamma = 0`, the return value is ``Inf`` for
+    ``x = 0``, and ``0`` for all other ``x``.
+
+    Note: Internally, the function :func:`scipy.special.voigt_profile` is
+    used to calculate the data.
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        position : :class:`float`
+            Position (of the maximum) of the Voigt profile
+
+            Default: 0
+
+        sigma : :class:`float`
+            Standard deviation of the Gaussian part
+
+            Default: 1
+
+        gamma : :class:`float`
+            Width of the Lorentzian part
+
+            The full width at half maximum (FWHM) is related to the width
+            :math:`b` by: :math:`2b`.
+
+            Default: 1
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Suppose you would want to create a Voigt profile with standard
+    values (position=0, gamma=1, sigma=1). Starting from scratch, you need to
+    create a dummy dataset (using, *e.g.*, :class:`aspecd.model.Zeros`) of
+    given length and axes range. Based on that you can create your Voigtian:
+
+    .. code-block:: yaml
+
+       - kind: model
+         type: Zeros
+         properties:
+           parameters:
+             shape: 1001
+             range: [-5, 5]
+         result: dummy
+
+       - kind: model
+         type: Voigtian
+         from_dataset: dummy
+         result: voigtian
+
+    Of course, if you start with an existing dataset (*e.g.*, loaded from
+    some real data), you could use the label to this dataset directly in
+    ``from_dataset``, without needing to create a dummy dataset first.
+
+    Of course, you can control position and widths of Gaussian and
+    Lorentzian contributions explicitly:
+
+    .. code-block:: yaml
+
+       - kind: model
+         type: Voigtian
+         properties:
+           parameters:
+             position: 1.5
+             sigma: 0.5
+             gamma: 2
+         from_dataset: dummy
+         result: voigtian
+
+    This would create a Voigt profile with its maximum situated at a
+    value of 1.5 at the *x* axis, and with a standard deviation of
+    the Gaussian component of 0.5 and a line width of the Lorentzian part of 2.
+
+    .. versionadded:: 0.10
+
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = "Voigt profile"
+        self.parameters["sigma"] = 1
+        self.parameters["gamma"] = 1
+        self.parameters["position"] = 0
+
+    def _perform_task(self):
+        x = np.asarray(self.variables[0])  # pylint: disable=invalid-name
+        voigtian = scipy.special.voigt_profile(
+            x - self.parameters["position"],
+            self.parameters["sigma"],
+            self.parameters["gamma"],
+        )
+        self._dataset.data.data = voigtian
 
 
 class Sine(Model):

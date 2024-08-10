@@ -5,13 +5,13 @@ import numpy as np
 
 import aspecd.dataset
 import aspecd.exceptions
-import aspecd.model
 import aspecd.utils
+from aspecd import model
 
 
 class TestModel(unittest.TestCase):
     def setUp(self):
-        self.model = aspecd.model.Model()
+        self.model = model.Model()
 
     def test_instantiate_class(self):
         pass
@@ -64,20 +64,20 @@ class TestModel(unittest.TestCase):
             self.model.create()
 
     def test_create_with_missing_parameter_raises(self):
-        class MyModel(aspecd.model.Model):
+        class MyModel(model.Model):
             def _sanitise_parameters(self):
                 if "coefficient" not in self.parameters:
                     raise aspecd.exceptions.MissingParameterError(
                         message="Parameter 'coefficient' missing"
                     )
 
-        model = MyModel()
-        model.parameters["foo"] = "bar"
-        model.variables = [np.linspace(0, 1)]
+        model_ = MyModel()
+        model_.parameters["foo"] = "bar"
+        model_.variables = [np.linspace(0, 1)]
         with self.assertRaisesRegex(
             aspecd.exceptions.MissingParameterError, "coefficient"
         ):
-            model.create()
+            model_.create()
 
     def test_create_returns_calculated_dataset(self):
         self.model.parameters = [0]
@@ -259,7 +259,7 @@ class TestModel(unittest.TestCase):
 
 class TestCompositeModel(unittest.TestCase):
     def setUp(self):
-        self.model = aspecd.model.CompositeModel()
+        self.model = model.CompositeModel()
 
     def test_instantiate_class(self):
         pass
@@ -281,7 +281,7 @@ class TestCompositeModel(unittest.TestCase):
         models = ["Polynomial"]
         parameters = {"coefficients": [1]}
         # Create single model
-        single_model = aspecd.model.Polynomial()
+        single_model = model.Polynomial()
         single_model.parameters = parameters
         single_model.variables = [variables]
         single_model_result = single_model.create()
@@ -301,7 +301,7 @@ class TestCompositeModel(unittest.TestCase):
         parameters = {"coefficients": [1]}
         weights = [2]
         # Create single model
-        single_model = aspecd.model.Polynomial()
+        single_model = model.Polynomial()
         single_model.parameters = parameters
         single_model.variables = [variables]
         single_model_result = single_model.create()
@@ -323,15 +323,15 @@ class TestCompositeModel(unittest.TestCase):
         # Create individual models
         data = np.zeros(len(variables[0]))
         for idx, model_name in enumerate(models):
-            model = aspecd.utils.object_from_class_name(
+            model_ = aspecd.utils.object_from_class_name(
                 "aspecd.model." + model_name
             )
             for key in parameters[idx]:
                 # noinspection PyUnresolvedReferences
-                model.parameters[key] = parameters[idx][key]
-            model.variables = variables
+                model_.parameters[key] = parameters[idx][key]
+            model_.variables = variables
             # noinspection PyUnresolvedReferences
-            model_result = model.create()
+            model_result = model_.create()
             data += model_result.data.data
         # Create composite model
         self.model.models = models
@@ -350,15 +350,15 @@ class TestCompositeModel(unittest.TestCase):
         # Create individual models
         data = np.zeros(len(variables[0]))
         for idx, model_name in enumerate(models):
-            model = aspecd.utils.object_from_class_name(
+            model_ = aspecd.utils.object_from_class_name(
                 "aspecd.model." + model_name
             )
             for key in parameters[idx]:
                 # noinspection PyUnresolvedReferences
-                model.parameters[key] = parameters[idx][key]
-            model.variables = variables
+                model_.parameters[key] = parameters[idx][key]
+            model_.variables = variables
             # noinspection PyUnresolvedReferences
-            model_result = model.create()
+            model_result = model_.create()
             if not idx:
                 data += model_result.data.data
             else:
@@ -411,7 +411,7 @@ class TestCompositeModel(unittest.TestCase):
 
 class TestFamilyOfCurves(unittest.TestCase):
     def setUp(self):
-        self.model = aspecd.model.FamilyOfCurves()
+        self.model = model.FamilyOfCurves()
         self.variables = np.linspace(0, 6 * np.pi)
 
     def test_instantiate_class(self):
@@ -438,7 +438,7 @@ class TestFamilyOfCurves(unittest.TestCase):
         self.model.vary["parameter"] = "amplitude"
         self.model.vary["values"] = 4
         self.model.variables = [self.variables]
-        simple_model = aspecd.model.Sine()
+        simple_model = model.Sine()
         simple_model.variables = [self.variables]
         simple_model.parameters["amplitude"] = self.model.vary["values"]
         simple_dataset = simple_model.create()
@@ -452,7 +452,7 @@ class TestFamilyOfCurves(unittest.TestCase):
         self.model.vary["parameter"] = "amplitude"
         self.model.vary["values"] = [2, 4]
         self.model.variables = [self.variables]
-        simple_model1 = aspecd.model.Sine()
+        simple_model1 = model.Sine()
         simple_model1.variables = [self.variables]
         simple_model1.parameters["amplitude"] = self.model.vary["values"][0]
         simple_dataset1 = simple_model1.create()
@@ -538,7 +538,7 @@ class TestFamilyOfCurves(unittest.TestCase):
 
 class TestZeros(unittest.TestCase):
     def setUp(self):
-        self.model = aspecd.model.Zeros()
+        self.model = model.Zeros()
         self.dataset = aspecd.dataset.CalculatedDataset()
         self.dataset.data.data = np.random.randn(10)
         self.dataset3d = aspecd.dataset.CalculatedDataset()
@@ -624,7 +624,7 @@ class TestZeros(unittest.TestCase):
 
 class TestOnes(unittest.TestCase):
     def setUp(self):
-        self.model = aspecd.model.Ones()
+        self.model = model.Ones()
         self.dataset = aspecd.dataset.CalculatedDataset()
         self.dataset.data.data = np.random.randn(10)
         self.dataset3d = aspecd.dataset.CalculatedDataset()
@@ -710,7 +710,7 @@ class TestOnes(unittest.TestCase):
 
 class TestPolynomial(unittest.TestCase):
     def setUp(self):
-        self.model = aspecd.model.Polynomial()
+        self.model = model.Polynomial()
 
     def test_instantiate_class(self):
         pass
@@ -748,7 +748,7 @@ def get_fwhm(dataset):
 
 class TestGaussian(unittest.TestCase):
     def setUp(self):
-        self.model = aspecd.model.Gaussian()
+        self.model = model.Gaussian()
 
     def test_instantiate_class(self):
         pass
@@ -791,7 +791,7 @@ class TestGaussian(unittest.TestCase):
 
 class TestNormalisedGaussian(unittest.TestCase):
     def setUp(self):
-        self.model = aspecd.model.NormalisedGaussian()
+        self.model = model.NormalisedGaussian()
 
     def test_instantiate_class(self):
         pass
@@ -833,7 +833,7 @@ class TestNormalisedGaussian(unittest.TestCase):
 
 class TestLorentzian(unittest.TestCase):
     def setUp(self):
-        self.model = aspecd.model.Lorentzian()
+        self.model = model.Lorentzian()
 
     def test_instantiate_class(self):
         pass
@@ -878,7 +878,7 @@ class TestLorentzian(unittest.TestCase):
 
 class TestNormalisedLorentzian(unittest.TestCase):
     def setUp(self):
-        self.model = aspecd.model.NormalisedLorentzian()
+        self.model = model.NormalisedLorentzian()
 
     def test_instantiate_class(self):
         pass
@@ -918,9 +918,56 @@ class TestNormalisedLorentzian(unittest.TestCase):
         self.assertTrue(np.all(np.isfinite(dataset.data.data)))
 
 
+class TestVoigtian(unittest.TestCase):
+    def setUp(self):
+        self.model = model.Voigtian()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn("voigt profile", self.model.description.lower())
+
+    def test_default_position_is_zero(self):
+        self.model.variables = [np.linspace(-5, 5, 1001)]
+        dataset = self.model.create()
+        self.assertEqual(
+            0, self.model.variables[0][dataset.data.data.argmax()]
+        )
+
+    def test_position_sets_position(self):
+        position = 0.5
+        self.model.variables = [np.linspace(-5, 5, 1001)]
+        self.model.parameters["position"] = position
+        dataset = self.model.create()
+        self.assertAlmostEqual(
+            position, self.model.variables[0][dataset.data.data.argmax()], 4
+        )
+
+    def test_gamma_zero_equals_normalised_gaussian(self):
+        self.model.variables = [np.linspace(-5, 5, 1001)]
+        self.model.parameters["gamma"] = 0
+        dataset = self.model.create()
+        gaussian = model.NormalisedGaussian()
+        gaussian.variables = self.model.variables
+        gaussian_data = gaussian.create()
+        np.testing.assert_allclose(dataset.data.data, gaussian_data.data.data)
+
+    def test_sigma_zero_equals_normalised_lorentzian(self):
+        self.model.variables = [np.linspace(-5, 5, 1001)]
+        self.model.parameters["sigma"] = 0
+        dataset = self.model.create()
+        lorentzian = model.NormalisedLorentzian()
+        lorentzian.variables = self.model.variables
+        lorentzian_data = lorentzian.create()
+        np.testing.assert_allclose(
+            dataset.data.data, lorentzian_data.data.data
+        )
+
+
 class TestSine(unittest.TestCase):
     def setUp(self):
-        self.model = aspecd.model.Sine()
+        self.model = model.Sine()
 
     def test_instantiate_class(self):
         pass
@@ -960,7 +1007,7 @@ class TestSine(unittest.TestCase):
 
 class TestExponential(unittest.TestCase):
     def setUp(self):
-        self.model = aspecd.model.Exponential()
+        self.model = model.Exponential()
 
     def test_instantiate_class(self):
         pass

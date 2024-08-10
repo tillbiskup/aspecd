@@ -5,8 +5,68 @@ Changelog
 This page contains a summary of changes between the official ASpecD releases. Only the biggest changes are listed here. A complete and detailed log of all changes is available through the `GitHub Repository Browser <https://github.com/tillbiskup/aspecd/commits/master>`_.
 
 
-Version 0.9.2
+Version 0.10.0
 ==============
+
+Released 2024-08-10
+
+
+New features
+------------
+
+* Plotting
+
+  * Set individual properties for each of the lines of a :class:`aspecd.plotting.SinglePlotter2DStacked`
+  * Conveniently set identical properties for all lines of :class:`aspecd.plotting.SinglePlotter2DStacked` and :class:`aspecd.plotting.MultiPlotter1D`
+  * :class:`aspecd.plotting.TextProerties`
+  * :class:`aspecd.plotting.DrawingProperties` has attribute ``zorder``.
+  * :class:`aspecd.plotting.SubplotGridSpecs` for properties of the subplot grid of a CompositePlotter.
+  * :class:`aspecd.plotting.CompositePlotter` allows to share *x* and *y* axes.
+
+* Plot annotations
+
+  * :class:`aspecd.annotations.Text` for text annotations to plot(ter)s
+
+* Tasks
+
+  * :class:`aspecd.tasks.SingleplotTask` allows to set as many results as datasets, to allow for adding an individual plotter (for one of the datasets) to a :class:`aspecd.tasks.CompositeplotTask`. (`#3 <https://github.com/tillbiskup/aspecd/issues/3>`_)
+
+* Models
+
+    * :class:`aspecd.model.Voigtian` for creating Voigt profiles frequently used in spectroscopy to describe line shapes.
+
+
+Fixes
+-----
+
+* Tasks
+
+  * :class:`aspecd.tasks.MultiplotTask` preserves order of datasets the task is applied to, regardless whether the datasets are originally imported or result from prior tasks (via ``result`` property). (`#2 <https://github.com/tillbiskup/aspecd/issues/2>`_)
+  * :meth:`aspecd.tasks.Recipe.get_datasets` preserves order of datasets, regardless whether the datasets are originally imported or result from prior tasks (via ``result`` property).
+  * :meth:`aspecd.tasks.Chef.cook` closes open figures.
+
+* Plotting
+
+  * :class:`CompositePlotter` does not add additional drawings any more to the plotters used. (`#5 <https://github.com/tillbiskup/aspecd/issues/5>`_)
+
+
+Version 0.9.3
+=============
+
+Released 2024-07-22
+
+
+Fixes
+-----
+
+* Correct method for area normalization: take number of points into account.
+* Adjust stacking in ``SinglePlotter2DStacked`` for data with larger minima than maxima.
+* Templates for LaTeX dataset report: escape ``_`` and ``#`` in dataset label.
+* Axis labels can be removed by setting one or both of ``xlabel`` and ``ylabel`` to ``None`` (or ``null`` in YAML/recipe).
+
+
+Version 0.9.2
+=============
 
 Released 2024-03-24
 
@@ -21,7 +81,7 @@ Fixes
 
 
 Version 0.9.1
-==============
+=============
 
 Released 2024-01-15
 

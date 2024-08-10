@@ -1,0 +1,134 @@
+@startuml
+
+class PlotProperties {
+  figure
+  legend
+  zero_lines
+  apply(plotter)
+}
+
+class SinglePlotProperties extends PlotProperties {
+  axes
+  drawing
+  grid
+  apply(plotter)
+}
+
+class MultiPlotProperties extends PlotProperties {
+  axes
+  drawings : list
+  grid
+  add_drawing()
+  apply(plotter)
+  from_dict(dict_)
+}
+
+class CompositePlotProperties extends PlotProperties {
+  axes
+  apply(plotter)
+}
+
+class SinglePlot1DProperties extends SinglePlotProperties {
+  drawing
+}
+
+class SinglePlot2DProperties extends SinglePlotProperties{
+  colorbar
+  colormap
+  drawing
+  apply(plotter)
+}
+
+class SinglePlot2DStackedProperties extends MultiPlot1DProperties {
+  drawing
+}
+
+class MultiPlot1DProperties extends MultiPlotProperties{
+  colormap : NoneType
+  add_drawing()
+  apply(plotter)
+  from_dict(dict_)
+}
+
+class AxesProperties {
+  aspect : str
+  facecolor : NoneType
+  invert : NoneType, list
+  label_fontsize
+  position : list
+  title : str
+  xlabel : str
+  xlim : list
+  xscale : str
+  xticklabelangle : float
+  xticklabels : NoneType
+  xticks : NoneType
+  ylabel : str
+  ylim : list
+  yscale : str
+  yticklabelangle : float
+  yticklabels : NoneType
+  yticks : NoneType
+  apply(axes)
+}
+class ColorbarProperties {
+  aspect : float
+  format : str
+  fraction : float
+  kwargs
+  label : dict
+  location : NoneType
+  pad : NoneType
+  apply(colorbar)
+}
+class FigureProperties {
+  dpi : float
+  size : tuple
+  title : str
+  apply(figure)
+}
+class GridProperties {
+  axis : str
+  lines
+  show : bool
+  ticks : str
+  apply(axes)
+}
+class LegendProperties {
+  fontsize
+  frameon : bool
+  labelspacing : float
+  loc : str
+  location
+  ncol : int
+  title : str
+  apply(legend)
+}
+
+class DrawingProperties {
+  cmap : str
+  label : str
+  apply(drawing)
+}
+class LineProperties extends DrawingProperties {
+  color : str
+  drawstyle : str
+  linestyle : str
+  linewidth : float
+  marker : str
+  settable_properties()
+}
+class SurfaceProperties extends DrawingProperties {
+  cmap : str
+  colors : NoneType
+  linestyles : NoneType
+  linewidths : NoneType
+  apply(drawing)
+}
+
+LegendProperties -[hidden]> FigureProperties
+AxesProperties -[hidden]> SinglePlotProperties
+SinglePlotProperties -[hidden]> MultiPlotProperties
+MultiPlotProperties -[hidden]> CompositePlotProperties
+
+@enduml

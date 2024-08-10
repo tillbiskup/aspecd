@@ -5,6 +5,22 @@ Roadmap
 A few ideas how to develop the project further, currently a list as a reminder for the main developers themselves, in no particular order, though with a tendency to list more important aspects first:
 
 
+For version 0.11
+================
+
+* Plotting
+
+  * Plot annotations
+
+    * Text annotations with additional lines/arrows
+    * additional types of annotations, *e.g.* ``axvspan``, ``axhspan``, symbols
+
+* Example recipes
+
+  * A series of example recipes, starting with models for generating artificial data.
+  * Show-off of different plotters and the possibilities there.
+
+
 For next releases
 =================
 
@@ -20,11 +36,6 @@ For next releases
 
     Similar to :class:`aspecd.plotting.MultiDeviceDataPlotter1D`, but with the different device data plotted in separate axes stacked vertically
 
-  * Plot annotations
-
-    * additional types of annotations, *e.g.* ``axvspan``, ``axhspan``, symbols
-    * ``zorder`` as attribute for annotations
-
   * Quiver plots
 
     https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.quiver.html
@@ -38,6 +49,10 @@ For next releases
   * :class:`aspecd.processing.BaselineCorrection` with ``fit_area`` definable as axis range, and arbitrary parts of the axis (*e.g.*, in the middle of a dataset or with separate fit areas)
 
 * Recipe-driven data analysis:
+
+  * Tasks can be "recycled" with only few properties changed.
+
+    * Most useful, probably, for plots where you want to change, *e.g.*, the title of a more complex plot for individual datasets, but don't want to copy&paste the plotting task in the recipe for each dataset independently. (`#4 <https://github.com/tillbiskup/aspecd/issues/4>`_)
 
   * Better handling of automatically generated filenames for saving plots and reports: unique filenames; using the label rather than the source (id) of the dataset
 

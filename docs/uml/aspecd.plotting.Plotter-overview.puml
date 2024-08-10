@@ -1,0 +1,55 @@
+@startuml
+
+abstract class Plotter {
+}
+
+abstract class SinglePlotter extends Plotter {
+}
+
+abstract class MultiPlotter extends Plotter {
+}
+
+class MultiPlotter1D extends MultiPlotter {
+}
+
+class MultiDeviceDataPlotter1D extends SinglePlotter1D {
+}
+
+class MultiPlotter1DStacked extends MultiPlotter1D {
+}
+
+class SinglePlotter1D extends SinglePlotter {
+}
+
+class SinglePlotter2D extends SinglePlotter {
+}
+
+class SinglePlotter2DStacked extends SinglePlotter {
+}
+
+class CompositePlotter extends Plotter {
+}
+
+class SingleCompositePlotter extends CompositePlotter {
+}
+
+class Saver {
+}
+
+Saver -[hidden]> PlotProperties
+
+class Caption {
+}
+
+class PlotProperties {
+}
+
+note bottom of PlotProperties
+    Each Plotter has specific properties.
+    See separate diagram for hierarchy
+    of PlotProperties classes.
+endnote
+
+PlotProperties -* Plotter : properties
+Plotter *- Caption : caption
+@enduml

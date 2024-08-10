@@ -1,4 +1,5 @@
 """Tests for plotting."""
+
 import contextlib
 import hashlib
 import io
@@ -27,8 +28,6 @@ class TestPlotter(unittest.TestCase):
     def tearDown(self):
         if os.path.isfile(self.filename):
             os.remove(self.filename)
-        if self.plotter.fig:
-            plt.close(self.plotter.fig)
 
     def test_instantiate_class(self):
         pass
@@ -268,10 +267,6 @@ class TestSinglePlotter(unittest.TestCase):
     def setUp(self):
         self.plotter = plotting.SinglePlotter()
 
-    def tearDown(self):
-        if self.plotter.fig:
-            plt.close(self.plotter.fig)
-
     def test_instantiate_class(self):
         pass
 
@@ -339,6 +334,18 @@ class TestSinglePlotter(unittest.TestCase):
         plotter = test_dataset.plot(self.plotter)
         self.assertEqual(xlabel, plotter.axes.get_xlabel())
         self.assertEqual(ylabel, plotter.axes.get_ylabel())
+
+    def test_plot_with_dataset_with_label_properties_sets_axes_labels(self):
+        test_dataset = dataset.Dataset()
+        test_dataset.data.axes[0].quantity = "foo"
+        test_dataset.data.axes[0].unit = "bar"
+        test_dataset.data.axes[1].quantity = "foo"
+        test_dataset.data.axes[1].unit = "bar"
+        self.plotter.properties.axes.xlabel = None
+        self.plotter.properties.axes.ylabel = None
+        plotter = test_dataset.plot(self.plotter)
+        self.assertEqual("", plotter.axes.get_xlabel())
+        self.assertEqual("", plotter.axes.get_ylabel())
 
     def test_plot_returns_dataset(self):
         test_dataset = self.plotter.plot(dataset=dataset.Dataset())
@@ -408,10 +415,6 @@ class TestSinglePlotter1D(unittest.TestCase):
         self.dataset.data.axes[0].unit = "mT"
         self.dataset.data.axes[1].quantity = "intensity"
         self.dataset.data.axes[1].unit = "V"
-
-    def tearDown(self):
-        if self.plotter.fig:
-            plt.close(self.plotter.fig)
 
     def test_instantiate_class(self):
         pass
@@ -621,10 +624,6 @@ class TestSinglePlotter1D(unittest.TestCase):
 class TestSinglePlotter2D(unittest.TestCase):
     def setUp(self):
         self.plotter = plotting.SinglePlotter2D()
-
-    def tearDown(self):
-        if self.plotter.fig:
-            plt.close(self.plotter.fig)
 
     def test_instantiate_class(self):
         pass
@@ -974,8 +973,6 @@ class TestSinglePlotter2DStacked(unittest.TestCase):
         self.filename = "foo.pdf"
 
     def tearDown(self):
-        if self.plotter.fig:
-            plt.close(self.plotter.fig)
         if os.path.exists(self.filename):
             os.remove(self.filename)
 
@@ -1085,23 +1082,48 @@ class TestSinglePlotter2DStacked(unittest.TestCase):
             max(plotter.axes.get_lines()[0].get_ydata()) * 10,
         )
 
+    def test_plot_calculates_offset_accordingly(self):
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.random.random([5, 10]) - 10
+        plotter = dataset_.plot(self.plotter)
+        self.assertAlmostEqual(
+            10 * 1.05, self.plotter.parameters["offset"], 1
+        )
+
     def test_plot_sets_drawings(self):
         dataset_ = aspecd.dataset.CalculatedDataset()
         dataset_.data.data = np.random.random([5, 10]) - 0.5
         dataset_.plot(self.plotter)
         self.assertEqual(10, len(self.plotter.drawing))
 
+    def test_plot_with_show_legend_sets_legend_label(self):
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.random.random([5, 10]) - 0.5
+        self.plotter.parameters["show_legend"] = True
+        labels = ["foo", "bar", "baz", "foobar", "barbaz"]
+        for label in labels:
+            line_properties = aspecd.plotting.LineProperties()
+            line_properties.label = label
+            self.plotter.properties.drawings.append(line_properties)
+        plotter = dataset_.plot(self.plotter)
+        for idx, label in enumerate(labels):
+            self.assertEqual(
+                label, plotter.legend.get_texts()[idx].get_text()
+            )
+
     def test_plot_applies_drawing_properties_to_all_drawings(self):
-        self.plotter.properties.drawing.color = "#aaccee"
+        color = "#aaccee"
+        dict_ = {"drawing": {"color": color}}
+        self.plotter.properties.from_dict(dict_)
         dataset_ = aspecd.dataset.CalculatedDataset()
         dataset_.data.data = np.random.random([5, 10]) - 0.5
         plotter = dataset_.plot(self.plotter)
         self.assertEqual(
-            self.plotter.properties.drawing.color,
+            self.plotter.properties.drawing[0].color,
             plotter.axes.get_lines()[0]._color,
         )
         self.assertEqual(
-            self.plotter.properties.drawing.color,
+            self.plotter.properties.drawing[0].color,
             plotter.axes.get_lines()[4]._color,
         )
 
@@ -1109,10 +1131,13 @@ class TestSinglePlotter2DStacked(unittest.TestCase):
         color = "#aaccee"
         properties = {"drawing": {"color": color}}
         self.plotter.properties.from_dict(properties)
-        self.assertEqual(color, self.plotter.properties.drawing.color)
+        self.assertEqual(color, self.plotter.properties.drawing[0].color)
 
     def test_save_plot_with_set_color_does_not_raise(self):
-        self.plotter.properties.drawing.color = "#aaccee"
+        # self.plotter.properties.drawing[0].color = "#aaccee"
+        color = "#aaccee"
+        dict_ = {"drawing": {"color": color}}
+        self.plotter.properties.from_dict(dict_)
         dataset_ = aspecd.dataset.CalculatedDataset()
         dataset_.data.data = np.random.random([5, 10]) - 0.5
         plotter = dataset_.plot(self.plotter)
@@ -1278,8 +1303,6 @@ class TestMultiDeviceDataPlotter1D(unittest.TestCase):
         self.dataset = None
 
     def tearDown(self):
-        if self.plotter.fig:
-            plt.close(self.plotter.fig)
         if os.path.exists(self.filename):
             os.remove(self.filename)
 
@@ -1516,10 +1539,6 @@ class TestMultiPlotter(unittest.TestCase):
     def setUp(self):
         self.plotter = plotting.MultiPlotter()
 
-    def tearDown(self):
-        if self.plotter.fig:
-            plt.close(self.plotter.fig)
-
     def test_instantiate_class(self):
         pass
 
@@ -1726,10 +1745,6 @@ class TestMultiPlotter1D(unittest.TestCase):
         self.dataset.data.axes[0].unit = "mT"
         self.dataset.data.axes[1].quantity = "intensity"
         self.dataset.data.axes[1].unit = "V"
-
-    def tearDown(self):
-        if self.plotter.fig:
-            plt.close(self.plotter.fig)
 
     def test_instantiate_class(self):
         pass
@@ -1969,10 +1984,6 @@ class TestMultiPlotter1DStacked(unittest.TestCase):
         self.plotter.datasets.append(dataset_)
         self.plotter.datasets.append(dataset_)
 
-    def tearDown(self):
-        if self.plotter.fig:
-            plt.close(self.plotter.fig)
-
     def test_instantiate_class(self):
         pass
 
@@ -2153,6 +2164,13 @@ class TestMultiPlotter1DStacked(unittest.TestCase):
         )
         self.assertListEqual(data_limits, list(self.plotter.ax.get_xlim()))
 
+    def test_plot_to_dict_returns_dict(self):
+        self.plotter.parameters["tight"] = "y"
+        self.plotter.parameters["switch_axes"] = True
+        self.plotter.plot()
+        dict_ = self.plotter.to_dict()
+        self.assertIsInstance(dict_, dict)
+
 
 class TestCompositePlotter(unittest.TestCase):
     def setUp(self):
@@ -2160,27 +2178,24 @@ class TestCompositePlotter(unittest.TestCase):
         self.dataset = aspecd.dataset.CalculatedDataset()
         self.dataset.data.data = np.sin(np.linspace(0, 2 * np.pi, 101))
 
-    def tearDown(self):
-        if self.plotter.fig:
-            plt.close(self.plotter.fig)
-
     def test_instantiate_class(self):
         pass
 
     def test_description_is_sensible(self):
         self.assertIn("Composite", self.plotter.description)
 
-    def test_has_grid_dimensions_property(self):
-        self.assertTrue(hasattr(self.plotter, "grid_dimensions"))
-
-    def test_has_subplot_locations_property(self):
-        self.assertTrue(hasattr(self.plotter, "subplot_locations"))
-
-    def test_has_axes_positions_property(self):
-        self.assertTrue(hasattr(self.plotter, "axes_positions"))
-
-    def test_has_plotter_property(self):
-        self.assertTrue(hasattr(self.plotter, "plotter"))
+    def test_has_properties(self):
+        properties = [
+            "grid_dimensions",
+            "grid_spec",
+            "subplot_locations",
+            "axes_positions",
+            "plotter",
+            "sharex",
+            "sharey",
+        ]
+        for property in properties:
+            self.assertTrue(hasattr(self.plotter, property))
 
     def test_plot_with_single_subplot_adds_axis_to_axes(self):
         self.plotter.grid_dimensions = [1, 1]
@@ -2282,14 +2297,119 @@ class TestCompositePlotter(unittest.TestCase):
             self.plotter.plot()
         self.assertEqual(self.plotter.style, self.plotter.plotter[0].style)
 
+    def test_plot_does_not_multiply_drawings_of_contained_plotters(self):
+        self.plotter.grid_dimensions = [1, 1]
+        self.plotter.subplot_locations = [[0, 0, 1, 1]]
+        single_plotter = plotting.SinglePlotter2DStacked()
+        self.dataset.data.data = np.random.random([10, 10])
+        single_plotter.dataset = self.dataset
+        single_plotter.plot()
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plot()
+        self.assertEqual(10, len(single_plotter.drawings))
+
+    def test_plot_applies_grid_spec_properties(self):
+        self.plotter.grid_dimensions = [1, 1]
+        self.plotter.subplot_locations = [[0, 0, 1, 1]]
+        single_plotter = plotting.SinglePlotter1D()
+        single_plotter.dataset = self.dataset
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.properties.grid_spec.left = 0.5
+        self.plotter.plot()
+        self.assertTrue(
+            self.plotter.grid_spec.locally_modified_subplot_params()
+        )
+
+    def test_plot_to_dict_returns_dict(self):
+        self.plotter.grid_dimensions = [1, 1]
+        self.plotter.subplot_locations = [[0, 0, 1, 1]]
+        single_plotter = plotting.SinglePlotter1D()
+        single_plotter.dataset = self.dataset
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plot()
+        dict_ = self.plotter.to_dict()
+        self.assertIsInstance(dict_, dict)
+
+    def test_plot_with_sharex_shares_axes(self):
+        self.plotter.grid_dimensions = [2, 2]
+        self.plotter.subplot_locations = [
+            [0, 0, 1, 1],
+            [1, 0, 1, 1],
+            [0, 1, 2, 1],
+        ]
+        self.plotter.sharex = True
+        single_plotter = plotting.SinglePlotter1D()
+        single_plotter.dataset = self.dataset
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plot()
+        self.assertTrue(self.plotter.axes[1]._sharex)
+
+    def test_plot_with_sharex_and_more_axes_shares_axes(self):
+        self.plotter.grid_dimensions = [3, 2]
+        self.plotter.subplot_locations = [
+            [0, 0, 1, 1],
+            [1, 0, 1, 1],
+            [0, 1, 1, 1],
+            [1, 1, 1, 1],
+            [2, 0, 1, 1],
+            [2, 1, 1, 1],
+        ]
+        self.plotter.sharex = True
+        single_plotter = plotting.SinglePlotter1D()
+        single_plotter.dataset = self.dataset
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plot()
+        self.assertTrue(self.plotter.axes[0]._sharex)
+
+    def test_plot_with_sharey_shares_axes(self):
+        self.plotter.grid_dimensions = [2, 2]
+        self.plotter.subplot_locations = [
+            [0, 0, 1, 1],
+            [0, 1, 1, 1],
+            [1, 0, 1, 2],
+        ]
+        self.plotter.sharey = True
+        single_plotter = plotting.SinglePlotter1D()
+        single_plotter.dataset = self.dataset
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plot()
+        self.assertTrue(self.plotter.axes[1]._sharey)
+
+    def test_plot_with_sharey_and_more_axes_shares_axes(self):
+        self.plotter.grid_dimensions = [2, 3]
+        self.plotter.subplot_locations = [
+            [0, 0, 1, 1],
+            [0, 1, 1, 1],
+            [0, 2, 1, 1],
+            [1, 0, 1, 1],
+            [1, 1, 1, 1],
+            [1, 2, 1, 1],
+        ]
+        self.plotter.sharey = True
+        single_plotter = plotting.SinglePlotter1D()
+        single_plotter.dataset = self.dataset
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plot()
+        self.assertTrue(self.plotter.axes[0]._sharey)
+
 
 class TestSingleCompositePlotter(unittest.TestCase):
     def setUp(self):
         self.plotter = plotting.SingleCompositePlotter()
-
-    def tearDown(self):
-        if self.plotter.fig:
-            plt.close(self.plotter.fig)
 
     def test_instantiate_class(self):
         pass
@@ -2534,7 +2654,7 @@ class TestDrawingProperties(unittest.TestCase):
         self.assertTrue(callable(self.drawing_properties.from_dict))
 
     def test_has_properties(self):
-        for prop in ["label"]:
+        for prop in ["label", "zorder"]:
             self.assertTrue(hasattr(self.drawing_properties, prop))
 
     def test_has_apply_method(self):
@@ -2545,11 +2665,17 @@ class TestDrawingProperties(unittest.TestCase):
         with self.assertRaises(aspecd.exceptions.MissingDrawingError):
             self.drawing_properties.apply()
 
-    def test_apply_sets_properties(self):
+    def test_apply_sets_label(self):
         self.drawing_properties.label = "foo"
         line = matplotlib.lines.Line2D([0, 1], [0, 0])
         self.drawing_properties.apply(drawing=line)
         self.assertEqual(self.drawing_properties.label, line.get_label())
+
+    def test_apply_sets_zorder(self):
+        self.drawing_properties.zorder = 42
+        line = matplotlib.lines.Line2D([0, 1], [0, 0])
+        self.drawing_properties.apply(drawing=line)
+        self.assertEqual(self.drawing_properties.zorder, line.get_zorder())
 
     def test_apply_with_nonexisting_property_issues_log_message(self):
         self.drawing_properties.foobar = "foo"
@@ -2786,6 +2912,14 @@ class TestAxesProperties(unittest.TestCase):
         plot.plot()
         self.axis_properties.apply(axes=plot.axes)
         self.assertEqual(self.axis_properties.xlabel, plot.axes.get_xlabel())
+        plt.close(plot.figure)
+
+    def test_set_empty_axis_ylabel(self):
+        self.axis_properties.ylabel = ""
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertEqual(self.axis_properties.ylabel, plot.axes.get_ylabel())
         plt.close(plot.figure)
 
     def test_apply_properties_from_dict_sets_axis_properties(self):
@@ -3491,6 +3625,14 @@ class TestMultiPlot1DProperties(unittest.TestCase):
         plt.close(plotter.figure)
 
 
+class TestSinglePlot2DStackedProperties(unittest.TestCase):
+    def setUp(self):
+        self.plot_properties = plotting.SinglePlot2DStackedProperties()
+
+    def test_instantiate_class(self):
+        pass
+
+
 class TestCompositePlotProperties(unittest.TestCase):
     def setUp(self):
         self.plot_properties = plotting.CompositePlotProperties()
@@ -3503,6 +3645,9 @@ class TestCompositePlotProperties(unittest.TestCase):
 
     def test_has_axes_property(self):
         self.assertTrue(hasattr(self.plot_properties, "axes"))
+
+    def test_has_grid_spec_property(self):
+        self.assertTrue(hasattr(self.plot_properties, "grid_spec"))
 
     def test_has_to_dict_method(self):
         self.assertTrue(hasattr(self.plot_properties, "to_dict"))
@@ -3567,3 +3712,142 @@ class TestCompositePlotProperties(unittest.TestCase):
             self.plot_properties.axes.xlabel, plot.axes[0].get_xlabel()
         )
         plt.close(plot.figure)
+
+
+class TestTextProperties(unittest.TestCase):
+    def setUp(self):
+        self.properties = plotting.TextProperties()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_properties(self):
+        for prop in [
+            "alpha",
+            "backgroundcolor",
+            "color",
+            "fontfamily",
+            "fontsize",
+            "fontstretch",
+            "fontstyle",
+            "fontvariant",
+            "fontweight",
+            "horizontalalignment",
+            "in_layout",
+            "linespacing",
+            "math_fontfamily",
+            "multialignment",
+            "parse_math",
+            "rotation",
+            "rotation_mode",
+            "usetex",
+            "verticalalignment",
+            "wrap",
+            "zorder",
+        ]:
+            self.assertTrue(hasattr(self.properties, prop))
+
+    def test_has_apply_method(self):
+        self.assertTrue(hasattr(self.properties, "apply"))
+        self.assertTrue(callable(self.properties.apply))
+
+    def test_apply_without_argument_raises(self):
+        with self.assertRaises(aspecd.exceptions.MissingDrawingError):
+            self.properties.apply()
+
+    def test_apply_sets_properties(self):
+        properties = {
+            "alpha": 0.5,
+            "color": "#ff0000",
+            "fontsize": 20,
+            "fontstyle": "oblique",
+            "fontvariant": "small-caps",
+            "fontweight": "heavy",
+            "horizontalalignment": "center",
+            "in_layout": False,
+            "math_fontfamily": "cm",
+            "parse_math": True,
+            "rotation": 30,
+            "rotation_mode": "anchor",
+            "usetex": True,
+            "verticalalignment": "top",
+            "wrap": True,
+            "zorder": 5,
+        }
+        for prop, value in properties.items():
+            with self.subTest(key=prop, val=value):
+                text = matplotlib.text.Text(0, 0, "Lorem ipsum")
+                setattr(self.properties, prop, value)
+                self.properties.apply(drawing=text)
+                self.assertEqual(
+                    getattr(self.properties, prop),
+                    getattr(text, f"get_{prop}")(),
+                )
+
+    def test_apply_sets_font_family(self):
+        # Note: matplotlib.text.Text.get_fontfamily returns a list
+        text = matplotlib.text.Text(0, 0, "Lorem ipsum")
+        self.properties.fontfamily = "fantasy"
+        self.properties.apply(drawing=text)
+        self.assertEqual(
+            self.properties.fontfamily,
+            text.get_fontfamily()[0],
+        )
+
+    def test_apply_sets_font_stretch(self):
+        # Note: matplotlib.text.Text has no get_fontstretch method
+        text = matplotlib.text.Text(0, 0, "Lorem ipsum")
+        self.properties.fontstretch = "ultra-condensed"
+        self.properties.apply(drawing=text)
+        self.assertEqual(
+            self.properties.fontstretch,
+            text.get_stretch(),
+        )
+
+    def test_apply_with_backgroundcolor_none_removes_background_color(self):
+        text = matplotlib.text.Text(0, 0, "Lorem ipsum")
+        self.properties.backgroundcolor = None
+        self.properties.apply(drawing=text)
+        self.assertFalse(text.get_bbox_patch())
+
+    def test_apply_without_backgroundcolor_removes_background_color(self):
+        text = matplotlib.text.Text(0, 0, "Lorem ipsum")
+        self.properties.apply(drawing=text)
+        self.assertFalse(text.get_bbox_patch())
+
+    def test_apply_with_usetex_none_uses_rcparams_value(self):
+        text = matplotlib.text.Text(0, 0, "Lorem ipsum")
+        self.properties.usetex = None
+        self.properties.apply(drawing=text)
+        self.assertEqual(
+            matplotlib.rcParams["text.usetex"], text.get_usetex()
+        )
+
+
+class TestSubplotGridSpecs(unittest.TestCase):
+    def setUp(self):
+        self.properties = plotting.SubplotGridSpecs()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_properties(self):
+        for prop in [
+            "left",
+            "bottom",
+            "right",
+            "top",
+            "wspace",
+            "hspace",
+            "width_ratios",
+            "height_ratios",
+        ]:
+            self.assertTrue(hasattr(self.properties, prop))
+
+    def test_has_to_dict_method(self):
+        self.assertTrue(hasattr(self.properties, "to_dict"))
+        self.assertTrue(callable(self.properties.to_dict))
+
+    def test_has_from_dict_method(self):
+        self.assertTrue(hasattr(self.properties, "from_dict"))
+        self.assertTrue(callable(self.properties.from_dict))
