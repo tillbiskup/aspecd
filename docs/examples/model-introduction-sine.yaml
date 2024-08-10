@@ -1,0 +1,29 @@
+format:
+  type: ASpecD recipe
+  version: '0.2'
+
+tasks:
+  - kind: model
+    type: Zeros
+    properties:
+      parameters:
+        shape: 1001
+        range: [0, 12.566]
+    result: dummy
+
+  - kind: model
+    type: Sine
+    from_dataset: dummy
+    result: sine
+    comment: >
+      Create sine with default parameters
+
+  - kind: singleplot
+    type: SinglePlotter1D
+    properties:
+      parameters:
+        tight_layout: True
+      filename: model-introduction-sine.pdf
+    apply_to: sine
+    comment: >
+      Plot sine with default parameters

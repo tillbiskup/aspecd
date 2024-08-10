@@ -1,0 +1,143 @@
+@startuml
+
+class "Plotter" {
+  annotations : list
+  ax
+  axes : NoneType
+  caption
+  comment : str
+  description : str
+  fig
+  figure : NoneType
+  filename : str
+  label : str
+  legend : NoneType
+  name : str
+  parameters : dict
+  properties
+  style : str
+  annotate(annotation)
+  applicable(data)
+  delete_annotation(index)
+  plot()
+  save(saver)
+}
+
+class SinglePlotter extends Plotter {
+  data : NoneType
+  dataset : NoneType
+  description : str
+  drawing : NoneType
+  properties
+  create_history_record()
+  plot(dataset, from_dataset)
+}
+
+class MultiPlotter extends Plotter {
+  data : list
+  datasets : list
+  description : str
+  properties
+  plot()
+}
+
+class MultiPlotter1D extends MultiPlotter {
+  allowed_types
+  description : str
+  drawings : list
+  properties
+  type
+  applicable(data)
+}
+
+class MultiDeviceDataPlotter1D extends SinglePlotter1D {
+  data : list
+  description : str
+  drawing : list
+  drawings
+  properties
+  applicable(data)
+}
+
+class MultiPlotter1DStacked extends MultiPlotter1D {
+  description : str
+  drawings : list
+}
+
+class SinglePlotter1D extends SinglePlotter {
+  allowed_types
+  description : str
+  drawing
+  properties
+  type
+  applicable(data)
+}
+
+class SinglePlotter2D extends SinglePlotter {
+  allowed_types
+  colorbar : NoneType
+  description : str
+  drawing
+  properties
+  type
+  applicable(data)
+}
+
+class SinglePlotter2DStacked extends SinglePlotter {
+  dataset : NoneType
+  description : str
+  drawing : list
+  drawings
+  properties
+  applicable(data)
+}
+
+class CompositePlotter extends Plotter {
+  axes : list
+  axes_positions : list
+  description : str
+  figure
+  grid_dimensions : list
+  plotter : list
+  properties
+  subplot_locations : list
+}
+
+class SingleCompositePlotter extends CompositePlotter {
+  dataset : NoneType
+  description : str
+  create_history_record()
+  plot(dataset, from_dataset)
+}
+
+class Saver {
+  filename : NoneType, str
+  parameters : dict
+  plotter : NoneType
+  save(plotter)
+}
+
+Saver -[hidden]> PlotProperties
+
+class Caption {
+  parameters : list
+  text : str
+  title : str
+}
+
+class PlotProperties {
+  figure
+  legend
+  zero_lines
+  apply(plotter)
+}
+
+note bottom of PlotProperties
+    Each Plotter has specific properties.
+    See separate diagram for hierarchy
+    of PlotProperties classes.
+endnote
+
+PlotProperties -* Plotter : properties
+Plotter *- Caption : caption
+@enduml
