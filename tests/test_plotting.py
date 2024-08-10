@@ -2344,7 +2344,7 @@ class TestCompositePlotter(unittest.TestCase):
         self.plotter.plotter.append(single_plotter)
         self.plotter.plotter.append(single_plotter)
         self.plotter.plot()
-        self.assertTrue(self.plotter.axes[0]._sharex)
+        self.assertTrue(self.plotter.axes[1]._sharex)
 
     def test_plot_with_sharex_and_more_axes_shares_axes(self):
         self.plotter.grid_dimensions = [3, 2]
@@ -2382,7 +2382,7 @@ class TestCompositePlotter(unittest.TestCase):
         self.plotter.plotter.append(single_plotter)
         self.plotter.plotter.append(single_plotter)
         self.plotter.plot()
-        self.assertTrue(self.plotter.axes[0]._sharey)
+        self.assertTrue(self.plotter.axes[1]._sharey)
 
     def test_plot_with_sharey_and_more_axes_shares_axes(self):
         self.plotter.grid_dimensions = [2, 3]
