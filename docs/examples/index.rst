@@ -2,7 +2,7 @@
 Overview
 ========
 
-Here, we present a (growing) series of working examples of how to use the ASpecD framework to perform both, day-to-day routine tasks in a laboratory as well as more complex processing and analysis tasks.
+Here, we present a (growing) series of working examples of how to use the ASpecD framework to perform both, day-to-day routine tasks in a laboratory as well as more complex processing and analysis tasks. For a more general introduction to working with recipes and recipe-driven data analysis, see the :doc:`Use cases section <../usecases>`.
 
 .. note::
 

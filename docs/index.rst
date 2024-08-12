@@ -145,7 +145,7 @@ There is a number of related packages that are based on the ASpecD framework and
 
   Package for processing and analysing continuous-wave electron paramagnetic resonance (cw-EPR) data, originally implemented by P. Kirchner, developed and maintained by M. Schröder and T. Biskup.
 
-* `nmraspecds <https://docs.nmraspecds.de/>`_
+* `NMRAspecds <https://docs.nmraspecds.de/>`_
 
   Package for processing and analysing nuclear magnetic resonance (NMR) data, developed and maintained by M. Schröder.
 
