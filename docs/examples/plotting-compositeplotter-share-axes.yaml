@@ -1,0 +1,229 @@
+format:
+  type: ASpecD recipe
+  version: '0.2'
+
+settings:
+  autosave_plots: False
+
+tasks:
+  - kind: model
+    type: Zeros
+    properties:
+      parameters:
+        shape: 1001
+        range: [-10, 10]
+    result: dummy-1
+
+  - kind: model
+    type: Zeros
+    properties:
+      parameters:
+        shape: 1001
+        range: [-8, 8]
+    result: dummy-2
+
+  - kind: model
+    type: NormalisedGaussian
+    from_dataset: dummy-1
+    result: gaussian-1
+    comment: >
+      Create normalised Gaussian profile with default parameters
+
+  - kind: model
+    type: NormalisedGaussian
+    from_dataset: dummy-1
+    properties:
+      parameters:
+        width: 1.5
+    result: gaussian-2
+    comment: >
+      Create normalised Gaussian profile with width=1.5
+
+  - kind: model
+    type: NormalisedGaussian
+    from_dataset: dummy-2
+    properties:
+      parameters:
+        width: 2.0
+    result: gaussian-3
+    comment: >
+      Create normalised Gaussian profile with width=2.0
+
+  - kind: model
+    type: NormalisedGaussian
+    from_dataset: dummy-2
+    properties:
+      parameters:
+        width: 0.5
+    result: gaussian-4
+    comment: >
+      Create normalised Gaussian profile with width=0.5
+
+  - kind: singleplot
+    type: SinglePlotter1D
+    properties:
+      properties:
+        axes:
+          xlabel: "$position$ / a.u."
+      parameters:
+        tight_layout: True
+    apply_to:
+      - gaussian-1
+      - gaussian-2
+      - gaussian-3
+      - gaussian-4
+    result:
+      - plot-1
+      - plot-2
+      - plot-3
+      - plot-4
+    comment: >
+      Plotters used in CompositePlotter below
+
+  - kind: compositeplot
+    type: CompositePlotter
+    properties:
+      properties:
+        grid_spec:
+          wspace: 0
+      parameters:
+        tight_layout: True
+      plotter:
+        - plot-1
+        - plot-2
+        - plot-3
+        - plot-4
+      grid_dimensions: [2, 2]
+      subplot_locations:
+        - [0, 0, 1, 1]
+        - [0, 1, 1, 1]
+        - [1, 0, 1, 1]
+        - [1, 1, 1, 1]
+      filename: plotting-compositeplotter-share-y-axes.pdf
+      sharey: True
+      comment: >
+        Composite plotter with shared y axes
+
+  - kind: compositeplot
+    type: CompositePlotter
+    properties:
+      properties:
+        grid_spec:
+          wspace: 0
+      parameters:
+        tight_layout: True
+      plotter:
+        - plot-2
+        - plot-1
+        - plot-4
+        - plot-3
+      grid_dimensions: [2, 2]
+      subplot_locations:
+        - [0, 1, 1, 1]
+        - [0, 0, 1, 1]
+        - [1, 1, 1, 1]
+        - [1, 0, 1, 1]
+      filename: plotting-compositeplotter-share-y-axes-wo-inner-ticks.pdf
+      sharey: True
+      comment: >
+        Composite plotter with shared y axes and no inner ticks
+
+  - kind: compositeplot
+    type: CompositePlotter
+    properties:
+      properties:
+        grid_spec:
+          hspace: 0
+      parameters:
+        tight_layout: True
+      plotter:
+        - plot-1
+        - plot-2
+        - plot-3
+        - plot-4
+      grid_dimensions: [2, 2]
+      subplot_locations:
+        - [0, 0, 1, 1]
+        - [0, 1, 1, 1]
+        - [1, 0, 1, 1]
+        - [1, 1, 1, 1]
+      filename: plotting-compositeplotter-share-x-axes.pdf
+      sharex: True
+      comment: >
+        Composite plotter with shared x axes
+
+  - kind: compositeplot
+    type: CompositePlotter
+    properties:
+      properties:
+        grid_spec:
+          hspace: 0
+      parameters:
+        tight_layout: True
+      plotter:
+        - plot-1
+        - plot-3
+        - plot-2
+        - plot-4
+      grid_dimensions: [2, 2]
+      subplot_locations:
+        - [0, 0, 1, 1]
+        - [0, 1, 1, 1]
+        - [1, 0, 1, 1]
+        - [1, 1, 1, 1]
+      filename: plotting-compositeplotter-share-x-axes-column-wise.pdf
+      sharex: column-wise
+      comment: >
+        Composite plotter with column-wise shared x axes
+
+  - kind: compositeplot
+    type: CompositePlotter
+    properties:
+      properties:
+        grid_spec:
+          wspace: 0
+      parameters:
+        tight_layout: True
+      plotter:
+        - plot-1
+        - plot-3
+        - plot-2
+        - plot-4
+      grid_dimensions: [2, 2]
+      subplot_locations:
+        - [0, 0, 1, 1]
+        - [0, 1, 1, 1]
+        - [1, 0, 1, 1]
+        - [1, 1, 1, 1]
+      filename: plotting-compositeplotter-share-y-axes-row-wise.pdf
+      sharey: row-wise
+      comment: >
+        Composite plotter with row-wise shared y axes
+
+  - kind: compositeplot
+    type: CompositePlotter
+    properties:
+      properties:
+        grid_spec:
+          wspace: 0
+          hspace: 0
+        axes:
+          ylim: [-0.05, 0.85]
+      parameters:
+        tight_layout: True
+      plotter:
+        - plot-1
+        - plot-2
+        - plot-3
+        - plot-4
+      grid_dimensions: [2, 2]
+      subplot_locations:
+        - [0, 0, 1, 1]
+        - [0, 1, 1, 1]
+        - [1, 0, 1, 1]
+        - [1, 1, 1, 1]
+      filename: plotting-compositeplotter-share-x-y-axes.pdf
+      sharex: True
+      sharey: True
+      comment: >
+        Composite plotter with shared x and y axes

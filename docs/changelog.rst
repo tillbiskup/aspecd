@@ -5,6 +5,18 @@ Changelog
 This page contains a summary of changes between the official ASpecD releases. Only the biggest changes are listed here. A complete and detailed log of all changes is available through the `GitHub Repository Browser <https://github.com/tillbiskup/aspecd/commits/master>`_.
 
 
+Version 0.10.1
+==============
+
+Released 2024-08-13
+
+
+Fixes
+-----
+
+* CompositePlotter shares axes correctly
+
+
 Version 0.10.0
 ==============
 
@@ -18,7 +30,7 @@ New features
 
   * Set individual properties for each of the lines of a :class:`aspecd.plotting.SinglePlotter2DStacked`
   * Conveniently set identical properties for all lines of :class:`aspecd.plotting.SinglePlotter2DStacked` and :class:`aspecd.plotting.MultiPlotter1D`
-  * :class:`aspecd.plotting.TextProerties`
+  * :class:`aspecd.plotting.TextProperties`
   * :class:`aspecd.plotting.DrawingProperties` has attribute ``zorder``.
   * :class:`aspecd.plotting.SubplotGridSpecs` for properties of the subplot grid of a CompositePlotter.
   * :class:`aspecd.plotting.CompositePlotter` allows to share *x* and *y* axes.
