@@ -2346,6 +2346,56 @@ class TestCompositePlotter(unittest.TestCase):
         self.plotter.plot()
         self.assertTrue(self.plotter.axes[1]._sharex)
 
+    def test_plot_with_sharex_true_shares_all_axes(self):
+        self.plotter.grid_dimensions = [2, 2]
+        self.plotter.subplot_locations = [
+            [0, 0, 1, 1],
+            [1, 0, 1, 1],
+            [0, 1, 1, 1],
+            [1, 1, 1, 1],
+        ]
+        axes_limits = [
+            [-1, 1],
+            [-2, 2],
+            [-3, 3],
+            [-4, 4],
+        ]
+        for limits in axes_limits:
+            plotter = plotting.SinglePlotter1D()
+            plotter.properties.axes.xlim = limits
+            plotter.dataset = self.dataset
+            self.plotter.plotter.append(plotter)
+        self.plotter.sharex = True
+        self.plotter.plot()
+        self.assertEqual(
+            self.plotter.axes[0].get_xlim(), self.plotter.axes[2].get_xlim()
+        )
+
+    def test_plot_with_sharex_all_shares_all_axes(self):
+        self.plotter.grid_dimensions = [2, 2]
+        self.plotter.subplot_locations = [
+            [0, 0, 1, 1],
+            [1, 0, 1, 1],
+            [0, 1, 1, 1],
+            [1, 1, 1, 1],
+        ]
+        axes_limits = [
+            [-1, 1],
+            [-2, 2],
+            [-3, 3],
+            [-4, 4],
+        ]
+        for limits in axes_limits:
+            plotter = plotting.SinglePlotter1D()
+            plotter.properties.axes.xlim = limits
+            plotter.dataset = self.dataset
+            self.plotter.plotter.append(plotter)
+        self.plotter.sharex = "all"
+        self.plotter.plot()
+        self.assertEqual(
+            self.plotter.axes[0].get_xlim(), self.plotter.axes[2].get_xlim()
+        )
+
     def test_plot_with_sharex_and_more_axes_shares_axes(self):
         self.plotter.grid_dimensions = [3, 2]
         self.plotter.subplot_locations = [
@@ -2385,6 +2435,56 @@ class TestCompositePlotter(unittest.TestCase):
         self.plotter.plot()
         self.assertTrue(self.plotter.axes[1]._sharey)
 
+    def test_plot_with_sharey_true_shares_all_axes(self):
+        self.plotter.grid_dimensions = [2, 2]
+        self.plotter.subplot_locations = [
+            [0, 0, 1, 1],
+            [1, 0, 1, 1],
+            [0, 1, 1, 1],
+            [1, 1, 1, 1],
+        ]
+        axes_limits = [
+            [-1, 1],
+            [-2, 2],
+            [-3, 3],
+            [-4, 4],
+        ]
+        for limits in axes_limits:
+            plotter = plotting.SinglePlotter1D()
+            plotter.properties.axes.ylim = limits
+            plotter.dataset = self.dataset
+            self.plotter.plotter.append(plotter)
+        self.plotter.sharey = True
+        self.plotter.plot()
+        self.assertEqual(
+            self.plotter.axes[0].get_ylim(), self.plotter.axes[1].get_ylim()
+        )
+
+    def test_plot_with_sharey_all_shares_all_axes(self):
+        self.plotter.grid_dimensions = [2, 2]
+        self.plotter.subplot_locations = [
+            [0, 0, 1, 1],
+            [1, 0, 1, 1],
+            [0, 1, 1, 1],
+            [1, 1, 1, 1],
+        ]
+        axes_limits = [
+            [-1, 1],
+            [-2, 2],
+            [-3, 3],
+            [-4, 4],
+        ]
+        for limits in axes_limits:
+            plotter = plotting.SinglePlotter1D()
+            plotter.properties.axes.ylim = limits
+            plotter.dataset = self.dataset
+            self.plotter.plotter.append(plotter)
+        self.plotter.sharey = "all"
+        self.plotter.plot()
+        self.assertEqual(
+            self.plotter.axes[0].get_ylim(), self.plotter.axes[1].get_ylim()
+        )
+
     def test_plot_with_sharey_and_more_axes_shares_axes(self):
         self.plotter.grid_dimensions = [2, 3]
         self.plotter.subplot_locations = [
@@ -2407,6 +2507,62 @@ class TestCompositePlotter(unittest.TestCase):
         self.plotter.plot()
         self.assertTrue(self.plotter.axes[1]._sharey)
         self.assertTrue(self.plotter.axes[2]._sharey)
+
+    def test_plot_with_sharex_column_wise_shares_axes(self):
+        self.plotter.grid_dimensions = [2, 2]
+        self.plotter.subplot_locations = [
+            [0, 0, 1, 1],
+            [1, 0, 1, 1],
+            [0, 1, 1, 1],
+            [1, 1, 1, 1],
+        ]
+        axes_limits = [
+            [-1, 1],
+            [-2, 2],
+            [-3, 3],
+            [-4, 4],
+        ]
+        for limits in axes_limits:
+            plotter = plotting.SinglePlotter1D()
+            plotter.properties.axes.xlim = limits
+            plotter.dataset = self.dataset
+            self.plotter.plotter.append(plotter)
+        sharex = ["col", "column", "column-wise"]
+        with self.subTest(sharex=sharex):
+            self.plotter.sharex = sharex
+            self.plotter.plot()
+            self.assertNotEqual(
+                self.plotter.axes[0].get_xlim(),
+                self.plotter.axes[2].get_xlim(),
+            )
+
+    def test_plot_with_sharey_row_wise_shares_axes(self):
+        self.plotter.grid_dimensions = [2, 2]
+        self.plotter.subplot_locations = [
+            [0, 0, 1, 1],
+            [1, 0, 1, 1],
+            [0, 1, 1, 1],
+            [1, 1, 1, 1],
+        ]
+        axes_limits = [
+            [-1, 1],
+            [-2, 2],
+            [-3, 3],
+            [-4, 4],
+        ]
+        for limits in axes_limits:
+            plotter = plotting.SinglePlotter1D()
+            plotter.properties.axes.ylim = limits
+            plotter.dataset = self.dataset
+            self.plotter.plotter.append(plotter)
+        sharey = ["row", "rows", "row-wise"]
+        with self.subTest(sharey=sharey):
+            self.plotter.sharex = sharey
+            self.plotter.plot()
+            self.assertNotEqual(
+                self.plotter.axes[0].get_ylim(),
+                self.plotter.axes[1].get_ylim(),
+            )
 
 
 class TestSingleCompositePlotter(unittest.TestCase):

@@ -2216,11 +2216,11 @@ class Task(aspecd.utils.ToDictMixin):
                             if hasattr(element, "from_dict"):
                                 element.from_dict(source[key][idx])
                             elif isinstance(element, dict):
-                                target[key][idx] = (
-                                    self._set_attributes_in_dict(
-                                        source=source[key][idx],
-                                        target=element,
-                                    )
+                                target[key][
+                                    idx
+                                ] = self._set_attributes_in_dict(
+                                    source=source[key][idx],
+                                    target=element,
                                 )
                             else:
                                 target[key][idx] = source[key][idx]
@@ -2784,9 +2784,9 @@ class SingleanalysisTask(AnalysisTask):
                 if result_labels:
                     if isinstance(self._task.result, aspecd.dataset.Dataset):
                         self._task.result.id = self.result[number]
-                    self.recipe.results[self.result[number]] = (
-                        self._task.result
-                    )
+                    self.recipe.results[
+                        self.result[number]
+                    ] = self._task.result
                 else:
                     if isinstance(self._task.result, aspecd.dataset.Dataset):
                         self._task.result.id = self.result

@@ -11,6 +11,18 @@ Version 0.11.0
 Not yet released
 
 
+Version 0.10.1
+==============
+
+Not yet released
+
+
+Fixes
+-----
+
+* CompositePlotter shares axes correctly
+
+
 Version 0.10.0
 ==============
 

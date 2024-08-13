@@ -3661,24 +3661,34 @@ class CompositePlotter(Plotter):
             processing. To prevent this, assign the result of the processing
             step a unique name.
 
-    sharex : :class:`bool`
-        Whether to share the *x* axes of all plots in each column.
+    sharex : :class:`bool` | :class:`str`
+        Whether to share the *x* axes of all subplots.
 
-        If set, all axes starting with the first defined axes in each
-        column will share their *x* axes. At the same time, only the outer
-        axes will be shown.
+        If set to ``True`` or ``all``, all *x* axes are shared, starting with
+        the first defined axes.
+
+        If set to one of ``["col", "columns", "column-wise"]``, the *x*
+        axes in each column are shared, starting with the first defined
+        axes in each column.
+
+        In both cases, only the outer *x* axes will be shown.
 
         Typically, you will want to set the ``hspace`` property in
         :attr:`CompositePlotProperties.grid_spec` to a small value.
 
         .. versionadded:: 0.10
 
-    sharey : :class:`bool`
-        Whether to share the *y* axes of all plots in each row.
+    sharey : :class:`bool` | :class:`str`
+        Whether to share the *y* axes of all subplots.
 
-        If set, all axes starting with the first defined axes in each
-        row will share their *y* axes. At the same time, only the outer
-        axes will be shown.
+        If set to ``True`` or ``all``, all *y* axes are shared, starting with
+        the first defined axes.
+
+        If set to one of ``["row", "rows", "row-wise"]``, the *y* axes in
+        each row are shared, starting with the first defined axes in each
+        row.
+
+        In both cases, only the outer *y* axes will be shown.
 
         Typically, you will want to set the ``wspace`` property in
         :attr:`CompositePlotProperties.grid_spec` to a small value.
@@ -3786,11 +3796,23 @@ class CompositePlotter(Plotter):
             self.axes[idx].set_position(new_position)
 
         if self.sharex:
-            self._sharex()
+            if isinstance(self.sharex, bool) or self.sharex == "all":
+                self._sharex()
+            elif self.sharex in ["col", "column", "column-wise"]:
+                self._sharex_column_wise()
         if self.sharey:
-            self._sharey()
+            if isinstance(self.sharey, bool) or self.sharey == "all":
+                self._sharey()
+            elif self.sharey in ["row", "rows", "row-wise"]:
+                self._sharey_row_wise()
 
     def _sharex(self):
+        for axes in self.axes:
+            axes._label_outer_xaxis(skip_non_rectangular_axes=False)  # noqa
+        for idx, axes in enumerate(self.axes[:-1]):
+            self.axes[idx + 1].sharex(axes)
+
+    def _sharex_column_wise(self):
         columns = []
         for col in range(self.grid_dimensions[1]):
             axes = []
@@ -3802,11 +3824,19 @@ class CompositePlotter(Plotter):
         for column in columns:
             if len(column) > 1:
                 for axes in column:
-                    axes._label_outer_xaxis(skip_non_rectangular_axes=False)
+                    axes._label_outer_xaxis(  # noqa
+                        skip_non_rectangular_axes=False
+                    )
                 for idx, axes in enumerate(column[:-1]):
                     column[idx + 1].sharex(axes)
 
     def _sharey(self):
+        for axes in self.axes:
+            axes._label_outer_yaxis(skip_non_rectangular_axes=False)  # noqa
+        for idx, axes in enumerate(self.axes[:-1]):
+            self.axes[idx + 1].sharey(axes)
+
+    def _sharey_row_wise(self):
         rows = []
         for row in range(self.grid_dimensions[0]):
             axes = []
@@ -3818,7 +3848,9 @@ class CompositePlotter(Plotter):
         for row in rows:
             if len(row) > 1:
                 for axes in row:
-                    axes._label_outer_yaxis(skip_non_rectangular_axes=False)
+                    axes._label_outer_yaxis(  # noqa
+                        skip_non_rectangular_axes=False
+                    )
                 for idx, axes in enumerate(row[:-1]):
                     row[idx + 1].sharey(axes)
 

@@ -31,3 +31,9 @@ If you are new to working with models or need a refresher, have a look at the :d
 
     model-introduction
     model-voigt
+
+
+.. toctree::
+    :maxdepth: 1
+
+    plotting-compositeplotter-share-axes
