@@ -36,7 +36,7 @@ New features
 
   * Set individual properties for each of the lines of a :class:`aspecd.plotting.SinglePlotter2DStacked`
   * Conveniently set identical properties for all lines of :class:`aspecd.plotting.SinglePlotter2DStacked` and :class:`aspecd.plotting.MultiPlotter1D`
-  * :class:`aspecd.plotting.TextProerties`
+  * :class:`aspecd.plotting.TextProperties`
   * :class:`aspecd.plotting.DrawingProperties` has attribute ``zorder``.
   * :class:`aspecd.plotting.SubplotGridSpecs` for properties of the subplot grid of a CompositePlotter.
   * :class:`aspecd.plotting.CompositePlotter` allows to share *x* and *y* axes.
