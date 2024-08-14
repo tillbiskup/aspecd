@@ -2206,6 +2206,15 @@ class TestCompositePlotter(unittest.TestCase):
         self.plotter.plot()
         self.assertEqual(1, len(self.plotter.axes))
 
+    def test_plot_operates_on_copies_of_plotters(self):
+        self.plotter.grid_dimensions = [1, 1]
+        self.plotter.subplot_locations = [[0, 0, 1, 1]]
+        single_plotter = plotting.SinglePlotter1D()
+        single_plotter.dataset = self.dataset
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plot()
+        self.assertNotEqual(single_plotter, self.plotter.plotter[0])
+
     def test_plot_with_multiple_subplots_adds_axes_to_axes(self):
         self.plotter.grid_dimensions = [2, 2]
         self.plotter.subplot_locations = [
