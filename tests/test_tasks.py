@@ -2689,6 +2689,57 @@ class TestSinglePlotTask(unittest.TestCase):
         self.task.perform()
         self.assertTrue(self.task.properties["filename"])
 
+    def test_perform_task_autosaving_adds_filenames_to_task(self):
+        self.plotting_task = {
+            "kind": "singleplot",
+            "type": "SinglePlotter",
+            "apply_to": self.datasets,
+        }
+        self.figure_filenames = []
+        for name in self.datasets:
+            self.figure_filenames.append(
+                "".join([name, "_", self.plotting_task["type"], ".pdf"])
+            )
+        dataset_factory = dataset.DatasetFactory()
+        dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
+        self.recipe.dataset_factory = dataset_factory
+        recipe_dict = {
+            "datasets": self.datasets,
+            "tasks": [self.plotting_task],
+        }
+        self.recipe.from_dict(recipe_dict)
+        # noinspection PyTypeChecker
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertListEqual(self.figure_filenames, self.task._task.filename)
+
+    def test_perform_task_autosaving_w_results_leaves_filename(self):
+        self.plotting_task = {
+            "kind": "singleplot",
+            "type": "SinglePlotter",
+            "apply_to": self.datasets,
+            "result": ["foo", "bar"],
+        }
+        self.figure_filenames = []
+        for name in self.datasets:
+            self.figure_filenames.append(
+                "".join([name, "_", self.plotting_task["type"], ".pdf"])
+            )
+        dataset_factory = dataset.DatasetFactory()
+        dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
+        self.recipe.dataset_factory = dataset_factory
+        recipe_dict = {
+            "datasets": self.datasets,
+            "tasks": [self.plotting_task],
+        }
+        self.recipe.from_dict(recipe_dict)
+        # noinspection PyTypeChecker
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertEqual(self.figure_filenames[-1], self.task._task.filename)
+
     def test_perform_task_autosaving_adds_filename_to_figure_record(self):
         self.figure_filename = "".join(
             [self.dataset[0], "_", self.plotting_task["type"], ".pdf"]

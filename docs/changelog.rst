@@ -11,6 +11,13 @@ Version 0.11.0
 Not yet released
 
 
+Fixes
+-----
+
+* CompositePlotter operates on copies of plotters.
+* Plot task writes correct filename for each plotter if results is used.
+
+
 Version 0.10.1
 ==============
 
