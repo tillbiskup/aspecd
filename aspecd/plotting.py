@@ -3777,15 +3777,15 @@ class CompositePlotter(Plotter):
     def _create_plot(self):
         if not self.plotter or len(self.plotter) < len(self.axes):
             raise aspecd.exceptions.MissingPlotterError
-        self.plotter = [copy.copy(plotter) for plotter in self.plotter]
-        for plotter in self.plotter:
+        plotter_copy = [copy.copy(plotter) for plotter in self.plotter]
+        for plotter in plotter_copy:
             plotter.style = self.style
             if hasattr(plotter, "drawings"):
                 plotter.drawings = []
         for idx, axes in enumerate(self.axes):
-            self.plotter[idx].figure = self.figure
-            self.plotter[idx].axes = axes
-            self.plotter[idx].plot()
+            plotter_copy[idx].figure = self.figure
+            plotter_copy[idx].axes = axes
+            plotter_copy[idx].plot()
         for idx, position in enumerate(self.axes_positions):
             left, bottom, width, height = self.axes[idx].get_position().bounds
             new_position = [

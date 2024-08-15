@@ -2212,8 +2212,19 @@ class TestCompositePlotter(unittest.TestCase):
         single_plotter = plotting.SinglePlotter1D()
         single_plotter.dataset = self.dataset
         self.plotter.plotter.append(single_plotter)
+        self.plotter.style = "xkcd"
         self.plotter.plot()
-        self.assertNotEqual(single_plotter, self.plotter.plotter[0])
+        self.assertNotEqual(single_plotter.style, self.plotter.style)
+
+    def test_to_dict(self):
+        self.plotter.grid_dimensions = [1, 1]
+        self.plotter.subplot_locations = [[0, 0, 1, 1]]
+        single_plotter = plotting.SinglePlotter1D()
+        single_plotter.dataset = self.dataset
+        single_plotter.plot()
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plot()
+        self.assertTrue(self.plotter.to_dict())
 
     def test_plot_with_multiple_subplots_adds_axes_to_axes(self):
         self.plotter.grid_dimensions = [2, 2]
@@ -2295,6 +2306,7 @@ class TestCompositePlotter(unittest.TestCase):
             )
         )
 
+    @unittest.skip  # CompositePlotter now works on copies of plotters.
     def test_plot_sets_style_property_to_plotters(self):
         self.plotter.grid_dimensions = [1, 1]
         self.plotter.subplot_locations = [[0, 0, 1, 1]]
