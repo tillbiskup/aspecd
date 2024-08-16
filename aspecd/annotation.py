@@ -1056,3 +1056,343 @@ class Text(PlotAnnotation):
                 position[0], position[1], self.parameters["texts"][idx]
             )
             self.drawings.append(text)
+
+
+class VerticalSpan(PlotAnnotation):
+    """
+    Vertical span(s) (rectangle) added to a plot.
+
+    Vertical spans are often useful to highlight areas of a plot, such as
+    peaks.
+
+    The properties of the spans can be controlled in quite some detail using
+    the :attr:`properties` property. Note that all spans will share the same
+    properties. If you need to add spans with different properties to the
+    same plot, use several :class:`VerticalSpan` objects and annotate
+    separately.
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for the annotation, implicit and explicit
+
+        The following keys exist:
+
+        positions : :class:`list`
+            List of the positions vertical spans should appear at.
+
+            Each span needs two coordinates: [xmin, xmax].
+
+            If you want to have more than one span, provide a list of lists.
+
+            Values are in axis (data) units.
+
+        limits : :class:`list`
+            Limits of the vertical spans
+
+            If not given, the vertical spans will span the entire range of
+            the current axes.
+
+            Values are in relative units, within a range of [0, 1].
+
+    properties : :class:`aspecd.plotting.PatchProperties`
+        Properties of the span(s) within a plot
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.PatchProperties` class.
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Generally and for obvious reasons, you need to have both, a plot task
+    and a plotannotation task. It does not really matter which task you
+    define first, the plot or the plot annotation. There are only marginal
+    differences, and both ways are shown below.
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            filename: plot1D.pdf
+          result: plot1D
+
+        - kind: plotannotation
+          type: VerticalSpan
+          properties:
+            parameters:
+              positions: [[35, 42]]
+            properties:
+              edgecolor: Null
+              facecolor: green
+              alpha: 0.5
+          plotter: plot1D
+
+
+    In this case, the plotter is defined first, and the annotation second.
+    To refer to the plotter from within the plotannotation task, you need to
+    set the ``result`` attribute in the plotting task and refer to it within
+    the ``plotter`` attribute of the plotannotation task. Although defining
+    the plotter before the annotation, the user still expects the annotation
+    to be included in the file containing the actual plot, despite the fact
+    that the figure has been saved (for the first time) before the
+    annotation has been added.
+
+    Sometimes, it might be convenient to go the other way round and first
+    define an annotation and afterwards add it to a plot(ter). This can be
+    done as well:
+
+    .. code-block:: yaml
+
+        - kind: plotannotation
+          type: VerticalSpan
+          properties:
+            parameters:
+              positions:
+                - [35, 42]
+                - [21, 24]
+            properties:
+              edgecolor: Null
+              facecolor: green
+              alpha: 0.5
+          result: vspans
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            filename: plot1D.pdf
+          annotations:
+            - vspans
+
+
+    In this way, you can add the same annotation to several plots,
+    and be sure that each annotation is handled as a separate object.
+
+    Suppose you have more than one plotter you want to apply an annotation
+    to. In this case, the ``plotter`` property of the plotannotation task is
+    a list rather than a string:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          result: plot1
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          result: plot2
+
+        - kind: plotannotation
+          type: VerticalSpan
+          properties:
+            parameters:
+              positions:
+                - [35, 42]
+          plotter:
+            - plot1
+            - plot2
+
+    In this case, the annotation will be applied to both plots
+    independently. Note that the example has been reduced to the key
+    aspects. In a real situation, the two plotters will differ much more.
+
+
+    .. versionadded:: 0.11
+
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.parameters["positions"] = []
+        self.parameters["limits"] = []
+        self.properties = aspecd.plotting.PatchProperties()
+
+    def _perform_task(self):
+        for position in self.parameters["positions"]:
+            if self.parameters["limits"]:
+                span = self.plotter.ax.axvspan(
+                    xmin=position[0],
+                    xmax=position[1],
+                    ymin=self.parameters["limits"][0],
+                    ymax=self.parameters["limits"][1],
+                )
+            else:
+                span = self.plotter.ax.axvspan(
+                    xmin=position[0], xmax=position[1]
+                )
+            self.drawings.append(span)
+
+
+class HorizontalSpan(PlotAnnotation):
+    """
+    Horizontal span(s) (rectangle) added to a plot.
+
+    Horizontal spans are often useful to highlight areas of a plot.
+
+    The properties of the spans can be controlled in quite some detail using
+    the :attr:`properties` property. Note that all spans will share the same
+    properties. If you need to add spans with different properties to the
+    same plot, use several :class:`HorizontalSpan` objects and annotate
+    separately.
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for the annotation, implicit and explicit
+
+        The following keys exist:
+
+        positions : :class:`list`
+            List of the positions hoizontal spans should appear at.
+
+            Each span needs two coordinates: [ymin, ymax].
+
+            If you want to have more than one span, provide a list of lists.
+
+            Values are in axis (data) units.
+
+        limits : :class:`list`
+            Limits of the hoizontal spans
+
+            If not given, the hoizontal spans will span the entire range of
+            the current axes.
+
+            Values are in relative units, within a range of [0, 1].
+
+    properties : :class:`aspecd.plotting.PatchProperties`
+        Properties of the span(s) within a plot
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.PatchProperties` class.
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Generally and for obvious reasons, you need to have both, a plot task
+    and a plotannotation task. It does not really matter which task you
+    define first, the plot or the plot annotation. There are only marginal
+    differences, and both ways are shown below.
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            filename: plot1D.pdf
+          result: plot1D
+
+        - kind: plotannotation
+          type: HorizontalSpan
+          properties:
+            parameters:
+              positions: [[35, 42]]
+            properties:
+              edgecolor: Null
+              facecolor: green
+              alpha: 0.5
+          plotter: plot1D
+
+
+    In this case, the plotter is defined first, and the annotation second.
+    To refer to the plotter from within the plotannotation task, you need to
+    set the ``result`` attribute in the plotting task and refer to it within
+    the ``plotter`` attribute of the plotannotation task. Although defining
+    the plotter before the annotation, the user still expects the annotation
+    to be included in the file containing the actual plot, despite the fact
+    that the figure has been saved (for the first time) before the
+    annotation has been added.
+
+    Sometimes, it might be convenient to go the other way round and first
+    define an annotation and afterwards add it to a plot(ter). This can be
+    done as well:
+
+    .. code-block:: yaml
+
+        - kind: plotannotation
+          type: HorizontalSpan
+          properties:
+            parameters:
+              positions:
+                - [35, 42]
+                - [21, 24]
+            properties:
+              edgecolor: Null
+              facecolor: green
+              alpha: 0.5
+          result: vspans
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            filename: plot1D.pdf
+          annotations:
+            - vspans
+
+
+    In this way, you can add the same annotation to several plots,
+    and be sure that each annotation is handled as a separate object.
+
+    Suppose you have more than one plotter you want to apply an annotation
+    to. In this case, the ``plotter`` property of the plotannotation task is
+    a list rather than a string:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          result: plot1
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          result: plot2
+
+        - kind: plotannotation
+          type: HorizontalSpan
+          properties:
+            parameters:
+              positions:
+                - [35, 42]
+          plotter:
+            - plot1
+            - plot2
+
+    In this case, the annotation will be applied to both plots
+    independently. Note that the example has been reduced to the key
+    aspects. In a real situation, the two plotters will differ much more.
+
+
+    .. versionadded:: 0.11
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.parameters["positions"] = []
+        self.parameters["limits"] = []
+        self.properties = aspecd.plotting.PatchProperties()
+
+    def _perform_task(self):
+        for position in self.parameters["positions"]:
+            if self.parameters["limits"]:
+                span = self.plotter.ax.axhspan(
+                    ymin=position[0],
+                    ymax=position[1],
+                    xmin=self.parameters["limits"][0],
+                    xmax=self.parameters["limits"][1],
+                )
+            else:
+                span = self.plotter.ax.axhspan(
+                    ymin=position[0], ymax=position[1]
+                )
+            self.drawings.append(span)

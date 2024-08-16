@@ -4030,3 +4030,82 @@ class TestSubplotGridSpecs(unittest.TestCase):
     def test_has_from_dict_method(self):
         self.assertTrue(hasattr(self.properties, "from_dict"))
         self.assertTrue(callable(self.properties.from_dict))
+
+
+class TestPatchProperties(unittest.TestCase):
+    def setUp(self):
+        self.properties = plotting.PatchProperties()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_properties(self):
+        for prop in [
+            "alpha",
+            "color",
+            "edgecolor",
+            "facecolor",
+            "fill",
+            "hatch",
+            "in_layout",
+            "joinstyle",
+            "linestyle",
+            "linewidth",
+            "rasterized",
+            "sketch_params",
+            "snap",
+            "zorder",
+        ]:
+            self.assertTrue(hasattr(self.properties, prop))
+
+    def test_has_apply_method(self):
+        self.assertTrue(hasattr(self.properties, "apply"))
+        self.assertTrue(callable(self.properties.apply))
+
+    def test_apply_without_argument_raises(self):
+        with self.assertRaises(aspecd.exceptions.MissingDrawingError):
+            self.properties.apply()
+
+    def test_apply_sets_properties(self):
+        properties = {
+            "alpha": 0.5,
+            # "color": "#00ff00",
+            "edgecolor": "#ff0000",
+            "facecolor": "#0000ff",
+            "fill": False,
+            "hatch": "x",
+            "in_layout": False,
+            "joinstyle": "bevel",
+            "linestyle": "-",
+            "linewidth": 3,
+            "rasterized": True,
+            # "sketch_params": 2,
+            "snap": False,
+            "zorder": 5,
+        }
+        for prop, value in properties.items():
+            with self.subTest(key=prop, val=value):
+                patch = matplotlib.patches.Patch()
+                setattr(self.properties, prop, value)
+                self.properties.apply(drawing=patch)
+                if prop == "color":
+                    self.assertEqual(
+                        getattr(self.properties, prop),
+                        matplotlib.colors.to_hex(patch.get_facecolor()),
+                    )
+                    self.assertEqual(
+                        getattr(self.properties, prop),
+                        matplotlib.colors.to_hex(patch.get_edgecolor()),
+                    )
+                elif prop.endswith("color"):
+                    self.assertEqual(
+                        getattr(self.properties, prop),
+                        matplotlib.colors.to_hex(
+                            getattr(patch, f"get_" f"{prop}")()
+                        ),
+                    )
+                else:
+                    self.assertEqual(
+                        getattr(self.properties, prop),
+                        getattr(patch, f"get_{prop}")(),
+                    )

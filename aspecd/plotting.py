@@ -6035,3 +6035,128 @@ class SubplotGridSpecs(aspecd.utils.Properties):
         self.hspace = None
         self.width_ratios = None
         self.height_ratios = None
+
+
+class PatchProperties(DrawingProperties):
+    r"""
+    Properties of a patch within a plot.
+
+    Basically, the attributes are a subset of what :mod:`matplotlib` defines
+    for :obj:`matplotlib.patches.Patch` objects.
+
+    Attributes
+    ----------
+    alpha : :class:`float` | :class:`None`
+        Transparency value -- not supported on all backends.
+
+        Valid range: [0, 1]
+
+    color : color
+        color of the patch
+
+        For details see :mod:`matplotlib.colors`
+
+    edgecolor : color
+        edge color of the patch
+
+        For details see :mod:`matplotlib.colors`
+
+    facecolor : color
+        face color of the patch
+
+        For details see :mod:`matplotlib.colors`
+
+    fill : :class:`bool`
+        Whether to fill the patch
+
+    hatch : :class:`str` | :class:`None`
+        hatching pattern.
+
+        hatch can be one of::
+
+            /   - diagonal hatching
+            \   - back diagonal
+            |   - vertical
+            -   - horizontal
+            +   - crossed
+            x   - crossed diagonal
+            o   - small circle
+            O   - large circle
+            .   - dots
+            *   - stars
+
+        Letters can be combined, in which case all the specified hatchings
+        are done. If same letter repeats, it increases the density of
+        hatching of that pattern.
+
+    in_layout : :class:`bool`
+        Set if artist is to be included in layout calculations.
+
+    joinstyle : :class:`str`
+        Connection between two line segments.
+
+        Default: 'miter'
+
+    linestyle : :class:`str`
+        Style of the line.
+
+        Default: 'solid'
+
+        For details see :meth:`matplotlib.lines.Line2D.set_linestyle`
+
+    linewidth : :class:`float`
+        Width of the line, float value in points.
+
+        Default: 1.0
+
+    rasterized : :class:`bool`
+        Whether to force rasterized drawing for vector graphics output.
+
+    snap : :class:`bool`
+        Snapping behavior.
+
+        Possible values:
+
+        * True: Snap vertices to the nearest pixel center.
+        * False: Do not modify vertex positions.
+        * None: (auto) If the path contains only rectilinear line segments,
+          round to the nearest pixel center.
+
+    zorder : :class:`float`
+        Zorder for the artist.
+
+        Artists with lower zorder are drawn first.
+
+        For a summary of the default zorder values, see the `Matplotlib
+        documentation <https://matplotlib.org/stable/gallery/misc
+        /zorder_demo.html>`_
+
+
+    Examples
+    --------
+    A typical use case for patches are horizontal or vertical spans as used
+    for plot annotations. For details, see the
+    :class:`aspecd.annotation.VerticalSpan` class.
+
+
+    .. versionadded:: 0.11
+
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.alpha = None
+        self.color = None
+        self.edgecolor = None
+        self.facecolor = None
+        self.fill = True
+        self.hatch = None
+        self.in_layout = True
+        self.joinstyle = "miter"
+        self.linestyle = "-"
+        self.linewidth = 1
+        self.rasterized = False
+        self.sketch_params = None
+        self.snap = None
+        self.zorder = None

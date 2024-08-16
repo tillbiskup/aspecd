@@ -17,7 +17,7 @@ Available modules
 :mod:`aspecd.analysis`
     Analyse data in datasets
 :mod:`aspecd.annotation`
-    Annotate datasets
+    Annotate datasets and plots
 :mod:`aspecd.plotting`
     Plot data in datasets
 :mod:`aspecd.table`

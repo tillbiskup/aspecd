@@ -11,6 +11,19 @@ Version 0.11.0
 Not yet released
 
 
+New features
+------------
+
+* Plotting
+
+  * :class:`aspecd.plotting.PatchProperties` for properties of patches, as used for :class:`aspecd.annotations.VerticalSpan` and :class:`aspecd.annotations.HorizontalSpan`.
+
+* Plot annotations
+
+  * :class:`aspecd.annotations.VerticalSpan` for adding vertical spans (rectangles) to plot(ter)s
+  * :class:`aspecd.annotations.HorizontalSpan` for adding horizontal spans (rectangles) to plot(ter)s
+
+
 Fixes
 -----
 
