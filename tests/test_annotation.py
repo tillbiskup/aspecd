@@ -462,3 +462,7 @@ class TestText(unittest.TestCase):
         self.plotter.plot()
         annotation_ = self.plotter.annotate(self.annotation)
         self.assertIn(annotation_.drawings[0], self.plotter.ax.get_children())
+
+    def test_to_dict_contains_properties(self):
+        dict_ = self.annotation.to_dict()
+        self.assertIn("properties", dict_)

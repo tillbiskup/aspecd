@@ -3671,6 +3671,14 @@ class TestPlotAnnotationTask(unittest.TestCase):
         self.task.perform()
         self.assertNotIn("apply_to", self.task.to_dict())
 
+    def test_properties_in_to_dict(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.annotation_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertIn("properties", self.task.to_dict())
+        self.assertTrue(self.task.to_dict()["properties"])
+
 
 class TestReportTask(unittest.TestCase):
     def setUp(self):

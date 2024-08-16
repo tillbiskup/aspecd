@@ -16,6 +16,7 @@ Fixes
 
 * CompositePlotter operates on copies of plotters.
 * Plot task writes correct filename for each plotter if results is used.
+* PlotannotationTask saves properties to recipe history
 
 
 Version 0.10.1

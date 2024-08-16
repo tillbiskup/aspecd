@@ -3827,21 +3827,21 @@ class PlotannotationTask(Task):
         self._exclude_from_to_dict.append("apply_to")
 
     def _perform(self):
-        task = self.get_object()
+        self._task = self.get_object()
         if self.plotter:
             if not isinstance(self.plotter, list):
                 self.plotter = [self.plotter]
             for plotter in self.plotter:
-                task.plotter = self.recipe.plotters[plotter]
+                self._task.plotter = self.recipe.plotters[plotter]
                 # noinspection PyUnresolvedReferences
-                task.annotate()
-                if task.plotter.filename:
+                self._task.annotate()
+                if self._task.plotter.filename:
                     saver = aspecd.plotting.Saver(
-                        filename=task.plotter.filename
+                        filename=self._task.plotter.filename
                     )
-                    task.plotter.save(saver)
+                    self._task.plotter.save(saver)
         elif self.result:
-            self.recipe.plotannotations[self.result] = task
+            self.recipe.plotannotations[self.result] = self._task
 
 
 class ReportTask(Task):
