@@ -1650,13 +1650,29 @@ class TextWithLine(PlotAnnotation):
                 ):
                     offset.append(position[i_value] + value)
                 if self.parameters["offsets"][idx][0] > 0:
-                    connectionstyle = "angle, angleA=-135, angleB=90, rad=0"
+                    if self.parameters["offsets"][idx][1] > 0:
+                        connectionstyle = (
+                            "angle, angleA=-135, angleB=90, rad=0"
+                        )
+                        relpos = [0, 0]
+                    else:
+                        connectionstyle = (
+                            "angle, angleA=-45, angleB=90, rad=0"
+                        )
+                        relpos = [0, 1]
                     horizontalalignment = "left"
-                    relpos = [0, 0]
                 elif self.parameters["offsets"][idx][0] < 0:
+                    if self.parameters["offsets"][idx][1] > 0:
+                        connectionstyle = (
+                            "angle, angleA=-45, angleB=90, rad=0"
+                        )
+                        relpos = [1, 0]
+                    else:
+                        connectionstyle = (
+                            "angle, angleA=-135, angleB=90, rad=0"
+                        )
+                        relpos = [1, 1]
                     horizontalalignment = "right"
-                    connectionstyle = "angle, angleA=-45, angleB=90, rad=0"
-                    relpos = [1, 0]
             else:
                 offset = position
             annotation = self.plotter.ax.annotate(

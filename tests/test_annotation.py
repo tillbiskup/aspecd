@@ -727,20 +727,38 @@ class TestTextWithLine(unittest.TestCase):
             [0.5, 0.5],
             [0.5, 0.5],
             [0.5, 0.5],
+            [0.5, 0.5],
+            [0.5, 0.5],
+            [0.5, 0.5],
         ]
-        self.annotation.parameters["offsets"] = [[0, 1], [1, 1], [-1, 1]]
-        self.annotation.parameters["texts"] = ["foo", "bar", "baz"]
+        self.annotation.parameters["offsets"] = [
+            [0, 1],
+            [1, 1],
+            [-1, 1],
+            [0, -1],
+            [1, -1],
+            [-1, -1],
+        ]
+        self.annotation.parameters["texts"] = [
+            "foo",
+            "bar",
+            "baz",
+            "-foo",
+            "-bar",
+            "-baz",
+        ]
         self.plotter.plot()
         annotation_ = self.plotter.annotate(self.annotation)
-        self.assertListEqual(
-            [0.5, 0.5], annotation_.drawings[0].arrowprops["relpos"]
-        )
-        self.assertListEqual(
-            [0, 0], annotation_.drawings[1].arrowprops["relpos"]
-        )
-        self.assertListEqual(
-            [1, 0], annotation_.drawings[2].arrowprops["relpos"]
-        )
+        relpos = [
+            [0.5, 0.5],
+            [0, 0],
+            [1, 0],
+            [0.5, 0.5],
+            [0, 1],
+            [1, 1],
+        ]
+        for idx, annotation in enumerate(annotation_.drawings):
+            self.assertListEqual(relpos[idx], annotation.arrowprops["relpos"])
 
     def test_annotate_sets_correct_connection_style(self):
         self.annotation.parameters["positions"] = [
