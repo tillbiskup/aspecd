@@ -1399,22 +1399,36 @@ class HorizontalSpan(PlotAnnotation):
 
 
 class TextWithLine(PlotAnnotation):
-    """
+    r"""
     Text with connecting line added to a plot.
 
     One of the most versatile ways to annotate a plot is adding text labels
     at defined positions. However, if you intend to annotate data points,
     sometimes it is helpful to have a connecting line between data point and
-    text. Basically, this class is the ASpecD wrapper to
-    :meth:`matplotlib.axes.Axes.annotate`. Basically, you provide coordinates
-    (*x*, *y*) for the location, an offset (*dx*, *dy*), and a text label. By
-    default, coordinates are data coordinates.
+    text. This class uses :meth:`matplotlib.axes.Axes.annotate` under the hood.
+    Basically, you provide coordinates (*x*, *y*) for the location,
+    an offset (*dx*, *dy*), and a text label. By default, coordinates are
+    data coordinates.
+
+    Depending on the horizontal offset *dx*, the connecting line is either a
+    straight line (*dx* = 0), or it has a 45° hook in the upper part to the
+    left (*dx* < 0) or to the right (*dx* > 0). Similarly, if you set a
+    *negative* vertical  offset, the hook is obviously in the lower part.
+
+    In ASCII art, this may look like this::
+
+        foo  foo  foo            | | |
+          \   |   /              | | |
+           \  |  /               | | |
+            | | |               /  |  \
+            | | |              /   |   \
+            | | |            foo  foo  foo
 
     The properties of the texts and the connecting line can be controlled in
     quite some detail using the :attr:`properties` property. Note that all
     texts will share the same properties. If you need to add texts with
-    different properties to the same plot, use several :class:`Text` objects
-    and annotate separately.
+    different properties to the same plot, use several :class:`TextWithLine`
+    objects and annotate separately.
 
 
     Attributes
@@ -1439,6 +1453,8 @@ class TextWithLine(PlotAnnotation):
             Depending on the horizontal offset *dx*, the connecting line is
             either a straight line (*dx* = 0), or it has a 45° hook in the
             upper part to the left (*dx* < 0) or to the right (*dx* > 0).
+            Similarly, if you set a *negative* vertical  offset, the hook is
+            obviously in the lower part.
 
             Values are in axis (data) units.
 
