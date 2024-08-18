@@ -650,3 +650,156 @@ class TestHorizontalSpan(unittest.TestCase):
             annotation_.parameters["limits"],
             list(annotation_.drawings[0].get_corners()[:, 0][0:2]),
         )
+
+
+class TestTextWithLine(unittest.TestCase):
+    def setUp(self):
+        self.annotation = annotation.TextWithLine()
+        self.plotter = aspecd.plotting.Plotter()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_annotate_adds_text_to_plotter(self):
+        self.annotation.parameters["positions"] = [[0.5, 0.5]]
+        self.annotation.parameters["texts"] = ["foo"]
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertIn(annotation_.drawings[0], self.plotter.ax.get_children())
+
+    def test_annotate_adds_text_at_correct_position(self):
+        self.annotation.parameters["positions"] = [[0.5, 0.5]]
+        self.annotation.parameters["texts"] = ["foo"]
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertListEqual(
+            annotation_.parameters["positions"][0],
+            list(annotation_.drawings[0].get_position()),
+        )
+
+    def test_annotate_adds_text_at_correct_offset(self):
+        self.annotation.parameters["positions"] = [[0.5, 0.5]]
+        self.annotation.parameters["offsets"] = [[1, 1]]
+        self.annotation.parameters["texts"] = ["foo"]
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertListEqual(
+            [1.5, 1.5],
+            list(annotation_.drawings[0].get_position()),
+        )
+
+    def test_annotate_adds_correct_text(self):
+        self.annotation.parameters["positions"] = [[0.5, 0.5]]
+        self.annotation.parameters["texts"] = ["foo"]
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        result = [
+            item
+            for item in self.plotter.ax.get_children()
+            if item is annotation_.drawings[0]
+        ][0]
+        self.assertEqual(
+            annotation_.parameters["texts"][0], result.get_text()
+        )
+
+    def test_annotate_sets_correct_horizontal_alignment(self):
+        self.annotation.parameters["positions"] = [
+            [0.5, 0.5],
+            [0.5, 0.5],
+            [0.5, 0.5],
+        ]
+        self.annotation.parameters["offsets"] = [[0, 1], [1, 1], [-1, 1]]
+        self.annotation.parameters["texts"] = ["foo", "bar", "baz"]
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertEqual(
+            "center", annotation_.drawings[0].get_horizontalalignment()
+        )
+        self.assertEqual(
+            "left", annotation_.drawings[1].get_horizontalalignment()
+        )
+        self.assertEqual(
+            "right", annotation_.drawings[2].get_horizontalalignment()
+        )
+
+    def test_annotate_sets_correct_rel_position(self):
+        self.annotation.parameters["positions"] = [
+            [0.5, 0.5],
+            [0.5, 0.5],
+            [0.5, 0.5],
+        ]
+        self.annotation.parameters["offsets"] = [[0, 1], [1, 1], [-1, 1]]
+        self.annotation.parameters["texts"] = ["foo", "bar", "baz"]
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertListEqual(
+            [0.5, 0.5], annotation_.drawings[0].arrowprops["relpos"]
+        )
+        self.assertListEqual(
+            [0, 0], annotation_.drawings[1].arrowprops["relpos"]
+        )
+        self.assertListEqual(
+            [1, 0], annotation_.drawings[2].arrowprops["relpos"]
+        )
+
+    def test_annotate_sets_correct_connection_style(self):
+        self.annotation.parameters["positions"] = [
+            [0.5, 0.5],
+            [0.5, 0.5],
+            [0.5, 0.5],
+        ]
+        self.annotation.parameters["offsets"] = [[0, 1], [1, 1], [-1, 1]]
+        self.annotation.parameters["texts"] = ["foo", "bar", "baz"]
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertIsNone(
+            annotation_.drawings[0].arrowprops["connectionstyle"]
+        )
+        self.assertIn(
+            "angleA=-135",
+            annotation_.drawings[1].arrowprops["connectionstyle"],
+        )
+        self.assertIn(
+            "angleA=-45",
+            annotation_.drawings[2].arrowprops["connectionstyle"],
+        )
+
+    def test_annotate_adds_texts_to_plotter(self):
+        self.annotation.parameters["positions"] = [[0.5, 0.5], [0.7, 0.7]]
+        self.annotation.parameters["texts"] = ["foo", "bar"]
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertEqual(
+            len(annotation_.parameters["positions"]),
+            len(annotation_.drawings),
+        )
+        for drawing in annotation_.drawings:
+            self.assertIn(drawing, self.plotter.ax.get_children())
+
+    def test_annotate_with_xpositions_and_ypositions(self):
+        self.annotation.parameters["xpositions"] = [0.3]
+        self.annotation.parameters["ypositions"] = [0.7]
+        self.annotation.parameters["texts"] = ["foo"]
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertIn(annotation_.drawings[0], self.plotter.ax.get_children())
+
+    def test_annotate_with_xpositions_and_scalar_ypositions(self):
+        self.annotation.parameters["xpositions"] = [0.3]
+        self.annotation.parameters["ypositions"] = 0.7
+        self.annotation.parameters["texts"] = ["foo"]
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertIn(annotation_.drawings[0], self.plotter.ax.get_children())
+
+    def test_annotate_with_many_xpositions_and_one_ypositions(self):
+        self.annotation.parameters["xpositions"] = [0.3, 0.5, 0.7]
+        self.annotation.parameters["ypositions"] = [0.7]
+        self.annotation.parameters["texts"] = ["foo", "bar", "baz"]
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertIn(annotation_.drawings[0], self.plotter.ax.get_children())
+
+    def test_to_dict_contains_properties(self):
+        dict_ = self.annotation.to_dict()
+        self.assertIn("properties", dict_)

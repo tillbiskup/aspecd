@@ -12,8 +12,7 @@ For version 0.11
 
   * Plot annotations
 
-    * Text annotations with additional lines/arrows
-    * additional types of annotations, *e.g.* ``axvspan``, ``axhspan``, symbols
+    * additional types of annotations, *e.g.*, symbols
 
 * Example recipes
 

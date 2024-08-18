@@ -2833,7 +2833,11 @@ class TestDrawingProperties(unittest.TestCase):
         self.assertTrue(callable(self.drawing_properties.from_dict))
 
     def test_has_properties(self):
-        for prop in ["label", "zorder"]:
+        for prop in [
+            "label",
+            "zorder",
+            "alpha",
+        ]:
             self.assertTrue(hasattr(self.drawing_properties, prop))
 
     def test_has_apply_method(self):
@@ -4107,5 +4111,217 @@ class TestPatchProperties(unittest.TestCase):
                 else:
                     self.assertEqual(
                         getattr(self.properties, prop),
+                        getattr(patch, f"get_{prop}")(),
+                    )
+
+
+class TestAnnotationTextProperties(unittest.TestCase):
+    def setUp(self):
+        self.properties = plotting.AnnotationTextProperties()
+        self.annotation = matplotlib.text.Annotation(
+            "Lorem ipsum",
+            [1, 2],
+            xytext=[-0.75, 4],
+            arrowprops={
+                "arrowstyle": "-",
+                "relpos": [1, 0],
+                "connectionstyle": "angle, angleA=-45, angleB=90, rad=0",
+            },
+        )
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_properties(self):
+        for prop in [
+            "alpha",
+            "backgroundcolor",
+            "color",
+            "fontfamily",
+            "fontsize",
+            "fontstretch",
+            "fontstyle",
+            "fontvariant",
+            "fontweight",
+            "in_layout",
+            "linespacing",
+            "math_fontfamily",
+            "parse_math",
+            "rotation",
+            "rotation_mode",
+            "usetex",
+            "wrap",
+            "zorder",
+        ]:
+            self.assertTrue(hasattr(self.properties, prop))
+
+    def test_has_no_alignment_properties(self):
+        for prop in [
+            "horizontalalignment",
+            "verticalalignment",
+            "multialignment",
+        ]:
+            self.assertFalse(hasattr(self.properties, prop))
+
+    def test_has_apply_method(self):
+        self.assertTrue(hasattr(self.properties, "apply"))
+        self.assertTrue(callable(self.properties.apply))
+
+    def test_apply_without_argument_raises(self):
+        with self.assertRaises(aspecd.exceptions.MissingDrawingError):
+            self.properties.apply()
+
+    def test_apply_sets_text_properties(self):
+        properties = {
+            "alpha": 0.5,
+            "color": "#ff0000",
+            "fontsize": 20,
+            "fontstyle": "oblique",
+            "fontvariant": "small-caps",
+            "fontweight": "heavy",
+            "horizontalalignment": "center",
+            "in_layout": False,
+            "math_fontfamily": "cm",
+            "parse_math": True,
+            "rotation": 30,
+            "rotation_mode": "anchor",
+            "usetex": True,
+            "verticalalignment": "top",
+            "wrap": True,
+            "zorder": 5,
+        }
+        for prop, value in properties.items():
+            with self.subTest(key=prop, val=value):
+                setattr(self.properties, prop, value)
+                self.properties.apply(drawing=self.annotation)
+                self.assertEqual(
+                    getattr(self.properties, prop),
+                    getattr(self.annotation, f"get_{prop}")(),
+                )
+
+    def test_apply_sets_font_family(self):
+        # Note: matplotlib.text.Annotation.get_fontfamily returns a list
+        self.properties.fontfamily = "fantasy"
+        self.properties.apply(drawing=self.annotation)
+        self.assertEqual(
+            self.properties.fontfamily,
+            self.annotation.get_fontfamily()[0],
+        )
+
+    def test_apply_sets_font_stretch(self):
+        # Note: matplotlib.text.Text has no get_fontstretch method
+        self.properties.fontstretch = "ultra-condensed"
+        self.properties.apply(drawing=self.annotation)
+        self.assertEqual(
+            self.properties.fontstretch,
+            self.annotation.get_stretch(),
+        )
+
+    def test_apply_with_backgroundcolor_none_removes_background_color(self):
+        self.properties.backgroundcolor = None
+        self.properties.apply(drawing=self.annotation)
+        self.assertFalse(self.annotation.get_bbox_patch())
+
+    def test_apply_without_backgroundcolor_removes_background_color(self):
+        self.properties.apply(drawing=self.annotation)
+        self.assertFalse(self.annotation.get_bbox_patch())
+
+    def test_apply_with_usetex_none_uses_rcparams_value(self):
+        self.properties.usetex = None
+        self.properties.apply(drawing=self.annotation)
+        self.assertEqual(
+            matplotlib.rcParams["text.usetex"], self.annotation.get_usetex()
+        )
+
+
+class TestAnnotationProperties(unittest.TestCase):
+    def setUp(self):
+        self.properties = plotting.AnnotationProperties()
+        self.annotation = matplotlib.text.Annotation(
+            "Lorem ipsum",
+            [1, 2],
+            xytext=[-0.75, 4],
+            arrowprops={
+                "arrowstyle": "-",
+                "relpos": [1, 0],
+                "connectionstyle": "angle, angleA=-45, angleB=90, rad=0",
+            },
+        )
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_properties(self):
+        for prop in [
+            "text",
+            "line",
+        ]:
+            self.assertTrue(hasattr(self.properties, prop))
+
+    def test_has_apply_method(self):
+        self.assertTrue(hasattr(self.properties, "apply"))
+        self.assertTrue(callable(self.properties.apply))
+
+    def test_apply_without_argument_raises(self):
+        with self.assertRaises(aspecd.exceptions.MissingDrawingError):
+            self.properties.apply()
+
+    def test_apply_sets_text_properties(self):
+        properties = {
+            "alpha": 0.5,
+            "color": "#ff0000",
+            "fontsize": 20,
+            "fontstyle": "oblique",
+            "fontvariant": "small-caps",
+            "fontweight": "heavy",
+            "horizontalalignment": "center",
+            "in_layout": False,
+            "math_fontfamily": "cm",
+            "parse_math": True,
+            "rotation": 30,
+            "rotation_mode": "anchor",
+            "usetex": True,
+            "verticalalignment": "top",
+            "wrap": True,
+            "zorder": 5,
+        }
+        for prop, value in properties.items():
+            with self.subTest(key=prop, val=value):
+                setattr(self.properties.text, prop, value)
+                self.properties.apply(drawing=self.annotation)
+                self.assertEqual(
+                    getattr(self.properties.text, prop),
+                    getattr(self.annotation, f"get_{prop}")(),
+                )
+
+    def test_apply_sets_line_properties(self):
+        properties = {
+            "alpha": 0.5,
+            "edgecolor": "#ff0000",
+            "facecolor": "#0000ff",
+            "fill": False,
+            "hatch": "x",
+            "in_layout": False,
+            "joinstyle": "bevel",
+            "linestyle": "-",
+            "linewidth": 3,
+            "snap": False,
+            "zorder": 5,
+        }
+        for prop, value in properties.items():
+            with self.subTest(key=prop, val=value):
+                setattr(self.properties.line, prop, value)
+                self.properties.apply(drawing=self.annotation)
+                patch = self.annotation.arrow_patch
+                if prop.endswith("color"):
+                    self.assertEqual(
+                        getattr(self.properties.line, prop),
+                        matplotlib.colors.to_hex(
+                            getattr(patch, f"get_" f"{prop}")()
+                        ),
+                    )
+                else:
+                    self.assertEqual(
+                        getattr(self.properties.line, prop),
                         getattr(patch, f"get_{prop}")(),
                     )

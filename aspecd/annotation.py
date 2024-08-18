@@ -1396,3 +1396,278 @@ class HorizontalSpan(PlotAnnotation):
                     ymin=position[0], ymax=position[1]
                 )
             self.drawings.append(span)
+
+
+class TextWithLine(PlotAnnotation):
+    """
+    Text with connecting line added to a plot.
+
+    One of the most versatile ways to annotate a plot is adding text labels
+    at defined positions. However, if you intend to annotate data points,
+    sometimes it is helpful to have a connecting line between data point and
+    text. Basically, this class is the ASpecD wrapper to
+    :meth:`matplotlib.axes.Axes.annotate`. Basically, you provide coordinates
+    (*x*, *y*) for the location, an offset (*dx*, *dy*), and a text label. By
+    default, coordinates are data coordinates.
+
+    The properties of the texts and the connecting line can be controlled in
+    quite some detail using the :attr:`properties` property. Note that all
+    texts will share the same properties. If you need to add texts with
+    different properties to the same plot, use several :class:`Text` objects
+    and annotate separately.
+
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for the annotation, implicit and explicit
+
+        The following keys exist:
+
+        positions : :class:`list`
+            List of the positions the lines should point to.
+
+            Note that each position is itself a list: [*x*, *y*]
+
+            Values are in axis (data) units.
+
+        offsets : :class:`list`
+            List of the offsets texts should appear at.
+
+            Note that each position is itself a list: [*dx*, *dy*]
+
+            Depending on the horizontal offset *dx*, the connecting line is
+            either a straight line (*dx* = 0), or it has a 45° hook in the
+            upper part to the left (*dx* < 0) or to the right (*dx* > 0).
+
+            Values are in axis (data) units.
+
+        xpositions : :class:`list`
+            List of the *x* positions texts should appear at.
+
+            This allows to set *x* positions from the result of other tasks,
+            *e.g.* a peak finding analysis step.
+
+            If ``xpositions`` is set, you need to set ``ypositions`` as well.
+            However, you can set either a single element or even a scalar
+            (not a list). In this case, the single *y* position is expanded
+            to match the number of *x* positions, *i.e.*, all texts will
+            appear with the same *y* position.
+
+            If you provide both, ``positions`` and
+            ``xpositions``/``ypositions``, the latter couple wins.
+
+            Values are in axis (data) units.
+
+        ypositions : :class:`list` or :class:`float`
+            List of the *y* positions texts should appear at.
+
+            If ``xpositions`` is set, you need to set ``ypositions`` as well.
+            However, you can set either a single element or even a scalar
+            (not a list). In this case, the single *y* position is expanded
+            to match the number of *x* positions, *i.e.*, all texts will
+            appear with the same *y* position.
+
+            If you provide both, ``positions`` and
+            ``xpositions``/``ypositions``, the latter couple wins.
+
+            Values are in axis (data) units.
+
+        texts : :class:`list`
+            Texts that should appear at the individual positions.
+
+            Each text is a :class:`str`, obviously.
+
+    properties : :class:`aspecd.plotting.AnnotationProperties`
+        Properties of the text(s) and line(s) within a plot
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.AnnotationProperties` class.
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Generally and for obvious reasons, you need to have both, a plot task
+    and a plotannotation task. It does not really matter which task you
+    define first, the plot or the plot annotation. There are only marginal
+    differences, and both ways are shown below.
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            filename: plot1D.pdf
+          result: plot1D
+
+        - kind: plotannotation
+          type: TextWithLine
+          properties:
+            parameters:
+              positions:
+                - [0.5, 0.5]
+                - [0.55, 0.5]
+              offsets:
+                - [0.5, 2]
+                - [0.8, 2]
+              texts:
+                - "Lorem ipsum"
+                - "dolor sit amet"
+            properties:
+              text:
+                color: green
+                fontsize: large
+                fontstyle: oblique
+              line:
+                linestyle: ":"
+          plotter: plot1D
+
+
+    In this case, the plotter is defined first, and the annotation second.
+    To refer to the plotter from within the plotannotation task, you need to
+    set the ``result`` attribute in the plotting task and refer to it within
+    the ``plotter`` attribute of the plotannotation task. Although defining
+    the plotter before the annotation, the user still expects the annotation
+    to be included in the file containing the actual plot, despite the fact
+    that the figure has been saved (for the first time) before the
+    annotation has been added.
+
+    Sometimes, it might be convenient to go the other way round and first
+    define an annotation and afterwards add it to a plot(ter). This can be
+    done as well:
+
+    .. code-block:: yaml
+
+        - kind: plotannotation
+          type: TextWithLine
+          properties:
+            parameters:
+              positions:
+                - [0.5, 0.5]
+                - [0.55, 0.5]
+              offsets:
+                - [0.5, 2]
+                - [0.8, 2]
+              texts:
+                - "Lorem ipsum"
+                - "dolor sit amet"
+            properties:
+              text:
+                color: green
+                fontsize: large
+                fontstyle: oblique
+              line:
+                linestyle: ":"
+          result: text
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            filename: plot1D.pdf
+          annotations:
+            - text
+
+
+    In this way, you can add the same annotation to several plots,
+    and be sure that each annotation is handled as a separate object.
+
+    Suppose you have more than one plotter you want to apply an annotation
+    to. In this case, the ``plotter`` property of the plotannotation task is
+    a list rather than a string:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          result: plot1
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          result: plot2
+
+        - kind: plotannotation
+          type: TextWithLine
+          properties:
+            parameters:
+              positions:
+                - [0.5, 0.5]
+                - [0.55, 0.5]
+              offsets:
+                - [0.5, 2]
+                - [0.8, 2]
+              texts:
+                - "Lorem ipsum"
+                - "dolor sit amet"
+          plotter:
+            - plot1
+            - plot2
+
+    In this case, the annotation will be applied to both plots
+    independently. Note that the example has been reduced to the key
+    aspects. In a real situation, the two plotters will differ much more.
+
+
+    .. versionadded:: 0.11
+
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.parameters["positions"] = []
+        self.parameters["offsets"] = []
+        self.parameters["xpositions"] = []
+        self.parameters["ypositions"] = []
+        self.parameters["texts"] = []
+        self.properties = aspecd.plotting.AnnotationProperties()
+
+    def _perform_task(self):
+        if self.parameters["xpositions"] and self.parameters["ypositions"]:
+            xpositions = self.parameters["xpositions"]
+            ypositions = self.parameters["ypositions"]
+            if np.isscalar(ypositions):
+                ypositions = [ypositions] * len(xpositions)
+            if len(ypositions) == 1:
+                ypositions = ypositions * len(xpositions)
+            positions = []
+            for idx, xposition in enumerate(xpositions):
+                positions.append([xposition, ypositions[idx]])
+        else:
+            positions = self.parameters["positions"]
+        for idx, position in enumerate(positions):
+            horizontalalignment = "center"
+            connectionstyle = None
+            relpos = [0.5, 0.5]
+            if self.parameters["offsets"]:
+                offset = []
+                for i_value, value in enumerate(
+                    self.parameters["offsets"][idx]
+                ):
+                    offset.append(position[i_value] + value)
+                if self.parameters["offsets"][idx][0] > 0:
+                    connectionstyle = "angle, angleA=-135, angleB=90, rad=0"
+                    horizontalalignment = "left"
+                    relpos = [0, 0]
+                elif self.parameters["offsets"][idx][0] < 0:
+                    horizontalalignment = "right"
+                    connectionstyle = "angle, angleA=-45, angleB=90, rad=0"
+                    relpos = [1, 0]
+            else:
+                offset = position
+            annotation = self.plotter.ax.annotate(
+                self.parameters["texts"][idx],
+                position,
+                horizontalalignment=horizontalalignment,
+                xytext=offset,
+                arrowprops={
+                    "arrowstyle": "-",
+                    "relpos": relpos,
+                    "connectionstyle": connectionstyle,
+                },
+            )
+            self.drawings.append(annotation)

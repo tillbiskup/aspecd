@@ -5242,6 +5242,13 @@ class DrawingProperties(aspecd.utils.Properties):
 
          Default: ''
 
+    alpha : :class:`float`
+        Alpha value used for blending
+
+        Must be within the 0-1 range, inclusive, or :class:`None`.
+
+        .. versionadded:: 0.11
+
     zorder : :class:`float`
         Zorder for the artist.
 
@@ -5287,12 +5294,16 @@ class DrawingProperties(aspecd.utils.Properties):
     .. versionchanged:: 0.10
         New property :attr:`zorder`
 
+    .. versionchanged:: 0.11
+        New property :attr:`alpha`
+
     """
 
     def __init__(self):
         super().__init__()
         self.label = ""
         self.zorder = 2
+        self.alpha = None
 
     def apply(self, drawing=None):
         """
@@ -6160,3 +6171,216 @@ class PatchProperties(DrawingProperties):
         self.sketch_params = None
         self.snap = None
         self.zorder = None
+
+
+class AnnotationTextProperties(DrawingProperties):
+    """
+    Properties of text of an annotation.
+
+    Basically, the attributes are a subset of what :mod:`matplotlib` defines
+    for :obj:`matplotlib.text.Text` objects. However, the alignment
+    properties are missing that are present in :class:`TextProperties`,
+    as they would interfere with the functionality of the
+    :class:`aspecd.annotate.TextWithLine` class.
+
+
+    Attributes
+    ----------
+    alpha : :class:`float`
+        Alpha value used for blending
+
+        Must be within the 0-1 range, inclusive, or :class:`None`.
+
+    backgroundcolor : :class:`str`
+        Color used as background for the text
+
+        If set to :class:`None`, no background will be set (and the bbox
+        removed from the Matplotlib artist)
+
+    color : :class:`str`
+        Color used for the text
+
+    fontfamily : :class:`str`
+        Font family or font name
+
+        Font family can be one of: 'serif', 'sans-serif', 'cursive', 'fantasy',
+        'monospace'
+
+    fontsize : :class:`float` or :class:`str`
+        Size of the font
+
+        Either a numeric value or one of 'xx-small', 'x-small', 'small',
+        'medium', 'large', 'x-large', 'xx-large'
+
+    fontstretch : :class:`int` or :class:`str`
+        Stretch of the font
+
+        A numeric value in range 0-1000 or one of 'ultra-condensed',
+        'extra-condensed', 'condensed', 'semi-condensed', 'normal',
+        'semi-expanded', 'expanded', 'extra-expanded', 'ultra-expanded'
+
+    fontstyle : :class:`str`
+        Style of the font
+
+        One of: 'normal', 'italic', 'oblique'
+
+    fontvariant : :class:``
+        Variant of the font
+
+        One of: 'normal', 'small-caps'
+
+    fontweight : :class:`int` or :class:`str`
+        Weight of the font
+
+        A numeric value in range 0-1000 or one of 'ultralight', 'light',
+        'normal', 'regular', 'book', 'medium', 'roman', 'semibold',
+        'demibold', 'demi', 'bold', 'heavy', 'extra bold', 'black'.
+
+    in_layout : :class:`bool`
+        Set if artist is to be included in layout calculations.
+
+    linespacing : :class:`float`
+        Line spacing of the text
+
+        The value is interpreted as multiple of the font size
+
+    math_fontfamily : :class:`str`
+        Font family or fontname used for math fonts
+
+    parse_math : :class:`bool`
+        Set mathtext parsing for text
+
+        If False, no mathtext will be used. If True, mathtext will be used if
+        there is an even number of unescaped dollar signs.
+
+    rotation : :class:`float` or :class:`str`
+        Rotation of the text
+
+        Either a scalar number or one of: 'vertical', 'horizontal'
+
+    rotation_mode : :class:`str`
+        Rotation mode of the text
+
+        One of: 'default', 'anchor'
+
+        If "default", the text will be first rotated, then aligned according
+        to their horizontal and vertical alignments. If "anchor",
+        then alignment occurs before rotation.
+
+    usetex : :class:`bool` or :class:`None`
+        Whether to render using TeX
+
+        None means to use ``rcParams["text.usetex"]`` (default: False).
+
+    wrap : :class:`bool`
+        Set whether the text can be wrapped.
+
+        Wrapping makes sure the text is confined to the (sub)figure box. It
+        does not take into account any other artists.
+
+    zorder : :class:`float`
+        Zorder for the artist.
+
+        Artists with lower zorder values are drawn first.
+
+        For a summary of the default zorder values, see the `Matplotlib
+        documentation <https://matplotlib.org/stable/gallery/misc
+        /zorder_demo.html>`_
+
+
+    Raises
+    ------
+    aspecd.exceptions.MissingDrawingError
+        Raised if no text is provided.
+
+
+    .. versionadded:: 0.11
+
+
+    """
+
+    # pylint: disable=too-many-instance-attributes
+    def __init__(self):
+        super().__init__()
+        self.alpha = None
+        self.backgroundcolor = None
+        self.color = "#000000"
+        self.fontfamily = None
+        self.fontsize = None
+        self.fontstretch = None
+        self.fontstyle = None
+        self.fontvariant = None
+        self.fontweight = None
+        self.in_layout = True
+        self.linespacing = None
+        self.math_fontfamily = None
+        self.parse_math = None
+        self.rotation = None
+        self.rotation_mode = None
+        self.usetex = False
+        self.wrap = None
+        self.zorder = None
+
+    def apply(self, drawing=None):
+        """Apply properties to text."""
+        super().apply(drawing=drawing)
+        if self.backgroundcolor is None:
+            drawing._bbox_patch = None  # pylint: disable=protected-access
+
+
+class AnnotationProperties(aspecd.utils.Properties):
+    """
+    Properties for the text and line of annotations.
+
+    This class is used to set properties for the
+    :class:`aspecd.annotation.TextWithLine` class.
+
+
+    Attributes
+    ----------
+    text : :class:`AnnotationTextProperties`
+        Properties of the text part of the annotation
+
+    line : :class:`PatchProperties`
+        Properties of the line part of the annotation
+
+    Raises
+    ------
+    aspecd.exceptions.MissingDrawingError
+        Raised if no text is provided.
+
+
+    .. versionadded:: 0.11
+
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.text = AnnotationTextProperties()
+        self.line = PatchProperties()
+
+    def apply(self, drawing=None):
+        """
+        Apply properties to drawing.
+
+        Properties will be set independently for the text and line parts of
+        the annotation, and the underlying
+        :meth:`AnnotationTextProperties.apply` and
+        :meth:`PatchProperties.apply` method be called.
+
+        Parameters
+        ----------
+        drawing: :class:`matplotlib.axes.Axes`
+            axis to set properties for
+
+        Raises
+        ------
+        aspecd.exceptions.MissingDrawingError
+            Raised if no line is provided.
+
+        """
+        if not drawing:
+            raise aspecd.exceptions.MissingDrawingError
+        self.text.apply(drawing=drawing)
+        self.line.apply(drawing=drawing.arrow_patch)
