@@ -81,9 +81,21 @@ Concrete plot annotations are:
 
     Add horizontal line(s) to a plot(ter).
 
+* :class:`aspecd.annotation.VerticalSpan`
+
+    Add vertical span(s) (rectangles) to a plot(ter).
+
+* :class:`aspecd.annotation.HorizontalSpan`
+
+    Add horizontal span(s) (rectangles) to a plot(ter).
+
 * :class:`aspecd.annotation.Text`
 
     Add text(s) to a plot(ter).
+
+* :class:`aspecd.annotation.TextWithLine`
+
+    Add text(s) with a connecting line to a plot(ter).
 
 
 Module documentation

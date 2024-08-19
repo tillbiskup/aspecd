@@ -1,0 +1,102 @@
+format:
+  type: ASpecD recipe
+  version: '0.2'
+
+settings:
+  autosave_plots: False
+
+tasks:
+  - kind: model
+    type: Zeros
+    properties:
+      parameters:
+        shape: 1001
+        range: [-10, 10]
+    result: dummy
+
+  - kind: model
+    type: Lorentzian
+    from_dataset: dummy
+    properties:
+      parameters:
+        width: 2
+    result: model_data
+    comment: >
+      Create Lorentzian with width set explicitly
+
+  - kind: singleplot
+    type: SinglePlotter1D
+    properties:
+      properties:
+        axes:
+          xlabel: "$position$ / a.u."
+      parameters:
+        tight_layout: True
+      filename: plotting-annotation-lines-vertical.pdf
+    apply_to:
+      - model_data
+    result:
+      - plot-with-vertical-lines
+    comment: >
+      Plotter that gets annotated later
+
+  - kind: plotannotation
+    type: VerticalLine
+    properties:
+      parameters:
+        positions: [-2, 2]
+      properties:
+        color: green
+        linewidth: 2
+        linestyle: dotted
+        alpha: 0.3
+    plotter: plot-with-vertical-lines
+    result: vertical-lines
+    comment: >
+      Two styled vertical lines marking the FWHM
+
+  - kind: plotannotation
+    type: HorizontalLine
+    properties:
+      parameters:
+        positions: [0.5]
+      properties:
+        color: red
+        linewidth: 1
+        linestyle: dashed
+    result: horizontal-line
+    comment: >
+      Styled horizontal line marking the FWHM, used later in plot
+
+  - kind: singleplot
+    type: SinglePlotter1D
+    properties:
+      properties:
+        axes:
+          xlabel: "$position$ / a.u."
+      parameters:
+        tight_layout: True
+      filename: plotting-annotation-lines-horizontal.pdf
+    apply_to:
+      - model_data
+    annotations:
+      - horizontal-line
+    comment: >
+      Plotter using an existing annotation
+
+  - kind: singleplot
+    type: SinglePlotter1D
+    properties:
+      properties:
+        axes:
+          xlabel: "$position$ / a.u."
+      parameters:
+        tight_layout: True
+      filename: plotting-annotation-lines-both.pdf
+    apply_to:
+      - model_data
+    annotations:
+      - horizontal-line
+      - vertical-lines
+    comment: >
+      Plotter using both existing annotations
