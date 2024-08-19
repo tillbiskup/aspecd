@@ -63,7 +63,7 @@ Examples for the figures created in the recipe are given below. While in the rec
         for k in plotting-compositeplotter-share*pdf; do echo ${k%.*}; convert -density 180 $k ${k%.*}.png; done
 
 
-As this is a rather lengthly recipe demonstrating many different scenarios, the individual cases are shown separately, each with the corresponding section of the recipe.
+As this is a rather lengthy recipe demonstrating many different scenarios, the individual cases are shown separately, each with the corresponding section of the recipe.
 
 
 All *y* axes shared
