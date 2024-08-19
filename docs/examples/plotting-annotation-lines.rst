@@ -19,6 +19,9 @@ Classes used:
 * Plotting:
 
   * :class:`aspecd.plotting.SinglePlotter1D`
+
+* Annotations:
+
   * :class:`aspecd.annotation.VerticalLine`
   * :class:`aspecd.annotation.HorizontalLine`
 
@@ -33,7 +36,7 @@ Here, we focus on simple **vertical and horizontal lines** added to a plot that 
 Recipe
 ======
 
-Shown below is the entire recipe. As this is quite lengthly, separate parts will be detailed below in the "Results" section.
+Shown below is the entire recipe. As this is quite lengthy, separate parts will be detailed below in the "Results" section.
 
 
 .. literalinclude:: plotting-annotation-lines.yaml

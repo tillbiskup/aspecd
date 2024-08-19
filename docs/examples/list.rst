@@ -44,3 +44,4 @@ If you are new to working with models or need a refresher, have a look at the :d
 
     plotting-annotation-lines
     plotting-annotation-vertical-span
+    plotting-annotation-text
