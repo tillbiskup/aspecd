@@ -33,6 +33,7 @@ Fixes
 * Plot task writes correct filename for each plotter if results is used.
 * PlotannotationTask saves properties to recipe history.
 * PlotannotationTask can be applied to plotter and stored for later use as result at the same time.
+* Text plot annotation with scalar y position set to zero works.
 
 
 Version 0.10.1

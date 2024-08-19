@@ -1051,7 +1051,10 @@ class Text(PlotAnnotation):
         self.properties = aspecd.plotting.TextProperties()
 
     def _perform_task(self):
-        if self.parameters["xpositions"] and self.parameters["ypositions"]:
+        if self.parameters["xpositions"] and (
+            self.parameters["ypositions"]
+            or self.parameters["ypositions"] == 0
+        ):
             xpositions = self.parameters["xpositions"]
             ypositions = self.parameters["ypositions"]
             if np.isscalar(ypositions):

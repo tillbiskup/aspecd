@@ -449,9 +449,25 @@ class TestText(unittest.TestCase):
         annotation_ = self.plotter.annotate(self.annotation)
         self.assertIn(annotation_.drawings[0], self.plotter.ax.get_children())
 
+    def test_annotate_with_xpositions_and_ypositions_zero(self):
+        self.annotation.parameters["xpositions"] = [0]
+        self.annotation.parameters["ypositions"] = [0]
+        self.annotation.parameters["texts"] = ["foo"]
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertIn(annotation_.drawings[0], self.plotter.ax.get_children())
+
     def test_annotate_with_xpositions_and_scalar_ypositions(self):
         self.annotation.parameters["xpositions"] = [0.3]
         self.annotation.parameters["ypositions"] = 0.7
+        self.annotation.parameters["texts"] = ["foo"]
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertIn(annotation_.drawings[0], self.plotter.ax.get_children())
+
+    def test_annotate_with_xpositions_and_scalar_ypositions_zero(self):
+        self.annotation.parameters["xpositions"] = [0.3]
+        self.annotation.parameters["ypositions"] = 0
         self.annotation.parameters["texts"] = ["foo"]
         self.plotter.plot()
         annotation_ = self.plotter.annotate(self.annotation)
