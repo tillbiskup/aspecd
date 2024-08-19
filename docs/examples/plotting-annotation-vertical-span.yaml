@@ -1,0 +1,56 @@
+format:
+  type: ASpecD recipe
+  version: '0.2'
+
+settings:
+  autosave_plots: False
+
+tasks:
+  - kind: model
+    type: Zeros
+    properties:
+      parameters:
+        shape: 1001
+        range: [-10, 10]
+    result: dummy
+
+  - kind: model
+    type: Lorentzian
+    from_dataset: dummy
+    properties:
+      parameters:
+        width: 2
+    result: model_data
+    comment: >
+      Create Lorentzian with width set explicitly
+
+  - kind: singleplot
+    type: SinglePlotter1D
+    properties:
+      properties:
+        axes:
+          xlabel: "$position$ / a.u."
+      parameters:
+        tight_layout: True
+      filename: plotting-annotation-vertical-span.pdf
+    apply_to:
+      - model_data
+    result:
+      - plot-with-vertical-span
+    comment: >
+      Plotter that gets annotated later
+
+  - kind: plotannotation
+    type: VerticalSpan
+    properties:
+      parameters:
+        positions:
+          - [-2, 2]
+      properties:
+        facecolor: green
+        alpha: 0.3
+        zorder: 0
+    plotter: plot-with-vertical-span
+    result: vertical-lines
+    comment: >
+      Two styled vertical span marking the FWHM

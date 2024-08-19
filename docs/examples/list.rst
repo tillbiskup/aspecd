@@ -43,3 +43,4 @@ If you are new to working with models or need a refresher, have a look at the :d
     :maxdepth: 1
 
     plotting-annotation-lines
+    plotting-annotation-vertical-span

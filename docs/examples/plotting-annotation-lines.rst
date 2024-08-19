@@ -14,7 +14,7 @@ Classes used:
 * Models:
 
   * :class:`aspecd.model.Zeros`
-  * :class:`aspecd.model.NormalisedGaussian`
+  * :class:`aspecd.model.Lorentzian`
 
 * Plotting:
 
@@ -39,7 +39,7 @@ Shown below is the entire recipe. As this is quite lengthly, separate parts will
 .. literalinclude:: plotting-annotation-lines.yaml
     :language: yaml
     :linenos:
-    :caption: Concrete example of a recipe demonstrating some of the many different modes of sharing axes. You can share *x* and *y* axes separately, and you can share *x* axes column-wise and *y* axes row-wise.
+    :caption: Concrete example of a recipe demonstrating some of the ways to add annotations to plot(ter)s, in this case vertical and horizontal lines.
 
 
 Comments
@@ -49,7 +49,7 @@ Comments
 * For simplicity, a generic plotter is used, to focus on the annotations.
 * The sequence of defining plot and annotation(s) does not matter. You only need to provide the ``result`` key with a unique name for whichever task you define first, to refer to it in the later task(s).
 * Styling the lines, as shown here for pure demonstration purposes, shall be used carefully in scientific presentations, but can nevertheless be very helpful.
-* While technically speaking, you could highlight entire regions by setting a rather large line width, colour, and possibly transparency, this is the realm of the dedicated :class:`aspecd.annotation.VerticalSpan` and :class:`aspecd.annotation.HorizontalSpan` annotations.
+* While technically speaking, you could highlight entire regions by setting a rather large line width, colour, and possibly transparency, this is the realm of the dedicated :class:`aspecd.annotation.VerticalSpan` and :class:`aspecd.annotation.HorizontalSpan` annotations. See the :doc:`plotting-annotation-vertical-span` example for further details.
 
 
 Results
