@@ -3,6 +3,7 @@
 import unittest
 
 import matplotlib
+import numpy as np
 
 import aspecd.annotation as annotation
 import aspecd.dataset
@@ -449,6 +450,14 @@ class TestText(unittest.TestCase):
         annotation_ = self.plotter.annotate(self.annotation)
         self.assertIn(annotation_.drawings[0], self.plotter.ax.get_children())
 
+    def test_annotate_with_xpositions_as_ndarray_and_ypositions(self):
+        self.annotation.parameters["xpositions"] = np.asarray([0.3, 0.4])
+        self.annotation.parameters["ypositions"] = [0.7, 0.7]
+        self.annotation.parameters["texts"] = ["foo", "bar"]
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertIn(annotation_.drawings[0], self.plotter.ax.get_children())
+
     def test_annotate_with_xpositions_and_ypositions_zero(self):
         self.annotation.parameters["xpositions"] = [0]
         self.annotation.parameters["ypositions"] = [0]
@@ -814,6 +823,14 @@ class TestTextWithLine(unittest.TestCase):
         self.annotation.parameters["xpositions"] = [0.3]
         self.annotation.parameters["ypositions"] = [0.7]
         self.annotation.parameters["texts"] = ["foo"]
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertIn(annotation_.drawings[0], self.plotter.ax.get_children())
+
+    def test_annotate_with_xpositions_as_ndarray_and_ypositions(self):
+        self.annotation.parameters["xpositions"] = np.asarray([0.3, 0.5])
+        self.annotation.parameters["ypositions"] = [0.7, 0.7]
+        self.annotation.parameters["texts"] = ["foo", "bar"]
         self.plotter.plot()
         annotation_ = self.plotter.annotate(self.annotation)
         self.assertIn(annotation_.drawings[0], self.plotter.ax.get_children())

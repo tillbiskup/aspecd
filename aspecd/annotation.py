@@ -1051,6 +1051,10 @@ class Text(PlotAnnotation):
         self.properties = aspecd.plotting.TextProperties()
 
     def _perform_task(self):
+        if isinstance(self.parameters["xpositions"], np.ndarray):
+            self.parameters["xpositions"] = self.parameters[
+                "xpositions"
+            ].tolist()
         if self.parameters["xpositions"] and (
             self.parameters["ypositions"]
             or self.parameters["ypositions"] == 0
@@ -1658,6 +1662,10 @@ class TextWithLine(PlotAnnotation):
         self.properties = aspecd.plotting.AnnotationProperties()
 
     def _perform_task(self):
+        if isinstance(self.parameters["xpositions"], np.ndarray):
+            self.parameters["xpositions"] = self.parameters[
+                "xpositions"
+            ].tolist()
         if self.parameters["xpositions"] and self.parameters["ypositions"]:
             xpositions = self.parameters["xpositions"]
             ypositions = self.parameters["ypositions"]
