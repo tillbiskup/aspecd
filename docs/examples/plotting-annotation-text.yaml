@@ -117,3 +117,52 @@ tasks:
       - text-with-line
     comment: >
       Plotter with annotations
+
+  - kind: singleanalysis
+    type: PeakFinding
+    properties:
+      parameters:
+        return_intensities: True
+    apply_to: model_data
+    result: peaks_with_intensities
+
+  - kind: plotannotation
+    type: TextWithLine
+    properties:
+      parameters:
+        positions: peaks_with_intensities
+        offsets:
+          - [-0.5, 0.2]
+          - [0.5, 0.2]
+        texts:
+          - "Peak a"
+          - "Peak b"
+      properties:
+        text:
+          color: green
+          fontsize: larger
+          fontstyle: italic
+        line:
+          edgecolor: blue
+          linewidth: 0.8
+    result: text-with-line-automatically-positioned
+    comment: >
+      Texts with attached lines. Due to the offset, you get "hooks"
+
+  - kind: singleplot
+    type: SinglePlotter1D
+    properties:
+      properties:
+        axes:
+          xlabel: "$position$ / a.u."
+          xlim: [0, 20]
+          ylim: [0, 1.7]
+      parameters:
+        tight_layout: True
+      filename: plotting-annotation-text-with-line-autopositioned.pdf
+    apply_to:
+      - model_data
+    annotations:
+      - text-with-line-automatically-positioned
+    comment: >
+      Plotter with annotations

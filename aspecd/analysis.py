@@ -1368,6 +1368,18 @@ class PeakFinding(SingleAnalysisStep):
 
             Default: False
 
+        return_intensities : :class:`bool`
+            Whether to return both, peak positions and intensities.
+
+            In this case, the result will be a 2D numpy array with the
+            peak positions in the first and the peak intensities in the
+            second column. This can be used, *e.g.*, in annotations to
+            mark the peak positions.
+
+            Default: False
+
+            .. versionadded:: 0.11
+
         height : number or ndarray or sequence
             Required height of peaks. Either a number, None, an array
             matching x or a 2-element sequence of the former. The first
@@ -1499,6 +1511,7 @@ class PeakFinding(SingleAnalysisStep):
         self.parameters["negative_peaks"] = False
         self.parameters["return_properties"] = False
         self.parameters["return_dataset"] = False
+        self.parameters["return_intensities"] = False
         self.parameters["height"] = None
         self.parameters["threshold"] = None
         self.parameters["distance"] = None
@@ -1558,6 +1571,14 @@ class PeakFinding(SingleAnalysisStep):
             and not self.parameters["negative_peaks"]
         ):
             self.result = (peaks, properties)
+        elif self.parameters["return_intensities"]:
+            self.result = np.stack(
+                (
+                    self.dataset.data.axes[0].values[peaks],
+                    self.dataset.data.data[peaks],
+                ),
+                axis=1,
+            )
         else:
             self.result = self.dataset.data.axes[0].values[peaks]
 

@@ -25,6 +25,11 @@ New features
   * :class:`aspecd.annotations.HorizontalSpan` for adding horizontal spans (rectangles) to plot(ter)s
   * :class:`aspecd.annotations.TextWithLine` for adding text with additional lines
 
+* Analysis
+
+  * :class:`aspecd.analysis.PeakFinding` can return both, peak positions and intensities, as pairs, ready to be used in :class:`aspecd.annotation.TextWithLine` annotations.
+
+
 
 Fixes
 -----

@@ -997,6 +997,20 @@ class TestPeakFinding(unittest.TestCase):
         result = np.sort(np.concatenate((positive, negative)))
         self.assertListEqual(list(result), list(analysis.result))
 
+    def test_analyse_returns_peak_positions_and_intensities(self):
+        self.analysis.parameters["return_intensities"] = True
+        self.dataset.data.axes[0].values = np.linspace(
+            340, 350, len(self.dataset.data.data)
+        )
+        analysis = self.dataset.analyse(self.analysis)
+        result, _ = scipy.signal.find_peaks(self.dataset.data.data)
+        heights = self.dataset.data.data[result]
+        result = self.dataset.data.axes[0].values[result]
+        print(result, heights)
+        np.testing.assert_array_equal(
+            np.stack((result, heights), axis=1), analysis.result
+        )
+
 
 class TestPowerDensitySpectrum(unittest.TestCase):
     def setUp(self):

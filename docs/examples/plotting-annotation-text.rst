@@ -123,3 +123,29 @@ The resulting figure is shown below:
 
     Plot with two text labels with attached lines for the peak positions as annotation. Note that in this case, the annotation has been defined first, with a ``result`` key for later reference, and the plot(ter) afterwards, referring to the annotation using the ``annotations`` key. Mind the plural here, as a plotter can have multiple annotations.
 
+
+
+Text with lines - automatically positioned
+------------------------------------------
+
+In the example above, we have shown how to automatically position the lines at the peak positions in the *x* direction, but still have positioned the annotations in the *y* direction manually. How about getting both, *x* and *y* position of the peaks automatically, and only providing the (relative) offset for the text labels?
+
+This is possible by using a new feature of the :class:`aspecd.analysis.PeakFinding` class, namely to explicitly return the intensities as well. Thus, you get a two-dimensional (two-column) numpy array with the peak positions (*x* values) in the first and the peak intensities (*y* values) in the second column. This can nicely be used to directly feed it into the ``positions`` key of the annotation;
+
+
+.. literalinclude:: plotting-annotation-text.yaml
+    :language: yaml
+    :linenos:
+    :lines: 121-168
+    :lineno-start: 121
+
+
+The result is fairly similar to the result shown above with the manual positioning, but this time, we need not care of the *y* positions by ourselves. Use whatever suits your needs in the given situation.
+
+The resulting figure is shown below:
+
+
+.. figure:: ./plotting-annotation-text-with-line-autopositioned.png
+
+    Plot with two text labels with attached lines for the peak positions as annotation. Note that in this case, the annotation has been defined first, with a ``result`` key for later reference, and the plot(ter) afterwards, referring to the annotation using the ``annotations`` key. Mind the plural here, as a plotter can have multiple annotations. Furthermore, instead of only providing the ``xpositions`` by the result of the :class:`PeakFinding <aspecd.analysis.PeakFinding>` analysis step, we got both, *x* and *y* positions, and thus used the ``positions`` key instead.
+
