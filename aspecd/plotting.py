@@ -2173,9 +2173,9 @@ class SinglePlotter2DStacked(SinglePlotter):
         show_zero_lines : :class:`bool`
             Whether to show zero lines in the plot
 
-            Regardless of whether you set this to true, zero lines will only be
-            added to the final plot if the zero value is within the current
-            axes limits.
+            Regardless of whether you set this to true, zero lines will
+            only be added to the final plot if the zero value is within
+            the current axes limits.
 
             Zero line properties can be set via the
             :attr:`aspecd.plotting.Plotter.properties` attribute.
@@ -3340,6 +3340,18 @@ class MultiPlotter1DStacked(MultiPlotter1D):
             If not provided, automatically a best fit will be calculated.
 
             Default: None
+
+        show_zero_lines : :class:`bool`
+            Whether to show zero lines in the plot
+
+            Regardless of whether you set this to true, zero lines will
+            only be added to the final plot if the zero value is within
+            the current axes limits.
+
+            Zero line properties can be set via the
+            :attr:`aspecd.plotting.Plotter.properties` attribute.
+
+            Default: False
 
     Examples
     --------

@@ -723,7 +723,7 @@ class Dataset(aspecd.utils.ToDictMixin):
 
         Parameters
         ----------
-        dataset_id : :class:`string`
+        dataset_id : :class:`str`
             ID of the dataset the reference should be removed for
 
         Raises
@@ -1100,7 +1100,7 @@ class Data(aspecd.utils.ToDictMixin):
 
     Parameters
     ----------
-    data : `numpy.array`
+    data : :class:`numpy.ndarray`
         Numerical data
     axes : :class:`list`
         List of objects of type :class:`aspecd.dataset.Axis`
@@ -1255,16 +1255,16 @@ class Axis(aspecd.utils.ToDictMixin):
 
     Attributes
     ----------
-    quantity : `string`
+    quantity : :class:`str`
         quantity of the numerical data, usually used as first part of an
         automatically generated axis label
-    unit : `string`
+    unit : :class:`str`
         unit of the numerical data, usually used as second part of an
         automatically generated axis label
-    symbol : `string`
+    symbol : :class:`str`
         symbol for the quantity of the numerical data, usually used as first
         part of an automatically generated axis label
-    label : `string`
+    label : :class:`str`
         manual label for the axis, particularly useful in cases where no
         quantity and unit are provided or should be overwritten.
 
