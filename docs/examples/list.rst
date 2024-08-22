@@ -26,6 +26,9 @@ Basically, most if not all of the functionality of the ASpecD framework can be d
 If you are new to working with models or need a refresher, have a look at the :doc:`model-introduction` example.
 
 
+Models
+------
+
 .. toctree::
     :maxdepth: 1
 
@@ -33,11 +36,17 @@ If you are new to working with models or need a refresher, have a look at the :d
     model-voigt
 
 
+Plotting
+--------
+
 .. toctree::
     :maxdepth: 1
 
     plotting-compositeplotter-share-axes
 
+
+Plot annotations
+----------------
 
 .. toctree::
     :maxdepth: 1
