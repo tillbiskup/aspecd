@@ -3295,6 +3295,86 @@ class TestAxesProperties(unittest.TestCase):
         self.axis_properties.apply(axes=plot.axes)
         self.assertFalse(plot.axes.spines.left.get_visible())
 
+    def test_set_xlabelposition_left(self):
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.xlabelposition = "left"
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertEqual(
+            "left", plot.axes.get_xaxis().label.get_horizontalalignment()
+        )
+        self.assertEqual(0, plot.axes.get_xaxis().label.get_position()[0])
+
+    def test_set_xlabelposition_center(self):
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.xlabelposition = "center"
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertEqual(
+            "center", plot.axes.get_xaxis().label.get_horizontalalignment()
+        )
+        self.assertEqual(0.5, plot.axes.get_xaxis().label.get_position()[0])
+
+    def test_set_xlabelposition_right(self):
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.xlabelposition = "right"
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertEqual(
+            "right", plot.axes.get_xaxis().label.get_horizontalalignment()
+        )
+        self.assertEqual(1, plot.axes.get_xaxis().label.get_position()[0])
+
+    def test_set_ylabelposition_left(self):
+        self.axis_properties.ylabelposition = "left"
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertEqual(
+            "left", plot.axes.get_yaxis().label.get_horizontalalignment()
+        )
+        self.assertEqual(0, plot.axes.get_yaxis().label.get_position()[1])
+
+    def test_set_ylabelposition_bottom(self):
+        self.axis_properties.ylabelposition = "bottom"
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertEqual(
+            "left", plot.axes.get_yaxis().label.get_horizontalalignment()
+        )
+        self.assertEqual(0, plot.axes.get_yaxis().label.get_position()[1])
+
+    def test_set_ylabelposition_center(self):
+        self.axis_properties.ylabelposition = "center"
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertEqual(
+            "center", plot.axes.get_yaxis().label.get_horizontalalignment()
+        )
+        self.assertEqual(0.5, plot.axes.get_yaxis().label.get_position()[1])
+
+    def test_set_ylabelposition_right(self):
+        self.axis_properties.ylabelposition = "right"
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertEqual(
+            "right", plot.axes.get_yaxis().label.get_horizontalalignment()
+        )
+        self.assertEqual(1, plot.axes.get_yaxis().label.get_position()[1])
+
+    def test_set_ylabelposition_top(self):
+        self.axis_properties.ylabelposition = "top"
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertEqual(
+            "right", plot.axes.get_yaxis().label.get_horizontalalignment()
+        )
+        self.assertEqual(1, plot.axes.get_yaxis().label.get_position()[1])
+
 
 class TestLegendProperties(unittest.TestCase):
     def setUp(self):

@@ -4900,6 +4900,15 @@ class AxesProperties(aspecd.utils.Properties):
 
         Default: ''
 
+    xlabelposition : :class:`str`
+        Position of the label for the x-axis.
+
+        Possible values are: "left", "center", "right".
+
+        Default: "center"
+
+        .. versionadded:: 0.11
+
     xlim: :class:`list`
         x-axis view limits, two floats
 
@@ -4936,6 +4945,16 @@ class AxesProperties(aspecd.utils.Properties):
         YAML).
 
         Default: ''
+
+    ylabelposition : :class:`str`
+        Position of the label for the y-axis.
+
+        Possible values are: "left", "center", "right", "bottom", "top",
+        where "left"/"bottom" and "right"/"top" are equivalent.
+
+        Default: "center"
+
+        .. versionadded:: 0.11
 
     ylim: :class:`list`
         y-axis view limits, two floats
@@ -5037,7 +5056,8 @@ class AxesProperties(aspecd.utils.Properties):
         ``Null``
 
     .. versionchanged:: 0.11
-        New properties ``frame_on`` and ``spines``
+        New properties ``frame_on``, ``spines``, ``xlabelposition``,
+        and ``ylabelposition``
 
     """
 
@@ -5049,12 +5069,14 @@ class AxesProperties(aspecd.utils.Properties):
         self.position = []
         self.title = ""
         self.xlabel = ""
+        self.xlabelposition = "center"
         self.xlim = []
         self.xscale = ""
         self.xticklabels = None
         self.xticklabelangle = 0.0
         self.xticks = None
         self.ylabel = ""
+        self.ylabelposition = "center"
         self.ylim = []
         self.yscale = ""
         self.yticklabels = None
@@ -5091,7 +5113,7 @@ class AxesProperties(aspecd.utils.Properties):
             if hasattr(axes, "set_" + property_):
                 getattr(axes, "set_" + property_)(value)
         self._set_axes_ticks(axes)
-        self._set_axes_fonts(axes)
+        self._set_axes_label_properties(axes)
         if self.invert:
             self._invert_axes(axes)
         self.spines.apply(axes=axes)
@@ -5121,6 +5143,7 @@ class AxesProperties(aspecd.utils.Properties):
                 prop.startswith(("xtick", "ytick", "invert"))
                 or "fontsize" in prop
                 or "spines" in prop
+                or prop.endswith("labelposition")
             ):
                 pass
             elif isinstance(all_properties[prop], np.ndarray):
@@ -5146,9 +5169,24 @@ class AxesProperties(aspecd.utils.Properties):
         for tick in axes.get_yticklabels():
             tick.set_rotation(self.yticklabelangle)
 
-    def _set_axes_fonts(self, axes):
+    def _set_axes_label_properties(self, axes):
         axes.get_xaxis().get_label().set_fontsize(self.label_fontsize)
         axes.get_yaxis().get_label().set_fontsize(self.label_fontsize)
+        xlabel = axes.get_xaxis().get_label()
+        ylabel = axes.get_yaxis().get_label()
+        if self.ylabelposition == "bottom":
+            self.ylabelposition = "left"
+        if self.ylabelposition == "top":
+            self.ylabelposition = "right"
+        position = {"left": 0, "center": 0.5, "right": 1}
+        xlabel.set_horizontalalignment(self.xlabelposition)
+        ylabel.set_horizontalalignment(self.ylabelposition)
+        xlabel.set_position(
+            [position[self.xlabelposition], xlabel.get_position()[1]]
+        )
+        ylabel.set_position(
+            [ylabel.get_position()[1], position[self.ylabelposition]]
+        )
 
     def _invert_axes(self, axes):
         if isinstance(self.invert, str):
