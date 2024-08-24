@@ -3078,6 +3078,7 @@ class TestAxesProperties(unittest.TestCase):
             "xticklabelangle",
             "yticklabelangle",
             "invert",
+            "frame_on",
         ]:
             self.assertTrue(hasattr(self.axis_properties, prop))
 
@@ -3273,6 +3274,26 @@ class TestAxesProperties(unittest.TestCase):
             plot.axes.get_yaxis().get_label().get_fontsize(),
         )
         plt.close(plot.figure)
+
+    def test_frame_is_on_by_default(self):
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertTrue(plot.axes.get_frame_on())
+
+    def test_switch_frame_off(self):
+        self.axis_properties.frame_on = False
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertFalse(plot.axes.get_frame_on())
+
+    def test_set_spine_properties(self):
+        self.axis_properties.spines.left.visible = False
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertFalse(plot.axes.spines.left.get_visible())
 
 
 class TestLegendProperties(unittest.TestCase):
@@ -4325,3 +4346,86 @@ class TestAnnotationProperties(unittest.TestCase):
                         getattr(self.properties.line, prop),
                         getattr(patch, f"get_{prop}")(),
                     )
+
+
+class TestSpines(unittest.TestCase):
+    def setUp(self):
+        self.properties = plotting.Spines()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_properties(self):
+        for prop in [
+            "left",
+            "bottom",
+            "right",
+            "top",
+        ]:
+            self.assertTrue(hasattr(self.properties, prop))
+
+    def test_properties_are_spine_properties(self):
+        for prop in [
+            "left",
+            "bottom",
+            "right",
+            "top",
+        ]:
+            self.assertIsInstance(
+                getattr(self.properties, prop), plotting.SpineProperties
+            )
+
+    def test_has_apply_method(self):
+        self.assertTrue(hasattr(self.properties, "apply"))
+        self.assertTrue(callable(self.properties.apply))
+
+    def test_apply_without_argument_raises(self):
+        with self.assertRaises(aspecd.exceptions.MissingAxisError):
+            self.properties.apply()
+
+    def test_apply_sets_spine_properties(self):
+        plot = plotting.Plotter()
+        plot.plot()
+        self.properties.left.visible = False
+        self.properties.apply(axes=plot.axes)
+        self.assertFalse(plot.axes.spines.left.get_visible())
+
+
+class TestSpineProperties(unittest.TestCase):
+    def setUp(self):
+        self.properties = plotting.SpineProperties()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_properties(self):
+        for prop in [
+            "visible",
+            "position",
+            "bounds",
+        ]:
+            self.assertTrue(hasattr(self.properties, prop))
+
+    def test_has_apply_method(self):
+        self.assertTrue(hasattr(self.properties, "apply"))
+        self.assertTrue(callable(self.properties.apply))
+
+    def test_apply_without_argument_raises(self):
+        with self.assertRaises(aspecd.exceptions.MissingDrawingError):
+            self.properties.apply()
+
+    def test_apply_with_position_none_does_not_set_position(self):
+        plot = plotting.Plotter()
+        plot.plot()
+        position = plot.axes.spines.left.get_position()
+        self.properties.position = None
+        self.properties.apply(drawing=plot.axes.spines.left)
+        self.assertEqual(position, plot.axes.spines.left.get_position())
+
+    def test_apply_with_bounds_none_does_not_set_bounds(self):
+        plot = plotting.Plotter()
+        plot.plot()
+        bounds = plot.axes.spines.left.get_bounds()
+        self.properties.bounds = None
+        self.properties.apply(drawing=plot.axes.spines.left)
+        self.assertEqual(bounds, plot.axes.spines.left.get_bounds())

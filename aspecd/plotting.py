@@ -4927,6 +4927,8 @@ class AxesProperties(aspecd.utils.Properties):
 
         Default: None
 
+        .. versionadded:: 0.6
+
     ylabel: :class:`str`
         label for the y-axis
 
@@ -4962,6 +4964,8 @@ class AxesProperties(aspecd.utils.Properties):
 
         Default: None
 
+        .. versionadded:: 0.6
+
     label_fontsize : :class:`int` or :class:`str`
         Font size of the axes labels.
 
@@ -4971,6 +4975,8 @@ class AxesProperties(aspecd.utils.Properties):
         ``large``, ``x-large``, ``xx-large``
 
         Default: ``plt.rcParams['font.size']``
+
+        .. versionadded:: 0.9
 
     invert: :class:`list` or :class:`str`
         Axes to invert
@@ -4988,6 +4994,28 @@ class AxesProperties(aspecd.utils.Properties):
             An alternative option to invert an axis is to provide
             descending values for axis limits. However, this may be
             inconvenient if you don't want to explicitly provide axis limits.
+
+        .. versionadded:: 0.9
+
+    frame_on : :class:`bool`
+        Whether to draw the "frame" (aka "spines") around the axes.
+
+        Note that setting this attribute to ``False`` will remove the entire
+        frame, hence it is usually not what you intended.
+
+        Default: ``True``
+
+        .. versionadded:: 0.11
+
+    spines : :class:`Spines`
+        Settings for axes spines.
+
+        Axes spines are basically the four lines in the four edges of an
+        axes, where the tick marks are attached.
+
+        See class :class:`Spines` and :class:`SpineProperties` for details.
+
+        .. versionadded:: 0.11
 
     Raises
     ------
@@ -5007,6 +5035,9 @@ class AxesProperties(aspecd.utils.Properties):
     .. versionchanged:: 0.9.3
         Properties ``xlabel`` and ``ylabel`` can be removed by setting to
         ``Null``
+
+    .. versionchanged:: 0.11
+        New properties ``frame_on`` and ``spines``
 
     """
 
@@ -5031,6 +5062,8 @@ class AxesProperties(aspecd.utils.Properties):
         self.yticks = None
         self.label_fontsize = plt.rcParams["font.size"]
         self.invert = None
+        self.frame_on = True
+        self.spines = Spines()
 
     def apply(self, axes=None):
         """
@@ -5061,6 +5094,7 @@ class AxesProperties(aspecd.utils.Properties):
         self._set_axes_fonts(axes)
         if self.invert:
             self._invert_axes(axes)
+        self.spines.apply(axes=axes)
 
     def _get_settable_properties(self):
         """
@@ -5086,12 +5120,13 @@ class AxesProperties(aspecd.utils.Properties):
             if (
                 prop.startswith(("xtick", "ytick", "invert"))
                 or "fontsize" in prop
+                or "spines" in prop
             ):
                 pass
             elif isinstance(all_properties[prop], np.ndarray):
                 if any(all_properties[prop]):
                     properties[prop] = all_properties[prop]
-            elif all_properties[prop]:
+            elif all_properties[prop] or all_properties[prop] is False:
                 properties[prop] = all_properties[prop]
             elif prop.endswith("label") and all_properties[prop] is None:
                 properties[prop] = all_properties[prop]
@@ -5322,17 +5357,17 @@ class DrawingProperties(aspecd.utils.Properties):
         Apply properties to drawing.
 
         For each property, the corresponding "set_<property>" method of the
-        line will be called.
+        artist will be called.
 
         Parameters
         ----------
-        drawing: :class:`matplotlib.axes.Axes`
-            axis to set properties for
+        drawing: :class:`matplotlib.artist.Artist`
+            Artist to set properties for
 
         Raises
         ------
         aspecd.exceptions.MissingDrawingError
-            Raised if no line is provided.
+            Raised if no artist is provided.
 
         """
         if not drawing:
@@ -5353,11 +5388,11 @@ class DrawingProperties(aspecd.utils.Properties):
 
         Parameters
         ----------
-        drawing : :class:`matplotlib.axes.Axes`
-            axis to set properties for
+        drawing : :class:`matplotlib.artist.Artist`
+            Artist to set properties for
 
         prop : :class:`str`
-            name of the property to set
+            Name of the property to set
 
         """
         if hasattr(drawing, "".join(["set_", prop])):
@@ -6018,6 +6053,10 @@ class SubplotGridSpecs(aspecd.utils.Properties):
 
     Examples
     --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class.
+
     Subplot grid spec properties are always set in context of a concrete
     :class:`CompositePlotter`.
 
@@ -6396,3 +6435,189 @@ class AnnotationProperties(aspecd.utils.Properties):
             raise aspecd.exceptions.MissingDrawingError
         self.text.apply(drawing=drawing)
         self.line.apply(drawing=drawing.arrow_patch)
+
+
+class Spines(aspecd.utils.Properties):
+    """
+    Properties proxy for spines of an axes.
+
+    Axes spines are basically the four lines in the four edges of an
+    axes, where the tick marks are attached.
+
+    This class serves as a "container" for the four individual spines.
+
+    Attributes
+    ----------
+    left : :class:`SpineProperties`
+        Properties of the left axes spine
+
+    bottom : :class:`SpineProperties`
+        Properties of the bottom axes spine
+
+    right : :class:`SpineProperties`
+        Properties of the right axes spine
+
+    top : :class:`SpineProperties`
+        Properties of the top axes spine
+
+    Raises
+    ------
+    aspecd.exceptions.MissingDrawingError
+        Raised if no drawing is provided.
+
+
+    Examples
+    --------
+    For detailed examples on how to set the spine properties in a plot,
+    see the documentation of the :class:`SpineProperties` class.
+
+
+    .. versionadded:: 0.11
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.left = SpineProperties()
+        self.bottom = SpineProperties()
+        self.right = SpineProperties()
+        self.top = SpineProperties()
+
+    def apply(self, axes=None):
+        """
+        Apply properties to spine.
+
+        For each spine, the corresponding :meth:`SpineProperties.apply`
+        method will be called.
+
+        Parameters
+        ----------
+        axes: :class:`matplotlib.axes.Axes`
+            Axis to set spine properties for
+
+        Raises
+        ------
+        aspecd.exceptions.MissingAxisError
+            Raised if no axes is provided.
+
+        """
+        if not axes:
+            raise aspecd.exceptions.MissingAxisError
+        for prop in self.get_properties():
+            getattr(self, prop).apply(drawing=getattr(axes.spines, prop))
+
+
+class SpineProperties(DrawingProperties):
+    """
+    Properties proxy for spines of an axes.
+
+    Axes spines are basically the four lines in the four edges of an
+    axes, where the tick marks are attached.
+
+    For details, see the documentation of the :class:`matplotlib.spines.Spine`
+    class.
+
+
+    Attributes
+    ----------
+    visible : :class:`bool`
+        Whether to show the spine.
+
+        To remove a spine, set its visibility to ``False``.
+
+    position : :class:`tuple`
+        Type and value of the positioning of a spine.
+
+    bounds : :class:`tuple`
+        Lower and higher spine bound
+
+    Raises
+    ------
+    aspecd.exceptions.MissingDrawingError
+        Raised if no drawing is provided.
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class.
+
+    Spines are set within the axes properties, hence in the axes block. Note
+    that there are four spines: ``left``, ``bottom``, ``right``,
+    and ``top``, for whom you can (and need to) set the properties
+    separately.
+
+    To get rid of the top and right spine (a typical use case), just set the
+    visibility of those two to ``False``:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            properties:
+              axes:
+                spines:
+                  right:
+                    visible: False
+                  top:
+                    visible: False
+
+    If you want to detach the spines, you could explicitly set both, ``bounds``
+    and ``positions``:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            properties:
+              axes:
+                xlabel: "$position$ / a.u."
+                spines:
+                  left:
+                    bounds: [0, 1]
+                    position: ["outward", 5]
+                  bottom:
+                    bounds: [-10, 10]
+                    position: ["outward", 5]
+                  right:
+                    visible: False
+                  top:
+                    visible: False
+
+
+    .. versionadded:: 0.11
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.visible = True
+        self.position = None
+        self.bounds = None
+
+    def apply(self, drawing=None):
+        """
+        Apply properties to spine.
+
+        For each property, the corresponding "set_<property>" method of the
+        spine will be called.
+
+        Parameters
+        ----------
+        drawing: :class:`matplotlib.spines.Spine`
+            Spine of an axis to set properties for
+
+        Raises
+        ------
+        aspecd.exceptions.MissingDrawingError
+            Raised if no line is provided.
+
+        """
+        if not drawing:
+            raise aspecd.exceptions.MissingDrawingError
+        for prop in self.get_properties():
+            if getattr(self, prop) is not None:
+                self._safe_set_drawing_property(drawing, prop)

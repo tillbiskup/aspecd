@@ -18,6 +18,8 @@ New features
 
   * :class:`aspecd.plotting.PatchProperties` for properties of patches, as used for :class:`aspecd.annotations.VerticalSpan` and :class:`aspecd.annotations.HorizontalSpan`.
   * :class:`aspecd.plotting.AnnotationProperties` and :class:`aspecd.plotting.AnnotationTextProperties` for properties of text annotations with lines, as used for :class:`aspecd.annotations.TextWithLine`.
+  * :class:`aspecd.plotting.AxesProperties` has attribute ``frame_on``.
+  * :class:`aspecd.plotting.Spines` and :class:`aspecd.plotting.SpineProperties` for controlling spine properties of axes.
 
 * Plot annotations
 
