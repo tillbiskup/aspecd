@@ -4429,3 +4429,49 @@ class TestSpineProperties(unittest.TestCase):
         self.properties.bounds = None
         self.properties.apply(drawing=plot.axes.spines.left)
         self.assertEqual(bounds, plot.axes.spines.left.get_bounds())
+
+    def test_apply_with_arrow_adds_correct_arrow(self):
+        plot = plotting.Plotter()
+        plot.plot()
+        self.properties.arrow = True
+        marker = {
+            "left": "^",
+            "bottom": ">",
+            "right": "^",
+            "top": ">",
+        }
+        edges = ["left", "bottom", "right", "top"]
+        for edge in edges:
+            with self.subTest(edge=edge):
+                self.properties._edge = edge
+                self.properties.apply(drawing=getattr(plot.axes.spines, edge))
+                pattern = lambda artist: artist.get_label() == f"arrow_{edge}"
+                self.assertTrue(plot.ax.findobj(pattern))
+                self.assertEqual(
+                    marker[edge],
+                    plot.ax.findobj(pattern)[0].get_marker(),
+                )
+
+    def test_apply_with_arrow_and_inverted_axes_adds_correct_arrow(self):
+        plot = plotting.Plotter()
+        plot.plot()
+        plot.axes.invert_yaxis()
+        plot.axes.invert_xaxis()
+        self.properties.arrow = True
+        marker = {
+            "left": "v",
+            "bottom": "<",
+            "right": "v",
+            "top": "<",
+        }
+        edges = ["left", "bottom", "right", "top"]
+        for edge in edges:
+            with self.subTest(edge=edge):
+                self.properties._edge = edge
+                self.properties.apply(drawing=getattr(plot.axes.spines, edge))
+                pattern = lambda artist: artist.get_label() == f"arrow_{edge}"
+                self.assertTrue(plot.ax.findobj(pattern))
+                self.assertEqual(
+                    marker[edge],
+                    plot.ax.findobj(pattern)[0].get_marker(),
+                )

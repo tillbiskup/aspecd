@@ -6478,10 +6478,10 @@ class Spines(aspecd.utils.Properties):
 
     def __init__(self):
         super().__init__()
-        self.left = SpineProperties()
-        self.bottom = SpineProperties()
-        self.right = SpineProperties()
-        self.top = SpineProperties()
+        self.left = SpineProperties(edge="left")
+        self.bottom = SpineProperties(edge="bottom")
+        self.right = SpineProperties(edge="right")
+        self.top = SpineProperties(edge="top")
 
     def apply(self, axes=None):
         """
@@ -6528,8 +6528,57 @@ class SpineProperties(DrawingProperties):
     position : :class:`tuple`
         Type and value of the positioning of a spine.
 
+        The position type is one of ``outward, axes, data``:
+
+        outward
+            Place the spine out from the data area by the specified number
+            of points. (Negative values place the spine inwards.)
+
+        axes
+            Place the spine at the specified Axes coordinate (0 to 1).
+
+        data
+            Place the spine at the specified data coordinate.
+
+        Two shorthand notations exist, where ``position`` is only a string,
+        no longer a tuple (or list):
+
+        center
+            Sets spline at the centre of the axis.
+
+            Same as ``('axes', 0.5)``
+
+        zero
+            Sets spline to the zero value of the data.
+
+            Same as ``('data', 0.0)``
+
+
     bounds : :class:`tuple`
-        Lower and higher spine bound
+        Lower and higher spine bound in axes coordinates.
+
+    arrow : :class:`bool`
+        Whether to draw arrows at the tip of the spine
+
+        Particularly with only two spines shown and perhaps with spines
+        positioned at zero (the origin of the Cartesian coordinate system),
+        adding arrow heads at the tips of the spines makes sense.
+
+        Note that this is not a default property of the underlying
+        :class:`matplotlib.spines.Spine`, but adds the arrow heads as
+        additional plots.
+
+        This functionality is inspired by an example in the Matplotlib
+        documentation: `<https://matplotlib.org/stable/gallery/spines
+        /centered_spines_with_arrows.html>`_
+
+
+    Parameters
+    ----------
+    edge: :class:`str`
+        Position the spline belongs to in an axis: left, bottom, right, top.
+
+        This information is relevant for adding arrow heads.
 
     Raises
     ------
@@ -6574,7 +6623,6 @@ class SpineProperties(DrawingProperties):
           properties:
             properties:
               axes:
-                xlabel: "$position$ / a.u."
                 spines:
                   left:
                     bounds: [0, 1]
@@ -6587,16 +6635,46 @@ class SpineProperties(DrawingProperties):
                   top:
                     visible: False
 
+    Suppose you want to draw what the Matplotlib documentation calls a "math
+    textbook style plot", where the spines are centred at zero (in the
+    origin of the Cartesian coordinate system) and have arrows at their ends:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            properties:
+              axes:
+                xlabel: Null
+                ylabel: Null
+                invert:
+                  - x
+                  - y
+                spines:
+                  left:
+                    position: zero
+                    arrow: True
+                  bottom:
+                    position: zero
+                    arrow: True
+                  right:
+                    visible: False
+                  top:
+                    visible: False
+
 
     .. versionadded:: 0.11
 
     """
 
-    def __init__(self):
+    def __init__(self, edge="left"):
         super().__init__()
         self.visible = True
         self.position = None
         self.bounds = None
+        self.arrow = False
+        self._edge = edge
 
     def apply(self, drawing=None):
         """
@@ -6619,5 +6697,50 @@ class SpineProperties(DrawingProperties):
         if not drawing:
             raise aspecd.exceptions.MissingDrawingError
         for prop in self.get_properties():
-            if getattr(self, prop) is not None:
+            if prop == "arrow" and getattr(self, prop):
+                marker_normal = {
+                    "left": "^",
+                    "bottom": ">",
+                    "right": "^",
+                    "top": ">",
+                }
+                marker_inverted = {
+                    "left": "v",
+                    "bottom": "<",
+                    "right": "v",
+                    "top": "<",
+                }
+                positions_normal = {
+                    "left": [0, 1],
+                    "bottom": [1, 0],
+                    "right": [0, 1],
+                    "top": [1, 0],
+                }
+                positions_inverted = {
+                    "left": [0, 0],
+                    "bottom": [0, 0],
+                    "right": [0, 0],
+                    "top": [0, 0],
+                }
+                if self._edge in ("top", "bottom"):
+                    inverted = drawing.axes.xaxis_inverted()
+                    transform = drawing.axes.get_yaxis_transform()
+                else:
+                    inverted = drawing.axes.yaxis_inverted()
+                    transform = drawing.axes.get_xaxis_transform()
+                if inverted:
+                    marker = marker_inverted
+                    positions = positions_inverted
+                else:
+                    marker = marker_normal
+                    positions = positions_normal
+                drawing.axes.plot(
+                    *positions[self._edge],
+                    marker[self._edge],
+                    color=drawing.get_edgecolor(),
+                    transform=transform,
+                    clip_on=False,
+                    label=f"arrow_{self._edge}",
+                )
+            elif getattr(self, prop) is not None:
                 self._safe_set_drawing_property(drawing, prop)
