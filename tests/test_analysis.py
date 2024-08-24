@@ -1006,7 +1006,6 @@ class TestPeakFinding(unittest.TestCase):
         result, _ = scipy.signal.find_peaks(self.dataset.data.data)
         heights = self.dataset.data.data[result]
         result = self.dataset.data.axes[0].values[result]
-        print(result, heights)
         np.testing.assert_array_equal(
             np.stack((result, heights), axis=1), analysis.result
         )
