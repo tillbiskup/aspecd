@@ -19,7 +19,7 @@ tasks:
     from_dataset: dummy
     result: model_data
     comment: >
-      Create Sine
+      Create sine
 
   - kind: singleplot
     type: SinglePlotter1D

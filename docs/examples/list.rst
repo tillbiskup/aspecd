@@ -43,6 +43,7 @@ Plotting
     :maxdepth: 1
 
     plotting-compositeplotter-share-axes
+    plotting-spines
 
 
 Plot annotations
