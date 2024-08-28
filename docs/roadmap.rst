@@ -8,12 +8,6 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.11
 ================
 
-* Plotting
-
-  * Plot annotations
-
-    * additional types of annotations, *e.g.*, symbols
-
 * Example recipes
 
   * A series of example recipes, starting with models for generating artificial data.

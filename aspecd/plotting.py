@@ -6782,3 +6782,124 @@ class SpineProperties(DrawingProperties):
                 )
             elif getattr(self, prop) is not None:
                 self._safe_set_drawing_property(drawing, prop)
+
+
+class MarkerProperties(DrawingProperties):
+    """
+    Properties for marker.
+
+    Basically, the attributes are a subset of what :mod:`matplotlib` defines
+    for the marker part of :obj:`matplotlib.lines.Line2D` objects.
+
+    Attributes
+    ----------
+    alpha : :class:`float` | :class:`None`
+        Transparency value -- not supported on all backends.
+
+        Valid range: [0, 1]
+
+    edgecolor : color
+        edge color of the marker
+
+        For details see :mod:`matplotlib.colors`
+
+    edgewidth : :class:`float`
+        Width of the marker edge
+
+    facecolor : color
+        face color of the marker
+
+        For details see :mod:`matplotlib.colors`
+
+    facecoloralt : color
+        Alternative face color of the marker
+
+        This color gets interesting depending on the fill style.
+
+        For details see :mod:`matplotlib.colors`
+
+    fillstyle : :class:`str`
+        Style to use to fill the marker.
+
+        Allowed values are: "full", "left", "right", "bottom", "top", "none"
+
+    size : :class:`float`
+        Size of the marker.
+
+    zorder : :class:`float`
+        Zorder for the artist.
+
+        Artists with lower zorder are drawn first.
+
+        For a summary of the default zorder values, see the `Matplotlib
+        documentation <https://matplotlib.org/stable/gallery/misc
+        /zorder_demo.html>`_
+
+    Raises
+    ------
+    aspecd.exceptions.MissingDrawingError
+        Raised if no marker is provided.
+
+
+    Examples
+    --------
+    Markers are typically used for plot annotations. For details, see the
+    :class:`aspecd.annotation.Marker` class.
+
+
+    .. versionadded:: 0.11
+
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.size = None
+        self.edgecolor = None
+        self.facecolor = None
+        self.facecoloralt = None
+        self.edgewidth = None
+        self.fillstyle = None
+
+    def _safe_set_drawing_property(self, drawing=None, prop=None):
+        """Safe setting of drawing properties.
+
+        The method first checks whether the corresponding setter for the
+        property exists and only in this case sets the property.
+
+
+        Parameters
+        ----------
+        drawing : :class:`matplotlib.artist.Artist`
+            Artist to set properties for
+
+        prop : :class:`str`
+            Name of the property to set
+
+        """
+        if hasattr(drawing, "".join(["set_", prop])):
+            try:
+                getattr(drawing, "".join(["set_", prop]))(getattr(self, prop))
+            except TypeError:
+                logger.debug(
+                    'Cannot set attribute "%s" for "%s"',
+                    prop,
+                    drawing.__class__,
+                )
+        elif hasattr(drawing, "".join(["set_marker", prop])):
+            try:
+                getattr(drawing, "".join(["set_marker", prop]))(
+                    getattr(self, prop)
+                )
+            except TypeError:
+                logger.debug(
+                    'Cannot set attribute "%s" for "%s"',
+                    prop,
+                    drawing.__class__,
+                )
+        else:
+            logger.debug(
+                '"%s" has no setter for attribute "%s", hence not set',
+                drawing.__class__,
+                prop,
+            )

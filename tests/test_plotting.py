@@ -4555,3 +4555,63 @@ class TestSpineProperties(unittest.TestCase):
                     marker[edge],
                     plot.ax.findobj(pattern)[0].get_marker(),
                 )
+
+
+class TestMarkerProperties(unittest.TestCase):
+    def setUp(self):
+        self.properties = plotting.MarkerProperties()
+        plotter = plotting.Plotter()
+        annotation_ = annotation.Marker()
+        annotation_.parameters["positions"] = [[0.5, 0.5]]
+        annotation_.parameters["marker"] = "o"
+        plotter.plot()
+        result = plotter.annotate(annotation_)
+        self.annotation = result.drawings[0]
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_properties(self):
+        for prop in [
+            "size",
+            "edgecolor",
+            "facecolor",
+            "facecoloralt",
+            "edgewidth",
+            "fillstyle",
+            "zorder",
+            "alpha",
+        ]:
+            self.assertTrue(hasattr(self.properties, prop))
+
+    def test_has_apply_method(self):
+        self.assertTrue(hasattr(self.properties, "apply"))
+        self.assertTrue(callable(self.properties.apply))
+
+    def test_apply_without_argument_raises(self):
+        with self.assertRaises(aspecd.exceptions.MissingDrawingError):
+            self.properties.apply()
+
+    def test_apply_sets_marker_properties(self):
+        properties = {
+            "size": 12,
+            "edgecolor": "#ff0000",
+            "facecolor": "#00ff00",
+            "facecoloralt": "#0000ff",
+            "edgewidth": 3,
+        }
+        for prop, value in properties.items():
+            with self.subTest(key=prop, val=value):
+                setattr(self.properties, prop, value)
+                self.properties.apply(drawing=self.annotation)
+                self.assertEqual(
+                    getattr(self.properties, prop),
+                    getattr(self.annotation, f"get_marker{prop}")(),
+                )
+        prop, value = "fillstyle", "left"
+        setattr(self.properties, prop, value)
+        self.properties.apply(drawing=self.annotation)
+        self.assertEqual(
+            getattr(self.properties, prop),
+            getattr(self.annotation, f"get_{prop}")(),
+        )

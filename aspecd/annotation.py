@@ -97,12 +97,17 @@ Concrete plot annotations are:
 
     Add text(s) with a connecting line to a plot(ter).
 
+* :class:`aspecd.annotation.Marker`
+
+    Add marker(s) to a plot(ter).
+
 
 Module documentation
 ====================
 
 """
 
+import matplotlib
 import numpy as np
 
 import aspecd.exceptions
@@ -1726,3 +1731,283 @@ class TextWithLine(PlotAnnotation):
                 },
             )
             self.drawings.append(annotation)
+
+
+class Marker(PlotAnnotation):
+    r"""
+    Marker added to a plot.
+
+    One very common way to annotate a plot is adding markers at defined
+    positions. Basically, this class is the ASpecD wrapper to
+    :meth:`matplotlib.axes.Axes.plot` with only a marker used and no line
+    drawn. Basically, you provide coordinates (*x*, *y*) for the location
+    and a marker. By default, coordinates are data coordinates and specify
+    the centre of the marker.
+
+    The properties of the markers can be controlled in quite some detail using
+    the :attr:`properties` property. Note that all markers will share the same
+    properties. If you need to add markers with different properties to the
+    same plot, use several :class:`Marker` objects and annotate separately.
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for the annotation, implicit and explicit
+
+        The following keys exist:
+
+        positions : :class:`list`
+            List of the positions markers should appear at.
+
+            Note that each position is itself a list: [*x*, *y*]
+
+            Values are in axis (data) units.
+
+        xpositions : :class:`list`
+            List of the *x* positions markers should appear at.
+
+            This allows to set *x* positions from the result of other tasks,
+            *e.g.* a peak finding analysis step.
+
+            If ``xpositions`` is set, you need to set ``ypositions`` as well.
+            However, you can set either a single element or even a scalar
+            (not a list). In this case, the single *y* position is expanded
+            to match the number of *x* positions, *i.e.*, all markers will
+            appear with the same *y* position.
+
+            If you provide both, ``positions`` and
+            ``xpositions``/``ypositions``, the latter couple wins.
+
+            Values are in axis (data) units.
+
+        ypositions : :class:`list` or :class:`float`
+            List of the *y* positions markers should appear at.
+
+            If ``xpositions`` is set, you need to set ``ypositions`` as well.
+            However, you can set either a single element or even a scalar
+            (not a list). In this case, the single *y* position is expanded
+            to match the number of *x* positions, *i.e.*, all markers will
+            appear with the same *y* position.
+
+            If you provide both, ``positions`` and
+            ``xpositions``/``ypositions``, the latter couple wins.
+
+            Values are in axis (data) units.
+
+        marker : :class:`str`
+            Marker that shall be added to the plot.
+
+            There is a large list of predefined markers available. For
+            details, see :mod:`matplotlib.markers`. Note that you can use
+            both, the code and the keyword of a specific marker, as returned
+            by the :attr:`matplotlib.lines.Line2D.markers` attribute:
+
+            ========  ================
+            code      keyword
+            ========  ================
+            ``"."``   point
+            ``","``   pixel
+            ``"o"``   circle
+            ``"v"``   triangle_down
+            ``"^"``   triangle_up
+            ``"<"``   triangle_left
+            ``">"``   triangle_right
+            ``"1"``   tri_down
+            ``"2"``   tri_up
+            ``"3"``   tri_left
+            ``"4"``   tri_right
+            ``"8"``   octagon
+            ``"s"``   square
+            ``"p"``   pentagon
+            ``"*"``   star
+            ``"h"``   hexagon1
+            ``"H"``   hexagon2
+            ``"+"``   plus
+            ``"x"``   x
+            ``"D"``   diamond
+            ``"d"``   thin_diamond
+            ``"|"``   vline
+            ``"_"``   hline
+            ``"P"``   plus_filled
+            ``"X"``   x_filled
+            ``0``     tickleft
+            ``1``     tickright
+            ``2``     tickup
+            ``3``     tickdown
+            ``4``     caretleft
+            ``5``     caretright
+            ``6``     caretup
+            ``7``     caretdown
+            ``8``     caretleftbase
+            ``9``     caretrightbase
+            ``10``    caretupbase
+            ``11``    caretdownbase
+            ========  ================
+
+            Please note the difference between the string ``"1"`` and the
+            number ``1`` that result in triangle down and tick right
+            markers, respectively.
+
+            Furthermore, you can use markers created from TeX symbols using
+            MathText (LaTeX needs not to be installed). Just surround your
+            marker with ``$`` signs, such as ``"$\u266B$"`` or
+            ``"$\mathcal{A}$"``.
+
+            If you provide multiple positions, the same marker will be added
+            multiple times.
+
+    properties : :class:`aspecd.plotting.MarkerProperties`
+        Properties of the marker(s) within a plot
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.MarkerProperties` class.
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Generally and for obvious reasons, you need to have both, a plot task
+    and a plotannotation task. It does not really matter which task you
+    define first, the plot or the plot annotation. There are only marginal
+    differences, and both ways are shown below.
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            filename: plot1D.pdf
+          result: plot1D
+
+        - kind: plotannotation
+          type: Marker
+          properties:
+            parameters:
+              positions:
+                - [0.5, 0.5]
+                - [1.0, 0.5]
+              marker: o
+            properties:
+              edgecolor: green
+              size: 12
+          plotter: plot1D
+
+
+    In this case, the plotter is defined first, and the annotation second.
+    To refer to the plotter from within the plotannotation task, you need to
+    set the ``result`` attribute in the plotting task and refer to it within
+    the ``plotter`` attribute of the plotannotation task. Although defining
+    the plotter before the annotation, the user still expects the annotation
+    to be included in the file containing the actual plot, despite the fact
+    that the figure has been saved (for the first time) before the
+    annotation has been added.
+
+    Sometimes, it might be convenient to go the other way round and first
+    define an annotation and afterwards add it to a plot(ter). This can be
+    done as well:
+
+    .. code-block:: yaml
+
+        - kind: plotannotation
+          type: Marker
+          properties:
+            parameters:
+              positions:
+                - [0.5, 0.5]
+                - [1.0, 0.5]
+              marker: o
+            properties:
+              edgecolor: green
+              size: 12
+          result: text
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            filename: plot1D.pdf
+          annotations:
+            - text
+
+
+    In this way, you can add the same annotation to several plots,
+    and be sure that each annotation is handled as a separate object.
+
+    Suppose you have more than one plotter you want to apply an annotation
+    to. In this case, the ``plotter`` property of the plotannotation task is
+    a list rather than a string:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          result: plot1
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          result: plot2
+
+        - kind: plotannotation
+          type: Marker
+          properties:
+            parameters:
+              positions:
+                - [0.5, 0.5]
+                - [1.0, 0.5]
+              marker: o
+          plotter:
+            - plot1
+            - plot2
+
+    In this case, the annotation will be applied to both plots
+    independently. Note that the example has been reduced to the key
+    aspects. In a real situation, the two plotters will differ much more.
+
+    .. versionadded:: 0.11
+
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.parameters["positions"] = []
+        self.parameters["xpositions"] = []
+        self.parameters["ypositions"] = []
+        self.parameters["marker"] = ""
+        self.properties = aspecd.plotting.DrawingProperties()
+
+    def _perform_task(self):
+        if isinstance(self.parameters["xpositions"], np.ndarray):
+            self.parameters["xpositions"] = self.parameters[
+                "xpositions"
+            ].tolist()
+        if self.parameters["xpositions"] and (
+            self.parameters["ypositions"]
+            or self.parameters["ypositions"] == 0
+        ):
+            xpositions = self.parameters["xpositions"]
+            ypositions = self.parameters["ypositions"]
+            if np.isscalar(ypositions):
+                ypositions = [ypositions] * len(xpositions)
+            if len(ypositions) == 1:
+                ypositions = ypositions * len(xpositions)
+            positions = []
+            for idx, xposition in enumerate(xpositions):
+                positions.append([xposition, ypositions[idx]])
+        else:
+            positions = self.parameters["positions"]
+        keywords = {
+            val: key
+            for key, val in matplotlib.markers.MarkerStyle.markers.items()
+        }
+        if self.parameters["marker"] in keywords.keys():
+            marker_symbol = keywords[self.parameters["marker"]]
+        else:
+            marker_symbol = self.parameters["marker"]
+        for position in positions:
+            marker = self.plotter.axes.plot(
+                *position, marker=marker_symbol, linestyle=""
+            )
+            self.drawings.append(marker[0])

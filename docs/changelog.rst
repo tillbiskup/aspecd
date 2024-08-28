@@ -16,16 +16,18 @@ New features
 
 * Plotting
 
-  * :class:`aspecd.plotting.PatchProperties` for properties of patches, as used for :class:`aspecd.annotations.VerticalSpan` and :class:`aspecd.annotations.HorizontalSpan`.
-  * :class:`aspecd.plotting.AnnotationProperties` and :class:`aspecd.plotting.AnnotationTextProperties` for properties of text annotations with lines, as used for :class:`aspecd.annotations.TextWithLine`.
+  * :class:`aspecd.plotting.PatchProperties` for properties of patches, as used for :class:`aspecd.annotation.VerticalSpan` and :class:`aspecd.annotation.HorizontalSpan`.
+  * :class:`aspecd.plotting.AnnotationProperties` and :class:`aspecd.plotting.AnnotationTextProperties` for properties of text annotations with lines, as used for :class:`aspecd.annotation.TextWithLine`.
   * :class:`aspecd.plotting.AxesProperties` has new attributes ``frame_on``, ``xlabelposition``, and ``ylabelposition``.
   * :class:`aspecd.plotting.Spines` and :class:`aspecd.plotting.SpineProperties` for controlling spine properties of axes.
+  * :class:`aspecd.plotting.MarkerProperties` for properties of markers, as used for :class:`aspecd.annotation.Marker`.
 
 * Plot annotations
 
-  * :class:`aspecd.annotations.VerticalSpan` for adding vertical spans (rectangles) to plot(ter)s
-  * :class:`aspecd.annotations.HorizontalSpan` for adding horizontal spans (rectangles) to plot(ter)s
-  * :class:`aspecd.annotations.TextWithLine` for adding text with additional lines
+  * :class:`aspecd.annotation.VerticalSpan` for adding vertical spans (rectangles) to plot(ter)s
+  * :class:`aspecd.annotation.HorizontalSpan` for adding horizontal spans (rectangles) to plot(ter)s
+  * :class:`aspecd.annotation.TextWithLine` for adding text with additional lines
+  * :class:`aspecd.annotation.Marker` for adding markers to plot(ter)s
 
 * Analysis
 

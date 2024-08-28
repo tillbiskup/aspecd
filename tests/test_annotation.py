@@ -854,3 +854,143 @@ class TestTextWithLine(unittest.TestCase):
     def test_to_dict_contains_properties(self):
         dict_ = self.annotation.to_dict()
         self.assertIn("properties", dict_)
+
+
+class TestMarker(unittest.TestCase):
+    def setUp(self):
+        self.annotation = annotation.Marker()
+        self.plotter = aspecd.plotting.Plotter()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_annotate_adds_marker_to_plotter(self):
+        self.annotation.parameters["positions"] = [[0.5, 0.5]]
+        self.annotation.parameters["marker"] = "o"
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertIn(annotation_.drawings[0], self.plotter.ax.get_children())
+
+    def test_annotate_adds_marker_at_correct_position(self):
+        self.annotation.parameters["positions"] = [[0.5, 0.5]]
+        self.annotation.parameters["marker"] = "o"
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertListEqual(
+            annotation_.parameters["positions"][0],
+            list(annotation_.drawings[0].get_data()),
+        )
+
+    def test_annotate_adds_correct_marker(self):
+        self.annotation.parameters["positions"] = [[0.5, 0.5]]
+        self.annotation.parameters["marker"] = "o"
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        result = [
+            item
+            for item in self.plotter.ax.get_children()
+            if item is annotation_.drawings[0]
+        ][0]
+        self.assertEqual(
+            annotation_.parameters["marker"][0], result.get_marker()
+        )
+
+    def test_annotate_with_marker_keywords(self):
+        self.annotation.parameters["positions"] = [[0.5, 0.5]]
+        self.annotation.parameters["marker"] = "octagon"
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        result = [
+            item
+            for item in self.plotter.ax.get_children()
+            if item is annotation_.drawings[0]
+        ][0]
+        self.assertEqual("8", result.get_marker())
+
+    def test_annotate_with_mathtext(self):
+        self.annotation.parameters["positions"] = [[0.5, 0.5]]
+        self.annotation.parameters["marker"] = "$\mathcal{A}$"
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        result = [
+            item
+            for item in self.plotter.ax.get_children()
+            if item is annotation_.drawings[0]
+        ][0]
+        self.assertEqual(
+            annotation_.parameters["marker"], result.get_marker()
+        )
+
+    def test_annotate_adds_markers_to_plotter(self):
+        self.annotation.parameters["positions"] = [[0.5, 0.5], [0.7, 0.7]]
+        self.annotation.parameters["marker"] = "o"
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertEqual(
+            len(annotation_.parameters["positions"]),
+            len(annotation_.drawings),
+        )
+        for drawing in annotation_.drawings:
+            self.assertIn(drawing, self.plotter.ax.get_children())
+
+    def test_annotate_with_multiple_markers_does_not_add_connecting_line(
+        self,
+    ):
+        self.annotation.parameters["positions"] = [[0.5, 0.5], [0.7, 0.7]]
+        self.annotation.parameters["marker"] = "o"
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        for drawing in annotation_.drawings:
+            self.assertEqual("None", drawing.get_linestyle())
+
+    def test_annotate_with_xpositions_and_ypositions(self):
+        self.annotation.parameters["xpositions"] = [0.3]
+        self.annotation.parameters["ypositions"] = [0.7]
+        self.annotation.parameters["marker"] = "o"
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertIn(annotation_.drawings[0], self.plotter.ax.get_children())
+
+    def test_annotate_with_xpositions_as_ndarray_and_ypositions(self):
+        self.annotation.parameters["xpositions"] = np.asarray([0.3, 0.4])
+        self.annotation.parameters["ypositions"] = [0.7, 0.7]
+        self.annotation.parameters["marker"] = "o"
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertIn(annotation_.drawings[0], self.plotter.ax.get_children())
+
+    def test_annotate_with_xpositions_and_ypositions_zero(self):
+        self.annotation.parameters["xpositions"] = [0]
+        self.annotation.parameters["ypositions"] = [0]
+        self.annotation.parameters["marker"] = "o"
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertIn(annotation_.drawings[0], self.plotter.ax.get_children())
+
+    def test_annotate_with_xpositions_and_scalar_ypositions(self):
+        self.annotation.parameters["xpositions"] = [0.3]
+        self.annotation.parameters["ypositions"] = 0.7
+        self.annotation.parameters["marker"] = "o"
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertIn(annotation_.drawings[0], self.plotter.ax.get_children())
+
+    def test_annotate_with_xpositions_and_scalar_ypositions_zero(self):
+        self.annotation.parameters["xpositions"] = [0.3]
+        self.annotation.parameters["ypositions"] = 0
+        self.annotation.parameters["marker"] = "o"
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertIn(annotation_.drawings[0], self.plotter.ax.get_children())
+
+    def test_annotate_with_many_xpositions_and_one_ypositions(self):
+        self.annotation.parameters["xpositions"] = [0.3, 0.5, 0.7]
+        self.annotation.parameters["ypositions"] = [0.7]
+        self.annotation.parameters["marker"] = "o"
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertIn(annotation_.drawings[0], self.plotter.ax.get_children())
+
+    def test_to_dict_contains_properties(self):
+        dict_ = self.annotation.to_dict()
+        self.assertIn("properties", dict_)
