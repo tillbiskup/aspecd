@@ -1794,6 +1794,15 @@ class Marker(PlotAnnotation):
 
             Values are in axis (data) units.
 
+        yoffset : :class:`float`
+            Additional offset for the *y* direction added to the *y* position.
+
+            Useful, *e.g.*, when you want to mark peaks, but not on the line
+            itself, but slightly above (positive offset values) or below (
+            negative offset values).
+
+            Default: 0
+
         marker : :class:`str`
             Marker that shall be added to the plot.
 
@@ -1975,8 +1984,9 @@ class Marker(PlotAnnotation):
         self.parameters["positions"] = []
         self.parameters["xpositions"] = []
         self.parameters["ypositions"] = []
+        self.parameters["yoffset"] = 0
         self.parameters["marker"] = ""
-        self.properties = aspecd.plotting.DrawingProperties()
+        self.properties = aspecd.plotting.MarkerProperties()
 
     def _perform_task(self):
         if isinstance(self.parameters["xpositions"], np.ndarray):
@@ -2008,6 +2018,9 @@ class Marker(PlotAnnotation):
             marker_symbol = self.parameters["marker"]
         for position in positions:
             marker = self.plotter.axes.plot(
-                *position, marker=marker_symbol, linestyle=""
+                position[0],
+                position[1] + self.parameters["yoffset"],
+                marker=marker_symbol,
+                linestyle="",
             )
             self.drawings.append(marker[0])

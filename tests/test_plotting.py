@@ -4615,3 +4615,28 @@ class TestMarkerProperties(unittest.TestCase):
             getattr(self.properties, prop),
             getattr(self.annotation, f"get_{prop}")(),
         )
+
+    def test_apply_with_color_none_removes_color(self):
+        properties = {
+            "edgecolor": None,
+            "facecolor": None,
+            "facecoloralt": None,
+        }
+        for prop, value in properties.items():
+            with self.subTest(key=prop, val=value):
+                setattr(self.properties, prop, value)
+                self.properties.apply(drawing=self.annotation)
+                self.assertEqual(
+                    "none",
+                    getattr(self.annotation, f"get_marker{prop}")(),
+                )
+
+    def test_colors_default_to_black(self):
+        properties = ["edgecolor", "facecolor"]
+        for prop in properties:
+            with self.subTest(prop=prop):
+                self.properties.apply(drawing=self.annotation)
+                self.assertEqual(
+                    "#000000",
+                    getattr(self.annotation, f"get_marker{prop}")(),
+                )

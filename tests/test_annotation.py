@@ -994,3 +994,27 @@ class TestMarker(unittest.TestCase):
     def test_to_dict_contains_properties(self):
         dict_ = self.annotation.to_dict()
         self.assertIn("properties", dict_)
+
+    def test_annotate_sets_correct_facecolor_for_each_mark(self):
+        color = "#cccccc"
+        properties = {"facecolor": color}
+        self.annotation.properties.from_dict(properties)
+        self.plotter.plot()
+        self.annotation.parameters["positions"] = [[0.1, 0.3], [0.5, 0.6]]
+        annotation_ = self.plotter.annotate(self.annotation)
+        for drawing in annotation_.drawings:
+            self.assertEqual(
+                color, matplotlib.colors.to_hex(drawing.get_markerfacecolor())
+            )
+
+    def test_annotate_with_scalar_yoffset(self):
+        self.annotation.parameters["positions"] = [[0.5, 0.5]]
+        self.annotation.parameters["yoffset"] = 0.1
+        self.annotation.parameters["marker"] = "o"
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertEqual(
+            annotation_.parameters["positions"][0][1]
+            + self.annotation.parameters["yoffset"],
+            annotation_.drawings[0].get_data()[1],
+        )

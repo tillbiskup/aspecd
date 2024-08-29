@@ -6803,6 +6803,10 @@ class MarkerProperties(DrawingProperties):
 
         For details see :mod:`matplotlib.colors`
 
+        To remove the color, set it to :data:`None` (or ``Null`` in YAML)
+
+        Default: "#000000"
+
     edgewidth : :class:`float`
         Width of the marker edge
 
@@ -6811,12 +6815,20 @@ class MarkerProperties(DrawingProperties):
 
         For details see :mod:`matplotlib.colors`
 
+        To remove the color, set it to :data:`None` (or ``Null`` in YAML)
+
+        Default: "#000000"
+
     facecoloralt : color
         Alternative face color of the marker
 
         This color gets interesting depending on the fill style.
 
         For details see :mod:`matplotlib.colors`
+
+        To remove the color, set it to :data:`None` (or ``Null`` in YAML)
+
+        Default: "none"
 
     fillstyle : :class:`str`
         Style to use to fill the marker.
@@ -6855,8 +6867,8 @@ class MarkerProperties(DrawingProperties):
     def __init__(self):
         super().__init__()
         self.size = None
-        self.edgecolor = None
-        self.facecolor = None
+        self.edgecolor = "#000000"
+        self.facecolor = "#000000"
         self.facecoloralt = None
         self.edgewidth = None
         self.fillstyle = None
@@ -6877,9 +6889,13 @@ class MarkerProperties(DrawingProperties):
             Name of the property to set
 
         """
+        if "color" in prop and getattr(self, prop) is None:
+            set_value = "none"
+        else:
+            set_value = getattr(self, prop)
         if hasattr(drawing, "".join(["set_", prop])):
             try:
-                getattr(drawing, "".join(["set_", prop]))(getattr(self, prop))
+                getattr(drawing, "".join(["set_", prop]))(set_value)
             except TypeError:
                 logger.debug(
                     'Cannot set attribute "%s" for "%s"',
@@ -6888,9 +6904,7 @@ class MarkerProperties(DrawingProperties):
                 )
         elif hasattr(drawing, "".join(["set_marker", prop])):
             try:
-                getattr(drawing, "".join(["set_marker", prop]))(
-                    getattr(self, prop)
-                )
+                getattr(drawing, "".join(["set_marker", prop]))(set_value)
             except TypeError:
                 logger.debug(
                     'Cannot set attribute "%s" for "%s"',
