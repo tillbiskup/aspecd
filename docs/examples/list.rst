@@ -55,3 +55,4 @@ Plot annotations
     plotting-annotation-lines
     plotting-annotation-vertical-span
     plotting-annotation-text
+    plotting-annotation-marker
