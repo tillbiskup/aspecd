@@ -101,6 +101,10 @@ Concrete plot annotations are:
 
     Add marker(s) to a plot(ter).
 
+* :class:`aspecd.annotation.FillBetween`
+
+    Coloured surface under a curve or between curves.
+
 
 Module documentation
 ====================
@@ -110,6 +114,7 @@ Module documentation
 import matplotlib
 import numpy as np
 
+import aspecd.dataset
 import aspecd.exceptions
 import aspecd.history
 import aspecd.plotting
@@ -863,7 +868,7 @@ class Text(PlotAnnotation):
 
     One of the most versatile ways to annotate a plot is adding text labels
     at defined positions. Basically, this class is the ASpecD wrapper to
-    :meth:`matplotlib.axes.Axes.text`. Basically, you provide coordinates
+    :meth:`matplotlib.axes.Axes.text`. In short, you provide coordinates
     (*x*, *y*) for the location and a text label. By default, coordinates
     are data coordinates and specify the bottom left corner of the text.
 
@@ -2024,3 +2029,187 @@ class Marker(PlotAnnotation):
                 linestyle="",
             )
             self.drawings.append(marker[0])
+
+
+class FillBetween(PlotAnnotation):
+    """
+    Coloured surface under a curve or between curves.
+
+    Particularly in signal decomposition, highlighting the individual
+    components with coloured surfaces is a common task. But similarly,
+    confidence intervals for a fit (between two lines or curves) can be
+    marked this way.
+
+    Basically, this class is the ASpecD wrapper to
+    :meth:`matplotlib.axes.Axes.fill_between`, although (currently) with some
+    restrictions.
+
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for the annotation, implicit and explicit
+
+        The following keys exist:
+
+        data : :class:`aspecd.dataset.Dataset` | :class:`list`
+            Dataset or list of datasets.
+
+            Datasets used to fill the area below. Strictly speaking, without
+            further parameters, the area between the data points and zero is
+            filled.
+
+        second : :class:`float` | :class:`aspecd.dataset.Dataset` | :class:`list`
+            Scalar, dataset or list of datasets.
+
+            Second value used to fill the area between.
+
+            If ``second`` is a list, it needs to contain at least as many
+            elements as ``data``.
+
+            Default: 0
+
+    properties : :class:`aspecd.plotting.PatchProperties`
+        Properties of the marker(s) within a plot
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.PatchProperties` class.
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Generally and for obvious reasons, you need to have both, a plot task
+    and a plotannotation task. It does not really matter which task you
+    define first, the plot or the plot annotation. There are only marginal
+    differences, and both ways are shown below.
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            filename: plot1D.pdf
+          result: plot1D
+
+        - kind: plotannotation
+          type: FillBetween
+          properties:
+            parameters:
+              data: component
+            properties:
+              facecolor: green
+              alpha: 0.3
+          plotter: plot1D
+
+    In this case, the plotter is defined first, and the annotation second.
+    To refer to the plotter from within the plotannotation task, you need to
+    set the ``result`` attribute in the plotting task and refer to it within
+    the ``plotter`` attribute of the plotannotation task. Although defining
+    the plotter before the annotation, the user still expects the annotation
+    to be included in the file containing the actual plot, despite the fact
+    that the figure has been saved (for the first time) before the
+    annotation has been added.
+
+    Note that ``component`` refers to a dataset available within your recipe.
+
+    Sometimes, it might be convenient to go the other way round and first
+    define an annotation and afterwards add it to a plot(ter). This can be
+    done as well:
+
+    .. code-block:: yaml
+
+        - kind: plotannotation
+          type: FillBetween
+          properties:
+            parameters:
+              data: component
+            properties:
+              facecolor: green
+              alpha: 0.3
+          result: fillbetween
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            filename: plot1D.pdf
+          annotations:
+            - fillbetween
+
+
+    In this way, you can add the same annotation to several plots,
+    and be sure that each annotation is handled as a separate object.
+
+    Suppose you have more than one plotter you want to apply an annotation
+    to. In this case, the ``plotter`` property of the plotannotation task is
+    a list rather than a string:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          result: plot1
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          result: plot2
+
+        - kind: plotannotation
+          type: FillBetween
+          properties:
+            parameters:
+              data: component
+            properties:
+              facecolor: green
+              alpha: 0.3
+          plotter:
+            - plot1
+            - plot2
+
+    In this case, the annotation will be applied to both plots
+    independently. Note that the example has been reduced to the key
+    aspects. In a real situation, the two plotters will differ much more.
+
+
+    .. versionadded:: 0.11
+
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.parameters["data"] = None
+        self.parameters["second"] = 0
+        self.properties = aspecd.plotting.PatchProperties()
+
+    def _perform_task(self):
+        if isinstance(self.parameters["data"], aspecd.dataset.Dataset):
+            datasets = [self.parameters["data"]]
+        else:
+            datasets = self.parameters["data"]
+        if isinstance(self.parameters["second"], aspecd.dataset.Dataset):
+            second = self.parameters["second"].data.data
+        elif isinstance(self.parameters["second"], list):
+            second = [
+                dataset.data.data for dataset in self.parameters["second"]
+            ]
+        else:
+            second = self.parameters["second"]
+        for idx, dataset in enumerate(datasets):
+            if isinstance(second, list):
+                fill_between = self.plotter.axes.fill_between(
+                    dataset.data.axes[0].values,
+                    dataset.data.data,
+                    second[idx],
+                )
+            else:
+                fill_between = self.plotter.axes.fill_between(
+                    dataset.data.axes[0].values,
+                    dataset.data.data,
+                    second,
+                )
+            self.drawings.append(fill_between)

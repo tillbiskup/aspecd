@@ -1018,3 +1018,84 @@ class TestMarker(unittest.TestCase):
             + self.annotation.parameters["yoffset"],
             annotation_.drawings[0].get_data()[1],
         )
+
+
+class TestFillBetween(unittest.TestCase):
+    def setUp(self):
+        self.annotation = annotation.FillBetween()
+        self.plotter = aspecd.plotting.Plotter()
+        self.dataset = aspecd.dataset.CalculatedDataset()
+        self.dataset.data.data = np.ones(101)
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_annotate_adds_annotation_to_plotter(self):
+        self.annotation.parameters["data"] = self.dataset
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertIn(annotation_.drawings[0], self.plotter.ax.get_children())
+        self.assertIsInstance(
+            annotation_.drawings[0], matplotlib.collections.PolyCollection
+        )
+
+    def test_annotate_adds_annotations_to_plotter(self):
+        self.annotation.parameters["data"] = [self.dataset, self.dataset]
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertEqual(
+            len(annotation_.parameters["data"]),
+            len(annotation_.drawings),
+        )
+        for drawing in annotation_.drawings:
+            self.assertIn(drawing, self.plotter.ax.get_children())
+
+    def test_to_dict_contains_properties(self):
+        dict_ = self.annotation.to_dict()
+        self.assertIn("properties", dict_)
+
+    def test_annotate_sets_correct_facecolor_for_each_annotation(self):
+        color = "#cccccc"
+        properties = {"facecolor": color}
+        self.annotation.properties.from_dict(properties)
+        self.plotter.plot()
+        self.annotation.parameters["data"] = [self.dataset, self.dataset]
+        annotation_ = self.plotter.annotate(self.annotation)
+        for drawing in annotation_.drawings:
+            self.assertEqual(
+                color, matplotlib.colors.to_hex(drawing.get_facecolor())
+            )
+
+    def test_annotate_with_second_as_scalar(self):
+        self.annotation.parameters["data"] = self.dataset
+        self.annotation.parameters["second"] = 0.1
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertAlmostEqual(
+            0.1,
+            annotation_.drawings[0].get_paths()[0].get_extents().bounds[1],
+        )
+
+    def test_annotate_with_second_as_dataset(self):
+        self.annotation.parameters["data"] = self.dataset
+        second = aspecd.dataset.CalculatedDataset()
+        second.data.data = np.ones(101) * 0.1
+        self.annotation.parameters["second"] = second
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertAlmostEqual(
+            0.1,
+            annotation_.drawings[0].get_paths()[0].get_extents().bounds[1],
+        )
+
+    def test_annotate_with_seconds_as_list_of_datasets(self):
+        self.annotation.parameters["data"] = self.dataset
+        second = aspecd.dataset.CalculatedDataset()
+        second.data.data = np.ones(101) * 0.1
+        self.annotation.parameters["second"] = [second, second]
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertAlmostEqual(
+            0.1,
+            annotation_.drawings[0].get_paths()[0].get_extents().bounds[1],
+        )

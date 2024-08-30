@@ -28,6 +28,7 @@ New features
   * :class:`aspecd.annotation.HorizontalSpan` for adding horizontal spans (rectangles) to plot(ter)s
   * :class:`aspecd.annotation.TextWithLine` for adding text with additional lines
   * :class:`aspecd.annotation.Marker` for adding markers to plot(ter)s
+  * :class:`aspecd.annotation.FillBetween` for colouring the surface below a curve.
 
 * Analysis
 
