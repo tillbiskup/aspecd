@@ -2060,12 +2060,18 @@ class FillBetween(PlotAnnotation):
             filled.
 
         second : :class:`float` | :class:`aspecd.dataset.Dataset` | :class:`list`
-            Scalar, dataset or list of datasets.
+            Scalar, dataset or list (of scalars or datasets).
 
             Second value used to fill the area between.
 
-            If ``second`` is a list, it needs to contain at least as many
-            elements as ``data``.
+            If a scalar, the scalar value is broadcast to the length of the
+            *y* values in ``data``.
+
+            If a dataset, the data need to be of same shape as the
+            data of the dataset in ``data``.
+
+            If a list, it needs to contain at least as many elements as
+            ``data``. Note that you can mix scalars and datasets in the list.
 
             Default: 0
 
@@ -2194,9 +2200,12 @@ class FillBetween(PlotAnnotation):
         if isinstance(self.parameters["second"], aspecd.dataset.Dataset):
             second = self.parameters["second"].data.data
         elif isinstance(self.parameters["second"], list):
-            second = [
-                dataset.data.data for dataset in self.parameters["second"]
-            ]
+            second = []
+            for item in self.parameters["second"]:
+                try:
+                    second.append(item.data.data)
+                except AttributeError:
+                    second.append(item)
         else:
             second = self.parameters["second"]
         for idx, dataset in enumerate(datasets):

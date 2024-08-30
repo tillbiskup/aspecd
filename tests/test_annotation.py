@@ -1099,3 +1099,29 @@ class TestFillBetween(unittest.TestCase):
             0.1,
             annotation_.drawings[0].get_paths()[0].get_extents().bounds[1],
         )
+
+    def test_annotate_with_seconds_as_list_of_scalars(self):
+        self.annotation.parameters["data"] = self.dataset
+        self.annotation.parameters["second"] = [0.2, 0.5]
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertAlmostEqual(
+            0.2,
+            annotation_.drawings[0].get_paths()[0].get_extents().bounds[1],
+        )
+
+    def test_annotate_with_seconds_as_mixed_list(self):
+        self.annotation.parameters["data"] = [self.dataset, self.dataset]
+        second = aspecd.dataset.CalculatedDataset()
+        second.data.data = np.ones(101) * 0.1
+        self.annotation.parameters["second"] = [0.2, second]
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertAlmostEqual(
+            0.2,
+            annotation_.drawings[0].get_paths()[0].get_extents().bounds[1],
+        )
+        self.assertAlmostEqual(
+            0.1,
+            annotation_.drawings[1].get_paths()[0].get_extents().bounds[1],
+        )

@@ -56,3 +56,4 @@ Plot annotations
     plotting-annotation-vertical-span
     plotting-annotation-text
     plotting-annotation-marker
+    plotting-annotation-fillbetween

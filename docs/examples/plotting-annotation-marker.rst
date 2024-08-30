@@ -119,7 +119,7 @@ The resulting figure is shown below:
 
 .. figure:: ./plotting-annotation-marker-styled.png
 
-    Plot with two markers for the peak positions as annotation. The markers are heavily styled, and a larger symbol used to show all the details..
+    Plot with two markers for the peak positions as annotation. The markers are heavily styled, and a larger symbol used to show all the details.
 
 
 
