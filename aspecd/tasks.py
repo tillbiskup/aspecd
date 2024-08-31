@@ -901,7 +901,6 @@ import aspecd.plotting
 import aspecd.system
 import aspecd.utils
 
-
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
@@ -1931,7 +1930,9 @@ class Task(aspecd.utils.ToDictMixin):
                     task_copy.model
                 )
             if hasattr(task_copy, "parameters"):
-                self._replace_objects_with_labels(task_copy.parameters)
+                parameters = copy.copy(task_copy.parameters)
+                self._replace_objects_with_labels(parameters)
+                task_copy.parameters = parameters
             self.properties.update(task_copy.to_dict())
         if "parameters" in self.properties:
             if isinstance(self.properties["parameters"], list):
@@ -1954,6 +1955,12 @@ class Task(aspecd.utils.ToDictMixin):
         for property_key, property_value in dict_.items():
             if isinstance(property_value, (dict, collections.OrderedDict)):
                 self._replace_objects_with_labels(property_value)
+            elif isinstance(property_value, list):
+                dict_[property_key] = [
+                    self._replace_object_with_label(item)
+                    for item in property_value
+                ]
+                continue
             elif (
                 aspecd.utils.isiterable(property_value)
                 and not isinstance(property_value, str)
@@ -2216,11 +2223,11 @@ class Task(aspecd.utils.ToDictMixin):
                             if hasattr(element, "from_dict"):
                                 element.from_dict(source[key][idx])
                             elif isinstance(element, dict):
-                                target[key][idx] = (
-                                    self._set_attributes_in_dict(
-                                        source=source[key][idx],
-                                        target=element,
-                                    )
+                                target[key][
+                                    idx
+                                ] = self._set_attributes_in_dict(
+                                    source=source[key][idx],
+                                    target=element,
                                 )
                             else:
                                 target[key][idx] = source[key][idx]
@@ -2784,9 +2791,9 @@ class SingleanalysisTask(AnalysisTask):
                 if result_labels:
                     if isinstance(self._task.result, aspecd.dataset.Dataset):
                         self._task.result.id = self.result[number]
-                    self.recipe.results[self.result[number]] = (
-                        self._task.result
-                    )
+                    self.recipe.results[
+                        self.result[number]
+                    ] = self._task.result
                 else:
                     if isinstance(self._task.result, aspecd.dataset.Dataset):
                         self._task.result.id = self.result
