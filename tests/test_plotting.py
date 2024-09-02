@@ -1997,6 +1997,25 @@ class TestMultiPlotter1DStacked(unittest.TestCase):
             min(self.plotter.axes.get_lines()[0].get_ydata()) * 2,
         )
 
+    def test_plot_stacks_with_positive_signal(self):
+        dataset_ = aspecd.dataset.CalculatedDataset()
+
+        def gaussian(amp, fwhm, mean):
+            return lambda x: amp * np.exp(
+                -4.0 * np.log(2) * (x - mean) ** 2 / fwhm ** 2
+            )
+        data = np.array([])
+        xvalues = np.linspace(1, 50)
+        data = np.append(data, gaussian(4, 5,  12)(xvalues))
+        dataset_.data.data = data
+        self.plotter.datasets[0] = dataset_
+        self.plotter.datasets.append(dataset_)
+        self.plotter.plot()
+        self.assertLess(
+            max(self.plotter.axes.get_lines()[3].get_ydata()),
+            max(self.plotter.axes.get_lines()[0].get_ydata()),
+        )
+
     def test_plot_removes_yticks(self):
         self.plotter.plot()
         self.assertEqual(0, len(self.plotter.axes.get_yticklabels()))

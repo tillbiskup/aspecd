@@ -3424,7 +3424,8 @@ class MultiPlotter1DStacked(MultiPlotter1D):
     def _create_plot(self):
         """Actual drawing of datasets"""
         if not self.parameters["offset"]:
-            offset = abs(self.datasets[0].data.data.min()) * 1.05
+            offset = max([abs(self.datasets[0].data.data.min()),
+                          abs(self.datasets[0].data.data.max())]) * 1.05
             self.parameters["offset"] = offset
         else:
             offset = self.parameters["offset"]
