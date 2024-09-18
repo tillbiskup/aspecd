@@ -709,15 +709,14 @@ class TestTxtImporter(unittest.TestCase):
 
         self.importer.source = self.source
         self.dataset.import_from(self.importer)
-        self.assertListEqual(list(data[:, 1]), list(self.dataset.data.data))
-        self.assertListEqual(
-            list(data[:, 1]), list(self.dataset._origdata.data)
+        self.assertEqual(1, self.dataset.data.data.ndim)
+        np.testing.assert_allclose(data[:, 1], self.dataset.data.data)
+        np.testing.assert_allclose(data[:, 1], self.dataset._origdata.data)
+        np.testing.assert_allclose(
+            data[:, 0], self.dataset.data.axes[0].values
         )
-        self.assertListEqual(
-            list(data[:, 0]), list(self.dataset.data.axes[0].values)
-        )
-        self.assertListEqual(
-            list(data[:, 0]), list(self.dataset._origdata.axes[0].values)
+        np.testing.assert_allclose(
+            data[:, 0], self.dataset._origdata.axes[0].values
         )
 
     def test_import_2d_data_sets_data_and_axis(self):

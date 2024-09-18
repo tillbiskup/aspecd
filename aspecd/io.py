@@ -1359,6 +1359,8 @@ class TxtImporter(DatasetImporter):
         if data.ndim == 2 and axis is not None:
             self.dataset.data.axes[0].values = data[:, axis]
             data = np.delete(data, axis, 1)
+            if data.shape[1] == 1:
+                data = data[:, 0]
         self.dataset.data.data = data
 
 
