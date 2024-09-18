@@ -34,6 +34,10 @@ New features
 
   * :class:`aspecd.analysis.PeakFinding` can return both, peak positions and intensities, as pairs, ready to be used in :class:`aspecd.annotation.TextWithLine` annotations.
 
+* IO
+
+  * :class:`aspecd.io.TxtImporter` has an additional parameter ``axis`` specifying which column to use for axis values when reading 2D data. (`#6 <https://github.com/tillbiskup/aspecd/issues/6>`_)
+
 
 
 Fixes

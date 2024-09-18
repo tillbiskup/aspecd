@@ -720,6 +720,20 @@ class TestTxtImporter(unittest.TestCase):
             list(data[:, 0]), list(self.dataset._origdata.axes[0].values)
         )
 
+    def test_import_2d_data_sets_data_and_axis(self):
+        data = np.random.random([5, 4])
+        np.savetxt(self.source, data)
+
+        self.importer.source = self.source
+        self.importer.parameters["axis"] = 2
+        self.dataset.import_from(self.importer)
+        np.testing.assert_allclose(
+            np.delete(data, 2, 1), self.dataset.data.data
+        )
+        np.testing.assert_allclose(
+            data[:, 2], self.dataset.data.axes[0].values
+        )
+
     def test_import_with_skiprows(self):
         data = np.random.random([5, 1])
         np.savetxt(self.source, data)
@@ -736,6 +750,7 @@ class TestTxtImporter(unittest.TestCase):
 
         self.importer.source = self.source
         self.importer.parameters["delimiter"] = ";"
+        self.importer.parameters["axis"] = None
         self.dataset.import_from(self.importer)
         self.assertEqual((5, 3), self.dataset.data.data.shape)
 
@@ -745,6 +760,7 @@ class TestTxtImporter(unittest.TestCase):
 
         self.importer.source = self.source
         self.importer.parameters["comments"] = "%"
+        self.importer.parameters["axis"] = None
         self.dataset.import_from(self.importer)
         self.assertEqual((5, 3), self.dataset.data.data.shape)
 
