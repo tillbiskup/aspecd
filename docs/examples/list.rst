@@ -57,3 +57,12 @@ Plot annotations
     plotting-annotation-text
     plotting-annotation-marker
     plotting-annotation-fillbetween
+
+
+Analysis
+--------
+
+.. toctree::
+    :maxdepth: 1
+
+    analysis-centre-of-mass

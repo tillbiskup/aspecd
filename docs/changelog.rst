@@ -33,6 +33,7 @@ New features
 * Analysis
 
   * :class:`aspecd.analysis.PeakFinding` can return both, peak positions and intensities, as pairs, ready to be used in :class:`aspecd.annotation.TextWithLine` annotations.
+  * :class:`aspecd.analysis.CentreOfMass` for calculating the centre of mass for ND datasets.
 
 * IO
 

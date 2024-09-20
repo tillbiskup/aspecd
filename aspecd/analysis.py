@@ -123,6 +123,10 @@ independently.
   these device data, the most general way is to extract them as
   individual dataset and perform all further tasks on it.
 
+* :class:`CentreOfMass`
+
+  Calculate centre of mass for ND datasets.
+
 
 Writing own analysis steps
 ==========================
@@ -2169,7 +2173,8 @@ class CentreOfMass(SingleAnalysisStep):
         \vec{r}_s = \frac{1}{M} \sum_{i}m_{i} \cdot \vec{r}_i
 
     Note that in contrast to :func:`scipy.ndimage.center_of_mass`,
-    the actual axis values are used to calculate the centre of mass.
+    the actual axis values are used to calculate the centre of mass. Hence,
+    the calculation works for non-uniform spacing of individual axes as well.
 
 
     Attributes

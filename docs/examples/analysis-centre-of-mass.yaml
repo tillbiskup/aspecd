@@ -1,0 +1,115 @@
+format:
+  type: ASpecD recipe
+  version: '0.2'
+
+settings:
+  autosave_plots: False
+
+tasks:
+  - kind: model
+    type: Zeros
+    properties:
+      parameters:
+        shape: 1001
+        range: [0, 20]
+    result: dummy
+
+  - kind: model
+    type: CompositeModel
+    from_dataset: dummy
+    properties:
+      models:
+        - Lorentzian
+        - Lorentzian
+      parameters:
+        - position: 5
+          width: 0.8
+        - position: 8
+          width: 2
+    result: model_data
+
+  - kind: singleanalysis
+    type: CentreOfMass
+    apply_to: model_data
+    result: centre_of_mass
+
+  - kind: singleplot
+    type: SinglePlotter1D
+    properties:
+      properties:
+        axes:
+          xlabel: "$position$ / a.u."
+          xlim: [0, 20]
+          ylim: [0, 1.35]
+      parameters:
+        tight_layout: True
+      filename: analysis-centre-of-mass-lorentzian.pdf
+    apply_to:
+      - model_data
+    result:
+      - plot-lorentzian
+    comment: >
+      Plotter that gets annotated later
+
+  - kind: plotannotation
+    type: VerticalLine
+    properties:
+      parameters:
+        positions: centre_of_mass
+      properties:
+        color: gray
+        linestyle: dashed
+    plotter: plot-lorentzian
+    comment: >
+      Vertical line marking the centre of mass
+
+  - kind: model
+    type: Ones
+    properties:
+      parameters:
+        shape: [512, 512]
+        range:
+          - [200, 350]
+          - [275, 425]
+    result: dummy_2D
+
+  - kind: singleprocessing
+    type: Noise
+    properties:
+      parameters:
+        exponent: 0
+    apply_to: dummy_2D
+    result: model_data_2D
+
+  - kind: singleanalysis
+    type: CentreOfMass
+    apply_to: model_data_2D
+    result: centre_of_mass_2D
+
+  - kind: singleplot
+    type: SinglePlotter2D
+    properties:
+      parameters:
+        tight_layout: True
+      properties:
+        axes:
+          aspect: equal
+      filename: analysis-centre-of-mass-2D.pdf
+    apply_to:
+      - model_data_2D
+    result:
+      - plot-2D
+    comment: >
+      Plotter that gets annotated later
+
+  - kind: plotannotation
+    type: Marker
+    properties:
+      parameters:
+        positions:
+          - centre_of_mass_2D
+        marker: x
+      properties:
+        edgecolor: red
+        size: 12
+    plotter: plot-2D
