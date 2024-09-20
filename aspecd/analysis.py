@@ -2137,3 +2137,100 @@ class DeviceDataExtraction(SingleAnalysisStep):
         reference.from_dataset(self.dataset)
         dataset.references.append(reference)
         self.result = dataset
+
+
+class CentreOfMass(SingleAnalysisStep):
+    r"""
+    Calculate centre of mass for ND datasets.
+
+    In Physics, the centre of mass of a body is the mass-weighted average of
+    the positions of its mass points. It can be equally applied to an ND
+    dataset, where the mass is related to the intensity value at a given point.
+
+    In one dimension, the centre of mass, :math:`x_s`, can be calculated by:
+
+    .. math::
+
+        x_s = \frac{1}{M} \cdot \sum_{i=1}^{n} x_{i} \cdot m_{i}
+
+
+    with the total mass :math:`M`, *i.e.* the sum of all point masses:
+
+    .. math::
+
+        M = \sum_{i=1}^{n} m_{i}
+
+    This can be generalised to arbitrary dimensions, defining the centre of
+    mass as the mass-weighted average of the position vectors
+    :math:`\vec{r}_i`:
+
+    .. math::
+
+        \vec{r}_s = \frac{1}{M} \sum_{i}m_{i} \cdot \vec{r}_i
+
+    Note that in contrast to :func:`scipy.ndimage.center_of_mass`,
+    the actual axis values are used to calculate the centre of mass.
+
+
+    Attributes
+    ----------
+    result : :class:`np.array`
+        Coordinates of the centre of mass of the data in axis coordinates.
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Obtaining the centre of mass of a given dataset is fairly straight-forward:
+
+    .. code-block:: yaml
+
+        - kind: singleanalysis
+          type: CentreOfMass
+          result: centre_of_mass
+
+    However, usually you would like to graphically display the result in
+    some way. Assuming a 1D dataset, you may plot a vertical line,
+    using :class:`aspecd.annotation.VerticalLine`, and using the result of
+    the analysis as the *x* coordinate of the annotation:
+
+    .. code-block:: yaml
+
+        - kind: singleanalysis
+          type: CentreOfMass
+          result: centre_of_mass
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            filename: plot.pdf
+          result: plot
+
+        - kind: plotannotation
+          type: VerticalLine
+          properties:
+            parameters:
+              positions: centre_of_mass
+          plotter: plot
+
+
+    .. versionadded:: 0.11
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = "Calculate centre of mass"
+
+    def _perform_task(self):
+        axes_values = [axes.values for axes in self.dataset.data.axes[:-1]]
+        coordinates = [
+            np.sum(self.dataset.data.data * axis_values)
+            / np.sum(self.dataset.data.data)
+            for axis_values in axes_values
+        ]
+        self.result = np.array(coordinates)

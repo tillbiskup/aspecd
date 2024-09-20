@@ -34,3 +34,6 @@ tests/*tex
 # coverage
 .coverage
 htmlcov/
+
+# PDFs in docs
+docs/*/*pdf

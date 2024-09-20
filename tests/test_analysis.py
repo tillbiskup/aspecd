@@ -1195,3 +1195,59 @@ class TestDeviceDataExtraction(unittest.TestCase):
         self.dataset.device_data = {}
         with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
             self.dataset.analyse(self.analysis)
+
+
+class TestCentreOfMass(unittest.TestCase):
+    def setUp(self):
+        self.analysis = aspecd.analysis.CentreOfMass()
+        self.dataset = aspecd.dataset.Dataset()
+        self.dataset.data.data = np.sin(np.linspace(0, np.pi, num=1001))
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn("centre of mass", self.analysis.description.lower())
+
+    def test_analyse_returns_centre_of_mass_in_1d_with_indices(self):
+        analysis = self.dataset.analyse(self.analysis)
+        np.testing.assert_almost_equal(500, analysis.result)
+
+    def test_analyse_returns_centre_of_mass_in_1d_with_axis_values(self):
+        self.dataset.data.axes[0].values = np.linspace(
+            340, 350, len(self.dataset.data.data)
+        )
+        analysis = self.dataset.analyse(self.analysis)
+        np.testing.assert_almost_equal(345, analysis.result)
+
+    def test_analyse_returns_centre_of_mass_in_2d_with_indices(self):
+        self.dataset.data.data = np.array(
+            [
+                [0, 0, 0, 0, 0],
+                [0, 1, 1, 1, 0],
+                [0, 1, 2, 1, 0],
+                [0, 1, 1, 1, 0],
+                [0, 0, 0, 0, 0],
+            ]
+        )
+        analysis = self.dataset.analyse(self.analysis)
+        np.testing.assert_array_almost_equal(
+            np.array([2, 2]), analysis.result
+        )
+
+    def test_analyse_returns_centre_of_mass_in_2d_with_axis_values(self):
+        self.dataset.data.data = np.array(
+            [
+                [0, 0, 0, 0, 0],
+                [0, 1, 1, 1, 0],
+                [0, 1, 2, 1, 0],
+                [0, 1, 1, 1, 0],
+                [0, 0, 0, 0, 0],
+            ]
+        )
+        self.dataset.data.axes[0].values = np.linspace(340, 350, 5)
+        self.dataset.data.axes[1].values = np.linspace(230, 235, 5)
+        analysis = self.dataset.analyse(self.analysis)
+        np.testing.assert_array_almost_equal(
+            np.array([345, 232.5]), analysis.result
+        )
