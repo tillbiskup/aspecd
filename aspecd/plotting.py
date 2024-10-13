@@ -3424,8 +3424,15 @@ class MultiPlotter1DStacked(MultiPlotter1D):
     def _create_plot(self):
         """Actual drawing of datasets"""
         if not self.parameters["offset"]:
-            offset = max([abs(self.datasets[0].data.data.min()),
-                          abs(self.datasets[0].data.data.max())]) * 1.05
+            offset = (
+                max(
+                    [
+                        abs(self.datasets[0].data.data.min()),
+                        abs(self.datasets[0].data.data.max()),
+                    ]
+                )
+                * 1.05
+            )
             self.parameters["offset"] = offset
         else:
             offset = self.parameters["offset"]
@@ -4796,7 +4803,10 @@ class FigureProperties(aspecd.utils.Properties):
 
         2-tuple of floats
 
-        Default: 6, 4
+        In order to not prevent users from setting the default figure size
+        in their matplotlibrc file, the default is ``None``.
+
+        Default: None
 
     dpi: :class:`float`
         Figure resolution in dots per inch.
@@ -4821,11 +4831,14 @@ class FigureProperties(aspecd.utils.Properties):
     .. versionchanged:: 0.6
         Default figure size set to (6., 4.)
 
+    .. versionchanged:: 0.11
+        Default figure size set to None to allow setting from matplotlibrc file.
+
     """
 
     def __init__(self):
         super().__init__()
-        self.size = (6.0, 4.0)
+        self.size = None  # (6.0, 4.0)
         self.dpi = 100.0
         self.title = ""
 
@@ -4849,7 +4862,8 @@ class FigureProperties(aspecd.utils.Properties):
         for prop in self.get_properties():
             setattr(figure, prop, getattr(self, prop))
         # Need to set size and title manually
-        figure.set_size_inches(self.size)
+        if self.size:
+            figure.set_size_inches(self.size)
         figure.suptitle(self.title)
 
 
