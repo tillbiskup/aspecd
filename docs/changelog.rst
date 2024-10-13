@@ -40,6 +40,13 @@ New features
   * :class:`aspecd.io.TxtImporter` has an additional parameter ``axis`` specifying which column to use for axis values when reading 2D data. (`#6 <https://github.com/tillbiskup/aspecd/issues/6>`_)
 
 
+Changes
+-------
+
+* Plotting: Default figure size in :class:`aspecd.plotting.FigureProperties` set to ``None`` to allow setting from matplotlibrc to take effect.
+
+  *Without adjustments, this may change the size (and aspect ratio) of your figures from 6x4 inches to 6.4x4.8 inches.*
+
 
 Fixes
 -----

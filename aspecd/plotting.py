@@ -4838,7 +4838,7 @@ class FigureProperties(aspecd.utils.Properties):
 
     def __init__(self):
         super().__init__()
-        self.size = None  # (6.0, 4.0)
+        self.size = None
         self.dpi = 100.0
         self.title = ""
 
