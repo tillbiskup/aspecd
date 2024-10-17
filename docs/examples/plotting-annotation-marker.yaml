@@ -1,0 +1,273 @@
+format:
+  type: ASpecD recipe
+  version: '0.2'
+
+settings:
+  autosave_plots: False
+
+tasks:
+  - kind: model
+    type: Zeros
+    properties:
+      parameters:
+        shape: 1001
+        range: [0, 20]
+    result: dummy
+
+  - kind: model
+    type: CompositeModel
+    from_dataset: dummy
+    properties:
+      models:
+        - Lorentzian
+        - Lorentzian
+      parameters:
+        - position: 5
+          width: 0.8
+        - position: 8
+          width: 2
+    result: model_data
+
+  - kind: singleanalysis
+    type: PeakFinding
+    apply_to: model_data
+    result: peaks
+
+  - kind: singleplot
+    type: SinglePlotter1D
+    properties:
+      properties:
+        axes:
+          xlabel: "$position$ / a.u."
+          xlim: [0, 20]
+          ylim: [0, 1.45]
+        grid:
+          show: True
+          axis: x
+          lines:
+            linestyle: ":"
+      parameters:
+        tight_layout: True
+      filename: plotting-annotation-marker-default.pdf
+    apply_to:
+      - model_data
+    result:
+      - plot-with-marker
+    comment: >
+      Plotter that gets annotated later
+
+  - kind: plotannotation
+    type: Marker
+    properties:
+      parameters:
+        xpositions: peaks
+        ypositions: 1.38
+        marker: "*"
+    plotter: plot-with-marker
+    comment: >
+      Star-shaped markers with default styling to highlight the peaks.
+
+  - kind: singleplot
+    type: SinglePlotter1D
+    properties:
+      properties:
+        axes:
+          xlabel: "$position$ / a.u."
+          xlim: [0, 20]
+          ylim: [0, 1.45]
+      parameters:
+        tight_layout: True
+      filename: plotting-annotation-marker-styled.pdf
+    apply_to:
+      - model_data
+    result:
+      - plot-with-styled-marker
+    comment: >
+      Plotter that gets annotated later
+
+  - kind: plotannotation
+    type: Marker
+    properties:
+      parameters:
+        xpositions: peaks
+        ypositions: 1.38
+        marker: "h"
+      properties:
+        edgecolor: red
+        edgewidth: 2
+        facecolor: blue
+        facecoloralt: green
+        size: 16
+        fillstyle: top
+        alpha: 0.8
+    plotter: plot-with-styled-marker
+    comment: >
+      Styled markers demonstrating some of the styling possibilities.
+
+  - kind: singleanalysis
+    type: PeakFinding
+    properties:
+      parameters:
+        return_intensities: True
+    apply_to: model_data
+    result: peaks_xy
+
+  - kind: singleplot
+    type: SinglePlotter1D
+    properties:
+      properties:
+        axes:
+          xlabel: "$position$ / a.u."
+          xlim: [0, 20]
+          ylim: [0, 1.45]
+      parameters:
+        tight_layout: True
+      filename: plotting-annotation-marker-peaks.pdf
+    apply_to:
+      - model_data
+    result:
+      - plot-with-marker-peaks
+    comment: >
+      Plotter that gets annotated later
+
+  - kind: plotannotation
+    type: Marker
+    properties:
+      parameters:
+        positions: peaks_xy
+        marker: "*"
+    plotter: plot-with-marker-peaks
+    comment: >
+      Star-shaped markers with default styling placed on peaks.
+
+  - kind: singleplot
+    type: SinglePlotter1D
+    properties:
+      properties:
+        axes:
+          xlabel: "$position$ / a.u."
+          xlim: [0, 20]
+          ylim: [0, 1.45]
+      parameters:
+        tight_layout: True
+      filename: plotting-annotation-marker-peaks-yoffset.pdf
+    apply_to:
+      - model_data
+    result:
+      - plot-with-marker-peaks-yoffset
+    comment: >
+      Plotter that gets annotated later
+
+  - kind: plotannotation
+    type: Marker
+    properties:
+      parameters:
+        positions: peaks_xy
+        yoffset: 0.05
+        marker: "*"
+    plotter: plot-with-marker-peaks-yoffset
+    comment: >
+      Star-shaped markers with default styling placed on peaks, vertically offset.
+
+  - kind: singleplot
+    type: SinglePlotter1D
+    properties:
+      properties:
+        axes:
+          xlabel: "$position$ / a.u."
+          xlim: [0, 20]
+          ylim: [0, 1.45]
+      parameters:
+        tight_layout: True
+      filename: plotting-annotation-marker-by-name.pdf
+    apply_to:
+      - model_data
+    result:
+      - plot-with-marker-by-name
+    comment: >
+      Plotter that gets annotated later
+
+  - kind: plotannotation
+    type: Marker
+    properties:
+      parameters:
+        positions: peaks_xy
+        yoffset: 0.005
+        marker: "caretdown"
+      properties:
+        edgewidth: 0
+    plotter: plot-with-marker-by-name
+    comment: >
+      Markers with default styling identified by their name.
+
+  - kind: singleplot
+    type: SinglePlotter1D
+    properties:
+      properties:
+        axes:
+          xlabel: "$position$ / a.u."
+          xlim: [0, 20]
+          ylim: [0, 1.45]
+      parameters:
+        tight_layout: True
+      filename: plotting-annotation-marker-mathtext.pdf
+    apply_to:
+      - model_data
+    result:
+      - plot-with-marker-mathtext
+    comment: >
+      Plotter that gets annotated later
+
+  - kind: plotannotation
+    type: Marker
+    properties:
+      parameters:
+        positions: peaks_xy
+        yoffset: 0.05
+        marker: $\mathcal{A}$
+      properties:
+        size: 14
+        edgewidth: 0
+        facecolor: orange
+    plotter: plot-with-marker-mathtext
+    comment: >
+      Markers with default styling using MathText (no LaTeX install needed).
+      
+      Note that in this case, you cannot have question marks surrounding the
+      marker string, as otherwise, YAML is unhappy.
+
+  - kind: singleplot
+    type: SinglePlotter1D
+    properties:
+      properties:
+        axes:
+          xlabel: "$position$ / a.u."
+          xlim: [0, 20]
+          ylim: [0, 1.45]
+      parameters:
+        tight_layout: True
+      filename: plotting-annotation-marker-unicode.pdf
+    apply_to:
+      - model_data
+    result:
+      - plot-with-marker-unicode
+    comment: >
+      Plotter that gets annotated later
+
+  - kind: plotannotation
+    type: Marker
+    properties:
+      parameters:
+        positions: peaks_xy
+        yoffset: 0.06
+        marker: "$\u266B$"
+      properties:
+        size: 14
+        edgewidth: 0
+        facecolor: blue
+    plotter: plot-with-marker-unicode
+    comment: >
+      Markers with default styling using Unicode (there is music in the peaks).
+      
+      Note that in this case, you need to have question marks surrounding the
+      marker string, as otherwise, YAML is unhappy.

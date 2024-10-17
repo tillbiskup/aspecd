@@ -2173,9 +2173,9 @@ class SinglePlotter2DStacked(SinglePlotter):
         show_zero_lines : :class:`bool`
             Whether to show zero lines in the plot
 
-            Regardless of whether you set this to true, zero lines will only be
-            added to the final plot if the zero value is within the current
-            axes limits.
+            Regardless of whether you set this to true, zero lines will
+            only be added to the final plot if the zero value is within
+            the current axes limits.
 
             Zero line properties can be set via the
             :attr:`aspecd.plotting.Plotter.properties` attribute.
@@ -3341,6 +3341,18 @@ class MultiPlotter1DStacked(MultiPlotter1D):
 
             Default: None
 
+        show_zero_lines : :class:`bool`
+            Whether to show zero lines in the plot
+
+            Regardless of whether you set this to true, zero lines will
+            only be added to the final plot if the zero value is within
+            the current axes limits.
+
+            Zero line properties can be set via the
+            :attr:`aspecd.plotting.Plotter.properties` attribute.
+
+            Default: False
+
     Examples
     --------
     For convenience, a series of examples in recipe style (for details of
@@ -3412,7 +3424,15 @@ class MultiPlotter1DStacked(MultiPlotter1D):
     def _create_plot(self):
         """Actual drawing of datasets"""
         if not self.parameters["offset"]:
-            offset = abs(self.datasets[0].data.data.min()) * 1.05
+            offset = (
+                max(
+                    [
+                        abs(self.datasets[0].data.data.min()),
+                        abs(self.datasets[0].data.data.max()),
+                    ]
+                )
+                * 1.05
+            )
             self.parameters["offset"] = offset
         else:
             offset = self.parameters["offset"]
@@ -3661,24 +3681,34 @@ class CompositePlotter(Plotter):
             processing. To prevent this, assign the result of the processing
             step a unique name.
 
-    sharex : :class:`bool`
-        Whether to share the *x* axes of all plots in each column.
+    sharex : :class:`bool` | :class:`str`
+        Whether to share the *x* axes of all subplots.
 
-        If set, all axes starting with the first defined axes in each
-        column will share their *x* axes. At the same time, only the outer
-        axes will be shown.
+        If set to ``True`` or ``all``, all *x* axes are shared, starting with
+        the first defined axes.
+
+        If set to one of ``["col", "columns", "column-wise"]``, the *x*
+        axes in each column are shared, starting with the first defined
+        axes in each column.
+
+        In both cases, only the outer *x* axes will be shown.
 
         Typically, you will want to set the ``hspace`` property in
         :attr:`CompositePlotProperties.grid_spec` to a small value.
 
         .. versionadded:: 0.10
 
-    sharey : :class:`bool`
-        Whether to share the *y* axes of all plots in each row.
+    sharey : :class:`bool` | :class:`str`
+        Whether to share the *y* axes of all subplots.
 
-        If set, all axes starting with the first defined axes in each
-        row will share their *y* axes. At the same time, only the outer
-        axes will be shown.
+        If set to ``True`` or ``all``, all *y* axes are shared, starting with
+        the first defined axes.
+
+        If set to one of ``["row", "rows", "row-wise"]``, the *y* axes in
+        each row are shared, starting with the first defined axes in each
+        row.
+
+        In both cases, only the outer *y* axes will be shown.
 
         Typically, you will want to set the ``wspace`` property in
         :attr:`CompositePlotProperties.grid_spec` to a small value.
@@ -3767,14 +3797,15 @@ class CompositePlotter(Plotter):
     def _create_plot(self):
         if not self.plotter or len(self.plotter) < len(self.axes):
             raise aspecd.exceptions.MissingPlotterError
-        for plotter in self.plotter:
+        plotter_copy = [copy.copy(plotter) for plotter in self.plotter]
+        for plotter in plotter_copy:
             plotter.style = self.style
             if hasattr(plotter, "drawings"):
                 plotter.drawings = []
         for idx, axes in enumerate(self.axes):
-            self.plotter[idx].figure = self.figure
-            self.plotter[idx].axes = axes
-            self.plotter[idx].plot()
+            plotter_copy[idx].figure = self.figure
+            plotter_copy[idx].axes = axes
+            plotter_copy[idx].plot()
         for idx, position in enumerate(self.axes_positions):
             left, bottom, width, height = self.axes[idx].get_position().bounds
             new_position = [
@@ -3786,11 +3817,23 @@ class CompositePlotter(Plotter):
             self.axes[idx].set_position(new_position)
 
         if self.sharex:
-            self._sharex()
+            if isinstance(self.sharex, bool) or self.sharex == "all":
+                self._sharex()
+            elif self.sharex in ["col", "column", "column-wise"]:
+                self._sharex_column_wise()
         if self.sharey:
-            self._sharey()
+            if isinstance(self.sharey, bool) or self.sharey == "all":
+                self._sharey()
+            elif self.sharey in ["row", "rows", "row-wise"]:
+                self._sharey_row_wise()
 
     def _sharex(self):
+        for axes in self.axes:
+            axes._label_outer_xaxis(skip_non_rectangular_axes=False)  # noqa
+        for idx, axes in enumerate(self.axes[:-1]):
+            self.axes[idx + 1].sharex(axes)
+
+    def _sharex_column_wise(self):
         columns = []
         for col in range(self.grid_dimensions[1]):
             axes = []
@@ -3802,11 +3845,19 @@ class CompositePlotter(Plotter):
         for column in columns:
             if len(column) > 1:
                 for axes in column:
-                    axes.label_outer()
-                for idx, axes in enumerate(column[1:]):
-                    column[idx - 1].sharex(axes)
+                    axes._label_outer_xaxis(  # noqa
+                        skip_non_rectangular_axes=False
+                    )
+                for idx, axes in enumerate(column[:-1]):
+                    column[idx + 1].sharex(axes)
 
     def _sharey(self):
+        for axes in self.axes:
+            axes._label_outer_yaxis(skip_non_rectangular_axes=False)  # noqa
+        for idx, axes in enumerate(self.axes[:-1]):
+            self.axes[idx + 1].sharey(axes)
+
+    def _sharey_row_wise(self):
         rows = []
         for row in range(self.grid_dimensions[0]):
             axes = []
@@ -3818,9 +3869,11 @@ class CompositePlotter(Plotter):
         for row in rows:
             if len(row) > 1:
                 for axes in row:
-                    axes.label_outer()
-                for idx, axes in enumerate(row[1:]):
-                    row[idx - 1].sharey(axes)
+                    axes._label_outer_yaxis(  # noqa
+                        skip_non_rectangular_axes=False
+                    )
+                for idx, axes in enumerate(row[:-1]):
+                    row[idx + 1].sharey(axes)
 
 
 class SingleCompositePlotter(CompositePlotter):
@@ -4750,7 +4803,10 @@ class FigureProperties(aspecd.utils.Properties):
 
         2-tuple of floats
 
-        Default: 6, 4
+        In order to not prevent users from setting the default figure size
+        in their matplotlibrc file, the default is ``None``.
+
+        Default: None
 
     dpi: :class:`float`
         Figure resolution in dots per inch.
@@ -4775,11 +4831,14 @@ class FigureProperties(aspecd.utils.Properties):
     .. versionchanged:: 0.6
         Default figure size set to (6., 4.)
 
+    .. versionchanged:: 0.11
+        Default figure size set to None to allow setting from matplotlibrc file.
+
     """
 
     def __init__(self):
         super().__init__()
-        self.size = (6.0, 4.0)
+        self.size = None
         self.dpi = 100.0
         self.title = ""
 
@@ -4803,7 +4862,8 @@ class FigureProperties(aspecd.utils.Properties):
         for prop in self.get_properties():
             setattr(figure, prop, getattr(self, prop))
         # Need to set size and title manually
-        figure.set_size_inches(self.size)
+        if self.size:
+            figure.set_size_inches(self.size)
         figure.suptitle(self.title)
 
 
@@ -4855,6 +4915,15 @@ class AxesProperties(aspecd.utils.Properties):
 
         Default: ''
 
+    xlabelposition : :class:`str`
+        Position of the label for the x-axis.
+
+        Possible values are: "left", "center", "right".
+
+        Default: "center"
+
+        .. versionadded:: 0.11
+
     xlim: :class:`list`
         x-axis view limits, two floats
 
@@ -4882,6 +4951,8 @@ class AxesProperties(aspecd.utils.Properties):
 
         Default: None
 
+        .. versionadded:: 0.6
+
     ylabel: :class:`str`
         label for the y-axis
 
@@ -4889,6 +4960,16 @@ class AxesProperties(aspecd.utils.Properties):
         YAML).
 
         Default: ''
+
+    ylabelposition : :class:`str`
+        Position of the label for the y-axis.
+
+        Possible values are: "left", "center", "right", "bottom", "top",
+        where "left"/"bottom" and "right"/"top" are equivalent.
+
+        Default: "center"
+
+        .. versionadded:: 0.11
 
     ylim: :class:`list`
         y-axis view limits, two floats
@@ -4917,6 +4998,8 @@ class AxesProperties(aspecd.utils.Properties):
 
         Default: None
 
+        .. versionadded:: 0.6
+
     label_fontsize : :class:`int` or :class:`str`
         Font size of the axes labels.
 
@@ -4926,6 +5009,8 @@ class AxesProperties(aspecd.utils.Properties):
         ``large``, ``x-large``, ``xx-large``
 
         Default: ``plt.rcParams['font.size']``
+
+        .. versionadded:: 0.9
 
     invert: :class:`list` or :class:`str`
         Axes to invert
@@ -4943,6 +5028,28 @@ class AxesProperties(aspecd.utils.Properties):
             An alternative option to invert an axis is to provide
             descending values for axis limits. However, this may be
             inconvenient if you don't want to explicitly provide axis limits.
+
+        .. versionadded:: 0.9
+
+    frame_on : :class:`bool`
+        Whether to draw the "frame" (aka "spines") around the axes.
+
+        Note that setting this attribute to ``False`` will remove the entire
+        frame, hence it is usually not what you intended.
+
+        Default: ``True``
+
+        .. versionadded:: 0.11
+
+    spines : :class:`Spines`
+        Settings for axes spines.
+
+        Axes spines are basically the four lines in the four edges of an
+        axes, where the tick marks are attached.
+
+        See class :class:`Spines` and :class:`SpineProperties` for details.
+
+        .. versionadded:: 0.11
 
     Raises
     ------
@@ -4963,6 +5070,10 @@ class AxesProperties(aspecd.utils.Properties):
         Properties ``xlabel`` and ``ylabel`` can be removed by setting to
         ``Null``
 
+    .. versionchanged:: 0.11
+        New properties ``frame_on``, ``spines``, ``xlabelposition``,
+        and ``ylabelposition``
+
     """
 
     # pylint: disable=too-many-instance-attributes
@@ -4973,12 +5084,14 @@ class AxesProperties(aspecd.utils.Properties):
         self.position = []
         self.title = ""
         self.xlabel = ""
+        self.xlabelposition = "center"
         self.xlim = []
         self.xscale = ""
         self.xticklabels = None
         self.xticklabelangle = 0.0
         self.xticks = None
         self.ylabel = ""
+        self.ylabelposition = "center"
         self.ylim = []
         self.yscale = ""
         self.yticklabels = None
@@ -4986,6 +5099,8 @@ class AxesProperties(aspecd.utils.Properties):
         self.yticks = None
         self.label_fontsize = plt.rcParams["font.size"]
         self.invert = None
+        self.frame_on = True
+        self.spines = Spines()
 
     def apply(self, axes=None):
         """
@@ -5013,9 +5128,10 @@ class AxesProperties(aspecd.utils.Properties):
             if hasattr(axes, "set_" + property_):
                 getattr(axes, "set_" + property_)(value)
         self._set_axes_ticks(axes)
-        self._set_axes_fonts(axes)
+        self._set_axes_label_properties(axes)
         if self.invert:
             self._invert_axes(axes)
+        self.spines.apply(axes=axes)
 
     def _get_settable_properties(self):
         """
@@ -5041,12 +5157,14 @@ class AxesProperties(aspecd.utils.Properties):
             if (
                 prop.startswith(("xtick", "ytick", "invert"))
                 or "fontsize" in prop
+                or "spines" in prop
+                or prop.endswith("labelposition")
             ):
                 pass
             elif isinstance(all_properties[prop], np.ndarray):
                 if any(all_properties[prop]):
                     properties[prop] = all_properties[prop]
-            elif all_properties[prop]:
+            elif all_properties[prop] or all_properties[prop] is False:
                 properties[prop] = all_properties[prop]
             elif prop.endswith("label") and all_properties[prop] is None:
                 properties[prop] = all_properties[prop]
@@ -5066,9 +5184,24 @@ class AxesProperties(aspecd.utils.Properties):
         for tick in axes.get_yticklabels():
             tick.set_rotation(self.yticklabelangle)
 
-    def _set_axes_fonts(self, axes):
+    def _set_axes_label_properties(self, axes):
         axes.get_xaxis().get_label().set_fontsize(self.label_fontsize)
         axes.get_yaxis().get_label().set_fontsize(self.label_fontsize)
+        xlabel = axes.get_xaxis().get_label()
+        ylabel = axes.get_yaxis().get_label()
+        if self.ylabelposition == "bottom":
+            self.ylabelposition = "left"
+        if self.ylabelposition == "top":
+            self.ylabelposition = "right"
+        position = {"left": 0, "center": 0.5, "right": 1}
+        xlabel.set_horizontalalignment(self.xlabelposition)
+        ylabel.set_horizontalalignment(self.ylabelposition)
+        xlabel.set_position(
+            [position[self.xlabelposition], xlabel.get_position()[1]]
+        )
+        ylabel.set_position(
+            [ylabel.get_position()[1], position[self.ylabelposition]]
+        )
 
     def _invert_axes(self, axes):
         if isinstance(self.invert, str):
@@ -5209,6 +5342,13 @@ class DrawingProperties(aspecd.utils.Properties):
 
          Default: ''
 
+    alpha : :class:`float`
+        Alpha value used for blending
+
+        Must be within the 0-1 range, inclusive, or :class:`None`.
+
+        .. versionadded:: 0.11
+
     zorder : :class:`float`
         Zorder for the artist.
 
@@ -5254,29 +5394,33 @@ class DrawingProperties(aspecd.utils.Properties):
     .. versionchanged:: 0.10
         New property :attr:`zorder`
 
+    .. versionchanged:: 0.11
+        New property :attr:`alpha`
+
     """
 
     def __init__(self):
         super().__init__()
         self.label = ""
         self.zorder = 2
+        self.alpha = None
 
     def apply(self, drawing=None):
         """
         Apply properties to drawing.
 
         For each property, the corresponding "set_<property>" method of the
-        line will be called.
+        artist will be called.
 
         Parameters
         ----------
-        drawing: :class:`matplotlib.axes.Axes`
-            axis to set properties for
+        drawing: :class:`matplotlib.artist.Artist`
+            Artist to set properties for
 
         Raises
         ------
         aspecd.exceptions.MissingDrawingError
-            Raised if no line is provided.
+            Raised if no artist is provided.
 
         """
         if not drawing:
@@ -5297,11 +5441,11 @@ class DrawingProperties(aspecd.utils.Properties):
 
         Parameters
         ----------
-        drawing : :class:`matplotlib.axes.Axes`
-            axis to set properties for
+        drawing : :class:`matplotlib.artist.Artist`
+            Artist to set properties for
 
         prop : :class:`str`
-            name of the property to set
+            Name of the property to set
 
         """
         if hasattr(drawing, "".join(["set_", prop])):
@@ -5962,6 +6106,10 @@ class SubplotGridSpecs(aspecd.utils.Properties):
 
     Examples
     --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class.
+
     Subplot grid spec properties are always set in context of a concrete
     :class:`CompositePlotter`.
 
@@ -6002,3 +6150,785 @@ class SubplotGridSpecs(aspecd.utils.Properties):
         self.hspace = None
         self.width_ratios = None
         self.height_ratios = None
+
+
+class PatchProperties(DrawingProperties):
+    r"""
+    Properties of a patch within a plot.
+
+    Basically, the attributes are a subset of what :mod:`matplotlib` defines
+    for :obj:`matplotlib.patches.Patch` objects.
+
+    Attributes
+    ----------
+    alpha : :class:`float` | :class:`None`
+        Transparency value -- not supported on all backends.
+
+        Valid range: [0, 1]
+
+    color : color
+        color of the patch
+
+        For details see :mod:`matplotlib.colors`
+
+    edgecolor : color
+        edge color of the patch
+
+        For details see :mod:`matplotlib.colors`
+
+    facecolor : color
+        face color of the patch
+
+        For details see :mod:`matplotlib.colors`
+
+    fill : :class:`bool`
+        Whether to fill the patch
+
+    hatch : :class:`str` | :class:`None`
+        hatching pattern.
+
+        hatch can be one of::
+
+            /   - diagonal hatching
+            \   - back diagonal
+            |   - vertical
+            -   - horizontal
+            +   - crossed
+            x   - crossed diagonal
+            o   - small circle
+            O   - large circle
+            .   - dots
+            *   - stars
+
+        Letters can be combined, in which case all the specified hatchings
+        are done. If same letter repeats, it increases the density of
+        hatching of that pattern.
+
+    in_layout : :class:`bool`
+        Set if artist is to be included in layout calculations.
+
+    joinstyle : :class:`str`
+        Connection between two line segments.
+
+        Default: 'miter'
+
+    linestyle : :class:`str`
+        Style of the line.
+
+        Default: 'solid'
+
+        For details see :meth:`matplotlib.lines.Line2D.set_linestyle`
+
+    linewidth : :class:`float`
+        Width of the line, float value in points.
+
+        Default: 1.0
+
+    rasterized : :class:`bool`
+        Whether to force rasterized drawing for vector graphics output.
+
+    snap : :class:`bool`
+        Snapping behavior.
+
+        Possible values:
+
+        * True: Snap vertices to the nearest pixel center.
+        * False: Do not modify vertex positions.
+        * None: (auto) If the path contains only rectilinear line segments,
+          round to the nearest pixel center.
+
+    zorder : :class:`float`
+        Zorder for the artist.
+
+        Artists with lower zorder are drawn first.
+
+        For a summary of the default zorder values, see the `Matplotlib
+        documentation <https://matplotlib.org/stable/gallery/misc
+        /zorder_demo.html>`_
+
+
+    Examples
+    --------
+    A typical use case for patches are horizontal or vertical spans as used
+    for plot annotations. For details, see the
+    :class:`aspecd.annotation.VerticalSpan` class.
+
+
+    .. versionadded:: 0.11
+
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.alpha = None
+        self.color = None
+        self.edgecolor = None
+        self.facecolor = None
+        self.fill = True
+        self.hatch = None
+        self.in_layout = True
+        self.joinstyle = "miter"
+        self.linestyle = "-"
+        self.linewidth = 1
+        self.rasterized = False
+        self.sketch_params = None
+        self.snap = None
+        self.zorder = None
+
+
+class AnnotationTextProperties(DrawingProperties):
+    """
+    Properties of text of an annotation.
+
+    Basically, the attributes are a subset of what :mod:`matplotlib` defines
+    for :obj:`matplotlib.text.Text` objects. However, the alignment
+    properties are missing that are present in :class:`TextProperties`,
+    as they would interfere with the functionality of the
+    :class:`aspecd.annotate.TextWithLine` class.
+
+
+    Attributes
+    ----------
+    alpha : :class:`float`
+        Alpha value used for blending
+
+        Must be within the 0-1 range, inclusive, or :class:`None`.
+
+    backgroundcolor : :class:`str`
+        Color used as background for the text
+
+        If set to :class:`None`, no background will be set (and the bbox
+        removed from the Matplotlib artist)
+
+    color : :class:`str`
+        Color used for the text
+
+    fontfamily : :class:`str`
+        Font family or font name
+
+        Font family can be one of: 'serif', 'sans-serif', 'cursive', 'fantasy',
+        'monospace'
+
+    fontsize : :class:`float` or :class:`str`
+        Size of the font
+
+        Either a numeric value or one of 'xx-small', 'x-small', 'small',
+        'medium', 'large', 'x-large', 'xx-large'
+
+    fontstretch : :class:`int` or :class:`str`
+        Stretch of the font
+
+        A numeric value in range 0-1000 or one of 'ultra-condensed',
+        'extra-condensed', 'condensed', 'semi-condensed', 'normal',
+        'semi-expanded', 'expanded', 'extra-expanded', 'ultra-expanded'
+
+    fontstyle : :class:`str`
+        Style of the font
+
+        One of: 'normal', 'italic', 'oblique'
+
+    fontvariant : :class:``
+        Variant of the font
+
+        One of: 'normal', 'small-caps'
+
+    fontweight : :class:`int` or :class:`str`
+        Weight of the font
+
+        A numeric value in range 0-1000 or one of 'ultralight', 'light',
+        'normal', 'regular', 'book', 'medium', 'roman', 'semibold',
+        'demibold', 'demi', 'bold', 'heavy', 'extra bold', 'black'.
+
+    in_layout : :class:`bool`
+        Set if artist is to be included in layout calculations.
+
+    linespacing : :class:`float`
+        Line spacing of the text
+
+        The value is interpreted as multiple of the font size
+
+    math_fontfamily : :class:`str`
+        Font family or fontname used for math fonts
+
+    parse_math : :class:`bool`
+        Set mathtext parsing for text
+
+        If False, no mathtext will be used. If True, mathtext will be used if
+        there is an even number of unescaped dollar signs.
+
+    rotation : :class:`float` or :class:`str`
+        Rotation of the text
+
+        Either a scalar number or one of: 'vertical', 'horizontal'
+
+    rotation_mode : :class:`str`
+        Rotation mode of the text
+
+        One of: 'default', 'anchor'
+
+        If "default", the text will be first rotated, then aligned according
+        to their horizontal and vertical alignments. If "anchor",
+        then alignment occurs before rotation.
+
+    usetex : :class:`bool` or :class:`None`
+        Whether to render using TeX
+
+        None means to use ``rcParams["text.usetex"]`` (default: False).
+
+    wrap : :class:`bool`
+        Set whether the text can be wrapped.
+
+        Wrapping makes sure the text is confined to the (sub)figure box. It
+        does not take into account any other artists.
+
+    zorder : :class:`float`
+        Zorder for the artist.
+
+        Artists with lower zorder values are drawn first.
+
+        For a summary of the default zorder values, see the `Matplotlib
+        documentation <https://matplotlib.org/stable/gallery/misc
+        /zorder_demo.html>`_
+
+
+    Raises
+    ------
+    aspecd.exceptions.MissingDrawingError
+        Raised if no text is provided.
+
+
+    .. versionadded:: 0.11
+
+
+    """
+
+    # pylint: disable=too-many-instance-attributes
+    def __init__(self):
+        super().__init__()
+        self.alpha = None
+        self.backgroundcolor = None
+        self.color = "#000000"
+        self.fontfamily = None
+        self.fontsize = None
+        self.fontstretch = None
+        self.fontstyle = None
+        self.fontvariant = None
+        self.fontweight = None
+        self.in_layout = True
+        self.linespacing = None
+        self.math_fontfamily = None
+        self.parse_math = None
+        self.rotation = None
+        self.rotation_mode = None
+        self.usetex = False
+        self.wrap = None
+        self.zorder = None
+
+    def apply(self, drawing=None):
+        """Apply properties to text."""
+        super().apply(drawing=drawing)
+        if self.backgroundcolor is None:
+            drawing._bbox_patch = None  # pylint: disable=protected-access
+
+
+class AnnotationProperties(aspecd.utils.Properties):
+    """
+    Properties for the text and line of annotations.
+
+    This class is used to set properties for the
+    :class:`aspecd.annotation.TextWithLine` class.
+
+
+    Attributes
+    ----------
+    text : :class:`AnnotationTextProperties`
+        Properties of the text part of the annotation
+
+    line : :class:`PatchProperties`
+        Properties of the line part of the annotation
+
+    Raises
+    ------
+    aspecd.exceptions.MissingDrawingError
+        Raised if no text is provided.
+
+
+    .. versionadded:: 0.11
+
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.text = AnnotationTextProperties()
+        self.line = PatchProperties()
+
+    def apply(self, drawing=None):
+        """
+        Apply properties to drawing.
+
+        Properties will be set independently for the text and line parts of
+        the annotation, and the underlying
+        :meth:`AnnotationTextProperties.apply` and
+        :meth:`PatchProperties.apply` method be called.
+
+        Parameters
+        ----------
+        drawing: :class:`matplotlib.axes.Axes`
+            axis to set properties for
+
+        Raises
+        ------
+        aspecd.exceptions.MissingDrawingError
+            Raised if no line is provided.
+
+        """
+        if not drawing:
+            raise aspecd.exceptions.MissingDrawingError
+        self.text.apply(drawing=drawing)
+        self.line.apply(drawing=drawing.arrow_patch)
+
+
+class Spines(aspecd.utils.Properties):
+    """
+    Properties proxy for spines of an axes.
+
+    Axes spines are basically the four lines in the four edges of an
+    axes, where the tick marks are attached.
+
+    This class serves as a "container" for the four individual spines.
+
+    Attributes
+    ----------
+    left : :class:`SpineProperties`
+        Properties of the left axes spine
+
+    bottom : :class:`SpineProperties`
+        Properties of the bottom axes spine
+
+    right : :class:`SpineProperties`
+        Properties of the right axes spine
+
+    top : :class:`SpineProperties`
+        Properties of the top axes spine
+
+    Raises
+    ------
+    aspecd.exceptions.MissingDrawingError
+        Raised if no drawing is provided.
+
+
+    Examples
+    --------
+    For detailed examples on how to set the spine properties in a plot,
+    see the documentation of the :class:`SpineProperties` class.
+
+
+    .. versionadded:: 0.11
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.left = SpineProperties(edge="left")
+        self.bottom = SpineProperties(edge="bottom")
+        self.right = SpineProperties(edge="right")
+        self.top = SpineProperties(edge="top")
+
+    def apply(self, axes=None):
+        """
+        Apply properties to spine.
+
+        For each spine, the corresponding :meth:`SpineProperties.apply`
+        method will be called.
+
+        Parameters
+        ----------
+        axes: :class:`matplotlib.axes.Axes`
+            Axis to set spine properties for
+
+        Raises
+        ------
+        aspecd.exceptions.MissingAxisError
+            Raised if no axes is provided.
+
+        """
+        if not axes:
+            raise aspecd.exceptions.MissingAxisError
+        for prop in self.get_properties():
+            getattr(self, prop).apply(drawing=getattr(axes.spines, prop))
+
+
+class SpineProperties(DrawingProperties):
+    """
+    Properties proxy for spines of an axes.
+
+    Axes spines are basically the four lines in the four edges of an
+    axes, where the tick marks are attached.
+
+    For details, see the documentation of the :class:`matplotlib.spines.Spine`
+    class.
+
+
+    Attributes
+    ----------
+    visible : :class:`bool`
+        Whether to show the spine.
+
+        To remove a spine, set its visibility to ``False``.
+
+    position : :class:`tuple`
+        Type and value of the positioning of a spine.
+
+        The position type is one of ``outward, axes, data``:
+
+        outward
+            Place the spine out from the data area by the specified number
+            of points. (Negative values place the spine inwards.)
+
+        axes
+            Place the spine at the specified Axes coordinate (0 to 1).
+
+        data
+            Place the spine at the specified data coordinate.
+
+        Two shorthand notations exist, where ``position`` is only a string,
+        no longer a tuple (or list):
+
+        center
+            Sets spline at the centre of the axis.
+
+            Same as ``('axes', 0.5)``
+
+        zero
+            Sets spline to the zero value of the data.
+
+            Same as ``('data', 0.0)``
+
+
+    bounds : :class:`tuple`
+        Lower and higher spine bound in axes coordinates.
+
+    arrow : :class:`bool`
+        Whether to draw arrows at the tip of the spine
+
+        Particularly with only two spines shown and perhaps with spines
+        positioned at zero (the origin of the Cartesian coordinate system),
+        adding arrow heads at the tips of the spines makes sense.
+
+        Note that this is not a default property of the underlying
+        :class:`matplotlib.spines.Spine`, but adds the arrow heads as
+        additional plots.
+
+        This functionality is inspired by an example in the Matplotlib
+        documentation: `<https://matplotlib.org/stable/gallery/spines
+        /centered_spines_with_arrows.html>`_
+
+
+    Parameters
+    ----------
+    edge: :class:`str`
+        Position the spline belongs to in an axis: left, bottom, right, top.
+
+        This information is relevant for adding arrow heads.
+
+    Raises
+    ------
+    aspecd.exceptions.MissingDrawingError
+        Raised if no drawing is provided.
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class.
+
+    Spines are set within the axes properties, hence in the axes block. Note
+    that there are four spines: ``left``, ``bottom``, ``right``,
+    and ``top``, for whom you can (and need to) set the properties
+    separately.
+
+    To get rid of the top and right spine (a typical use case), just set the
+    visibility of those two to ``False``:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            properties:
+              axes:
+                spines:
+                  right:
+                    visible: False
+                  top:
+                    visible: False
+
+    If you want to detach the spines, you could explicitly set both, ``bounds``
+    and ``positions``:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            properties:
+              axes:
+                spines:
+                  left:
+                    bounds: [0, 1]
+                    position: ["outward", 5]
+                  bottom:
+                    bounds: [-10, 10]
+                    position: ["outward", 5]
+                  right:
+                    visible: False
+                  top:
+                    visible: False
+
+    Suppose you want to draw what the Matplotlib documentation calls a "math
+    textbook style plot", where the spines are centred at zero (in the
+    origin of the Cartesian coordinate system) and have arrows at their ends:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            properties:
+              axes:
+                xlabel: Null
+                ylabel: Null
+                invert:
+                  - x
+                  - y
+                spines:
+                  left:
+                    position: zero
+                    arrow: True
+                  bottom:
+                    position: zero
+                    arrow: True
+                  right:
+                    visible: False
+                  top:
+                    visible: False
+
+
+    .. versionadded:: 0.11
+
+    """
+
+    def __init__(self, edge="left"):
+        super().__init__()
+        self.visible = True
+        self.position = None
+        self.bounds = None
+        self.arrow = False
+        self._edge = edge
+
+    def apply(self, drawing=None):
+        """
+        Apply properties to spine.
+
+        For each property, the corresponding "set_<property>" method of the
+        spine will be called.
+
+        Parameters
+        ----------
+        drawing: :class:`matplotlib.spines.Spine`
+            Spine of an axis to set properties for
+
+        Raises
+        ------
+        aspecd.exceptions.MissingDrawingError
+            Raised if no line is provided.
+
+        """
+        if not drawing:
+            raise aspecd.exceptions.MissingDrawingError
+        for prop in self.get_properties():
+            if prop == "arrow" and getattr(self, prop):
+                marker_normal = {
+                    "left": "^",
+                    "bottom": ">",
+                    "right": "^",
+                    "top": ">",
+                }
+                marker_inverted = {
+                    "left": "v",
+                    "bottom": "<",
+                    "right": "v",
+                    "top": "<",
+                }
+                positions_normal = {
+                    "left": [0, 1],
+                    "bottom": [1, 0],
+                    "right": [0, 1],
+                    "top": [1, 0],
+                }
+                positions_inverted = {
+                    "left": [0, 0],
+                    "bottom": [0, 0],
+                    "right": [0, 0],
+                    "top": [0, 0],
+                }
+                if self._edge in ("top", "bottom"):
+                    inverted = drawing.axes.xaxis_inverted()
+                    transform = drawing.axes.get_yaxis_transform()
+                else:
+                    inverted = drawing.axes.yaxis_inverted()
+                    transform = drawing.axes.get_xaxis_transform()
+                if inverted:
+                    marker = marker_inverted
+                    positions = positions_inverted
+                else:
+                    marker = marker_normal
+                    positions = positions_normal
+                drawing.axes.plot(
+                    *positions[self._edge],
+                    marker[self._edge],
+                    color=drawing.get_edgecolor(),
+                    transform=transform,
+                    clip_on=False,
+                    label=f"arrow_{self._edge}",
+                )
+            elif getattr(self, prop) is not None:
+                self._safe_set_drawing_property(drawing, prop)
+
+
+class MarkerProperties(DrawingProperties):
+    """
+    Properties for marker.
+
+    Basically, the attributes are a subset of what :mod:`matplotlib` defines
+    for the marker part of :obj:`matplotlib.lines.Line2D` objects.
+
+    Attributes
+    ----------
+    alpha : :class:`float` | :class:`None`
+        Transparency value -- not supported on all backends.
+
+        Valid range: [0, 1]
+
+    edgecolor : color
+        edge color of the marker
+
+        For details see :mod:`matplotlib.colors`
+
+        To remove the color, set it to :data:`None` (or ``Null`` in YAML)
+
+        Default: "#000000"
+
+    edgewidth : :class:`float`
+        Width of the marker edge
+
+    facecolor : color
+        face color of the marker
+
+        For details see :mod:`matplotlib.colors`
+
+        To remove the color, set it to :data:`None` (or ``Null`` in YAML)
+
+        Default: "#000000"
+
+    facecoloralt : color
+        Alternative face color of the marker
+
+        This color gets interesting depending on the fill style.
+
+        For details see :mod:`matplotlib.colors`
+
+        To remove the color, set it to :data:`None` (or ``Null`` in YAML)
+
+        Default: "none"
+
+    fillstyle : :class:`str`
+        Style to use to fill the marker.
+
+        Allowed values are: "full", "left", "right", "bottom", "top", "none"
+
+    size : :class:`float`
+        Size of the marker.
+
+    zorder : :class:`float`
+        Zorder for the artist.
+
+        Artists with lower zorder are drawn first.
+
+        For a summary of the default zorder values, see the `Matplotlib
+        documentation <https://matplotlib.org/stable/gallery/misc
+        /zorder_demo.html>`_
+
+    Raises
+    ------
+    aspecd.exceptions.MissingDrawingError
+        Raised if no marker is provided.
+
+
+    Examples
+    --------
+    Markers are typically used for plot annotations. For details, see the
+    :class:`aspecd.annotation.Marker` class.
+
+
+    .. versionadded:: 0.11
+
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.size = None
+        self.edgecolor = "#000000"
+        self.facecolor = "#000000"
+        self.facecoloralt = None
+        self.edgewidth = None
+        self.fillstyle = None
+
+    def _safe_set_drawing_property(self, drawing=None, prop=None):
+        """Safe setting of drawing properties.
+
+        The method first checks whether the corresponding setter for the
+        property exists and only in this case sets the property.
+
+
+        Parameters
+        ----------
+        drawing : :class:`matplotlib.artist.Artist`
+            Artist to set properties for
+
+        prop : :class:`str`
+            Name of the property to set
+
+        """
+        if "color" in prop and getattr(self, prop) is None:
+            set_value = "none"
+        else:
+            set_value = getattr(self, prop)
+        if hasattr(drawing, "".join(["set_", prop])):
+            try:
+                getattr(drawing, "".join(["set_", prop]))(set_value)
+            except TypeError:
+                logger.debug(
+                    'Cannot set attribute "%s" for "%s"',
+                    prop,
+                    drawing.__class__,
+                )
+        elif hasattr(drawing, "".join(["set_marker", prop])):
+            try:
+                getattr(drawing, "".join(["set_marker", prop]))(set_value)
+            except TypeError:
+                logger.debug(
+                    'Cannot set attribute "%s" for "%s"',
+                    prop,
+                    drawing.__class__,
+                )
+        else:
+            logger.debug(
+                '"%s" has no setter for attribute "%s", hence not set',
+                drawing.__class__,
+                prop,
+            )

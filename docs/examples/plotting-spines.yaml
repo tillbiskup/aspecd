@@ -1,0 +1,176 @@
+format:
+  type: ASpecD recipe
+  version: '0.2'
+
+settings:
+  autosave_plots: False
+
+tasks:
+  - kind: model
+    type: Zeros
+    properties:
+      parameters:
+        shape: 1001
+        range: [-3.1415, 4.7124]
+    result: dummy
+
+  - kind: model
+    type: Sine
+    from_dataset: dummy
+    result: model_data
+    comment: >
+      Create sine
+
+  - kind: singleplot
+    type: SinglePlotter1D
+    properties:
+      properties:
+        axes:
+          xlabel: "$position$ / a.u."
+          spines:
+            right:
+              visible: False
+            top:
+              visible: False
+      parameters:
+        tight_layout: True
+      filename: plotting-spines-no-top-right.pdf
+    apply_to:
+      - model_data
+    comment: >
+      Plotter with no spines at top and right
+
+  - kind: singleplot
+    type: SinglePlotter1D
+    properties:
+      properties:
+        axes:
+          xlabel: "$position$ / a.u."
+          spines:
+            left:
+              bounds: [-1, 1]
+              position: ["outward", 10]
+            bottom:
+              bounds: [-3, 5]
+              position: ["outward", 10]
+            right:
+              visible: False
+            top:
+              visible: False
+      parameters:
+        tight_layout: True
+        show_zero_lines: False
+      filename: plotting-spines-no-top-right-detached.pdf
+    apply_to:
+      - model_data
+    comment: >
+      Plotter with no spines at top and right and detached spines
+
+  - kind: singleplot
+    type: SinglePlotter1D
+    properties:
+      properties:
+        axes:
+          xlabel: "$position$ / a.u."
+          xlabelposition: right
+          ylabelposition: top
+          spines:
+            left:
+              position: center
+            bottom:
+              position: center
+            right:
+              visible: False
+            top:
+              visible: False
+      parameters:
+        tight_layout: True
+        show_zero_lines: False
+      filename: plotting-spines-no-top-right-centre.pdf
+    apply_to:
+      - model_data
+    comment: >
+      Plotter with no spines at top and right and other spines at centre
+
+  - kind: singleplot
+    type: SinglePlotter1D
+    properties:
+      properties:
+        axes:
+          xlabel: "$position$ / a.u."
+          xlabelposition: right
+          ylabelposition: top
+          spines:
+            left:
+              position: zero
+            bottom:
+              position: zero
+            right:
+              visible: False
+            top:
+              visible: False
+      parameters:
+        tight_layout: True
+        show_zero_lines: False
+      filename: plotting-spines-no-top-right-zero.pdf
+    apply_to:
+      - model_data
+    comment: >
+      Plotter with no spines at top and right and other spines at centre
+
+  - kind: singleplot
+    type: SinglePlotter1D
+    properties:
+      properties:
+        axes:
+          xlabel: "$position$ / a.u."
+          xlabelposition: right
+          ylabelposition: top
+          spines:
+            left:
+              position: zero
+              arrow: True
+            bottom:
+              position: zero
+              arrow: True
+            right:
+              visible: False
+            top:
+              visible: False
+      parameters:
+        tight_layout: True
+      filename: plotting-spines-with-arrows.pdf
+    apply_to:
+      - model_data
+    comment: >
+      Plotter with centred spines with arrow
+
+  - kind: singleplot
+    type: SinglePlotter1D
+    properties:
+      properties:
+        axes:
+          xlabel: "$position$ / a.u."
+          xlabelposition: right
+          ylabelposition: top
+          invert:
+            - x
+            - y
+          spines:
+            left:
+              position: zero
+              arrow: True
+            bottom:
+              position: zero
+              arrow: True
+            right:
+              visible: False
+            top:
+              visible: False
+      parameters:
+        tight_layout: True
+      filename: plotting-spines-with-arrows-and-inverted-axes.pdf
+    apply_to:
+      - model_data
+    comment: >
+      Plotter with centred spines with arrow and inverted axes

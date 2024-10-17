@@ -1997,6 +1997,26 @@ class TestMultiPlotter1DStacked(unittest.TestCase):
             min(self.plotter.axes.get_lines()[0].get_ydata()) * 2,
         )
 
+    def test_plot_stacks_with_positive_signal(self):
+        dataset_ = aspecd.dataset.CalculatedDataset()
+
+        def gaussian(amp, fwhm, mean):
+            return lambda x: amp * np.exp(
+                -4.0 * np.log(2) * (x - mean) ** 2 / fwhm**2
+            )
+
+        data = np.array([])
+        xvalues = np.linspace(1, 50)
+        data = np.append(data, gaussian(4, 5, 12)(xvalues))
+        dataset_.data.data = data
+        self.plotter.datasets[0] = dataset_
+        self.plotter.datasets.append(dataset_)
+        self.plotter.plot()
+        self.assertLess(
+            max(self.plotter.axes.get_lines()[3].get_ydata()),
+            max(self.plotter.axes.get_lines()[0].get_ydata()),
+        )
+
     def test_plot_removes_yticks(self):
         self.plotter.plot()
         self.assertEqual(0, len(self.plotter.axes.get_yticklabels()))
@@ -2206,6 +2226,26 @@ class TestCompositePlotter(unittest.TestCase):
         self.plotter.plot()
         self.assertEqual(1, len(self.plotter.axes))
 
+    def test_plot_operates_on_copies_of_plotters(self):
+        self.plotter.grid_dimensions = [1, 1]
+        self.plotter.subplot_locations = [[0, 0, 1, 1]]
+        single_plotter = plotting.SinglePlotter1D()
+        single_plotter.dataset = self.dataset
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.style = "xkcd"
+        self.plotter.plot()
+        self.assertNotEqual(single_plotter.style, self.plotter.style)
+
+    def test_to_dict(self):
+        self.plotter.grid_dimensions = [1, 1]
+        self.plotter.subplot_locations = [[0, 0, 1, 1]]
+        single_plotter = plotting.SinglePlotter1D()
+        single_plotter.dataset = self.dataset
+        single_plotter.plot()
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plot()
+        self.assertTrue(self.plotter.to_dict())
+
     def test_plot_with_multiple_subplots_adds_axes_to_axes(self):
         self.plotter.grid_dimensions = [2, 2]
         self.plotter.subplot_locations = [
@@ -2286,6 +2326,7 @@ class TestCompositePlotter(unittest.TestCase):
             )
         )
 
+    @unittest.skip  # CompositePlotter now works on copies of plotters.
     def test_plot_sets_style_property_to_plotters(self):
         self.plotter.grid_dimensions = [1, 1]
         self.plotter.subplot_locations = [[0, 0, 1, 1]]
@@ -2346,14 +2387,64 @@ class TestCompositePlotter(unittest.TestCase):
         self.plotter.plot()
         self.assertTrue(self.plotter.axes[1]._sharex)
 
-    def test_plot_with_sharex_and_more_axes_shares_axes(self):
-        self.plotter.grid_dimensions = [3, 2]
+    def test_plot_with_sharex_true_shares_all_axes(self):
+        self.plotter.grid_dimensions = [2, 2]
         self.plotter.subplot_locations = [
             [0, 0, 1, 1],
             [1, 0, 1, 1],
             [0, 1, 1, 1],
             [1, 1, 1, 1],
+        ]
+        axes_limits = [
+            [-1, 1],
+            [-2, 2],
+            [-3, 3],
+            [-4, 4],
+        ]
+        for limits in axes_limits:
+            plotter = plotting.SinglePlotter1D()
+            plotter.properties.axes.xlim = limits
+            plotter.dataset = self.dataset
+            self.plotter.plotter.append(plotter)
+        self.plotter.sharex = True
+        self.plotter.plot()
+        self.assertEqual(
+            self.plotter.axes[0].get_xlim(), self.plotter.axes[2].get_xlim()
+        )
+
+    def test_plot_with_sharex_all_shares_all_axes(self):
+        self.plotter.grid_dimensions = [2, 2]
+        self.plotter.subplot_locations = [
+            [0, 0, 1, 1],
+            [1, 0, 1, 1],
+            [0, 1, 1, 1],
+            [1, 1, 1, 1],
+        ]
+        axes_limits = [
+            [-1, 1],
+            [-2, 2],
+            [-3, 3],
+            [-4, 4],
+        ]
+        for limits in axes_limits:
+            plotter = plotting.SinglePlotter1D()
+            plotter.properties.axes.xlim = limits
+            plotter.dataset = self.dataset
+            self.plotter.plotter.append(plotter)
+        self.plotter.sharex = "all"
+        self.plotter.plot()
+        self.assertEqual(
+            self.plotter.axes[0].get_xlim(), self.plotter.axes[2].get_xlim()
+        )
+
+    def test_plot_with_sharex_and_more_axes_shares_axes(self):
+        self.plotter.grid_dimensions = [3, 2]
+        self.plotter.subplot_locations = [
+            [0, 0, 1, 1],
+            [1, 0, 1, 1],
             [2, 0, 1, 1],
+            [0, 1, 1, 1],
+            [1, 1, 1, 1],
             [2, 1, 1, 1],
         ]
         self.plotter.sharex = True
@@ -2366,7 +2457,8 @@ class TestCompositePlotter(unittest.TestCase):
         self.plotter.plotter.append(single_plotter)
         self.plotter.plotter.append(single_plotter)
         self.plotter.plot()
-        self.assertTrue(self.plotter.axes[0]._sharex)
+        self.assertTrue(self.plotter.axes[1]._sharex)
+        self.assertTrue(self.plotter.axes[2]._sharex)
 
     def test_plot_with_sharey_shares_axes(self):
         self.plotter.grid_dimensions = [2, 2]
@@ -2383,6 +2475,56 @@ class TestCompositePlotter(unittest.TestCase):
         self.plotter.plotter.append(single_plotter)
         self.plotter.plot()
         self.assertTrue(self.plotter.axes[1]._sharey)
+
+    def test_plot_with_sharey_true_shares_all_axes(self):
+        self.plotter.grid_dimensions = [2, 2]
+        self.plotter.subplot_locations = [
+            [0, 0, 1, 1],
+            [1, 0, 1, 1],
+            [0, 1, 1, 1],
+            [1, 1, 1, 1],
+        ]
+        axes_limits = [
+            [-1, 1],
+            [-2, 2],
+            [-3, 3],
+            [-4, 4],
+        ]
+        for limits in axes_limits:
+            plotter = plotting.SinglePlotter1D()
+            plotter.properties.axes.ylim = limits
+            plotter.dataset = self.dataset
+            self.plotter.plotter.append(plotter)
+        self.plotter.sharey = True
+        self.plotter.plot()
+        self.assertEqual(
+            self.plotter.axes[0].get_ylim(), self.plotter.axes[1].get_ylim()
+        )
+
+    def test_plot_with_sharey_all_shares_all_axes(self):
+        self.plotter.grid_dimensions = [2, 2]
+        self.plotter.subplot_locations = [
+            [0, 0, 1, 1],
+            [1, 0, 1, 1],
+            [0, 1, 1, 1],
+            [1, 1, 1, 1],
+        ]
+        axes_limits = [
+            [-1, 1],
+            [-2, 2],
+            [-3, 3],
+            [-4, 4],
+        ]
+        for limits in axes_limits:
+            plotter = plotting.SinglePlotter1D()
+            plotter.properties.axes.ylim = limits
+            plotter.dataset = self.dataset
+            self.plotter.plotter.append(plotter)
+        self.plotter.sharey = "all"
+        self.plotter.plot()
+        self.assertEqual(
+            self.plotter.axes[0].get_ylim(), self.plotter.axes[1].get_ylim()
+        )
 
     def test_plot_with_sharey_and_more_axes_shares_axes(self):
         self.plotter.grid_dimensions = [2, 3]
@@ -2404,7 +2546,64 @@ class TestCompositePlotter(unittest.TestCase):
         self.plotter.plotter.append(single_plotter)
         self.plotter.plotter.append(single_plotter)
         self.plotter.plot()
-        self.assertTrue(self.plotter.axes[0]._sharey)
+        self.assertTrue(self.plotter.axes[1]._sharey)
+        self.assertTrue(self.plotter.axes[2]._sharey)
+
+    def test_plot_with_sharex_column_wise_shares_axes(self):
+        self.plotter.grid_dimensions = [2, 2]
+        self.plotter.subplot_locations = [
+            [0, 0, 1, 1],
+            [1, 0, 1, 1],
+            [0, 1, 1, 1],
+            [1, 1, 1, 1],
+        ]
+        axes_limits = [
+            [-1, 1],
+            [-2, 2],
+            [-3, 3],
+            [-4, 4],
+        ]
+        for limits in axes_limits:
+            plotter = plotting.SinglePlotter1D()
+            plotter.properties.axes.xlim = limits
+            plotter.dataset = self.dataset
+            self.plotter.plotter.append(plotter)
+        sharex = ["col", "column", "column-wise"]
+        with self.subTest(sharex=sharex):
+            self.plotter.sharex = sharex
+            self.plotter.plot()
+            self.assertNotEqual(
+                self.plotter.axes[0].get_xlim(),
+                self.plotter.axes[2].get_xlim(),
+            )
+
+    def test_plot_with_sharey_row_wise_shares_axes(self):
+        self.plotter.grid_dimensions = [2, 2]
+        self.plotter.subplot_locations = [
+            [0, 0, 1, 1],
+            [1, 0, 1, 1],
+            [0, 1, 1, 1],
+            [1, 1, 1, 1],
+        ]
+        axes_limits = [
+            [-1, 1],
+            [-2, 2],
+            [-3, 3],
+            [-4, 4],
+        ]
+        for limits in axes_limits:
+            plotter = plotting.SinglePlotter1D()
+            plotter.properties.axes.ylim = limits
+            plotter.dataset = self.dataset
+            self.plotter.plotter.append(plotter)
+        sharey = ["row", "rows", "row-wise"]
+        with self.subTest(sharey=sharey):
+            self.plotter.sharex = sharey
+            self.plotter.plot()
+            self.assertNotEqual(
+                self.plotter.axes[0].get_ylim(),
+                self.plotter.axes[1].get_ylim(),
+            )
 
 
 class TestSingleCompositePlotter(unittest.TestCase):
@@ -2654,7 +2853,11 @@ class TestDrawingProperties(unittest.TestCase):
         self.assertTrue(callable(self.drawing_properties.from_dict))
 
     def test_has_properties(self):
-        for prop in ["label", "zorder"]:
+        for prop in [
+            "label",
+            "zorder",
+            "alpha",
+        ]:
             self.assertTrue(hasattr(self.drawing_properties, prop))
 
     def test_has_apply_method(self):
@@ -2895,6 +3098,7 @@ class TestAxesProperties(unittest.TestCase):
             "xticklabelangle",
             "yticklabelangle",
             "invert",
+            "frame_on",
         ]:
             self.assertTrue(hasattr(self.axis_properties, prop))
 
@@ -3090,6 +3294,106 @@ class TestAxesProperties(unittest.TestCase):
             plot.axes.get_yaxis().get_label().get_fontsize(),
         )
         plt.close(plot.figure)
+
+    def test_frame_is_on_by_default(self):
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertTrue(plot.axes.get_frame_on())
+
+    def test_switch_frame_off(self):
+        self.axis_properties.frame_on = False
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertFalse(plot.axes.get_frame_on())
+
+    def test_set_spine_properties(self):
+        self.axis_properties.spines.left.visible = False
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertFalse(plot.axes.spines.left.get_visible())
+
+    def test_set_xlabelposition_left(self):
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.xlabelposition = "left"
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertEqual(
+            "left", plot.axes.get_xaxis().label.get_horizontalalignment()
+        )
+        self.assertEqual(0, plot.axes.get_xaxis().label.get_position()[0])
+
+    def test_set_xlabelposition_center(self):
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.xlabelposition = "center"
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertEqual(
+            "center", plot.axes.get_xaxis().label.get_horizontalalignment()
+        )
+        self.assertEqual(0.5, plot.axes.get_xaxis().label.get_position()[0])
+
+    def test_set_xlabelposition_right(self):
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.xlabelposition = "right"
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertEqual(
+            "right", plot.axes.get_xaxis().label.get_horizontalalignment()
+        )
+        self.assertEqual(1, plot.axes.get_xaxis().label.get_position()[0])
+
+    def test_set_ylabelposition_left(self):
+        self.axis_properties.ylabelposition = "left"
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertEqual(
+            "left", plot.axes.get_yaxis().label.get_horizontalalignment()
+        )
+        self.assertEqual(0, plot.axes.get_yaxis().label.get_position()[1])
+
+    def test_set_ylabelposition_bottom(self):
+        self.axis_properties.ylabelposition = "bottom"
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertEqual(
+            "left", plot.axes.get_yaxis().label.get_horizontalalignment()
+        )
+        self.assertEqual(0, plot.axes.get_yaxis().label.get_position()[1])
+
+    def test_set_ylabelposition_center(self):
+        self.axis_properties.ylabelposition = "center"
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertEqual(
+            "center", plot.axes.get_yaxis().label.get_horizontalalignment()
+        )
+        self.assertEqual(0.5, plot.axes.get_yaxis().label.get_position()[1])
+
+    def test_set_ylabelposition_right(self):
+        self.axis_properties.ylabelposition = "right"
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertEqual(
+            "right", plot.axes.get_yaxis().label.get_horizontalalignment()
+        )
+        self.assertEqual(1, plot.axes.get_yaxis().label.get_position()[1])
+
+    def test_set_ylabelposition_top(self):
+        self.axis_properties.ylabelposition = "top"
+        plot = plotting.Plotter()
+        plot.plot()
+        self.axis_properties.apply(axes=plot.axes)
+        self.assertEqual(
+            "right", plot.axes.get_yaxis().label.get_horizontalalignment()
+        )
+        self.assertEqual(1, plot.axes.get_yaxis().label.get_position()[1])
 
 
 class TestLegendProperties(unittest.TestCase):
@@ -3851,3 +4155,508 @@ class TestSubplotGridSpecs(unittest.TestCase):
     def test_has_from_dict_method(self):
         self.assertTrue(hasattr(self.properties, "from_dict"))
         self.assertTrue(callable(self.properties.from_dict))
+
+
+class TestPatchProperties(unittest.TestCase):
+    def setUp(self):
+        self.properties = plotting.PatchProperties()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_properties(self):
+        for prop in [
+            "alpha",
+            "color",
+            "edgecolor",
+            "facecolor",
+            "fill",
+            "hatch",
+            "in_layout",
+            "joinstyle",
+            "linestyle",
+            "linewidth",
+            "rasterized",
+            "sketch_params",
+            "snap",
+            "zorder",
+        ]:
+            self.assertTrue(hasattr(self.properties, prop))
+
+    def test_has_apply_method(self):
+        self.assertTrue(hasattr(self.properties, "apply"))
+        self.assertTrue(callable(self.properties.apply))
+
+    def test_apply_without_argument_raises(self):
+        with self.assertRaises(aspecd.exceptions.MissingDrawingError):
+            self.properties.apply()
+
+    def test_apply_sets_properties(self):
+        properties = {
+            "alpha": 0.5,
+            # "color": "#00ff00",
+            "edgecolor": "#ff0000",
+            "facecolor": "#0000ff",
+            "fill": False,
+            "hatch": "x",
+            "in_layout": False,
+            "joinstyle": "bevel",
+            "linestyle": "-",
+            "linewidth": 3,
+            "rasterized": True,
+            # "sketch_params": 2,
+            "snap": False,
+            "zorder": 5,
+        }
+        for prop, value in properties.items():
+            with self.subTest(key=prop, val=value):
+                patch = matplotlib.patches.Patch()
+                setattr(self.properties, prop, value)
+                self.properties.apply(drawing=patch)
+                if prop == "color":
+                    self.assertEqual(
+                        getattr(self.properties, prop),
+                        matplotlib.colors.to_hex(patch.get_facecolor()),
+                    )
+                    self.assertEqual(
+                        getattr(self.properties, prop),
+                        matplotlib.colors.to_hex(patch.get_edgecolor()),
+                    )
+                elif prop.endswith("color"):
+                    self.assertEqual(
+                        getattr(self.properties, prop),
+                        matplotlib.colors.to_hex(
+                            getattr(patch, f"get_" f"{prop}")()
+                        ),
+                    )
+                else:
+                    self.assertEqual(
+                        getattr(self.properties, prop),
+                        getattr(patch, f"get_{prop}")(),
+                    )
+
+
+class TestAnnotationTextProperties(unittest.TestCase):
+    def setUp(self):
+        self.properties = plotting.AnnotationTextProperties()
+        self.annotation = matplotlib.text.Annotation(
+            "Lorem ipsum",
+            [1, 2],
+            xytext=[-0.75, 4],
+            arrowprops={
+                "arrowstyle": "-",
+                "relpos": [1, 0],
+                "connectionstyle": "angle, angleA=-45, angleB=90, rad=0",
+            },
+        )
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_properties(self):
+        for prop in [
+            "alpha",
+            "backgroundcolor",
+            "color",
+            "fontfamily",
+            "fontsize",
+            "fontstretch",
+            "fontstyle",
+            "fontvariant",
+            "fontweight",
+            "in_layout",
+            "linespacing",
+            "math_fontfamily",
+            "parse_math",
+            "rotation",
+            "rotation_mode",
+            "usetex",
+            "wrap",
+            "zorder",
+        ]:
+            self.assertTrue(hasattr(self.properties, prop))
+
+    def test_has_no_alignment_properties(self):
+        for prop in [
+            "horizontalalignment",
+            "verticalalignment",
+            "multialignment",
+        ]:
+            self.assertFalse(hasattr(self.properties, prop))
+
+    def test_has_apply_method(self):
+        self.assertTrue(hasattr(self.properties, "apply"))
+        self.assertTrue(callable(self.properties.apply))
+
+    def test_apply_without_argument_raises(self):
+        with self.assertRaises(aspecd.exceptions.MissingDrawingError):
+            self.properties.apply()
+
+    def test_apply_sets_text_properties(self):
+        properties = {
+            "alpha": 0.5,
+            "color": "#ff0000",
+            "fontsize": 20,
+            "fontstyle": "oblique",
+            "fontvariant": "small-caps",
+            "fontweight": "heavy",
+            "horizontalalignment": "center",
+            "in_layout": False,
+            "math_fontfamily": "cm",
+            "parse_math": True,
+            "rotation": 30,
+            "rotation_mode": "anchor",
+            "usetex": True,
+            "verticalalignment": "top",
+            "wrap": True,
+            "zorder": 5,
+        }
+        for prop, value in properties.items():
+            with self.subTest(key=prop, val=value):
+                setattr(self.properties, prop, value)
+                self.properties.apply(drawing=self.annotation)
+                self.assertEqual(
+                    getattr(self.properties, prop),
+                    getattr(self.annotation, f"get_{prop}")(),
+                )
+
+    def test_apply_sets_font_family(self):
+        # Note: matplotlib.text.Annotation.get_fontfamily returns a list
+        self.properties.fontfamily = "fantasy"
+        self.properties.apply(drawing=self.annotation)
+        self.assertEqual(
+            self.properties.fontfamily,
+            self.annotation.get_fontfamily()[0],
+        )
+
+    def test_apply_sets_font_stretch(self):
+        # Note: matplotlib.text.Text has no get_fontstretch method
+        self.properties.fontstretch = "ultra-condensed"
+        self.properties.apply(drawing=self.annotation)
+        self.assertEqual(
+            self.properties.fontstretch,
+            self.annotation.get_stretch(),
+        )
+
+    def test_apply_with_backgroundcolor_none_removes_background_color(self):
+        self.properties.backgroundcolor = None
+        self.properties.apply(drawing=self.annotation)
+        self.assertFalse(self.annotation.get_bbox_patch())
+
+    def test_apply_without_backgroundcolor_removes_background_color(self):
+        self.properties.apply(drawing=self.annotation)
+        self.assertFalse(self.annotation.get_bbox_patch())
+
+    def test_apply_with_usetex_none_uses_rcparams_value(self):
+        self.properties.usetex = None
+        self.properties.apply(drawing=self.annotation)
+        self.assertEqual(
+            matplotlib.rcParams["text.usetex"], self.annotation.get_usetex()
+        )
+
+
+class TestAnnotationProperties(unittest.TestCase):
+    def setUp(self):
+        self.properties = plotting.AnnotationProperties()
+        self.annotation = matplotlib.text.Annotation(
+            "Lorem ipsum",
+            [1, 2],
+            xytext=[-0.75, 4],
+            arrowprops={
+                "arrowstyle": "-",
+                "relpos": [1, 0],
+                "connectionstyle": "angle, angleA=-45, angleB=90, rad=0",
+            },
+        )
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_properties(self):
+        for prop in [
+            "text",
+            "line",
+        ]:
+            self.assertTrue(hasattr(self.properties, prop))
+
+    def test_has_apply_method(self):
+        self.assertTrue(hasattr(self.properties, "apply"))
+        self.assertTrue(callable(self.properties.apply))
+
+    def test_apply_without_argument_raises(self):
+        with self.assertRaises(aspecd.exceptions.MissingDrawingError):
+            self.properties.apply()
+
+    def test_apply_sets_text_properties(self):
+        properties = {
+            "alpha": 0.5,
+            "color": "#ff0000",
+            "fontsize": 20,
+            "fontstyle": "oblique",
+            "fontvariant": "small-caps",
+            "fontweight": "heavy",
+            "horizontalalignment": "center",
+            "in_layout": False,
+            "math_fontfamily": "cm",
+            "parse_math": True,
+            "rotation": 30,
+            "rotation_mode": "anchor",
+            "usetex": True,
+            "verticalalignment": "top",
+            "wrap": True,
+            "zorder": 5,
+        }
+        for prop, value in properties.items():
+            with self.subTest(key=prop, val=value):
+                setattr(self.properties.text, prop, value)
+                self.properties.apply(drawing=self.annotation)
+                self.assertEqual(
+                    getattr(self.properties.text, prop),
+                    getattr(self.annotation, f"get_{prop}")(),
+                )
+
+    def test_apply_sets_line_properties(self):
+        properties = {
+            "alpha": 0.5,
+            "edgecolor": "#ff0000",
+            "facecolor": "#0000ff",
+            "fill": False,
+            "hatch": "x",
+            "in_layout": False,
+            "joinstyle": "bevel",
+            "linestyle": "-",
+            "linewidth": 3,
+            "snap": False,
+            "zorder": 5,
+        }
+        for prop, value in properties.items():
+            with self.subTest(key=prop, val=value):
+                setattr(self.properties.line, prop, value)
+                self.properties.apply(drawing=self.annotation)
+                patch = self.annotation.arrow_patch
+                if prop.endswith("color"):
+                    self.assertEqual(
+                        getattr(self.properties.line, prop),
+                        matplotlib.colors.to_hex(
+                            getattr(patch, f"get_" f"{prop}")()
+                        ),
+                    )
+                else:
+                    self.assertEqual(
+                        getattr(self.properties.line, prop),
+                        getattr(patch, f"get_{prop}")(),
+                    )
+
+
+class TestSpines(unittest.TestCase):
+    def setUp(self):
+        self.properties = plotting.Spines()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_properties(self):
+        for prop in [
+            "left",
+            "bottom",
+            "right",
+            "top",
+        ]:
+            self.assertTrue(hasattr(self.properties, prop))
+
+    def test_properties_are_spine_properties(self):
+        for prop in [
+            "left",
+            "bottom",
+            "right",
+            "top",
+        ]:
+            self.assertIsInstance(
+                getattr(self.properties, prop), plotting.SpineProperties
+            )
+
+    def test_has_apply_method(self):
+        self.assertTrue(hasattr(self.properties, "apply"))
+        self.assertTrue(callable(self.properties.apply))
+
+    def test_apply_without_argument_raises(self):
+        with self.assertRaises(aspecd.exceptions.MissingAxisError):
+            self.properties.apply()
+
+    def test_apply_sets_spine_properties(self):
+        plot = plotting.Plotter()
+        plot.plot()
+        self.properties.left.visible = False
+        self.properties.apply(axes=plot.axes)
+        self.assertFalse(plot.axes.spines.left.get_visible())
+
+
+class TestSpineProperties(unittest.TestCase):
+    def setUp(self):
+        self.properties = plotting.SpineProperties()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_properties(self):
+        for prop in [
+            "visible",
+            "position",
+            "bounds",
+        ]:
+            self.assertTrue(hasattr(self.properties, prop))
+
+    def test_has_apply_method(self):
+        self.assertTrue(hasattr(self.properties, "apply"))
+        self.assertTrue(callable(self.properties.apply))
+
+    def test_apply_without_argument_raises(self):
+        with self.assertRaises(aspecd.exceptions.MissingDrawingError):
+            self.properties.apply()
+
+    def test_apply_with_position_none_does_not_set_position(self):
+        plot = plotting.Plotter()
+        plot.plot()
+        position = plot.axes.spines.left.get_position()
+        self.properties.position = None
+        self.properties.apply(drawing=plot.axes.spines.left)
+        self.assertEqual(position, plot.axes.spines.left.get_position())
+
+    def test_apply_with_bounds_none_does_not_set_bounds(self):
+        plot = plotting.Plotter()
+        plot.plot()
+        bounds = plot.axes.spines.left.get_bounds()
+        self.properties.bounds = None
+        self.properties.apply(drawing=plot.axes.spines.left)
+        self.assertEqual(bounds, plot.axes.spines.left.get_bounds())
+
+    def test_apply_with_arrow_adds_correct_arrow(self):
+        plot = plotting.Plotter()
+        plot.plot()
+        self.properties.arrow = True
+        marker = {
+            "left": "^",
+            "bottom": ">",
+            "right": "^",
+            "top": ">",
+        }
+        edges = ["left", "bottom", "right", "top"]
+        for edge in edges:
+            with self.subTest(edge=edge):
+                self.properties._edge = edge
+                self.properties.apply(drawing=getattr(plot.axes.spines, edge))
+                pattern = lambda artist: artist.get_label() == f"arrow_{edge}"
+                self.assertTrue(plot.ax.findobj(pattern))
+                self.assertEqual(
+                    marker[edge],
+                    plot.ax.findobj(pattern)[0].get_marker(),
+                )
+
+    def test_apply_with_arrow_and_inverted_axes_adds_correct_arrow(self):
+        plot = plotting.Plotter()
+        plot.plot()
+        plot.axes.invert_yaxis()
+        plot.axes.invert_xaxis()
+        self.properties.arrow = True
+        marker = {
+            "left": "v",
+            "bottom": "<",
+            "right": "v",
+            "top": "<",
+        }
+        edges = ["left", "bottom", "right", "top"]
+        for edge in edges:
+            with self.subTest(edge=edge):
+                self.properties._edge = edge
+                self.properties.apply(drawing=getattr(plot.axes.spines, edge))
+                pattern = lambda artist: artist.get_label() == f"arrow_{edge}"
+                self.assertTrue(plot.ax.findobj(pattern))
+                self.assertEqual(
+                    marker[edge],
+                    plot.ax.findobj(pattern)[0].get_marker(),
+                )
+
+
+class TestMarkerProperties(unittest.TestCase):
+    def setUp(self):
+        self.properties = plotting.MarkerProperties()
+        plotter = plotting.Plotter()
+        annotation_ = annotation.Marker()
+        annotation_.parameters["positions"] = [[0.5, 0.5]]
+        annotation_.parameters["marker"] = "o"
+        plotter.plot()
+        result = plotter.annotate(annotation_)
+        self.annotation = result.drawings[0]
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_properties(self):
+        for prop in [
+            "size",
+            "edgecolor",
+            "facecolor",
+            "facecoloralt",
+            "edgewidth",
+            "fillstyle",
+            "zorder",
+            "alpha",
+        ]:
+            self.assertTrue(hasattr(self.properties, prop))
+
+    def test_has_apply_method(self):
+        self.assertTrue(hasattr(self.properties, "apply"))
+        self.assertTrue(callable(self.properties.apply))
+
+    def test_apply_without_argument_raises(self):
+        with self.assertRaises(aspecd.exceptions.MissingDrawingError):
+            self.properties.apply()
+
+    def test_apply_sets_marker_properties(self):
+        properties = {
+            "size": 12,
+            "edgecolor": "#ff0000",
+            "facecolor": "#00ff00",
+            "facecoloralt": "#0000ff",
+            "edgewidth": 3,
+        }
+        for prop, value in properties.items():
+            with self.subTest(key=prop, val=value):
+                setattr(self.properties, prop, value)
+                self.properties.apply(drawing=self.annotation)
+                self.assertEqual(
+                    getattr(self.properties, prop),
+                    getattr(self.annotation, f"get_marker{prop}")(),
+                )
+        prop, value = "fillstyle", "left"
+        setattr(self.properties, prop, value)
+        self.properties.apply(drawing=self.annotation)
+        self.assertEqual(
+            getattr(self.properties, prop),
+            getattr(self.annotation, f"get_{prop}")(),
+        )
+
+    def test_apply_with_color_none_removes_color(self):
+        properties = {
+            "edgecolor": None,
+            "facecolor": None,
+            "facecoloralt": None,
+        }
+        for prop, value in properties.items():
+            with self.subTest(key=prop, val=value):
+                setattr(self.properties, prop, value)
+                self.properties.apply(drawing=self.annotation)
+                self.assertEqual(
+                    "none",
+                    getattr(self.annotation, f"get_marker{prop}")(),
+                )
+
+    def test_colors_default_to_black(self):
+        properties = ["edgecolor", "facecolor"]
+        for prop in properties:
+            with self.subTest(prop=prop):
+                self.properties.apply(drawing=self.annotation)
+                self.assertEqual(
+                    "#000000",
+                    getattr(self.annotation, f"get_marker{prop}")(),
+                )

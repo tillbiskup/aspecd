@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.4717937.svg
+.. image:: zenodo.4717937.svg
    :target: https://doi.org/10.5281/zenodo.4717937
    :align: right
 
@@ -43,7 +43,15 @@ What is even better: Actual data processing and analysis **no longer requires pr
             - second-dataset.pdf
 
 
-For more general information on the ASpecD framework see its `Homepage <https://www.aspecd.de/>`_, and for how to use it, carry on reading. Interested in more real-live examples? Check out the :ref:`use cases section <use_cases>`.
+Save this recipe to a file, *e.g.*, ``my-first-recipe.yaml``. Cooking the recipe and serving the result is the matter of issuing a single command in a terminal:
+
+.. code-block:: bash
+
+    serve my-first-recipe.yaml
+
+This will do two things: process your data (and create the plots in our case) and write a **full and gap-less history** as an executable recipe.
+
+For more general information on the ASpecD framework see its `Homepage <https://www.aspecd.de/>`_, and for how to use it, carry on reading. Interested in more real-live examples? Check out the :ref:`use cases <use_cases>` and :doc:`example recipes <examples/list>` sections.
 
 
 Features
@@ -92,15 +100,15 @@ The ASpecD framework comes with a rather minimal set of requirements:
 How to cite
 -----------
 
-ASpecD is free software. However, if you use ASpecD for your own research, please cite both, the article describing it and the software itself:
+ASpecD is free software. However, if you use ASpecD (or one of the packages derived from it) for your own research, please cite both, the article describing it and the software itself:
 
   * Jara Popp, Till Biskup. ASpecD: A Modular Framework for the Analysis of Spectroscopic Data Focussing on Reproducibility and Good Scientific Practice. *Chemistry--Methods* **2**:e202100097, 2022. `doi:10.1002/cmtd.202100097 <https://doi.org/10.1002/cmtd.202100097>`_
 
   * Till Biskup. ASpecD (2022). `doi:10.5281/zenodo.4717937 <https://doi.org/10.5281/zenodo.4717937>`_
 
-To make things easier, ASpecD has a `DOI <https://doi.org/10.5281/zenodo.4717937>`_ provided by `Zenodo <https://zenodo.org/>`_, and you may click on the badge below to directly access the record associated with it. Note that this DOI refers to the package as such and always forwards to the most current version.
+To make things easier, ASpecD has a `DOI <https://doi.org/10.5281/zenodo.4717937>`_ provided by `Zenodo <https://zenodo.org/>`_, and you may click on the badge below to directly access the record associated with it. Note that this DOI refers to the package as such and always forwards to the most current version. For your actual publication, you may want to cite the specific version of the ASpecD framework you used, together with the unique DOI assigned to it via Zenodo.
 
-.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.4717937.svg
+.. image:: zenodo.4717937.svg
    :target: https://doi.org/10.5281/zenodo.4717937
 
 
@@ -145,7 +153,7 @@ There is a number of related packages that are based on the ASpecD framework and
 
   Package for processing and analysing continuous-wave electron paramagnetic resonance (cw-EPR) data, originally implemented by P. Kirchner, developed and maintained by M. Schröder and T. Biskup.
 
-* `nmraspecds <https://docs.nmraspecds.de/>`_
+* `NMRAspecds <https://docs.nmraspecds.de/>`_
 
   Package for processing and analysing nuclear magnetic resonance (NMR) data, developed and maintained by M. Schröder.
 

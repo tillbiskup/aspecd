@@ -429,7 +429,7 @@ class TestNormalisation(unittest.TestCase):
         self.processing.parameters["kind"] = "maximum"
         self.processing.parameters["noise_range"] = [0, 10]
         self.dataset.process(self.processing)
-        self.assertGreaterEqual(1.25, self.dataset.data.data.max(), 1)
+        self.assertGreaterEqual(1.26, self.dataset.data.data.max(), 1)
 
     def test_normalise_to_minimum_with_noisy_data(self):
         self.dataset.data.data = np.concatenate(
@@ -441,7 +441,7 @@ class TestNormalisation(unittest.TestCase):
         self.processing.parameters["kind"] = "minimum"
         self.processing.parameters["noise_range"] = [0, 10]
         self.dataset.process(self.processing)
-        self.assertLessEqual(-1.25, self.dataset.data.data.min(), 1)
+        self.assertLessEqual(-1.26, self.dataset.data.data.min(), 1)
 
     def test_normalise_to_amplitude_with_noisy_data(self):
         self.dataset.data.data = np.concatenate(

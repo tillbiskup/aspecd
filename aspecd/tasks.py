@@ -901,7 +901,6 @@ import aspecd.plotting
 import aspecd.system
 import aspecd.utils
 
-
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
@@ -1931,7 +1930,9 @@ class Task(aspecd.utils.ToDictMixin):
                     task_copy.model
                 )
             if hasattr(task_copy, "parameters"):
-                self._replace_objects_with_labels(task_copy.parameters)
+                parameters = copy.copy(task_copy.parameters)
+                self._replace_objects_with_labels(parameters)
+                task_copy.parameters = parameters
             self.properties.update(task_copy.to_dict())
         if "parameters" in self.properties:
             if isinstance(self.properties["parameters"], list):
@@ -1954,6 +1955,12 @@ class Task(aspecd.utils.ToDictMixin):
         for property_key, property_value in dict_.items():
             if isinstance(property_value, (dict, collections.OrderedDict)):
                 self._replace_objects_with_labels(property_value)
+            elif isinstance(property_value, list):
+                dict_[property_key] = [
+                    self._replace_object_with_label(item)
+                    for item in property_value
+                ]
+                continue
             elif (
                 aspecd.utils.isiterable(property_value)
                 and not isinstance(property_value, str)
@@ -3375,7 +3382,7 @@ class SingleplotTask(PlotTask):
             save_filenames.append(save_filename)
             self._add_plotter_to_recipe(number)
             self._add_figure_to_recipe(label=self.label[number])
-        if len(self.apply_to) > 1 and save_filenames:
+        if len(self.apply_to) > 1 and save_filenames and not self.result:
             self._task.filename = save_filenames
 
     def _add_plotter_to_recipe(self, number=None):
@@ -3827,21 +3834,21 @@ class PlotannotationTask(Task):
         self._exclude_from_to_dict.append("apply_to")
 
     def _perform(self):
-        task = self.get_object()
+        self._task = self.get_object()
         if self.plotter:
             if not isinstance(self.plotter, list):
                 self.plotter = [self.plotter]
             for plotter in self.plotter:
-                task.plotter = self.recipe.plotters[plotter]
+                self._task.plotter = self.recipe.plotters[plotter]
                 # noinspection PyUnresolvedReferences
-                task.annotate()
-                if task.plotter.filename:
+                self._task.annotate()
+                if self._task.plotter.filename:
                     saver = aspecd.plotting.Saver(
-                        filename=task.plotter.filename
+                        filename=self._task.plotter.filename
                     )
-                    task.plotter.save(saver)
-        elif self.result:
-            self.recipe.plotannotations[self.result] = task
+                    self._task.plotter.save(saver)
+        if self.result:
+            self.recipe.plotannotations[self.result] = self._task
 
 
 class ReportTask(Task):

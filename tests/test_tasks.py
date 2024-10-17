@@ -1309,6 +1309,20 @@ class TestTask(unittest.TestCase):
         dict_ = self.task.to_dict()
         self.assertEqual(dict_["properties"]["foo"], "foo")
 
+    def test_to_dict_w_dataset_in_properties_list_replaces_it_w_label(self):
+        kind = "processing"
+        type_ = "SingleProcessingStep"
+        self.task.kind = kind
+        self.task.type = type_
+        dataset = aspecd.dataset.Dataset()
+        recipe = tasks.Recipe()
+        recipe.datasets["foo"] = dataset
+        self.task.recipe = recipe
+        self.task.properties["foo"] = [dataset]
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(dict_["properties"]["foo"], ["foo"])
+
     def test_to_dict_with_dataset_from_results_replaces_it_with_label(self):
         kind = "processing"
         type_ = "SingleProcessingStep"
@@ -2689,6 +2703,57 @@ class TestSinglePlotTask(unittest.TestCase):
         self.task.perform()
         self.assertTrue(self.task.properties["filename"])
 
+    def test_perform_task_autosaving_adds_filenames_to_task(self):
+        self.plotting_task = {
+            "kind": "singleplot",
+            "type": "SinglePlotter",
+            "apply_to": self.datasets,
+        }
+        self.figure_filenames = []
+        for name in self.datasets:
+            self.figure_filenames.append(
+                "".join([name, "_", self.plotting_task["type"], ".pdf"])
+            )
+        dataset_factory = dataset.DatasetFactory()
+        dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
+        self.recipe.dataset_factory = dataset_factory
+        recipe_dict = {
+            "datasets": self.datasets,
+            "tasks": [self.plotting_task],
+        }
+        self.recipe.from_dict(recipe_dict)
+        # noinspection PyTypeChecker
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertListEqual(self.figure_filenames, self.task._task.filename)
+
+    def test_perform_task_autosaving_w_results_leaves_filename(self):
+        self.plotting_task = {
+            "kind": "singleplot",
+            "type": "SinglePlotter",
+            "apply_to": self.datasets,
+            "result": ["foo", "bar"],
+        }
+        self.figure_filenames = []
+        for name in self.datasets:
+            self.figure_filenames.append(
+                "".join([name, "_", self.plotting_task["type"], ".pdf"])
+            )
+        dataset_factory = dataset.DatasetFactory()
+        dataset_factory.importer_factory = aspecd.io.DatasetImporterFactory()
+        self.recipe.dataset_factory = dataset_factory
+        recipe_dict = {
+            "datasets": self.datasets,
+            "tasks": [self.plotting_task],
+        }
+        self.recipe.from_dict(recipe_dict)
+        # noinspection PyTypeChecker
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertEqual(self.figure_filenames[-1], self.task._task.filename)
+
     def test_perform_task_autosaving_adds_filename_to_figure_record(self):
         self.figure_filename = "".join(
             [self.dataset[0], "_", self.plotting_task["type"], ".pdf"]
@@ -3619,6 +3684,14 @@ class TestPlotAnnotationTask(unittest.TestCase):
         self.task.recipe = self.recipe
         self.task.perform()
         self.assertNotIn("apply_to", self.task.to_dict())
+
+    def test_properties_in_to_dict(self):
+        self.prepare_recipe()
+        self.task.from_dict(self.annotation_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        self.assertIn("properties", self.task.to_dict())
+        self.assertTrue(self.task.to_dict()["properties"])
 
 
 class TestReportTask(unittest.TestCase):

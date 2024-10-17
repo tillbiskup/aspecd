@@ -1,0 +1,135 @@
+format:
+  type: ASpecD recipe
+  version: '0.2'
+
+tasks:
+  - kind: model
+    type: Zeros
+    properties:
+      parameters:
+        shape: 1001
+        range: [0, 1]
+    result: dummy
+
+  - kind: singleprocessing
+    type: Noise
+    properties:
+      parameters:
+        exponent: -1
+        normalise: True
+    apply_to: dummy
+    result: pink_noise
+
+  - kind: singleprocessing
+    type: Noise
+    properties:
+      parameters:
+        exponent: 0
+        normalise: True
+    apply_to: dummy
+    result: gaussian_noise
+
+  - kind: singleprocessing
+    type: Noise
+    properties:
+      parameters:
+        exponent: -2
+        normalise: True
+    apply_to: dummy
+    result: brownian_noise
+
+  - kind: singleprocessing
+    type: Noise
+    properties:
+      parameters:
+        exponent: 1
+        normalise: True
+    apply_to: dummy
+    result: blue_noise
+
+  - kind: multiplot
+    type: MultiPlotter1DStacked
+    properties:
+      parameters:
+        tight_layout: True
+        show_legend: True
+        offset: 1
+      filename: noise.pdf
+      properties:
+        drawings:
+          - label: Gaussian
+          - label: Pink
+          - label: Brownian
+          - label: Blue
+        axes:
+          ylabel: null
+          yticks:
+            - 0
+            - 1
+            - 2
+            - 3
+          ytickmarks:
+            - Blue
+            - Brownian
+            - Pink
+            - Gaussian
+    apply_to:
+      - gaussian_noise
+      - pink_noise
+      - brownian_noise
+      - blue_noise
+    comment: >
+      Plot different noise
+
+  - kind: singleanalysis
+    type: PowerDensitySpectrum
+    apply_to:
+      - gaussian_noise
+      - pink_noise
+      - brownian_noise
+      - blue_noise
+    result:
+      - gaussian_noise_pds
+      - pink_noise_pds
+      - brownian_noise_pds
+      - blue_noise_pds
+
+  - kind: singleplot
+    type: SinglePlotter1D
+    properties:
+      filename:
+        - noise-gaussian-power_density_spectrum.pdf
+        - noise-pink-power_density_spectrum.pdf
+        - noise-brownian-power_density_spectrum.pdf
+        - noise-blue-power_density_spectrum.pdf
+    apply_to:
+      - gaussian_noise_pds
+      - pink_noise_pds
+      - brownian_noise_pds
+      - blue_noise_pds
+
+  - kind: multiplot
+    type: MultiPlotter1DStacked
+    properties:
+      parameters:
+        tight_layout: True
+        show_legend: True
+      filename: noise-power_density_spectrum.pdf
+      properties:
+        grid:
+          show: True
+          axis: y
+        drawings:
+          - label: Blue
+          - label: Gaussian
+          - label: Pink
+          - label: Brownian
+        axes:
+          ylabel: null
+    apply_to:
+      - blue_noise_pds
+      - gaussian_noise_pds
+      - pink_noise_pds
+      - brownian_noise_pds
+    comment: >
+      Plot different noise

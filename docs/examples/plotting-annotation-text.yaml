@@ -1,0 +1,168 @@
+format:
+  type: ASpecD recipe
+  version: '0.2'
+
+settings:
+  autosave_plots: False
+
+tasks:
+  - kind: model
+    type: Zeros
+    properties:
+      parameters:
+        shape: 1001
+        range: [0, 20]
+    result: dummy
+
+  - kind: model
+    type: CompositeModel
+    from_dataset: dummy
+    properties:
+      models:
+        - Lorentzian
+        - Lorentzian
+      parameters:
+        - position: 5
+          width: 0.8
+        - position: 8
+          width: 2
+    result: model_data
+
+  - kind: singleanalysis
+    type: PeakFinding
+    apply_to: model_data
+    result: peaks
+
+  - kind: singleplot
+    type: SinglePlotter1D
+    properties:
+      properties:
+        axes:
+          xlabel: "$position$ / a.u."
+          xlim: [0, 20]
+          ylim: [0, 1.35]
+        grid:
+          show: True
+          axis: x
+          lines:
+            linestyle: ":"
+      parameters:
+        tight_layout: True
+      filename: plotting-annotation-text.pdf
+    apply_to:
+      - model_data
+    result:
+      - plot-with-text
+    comment: >
+      Plotter that gets annotated later
+
+  - kind: plotannotation
+    type: Text
+    properties:
+      parameters:
+        xpositions: peaks
+        ypositions: 0.02
+        texts:
+          - "Peak a"
+          - "Peak b"
+      properties:
+        color: red
+        fontsize: smaller
+        fontstyle: italic
+        horizontalalignment: center
+    plotter: plot-with-text
+    comment: >
+      Text labels at the bottom of the line to highlight the peaks.
+
+  - kind: plotannotation
+    type: TextWithLine
+    properties:
+      parameters:
+        xpositions: peaks
+        ypositions:
+          - 1.35
+          - 1.12
+        offsets:
+          - [-0.5, 0.2]
+          - [0.5, 0.2]
+        texts:
+          - "Peak a"
+          - "Peak b"
+      properties:
+        text:
+          color: green
+          fontsize: larger
+          fontstyle: italic
+        line:
+          edgecolor: blue
+          linewidth: 0.8
+    result: text-with-line
+    comment: >
+      Texts with attached lines. Due to the offset, you get "hooks"
+
+  - kind: singleplot
+    type: SinglePlotter1D
+    properties:
+      properties:
+        axes:
+          xlabel: "$position$ / a.u."
+          xlim: [0, 20]
+          ylim: [0, 1.7]
+      parameters:
+        tight_layout: True
+      filename: plotting-annotation-text-with-line.pdf
+    apply_to:
+      - model_data
+    annotations:
+      - text-with-line
+    comment: >
+      Plotter with annotations
+
+  - kind: singleanalysis
+    type: PeakFinding
+    properties:
+      parameters:
+        return_intensities: True
+    apply_to: model_data
+    result: peaks_with_intensities
+
+  - kind: plotannotation
+    type: TextWithLine
+    properties:
+      parameters:
+        positions: peaks_with_intensities
+        offsets:
+          - [-0.5, 0.2]
+          - [0.5, 0.2]
+        texts:
+          - "Peak a"
+          - "Peak b"
+      properties:
+        text:
+          color: green
+          fontsize: larger
+          fontstyle: italic
+        line:
+          edgecolor: blue
+          linewidth: 0.8
+    result: text-with-line-automatically-positioned
+    comment: >
+      Texts with attached lines. Due to the offset, you get "hooks"
+
+  - kind: singleplot
+    type: SinglePlotter1D
+    properties:
+      properties:
+        axes:
+          xlabel: "$position$ / a.u."
+          xlim: [0, 20]
+          ylim: [0, 1.7]
+      parameters:
+        tight_layout: True
+      filename: plotting-annotation-text-with-line-autopositioned.pdf
+    apply_to:
+      - model_data
+    annotations:
+      - text-with-line-automatically-positioned
+    comment: >
+      Plotter with annotations

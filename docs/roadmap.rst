@@ -5,22 +5,6 @@ Roadmap
 A few ideas how to develop the project further, currently a list as a reminder for the main developers themselves, in no particular order, though with a tendency to list more important aspects first:
 
 
-For version 0.11
-================
-
-* Plotting
-
-  * Plot annotations
-
-    * Text annotations with additional lines/arrows
-    * additional types of annotations, *e.g.* ``axvspan``, ``axhspan``, symbols
-
-* Example recipes
-
-  * A series of example recipes, starting with models for generating artificial data.
-  * Show-off of different plotters and the possibilities there.
-
-
 For next releases
 =================
 

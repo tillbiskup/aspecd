@@ -5,6 +5,71 @@ Changelog
 This page contains a summary of changes between the official ASpecD releases. Only the biggest changes are listed here. A complete and detailed log of all changes is available through the `GitHub Repository Browser <https://github.com/tillbiskup/aspecd/commits/master>`_.
 
 
+Version 0.11.0
+==============
+
+Released 2024-10-17
+
+
+New features
+------------
+
+* Plotting
+
+  * :class:`aspecd.plotting.PatchProperties` for properties of patches, as used for :class:`aspecd.annotation.VerticalSpan` and :class:`aspecd.annotation.HorizontalSpan`.
+  * :class:`aspecd.plotting.AnnotationProperties` and :class:`aspecd.plotting.AnnotationTextProperties` for properties of text annotations with lines, as used for :class:`aspecd.annotation.TextWithLine`.
+  * :class:`aspecd.plotting.AxesProperties` has new attributes ``frame_on``, ``xlabelposition``, and ``ylabelposition``.
+  * :class:`aspecd.plotting.Spines` and :class:`aspecd.plotting.SpineProperties` for controlling spine properties of axes.
+  * :class:`aspecd.plotting.MarkerProperties` for properties of markers, as used for :class:`aspecd.annotation.Marker`.
+
+* Plot annotations
+
+  * :class:`aspecd.annotation.VerticalSpan` for adding vertical spans (rectangles) to plot(ter)s
+  * :class:`aspecd.annotation.HorizontalSpan` for adding horizontal spans (rectangles) to plot(ter)s
+  * :class:`aspecd.annotation.TextWithLine` for adding text with additional lines
+  * :class:`aspecd.annotation.Marker` for adding markers to plot(ter)s
+  * :class:`aspecd.annotation.FillBetween` for colouring the surface below a curve.
+
+* Analysis
+
+  * :class:`aspecd.analysis.PeakFinding` can return both, peak positions and intensities, as pairs, ready to be used in :class:`aspecd.annotation.TextWithLine` annotations.
+  * :class:`aspecd.analysis.CentreOfMass` for calculating the centre of mass for ND datasets.
+
+* IO
+
+  * :class:`aspecd.io.TxtImporter` has an additional parameter ``axis`` specifying which column to use for axis values when reading 2D data. (`#6 <https://github.com/tillbiskup/aspecd/issues/6>`_)
+
+
+Changes
+-------
+
+* Plotting: Default figure size in :class:`aspecd.plotting.FigureProperties` set to ``None`` to allow setting from matplotlibrc to take effect.
+
+  *Without adjustments, this may change the size (and aspect ratio) of your figures from 6x4 inches to 6.4x4.8 inches.*
+
+
+Fixes
+-----
+
+* CompositePlotter operates on copies of plotters.
+* Plot task writes correct filename for each plotter if results is used.
+* PlotannotationTask saves properties to recipe history.
+* PlotannotationTask can be applied to plotter and stored for later use as result at the same time.
+* Text plot annotation with scalar y position set to zero works.
+
+
+Version 0.10.1
+==============
+
+Released 2024-08-13
+
+
+Fixes
+-----
+
+* CompositePlotter shares axes correctly
+
+
 Version 0.10.0
 ==============
 
@@ -18,7 +83,7 @@ New features
 
   * Set individual properties for each of the lines of a :class:`aspecd.plotting.SinglePlotter2DStacked`
   * Conveniently set identical properties for all lines of :class:`aspecd.plotting.SinglePlotter2DStacked` and :class:`aspecd.plotting.MultiPlotter1D`
-  * :class:`aspecd.plotting.TextProerties`
+  * :class:`aspecd.plotting.TextProperties`
   * :class:`aspecd.plotting.DrawingProperties` has attribute ``zorder``.
   * :class:`aspecd.plotting.SubplotGridSpecs` for properties of the subplot grid of a CompositePlotter.
   * :class:`aspecd.plotting.CompositePlotter` allows to share *x* and *y* axes.

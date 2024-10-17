@@ -1,0 +1,65 @@
+format:
+  type: ASpecD recipe
+  version: '0.2'
+
+tasks:
+  - kind: model
+    type: Zeros
+    properties:
+      parameters:
+        shape: 1001
+        range: [330, 350]
+    result: dummy
+
+  - kind: model
+    type: FamilyOfCurves
+    from_dataset: dummy
+    properties:
+      model: Voigtian
+      vary:
+        parameter: position
+        values:
+          - 339.50
+          - 339.67
+          - 339.84
+          - 340.00
+          - 340.14
+          - 340.27
+          - 340.37
+          - 340.44
+          - 340.48
+          - 340.50
+          - 340.48
+          - 340.44
+          - 340.37
+          - 340.27
+          - 340.14
+          - 340.00
+          - 339.84
+          - 339.67
+          - 339.50
+    result: voigtians
+    comment: >
+      Create Voigt profile with varying position
+
+  - kind: singleprocessing
+    type: Noise
+    properties:
+      parameters:
+        amplitude: 0.005
+    apply_to: voigtians
+
+  - kind: singleprocessing
+    type: Differentiation
+    apply_to: voigtians
+    result: voigtians_diff
+
+  - kind: singleplot
+    type: SinglePlotter2DStacked
+    properties:
+      parameters:
+        tight_layout: True
+      filename: model-voigt_diff-family-of-curves.pdf
+    apply_to: voigtians_diff
+    comment: >
+      Plot differentiated Voigt profiles

@@ -1293,6 +1293,22 @@ class TxtImporter(DatasetImporter):
 
             Default: None (meaning: dot)
 
+        axis : :class:`int` | ``None``
+            Column index to use for axis in case of 2D data.
+
+            Often, when reading 2D text data, the first column contains
+            the axis values. In case you don't have axis values in the
+            data, set this parameter to ``None`` (in case of a YAML
+            recipe, use ``Null`` instead).
+
+            You can provide any (valid) column index here, starting with
+            ``0`` for the first column. The column marked as axis is
+            removed from the data array, but set as axis values.
+
+            Default: 0
+
+            .. versionadded:: 0.11
+
 
     .. admonition:: Decimal separators
 
@@ -1308,6 +1324,10 @@ class TxtImporter(DatasetImporter):
     .. versionchanged:: 0.6.3
         Document more parameter keys; add handling of decimal separator.
 
+    .. versionchanged:: 0.11
+        For 2D data, the first column (index 0) is used as axis values by
+        default.
+
     """
 
     def __init__(self, source=None):
@@ -1317,12 +1337,17 @@ class TxtImporter(DatasetImporter):
         self.parameters["delimiter"] = None
         self.parameters["comments"] = "#"
         self.parameters["separator"] = None
+        self.parameters["axis"] = 0
 
     def _import(self):
         if "separator" in self.parameters:
             separator = self.parameters.pop("separator")
         else:
             separator = None
+        if "axis" in self.parameters:
+            axis = self.parameters.pop("axis")
+        else:
+            axis = 0
         if separator:
             with open(self.source, encoding="utf8") as file:
                 contents = file.read()
@@ -1331,9 +1356,11 @@ class TxtImporter(DatasetImporter):
             data = np.loadtxt(io.StringIO(contents), **self.parameters)
         else:
             data = np.loadtxt(self.source, **self.parameters)
-        if len(np.shape(data)) > 1 and np.shape(data)[1] == 2:
-            self.dataset.data.axes[0].values = data[:, 0]
-            data = data[:, 1]
+        if data.ndim == 2 and axis is not None:
+            self.dataset.data.axes[0].values = data[:, axis]
+            data = np.delete(data, axis, 1)
+            if data.shape[1] == 1:
+                data = data[:, 0]
         self.dataset.data.data = data
 
 

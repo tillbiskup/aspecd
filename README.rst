@@ -32,6 +32,12 @@ What is even better: Actual data processing and analysis **no longer requires pr
             - second-dataset.pdf
 
 
+Save this recipe to a file, *e.g.*, ``my-first-recipe.yaml``. Cooking the recipe and serving the result is the matter of issuing a single command in a terminal::
+
+    serve my-first-recipe.yaml
+
+This will do two things: process your data (and create the plots in our case) and write a **full and gap-less history** as an executable recipe.
+
 For more general information on the ASpecD framework see its `homepage <https://www.aspecd.de/>`_, and for how to use it, its `documentation <https://doc.aspecd.de/>`_.
 
 
@@ -99,6 +105,10 @@ There is a number of related packages that are based on the ASpecD framework and
 * `cwepr <https://docs.cwepr.de/>`_
 
   Package for processing and analysing continuous-wave electron paramagnetic resonance (cw-EPR) data, originally developed by P. Kirchner, currently developed and maintained by M. Schröder and T. Biskup.
+
+* `NMRAspecds <https://docs.nmraspecds.de/>`_
+
+  Package for processing and analysing nuclear magnetic resonance (NMR) data, developed and maintained by M. Schröder.
 
 * `FitPy <https://docs.fitpy.de/>`_
 
