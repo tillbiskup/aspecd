@@ -763,6 +763,20 @@ class AggregatedAnalysisStep(AnalysisStep):
             - dataset2
           result: basic_characteristics
 
+    If the analysis step is from another package, the full class name needs
+    to be provided:
+
+    .. code-block:: yaml
+
+        - kind: aggregatedanalysis
+          type: package.module.AnalysisClass
+          properties:
+            parameters:
+              kind: foo
+          apply_to:
+            - dataset1
+            - dataset2
+          result: my_analysis
 
     .. versionadded:: 0.5
 
