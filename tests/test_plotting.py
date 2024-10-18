@@ -966,6 +966,13 @@ class TestSinglePlotter2D(unittest.TestCase):
         plotter = test_dataset.plot(self.plotter)
         self.assertEqual(0, plotter.colorbar.ax.yaxis.label.get_position()[0])
 
+    def test_to_dict_with_colorbar(self):
+        self.plotter.parameters["show_colorbar"] = True
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        plotter = test_dataset.plot(self.plotter)
+        plotter.to_dict()
+
 
 class TestSinglePlotter2DStacked(unittest.TestCase):
     def setUp(self):
@@ -2002,11 +2009,12 @@ class TestMultiPlotter1DStacked(unittest.TestCase):
 
         def gaussian(amp, fwhm, mean):
             return lambda x: amp * np.exp(
-                -4.0 * np.log(2) * (x - mean) ** 2 / fwhm ** 2
+                -4.0 * np.log(2) * (x - mean) ** 2 / fwhm**2
             )
+
         data = np.array([])
         xvalues = np.linspace(1, 50)
-        data = np.append(data, gaussian(4, 5,  12)(xvalues))
+        data = np.append(data, gaussian(4, 5, 12)(xvalues))
         dataset_.data.data = data
         self.plotter.datasets[0] = dataset_
         self.plotter.datasets.append(dataset_)
@@ -2949,7 +2957,14 @@ class TestSurfaceProperties(unittest.TestCase):
         self.assertTrue(callable(self.properties.from_dict))
 
     def test_has_properties(self):
-        for prop in ["cmap"]:
+        for prop in [
+            "cmap",
+            "linewidths",
+            "linestyles",
+            "colors",
+            "zorder",
+            "clim",
+        ]:
             self.assertTrue(hasattr(self.properties, prop))
 
     def test_has_apply_method(self):

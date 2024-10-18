@@ -11,6 +11,18 @@ Version 0.12.0
 Not yet released
 
 
+New features
+------------
+
+* Attribute ``clim`` in :class:`aspecd.plotting.SurfaceProperties`
+
+
+Fixes
+-----
+
+* Plotter with colorbar work with recipes (no longer recursion in ``to_dict()``)
+
+
 Version 0.11.0
 ==============
 

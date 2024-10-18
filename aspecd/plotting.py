@@ -1989,6 +1989,7 @@ class SinglePlotter2D(SinglePlotter):
         self.colorbar = None
         self._type = "imshow"
         self._allowed_types = ["contour", "contourf", "imshow"]
+        self._exclude_from_to_dict.append("colorbar")
 
     @property
     def type(self):
@@ -5580,9 +5581,19 @@ class SurfaceProperties(DrawingProperties):
     Attributes
     ----------
     cmap : :class:`str`
-        name of the colormap to use
+        Name of the colormap to use
 
         For details see :class:`matplotlib.colors.Colormap`
+
+    clim : :class:`tuple`
+        Norm limits for image scaling: ``(vmin, vmax)``
+
+        The corresponding parameters of the
+        :meth:`matplotlib.axes.Axes.contour` method are ``vmin`` and
+        ``vmax``. If you would like to set only one of them, set the other
+        to ``None``.
+
+        .. versionadded:: 0.12
 
     linewidths : :class:`float`
         Width of the contour lines (if present)
@@ -5612,6 +5623,7 @@ class SurfaceProperties(DrawingProperties):
         self.linewidths = None
         self.linestyles = None
         self.colors = None
+        self.clim = None
 
     def apply(self, drawing=None):
         """
