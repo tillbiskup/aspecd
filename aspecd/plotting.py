@@ -5604,6 +5604,16 @@ class SurfaceProperties(DrawingProperties):
     colors : :class:`str`
         Colour of the contour lines (if present)
 
+    norm : :class:`str`
+        The normalization method used to scale scalar data to the [0, 1]
+        range before mapping to colors using cmap. By default, a linear
+        scaling is used, mapping the lowest value to 0 and the highest to 1.
+
+        For a list of available scales, call
+        :func:`matplotlib.scale.get_scale_names`.
+
+        .. versionadded:: 0.12
+
     zorder : :class:`float`
         Zorder for the artist.
 
@@ -5624,6 +5634,7 @@ class SurfaceProperties(DrawingProperties):
         self.linestyles = None
         self.colors = None
         self.clim = None
+        self.norm = None
 
     def apply(self, drawing=None):
         """

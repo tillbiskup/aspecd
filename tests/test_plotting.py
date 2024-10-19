@@ -973,6 +973,25 @@ class TestSinglePlotter2D(unittest.TestCase):
         plotter = test_dataset.plot(self.plotter)
         plotter.to_dict()
 
+    def test_plot_sets_norm(self):
+        norm = "log"
+        dict_ = {"drawing": {"norm": norm}}
+        self.plotter.properties.from_dict(dict_)
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        self.plotter.plot(dataset=test_dataset)
+        self.assertIsInstance(
+            self.plotter.drawing.norm, matplotlib.colors.LogNorm
+        )
+
+    def test_to_dict_with_norm(self):
+        dict_ = {"drawing": {"norm": "symlog"}}
+        self.plotter.properties.from_dict(dict_)
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        plotter = test_dataset.plot(self.plotter)
+        plotter.to_dict()
+
 
 class TestSinglePlotter2DStacked(unittest.TestCase):
     def setUp(self):
@@ -2964,6 +2983,7 @@ class TestSurfaceProperties(unittest.TestCase):
             "colors",
             "zorder",
             "clim",
+            "norm",
         ]:
             self.assertTrue(hasattr(self.properties, prop))
 
