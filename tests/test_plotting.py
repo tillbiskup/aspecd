@@ -992,6 +992,16 @@ class TestSinglePlotter2D(unittest.TestCase):
         plotter = test_dataset.plot(self.plotter)
         plotter.to_dict()
 
+    def test_plot_contour_with_threshold(self):
+        self.plotter.type = "contour"
+        self.plotter.parameters["threshold"] = 0.1
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        plotter = test_dataset.plot(self.plotter)
+        self.assertEqual(
+            plotter.drawing.levels[0], self.plotter.parameters["threshold"]
+        )
+
 
 class TestSinglePlotter2DStacked(unittest.TestCase):
     def setUp(self):

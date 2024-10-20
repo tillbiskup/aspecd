@@ -1869,6 +1869,17 @@ class SinglePlotter2D(SinglePlotter):
 
             Default: None
 
+        threshold : :class:`float`
+            Threshold for determining the levels of a contour plot.
+
+            Sometimes, you want to control explicitly the lowest level of a
+            contour plot. This can be done setting a threshold value here.
+
+            Internally, a :class:`matplotlib.ticker.MaxNLocator` will be
+            used to determine the levels.
+
+            .. versionadded:: 0.12
+
         show_contour_lines : :class:`bool`
             Whether to show contour lines in case of contourf plot
 
@@ -1983,6 +1994,7 @@ class SinglePlotter2D(SinglePlotter):
         self.parameters["switch_axes"] = False
         # noinspection PyTypeChecker
         self.parameters["levels"] = None
+        self.parameters["threshold"] = None
         self.parameters["show_contour_lines"] = False
         self.parameters["show_colorbar"] = False
         self.properties = SinglePlot2DProperties()
@@ -2077,14 +2089,16 @@ class SinglePlotter2D(SinglePlotter):
     def _plot_contour(self):
         plot_function = getattr(self.axes, self.type)
         data = self._shape_data()
-        if self.parameters["levels"]:
-            self.drawing = plot_function(
-                data,
-                extent=self._get_extent(),
-                levels=self.parameters["levels"],
+        level_ticker = ticker.MaxNLocator(self.parameters["levels"])
+        if self.parameters["threshold"]:
+            levels = level_ticker.tick_values(
+                self.parameters["threshold"], np.max(data)
             )
         else:
-            self.drawing = plot_function(data, extent=self._get_extent())
+            levels = level_ticker.tick_values(np.min(data), np.max(data))
+        self.drawing = plot_function(
+            data, extent=self._get_extent(), levels=levels
+        )
         if self.type == "contourf" and self.parameters["show_contour_lines"]:
             self.axes.contour(
                 self.drawing, colors="k", linewidths=0.5, linestyles="-"
