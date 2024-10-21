@@ -815,6 +815,141 @@ class Dataset(aspecd.utils.ToDictMixin):
                 else:
                     setattr(self, key, dict_[key])
 
+    def __add__(self, other):
+        """
+        Arithmetic addition
+
+        Add a scalar or a dataset to the given dataset. Allows to use the
+        operator ``+`` in code:
+
+        .. code-block::
+            result = dataset + 1
+            result = dataset1 + dataset2
+
+        In case of two datasets, an element-wise addition will be performed.
+
+        Parameters
+        ----------
+        other : scalar | :class:`aspecd.dataset.Dataset`
+            Summand
+
+        Returns
+        -------
+        result : :class:`aspecd.dataset.Dataset`
+            New dataset whose data have been arithmetically operated upon.
+
+        .. versionadded:: 0.12
+
+        """
+        result = copy.deepcopy(self)
+        if isinstance(other, type(self)):
+            result.data.data += other.data.data
+        else:
+            result.data.data += other
+        return result
+
+    def __sub__(self, other):
+        """
+        Arithmetic subtraction
+
+        Subtract a scalar or a dataset from the given dataset. Allows to
+        use the operator ``-`` in code:
+
+        .. code-block::
+            result = dataset - 1
+            result = dataset1 - dataset2
+
+        In case of two datasets, an element-wise subtraction will be
+        performed.
+
+        Parameters
+        ----------
+        other : scalar | :class:`aspecd.dataset.Dataset`
+            Summand
+
+        Returns
+        -------
+        result : :class:`aspecd.dataset.Dataset`
+            New dataset whose data have been arithmetically operated upon.
+
+        .. versionadded:: 0.12
+
+        """
+        result = copy.deepcopy(self)
+        if isinstance(other, type(self)):
+            result.data.data -= other.data.data
+        else:
+            result.data.data -= other
+        return result
+
+    def __mul__(self, other):
+        """
+        Arithmetic multiplication
+
+        Multiply a scalar or a dataset to the given dataset. Allows to
+        use the operator ``*`` in code:
+
+        .. code-block::
+            result = dataset * 42
+            result = dataset1 * dataset2
+
+        In case of two datasets, an element-wise multiplication will be
+        performed.
+
+        Parameters
+        ----------
+        other : scalar | :class:`aspecd.dataset.Dataset`
+            factor
+
+        Returns
+        -------
+        result : :class:`aspecd.dataset.Dataset`
+            New dataset whose data have been arithmetically operated upon.
+
+        .. versionadded:: 0.12
+
+        """
+        result = copy.deepcopy(self)
+        if isinstance(other, type(self)):
+            result.data.data *= other.data.data
+        else:
+            result.data.data *= other
+        return result
+
+    def __truediv__(self, other):
+        """
+        Arithmetic division
+
+        Divide a dataset by a given scalar or other dataset. Allows to
+        use the operator ``/`` in code:
+
+        .. code-block::
+            result = dataset / 42
+            result = dataset1 / dataset2
+
+        In case of two datasets, an element-wise division will be
+        performed.
+
+        Parameters
+        ----------
+        other : scalar | :class:`aspecd.dataset.Dataset`
+            Divisor
+
+        Returns
+        -------
+        result : :class:`aspecd.dataset.Dataset`
+            New dataset whose data have been arithmetically operated upon.
+
+        .. versionadded:: 0.12
+
+        """
+        result = copy.deepcopy(self)
+        if isinstance(other, type(self)):
+            result.data.data /= other.data.data
+        else:
+            result.data.data /= other
+        return result
+
 
 class ExperimentalDataset(Dataset):
     """Base class for experimental datasets.

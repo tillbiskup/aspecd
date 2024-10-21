@@ -907,6 +907,105 @@ class TestDatasetReferences(unittest.TestCase):
         self.assertTrue(self.dataset.references)
 
 
+class TestDatasetAlgebra(unittest.TestCase):
+    def setUp(self):
+        self.dataset = dataset.Dataset()
+
+    def test_add_scalar(self):
+        scalar = 1
+        self.dataset.data.data = np.zeros([3, 3, 3])
+        result = self.dataset + scalar
+        np.testing.assert_allclose(scalar, result.data.data)
+
+    def test_add_dataset(self):
+        summand = dataset.Dataset()
+        summand.data.data = np.asarray([[1, 1, 1], [2, 2, 2], [3, 3, 3]])
+        self.dataset.data.data = np.ones([3, 3])
+        result = self.dataset + summand
+        np.testing.assert_allclose(summand.data.data + 1, result.data.data)
+
+    def test_add_operates_on_copy_of_dataset(self):
+        scalar = 1
+        self.dataset.data.data = np.zeros([3, 3, 3])
+        result = self.dataset + scalar
+        self.assertIsNot(self.dataset, result)
+        np.testing.assert_allclose(
+            self.dataset.data.data, np.zeros([3, 3, 3])
+        )
+
+    def test_in_place_add_operates_on_dataset(self):
+        scalar = 42
+        self.dataset.data.data = np.zeros([3, 3, 3])
+        self.dataset += scalar
+        np.testing.assert_allclose(scalar, self.dataset.data.data)
+
+    def test_subtract_scalar(self):
+        scalar = 1
+        self.dataset.data.data = np.ones([3, 3, 3]) + 1
+        result = self.dataset - scalar
+        np.testing.assert_allclose(scalar, result.data.data)
+
+    def test_subtract_dataset(self):
+        summand = dataset.Dataset()
+        summand.data.data = np.ones([3, 3, 3])
+        self.dataset.data.data = np.ones([3, 3, 3]) + 1
+        result = self.dataset - summand
+        np.testing.assert_allclose(summand.data.data, result.data.data)
+
+    def test_subtract_operates_on_copy_of_dataset(self):
+        scalar = 1
+        self.dataset.data.data = np.ones([3, 3, 3]) * 2
+        result = self.dataset - scalar
+        self.assertIsNot(self.dataset, result)
+        np.testing.assert_allclose(2, self.dataset.data.data)
+
+    def test_multiply_scalar(self):
+        scalar = 42
+        self.dataset.data.data = np.ones([3, 3, 3])
+        result = self.dataset * scalar
+        np.testing.assert_allclose(scalar, result.data.data)
+
+    def test_multiply_dataset(self):
+        factor = dataset.Dataset()
+        factor.data.data = np.ones([3, 3, 3]) * 2
+        self.dataset.data.data = np.ones([3, 3, 3]) * 2
+        result = self.dataset * factor
+        np.testing.assert_allclose(
+            factor.data.data * self.dataset.data.data, result.data.data
+        )
+
+    def test_multiply_operates_on_copy_of_dataset(self):
+        scalar = 42
+        self.dataset.data.data = np.ones([3, 3, 3]) + 1
+        result = self.dataset * scalar
+        self.assertIsNot(self.dataset, result)
+        np.testing.assert_allclose(
+            np.ones([3, 3, 3]) + 1, self.dataset.data.data
+        )
+
+    def test_divide_by_scalar(self):
+        scalar = 2
+        self.dataset.data.data = np.ones([3, 3, 3]) * scalar
+        result = self.dataset / scalar
+        np.testing.assert_allclose(1, result.data.data)
+
+    def test_divide_by_dataset(self):
+        factor = dataset.Dataset()
+        factor.data.data = np.ones([3, 3, 3]) * 2
+        self.dataset.data.data = np.ones([3, 3, 3]) * 2
+        result = self.dataset / factor
+        np.testing.assert_allclose(
+            factor.data.data / self.dataset.data.data, result.data.data
+        )
+
+    def test_divide_operates_on_copy_of_dataset(self):
+        scalar = 42
+        self.dataset.data.data = np.ones([3, 3, 3]) * 2
+        result = self.dataset / scalar
+        self.assertIsNot(self.dataset, result)
+        np.testing.assert_allclose(2, self.dataset.data.data)
+
+
 class TestExperimentalDataset(unittest.TestCase):
     def setUp(self):
         self.dataset = dataset.ExperimentalDataset()
