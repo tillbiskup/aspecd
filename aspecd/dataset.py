@@ -823,6 +823,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         operator ``+`` in code:
 
         .. code-block::
+
             result = dataset + 1
             result = dataset1 + dataset2
 
@@ -837,6 +838,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         -------
         result : :class:`aspecd.dataset.Dataset`
             New dataset whose data have been arithmetically operated upon.
+
 
         .. versionadded:: 0.12
 
@@ -856,6 +858,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         use the operator ``-`` in code:
 
         .. code-block::
+
             result = dataset - 1
             result = dataset1 - dataset2
 
@@ -871,6 +874,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         -------
         result : :class:`aspecd.dataset.Dataset`
             New dataset whose data have been arithmetically operated upon.
+
 
         .. versionadded:: 0.12
 
@@ -890,6 +894,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         use the operator ``*`` in code:
 
         .. code-block::
+
             result = dataset * 42
             result = dataset1 * dataset2
 
@@ -899,12 +904,13 @@ class Dataset(aspecd.utils.ToDictMixin):
         Parameters
         ----------
         other : scalar | :class:`aspecd.dataset.Dataset`
-            factor
+            Factor
 
         Returns
         -------
         result : :class:`aspecd.dataset.Dataset`
             New dataset whose data have been arithmetically operated upon.
+
 
         .. versionadded:: 0.12
 
@@ -924,6 +930,7 @@ class Dataset(aspecd.utils.ToDictMixin):
         use the operator ``/`` in code:
 
         .. code-block::
+
             result = dataset / 42
             result = dataset1 / dataset2
 
@@ -933,12 +940,13 @@ class Dataset(aspecd.utils.ToDictMixin):
         Parameters
         ----------
         other : scalar | :class:`aspecd.dataset.Dataset`
-            Divisor
+            Denominator
 
         Returns
         -------
         result : :class:`aspecd.dataset.Dataset`
             New dataset whose data have been arithmetically operated upon.
+
 
         .. versionadded:: 0.12
 

@@ -5,4 +5,5 @@ aspecd.dataset module
     :members:
     :inherited-members:
     :undoc-members:
+    :special-members: __add__, __sub__, __mul__, __div__
     :show-inheritance:
