@@ -1411,7 +1411,7 @@ class SinglePlotter(Plotter):
         Raised when no dataset exists to act on
 
     aspecd.exceptions.NotApplicableToDatasetError
-        Raised when processing step is not applicable to dataset
+        Raised when plotter is not applicable to dataset
 
 
     .. versionchanged:: 0.9
@@ -2171,7 +2171,7 @@ class SinglePlotter2DStacked(SinglePlotter):
     drawing : :class:`list`
         Actual graphical representation of the data.
 
-        List of :obj:`matplotlib.artist.Artist` objects, one for each of the
+        List of , one for each of the
         actual lines of the plot
 
     parameters : :class:`dict`
@@ -2835,6 +2835,150 @@ class MultiDeviceDataPlotter1D(SinglePlotter1D):
             old_ylabel = self.axes.get_ylabel()
             self.axes.set_xlabel(old_ylabel)
             self.axes.set_ylabel(old_xlabel)
+
+
+class SingleBarPlotter(SinglePlotter):
+    """
+    Bar plots of single datasets.
+
+    Bar plots can be used for both, 1D and 2D datasets. In case of a 1D
+    dataset, bars will be created whose height corresponds to the individual
+    data points. For a 2D dataset, groups of bars will be created, with one
+    bar per column in each bar group.
+
+
+    Attributes
+    ----------
+    dataset : :class:`aspecd.dataset.Dataset`
+        Dataset the plotting should be done for
+
+    drawing : :class:`list`
+        Actual graphical representation of the data.
+
+        List of :obj:`matplotlib.container.BarContainer` objects, one for
+        each column of the dataset. The actual
+        :obj:`matplotlib.artist.Artist` objects are the children of the
+        :obj:`matplotlib.container.BarContainer` objects.
+
+    parameters : :class:`dict`
+        All parameters necessary for the plot, implicit and explicit
+
+        The following keys exist, in addition to those of the superclass:
+
+        show_zero_lines : :class:`bool`
+            Whether to show zero lines in the plot
+
+            Regardless of whether you set this to true, zero lines will only be
+            added to the final plot if the zero value is within the current
+            axes limits.
+
+            Zero line properties can be set via the
+            :attr:`aspecd.plotting.Plotter.properties` attribute.
+
+            Default: False
+
+        width : :class:`float`
+            Total width of one group of bars.
+
+            In case of a 1D dataset, this is identical to the width of a
+            single bar. For 2D datasets, this is identical to the width of
+            each group of bars, *i.e.* a single bar will be width/columns wide.
+
+            As (groups of) bars are equally spaced, with a difference of two
+            ticks of 1, width should be in the interval [0, 1]. Setting the
+            width to 1 will leave no space between bars. While a width > 1
+            is technically possible, this would lead to overlapping bars.
+
+            Default: 0.8
+
+    Raises
+    ------
+    aspecd.exceptions.NotApplicableToDatasetError
+        Raised if the dataset data are >2D
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. Of course, all parameters settable
+    for the superclasses can be set as well. The examples focus each on a
+    single aspect.
+
+    In the simplest case, just invoke the plotter with default values:
+
+    .. code-block:: yaml
+
+       - kind: singleplot
+         type: SingleBarPlotter
+         properties:
+           filename: output.pdf
+
+
+    .. versionadded:: 0.12
+
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = "Bar plot for single dataset"
+        self.parameters.update(
+            {
+                "show_zero_lines": False,
+                "width": 0.8,
+            }
+        )
+        self.drawing = []
+        self.properties = SinglePlot2DStackedProperties()
+
+    @staticmethod
+    def applicable(data):
+        """Check whether plot is applicable to the given dataset.
+
+        Checks for the dimension of the data of the dataset, i.e. the
+        :attr:`aspecd.dataset.Data.data` attribute. Returns `True` if data
+        are one- or two-dimensional, and `False` otherwise.
+
+        Returns
+        -------
+        applicable : :class:`bool`
+            `True` if successful, `False` otherwise.
+
+        """
+        return data.data.ndim <= 2
+
+    def _create_plot(self):
+        labels = self._get_labels()
+        if self.dataset.data.data.ndim == 1:
+            position = np.arange(len(self.dataset.data.data))
+            width = self.parameters["width"]
+            drawing = self.axes.bar(
+                position, self.dataset.data.data, width=width, label=labels[0]
+            )
+            self.drawing.append(drawing)
+        else:
+            position = np.arange(len(self.dataset.data.data[:, 1]))
+            columns = self.dataset.data.data.shape[1]
+            width = self.parameters["width"] / columns
+            multiplier = -(columns - 1) / 2
+            for column in range(columns):
+                offset = width * multiplier
+                drawing = self.axes.bar(
+                    position + offset,
+                    self.dataset.data.data[:, column],
+                    width=width,
+                    label=labels[column],
+                )
+                multiplier += 1
+                self.drawing.append(drawing)
+        self.axes.set_xticks(position, self.dataset.data.axes[0].data)
+
+    def _get_labels(self):
+        labels = self.parameters["labels"]
+        while len(labels) < self.dataset.data.data.shape[1]:
+            labels.append("")
+        return labels
 
 
 class MultiPlotter(Plotter):

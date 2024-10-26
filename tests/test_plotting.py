@@ -1571,6 +1571,94 @@ class TestMultiDeviceDataPlotter1D(unittest.TestCase):
         self.assertEqual(color1, plotter.drawing[0].get_color())
 
 
+class TestSingleBarPlotter(unittest.TestCase):
+    def setUp(self):
+        self.plotter = plotting.SingleBarPlotter()
+        self.dataset = aspecd.dataset.CalculatedDataset()
+        self.dataset.data.data = np.random.random(5)
+        self.dataset.data.axes[0].data = np.asarray([5, 12, 21, 35, 42])
+        self.dataset.data.axes[0].quantity = "magnetic field"
+        self.dataset.data.axes[0].unit = "mT"
+        self.dataset.data.axes[1].quantity = "intensity"
+        self.dataset.data.axes[1].unit = "V"
+        self.dataset2d = aspecd.dataset.CalculatedDataset()
+        self.dataset2d.data.data = np.random.random([5, 2])
+        self.dataset2d.data.axes[0].data = np.asarray([5, 12, 21, 35, 42])
+        self.dataset2d.data.axes[0].quantity = "magnetic field"
+        self.dataset2d.data.axes[0].unit = "mT"
+        self.dataset2d.data.axes[1].quantity = "measurements"
+        self.dataset2d.data.axes[1].unit = ""
+        self.dataset2d.data.axes[2].quantity = "intensity"
+        self.dataset2d.data.axes[2].unit = "V"
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_class_has_sensible_description(self):
+        self.assertIn("Bar plot", self.plotter.description)
+
+    def test_plot_sets_drawing(self):
+        self.plotter.plot(dataset=self.dataset)
+        self.assertTrue(self.plotter.drawing)
+
+    def test_plot_has_zero_lines_switched_off_by_default(self):
+        self.assertFalse(self.plotter.parameters["show_zero_lines"])
+
+    def test_plot_sets_x_axis_values_as_tick_marks(self):
+        self.plotter.plot(dataset=self.dataset)
+        self.assertListEqual(
+            list(self.dataset.data.axes[0].data),
+            [
+                int(tick.get_text())
+                for tick in self.plotter.axes.get_xticklabels()
+            ],
+        )
+
+    def test_width_parameter(self):
+        self.plotter.parameters["width"] = 0.5
+        self.plotter.plot(dataset=self.dataset)
+        plt.show()
+        self.assertEqual(
+            self.plotter.parameters["width"],
+            self.plotter.drawing[0].get_children()[0].get_width(),
+        )
+
+    def test_plot_with_greater2D_dataset_raises(self):
+        dataset_ = aspecd.dataset.CalculatedDataset()
+        dataset_.data.data = np.random.random([5, 5, 5])
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            dataset_.plot(self.plotter)
+
+    def test_plot_with_2D_dataset_sets_drawings(self):
+        self.plotter.plot(dataset=self.dataset2d)
+        self.assertEqual(2, len(self.plotter.drawing))
+
+    def test_plot_with_2D_dataset_separates_bars(self):
+        self.plotter.plot(dataset=self.dataset2d)
+        self.assertNotEqual(
+            self.plotter.drawing[0].get_children()[0].get_x(),
+            self.plotter.drawing[1].get_children()[0].get_x(),
+        )
+
+    def test_plot_with_2d_dataset_respects_total_width(self):
+        self.plotter.plot(dataset=self.dataset2d)
+        self.assertEqual(
+            self.plotter.parameters["width"]
+            / self.dataset2d.data.data.shape[1],
+            self.plotter.drawing[0].get_children()[0].get_width(),
+        )
+
+    def test_plot_with_2d_dataset_sets_labels(self):
+        self.plotter.parameters["labels"] = ["first", "second"]
+        self.plotter.parameters["show_legend"] = True
+        self.plotter.plot(dataset=self.dataset2d)
+        # plt.show()
+        self.assertListEqual(
+            self.plotter.parameters["labels"],
+            [item.get_text() for item in self.plotter.legend.get_texts()],
+        )
+
+
 class TestMultiPlotter(unittest.TestCase):
     def setUp(self):
         self.plotter = plotting.MultiPlotter()
