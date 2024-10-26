@@ -16,6 +16,7 @@ New features
 
 * Attribute ``clim`` in :class:`aspecd.plotting.SurfaceProperties`
 * Parameter ``threshold`` for determining the levels of a contour plot in class :class:`aspecd.plotting.SinglePlotter2D`
+* Parameter ``units`` in :class:`aspecd.annotation.Text` and :class:`aspecd.annotation.Marker`, allowing to position using axes rather than data coordinates.
 
 
 Fixes

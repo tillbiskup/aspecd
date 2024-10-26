@@ -494,6 +494,17 @@ class TestText(unittest.TestCase):
         dict_ = self.annotation.to_dict()
         self.assertIn("properties", dict_)
 
+    def test_annotate_with_axes_units_uses_axes_transform(self):
+        self.annotation.parameters["positions"] = [[0.5, 0.5]]
+        self.annotation.parameters["units"] = "axes"
+        self.annotation.parameters["texts"] = ["foo"]
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertIsInstance(
+            annotation_.drawings[0].get_transform(),
+            matplotlib.transforms.BboxTransformTo,
+        )
+
 
 class TestVerticalSpan(unittest.TestCase):
     def setUp(self):
@@ -1017,6 +1028,17 @@ class TestMarker(unittest.TestCase):
             annotation_.parameters["positions"][0][1]
             + self.annotation.parameters["yoffset"],
             annotation_.drawings[0].get_data()[1],
+        )
+
+    def test_annotate_with_axes_units_uses_axes_transform(self):
+        self.annotation.parameters["positions"] = [[0.5, 0.5]]
+        self.annotation.parameters["units"] = "axes"
+        self.annotation.parameters["marker"] = "o"
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertIsInstance(
+            annotation_.drawings[0].get_transform(),
+            matplotlib.transforms.BboxTransformTo,
         )
 
 

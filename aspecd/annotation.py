@@ -890,7 +890,8 @@ class Text(PlotAnnotation):
 
             Note that each position is itself a list: [*x*, *y*]
 
-            Values are in axis (data) units.
+            Values are in axis (data) units by default, but can be set using
+            the parameter ``units`` (see below).
 
         xpositions : :class:`list`
             List of the *x* positions texts should appear at.
@@ -907,7 +908,8 @@ class Text(PlotAnnotation):
             If you provide both, ``positions`` and
             ``xpositions``/``ypositions``, the latter couple wins.
 
-            Values are in axis (data) units.
+            Values are in axis (data) units by default, but can be set using
+            the parameter ``units`` (see below).
 
         ypositions : :class:`list` or :class:`float`
             List of the *y* positions texts should appear at.
@@ -921,7 +923,25 @@ class Text(PlotAnnotation):
             If you provide both, ``positions`` and
             ``xpositions``/``ypositions``, the latter couple wins.
 
-            Values are in axis (data) units.
+            Values are in axis (data) units by default, but can be set using
+            the parameter ``units`` (see below).
+
+        units : :class:`str`
+            Units used for the positioning.
+
+            Can be one of ``data``, ``axes``.
+
+            If ``data``, positions are given in data coordinates.
+
+            If ``axes``, positions are given in axes coordinates, spanning
+            the interval [0, 1], with the origin in the lower left corner of
+            the axis. This allows to position annotations, such as markers
+            for subfigures, at a given place in the axis, regardless the
+            actual data limits.
+
+            Default: ``data``.
+
+            .. versionadded:: 0.12
 
         texts : :class:`list`
             Texts that should appear at the individual positions.
@@ -1047,6 +1067,36 @@ class Text(PlotAnnotation):
     independently. Note that the example has been reduced to the key
     aspects. In a real situation, the two plotters will differ much more.
 
+    Sometimes, you may want to position the annotation using axes rather
+    than data coordinates, to be independent of the actual axes limits. This
+    is straight-forward, setting the parameter ``units`` accordingly:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            filename: plot1D.pdf
+          result: plot1D
+
+        - kind: plotannotation
+          type: Text
+          properties:
+            parameters:
+              positions:
+                - [0.05, 0.95]
+              texts:
+                - "A"
+            properties:
+              color: green
+              fontsize: large
+              fontstyle: oblique
+              rotation: 30
+          plotter: plot1D
+
+    Note that axes coordinates are in the interval [0, 1], with the origin
+    in the lower left corner of your axis.
+
 
     .. versionadded:: 0.10
 
@@ -1057,6 +1107,7 @@ class Text(PlotAnnotation):
         self.parameters["positions"] = []
         self.parameters["xpositions"] = []
         self.parameters["ypositions"] = []
+        self.parameters["units"] = "data"
         self.parameters["texts"] = []
         self.properties = aspecd.plotting.TextProperties()
 
@@ -1082,9 +1133,19 @@ class Text(PlotAnnotation):
             positions = self.parameters["positions"]
         for idx, position in enumerate(positions):
             text = self.plotter.ax.text(
-                position[0], position[1], self.parameters["texts"][idx]
+                position[0],
+                position[1],
+                self.parameters["texts"][idx],
+                transform=self._get_transform(),
             )
             self.drawings.append(text)
+
+    def _get_transform(self):
+        if self.parameters["units"] == "data":
+            transform = self.plotter.ax.transData
+        if self.parameters["units"] == "axes":
+            transform = self.plotter.ax.transAxes
+        return transform
 
 
 class VerticalSpan(PlotAnnotation):
@@ -1808,6 +1869,23 @@ class Marker(PlotAnnotation):
 
             Default: 0
 
+        units : :class:`str`
+            Units used for the positioning.
+
+            Can be one of ``data``, ``axes``.
+
+            If ``data``, positions are given in data coordinates.
+
+            If ``axes``, positions are given in axes coordinates, spanning
+            the interval [0, 1], with the origin in the lower left corner of
+            the axis. This allows to position annotations, such as markers
+            for subfigures, at a given place in the axis, regardless the
+            actual data limits.
+
+            Default: ``data``.
+
+            .. versionadded:: 0.12
+
         marker : :class:`str`
             Marker that shall be added to the plot.
 
@@ -1979,6 +2057,35 @@ class Marker(PlotAnnotation):
     independently. Note that the example has been reduced to the key
     aspects. In a real situation, the two plotters will differ much more.
 
+    Sometimes, you may want to position the annotation using axes rather
+    than data coordinates, to be independent of the actual axes limits. This
+    is straight-forward, setting the parameter ``units`` accordingly:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            filename: plot1D.pdf
+          result: plot1D
+
+        - kind: plotannotation
+          type: Marker
+          properties:
+            parameters:
+              positions:
+                - [0.5, 0.5]
+              units: axes
+              marker: o
+            properties:
+              edgecolor: green
+              size: 12
+          plotter: plot1D
+
+    Note that axes coordinates are in the interval [0, 1], with the origin
+    in the lower left corner of your axis.
+
+
     .. versionadded:: 0.11
 
 
@@ -1990,6 +2097,7 @@ class Marker(PlotAnnotation):
         self.parameters["xpositions"] = []
         self.parameters["ypositions"] = []
         self.parameters["yoffset"] = 0
+        self.parameters["units"] = "data"
         self.parameters["marker"] = ""
         self.properties = aspecd.plotting.MarkerProperties()
 
@@ -2027,8 +2135,16 @@ class Marker(PlotAnnotation):
                 position[1] + self.parameters["yoffset"],
                 marker=marker_symbol,
                 linestyle="",
+                transform=self._get_transform(),
             )
             self.drawings.append(marker[0])
+
+    def _get_transform(self):
+        if self.parameters["units"] == "data":
+            transform = self.plotter.ax.transData
+        if self.parameters["units"] == "axes":
+            transform = self.plotter.ax.transAxes
+        return transform
 
 
 class FillBetween(PlotAnnotation):
