@@ -1085,13 +1085,9 @@ class Text(PlotAnnotation):
             parameters:
               positions:
                 - [0.05, 0.95]
+              units: axes
               texts:
                 - "A"
-            properties:
-              color: green
-              fontsize: large
-              fontstyle: oblique
-              rotation: 30
           plotter: plot1D
 
     Note that axes coordinates are in the interval [0, 1], with the origin
