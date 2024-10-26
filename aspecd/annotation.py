@@ -560,7 +560,8 @@ class VerticalLine(PlotAnnotation):
         positions : :class:`list`
             List of the positions vertical lines should appear at
 
-            Values are in axis (data) units.
+            Values are in data units by default, but can be set using the
+            parameter ``units`` (see below).
 
         limits : :class:`list`
             Limits of the vertical lines
@@ -569,6 +570,23 @@ class VerticalLine(PlotAnnotation):
             the current axes.
 
             Values are in relative units, within a range of [0, 1].
+
+        units : :class:`str`
+            Units used for the positioning.
+
+            Can be one of ``data``, ``axes``.
+
+            If ``data``, positions are given in data coordinates.
+
+            If ``axes``, positions are given in axes coordinates, spanning
+            the interval [0, 1], with the origin in the lower left corner of
+            the axis. This allows to position annotations, such as markers
+            for subfigures, at a given place in the axis, regardless the
+            actual data limits.
+
+            Default: ``data``.
+
+            .. versionadded:: 0.12
 
     properties : :class:`aspecd.plotting.LineProperties`
         Properties of the line(s) within a plot
@@ -675,6 +693,30 @@ class VerticalLine(PlotAnnotation):
     independently. Note that the example has been reduced to the key
     aspects. In a real situation, the two plotters will differ much more.
 
+    Sometimes, you may want to position the annotation using axes rather
+    than data coordinates, to be independent of the actual axes limits. This
+    is straight-forward, setting the parameter ``units`` accordingly:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            filename: plot1D.pdf
+          result: plot1D
+
+        - kind: plotannotation
+          type: VerticalLine
+          properties:
+            parameters:
+              positions: [.35, .42]
+              units: axes
+          plotter:
+          plotter: plot1D
+
+    Note that axes coordinates are in the interval [0, 1], with the origin
+    in the lower left corner of your axis.
+
 
     .. versionadded:: 0.9
 
@@ -684,6 +726,7 @@ class VerticalLine(PlotAnnotation):
         super().__init__()
         self.parameters["positions"] = []
         self.parameters["limits"] = []
+        self.parameters["units"] = "data"
         self.properties = aspecd.plotting.LineProperties()
 
     def _perform_task(self):
@@ -696,6 +739,8 @@ class VerticalLine(PlotAnnotation):
                 )
             else:
                 line = self.plotter.ax.axvline(x=position)
+            if self.parameters["units"] == "axes":
+                line.set_transform(self.plotter.ax.transAxes)
             self.drawings.append(line)
 
 
@@ -723,7 +768,8 @@ class HorizontalLine(PlotAnnotation):
         positions : :class:`list`
             List of the positions horizontal lines should appear at
 
-            Values are in axis (data) units.
+            Values are in data units by default, but can be set using the
+            parameter ``units`` (see below).
 
         limits : :class:`list`
             Limits of the horizontal lines
@@ -732,6 +778,23 @@ class HorizontalLine(PlotAnnotation):
             the current axes.
 
             Values are in relative units, within a range of [0, 1].
+
+        units : :class:`str`
+            Units used for the positioning.
+
+            Can be one of ``data``, ``axes``.
+
+            If ``data``, positions are given in data coordinates.
+
+            If ``axes``, positions are given in axes coordinates, spanning
+            the interval [0, 1], with the origin in the lower left corner of
+            the axis. This allows to position annotations, such as markers
+            for subfigures, at a given place in the axis, regardless the
+            actual data limits.
+
+            Default: ``data``.
+
+            .. versionadded:: 0.12
 
     properties : :class:`aspecd.plotting.LineProperties`
         Properties of the line(s) within a plot
@@ -838,6 +901,30 @@ class HorizontalLine(PlotAnnotation):
     independently. Note that the example has been reduced to the key
     aspects. In a real situation, the two plotters will differ much more.
 
+    Sometimes, you may want to position the annotation using axes rather
+    than data coordinates, to be independent of the actual axes limits. This
+    is straight-forward, setting the parameter ``units`` accordingly:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            filename: plot1D.pdf
+          result: plot1D
+
+        - kind: plotannotation
+          type: HorizontalLine
+          properties:
+            parameters:
+              positions: [.35, .42]
+              units: axes
+          plotter:
+          plotter: plot1D
+
+    Note that axes coordinates are in the interval [0, 1], with the origin
+    in the lower left corner of your axis.
+
 
     .. versionadded:: 0.9
 
@@ -847,6 +934,7 @@ class HorizontalLine(PlotAnnotation):
         super().__init__()
         self.parameters["positions"] = []
         self.parameters["limits"] = []
+        self.parameters["units"] = "data"
         self.properties = aspecd.plotting.LineProperties()
 
     def _perform_task(self):
@@ -859,6 +947,8 @@ class HorizontalLine(PlotAnnotation):
                 )
             else:
                 line = self.plotter.ax.axhline(y=position)
+            if self.parameters["units"] == "axes":
+                line.set_transform(self.plotter.ax.transAxes)
             self.drawings.append(line)
 
 
@@ -890,8 +980,8 @@ class Text(PlotAnnotation):
 
             Note that each position is itself a list: [*x*, *y*]
 
-            Values are in axis (data) units by default, but can be set using
-            the parameter ``units`` (see below).
+            Values are in data units by default, but can be set using the
+            parameter ``units`` (see below).
 
         xpositions : :class:`list`
             List of the *x* positions texts should appear at.
@@ -908,8 +998,8 @@ class Text(PlotAnnotation):
             If you provide both, ``positions`` and
             ``xpositions``/``ypositions``, the latter couple wins.
 
-            Values are in axis (data) units by default, but can be set using
-            the parameter ``units`` (see below).
+            Values are in data units by default, but can be set using the
+            parameter ``units`` (see below).
 
         ypositions : :class:`list` or :class:`float`
             List of the *y* positions texts should appear at.
@@ -923,8 +1013,8 @@ class Text(PlotAnnotation):
             If you provide both, ``positions`` and
             ``xpositions``/``ypositions``, the latter couple wins.
 
-            Values are in axis (data) units by default, but can be set using
-            the parameter ``units`` (see below).
+            Values are in data units by default, but can be set using the
+            parameter ``units`` (see below).
 
         units : :class:`str`
             Units used for the positioning.
@@ -1137,10 +1227,10 @@ class Text(PlotAnnotation):
             self.drawings.append(text)
 
     def _get_transform(self):
-        if self.parameters["units"] == "data":
-            transform = self.plotter.ax.transData
         if self.parameters["units"] == "axes":
             transform = self.plotter.ax.transAxes
+        else:
+            transform = self.plotter.ax.transData
         return transform
 
 
@@ -1171,7 +1261,8 @@ class VerticalSpan(PlotAnnotation):
 
             If you want to have more than one span, provide a list of lists.
 
-            Values are in axis (data) units.
+            Values are in data units by default, but can be set using the
+            parameter ``units`` (see below).
 
         limits : :class:`list`
             Limits of the vertical spans
@@ -1180,6 +1271,23 @@ class VerticalSpan(PlotAnnotation):
             the current axes.
 
             Values are in relative units, within a range of [0, 1].
+
+        units : :class:`str`
+            Units used for the positioning.
+
+            Can be one of ``data``, ``axes``.
+
+            If ``data``, positions are given in data coordinates.
+
+            If ``axes``, positions are given in axes coordinates, spanning
+            the interval [0, 1], with the origin in the lower left corner of
+            the axis. This allows to position annotations, such as markers
+            for subfigures, at a given place in the axis, regardless the
+            actual data limits.
+
+            Default: ``data``.
+
+            .. versionadded:: 0.12
 
     properties : :class:`aspecd.plotting.PatchProperties`
         Properties of the span(s) within a plot
@@ -1287,6 +1395,30 @@ class VerticalSpan(PlotAnnotation):
     independently. Note that the example has been reduced to the key
     aspects. In a real situation, the two plotters will differ much more.
 
+    Sometimes, you may want to position the annotation using axes rather
+    than data coordinates, to be independent of the actual axes limits. This
+    is straight-forward, setting the parameter ``units`` accordingly:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            filename: plot1D.pdf
+          result: plot1D
+
+        - kind: plotannotation
+          type: VerticalSpan
+          properties:
+            parameters:
+              positions: [.35, .42]
+              units: axes
+          plotter:
+          plotter: plot1D
+
+    Note that axes coordinates are in the interval [0, 1], with the origin
+    in the lower left corner of your axis.
+
 
     .. versionadded:: 0.11
 
@@ -1297,6 +1429,7 @@ class VerticalSpan(PlotAnnotation):
         super().__init__()
         self.parameters["positions"] = []
         self.parameters["limits"] = []
+        self.parameters["units"] = "data"
         self.properties = aspecd.plotting.PatchProperties()
 
     def _perform_task(self):
@@ -1312,6 +1445,8 @@ class VerticalSpan(PlotAnnotation):
                 span = self.plotter.ax.axvspan(
                     xmin=position[0], xmax=position[1]
                 )
+            if self.parameters["units"] == "axes":
+                span.set_transform(self.plotter.ax.transAxes)
             self.drawings.append(span)
 
 
@@ -1341,7 +1476,8 @@ class HorizontalSpan(PlotAnnotation):
 
             If you want to have more than one span, provide a list of lists.
 
-            Values are in axis (data) units.
+            Values are in data units by default, but can be set using the
+            parameter ``units`` (see below).
 
         limits : :class:`list`
             Limits of the hoizontal spans
@@ -1350,6 +1486,23 @@ class HorizontalSpan(PlotAnnotation):
             the current axes.
 
             Values are in relative units, within a range of [0, 1].
+
+        units : :class:`str`
+            Units used for the positioning.
+
+            Can be one of ``data``, ``axes``.
+
+            If ``data``, positions are given in data coordinates.
+
+            If ``axes``, positions are given in axes coordinates, spanning
+            the interval [0, 1], with the origin in the lower left corner of
+            the axis. This allows to position annotations, such as markers
+            for subfigures, at a given place in the axis, regardless the
+            actual data limits.
+
+            Default: ``data``.
+
+            .. versionadded:: 0.12
 
     properties : :class:`aspecd.plotting.PatchProperties`
         Properties of the span(s) within a plot
@@ -1457,6 +1610,30 @@ class HorizontalSpan(PlotAnnotation):
     independently. Note that the example has been reduced to the key
     aspects. In a real situation, the two plotters will differ much more.
 
+    Sometimes, you may want to position the annotation using axes rather
+    than data coordinates, to be independent of the actual axes limits. This
+    is straight-forward, setting the parameter ``units`` accordingly:
+
+    .. code-block:: yaml
+
+        - kind: singleplot
+          type: SinglePlotter1D
+          properties:
+            filename: plot1D.pdf
+          result: plot1D
+
+        - kind: plotannotation
+          type: HorizontalSpan
+          properties:
+            parameters:
+              positions: [.35, .42]
+              units: axes
+          plotter:
+          plotter: plot1D
+
+    Note that axes coordinates are in the interval [0, 1], with the origin
+    in the lower left corner of your axis.
+
 
     .. versionadded:: 0.11
 
@@ -1466,6 +1643,7 @@ class HorizontalSpan(PlotAnnotation):
         super().__init__()
         self.parameters["positions"] = []
         self.parameters["limits"] = []
+        self.parameters["units"] = "data"
         self.properties = aspecd.plotting.PatchProperties()
 
     def _perform_task(self):
@@ -1481,6 +1659,8 @@ class HorizontalSpan(PlotAnnotation):
                 span = self.plotter.ax.axhspan(
                     ymin=position[0], ymax=position[1]
                 )
+            if self.parameters["units"] == "axes":
+                span.set_transform(self.plotter.ax.transAxes)
             self.drawings.append(span)
 
 
@@ -1529,7 +1709,7 @@ class TextWithLine(PlotAnnotation):
 
             Note that each position is itself a list: [*x*, *y*]
 
-            Values are in axis (data) units.
+            Values are in data units.
 
         offsets : :class:`list`
             List of the offsets texts should appear at.
@@ -1542,7 +1722,7 @@ class TextWithLine(PlotAnnotation):
             Similarly, if you set a *negative* vertical  offset, the hook is
             obviously in the lower part.
 
-            Values are in axis (data) units.
+            Values are in data units.
 
         xpositions : :class:`list`
             List of the *x* positions texts should appear at.
@@ -1559,7 +1739,7 @@ class TextWithLine(PlotAnnotation):
             If you provide both, ``positions`` and
             ``xpositions``/``ypositions``, the latter couple wins.
 
-            Values are in axis (data) units.
+            Values are in data units.
 
         ypositions : :class:`list` or :class:`float`
             List of the *y* positions texts should appear at.
@@ -1573,7 +1753,7 @@ class TextWithLine(PlotAnnotation):
             If you provide both, ``positions`` and
             ``xpositions``/``ypositions``, the latter couple wins.
 
-            Values are in axis (data) units.
+            Values are in data units.
 
         texts : :class:`list`
             Texts that should appear at the individual positions.
@@ -1823,7 +2003,8 @@ class Marker(PlotAnnotation):
 
             Note that each position is itself a list: [*x*, *y*]
 
-            Values are in axis (data) units.
+            Values are in data units by default, but can be set using the
+            parameter ``units`` (see below).
 
         xpositions : :class:`list`
             List of the *x* positions markers should appear at.
@@ -1840,7 +2021,8 @@ class Marker(PlotAnnotation):
             If you provide both, ``positions`` and
             ``xpositions``/``ypositions``, the latter couple wins.
 
-            Values are in axis (data) units.
+            Values are in data units by default, but can be set using the
+            parameter ``units`` (see below).
 
         ypositions : :class:`list` or :class:`float`
             List of the *y* positions markers should appear at.
@@ -1854,7 +2036,8 @@ class Marker(PlotAnnotation):
             If you provide both, ``positions`` and
             ``xpositions``/``ypositions``, the latter couple wins.
 
-            Values are in axis (data) units.
+            Values are in data units by default, but can be set using the
+            parameter ``units`` (see below).
 
         yoffset : :class:`float`
             Additional offset for the *y* direction added to the *y* position.
@@ -1862,6 +2045,9 @@ class Marker(PlotAnnotation):
             Useful, *e.g.*, when you want to mark peaks, but not on the line
             itself, but slightly above (positive offset values) or below (
             negative offset values).
+
+            Values are in data units by default, but can be set using the
+            parameter ``units`` (see below).
 
             Default: 0
 
@@ -2136,10 +2322,10 @@ class Marker(PlotAnnotation):
             self.drawings.append(marker[0])
 
     def _get_transform(self):
-        if self.parameters["units"] == "data":
-            transform = self.plotter.ax.transData
         if self.parameters["units"] == "axes":
             transform = self.plotter.ax.transAxes
+        else:
+            transform = self.plotter.ax.transData
         return transform
 
 

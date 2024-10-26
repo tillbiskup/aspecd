@@ -314,6 +314,16 @@ class TestVerticalLine(unittest.TestCase):
             annotation_.drawings[0].get_ydata(),
         )
 
+    def test_annotate_with_axes_units_uses_axes_transform(self):
+        self.annotation.parameters["positions"] = [0.5]
+        self.annotation.parameters["units"] = "axes"
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertIsInstance(
+            annotation_.drawings[0].get_transform(),
+            matplotlib.transforms.BboxTransformTo,
+        )
+
 
 class TestHorizontalLine(unittest.TestCase):
     def setUp(self):
@@ -388,6 +398,16 @@ class TestHorizontalLine(unittest.TestCase):
         self.assertListEqual(
             annotation_.parameters["limits"],
             annotation_.drawings[0].get_xdata(),
+        )
+
+    def test_annotate_with_axes_units_uses_axes_transform(self):
+        self.annotation.parameters["positions"] = [0.5]
+        self.annotation.parameters["units"] = "axes"
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertIsInstance(
+            annotation_.drawings[0].get_transform(),
+            matplotlib.transforms.BboxTransformTo,
         )
 
 
@@ -596,6 +616,13 @@ class TestVerticalSpan(unittest.TestCase):
             list(annotation_.drawings[0].get_corners()[:, 1][1:3]),
         )
 
+    def test_annotate_with_axes_units_uses_axes_transform(self):
+        self.annotation.parameters["positions"] = [[0.5, 0.6]]
+        self.annotation.parameters["units"] = "axes"
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertEqual(3, annotation_.drawings[0].get_transform().depth)
+
 
 class TestHorizontalSpan(unittest.TestCase):
     def setUp(self):
@@ -686,6 +713,13 @@ class TestHorizontalSpan(unittest.TestCase):
             annotation_.parameters["limits"],
             list(annotation_.drawings[0].get_corners()[:, 0][0:2]),
         )
+
+    def test_annotate_with_axes_units_uses_axes_transform(self):
+        self.annotation.parameters["positions"] = [[0.5, 0.6]]
+        self.annotation.parameters["units"] = "axes"
+        self.plotter.plot()
+        annotation_ = self.plotter.annotate(self.annotation)
+        self.assertEqual(3, annotation_.drawings[0].get_transform().depth)
 
 
 class TestTextWithLine(unittest.TestCase):
