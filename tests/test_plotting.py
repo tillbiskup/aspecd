@@ -3,6 +3,7 @@
 import contextlib
 import hashlib
 import io
+import logging
 import warnings
 
 import matplotlib.axes
@@ -1677,6 +1678,52 @@ class TestSingleBarPlotter(unittest.TestCase):
             f"${self.dataset2d.data.axes[2].quantity}$ / "
             f"{self.dataset2d.data.axes[2].unit}",
             self.plotter.ax.get_ylabel(),
+        )
+
+    def test_set_color_from_dict(self):
+        color = "#aaccee"
+        properties = {"drawing": {"color": color}}
+        self.plotter.properties.from_dict(properties)
+        self.assertEqual(color, self.plotter.properties.drawing[0].color)
+
+    def test_plot_applies_drawing_properties(self):
+        color = "#aaccee"
+        dict_ = {"drawing": {"facecolor": color}}
+        self.plotter.properties.from_dict(dict_)
+        self.plotter.plot(dataset=self.dataset)
+        self.assertEqual(
+            self.plotter.properties.drawing[0].facecolor,
+            matplotlib.colors.to_hex(
+                self.plotter.drawing[0].get_children()[0].get_facecolor()
+            ),
+        )
+
+    def test_plot_applies_drawing_properties_to_all_drawings(self):
+        color = "#aaccee"
+        dict_ = {"drawing": {"facecolor": color}}
+        self.plotter.properties.from_dict(dict_)
+        self.plotter.plot(dataset=self.dataset2d)
+        self.assertEqual(
+            self.plotter.properties.drawing[0].facecolor,
+            matplotlib.colors.to_hex(
+                self.plotter.drawing[0].get_children()[0].get_facecolor()
+            ),
+        )
+        self.assertEqual(
+            self.plotter.properties.drawing[0].facecolor,
+            matplotlib.colors.to_hex(
+                self.plotter.drawing[1].get_children()[0].get_facecolor()
+            ),
+        )
+
+    def test_plot_applies_drawing_labels(self):
+        dict_ = {"drawings": [{"label": "foo"}, {"label": "bar"}]}
+        self.plotter.properties.from_dict(dict_)
+        self.plotter.parameters["show_legend"] = True
+        self.plotter.plot(dataset=self.dataset2d)
+        self.assertListEqual(
+            ["foo", "bar"],
+            [item.get_text() for item in self.plotter.legend.get_texts()],
         )
 
 

@@ -5010,10 +5010,6 @@ class BarPlotProperties(MultiPlot1DProperties):
         """
         Add a :obj:`aspecd.plotting.PatchProperties` object to the list.
 
-        The default properties are set as well, as obtained from
-        :obj:`matplotlib.pyplot.rcParams`. These contain at least colour,
-        width, marker, and style of a line.
-
         .. note::
 
             If you provide a key "drawing" (singular!) in the dictionary with
@@ -5027,13 +5023,17 @@ class BarPlotProperties(MultiPlot1DProperties):
             drawing_properties = self.drawings[-1]
         else:
             drawing_properties = PatchProperties()
-            # self._set_default_properties(drawing_properties)
         self.drawings.append(drawing_properties)
 
     def _apply_drawings_properties(self, plotter=None):
         if hasattr(plotter, "drawings"):
             for idx, drawing in enumerate(plotter.drawings):
-                self.drawings[idx].apply(drawing=drawing)
+                if self.drawings[idx].label:
+                    drawing.set_label(self.drawings[idx].label)
+                for bar in drawing.get_children():
+                    drawing_properties = copy.copy(self.drawings[idx])
+                    drawing_properties.label = ""
+                    drawing_properties.apply(drawing=bar)
 
 
 class CompositePlotProperties(PlotProperties):
