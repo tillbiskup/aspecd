@@ -2945,6 +2945,31 @@ class SingleBarPlotter(SinglePlotter):
         self.drawing = []
         self.properties = BarPlotProperties()
 
+    @property
+    def drawings(self):
+        """
+        Actual graphical representation of the data.
+
+        List of :obj:`matplotlib.container.BarContainer` objects, one for
+        each column of the dataset. The actual
+        :obj:`matplotlib.artist.Artist` objects are the children of the
+        :obj:`matplotlib.container.BarContainer` objects.
+
+        This is identical to :attr:`drawing` and has been added to work
+        conveniently with :class:`BarPlotProperties`.
+
+        Returns
+        -------
+        drawings : :class:`list`
+            Actual graphical representation of the data.
+
+        """
+        return self.drawing
+
+    @drawings.setter
+    def drawings(self, drawings=None):
+        self.drawing = drawings
+
     @staticmethod
     def applicable(data):
         """Check whether plot is applicable to the given dataset.
@@ -2970,6 +2995,9 @@ class SingleBarPlotter(SinglePlotter):
                 position, self.dataset.data.data, width=width, label=labels[0]
             )
             self.drawing.append(drawing)
+            self._set_drawing_properties()
+            if labels[0]:
+                self.properties.drawing[0].label = labels[0]
         else:
             position = np.arange(len(self.dataset.data.data[:, 1]))
             columns = self.dataset.data.data.shape[1]
@@ -2985,6 +3013,9 @@ class SingleBarPlotter(SinglePlotter):
                 )
                 multiplier += 1
                 self.drawing.append(drawing)
+                self._set_drawing_properties()
+                if labels[column]:
+                    self.properties.drawing[column].label = labels[column]
         self.axes.set_xticks(position, self.dataset.data.axes[0].data)
 
     def _get_labels(self):
@@ -3009,6 +3040,11 @@ class SingleBarPlotter(SinglePlotter):
         ylabel = self._create_axis_label_string(self.data.axes[-1])
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel(ylabel)
+
+    def _set_drawing_properties(self):
+        if len(self.properties.drawings) < len(self.drawing):
+            for _ in range(len(self.properties.drawings), len(self.drawing)):
+                self.properties.add_drawing()
 
 
 class MultiPlotter(Plotter):
@@ -4723,8 +4759,15 @@ class MultiPlotProperties(PlotProperties):
         super().apply(plotter=plotter)
         self.axes.apply(axes=plotter.axes)
         self.grid.apply(axes=plotter.axes)
+        self._apply_legend_properties(plotter=plotter)
+        self._apply_legend_properties(plotter)
+        self._apply_drawings_properties(plotter)
+
+    def _apply_legend_properties(self, plotter=None):
         if hasattr(plotter, "legend") and plotter.legend:
             self.legend.apply(legend=plotter.legend)
+
+    def _apply_drawings_properties(self, plotter=None):
         if hasattr(plotter, "drawings"):
             for idx, drawing in enumerate(plotter.drawings):
                 self.drawings[idx].apply(drawing=drawing)
@@ -4962,6 +5005,35 @@ class BarPlotProperties(MultiPlot1DProperties):
 
         """
         return self.drawings
+
+    def add_drawing(self):
+        """
+        Add a :obj:`aspecd.plotting.PatchProperties` object to the list.
+
+        The default properties are set as well, as obtained from
+        :obj:`matplotlib.pyplot.rcParams`. These contain at least colour,
+        width, marker, and style of a line.
+
+        .. note::
+
+            If you provide a key "drawing" (singular!) in the dictionary with
+            the properties, instead of setting default properties the
+            properties of this dict will be set to *all* drawings.
+            Thus, you can conveniently set identical settings for all patches.
+
+
+        """
+        if self._drawing and self.drawings:
+            drawing_properties = self.drawings[-1]
+        else:
+            drawing_properties = PatchProperties()
+            # self._set_default_properties(drawing_properties)
+        self.drawings.append(drawing_properties)
+
+    def _apply_drawings_properties(self, plotter=None):
+        if hasattr(plotter, "drawings"):
+            for idx, drawing in enumerate(plotter.drawings):
+                self.drawings[idx].apply(drawing=drawing)
 
 
 class CompositePlotProperties(PlotProperties):

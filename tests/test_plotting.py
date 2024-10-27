@@ -1635,6 +1635,10 @@ class TestSingleBarPlotter(unittest.TestCase):
         self.plotter.plot(dataset=self.dataset2d)
         self.assertEqual(2, len(self.plotter.drawing))
 
+    def test_plot_with_2D_dataset_sets_drawing_properties(self):
+        self.plotter.plot(dataset=self.dataset2d)
+        self.assertEqual(2, len(self.plotter.properties.drawings))
+
     def test_plot_with_2D_dataset_separates_bars(self):
         self.plotter.plot(dataset=self.dataset2d)
         self.assertNotEqual(
@@ -4092,6 +4096,13 @@ class TestBarPlotProperties(unittest.TestCase):
 
     def test_instantiate_class(self):
         pass
+
+    def test_added_drawing_is_patch_properties_object(self):
+        self.plot_properties.add_drawing()
+        self.assertIs(
+            type(self.plot_properties.drawings[0]),
+            aspecd.plotting.PatchProperties,
+        )
 
 
 class TestCompositePlotProperties(unittest.TestCase):
