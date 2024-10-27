@@ -626,6 +626,9 @@ class TestSinglePlotter2D(unittest.TestCase):
     def setUp(self):
         self.plotter = plotting.SinglePlotter2D()
 
+    def tearDown(self):
+        plt.close(self.plotter.figure)
+
     def test_instantiate_class(self):
         pass
 
@@ -1012,6 +1015,7 @@ class TestSinglePlotter2DStacked(unittest.TestCase):
     def tearDown(self):
         if os.path.exists(self.filename):
             os.remove(self.filename)
+        plt.close(self.plotter.figure)
 
     def test_instantiate_class(self):
         pass
@@ -1342,6 +1346,7 @@ class TestMultiDeviceDataPlotter1D(unittest.TestCase):
     def tearDown(self):
         if os.path.exists(self.filename):
             os.remove(self.filename)
+        plt.close(self.plotter.figure)
 
     def create_dataset(self, devices=("device1", "device2")):
         self.dataset = aspecd.dataset.CalculatedDataset()
