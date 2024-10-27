@@ -1591,6 +1591,9 @@ class TestSingleBarPlotter(unittest.TestCase):
         self.dataset2d.data.axes[2].quantity = "intensity"
         self.dataset2d.data.axes[2].unit = "V"
 
+    def tearDown(self):
+        plt.close(self.plotter.figure)
+
     def test_instantiate_class(self):
         pass
 
@@ -1617,7 +1620,6 @@ class TestSingleBarPlotter(unittest.TestCase):
     def test_width_parameter(self):
         self.plotter.parameters["width"] = 0.5
         self.plotter.plot(dataset=self.dataset)
-        plt.show()
         self.assertEqual(
             self.plotter.parameters["width"],
             self.plotter.drawing[0].get_children()[0].get_width(),
@@ -1652,10 +1654,25 @@ class TestSingleBarPlotter(unittest.TestCase):
         self.plotter.parameters["labels"] = ["first", "second"]
         self.plotter.parameters["show_legend"] = True
         self.plotter.plot(dataset=self.dataset2d)
-        # plt.show()
         self.assertListEqual(
             self.plotter.parameters["labels"],
             [item.get_text() for item in self.plotter.legend.get_texts()],
+        )
+
+    def test_plot_with_1d_dataset_sets_correct_y_label(self):
+        self.plotter.plot(dataset=self.dataset)
+        self.assertEqual(
+            f"${self.dataset.data.axes[1].quantity}$ / "
+            f"{self.dataset.data.axes[1].unit}",
+            self.plotter.ax.get_ylabel(),
+        )
+
+    def test_plot_with_2d_dataset_sets_correct_y_label(self):
+        self.plotter.plot(dataset=self.dataset2d)
+        self.assertEqual(
+            f"${self.dataset2d.data.axes[2].quantity}$ / "
+            f"{self.dataset2d.data.axes[2].unit}",
+            self.plotter.ax.get_ylabel(),
         )
 
 
@@ -4064,6 +4081,14 @@ class TestMultiPlot1DProperties(unittest.TestCase):
 class TestSinglePlot2DStackedProperties(unittest.TestCase):
     def setUp(self):
         self.plot_properties = plotting.SinglePlot2DStackedProperties()
+
+    def test_instantiate_class(self):
+        pass
+
+
+class TestBarPlotProperties(unittest.TestCase):
+    def setUp(self):
+        self.plot_properties = plotting.BarPlotProperties()
 
     def test_instantiate_class(self):
         pass

@@ -2860,6 +2860,12 @@ class SingleBarPlotter(SinglePlotter):
         :obj:`matplotlib.artist.Artist` objects are the children of the
         :obj:`matplotlib.container.BarContainer` objects.
 
+    properties : :class:`aspecd.plotting.BarPlotProperties`
+        Properties of the plot, defining its appearance
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.BarPlotProperties` class.
+
     parameters : :class:`dict`
         All parameters necessary for the plot, implicit and explicit
 
@@ -2890,6 +2896,16 @@ class SingleBarPlotter(SinglePlotter):
             is technically possible, this would lead to overlapping bars.
 
             Default: 0.8
+
+        labels : :class:`list`
+            Labels used for the individual columns of the dataset.
+
+            In case of a 2D dataset, each column is treated similarly to an
+            individual dataset, hence a label for the legend seems sensible.
+            If the dataset does not provide the necessary information,
+            you can set the label here.
+
+            Default: []
 
     Raises
     ------
@@ -2924,13 +2940,10 @@ class SingleBarPlotter(SinglePlotter):
         super().__init__()
         self.description = "Bar plot for single dataset"
         self.parameters.update(
-            {
-                "show_zero_lines": False,
-                "width": 0.8,
-            }
+            {"show_zero_lines": False, "width": 0.8, "labels": []}
         )
         self.drawing = []
-        self.properties = SinglePlot2DStackedProperties()
+        self.properties = BarPlotProperties()
 
     @staticmethod
     def applicable(data):
@@ -2976,9 +2989,26 @@ class SingleBarPlotter(SinglePlotter):
 
     def _get_labels(self):
         labels = self.parameters["labels"]
-        while len(labels) < self.dataset.data.data.shape[1]:
-            labels.append("")
+        if self.dataset.data.data.ndim > 1:
+            while len(labels) < self.dataset.data.data.shape[1]:
+                labels.append("")
+        elif not labels:
+            labels = [""]
         return labels
+
+    def _set_axes_labels(self):
+        """Set axes labels from axes in dataset.
+
+        This method is called automatically by :meth:`plot`.
+
+        The special aspect with the SingleBarPlotter: Use the *last* axis
+        for the *y* axis labels, as in all cases (1D and 2D datasets), we need
+        the last axis.
+        """
+        xlabel = self._create_axis_label_string(self.data.axes[0])
+        ylabel = self._create_axis_label_string(self.data.axes[-1])
+        self.axes.set_xlabel(xlabel)
+        self.axes.set_ylabel(ylabel)
 
 
 class MultiPlotter(Plotter):
@@ -4877,6 +4907,58 @@ class SinglePlot2DStackedProperties(MultiPlot1DProperties):
 
 
         .. versionadded:: 0.10
+
+        """
+        return self.drawings
+
+
+class BarPlotProperties(MultiPlot1DProperties):
+    """
+    Properties of a bar plot, defining its appearance.
+
+    drawings : :class:`list`
+        Properties of the bars within a plot.
+
+        Each element is a :obj:`aspecd.plotting.PatchProperties` object
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.PatchProperties` class.
+
+    colormap : :class:`str`
+        Name of the colormap to use for colouring the individual drawings
+
+        For a full list of colormaps available with Matplotlib, see
+        https://matplotlib.org/stable/gallery/color/colormap_reference.html.
+
+        Note that appending ``_r`` to the name of a colormap will reverse it.
+
+    Raises
+    ------
+    aspecd.exceptions.MissingPlotterError
+        Raised if no plotter is provided.
+
+
+    .. versionadded:: 0.12
+
+    """
+
+    @property
+    def drawing(self):
+        """
+        Properties of the bars within a plot.
+
+        Each element is a :obj:`aspecd.plotting.PatchProperties` object
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.PatchProperties` class.
+
+        This is identical to :attr:`drawings` and has been added to work
+        conveniently with :class:`SingleBarPlotter`.
+
+        Returns
+        -------
+        drawing : :class:`list`
+            Properties of the bars within a plot.
 
         """
         return self.drawings
