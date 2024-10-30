@@ -448,6 +448,20 @@ respective dataset source, ``{{ path(id) }}`` will be replaced by the path
 of the respective dataset source, and  ``{{ id(id) }}`` will be replaced by
 the id itself.
 
+Furthermore, there is a list of functions that look similar to the above
+variables, but perform actual operations:
+
+.. code-block:: yaml
+
+    key1: {{ add(result, 2) }}
+    key2: {{ add(result, -3.14) }}
+    key3: {{ multiply(result, 2) }}
+    key4: {{ multiply(result, 0.25) }}
+
+Here, ``result`` is an internal reference, typically a result of some other
+step, where you can perform either addition or multiplication on. Note that
+lists cannot be operated on, but numpy arrays and datasets.
+
 Note: The spaces within the double curly brackets are only for better
 readability, they can be omitted, although this is not recommended.
 
@@ -478,6 +492,31 @@ Here, you can see that all you would need to do is to replace the ``source``
 with the actual path to your dataset. This will automatically perform the
 tasks of the recipe on the given dataset, storing the plot to a
 file named ``my_dataset.pdf``.
+
+
+Applying functions to labels
+----------------------------
+
+.. versionadded:: 0.12
+
+Furthermore, there is a list of functions that look similar to the above
+variable replacements, but perform actual operations on the labels:
+
+.. code-block:: yaml
+
+    key1: {{ add(result, 2) }}
+    key2: {{ add(result, -3.14) }}
+    key3: {{ multiply(result, 2) }}
+    key4: {{ multiply(result, 0.25) }}
+
+Here, ``result`` is an internal reference, typically a result of some other
+step, where you can perform either addition or multiplication on. Note that
+lists cannot be operated on, but numpy arrays and datasets.
+
+Note: The spaces within the double curly brackets are only for better
+readability, they can be omitted, although this is not recommended.
+
+Why is this interesting? TBD
 
 
 Settings for recipes
@@ -2241,7 +2280,7 @@ class Task(aspecd.utils.ToDictMixin):
         """
         Replace labels for datasets, results, figures, plotters in properties.
 
-        Additionally to labels, variables will be parsed and replaced.
+        In addition to labels, variables will be parsed and replaced.
         Currently, the following types of variables are understood:
 
         .. code-block:: yaml
@@ -2255,6 +2294,22 @@ class Task(aspecd.utils.ToDictMixin):
         the respective dataset source, ``{{ path(id) }}`` will be replaced
         by the path of the respective dataset source, and  ``{{ id(id) }}``
         will be replaced by the id itself.
+
+        Furthermore, there is a list of functions that look similar to the
+        above variables, but perform actual operations:
+
+        .. code-block:: yaml
+
+            key1: {{ add(result, 2) }}
+            key2: {{ add(result, -3.14) }}
+            key3: {{ multiply(result, 2) }}
+            key4: {{ multiply(result, 0.25) }}
+
+        Here, ``result`` is an internal reference, typically a result of
+        some other step, where you can perform either addition or
+        multiplication on. Note that lists cannot be operated on, but numpy
+        arrays and datasets.
+
 
         Returns
         -------
@@ -2283,6 +2338,19 @@ class Task(aspecd.utils.ToDictMixin):
             properties = self.properties
         return properties
 
+    def _replace_label_with_object(self, label=""):
+        replacement = label
+        containers = [
+            self.recipe.datasets,
+            self.recipe.results,
+            self.recipe.figures,
+            self.recipe.plotters,
+        ]
+        for container in containers:
+            if label in container:
+                replacement = container[label]
+        return replacement
+
     def _replace_variables_in_properties(self, properties):
         pattern = r"{{([^}]*)}}"
         for key, value in properties.items():
@@ -2292,15 +2360,18 @@ class Task(aspecd.utils.ToDictMixin):
                 matches = re.findall(pattern, value)
                 for match in matches:
                     match_pattern = "{{" + match + "}}"
-                    value = value.replace(
-                        match_pattern, self._parse_variable(match.strip())
-                    )
+                    try:
+                        value = value.replace(
+                            match_pattern, self._parse_variable(match.strip())
+                        )
+                    except TypeError:
+                        value = self._parse_variable(match.strip())
                 properties[key] = value
         return properties
 
     def _parse_variable(self, variable):
         replacement = ""
-        function, argument = re.findall(r"(\w*)\((\w*)\)", variable)[0]
+        function, argument = re.findall(r"(\w*)\(([\w,-.\s]*)\)", variable)[0]
         if function == "id":
             replacement = argument
         elif function == "basename":
@@ -2313,6 +2384,17 @@ class Task(aspecd.utils.ToDictMixin):
                 replacement = aspecd.utils.path(
                     self.recipe.datasets[argument].id
                 )
+        elif function in ["add", "multiply"]:
+            items = []
+            for item in argument.split(","):
+                item = self._replace_label_with_object(item.strip())
+                if isinstance(item, str):
+                    item = float(item)
+                items.append(item)
+            if function == "add":
+                replacement = items[0] + items[1]
+            if function == "multiply":
+                replacement = items[0] * items[1]
         return replacement
 
 

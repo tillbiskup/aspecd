@@ -1250,7 +1250,7 @@ class TestTask(unittest.TestCase):
         processing_step = processing.SingleProcessingStep()
         processing_step.parameters = {"foo": "", "bar": ""}
         metadata = {
-            "parameters": {"foo": "{{ path(bar) }}{{ basename(" "bar)}}.pdf"}
+            "parameters": {"foo": "{{ path(bar) }}{{ basename(bar)}}.pdf"}
         }
         self.task.properties = metadata
         self.task.recipe = tasks.Recipe()
@@ -1260,6 +1260,134 @@ class TestTask(unittest.TestCase):
         self.task._set_object_attributes(processing_step)
         self.assertEqual(
             "/foo/bar/bla.pdf", processing_step.parameters["foo"]
+        )
+
+    def test_set_object_attributes_adds_values(self):
+        processing_step = processing.SingleProcessingStep()
+        processing_step.parameters = {"foo": "", "bar": ""}
+        metadata = {"parameters": {"foo": "{{ add(bar, 2) }}"}}
+        self.task.properties = metadata
+        self.task.recipe = tasks.Recipe()
+        self.task.recipe.results["bar"] = 2
+        dataset_ = dataset.Dataset()
+        dataset_.id = "/foo/bar/bla.blub"
+        self.task.recipe.datasets["baz"] = dataset_
+        self.task._set_object_attributes(processing_step)
+        self.assertEqual(4, processing_step.parameters["foo"])
+
+    def test_set_object_attributes_subtracts_values(self):
+        processing_step = processing.SingleProcessingStep()
+        processing_step.parameters = {"foo": "", "bar": ""}
+        metadata = {"parameters": {"foo": "{{ add(bar, -4) }}"}}
+        self.task.properties = metadata
+        self.task.recipe = tasks.Recipe()
+        self.task.recipe.results["bar"] = 2
+        dataset_ = dataset.Dataset()
+        dataset_.id = "/foo/bar/bla.blub"
+        self.task.recipe.datasets["baz"] = dataset_
+        self.task._set_object_attributes(processing_step)
+        self.assertEqual(-2, processing_step.parameters["foo"])
+
+    def test_set_object_attributes_adds_float_values(self):
+        processing_step = processing.SingleProcessingStep()
+        processing_step.parameters = {"foo": 0, "bar": ""}
+        metadata = {"parameters": {"foo": "{{ add(bar, 3.14) }}"}}
+        self.task.properties = metadata
+        self.task.recipe = tasks.Recipe()
+        self.task.recipe.results["bar"] = 2
+        dataset_ = dataset.Dataset()
+        dataset_.id = "/foo/bar/bla.blub"
+        self.task.recipe.datasets["baz"] = dataset_
+        self.task._set_object_attributes(processing_step)
+        self.assertAlmostEqual(5.14, processing_step.parameters["foo"])
+
+    def test_set_object_attributes_adds_to_array(self):
+        processing_step = processing.SingleProcessingStep()
+        processing_step.parameters = {"foo": "", "bar": ""}
+        metadata = {"parameters": {"foo": "{{ add(bar, 2) }}"}}
+        self.task.properties = metadata
+        self.task.recipe = tasks.Recipe()
+        self.task.recipe.results["bar"] = np.asarray([1, 2, 3])
+        dataset_ = dataset.Dataset()
+        dataset_.id = "/foo/bar/bla.blub"
+        self.task.recipe.datasets["baz"] = dataset_
+        self.task._set_object_attributes(processing_step)
+        np.testing.assert_array_equal(
+            np.asarray([3, 4, 5]), processing_step.parameters["foo"]
+        )
+
+    def test_set_object_attributes_adds_to_dataset(self):
+        processing_step = processing.SingleProcessingStep()
+        processing_step.parameters = {"foo": "", "bar": ""}
+        metadata = {"parameters": {"foo": "{{ add(bar, 2) }}"}}
+        self.task.properties = metadata
+        self.task.recipe = tasks.Recipe()
+        result = dataset.Dataset()
+        result.data.data = np.random.random(5)
+        self.task.recipe.results["bar"] = result
+        dataset_ = dataset.Dataset()
+        dataset_.id = "/foo/bar/bla.blub"
+        self.task.recipe.datasets["baz"] = dataset_
+        self.task._set_object_attributes(processing_step)
+        np.testing.assert_array_equal(
+            result.data.data + 2, processing_step.parameters["foo"].data.data
+        )
+
+    def test_set_object_attributes_adds_with_label_as_second_argument(self):
+        processing_step = processing.SingleProcessingStep()
+        processing_step.parameters = {"foo": "", "bar": ""}
+        metadata = {"parameters": {"foo": "{{ add(2, bar) }}"}}
+        self.task.properties = metadata
+        self.task.recipe = tasks.Recipe()
+        self.task.recipe.results["bar"] = np.asarray([1, 2, 3])
+        dataset_ = dataset.Dataset()
+        dataset_.id = "/foo/bar/bla.blub"
+        self.task.recipe.datasets["baz"] = dataset_
+        self.task._set_object_attributes(processing_step)
+        np.testing.assert_array_equal(
+            np.asarray([3, 4, 5]), processing_step.parameters["foo"]
+        )
+
+    def test_set_object_attributes_multiplies_values(self):
+        processing_step = processing.SingleProcessingStep()
+        processing_step.parameters = {"foo": "", "bar": ""}
+        metadata = {"parameters": {"foo": "{{ multiply(bar, 3) }}"}}
+        self.task.properties = metadata
+        self.task.recipe = tasks.Recipe()
+        self.task.recipe.results["bar"] = 2
+        dataset_ = dataset.Dataset()
+        dataset_.id = "/foo/bar/bla.blub"
+        self.task.recipe.datasets["baz"] = dataset_
+        self.task._set_object_attributes(processing_step)
+        self.assertEqual(2 * 3, processing_step.parameters["foo"])
+
+    def test_set_object_attributes_multiplies_float_values(self):
+        processing_step = processing.SingleProcessingStep()
+        processing_step.parameters = {"foo": 0, "bar": ""}
+        metadata = {"parameters": {"foo": "{{ multiply(bar, 3.14) }}"}}
+        self.task.properties = metadata
+        self.task.recipe = tasks.Recipe()
+        self.task.recipe.results["bar"] = 2
+        dataset_ = dataset.Dataset()
+        dataset_.id = "/foo/bar/bla.blub"
+        self.task.recipe.datasets["baz"] = dataset_
+        self.task._set_object_attributes(processing_step)
+        self.assertAlmostEqual(2 * 3.14, processing_step.parameters["foo"])
+
+    def test_set_object_attributes_multiplies_array(self):
+        processing_step = processing.SingleProcessingStep()
+        processing_step.parameters = {"foo": "", "bar": ""}
+        metadata = {"parameters": {"foo": "{{ multiply(bar, 2) }}"}}
+        self.task.properties = metadata
+        self.task.recipe = tasks.Recipe()
+        self.task.recipe.results["bar"] = np.asarray([1, 2, 3])
+        dataset_ = dataset.Dataset()
+        dataset_.id = "/foo/bar/bla.blub"
+        self.task.recipe.datasets["baz"] = dataset_
+        self.task._set_object_attributes(processing_step)
+        np.testing.assert_array_equal(
+            self.task.recipe.results["bar"] * 2,
+            processing_step.parameters["foo"],
         )
 
     def test_set_object_attributes_replaces_plotter_from_recipe(self):
