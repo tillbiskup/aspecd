@@ -438,9 +438,9 @@ replaced. Currently, the following types of variables are understood:
 
 .. code-block:: yaml
 
-    key1: {{ basename(id) }}
-    key2: {{ path(id) }}
-    key3: {{ id(id) }}
+    key1: "{{ basename(id) }}"
+    key2: "{{ path(id) }}"
+    key3: "{{ id(id) }}"
 
 Here, ``id`` is the id used internally for referring to a dataset,
 ``{{ basename(id) }}`` will be replaced with the file basename of the
@@ -448,22 +448,11 @@ respective dataset source, ``{{ path(id) }}`` will be replaced by the path
 of the respective dataset source, and  ``{{ id(id) }}`` will be replaced by
 the id itself.
 
-Furthermore, there is a list of functions that look similar to the above
-variables, but perform actual operations:
+.. note::
 
-.. code-block:: yaml
-
-    key1: {{ add(result, 2) }}
-    key2: {{ add(result, -3.14) }}
-    key3: {{ multiply(result, 2) }}
-    key4: {{ multiply(result, 0.25) }}
-
-Here, ``result`` is an internal reference, typically a result of some other
-step, where you can perform either addition or multiplication on. Note that
-lists cannot be operated on, but numpy arrays and datasets.
-
-Note: The spaces within the double curly brackets are only for better
-readability, they can be omitted, although this is not recommended.
+    The spaces within the double curly brackets are only for better
+    readability, they can be omitted, although this is not recommended.
+    Surrounding with quotation marks may be relevant to have valid YAML.
 
 Why is this interesting? Suppose you would like to create a rather generic
 recipe always performing the same tasks, but for different datasets. A
@@ -504,17 +493,20 @@ variable replacements, but perform actual operations on the labels:
 
 .. code-block:: yaml
 
-    key1: {{ add(result, 2) }}
-    key2: {{ add(result, -3.14) }}
-    key3: {{ multiply(result, 2) }}
-    key4: {{ multiply(result, 0.25) }}
+    key1: "{{ add(result, 2) }}"
+    key2: "{{ add(result, -3.14) }}"
+    key3: "{{ multiply(result, 2) }}"
+    key4: "{{ multiply(result, 0.25) }}"
 
 Here, ``result`` is an internal reference, typically a result of some other
 step, where you can perform either addition or multiplication on. Note that
-lists cannot be operated on, but numpy arrays and datasets.
+lists cannot be operated on, but scalars, NumPy arrays and datasets.
 
-Note: The spaces within the double curly brackets are only for better
-readability, they can be omitted, although this is not recommended.
+.. note::
+
+    The spaces within the double curly brackets are only for better
+    readability, they can be omitted, although this is not recommended.
+    Surrounding with quotation marks may be relevant to have valid YAML.
 
 Why is this interesting? TBD
 
