@@ -1736,6 +1736,8 @@ class SliceRemoval(SingleProcessingStep):
         return len(dataset.data.axes) >= 3
 
     def _sanitise_parameters(self):
+        if isinstance(self.parameters["position"], int):
+            self.parameters["position"] = [self.parameters["position"]]
         if (
             not self.parameters["position"]
             and self.parameters["position"] != 0
@@ -1758,12 +1760,12 @@ class SliceRemoval(SingleProcessingStep):
         axis = self.parameters["axis"]
         if self.parameters["unit"] == "index":
             axis_length = self.dataset.data.data.shape[axis]
-            if abs(position) > axis_length:
+            if any(abs(x) > axis_length for x in position):
                 out_of_range = True
         else:
-            if position < min(
-                self.dataset.data.axes[axis].values
-            ) or position > max(self.dataset.data.axes[axis].values):
+            min_value = min(self.dataset.data.axes[axis].values)
+            max_value = max(self.dataset.data.axes[axis].values)
+            if any(x < min_value or x > max_value for x in position):
                 out_of_range = True
         return out_of_range
 
@@ -1782,7 +1784,10 @@ class SliceRemoval(SingleProcessingStep):
 
     @staticmethod
     def _get_index(vector, value):
-        return np.abs(vector - value).argmin()
+        index = []
+        for _index in value:
+            index.append(np.abs(vector - _index).argmin())
+        return index
 
 
 class RangeExtraction(SingleProcessingStep):

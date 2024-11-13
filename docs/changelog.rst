@@ -23,6 +23,7 @@ Fixes
 -----
 
 * Plotter with colorbar work with recipes (no longer recursion in ``to_dict()``)
+* :class:`aspecd.processing.SliceRemoval` handles lists properly
 
 
 Version 0.11.0

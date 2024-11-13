@@ -1120,6 +1120,26 @@ class TestSliceRemoval(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.dataset.process(self.processing)
 
+    def test_list_of_slices_is_accepted(self):
+        self.processing.parameters["position"] = [1, 3]
+        self.dataset.process(self.processing)
+
+    def test_list_of_axis_values_is_accepted(self):
+        self.processing.parameters["unit"] = "axis"
+        self.processing.parameters["position"] = [1, 3]
+        self.dataset.process(self.processing)
+
+    def test_remove_multiple_slices(self):
+        self.processing.parameters["unit"] = "axis"
+        self.dataset.data.axes[0].values = np.linspace(
+            30, 70, len(self.dataset.data.axes[0].values)
+        )
+        self.processing.parameters["position"] = [31, 65]
+        self.processing.parameters["axis"] = 1
+        # data = np.delete(self.dataset.data.data, 1, 0)
+        self.dataset.process(self.processing)
+        self.assertEqual(self.dataset.data.data.shape[1], 498)
+
 
 class TestRangeExtraction(unittest.TestCase):
     def setUp(self):
