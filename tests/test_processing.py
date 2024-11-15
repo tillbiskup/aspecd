@@ -2916,3 +2916,148 @@ class TestRelativeAxis(unittest.TestCase):
     def test_delta_added_to_axis_quantity(self):
         self.dataset.process(self.processing)
         self.assertTrue(self.dataset.data.axes[0].quantity.startswith("Δ"))
+
+
+class TestSliceRearrangement(unittest.TestCase):
+    def setUp(self):
+        self.processing = aspecd.processing.SliceRearrangement()
+        self.dataset = aspecd.dataset.Dataset()
+        data = np.sin(np.linspace(0, 2 * np.pi, num=500))
+        self.dataset.data.data = (
+            np.tile(data, (5, 1))
+            * np.tile(np.linspace(1, 2, num=5), (500, 1)).T
+        ).T
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn(
+            "rearrange slices",
+            self.processing.description.lower(),
+        )
+
+    def test_is_undoable(self):
+        self.assertTrue(self.processing.undoable)
+
+    def test_with_1D_dataset_raises(self):
+        dataset = aspecd.dataset.Dataset()
+        dataset.data.data = np.sin(np.linspace(0, 2 * np.pi, num=500))
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            dataset.process(self.processing)
+
+    def test_without_position_raises(self):
+        with self.assertRaisesRegex(IndexError, "for slice rearrangement"):
+            self.dataset.process(self.processing)
+
+    def test_with_index_exceeding_dimension_raises(self):
+        self.processing.parameters["positions"] = [10]
+        self.processing.parameters["axis"] = 1
+        with self.assertRaisesRegex(
+            ValueError, r"Position\(s\) out of axis range."
+        ):
+            self.dataset.process(self.processing)
+
+    def test_rearrange_slices(self):
+        self.dataset.data.data = self.dataset.data.data.T
+        origdata = self.dataset.data.data
+        self.processing.parameters["positions"] = [2, 0, 1, 3, 4]
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(
+            origdata[self.processing.parameters["positions"], :],
+            self.dataset.data.data,
+        )
+
+    def test_rearrange_slices_along_second_axis(self):
+        origdata = self.dataset.data.data
+        self.processing.parameters["positions"] = [2, 0, 1, 3, 4]
+        self.processing.parameters["axis"] = 1
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(
+            origdata[:, self.processing.parameters["positions"]],
+            self.dataset.data.data,
+        )
+
+    def test_rearrange_slices_along_non_existing_axis_raises(self):
+        with self.assertRaisesRegex(IndexError, "Axis [0-9]+ out of bounds"):
+            self.processing.parameters["positions"] = 3
+            self.processing.parameters["axis"] = 2
+            self.dataset.process(self.processing)
+
+    def test_rearrange_slices_with_wrong_unit_raises(self):
+        self.processing.parameters["unit"] = "foo"
+        self.processing.parameters["positions"] = 3
+        with self.assertRaises(ValueError):
+            self.dataset.process(self.processing)
+
+    def test_rearrange_slices_with_axis_units(self):
+        origdata = self.dataset.data.data
+        self.processing.parameters["unit"] = "axis"
+        self.processing.parameters["axis"] = 1
+        self.dataset.data.axes[1].values = np.linspace(
+            30, 70, len(self.dataset.data.axes[1].values)
+        )
+        self.processing.parameters["positions"] = [40, 30, 70, 50, 60]
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(
+            origdata[:, [1, 0, 4, 2, 3]],
+            self.dataset.data.data,
+        )
+
+    def test_unit_is_case_insensitive(self):
+        origdata = self.dataset.data.data
+        self.processing.parameters["unit"] = "aXis"
+        self.processing.parameters["axis"] = 1
+        self.dataset.data.axes[1].values = np.linspace(
+            30, 70, len(self.dataset.data.axes[1].values)
+        )
+        self.processing.parameters["positions"] = [40, 30, 70, 50, 60]
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(
+            origdata[:, [1, 0, 4, 2, 3]],
+            self.dataset.data.data,
+        )
+
+    def test_rearrange_slices_with_axis_units_out_of_range_raises(self):
+        self.processing.parameters["unit"] = "axis"
+        self.dataset.data.axes[0].values = np.linspace(
+            30, 70, len(self.dataset.data.axes[0].values)
+        )
+        self.processing.parameters["positions"] = [300]
+        with self.assertRaisesRegex(
+            ValueError, r"Position\(s\) out of axis range."
+        ):
+            self.dataset.process(self.processing)
+
+    def test_rearrange_slices_fills_with_remaining_slices(self):
+        self.dataset.data.data = self.dataset.data.data.T
+        origdata = self.dataset.data.data
+        self.processing.parameters["positions"] = [2, 0]
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(
+            origdata[[2, 0, 1, 3, 4], :],
+            self.dataset.data.data,
+        )
+
+    def test_rearrange_slices_rearranges_axis_as_well(self):
+        self.processing.parameters["axis"] = 1
+        self.dataset.data.axes[1].values = np.linspace(
+            30, 70, len(self.dataset.data.axes[1].values)
+        )
+        original_axis = self.dataset.data.axes[1].values
+        self.processing.parameters["positions"] = [1, 0, 4, 2, 3]
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(
+            original_axis[[1, 0, 4, 2, 3]],
+            self.dataset.data.axes[1].values,
+        )
+
+    def test_rearrange_slices_with_double_positions_fills_slices(self):
+        self.dataset.data.data = self.dataset.data.data.T
+        original_data = self.dataset.data.data
+        self.processing.parameters["positions"] = [2, 0, 0]
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(
+            original_data[[2, 0, 0, 1, 3, 4], :],
+            self.dataset.data.data,
+        )

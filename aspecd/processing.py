@@ -117,6 +117,10 @@ independently.
 
   Remove slice along one or more dimensions from dataset.
 
+* :class:`aspecd.processing.SliceRearrangement`
+
+  Rearrange slices of a dataset along one dimension.
+
 * :class:`aspecd.processing.RangeExtraction`
 
   Extract range of data from a dataset.
@@ -3768,3 +3772,246 @@ class RelativeAxis(SingleProcessingStep):
         if value < min(range_) or value > max(range_):
             return False
         return True
+
+
+class SliceRearrangement(SingleProcessingStep):
+    """
+    Rearrange slices of a dataset along one dimension.
+
+    With multidimensional datasets, there is sometimes the need to rearrange
+    the slices. Suppose you have a dataset containing original data,
+    individual fitted components and the sum of the fitted components.
+    Tasks operating on such dataset typically expect the individual slices
+    in a certain sequence. If, however, the datasets originate from an
+    external source that has a different sorting, you can use this step to
+    rearrange the slices accordingly.
+
+    You can either provide indices or axis values for ``positions``. For the
+    latter, set the parameter "unit" accordingly. For details, see below.
+
+    If you provide less positions than slices along this dimension exist,
+    the remaining slices not covered in the "positions" parameter are
+    appended to the positions list.
+
+    If you provide the same position for a slice several times, the slice
+    will be repeatedly inserted into the dataset, resulting in a larger
+    dataset along the given axis dimension than before.
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        axis :
+            Index of the axis or list of indices of the axes to take the
+            position from to rearrange the slices
+
+            If an invalid axis is provided, an IndexError is raised.
+
+            Default: 0
+
+        positions :
+            Positions and intended order of the slices to rearrange
+
+            Positions can be given as axis indices (default) or axis values,
+            if the parameter "unit" is set accordingly. For details, see below.
+
+            If no position is provided or the given position is out of
+            bounds for the given axis, a ValueError is raised.
+
+        unit : :class:`str`
+            Unit used for specifying the positions: either "axis" or "index".
+
+            If an invalid value is provided, a ValueError is raised.
+
+            Default: "index"
+
+    Raises
+    ------
+    aspecd.exceptions.NotApplicableToDatasetError
+        Raised if dataset has not enough dimensions (*i.e.*, 1D dataset).
+
+    ValueError
+        Raised if index is out of bounds for given axis.
+
+        Raised if wrong unit is given.
+
+    IndexError
+        Raised if axis is out of bounds for given dataset.
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    In the simplest case, just invoke the slice rearrangement with a list of
+    positions only:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: SliceRearrangement
+         properties:
+           parameters:
+             positions: [1, 0, 4, 2, 3]
+
+    This will rearrange the slices along the first axis (index zero) in the
+    given sequence.
+
+    Typically, with 2D datasets, you will want to rearrange along the
+    *second* axis:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: SliceRearrangement
+         properties:
+           parameters:
+             axis: 1
+             positions: [1, 0, 4, 2, 3]
+
+    This will rearrange the slices along the second axis (index one) in the
+    given sequence.
+
+    Suppose you have a dataset with ten slices along the second dimension,
+    but you only care about the first three positions and want them to
+    appear in reverse order:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: SliceRearrangement
+         properties:
+           parameters:
+             axis: 1
+             positions: [2, 1, 0]
+
+    This will reverse the first three slices along the second dimension
+    (with index one), but keep the overall shape of the dataset.
+
+    What happens if you provide one slice several times? The slice is
+    inserted several times into your dataset, thus *expanding* the dataset
+    along the given axis dimension:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: SliceRearrangement
+         properties:
+           parameters:
+             axis: 1
+             positions: [1, 0, 1]
+
+    This will add the second slice of the original dataset at the first and
+    third position (indices 0 and 2, respectively), thus expanding your
+    dataset by one slice along the given dimension.
+
+    .. versionadded:: 0.12
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = "Rearrange slices"
+        self.undoable = True
+        self.parameters["positions"] = []
+        self.parameters["axis"] = 0
+        self.parameters["unit"] = "index"
+
+    @staticmethod
+    def applicable(dataset):
+        """
+        Check whether processing step is applicable to the given dataset.
+
+        Slice extraction is only applicable to datasets with at least
+        two-dimensional data.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset to check
+
+        Returns
+        -------
+        applicable : :class:`bool`
+            `True` if successful, `False` otherwise.
+
+        """
+        return len(dataset.data.axes) >= 3
+
+    def _sanitise_parameters(self):
+        if (
+            not self.parameters["positions"]
+            and self.parameters["positions"] != 0
+        ):
+            raise IndexError("No positions provided for slice rearrangement")
+        self.parameters["positions"] = np.atleast_1d(
+            self.parameters["positions"]
+        )
+        # self.parameters["axis"] = np.atleast_1d(self.parameters["axis"])
+        if self.parameters["axis"] > self.dataset.data.data.ndim - 1:
+            # pylint: disable=consider-using-f-string
+            raise IndexError(
+                "Axis %i out of bounds" % self.parameters["axis"]
+            )
+        self.parameters["unit"] = self.parameters["unit"].lower()
+        if self.parameters["unit"] not in ["index", "axis"]:
+            raise ValueError("Wrong unit, needs to be either index or axis.")
+        if self._out_of_range():
+            raise ValueError("Position(s) out of axis range.")
+
+    def _out_of_range(self):
+        axis = self.parameters["axis"]
+        positions = self.parameters["positions"]
+        if self.parameters["unit"] == "index":
+            axis_length = self.dataset.data.data.shape[axis]
+            out_of_range = np.argwhere(abs(positions) > axis_length).size
+        else:
+            out_of_range = (
+                np.argwhere(
+                    positions < min(self.dataset.data.axes[axis].values)
+                ).size
+                or np.argwhere(
+                    positions > max(self.dataset.data.axes[axis].values)
+                ).size
+            )
+        return out_of_range
+
+    def _perform_task(self):
+        indices = self._get_slice()
+        self.dataset.data.data = self.dataset.data.data[indices]
+        axis = self.parameters["axis"]
+        self.dataset.data.axes[axis].values = self.dataset.data.axes[
+            axis
+        ].values[indices[axis]]
+
+    def _get_slice(self):
+        # Create empty slice object
+        slice_object = []
+        for _ in range(self.dataset.data.data.ndim):
+            slice_object.append(slice(None))
+        # Extract positions and overwrite slice object
+        axis = self.parameters["axis"]
+        if self.parameters["unit"] == "index":
+            slice_ = self.parameters["positions"]
+        else:
+            slice_ = self._get_index(
+                self.dataset.data.axes[axis].values,
+                self.parameters["positions"],
+            )
+        remaining_positions = [
+            pos
+            for pos in range(len(self.dataset.data.axes[axis].values))
+            if pos not in slice_
+        ]
+        slice_object[axis] = np.append(slice_, remaining_positions).astype(
+            int
+        )
+        return tuple(slice_object)
+
+    @staticmethod
+    def _get_index(array, values):
+        return np.searchsorted(array, values)
