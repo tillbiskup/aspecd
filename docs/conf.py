@@ -146,6 +146,8 @@ html_logo = "./aspecd-logo.png"
 # 32x32 pixels large.
 html_favicon = "favicon.ico"
 
+html_last_updated_fmt = "%Y-%m-%d"
+
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
