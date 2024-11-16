@@ -1140,6 +1140,18 @@ class TestSliceRemoval(unittest.TestCase):
         self.dataset.process(self.processing)
         self.assertEqual(self.dataset.data.data.shape[1], 498)
 
+    def test_remove_slice_removes_axis_value_as_well(self):
+        self.dataset.data.axes[0].values = np.linspace(
+            30, 70, len(self.dataset.data.axes[0].values)
+        )
+        original_axis = self.dataset.data.axes[0].values
+        self.processing.parameters["position"] = [3]
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(
+            original_axis[[0, 1, 2, 4]],
+            self.dataset.data.axes[0].values,
+        )
+
 
 class TestRangeExtraction(unittest.TestCase):
     def setUp(self):

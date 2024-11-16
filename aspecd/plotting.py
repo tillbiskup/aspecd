@@ -5030,7 +5030,7 @@ class BarPlotProperties(MultiPlot1DProperties):
             for idx, drawing in enumerate(plotter.drawings):
                 if self.drawings[idx].label:
                     drawing.set_label(self.drawings[idx].label)
-                for bar in drawing.get_children():
+                for bar in drawing.get_children():  # noqa
                     drawing_properties = copy.copy(self.drawings[idx])
                     drawing_properties.label = ""
                     drawing_properties.apply(drawing=bar)

@@ -1782,8 +1782,12 @@ class SliceRemoval(SingleProcessingStep):
                 self.dataset.data.axes[axis].values,
                 self.parameters["position"],
             )
+        original_axis = self.dataset.data.axes[axis].values
         self.dataset.data.data = np.delete(
             self.dataset.data.data, position, axis
+        )
+        self.dataset.data.axes[axis].values = np.delete(
+            original_axis, position
         )
 
     @staticmethod
