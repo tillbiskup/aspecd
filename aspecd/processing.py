@@ -3806,15 +3806,14 @@ class SliceRearrangement(SingleProcessingStep):
     parameters : :class:`dict`
         All parameters necessary for this step.
 
-        axis :
-            Index of the axis or list of indices of the axes to take the
-            position from to rearrange the slices
+        axis : :class:`int`
+            Index of the axis to take the position from to rearrange the slices
 
             If an invalid axis is provided, an IndexError is raised.
 
             Default: 0
 
-        positions :
+        positions : :class:`list`
             Positions and intended order of the slices to rearrange
 
             Positions can be given as axis indices (default) or axis values,
@@ -3822,6 +3821,13 @@ class SliceRearrangement(SingleProcessingStep):
 
             If no position is provided or the given position is out of
             bounds for the given axis, a ValueError is raised.
+
+            If fewer positions are provided than present in this dimension,
+            the remaining positions are simply appended to the list.
+
+            If a position is given more than once, the corresponding slice
+            is introduced multiple times and the dataset enlarged along the
+            given dimension/axis.
 
         unit : :class:`str`
             Unit used for specifying the positions: either "axis" or "index".
