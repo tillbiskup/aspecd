@@ -53,6 +53,7 @@ setuptools.setup(
         "oyaml",
         "asdf",
         "bibrecord",
+        "setuptools",
     ],
     extras_require={
         "dev": [
