@@ -1631,6 +1631,7 @@ class TestDatasetAlgebra(unittest.TestCase):
         self.processing = aspecd.processing.DatasetAlgebra()
         self.dataset1 = aspecd.dataset.Dataset()
         self.dataset2 = aspecd.dataset.Dataset()
+        self.dataset3 = aspecd.dataset.Dataset()
 
     def test_instantiate_class(self):
         pass
@@ -1673,6 +1674,15 @@ class TestDatasetAlgebra(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "different shapes"):
             self.dataset1.process(self.processing)
 
+    def test_process_with_differing_shapes_and_multiple_datasets_raises(self):
+        self.dataset1.data.data = np.random.random(5)
+        self.dataset2.data.data = np.random.random(6)
+        self.dataset3.data.data = np.random.random(7)
+        self.processing.parameters["dataset"] = [self.dataset2, self.dataset3]
+        self.processing.parameters["kind"] = "add"
+        with self.assertRaisesRegex(ValueError, "different shapes"):
+            self.dataset1.process(self.processing)
+
     def test_process_with_differing_shapes_shows_shape_in_message(self):
         self.dataset1.data.data = np.random.random(5)
         self.dataset2.data.data = np.random.random(6)
@@ -1690,6 +1700,15 @@ class TestDatasetAlgebra(unittest.TestCase):
         self.processing.parameters["kind"] = "add"
         self.dataset1.process(self.processing)
         self.assertTrue(np.all(self.dataset1.data.data == 2))
+
+    def test_add_with_multiple_1d_datasets(self):
+        self.dataset1.data.data = np.ones(5)
+        self.dataset2.data.data = np.ones(5)
+        self.dataset3.data.data = np.ones(5)
+        self.processing.parameters["dataset"] = [self.dataset2, self.dataset3]
+        self.processing.parameters["kind"] = "add"
+        self.dataset1.process(self.processing)
+        self.assertTrue(np.all(self.dataset1.data.data == 3))
 
     def test_add_with_1d_datasets_with_history(self):
         self.dataset1.data.data = np.ones(5)
@@ -1719,6 +1738,15 @@ class TestDatasetAlgebra(unittest.TestCase):
         self.dataset1.process(self.processing)
         self.assertTrue(np.all(self.dataset1.data.data == 2))
 
+    def test_add_with_multiple_2d_datasets(self):
+        self.dataset1.data.data = np.ones([5, 5])
+        self.dataset2.data.data = np.ones([5, 5])
+        self.dataset3.data.data = np.ones([5, 5])
+        self.processing.parameters["dataset"] = [self.dataset2, self.dataset3]
+        self.processing.parameters["kind"] = "add"
+        self.dataset1.process(self.processing)
+        self.assertTrue(np.all(self.dataset1.data.data == 3))
+
     def test_subtract_with_2d_datasets(self):
         self.dataset1.data.data = np.ones([5, 5]) * 2
         self.dataset2.data.data = np.ones([5, 5])
@@ -1745,6 +1773,22 @@ class TestDatasetAlgebra(unittest.TestCase):
         self.dataset1.process(self.processing)
         self.assertEqual(
             self.dataset2.id,
+            self.dataset1.history[-1].processing.parameters["dataset"],
+        )
+
+    def test_process_with_multiple_datasets_writes_dataset_ids_in_history(
+        self,
+    ):
+        self.dataset1.data.data = np.ones(5)
+        self.dataset2.data.data = np.ones(5)
+        self.dataset2.id = "12345"
+        self.dataset3.data.data = np.ones(5)
+        self.dataset3.id = "23456"
+        self.processing.parameters["dataset"] = [self.dataset2, self.dataset3]
+        self.processing.parameters["kind"] = "add"
+        self.dataset1.process(self.processing)
+        self.assertEqual(
+            [self.dataset2.id, self.dataset3.id],
             self.dataset1.history[-1].processing.parameters["dataset"],
         )
 

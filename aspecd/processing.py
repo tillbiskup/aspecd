@@ -2623,6 +2623,14 @@ class DatasetAlgebra(SingleProcessingStep):
         identical as well. For this purpose, use the
         :class:`CommonRangeExtraction` processing step.
 
+    .. note::
+        Metadata of the dataset are not touched by this operation at all.
+        This means that the metadata in the dataset are still those of the
+        dataset the processing step operated on. This may, however, lead to
+        confusion or misinterpretation if somewhere in the metadata the
+        number of accumulations or measurements per point or similar is
+        encoded.
+
     Attributes
     ----------
     parameters : :class:`dict`
@@ -2691,8 +2699,29 @@ class DatasetAlgebra(SingleProcessingStep):
          apply_to:
            - label_to_dataset
 
+    Sometimes, you have recorded multiple datasets and want to add them all
+    up. While technically speaking, this would be possible with consecutive
+    steps, it is much more convenient to provide a list of datasets:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: DatasetAlgebra
+         properties:
+           parameters:
+             kind: plus
+             dataset:
+             - label_to_other_dataset
+             - label_to_yet_another_dataset
+
+    This will add the data of both datasets provided to the dataset operated
+    upon. Of course, you can subtract the data in the same way.
+
 
     .. versionadded:: 0.2
+
+    .. versionchanged:: 0.12
+        Handles a list of datasets in parameter "dataset".
 
     """
 
@@ -2721,25 +2750,28 @@ class DatasetAlgebra(SingleProcessingStep):
                 'Scalar operation "%s" not understood'
                 % self.parameters["kind"]
             )
+        if not isinstance(self.parameters["dataset"], list):
+            self.parameters["dataset"] = [self.parameters["dataset"]]
 
     def _perform_task(self):
         self._check_shape()
         operator_ = self._kinds[self.parameters["kind"].lower()]
-        self.dataset.data.data = operator_(
-            self.dataset.data.data, self.parameters["dataset"].data.data
-        )
-        self.parameters["dataset"] = self.parameters["dataset"].id
+        for index, dataset in enumerate(self.parameters["dataset"]):
+            self.dataset.data.data = operator_(
+                self.dataset.data.data, dataset.data.data
+            )
+            self.parameters["dataset"][index] = dataset.id
+        if len(self.parameters["dataset"]) == 1:
+            self.parameters["dataset"] = self.parameters["dataset"][0]
 
     def _check_shape(self):
-        if (
-            self.dataset.data.data.shape
-            != self.parameters["dataset"].data.data.shape
-        ):
-            raise ValueError(
-                f"Data of datasets have different shapes: "
-                f"{self.dataset.data.data.shape}, "
-                f"{self.parameters['dataset'].data.data.shape}."
-            )
+        for dataset in self.parameters["dataset"]:
+            if self.dataset.data.data.shape != dataset.data.data.shape:
+                raise ValueError(
+                    f"Data of datasets have different shapes: "
+                    f"{self.dataset.data.data.shape}, "
+                    f"{dataset.data.data.shape}."
+                )
 
 
 class Interpolation(SingleProcessingStep):

@@ -56,7 +56,7 @@ The good news: Creating Python virtual environments is fairly simple:
 
 .. code-block:: bash
 
-    python -m venv aspecd
+    python3 -m venv aspecd
 
 This will create a Python virtual environment named ``aspecd`` in the current directory. Of course, you can give your virtual environment any name you like. However, be careful with spaces and special characters, depending on your system.
 
