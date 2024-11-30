@@ -1726,6 +1726,26 @@ class TestProcessingTask(unittest.TestCase):
             cm.output[0],
         )
 
+    def test_perform_w_result_and_multiple_datasets_issues_log_messages(self):
+        self.prepare_recipe()
+        datasets = ["foo", "bar"]
+        recipe_dict = {"datasets": datasets, "tasks": [self.processing_task]}
+        self.recipe.from_dict(recipe_dict)
+        self.processing_task["result"] = ["fooz", "barz"]
+        self.processing_task["apply_to"] = datasets
+        self.task.from_dict(self.processing_task)
+        self.task.recipe = self.recipe
+        with self.assertLogs(__package__, level="INFO") as cm:
+            self.task.perform()
+        self.assertIn(
+            'Perform "{}" on dataset "{}" resulting in "{}"'.format(
+                self.processing_task["type"],
+                datasets[0],
+                self.processing_task["result"][0],
+            ),
+            cm.output[0],
+        )
+
     def test_perform_task_with_result_and_multiple_datasets_adds_results(
         self,
     ):

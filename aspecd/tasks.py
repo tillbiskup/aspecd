@@ -2396,26 +2396,36 @@ class Task(aspecd.utils.ToDictMixin):
         if function == "id":
             replacement = argument
         elif function == "basename":
-            if argument in self.recipe.datasets.keys():
-                replacement = aspecd.utils.basename(
-                    self.recipe.datasets[argument].id
-                )
+            replacement = self._parse_basename_function(argument)
         elif function == "path":
-            if argument in self.recipe.datasets.keys():
-                replacement = aspecd.utils.path(
-                    self.recipe.datasets[argument].id
-                )
+            replacement = self._parse_path_function(argument)
         elif function in ["add", "multiply"]:
-            items = []
-            for item in argument.split(","):
-                item = self._replace_label_with_object(item.strip())
-                if isinstance(item, str):
-                    item = float(item)
-                items.append(item)
-            if function == "add":
-                replacement = items[0] + items[1]
-            if function == "multiply":
-                replacement = items[0] * items[1]
+            replacement = self._parse_algebraic_function(argument, function)
+        return replacement
+
+    def _parse_basename_function(self, argument):
+        if argument in self.recipe.datasets.keys():
+            replacement = aspecd.utils.basename(
+                self.recipe.datasets[argument].id
+            )
+        return replacement
+
+    def _parse_path_function(self, argument):
+        if argument in self.recipe.datasets.keys():
+            replacement = aspecd.utils.path(self.recipe.datasets[argument].id)
+        return replacement
+
+    def _parse_algebraic_function(self, argument, function):
+        items = []
+        for item in argument.split(","):
+            item = self._replace_label_with_object(item.strip())
+            if isinstance(item, str):
+                item = float(item)
+            items.append(item)
+        if function == "add":
+            replacement = items[0] + items[1]
+        if function == "multiply":
+            replacement = items[0] * items[1]
         return replacement
 
 
@@ -2582,12 +2592,6 @@ class ProcessingTask(Task):
             if self.comment:
                 self._task.comment = self.comment
             if self.result:
-                logger.info(
-                    'Perform "%s" on dataset "%s" resulting in "%s"',
-                    self.type,
-                    dataset_id,
-                    self.result,
-                )
                 dataset_copy = copy.deepcopy(dataset)
                 self._task = dataset_copy.process(processing_step=self._task)
                 if result_labels:
@@ -2596,6 +2600,12 @@ class ProcessingTask(Task):
                 else:
                     dataset_copy.id = self.result
                     self.recipe.results[self.result] = dataset_copy
+                logger.info(
+                    'Perform "%s" on dataset "%s" resulting in "%s"',
+                    self.type,
+                    dataset_id,
+                    dataset_copy.id,
+                )
                 if dataset_copy.id in self.recipe.datasets.keys():
                     logger.warning(
                         'Result name "%s" identical to dataset label, '
