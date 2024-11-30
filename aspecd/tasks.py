@@ -819,6 +819,33 @@ performed. For details, see the documentation of the respective task
 subclass in this module below.
 
 
+Temporarily skipping a task
+===========================
+
+.. versionadded:: 0.12
+
+Sometimes it is quite useful to temporarily skip executing a task without
+having to either comment it out (tedious with complex tasks with many
+parameters) or remove it entirely from the recipe file. Hence, you can set a
+task to be skipped:
+
+
+.. code-block:: yaml
+
+    tasks:
+      - kind: processing
+        type: Normalisation
+        skip: true
+        properties:
+          parameters:
+            kind: amplitude
+
+
+Note that the ``skip`` property is on the same level as ``kind``, ``type``,
+and ``properties``, *i.e.* not a property of the specific task. Note further
+that marking a task as to be skipped makes it *not* appear in the history.
+
+
 Prerequisites for recipe-driven data analysis
 =============================================
 
@@ -1753,12 +1780,15 @@ class Chef:
         self._assign_recipe(recipe)
         self._prepare_history()
         for task in self.recipe.tasks:
-            task.perform()
-            task_history = task.to_dict()
-            if isinstance(task_history, list):
-                self.history["tasks"].extend(task_history)
+            if task.skip:
+                logger.info('Skipping task "%s"', task.type)
             else:
-                self.history["tasks"].append(task_history)
+                task.perform()
+                task_history = task.to_dict()
+                if isinstance(task_history, list):
+                    self.history["tasks"].extend(task_history)
+                else:
+                    self.history["tasks"].append(task_history)
         self.history["info"]["end"] = datetime.datetime.now().isoformat(
             timespec=self._timespec
         )
@@ -1884,6 +1914,16 @@ class Task(aspecd.utils.ToDictMixin):
     comment : :class:`str`
         User-supplied comment describing intent, purpose, reason, ...
 
+    skip : :class:`bool`
+        Whether to (temporarily) skip this task
+
+        Temporarily skipping a task that is defined in a recipe can be quite
+        helpful, as it makes it unnecessary to either comment out the task
+        or remove it entirely from the recipe.
+
+        Note that a skipped task will *not* be contained in the recipe
+        history.
+
 
     .. note::
         A note to developers: Usually, the :attr:`aspecd.tasks.Task.kind`
@@ -1905,6 +1945,9 @@ class Task(aspecd.utils.ToDictMixin):
     .. versionchanged:: 0.6.4
         New attribute :attr:`comment`
 
+    .. versionchanged:: 0.12
+        New attribute :attr:`skip`
+
     """
 
     def __init__(self, recipe=None):
@@ -1916,6 +1959,7 @@ class Task(aspecd.utils.ToDictMixin):
         self.apply_to = []
         self.recipe = recipe
         self.comment = ""
+        self.skip = False
         self._module = ""
         self._exclude_from_to_dict = ["recipe", "package"]
         self._task = None

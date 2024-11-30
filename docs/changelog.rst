@@ -32,7 +32,9 @@ New features
 
 * Tasks
 
+  * Functions ``add`` and ``multiply`` for properties of tasks in recipes.
   * New default setting ``number_of_colors`` on recipe level: Fixed number of elements from colormap, to have same colour succession in plots with different number of curves if a colormap is specified.
+  * Tasks can be marked as to be skipped, using the ``skip`` keyword on the top level of the task definition in a recipe.
 
 
 Fixes

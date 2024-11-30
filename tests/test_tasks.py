@@ -651,6 +651,31 @@ class TestChef(unittest.TestCase):
         self.chef.cook(recipe=recipe)
         self.assertTrue(self.chef.recipe.datasets[self.dataset].history)
 
+    def test_cook_recipe_with_skipped_processing_task_skips_task(self):
+        recipe = self.recipe
+        self.processing_task["skip"] = True
+        recipe_dict = {
+            "datasets": [self.dataset],
+            "tasks": [self.processing_task],
+        }
+        recipe.from_dict(recipe_dict)
+        self.chef.cook(recipe=recipe)
+        self.assertFalse(self.chef.recipe.datasets[self.dataset].history)
+
+    def test_cook_recipe_with_skipped_processing_task_logs_info(self):
+        recipe = self.recipe
+        self.processing_task["skip"] = True
+        recipe_dict = {
+            "datasets": [self.dataset],
+            "tasks": [self.processing_task],
+        }
+        recipe.from_dict(recipe_dict)
+        with self.assertLogs(__package__, level="INFO") as cm:
+            self.chef.cook(recipe=recipe)
+        self.assertIn(
+            f'Skipping task "{self.recipe.tasks[0].type}"', cm.output[0]
+        )
+
     def test_cook_recipe_with_multiple_datasets_performs_task(self):
         recipe = self.recipe
         recipe_dict = {
@@ -856,6 +881,19 @@ class TestChef(unittest.TestCase):
         for key in self.processing_task.keys():
             self.assertIn(key, self.chef.history["tasks"][0])
 
+    def test_cook_with_skipped_task_does_not_add_task_history_to_history(
+        self,
+    ):
+        recipe = self.recipe
+        self.processing_task["skip"] = True
+        recipe_dict = {
+            "datasets": [self.dataset],
+            "tasks": [self.processing_task],
+        }
+        recipe.from_dict(recipe_dict)
+        self.chef.cook(recipe)
+        self.assertFalse(self.chef.history["tasks"])
+
     def test_cook_adds_info_key_to_history(self):
         recipe = self.recipe
         self.chef.cook(recipe)
@@ -943,7 +981,7 @@ class TestTask(unittest.TestCase):
     def test_has_recipe_property(self):
         self.assertTrue(hasattr(self.task, "recipe"))
 
-    def test_has_recipe_property(self):
+    def test_has_comment_property(self):
         self.assertTrue(hasattr(self.task, "comment"))
 
     def test_instantiate_with_recipe_sets_recipe(self):
@@ -981,6 +1019,12 @@ class TestTask(unittest.TestCase):
         dict_ = {"type": type_}
         self.task.from_dict(dict_)
         self.assertEqual(type_, self.task.type)
+
+    def test_from_dict_sets_skip(self):
+        skip = True
+        dict_ = {"skip": skip}
+        self.task.from_dict(dict_)
+        self.assertEqual(skip, self.task.skip)
 
     def test_from_dict_with_apply_to_appends_to_list(self):
         dataset_id = "foo"

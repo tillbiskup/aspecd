@@ -8,9 +8,9 @@ A few ideas how to develop the project further, currently a list as a reminder f
 For version 0.12
 ================
 
-* Recipe-driven data analysis:
+* Plotting
 
-  * Skip task (temporarily) in recipe. Need to decide how to deal with a skipped task in the history.
+  * Finish :class:`aspecd.plotting.SingleBarPlotter`
 
 
 For next releases
