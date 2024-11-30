@@ -4839,7 +4839,7 @@ class MultiPlot1DProperties(MultiPlotProperties):
         this one set of properties.
 
         Otherwise, the behaviour is identical to that of the superclass
-        method: see :meth:`MultiPLotProperties.from_dict` for details.
+        method: see :meth:`MultiPlotProperties.from_dict` for details.
 
         Parameters
         ----------
