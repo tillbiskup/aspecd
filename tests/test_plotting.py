@@ -988,6 +988,46 @@ class TestSinglePlotter2D(unittest.TestCase):
             self.plotter.drawing.norm, matplotlib.colors.LogNorm
         )
 
+    def test_plot_sets_norm_not_in_scalenames(self):
+        norm = "centered"
+        dict_ = {"drawing": {"norm": norm}}
+        self.plotter.properties.from_dict(dict_)
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        self.plotter.plot(dataset=test_dataset)
+        self.assertIsInstance(
+            self.plotter.drawing.norm, matplotlib.colors.CenteredNorm
+        )
+
+    def test_plot_sets_norm_parameters_with_norm_not_in_scalenames(self):
+        norm = "centered"
+        norm_parameters = {"vcenter": 4.0}
+        dict_ = {
+            "drawing": {"norm": norm, "norm_parameters": norm_parameters}
+        }
+        self.plotter.properties.from_dict(dict_)
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        self.plotter.plot(dataset=test_dataset)
+        self.assertIsInstance(
+            self.plotter.drawing.norm, matplotlib.colors.CenteredNorm
+        )
+        for key, value in norm_parameters.items():
+            self.assertEqual(value, getattr(self.plotter.drawing.norm, key))
+
+    def test_plot_sets_norm_parameters_with_norm_in_scalenames(self):
+        norm = "log"
+        norm_parameters = {"clip": True}
+        dict_ = {
+            "drawing": {"norm": norm, "norm_parameters": norm_parameters}
+        }
+        self.plotter.properties.from_dict(dict_)
+        test_dataset = dataset.Dataset()
+        test_dataset.data.data = np.random.random([5, 5])
+        self.plotter.plot(dataset=test_dataset)
+        for key, value in norm_parameters.items():
+            self.assertEqual(value, getattr(self.plotter.drawing.norm, key))
+
     def test_to_dict_with_norm(self):
         dict_ = {"drawing": {"norm": "symlog"}}
         self.plotter.properties.from_dict(dict_)

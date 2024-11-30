@@ -12,10 +12,6 @@ For version 0.12
 
   * Skip task (temporarily) in recipe. Need to decide how to deal with a skipped task in the history.
 
-* Plotting
-
-  * Normalisation of colormaps: CenteredNorm, SymLogNorm, TwoSlopeNorm -- details in the `Matplotlib documentation <https://matplotlib.org/stable/users/explain/colors/colormapnorms.html>`_
-
 
 For next releases
 =================

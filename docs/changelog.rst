@@ -19,6 +19,7 @@ New features
   * Attribute ``clim`` in :class:`aspecd.plotting.SurfaceProperties`
   * Parameter ``threshold`` for determining the levels of a contour plot in class :class:`aspecd.plotting.SinglePlotter2D`
   * Attribute ``number_of_colors`` in :class:`aspecd.plotting.MultiPlot1DProperties`: Fixed number of elements from colormap, to have same colour succession in plots with different number of curves if a colormap is specified.
+  * Attributes ``norm`` and ``norm_parameters`` in :class:`aspecd.plotting.SurfaceProperties`.
 
 * Plot annotations
 

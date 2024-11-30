@@ -5951,7 +5951,21 @@ class SurfaceProperties(DrawingProperties):
         scaling is used, mapping the lowest value to 0 and the highest to 1.
 
         For a list of available scales, call
-        :func:`matplotlib.scale.get_scale_names`.
+        :func:`matplotlib.scale.get_scale_names`. Besides these names,
+        you can use the names of all subclasses of
+        :class:`matplotlib.colors.Normalize`. If the resulting object needs
+        any additional parameter or if you want to change the defaults,
+        set the :attr:`norm_parameters` attribute accordingly.
+
+        .. versionadded:: 0.12
+
+    norm_parameters : :class:`dict`
+        Additional parameters for the norm set using the attribute
+        :attr:`norm`.
+
+        For details which parameters can be set, see the Matplotlib
+        documentation of the respective subclass of
+        :class:`matplotlib.colors.Normalize`.
 
         .. versionadded:: 0.12
 
@@ -5976,6 +5990,8 @@ class SurfaceProperties(DrawingProperties):
         self.colors = None
         self.clim = None
         self.norm = None
+        self.norm_parameters = {}
+        self._original_norm = None
 
     def apply(self, drawing=None):
         """
@@ -5987,7 +6003,10 @@ class SurfaceProperties(DrawingProperties):
             matplotlib object to set properties for
 
         """
+        self._check_norm()
         super().apply(drawing=drawing)
+        self._apply_norm(drawing=drawing)
+        self._set_norm_parameters(drawing=drawing)
         children = drawing.axes.get_children()
         for child in children:
             if isinstance(
@@ -6004,6 +6023,23 @@ class SurfaceProperties(DrawingProperties):
                     child.set_linestyle(self.linestyles)
                 if self.colors:
                     child.set_color(self.colors)
+
+    def _check_norm(self):
+        if self.norm and self.norm not in mpl.scale.get_scale_names():
+            self._original_norm = self.norm
+            self.norm = None
+
+    def _apply_norm(self, drawing):
+        if self._original_norm:
+            self.norm = self._original_norm
+            norm = getattr(mpl.colors, f"{self.norm.capitalize()}Norm")()
+            drawing.set_norm(norm)
+
+    def _set_norm_parameters(self, drawing):
+        if self.norm_parameters:
+            for key, value in self.norm_parameters.items():
+                if hasattr(drawing.norm, key):
+                    setattr(drawing.norm, key, value)
 
 
 class GridProperties(aspecd.utils.Properties):
