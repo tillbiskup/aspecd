@@ -1625,6 +1625,32 @@ class TestAveraging(unittest.TestCase):
         self.dataset.process(self.processing)
         self.assertEqual("7.0-8.0 mV", self.dataset.label)
 
+    def test_average_with_inverted_range(self):
+        self.processing.parameters["range"] = [2, 3]
+        data = np.average(self.dataset.data.data[2 : 3 + 1, :], axis=0)
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(data, self.dataset.data.data)
+
+    def test_average_with_inverted_axis_and_axis_units(self):
+        self.processing.parameters["unit"] = "axis"
+        self.dataset.data.axes[0].values = np.linspace(
+            70, 30, len(self.dataset.data.axes[0].values)
+        )
+        self.processing.parameters["range"] = [40, 30]
+        data = np.average(self.dataset.data.data[-2:, :], axis=0)
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(data, self.dataset.data.data)
+
+    def test_average_with_axis_units_with_inverted_axis_and_range(self):
+        self.processing.parameters["unit"] = "axis"
+        self.dataset.data.axes[0].values = np.linspace(
+            70, 30, len(self.dataset.data.axes[0].values)
+        )
+        self.processing.parameters["range"] = [30, 40]
+        data = np.average(self.dataset.data.data[-2:, :], axis=0)
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(data, self.dataset.data.data)
+
 
 class TestDatasetAlgebra(unittest.TestCase):
     def setUp(self):

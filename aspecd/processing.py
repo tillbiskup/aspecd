@@ -2470,8 +2470,6 @@ class Averaging(SingleProcessingStep):
     def _get_range(self):
         if self.parameters["unit"] == "index":
             range_ = copy.copy(self.parameters["range"])
-            if range_[1] > 0:
-                range_[1] += 1
         else:
             axis = self.parameters["axis"]
             range_ = [
@@ -2482,9 +2480,12 @@ class Averaging(SingleProcessingStep):
                 self._get_index(
                     self.dataset.data.axes[axis].values,
                     self.parameters["range"][1],
-                )
-                + 1,
+                ),
             ]
+        if min(range_) > 0:
+            range_ = sorted(range_)
+        if range_[1] > 0:
+            range_[1] += 1
         return range_
 
     @staticmethod

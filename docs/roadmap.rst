@@ -5,6 +5,19 @@ Roadmap
 A few ideas how to develop the project further, currently a list as a reminder for the main developers themselves, in no particular order, though with a tendency to list more important aspects first:
 
 
+For version 0.12
+================
+
+* Recipe-driven data analysis:
+
+  * Skip task (temporarily) in recipe. Need to decide how to deal with a skipped task in the history.
+
+* Plotting
+
+  * Normalisation of colormaps: CenteredNorm, SymLogNorm, TwoSlopeNorm -- details in the `Matplotlib documentation <https://matplotlib.org/stable/users/explain/colors/colormapnorms.html>`_
+  * Fixed number of elements from colormap, to have same colour succession in plots with different number of curves if a colormap is specified
+
+
 For next releases
 =================
 
