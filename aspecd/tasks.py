@@ -528,9 +528,21 @@ important settings are described below:
   * ``default_colormap``
 
     Set the default colormap for plots. This will affect only those plots
-    supporting colormaps, such as :class:`aspecd.plotting.MultiPlotter1D`.
+    supporting colormaps, such as :class:`aspecd.plotting.SinglePlotter2D` and
+    :class:`aspecd.plotting.MultiPlotter1D`.
 
     .. versionadded:: 0.8.2
+
+  * ``number_of_colors``
+
+    Set the number of colours for plots. This will currently only affect
+    plots showing individual drawings, such as
+    :class:`aspecd.plotting.MultiPlotter1D` or
+    :class:`aspecd.plotting.SinglePlotter2DStacked`, and it will only have an
+    effect if a colormap is set for the task -- either using the setting
+    ``default_colormap`` on the recipe level or within the individual task.
+
+    .. versionadded:: 0.12
 
   * ``autosave_plots``
 
@@ -560,6 +572,7 @@ in the example below:
     settings:
       default_package: my_package
       default_colormap: viridis
+      number_of_colors: 7
       autosave_plots: false
 
 
@@ -1074,20 +1087,35 @@ class Recipe:
         Dictionary with the following fields:
 
         default_package: :class:`str`
-           Name of the package the task objects are obtained from
+            Name of the package the task objects are obtained from
 
-           If no name for a default package is supplied, "aspecd" is used.
+            If no name for a default package is supplied, "aspecd" is used.
 
         default_colormap: :class:`str`
-           Name of the (Matplotlib) colormap used for plots
+            Name of the (Matplotlib) colormap used for plots
 
-           If no name for a default colormap is supplied, the default
-           colormap for the currently installed Matplotlib version is used.
+            If no name for a default colormap is supplied, the default
+            colormap for the currently installed Matplotlib version is used.
 
-           If a colormap is provided for an individual task, this colormap
-           takes precedence over the default colormap for the individual task.
+            If a colormap is provided for an individual task, this colormap
+            takes precedence over the default colormap for the individual task.
 
-           .. versionadded:: 0.8.2
+            .. versionadded:: 0.8.2
+
+        number_of_colors: :class:`int`
+            Number of colors taken from the colormap.
+
+            This setting is useful if you provide a colormap and would like
+            to have always the same colour succession in your figures,
+            regardless of the number of actual drawings within one figure.
+
+            Has only an effect if a :attr:`colormap` is provided.
+
+            If number_of_colors is provided for an individual task,
+            this value takes precedence over the default number_of_colors
+            for the individual task.
+
+            .. versionadded:: 0.12
 
         autosave_plots: :class:`bool`
             Whether to save plots even if no filename is provided.
@@ -1200,6 +1228,7 @@ class Recipe:
         self.settings = {
             "default_package": "",
             "default_colormap": "",
+            "number_of_colors": None,
             "autosave_plots": True,
             "autosave_datasets": True,
             "write_history": True,
@@ -3239,6 +3268,14 @@ class PlotTask(Task):
             ):
                 self._task.properties.colormap = self.recipe.settings[
                     "default_colormap"
+                ]
+        if self.recipe.settings["number_of_colors"]:
+            if (
+                hasattr(self._task.properties, "number_of_colors")
+                and not self._task.properties.number_of_colors
+            ):
+                self._task.properties.number_of_colors = self.recipe.settings[
+                    "number_of_colors"
                 ]
 
 

@@ -4777,6 +4777,8 @@ class MultiPlot1DProperties(MultiPlotProperties):
     """
     Properties of a 1D multiplot, defining its appearance.
 
+    Attributes
+    ----------
     drawings : :class:`list`
         Properties of the lines within a plot.
 
@@ -4786,12 +4788,27 @@ class MultiPlot1DProperties(MultiPlotProperties):
         of the :class:`aspecd.plotting.LineProperties` class.
 
     colormap : :class:`str`
-        Name of the colormap to use for colouring the individual drawings
+        Name of the colormap to use for colouring the individual drawings.
 
         For a full list of colormaps available with Matplotlib, see
         https://matplotlib.org/stable/gallery/color/colormap_reference.html.
 
         Note that appending ``_r`` to the name of a colormap will reverse it.
+
+        If set to :obj:`None`, the default colormap from your Matplotlib
+        settings will be used.
+
+        Default: :obj:`None`
+
+    number_of_colors : :class:`int`
+        Number of colors taken from the colormap.
+
+        This setting is useful if you provide a colormap (probably globally
+        in a recipe) and would like to have always the same colour
+        succession in your figures, regardless of the number of actual
+        drawings within one figure.
+
+        Has only an effect if a :attr:`colormap` is provided.
 
     Raises
     ------
@@ -4802,11 +4819,15 @@ class MultiPlot1DProperties(MultiPlotProperties):
     .. versionchanged:: 0.8
         Added attribute :attr:`colormap`
 
+    .. versionchanged:: 0.12
+        Added attribute :attr:`number_of_colors`
+
     """
 
     def __init__(self):
         super().__init__()
         self.colormap = None
+        self.number_of_colors = None
         self._drawing = False
 
     def from_dict(self, dict_=None):
@@ -4895,7 +4916,11 @@ class MultiPlot1DProperties(MultiPlotProperties):
         """
         super().apply(plotter=plotter)
         if hasattr(plotter, "drawings") and self.colormap:
-            colors = plt.get_cmap(self.colormap, len(self.drawings))
+            if self.number_of_colors:
+                number_of_colors = self.number_of_colors
+            else:
+                number_of_colors = len(self.drawings)
+            colors = plt.get_cmap(self.colormap, number_of_colors)
             for idx, _ in enumerate(plotter.drawings):
                 self.drawings[idx].color = colors(idx)
 
@@ -4904,6 +4929,8 @@ class SinglePlot2DStackedProperties(MultiPlot1DProperties):
     """
     Properties of a 2D stacked singleplot, defining its appearance.
 
+    Attributes
+    ----------
     drawings : :class:`list`
         Properties of the lines within a plot.
 
@@ -4959,6 +4986,8 @@ class BarPlotProperties(MultiPlot1DProperties):
     """
     Properties of a bar plot, defining its appearance.
 
+    Attributes
+    ----------
     drawings : :class:`list`
         Properties of the bars within a plot.
 

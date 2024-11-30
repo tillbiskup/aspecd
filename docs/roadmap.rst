@@ -15,7 +15,6 @@ For version 0.12
 * Plotting
 
   * Normalisation of colormaps: CenteredNorm, SymLogNorm, TwoSlopeNorm -- details in the `Matplotlib documentation <https://matplotlib.org/stable/users/explain/colors/colormapnorms.html>`_
-  * Fixed number of elements from colormap, to have same colour succession in plots with different number of curves if a colormap is specified
 
 
 For next releases

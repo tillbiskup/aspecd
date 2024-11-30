@@ -14,11 +14,24 @@ Not yet released
 New features
 ------------
 
-* Attribute ``clim`` in :class:`aspecd.plotting.SurfaceProperties`
-* Parameter ``threshold`` for determining the levels of a contour plot in class :class:`aspecd.plotting.SinglePlotter2D`
-* Parameter ``units`` in :class:`aspecd.annotation.Text`, :class:`aspecd.annotation.Marker`, :class:`aspecd.annotation.VerticalLine`, :class:`aspecd.annotation.HorizontalLine`, :class:`aspecd.annotation.VerticalSpan`, and  :class:`aspecd.annotation.HorizontalSpan` allowing to position using axes rather than data coordinates.
-* :class:`aspecd.processing.SliceRearrangement` for rearranging slices of a dataset along one dimension.
-* :class:`aspecd.processing.DatasetAlgebra` operates on a list of datasets, allowing to add/subtract multiple datasets from a given dataset.
+* Plotting
+
+  * Attribute ``clim`` in :class:`aspecd.plotting.SurfaceProperties`
+  * Parameter ``threshold`` for determining the levels of a contour plot in class :class:`aspecd.plotting.SinglePlotter2D`
+  * Attribute ``number_of_colors`` in :class:`aspecd.plotting.MultiPlot1DProperties`: Fixed number of elements from colormap, to have same colour succession in plots with different number of curves if a colormap is specified.
+
+* Plot annotations
+
+  * Parameter ``units`` in :class:`aspecd.annotation.Text`, :class:`aspecd.annotation.Marker`, :class:`aspecd.annotation.VerticalLine`, :class:`aspecd.annotation.HorizontalLine`, :class:`aspecd.annotation.VerticalSpan`, and  :class:`aspecd.annotation.HorizontalSpan` allowing to position using axes rather than data coordinates.
+
+* Processing
+
+  * :class:`aspecd.processing.SliceRearrangement` for rearranging slices of a dataset along one dimension.
+  * :class:`aspecd.processing.DatasetAlgebra` operates on a list of datasets, allowing to add/subtract multiple datasets from a given dataset.
+
+* Tasks
+
+  * New default setting ``number_of_colors`` on recipe level: Fixed number of elements from colormap, to have same colour succession in plots with different number of curves if a colormap is specified.
 
 
 Fixes
