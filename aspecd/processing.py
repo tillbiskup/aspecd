@@ -4071,7 +4071,9 @@ class Denoising1DSVD(SingleProcessingStep):
     to create a (partial) circulant matrix or some variant thereof.
 
     Being a non-parametric method for denoising, basically no assumptions on
-    the shape of the actual signal are necessary.
+    the shape of the actual signal are necessary. This is one of the big
+    advantages over other methods such as filtering (see :class:`Filtering`
+    for details): Accidental distortions of the signal are very unlikely.
 
     To avoid ringing artifacts at the ends of the reconstructed signal,
     an adaptive intermediate detrending is performed as well.
@@ -4098,16 +4100,21 @@ class Denoising1DSVD(SingleProcessingStep):
 
         rank : :class:`int`
             Rank of the approximating matrix of the constructed partial
-            circulant matrix from the sequence.
-
-            If not explicitly provided, the rank will automatically be
-            determined by the algorithm.
+            circulant matrix from the sequence. The rank will automatically be
+            determined by the algorithm. Hence, this parameter is read-only.
+            For details of the algorithm, see the cited reference.
 
         fraction : :class:`float`
             Fraction of the data length used as rows of the constructed matrix.
 
             Sensible values are in the interval [0.1...0.4]*n, with n the
             size of the data vector.
+
+            Larger values than 0.4 are unnecessary, and generally smaller
+            values will speed up the process, as the matrix to be
+            constructed is smaller. Furthermore, it seems that larger
+            matrices not necessarily result in better denoising. For
+            details, see the cited reference.
 
             Default: 0.2
 
@@ -4137,9 +4144,24 @@ class Denoising1DSVD(SingleProcessingStep):
 
     .. code-block:: yaml
 
-       - kind: processing
-         type: Denoising1DSVD
+        - kind: processing
+          type: Denoising1DSVD
 
+    If you ever want to change some of the (few) available parameters,
+    *e.g.*, the size of the constructed matrix in fractions of the signal
+    length, this is of course possible as well:
+
+    .. code-block:: yaml
+
+        - kind: processing
+          type: Denoising1DSVD
+          properties:
+            parameters:
+              fraction: 0.3
+
+    Note, however, that enlarging the size of the constructed partial
+    circulant matrix does not necessarily provide better results and usually
+    slows down processing.
 
     .. versionadded:: 0.12
 
@@ -4213,6 +4235,11 @@ class Denoising1DSVD(SingleProcessingStep):
             self._n_rows = int(
                 self.dataset.data.data.size * self.parameters["fraction"]
             )
+        self.parameters["rank"] = 0
+        if self.parameters["fraction"] > 1:
+            raise ValueError("Fraction exceeds signal dimensions")
+        if self.parameters["fraction"] < 0.1:
+            raise ValueError("Fraction too small, minimum: 0.1")
 
     def _perform_task(self):
         self._create_matrix()
@@ -4260,7 +4287,7 @@ class Denoising1DSVD(SingleProcessingStep):
 
     def _detrend(self):
         self._trend = np.zeros_like(self.dataset.data.data)
-        while self._has_gap():
+        while self._needs_detrending():
             self._points_for_detrending -= 2
             self._trend = np.linspace(
                 0,
@@ -4275,7 +4302,7 @@ class Denoising1DSVD(SingleProcessingStep):
             self._perform_svd()
             self._determine_rank()
 
-    def _has_gap(self):
+    def _needs_detrending(self):
         noise_stddev = np.sqrt(
             np.sum(self._s[self.parameters["rank"] :] ** 2)
             / self.dataset.data.data.size

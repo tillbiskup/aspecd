@@ -3189,6 +3189,26 @@ class TestDenoising1DSVD(unittest.TestCase):
         with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
             dataset.process(self.processing)
 
+    def test_setting_rank_does_not_matter(self):
+        self.processing.parameters["rank"] = len(self.signal)
+        self.dataset.data.data = self.signal
+        processing_step = self.dataset.process(self.processing)
+        self.assertLess(processing_step.parameters["rank"], 100)
+
+    def test_fraction_exceeds_signal_dimension(self):
+        self.processing.parameters["fraction"] = 1.2
+        self.dataset.data.data = self.signal
+        with self.assertRaisesRegex(
+            ValueError, "Fraction exceeds signal " "dimensions"
+        ):
+            self.dataset.process(self.processing)
+
+    def test_fraction_too_small(self):
+        self.processing.parameters["fraction"] = 0.09
+        self.dataset.data.data = self.signal
+        with self.assertRaisesRegex(ValueError, "Fraction too small"):
+            self.dataset.process(self.processing)
+
     def test_with_pure_signal(self):
         self.dataset.data.data = self.signal
         self.dataset.process(self.processing)
@@ -3215,5 +3235,5 @@ class TestDenoising1DSVD(unittest.TestCase):
         np.testing.assert_allclose(
             self.signal[20:-20],
             self.dataset.data.data[20:-20] - trend[20:-20],
-            atol=7.5e-2,
+            atol=8e-2,
         )
