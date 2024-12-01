@@ -145,6 +145,10 @@ independently.
 
   Add (coloured) noise to data.
 
+* :class:`aspecd.processing.Denoising1DSVD`
+
+  Denoise 1D data using singular value decomposition (SVD).
+
 * :class:`aspecd.processing.ChangeAxesValues`
 
   Change values of individual axes.

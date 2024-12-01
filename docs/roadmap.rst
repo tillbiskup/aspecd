@@ -93,7 +93,13 @@ For later versions
 
 * Remaining basic processing and analysis steps:
 
-  * denoising (via SVD or similar)
+  * denoising for >1D data (via SVD or similar)
+
+    * https://doi.org/10.1007/s00348-019-2768-4
+    * https://doi.org/10.1016/j.ymssp.2017.02.036
+    * https://de.mathworks.com/matlabcentral/fileexchange/75242-svd-of-noisy-data-error-analysis-and-noise-filtering-svde
+
+  * Perhaps factory step for denoising, automatically selecting the right step for 1D and >1D data
 
   * SNREstimation with explicitly providing noise (using both, processing and analysis)
 
