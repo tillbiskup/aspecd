@@ -1352,7 +1352,7 @@ class Plotter(aspecd.utils.ToDictMixin):
 
     def _tight_layout(self):
         if self.parameters["tight_layout"]:
-            self.figure.set_tight_layout(True)
+            self.figure.set_layout_engine(layout="tight")
 
 
 class SinglePlotter(Plotter):

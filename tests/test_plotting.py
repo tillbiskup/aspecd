@@ -220,7 +220,7 @@ class TestPlotter(unittest.TestCase):
     def test_plot_sets_tight_layout(self):
         self.plotter.parameters["tight_layout"] = True
         mock = MagicMock()
-        with patch("matplotlib.figure.Figure.set_tight_layout", mock):
+        with patch("matplotlib.figure.Figure.set_layout_engine", mock):
             self.plotter.plot()
         mock.assert_called()
 
