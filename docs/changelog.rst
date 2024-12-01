@@ -29,6 +29,7 @@ New features
 
   * :class:`aspecd.processing.SliceRearrangement` for rearranging slices of a dataset along one dimension.
   * :class:`aspecd.processing.DatasetAlgebra` operates on a list of datasets, allowing to add/subtract multiple datasets from a given dataset.
+  * :class:`aspecd.processing.Denoising1DSVD` for denoising 1D datasets using singular value decomposition.
 
 * Tasks
 

@@ -3143,3 +3143,77 @@ class TestSliceRearrangement(unittest.TestCase):
             original_data[[2, 0, 0, 1, 3, 4], :],
             self.dataset.data.data,
         )
+
+
+class TestDenoising1DSVD(unittest.TestCase):
+    def setUp(self):
+        self.processing = aspecd.processing.Denoising1DSVD()
+        x = np.linspace(-10, 10, 1000)
+        self.signal = np.sinc(x)
+        self.noise = np.random.normal(scale=0.05, size=len(x))
+        self.noisy_signal = self.signal + self.noise
+        self.dataset = aspecd.dataset.Dataset()
+
+    def test_instantiate_class(self):
+        pass
+
+    def test_has_appropriate_description(self):
+        self.assertIn(
+            "Denoising 1D data using SVD", self.processing.description
+        )
+
+    def test_has_appropriate_references(self):
+        self.assertTrue(self.processing.references)
+        self.assertIn(
+            "Denoising scheme based on singular-value decomposition for "
+            "one-dimensional spectra",
+            self.processing.references[0].title,
+        )
+        self.assertIn(
+            "10.5281/zenodo.2603558",
+            self.processing.references[1].doi,
+        )
+
+    def test_is_undoable(self):
+        self.assertTrue(self.processing.undoable)
+
+    def test_with_nD_dataset_raises(self):
+        dataset = aspecd.dataset.Dataset()
+        dataset.data.data = np.zeros([5, 5])
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            dataset.process(self.processing)
+
+    def test_with_1D_dataset_with_too_few_points_raises(self):
+        dataset = aspecd.dataset.Dataset()
+        dataset.data.data = np.zeros(10)
+        with self.assertRaises(aspecd.exceptions.NotApplicableToDatasetError):
+            dataset.process(self.processing)
+
+    def test_with_pure_signal(self):
+        self.dataset.data.data = self.signal
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(
+            self.signal[20:-20], self.dataset.data.data[20:-20], atol=5e-4
+        )
+
+    def test_denoise_signal(self):
+        self.dataset.data.data = self.noisy_signal
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(
+            self.signal[20:-20], self.dataset.data.data[20:-20], atol=5e-2
+        )
+
+    def test_denoise_returns_rank_in_parameters(self):
+        self.dataset.data.data = self.noisy_signal
+        processing_step = self.dataset.process(self.processing)
+        self.assertTrue(processing_step.parameters["rank"])
+
+    def test_denoise_signal_with_trend(self):
+        trend = np.linspace(0, 1, self.noisy_signal.size)
+        self.dataset.data.data = self.noisy_signal + trend
+        self.dataset.process(self.processing)
+        np.testing.assert_allclose(
+            self.signal[20:-20],
+            self.dataset.data.data[20:-20] - trend[20:-20],
+            atol=7.5e-2,
+        )

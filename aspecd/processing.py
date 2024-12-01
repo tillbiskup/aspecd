@@ -3370,7 +3370,7 @@ class Noise(SingleProcessingStep):
     and König:
 
     * J. Timmer and M. König: On generating power law noise.
-      Astronomy and Astrophysics 300, 707--710 (1995)
+      *Astronomy and Astrophysics* **300**, 707--710 (1995)
 
     In short: In the Fourier space, normally distributed random numbers are
     drawn for power and phase of each frequency component, and the power scaled
@@ -4058,3 +4058,255 @@ class SliceRearrangement(SingleProcessingStep):
     @staticmethod
     def _get_index(array, values):
         return np.searchsorted(array, values)
+
+
+class Denoising1DSVD(SingleProcessingStep):
+    """
+    Denoise 1D data using singular value decomposition (SVD).
+
+    SVD has been shown to be a powerful method for denoising data and is
+    used in several slightly different ways, mostly for image or
+    more general 2D data denoising. To use SVD for denoising 1D data,
+    one first needs to create a 2D matrix from the original data. One way is
+    to create a (partial) circulant matrix or some variant thereof.
+
+    Being a non-parametric method for denoising, basically no assumptions on
+    the shape of the actual signal are necessary.
+
+    To avoid ringing artifacts at the ends of the reconstructed signal,
+    an adaptive intermediate detrending is performed as well.
+
+    The algorithm implemented here is based on:
+
+    * X. C. Chen, Yu. A. Litvinov, M. Wang, Q. Wang, and Y. H. Zhang:
+      Denoising scheme based on singular-value decomposition for
+      one-dimensional spectra and its application in precision storage-ring
+      mass spectrometry.
+      *Physical Review E* **99**, 063320 (2019)
+    * Chen, X.: (2019). A generic denoising method for 1D spectra based on
+      singular value decomposition (v2.1). Zenodo.
+      https://doi.org/10.5281/zenodo.2603558
+
+    Hence, if using this code leads to a scientific publication,
+    strongly consider citing the appropriate publication(s).
+
+
+    Attributes
+    ----------
+    parameters : :class:`dict`
+        All parameters necessary for this step.
+
+        rank : :class:`int`
+            Rank of the approximating matrix of the constructed partial
+            circulant matrix from the sequence.
+
+            If not explicitly provided, the rank will automatically be
+            determined by the algorithm.
+
+        fraction : :class:`float`
+            Fraction of the data length used as rows of the constructed matrix.
+
+            Sensible values are in the interval [0.1...0.4]*n, with n the
+            size of the data vector.
+
+            Default: 0.2
+
+        noise_threshold : :class:`float`
+            Threshold below which the singular components are considered noise.
+
+            Noise components are detected using the normalized mean total
+            variation of the left singular vectors as an indicator.
+
+            Default: 0.1
+
+    Raises
+    ------
+    aspecd.exceptions.NotApplicableToDatasetError
+        Raised if dataset is not 1D or has <=10 data points.
+
+
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    In the simplest case, just invoke the denoising without any further
+    parameters:
+
+    .. code-block:: yaml
+
+       - kind: processing
+         type: Denoising1DSVD
+
+
+    .. versionadded:: 0.12
+
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.description = "Denoising 1D data using SVD"
+        self.undoable = True
+        self.references = [
+            bib.Article(
+                author=[
+                    "X. C. Chen",
+                    "Yu. A. Litvinov",
+                    "M. Wang,",
+                    "Q. Wang",
+                    "Y. H. Zhang",
+                ],
+                title="Denoising scheme based on singular-value "
+                "decomposition for one-dimensional spectra and its "
+                "application in precision storage-ring mass spectrometry",
+                journal="Physical Review E",
+                volume="99",
+                pages="063320",
+                year="2019",
+            ),
+            bib.Dataset(
+                author=["Chen, Xiangcheng"],
+                title="A generic denoising method for 1D spectra based on "
+                "singular value decomposition",
+                publisher="Zenodo",
+                year="2019",
+                version="v2.1 (2019-03-23)",
+                doi="10.5281/zenodo.2603558",
+            ),
+        ]
+        self.parameters["rank"] = 0
+        self.parameters["fraction"] = 0.2
+        self.parameters["noise_threshold"] = 0.1
+        self._n_rows = 0
+        self._matrix = None
+        self._U = None  # noqa
+        self._s = None  # noqa
+        self._Vh = None  # noqa
+        self._trend = None
+        self._points_for_detrending = 11
+
+    @staticmethod
+    def applicable(dataset):
+        """
+        Check whether processing step is applicable to the given dataset.
+
+        This method is only applicable to 1D datasets with >10 data points.
+
+        Parameters
+        ----------
+        dataset : :class:`aspecd.dataset.Dataset`
+            dataset to check
+
+        Returns
+        -------
+        applicable : :class:`bool`
+            `True` if successful, `False` otherwise.
+
+        """
+        return len(dataset.data.axes) == 2 and len(dataset.data.data) > 10
+
+    def _sanitise_parameters(self):
+        if not self._n_rows:
+            self._n_rows = int(
+                self.dataset.data.data.size * self.parameters["fraction"]
+            )
+
+    def _perform_task(self):
+        self._create_matrix()
+        self._perform_svd()
+        self._determine_rank()
+        self._detrend()
+        self._reconstruct_matrix()
+        self._average_matrix()
+
+    def _create_matrix(self):
+        extended_vector = np.hstack(
+            (
+                self.dataset.data.data,
+                self.dataset.data.data[: self._n_rows - 1],
+            )
+        )
+        shape = (self._n_rows, self.dataset.data.data.size)
+        strides = (extended_vector.strides[0], extended_vector.strides[0])
+        self._matrix = np.lib.stride_tricks.as_strided(
+            extended_vector, shape, strides
+        )
+
+    def _perform_svd(self):
+        self._U, self._s, self._Vh = np.linalg.svd(self._matrix)
+
+    def _determine_rank(self):
+        while True:
+            left_singular_vectors = self._U[
+                :, self.parameters["rank"] : self.parameters["rank"] + 10
+            ]
+            normalised_mean_total_variation = np.mean(
+                np.abs(np.diff(left_singular_vectors, axis=0)), axis=0
+            ) / (
+                np.amax(left_singular_vectors, axis=0)
+                - np.amin(left_singular_vectors, axis=0)
+            )
+            try:
+                self.parameters["rank"] += np.argwhere(
+                    normalised_mean_total_variation
+                    > self.parameters["noise_threshold"]
+                )[0, 0]
+                break
+            except IndexError:
+                self.parameters["rank"] += 10
+
+    def _detrend(self):
+        self._trend = np.zeros_like(self.dataset.data.data)
+        while self._has_gap():
+            self._points_for_detrending -= 2
+            self._trend = np.linspace(
+                0,
+                self.dataset.data.data[-self._points_for_detrending :].mean()
+                - self.dataset.data.data[
+                    : self._points_for_detrending
+                ].mean(),
+                self.dataset.data.data.size,
+            )
+            self.dataset.data.data -= self._trend
+            self._create_matrix()
+            self._perform_svd()
+            self._determine_rank()
+
+    def _has_gap(self):
+        noise_stddev = np.sqrt(
+            np.sum(self._s[self.parameters["rank"] :] ** 2)
+            / self.dataset.data.data.size
+        )
+        gap = np.abs(
+            self.dataset.data.data[-self._points_for_detrending :].mean()
+            - self.dataset.data.data[: self._points_for_detrending].mean()
+        )
+        return gap > noise_stddev
+
+    def _reconstruct_matrix(self):
+        self._matrix = (
+            self._U[:, : self.parameters["rank"]]
+            @ np.diag(self._s[: self.parameters["rank"]])
+            @ self._Vh[: self.parameters["rank"]]
+        )
+
+    def _average_matrix(self):
+        extended_matrix = np.hstack(
+            (self._matrix[:, -self._n_rows + 1 :], self._matrix)
+        )
+        strides = (
+            extended_matrix.strides[0] - extended_matrix.strides[1],
+            extended_matrix.strides[1],
+        )
+        self.dataset.data.data = np.mean(
+            np.lib.stride_tricks.as_strided(
+                extended_matrix[:, self._n_rows - 1 :],
+                self._matrix.shape,
+                strides,
+            ),
+            axis=0,
+        )
+        self.dataset.data.data += self._trend
