@@ -902,7 +902,11 @@ class MetadataMapper:
 
     .. versionchanged:: 0.6
         Recipe files now retrieved from package data now via
-        :func:`aspecd.utils.get_package_data`
+        :func:`aspecd.utils.get_package_data`.
+
+    .. versionchanged:: 0.12
+        Add ``base dict`` key to "move item" dictionaries in YAML,
+        upped version number of the corresponding file format to 0.2.
 
     """
 
@@ -1130,6 +1134,16 @@ class MetadataMapper:
         as this will most probably mess up your dictionaries and result in
         hard to track bugs.
 
+        If you would like to move an item within a dictionary from one
+        sub-dictionary to another, you may provide a mapping similar to the
+        following::
+
+            mapping = [['base_dict', 'move_item', ['key', 'source', 'target']]]
+
+        Note, however, that you are currently limited to a flat base
+        dictionary, *i.e.* you cannot provide a sub-dictionary as first
+        attribute (here: ``base_dict``) of the mapping.
+
         """
         if self.recipe_filename:
             self.create_mappings()
@@ -1166,7 +1180,7 @@ class MetadataMapper:
 
             format:
               type: metadata mapper
-              version: '0.1'
+              version: '0.2'
 
             map 1:
               metadata file versions:
@@ -1196,6 +1210,11 @@ class MetadataMapper:
                 - key: Runs
                   source dict: measurement
                   target dict: experiment
+                  create target: True
+                - key: repetition_rate
+                  base dict: experiment
+                  source dict:
+                  target dict: laser
                   create target: True
 
         Unknown mappings are silently ignored. The difference between the
@@ -1267,47 +1286,51 @@ class MetadataMapper:
 
     def _add_mappings_from_recipe(self):
         if "copy key" in self._mapping_recipe.keys():
-            for i in range(len(self._mapping_recipe["copy key"])):
+            for mapping_description in self._mapping_recipe["copy key"]:
                 mapping = [
-                    self._mapping_recipe["copy key"][i]["in dict"],
+                    mapping_description["in dict"],
                     "copy_key",
                     [
-                        self._mapping_recipe["copy key"][i]["old key"],
-                        self._mapping_recipe["copy key"][i]["new key"],
+                        mapping_description["old key"],
+                        mapping_description["new key"],
                     ],
                 ]
                 self.mappings.append(mapping)
         if "combine items" in self._mapping_recipe.keys():
-            for i in range(len(self._mapping_recipe["combine items"])):
+            for mapping_description in self._mapping_recipe["combine items"]:
                 mapping = [
-                    self._mapping_recipe["combine items"][i]["in dict"],
+                    mapping_description["in dict"],
                     "combine_items",
                     [
-                        self._mapping_recipe["combine items"][i]["old keys"],
-                        self._mapping_recipe["combine items"][i]["new key"],
-                        self._mapping_recipe["combine items"][i]["pattern"],
+                        mapping_description["old keys"],
+                        mapping_description["new key"],
+                        mapping_description["pattern"],
                     ],
                 ]
                 self.mappings.append(mapping)
         if "rename key" in self._mapping_recipe.keys():
-            for i in range(len(self._mapping_recipe["rename key"])):
+            for mapping_description in self._mapping_recipe["rename key"]:
                 mapping = [
-                    self._mapping_recipe["rename key"][i]["in dict"],
+                    mapping_description["in dict"],
                     "rename_key",
                     [
-                        self._mapping_recipe["rename key"][i]["old key"],
-                        self._mapping_recipe["rename key"][i]["new key"],
+                        mapping_description["old key"],
+                        mapping_description["new key"],
                     ],
                 ]
                 self.mappings.append(mapping)
         if "move item" in self._mapping_recipe.keys():
-            for i in range(len(self._mapping_recipe["move item"])):
+            for mapping_description in self._mapping_recipe["move item"]:
                 sub_mapping = [
-                    self._mapping_recipe["move item"][i]["key"],
-                    self._mapping_recipe["move item"][i]["source dict"],
-                    self._mapping_recipe["move item"][i]["target dict"],
+                    mapping_description["key"],
+                    mapping_description["source dict"],
+                    mapping_description["target dict"],
                 ]
-                if "create target" in self._mapping_recipe["move item"][i]:
+                if "create target" in mapping_description:
                     sub_mapping.append(True)
-                mapping = ["", "move_item", sub_mapping]
+                if "base dict" in mapping_description:
+                    base_dict = mapping_description["base dict"]
+                else:
+                    base_dict = ""
+                mapping = [base_dict, "move_item", sub_mapping]
                 self.mappings.append(mapping)

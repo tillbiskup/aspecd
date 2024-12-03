@@ -1009,6 +1009,33 @@ class TestMetadataMapper(unittest.TestCase):
         self.metadata_mapper.create_mappings()
         self.assertEqual(mapping, self.metadata_mapper.mappings[-1])
 
+    def test_create_mappings_adds_move_item_with_base_dict_to_mappings(self):
+        move_item = [
+            {
+                "key": "model",
+                "source dict": "measurement",
+                "target dict": "spectrometer",
+                "base dict": "foo",
+            }
+        ]
+        mapping = [
+            "foo",
+            "move_item",
+            ["model", "measurement", "spectrometer"],
+        ]
+        mapping_dict = {
+            "format": {"type": "metadata mapper", "version": "0.1.0"},
+            "mapping1": {
+                "metadata file versions": ["0.1.0"],
+                "move item": move_item,
+            },
+        }
+        self.metadata_mapper.recipe_filename = self.filename
+        self.metadata_mapper.version = "0.1.0"
+        self.write_metadata_mapper_file(mapping_dict)
+        self.metadata_mapper.create_mappings()
+        self.assertEqual(mapping, self.metadata_mapper.mappings[-1])
+
     def test_create_mappings_adds_move_item_with_create_to_mappings(self):
         move_item = [
             {
