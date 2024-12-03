@@ -35,7 +35,7 @@ To give you a first example, here is a short recipe, followed by the command you
 
     format:
       type: ASpecD recipe
-      version: '0.2'
+      version: '0.3'
 
     datasets:
       - /path/to/first/dataset
@@ -88,7 +88,7 @@ But what about the first block shown in the first example, the top-level ``forma
 
     format:
       type: ASpecD recipe
-      version: '0.2'
+      version: '0.3'
 
 
 This first block of every ASpecD recipe simply describes the file format, *e.g.* an ASpecD recipe, and the version of the format. Note that regardless of the package based on the ASpecD framework, the format type will always be "ASpecD recipe" (at least for the time being), and the version number is *independent* of the version number of the ASpecD framework or any derived package, but is an independent version number of the recipe file format as such.
@@ -125,32 +125,37 @@ A recipe written as history from cooking another recipe will additionally automa
 
     system_info:
       python:
-        version: "3.7.3 (default, Jan 22 2021, 20:04:44) \n[GCC 8.3.0]"
+        version: "3.9.2 (default, Dec  1 2024, 12:12:57) \n[GCC 10.2.1 20210110]"
       packages:
-        aspecd: 0.4.0
-        jinja2: 2.11.2
-        matplotlib: 3.3.3
-        numpy: 1.19.5
-        scipy: 1.5.4
+        aspecd: 0.11.0
+        jinja2: 3.1.2
+        matplotlib: 3.9.2
+        numpy: 1.25.5
+        scipy: 1.11.2
         oyaml: '1.0'
-        asdf: 2.7.1
-        bibrecord: 0.1.0
-      platform: Linux-4.19.0-17-amd64-x86_64-with-debian-10.10
+        asdf: 2.15.1
+        bibrecord: 0.2.2
+      platform: Linux-5.10.0-33-amd64-x86_64-with-glibc2.31
       user:
         login: <username>
 
     format:
       type: ASpecD recipe
-      version: '0.2'
+      version: '0.3'
 
     settings:
-      default_package:
+      default_package: ''
+      colors:
+        default_colormap: ''
+        number_of_colors: null
+        first_color: 0
       autosave_plots: true
+      autosave_datasets: true
       write_history: true
 
     directories:
-      output:
-      datasets_source:
+      output: ''
+      datasets_source: ''
 
     datasets:
       - ...

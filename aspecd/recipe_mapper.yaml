@@ -2,7 +2,7 @@
 
 format:
   type: metadata mapper
-  version: 0.1
+  version: 0.2
 
 map 1:
   metadata file versions:
@@ -35,3 +35,18 @@ map 1:
 map2:
   metadata file versions:
     - '0.2'
+  move item:
+    - key: default_colormap
+      base dict: settings
+      source dict:
+      target dict: colors
+      create target: True
+    - key: number_of_colors
+      base dict: settings
+      source dict:
+      target dict: colors
+      create target: True
+
+map3:
+  metadata file versions:
+    - '0.3'

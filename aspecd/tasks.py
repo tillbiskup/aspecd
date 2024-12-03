@@ -48,7 +48,7 @@ To give a first impression of how such a recipe may look like:
 
     format:
       type: ASpecD recipe
-      version: '0.2'
+      version: '0.3'
 
     datasets:
       - loi:xxx
@@ -514,16 +514,41 @@ Why is this interesting? TBD
 Settings for recipes
 --------------------
 
-At the top level of a recipe, in the `settings` block, you can provide an (
-increasing) list of settings, part of which are described elsewhere as well.
+At the top level of a recipe, in the `settings` block, you can provide an
+(increasing) list of settings, part of which are described elsewhere as well.
 The full and up-to-date list is contained in the
 :class:`aspecd.tasks.Recipe` class documentation. For convenience, the most
 important settings are described below:
 
-  * ``default_package``
+* ``default_package``
 
-    Set the default package tasks are obtained from. Useful mostly for
-    packages derived from the ASpecD framework.
+  Set the default package tasks are obtained from. Useful mostly for
+  packages derived from the ASpecD framework.
+
+* ``autosave_plots``
+
+  Control whether plots are saved by default, even if no filename is
+  provided.
+
+* ``autosave_datasets``
+
+  Control whether datasets are saved by default, even if no target is
+  provided.
+
+  .. versionadded:: 0.8.3
+
+* ``write_history``
+
+  Control whether a history is written when serving a recipe. Setting
+  this to ``False`` will most probably render your data processing and
+  analysis irreproducible and therefore mostly useless. Hence,
+  use *only* for debugging purposes.
+
+* ``colors``
+
+  Settings for colors.
+
+  .. versionadded:: 0.12
 
   * ``default_colormap``
 
@@ -532,6 +557,9 @@ important settings are described below:
     :class:`aspecd.plotting.MultiPlotter1D`.
 
     .. versionadded:: 0.8.2
+
+    .. versionchanged:: 0.12
+        Moved to ``colors`` sub-dictionary
 
   * ``number_of_colors``
 
@@ -544,24 +572,18 @@ important settings are described below:
 
     .. versionadded:: 0.12
 
-  * ``autosave_plots``
+  * ``first_color``
 
-    Control whether plots are saved by default, even if no filename is
-    provided.
+    Set the first color of a chosen colormap to use.
 
-  * ``autosave_datasets``
+    Particularly with colormaps starting with white or fairly light
+    colors, setting an offset within the colormap is often necessary.
 
-    Control whether datasets are saved by default, even if no target is
-    provided.
+    This will currently only affect plots showing individual drawings, such as
+    :class:`aspecd.plotting.MultiPlotter1D` or
+    :class:`aspecd.plotting.SinglePlotter2DStacked`.
 
-    .. versionadded:: 0.8.3
-
-  * ``write_history``
-
-    Control whether a history is written when serving a recipe. Setting
-    this to ``False`` will most probably render your data processing and
-    analysis irreproducible and therefore mostly useless. Hence,
-    use *only* for debugging purposes.
+    .. versionadded:: 0.12
 
 
 As mentioned, all these settings are set in the ``settings`` block, as shown
@@ -571,9 +593,12 @@ in the example below:
 
     settings:
       default_package: my_package
-      default_colormap: viridis
       number_of_colors: 7
       autosave_plots: false
+      colors:
+        default_colormap: viridis
+        number_of_colors: 5
+        first_color: 3
 
 
 Executing recipes: serving the cooked results
@@ -1250,12 +1275,15 @@ class Recipe:
         self.tasks = []
         self.format = {
             "type": "ASpecD recipe",
-            "version": "0.2",
+            "version": "0.3",
         }
         self.settings = {
             "default_package": "",
-            "default_colormap": "",
-            "number_of_colors": None,
+            "colors": {
+                "default_colormap": "",
+                "number_of_colors": None,
+                "first_color": 0,
+            },
             "autosave_plots": True,
             "autosave_datasets": True,
             "write_history": True,
@@ -1295,7 +1323,11 @@ class Recipe:
         for key in ["settings", "directories"]:
             if key in dict_:
                 for subkey, value in dict_[key].items():
-                    getattr(self, key)[subkey] = value
+                    if isinstance(value, dict):
+                        for subsubkey, subvalue in value.items():
+                            getattr(self, key)[subkey][subsubkey] = subvalue
+                    else:
+                        getattr(self, key)[subkey] = value
         if not self.dataset_factory:
             package = (
                 self.settings["default_package"]
@@ -1507,7 +1539,7 @@ class Recipe:
 
             format:
               type: ASpecD recipe
-              version: '0.2'
+              version: '0.3'
             settings:
               default_package: ''
               autosave_plots: true
@@ -3315,22 +3347,21 @@ class PlotTask(Task):
         .. versionadded:: 0.8.2
 
         """
-        if self.recipe.settings["default_colormap"]:
-            if (
-                hasattr(self._task.properties, "colormap")
-                and not self._task.properties.colormap
-            ):
-                self._task.properties.colormap = self.recipe.settings[
-                    "default_colormap"
-                ]
-        if self.recipe.settings["number_of_colors"]:
-            if (
-                hasattr(self._task.properties, "number_of_colors")
-                and not self._task.properties.number_of_colors
-            ):
-                self._task.properties.number_of_colors = self.recipe.settings[
-                    "number_of_colors"
-                ]
+        task_property_to_settings = {
+            "colormap": "default_colormap",
+            "number_of_colors": "number_of_colors",
+            "first_color": "first_color",
+        }
+        for task_property, settings_key in task_property_to_settings.items():
+            if self.recipe.settings["colors"][settings_key]:
+                if hasattr(
+                    self._task.properties, task_property
+                ) and not getattr(self._task.properties, task_property):
+                    setattr(
+                        self._task.properties,
+                        task_property,
+                        self.recipe.settings["colors"][settings_key],
+                    )
 
 
 class SingleplotTask(PlotTask):

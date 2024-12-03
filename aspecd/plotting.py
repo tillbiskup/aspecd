@@ -541,8 +541,8 @@ example showing some of the properties that can be set is given below:
 
 .. code-block:: yaml
 
-    - kind: singleplot
-      type: SinglePlotter1D
+    - kind: multiplot
+      type: MultiPlotter1D
       properties:
         parameters:
           show_legend: True
@@ -560,6 +560,35 @@ Important here is to note that you need to set the ``show_legend`` parameter
 on a higher level of the overall plotter properties to ``True`` in order to
 have a legend be shown. Of course, you need not set all (or even any) of the
 properties explicitly. For details, see the :class:`LegendProperties` class.
+
+
+Removing a line from the legend
+-------------------------------
+
+Sometimes, you may want to have certain lines in your plot not showing up in
+the legend. By default, all lines ("drawings") will enter the legend, either
+by the explicit label you provide or by the label of the corresponding
+dataset. To have a line not showing up in the legend, set its label to
+either the empty string or to ``null`` (the YAML equivalent of :obj:`None`).
+A minimal example is given below:
+
+
+.. code-block:: yaml
+
+    - kind: multiplot
+      type: MultiPlotter1D
+      properties:
+        parameters:
+          show_legend: True
+        properties:
+          drawings:
+          - label: "one line"
+          - label: ""
+          - label: "another line"
+
+
+Here, there should be three lines in the plot, and the second would not
+appear in the legend, as its label is set to the empty string.
 
 
 Annotating plots
@@ -4814,7 +4843,7 @@ class MultiPlot1DProperties(MultiPlotProperties):
         Has only an effect if a :attr:`colormap` is provided.
 
     first_color : :class:`int`
-        First color of a choosen colormap to use.
+        First color of a chosen colormap to use.
 
         Particularly with colormaps starting with white or fairly light
         colors, setting an offset within the colormap is often necessary.

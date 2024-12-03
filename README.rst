@@ -11,7 +11,7 @@ What is even better: Actual data processing and analysis **no longer requires pr
 
     format:
       type: ASpecD recipe
-      version: '0.2'
+      version: '0.3'
 
     datasets:
       - /path/to/first/dataset

@@ -1,6 +1,6 @@
 format:
   type: ASpecD recipe
-  version: '0.2'
+  version: '0.3'
 
 settings:
   autosave_plots: False

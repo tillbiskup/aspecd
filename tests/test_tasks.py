@@ -88,13 +88,20 @@ class TestRecipe(unittest.TestCase):
         self.assertEqual(
             [
                 "default_package",
-                "default_colormap",
-                "number_of_colors",
+                "colors",
                 "autosave_plots",
                 "autosave_datasets",
                 "write_history",
             ],
             list(self.recipe.settings.keys()),
+        )
+        self.assertEqual(
+            [
+                "default_colormap",
+                "number_of_colors",
+                "first_color",
+            ],
+            list(self.recipe.settings["colors"].keys()),
         )
 
     def test_directories_property_is_dict_with_fields(self):
@@ -348,6 +355,21 @@ class TestRecipe(unittest.TestCase):
         self.recipe.dataset_factory = self.dataset_factory
         self.recipe.from_dict(dict_)
         self.assertEqual("bar", self.recipe.tasks[0].package)
+
+    def test_from_dict_without_colors_settings_retains_colors_subdict(self):
+        dict_ = {"settings": {"default_package": "foo"}}
+        self.recipe.dataset_factory = self.dataset_factory
+        self.recipe.from_dict(dict_)
+        self.assertIsInstance(self.recipe.settings["colors"], dict)
+
+    def test_from_dict_with_partial_colors_settings_retains_colors_keys(self):
+        dict_ = {"settings": {"colors": {"default_colormap": "foo"}}}
+        self.recipe.dataset_factory = self.dataset_factory
+        self.recipe.from_dict(dict_)
+        self.assertListEqual(
+            ["default_colormap", "number_of_colors", "first_color"],
+            list(self.recipe.settings["colors"].keys()),
+        )
 
     def test_has_to_dict_method(self):
         self.assertTrue(hasattr(self.recipe, "to_dict"))
@@ -3159,7 +3181,7 @@ class TestSinglePlotTask(unittest.TestCase):
         self.recipe.datasets[self.dataset[0]].data.data = np.random.random(
             [5, 5]
         )
-        self.recipe.settings["default_colormap"] = colormap
+        self.recipe.settings["colors"]["default_colormap"] = colormap
         self.plotting_task["type"] = "SinglePlotter2D"
         self.task.from_dict(self.plotting_task)
         self.task.recipe = self.recipe
@@ -3176,7 +3198,7 @@ class TestSinglePlotTask(unittest.TestCase):
         self.recipe.datasets[self.dataset[0]].data.data = np.random.random(
             [5, 5]
         )
-        self.recipe.settings["default_colormap"] = default_colormap
+        self.recipe.settings["colors"]["default_colormap"] = default_colormap
         self.plotting_task["type"] = "SinglePlotter2D"
         self.plotting_task["properties"] = {
             "properties": {"colormap": task_colormap}
@@ -3374,7 +3396,7 @@ class TestMultiPlotTask(unittest.TestCase):
     def test_default_colormap_gets_set_to_plotter(self):
         colormap = "viridis"
         self.prepare_recipe()
-        self.recipe.settings["default_colormap"] = colormap
+        self.recipe.settings["colors"]["default_colormap"] = colormap
         self.plotting_task["type"] = "MultiPlotter1D"
         self.task.from_dict(self.plotting_task)
         self.task.recipe = self.recipe
@@ -3388,7 +3410,7 @@ class TestMultiPlotTask(unittest.TestCase):
         default_colormap = "viridis"
         task_colormap = "viridis_r"
         self.prepare_recipe()
-        self.recipe.settings["default_colormap"] = default_colormap
+        self.recipe.settings["colors"]["default_colormap"] = default_colormap
         self.plotting_task["type"] = "MultiPlotter1D"
         self.plotting_task["properties"] = {
             "properties": {"colormap": task_colormap}
@@ -3404,7 +3426,7 @@ class TestMultiPlotTask(unittest.TestCase):
     def test_number_of_colors_gets_set_to_plotter(self):
         number_of_colors = 5
         self.prepare_recipe()
-        self.recipe.settings["number_of_colors"] = number_of_colors
+        self.recipe.settings["colors"]["number_of_colors"] = number_of_colors
         self.plotting_task["type"] = "MultiPlotter1D"
         self.task.from_dict(self.plotting_task)
         self.task.recipe = self.recipe
@@ -3419,7 +3441,7 @@ class TestMultiPlotTask(unittest.TestCase):
         number_of_colors = 5
         task_number_of_colors = 10
         self.prepare_recipe()
-        self.recipe.settings["number_of_colors"] = number_of_colors
+        self.recipe.settings["colors"]["number_of_colors"] = number_of_colors
         self.plotting_task["type"] = "MultiPlotter1D"
         self.plotting_task["properties"] = {
             "properties": {"number_of_colors": task_number_of_colors}
@@ -3431,6 +3453,38 @@ class TestMultiPlotTask(unittest.TestCase):
         self.assertEqual(
             task_number_of_colors,
             dict_["properties"]["properties"]["number_of_colors"],
+        )
+
+    def test_first_color_gets_set_to_plotter(self):
+        first_color = 5
+        self.prepare_recipe()
+        self.recipe.settings["colors"]["first_color"] = first_color
+        self.plotting_task["type"] = "MultiPlotter1D"
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(
+            first_color,
+            dict_["properties"]["properties"]["first_color"],
+        )
+
+    def test_first_color_does_not_override_task_first_color(self):
+        first_color = 5
+        task_first_color = 10
+        self.prepare_recipe()
+        self.recipe.settings["colors"]["first_color"] = first_color
+        self.plotting_task["type"] = "MultiPlotter1D"
+        self.plotting_task["properties"] = {
+            "properties": {"first_color": task_first_color}
+        }
+        self.task.from_dict(self.plotting_task)
+        self.task.recipe = self.recipe
+        self.task.perform()
+        dict_ = self.task.to_dict()
+        self.assertEqual(
+            task_first_color,
+            dict_["properties"]["properties"]["first_color"],
         )
 
     def test_perform_task_without_label_adds_figure_to_recipe(self):

@@ -18,7 +18,7 @@ New features
 
   * Attribute ``clim`` in :class:`aspecd.plotting.SurfaceProperties`
   * Parameter ``threshold`` for determining the levels of a contour plot in class :class:`aspecd.plotting.SinglePlotter2D`
-  * Attribute ``number_of_colors`` in :class:`aspecd.plotting.MultiPlot1DProperties`: Fixed number of elements from colormap, to have same colour succession in plots with different number of curves if a colormap is specified.
+  * Attributes ``number_of_colors`` and ``first_color`` in :class:`aspecd.plotting.MultiPlot1DProperties`: Fixed number of elements from colormap, to have same colour succession in plots with different number of curves if a colormap is specified, and potential offset in colormap if starting with white/a light colour.
   * Attributes ``norm`` and ``norm_parameters`` in :class:`aspecd.plotting.SurfaceProperties`.
 
 * Plot annotations
@@ -36,6 +36,15 @@ New features
   * Functions ``add`` and ``multiply`` for properties of tasks in recipes.
   * New default setting ``number_of_colors`` on recipe level: Fixed number of elements from colormap, to have same colour succession in plots with different number of curves if a colormap is specified.
   * Tasks can be marked as to be skipped, using the ``skip`` keyword on the top level of the task definition in a recipe.
+
+
+Changes
+-------
+
+* Recipe structure changed slightly: The ``settings`` dictionary has a new sub-dictionary ``colors``, and the ``default_colormap`` key moved there, together with the new keys ``number_of_colors`` and ``first_color``.
+
+  * **New recipe format version: 0.3**.
+  * Existing recipes are updated automatically on import.
 
 
 Fixes

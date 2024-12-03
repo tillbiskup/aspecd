@@ -393,6 +393,32 @@ class TestRecipeYamlImporter(unittest.TestCase):
             recipe.directories["datasets_source"],
         )
 
+    def test_import_version_0_2_converts_to_current_version(self):
+        self.recipe_dict = {
+            "format": {"version": "0.2"},
+            "settings": {
+                "default_package": "aspecd",
+                "autosave_plots": False,
+                "default_colormap": "viridis",
+            },
+            "datasets": ["foo"],
+            "tasks": [
+                {
+                    "kind": "singleplot",
+                    "type": "SinglePlotter",
+                    "properties": {"filename": "foo"},
+                }
+            ],
+        }
+        self.create_recipe_from_dict()
+        self.importer.source = self.recipe_filename
+        recipe = tasks.Recipe()
+        recipe.import_from(self.importer)
+        self.assertEqual(
+            self.recipe_dict["settings"]["default_colormap"],
+            recipe.settings["colors"]["default_colormap"],
+        )
+
 
 class TestRecipeYamlExporter(unittest.TestCase):
     def setUp(self):
