@@ -1,6 +1,6 @@
 format:
   type: ASpecD recipe
-  version: '0.2'
+  version: '0.3'
 
 datasets:
   - source: FTIR-C1_1.csv

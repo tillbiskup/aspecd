@@ -43,7 +43,7 @@ The typical use case of the ASpecD framework, and even more so the packages base
 
     format:
       type: ASpecD recipe
-      version: '0.2'
+      version: '0.3'
 
     datasets:
       - /path/to/first/dataset
@@ -69,7 +69,7 @@ A similar scenario to the one given above for the imported data would look like:
 
     format:
       type: ASpecD recipe
-      version: '0.2'
+      version: '0.3'
 
     tasks:
       - kind: model
