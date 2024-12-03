@@ -53,7 +53,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     # 'sphinx.ext.viewcode',
     "sphinx_multiversion",
-    "sphinx_design",
+    # "sphinx_design",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -222,7 +222,8 @@ texinfo_documents = [
         "ASpecD Documentation",
         author,
         "ASpecD",
-        "One line description of project.",
+        "A framework for handling spectroscopic data focussing on "
+        "reproducibility",
         "Miscellaneous",
     ),
 ]
@@ -235,5 +236,5 @@ intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
     "pandas": ("https://pandas.pydata.org/pandas-docs/dev", None),
-    "jinja2": ("https://jinja.palletsprojects.com/en/3.0.x/", None),
+    "jinja2": ("https://jinja.palletsprojects.com/en/stable/", None),
 }
