@@ -4808,6 +4808,9 @@ class MultiPlot1DProperties(MultiPlotProperties):
         succession in your figures, regardless of the number of actual
         drawings within one figure.
 
+        If there are more drawings than colors, the colors will be cycled,
+        *i.e.*, several drawings will have the same color.
+
         Has only an effect if a :attr:`colormap` is provided.
 
     Raises
@@ -4922,7 +4925,7 @@ class MultiPlot1DProperties(MultiPlotProperties):
                 number_of_colors = len(self.drawings)
             colors = plt.get_cmap(self.colormap, number_of_colors)
             for idx, _ in enumerate(plotter.drawings):
-                self.drawings[idx].color = colors(idx)
+                self.drawings[idx].color = colors(idx % number_of_colors)
 
 
 class SinglePlot2DStackedProperties(MultiPlot1DProperties):
