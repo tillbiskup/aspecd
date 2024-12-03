@@ -4813,6 +4813,14 @@ class MultiPlot1DProperties(MultiPlotProperties):
 
         Has only an effect if a :attr:`colormap` is provided.
 
+    first_color : :class:`int`
+        First color of a choosen colormap to use.
+
+        Particularly with colormaps starting with white or fairly light
+        colors, setting an offset within the colormap is often necessary.
+
+        Default: 0
+
     Raises
     ------
     aspecd.exceptions.MissingPlotterError
@@ -4823,7 +4831,7 @@ class MultiPlot1DProperties(MultiPlotProperties):
         Added attribute :attr:`colormap`
 
     .. versionchanged:: 0.12
-        Added attribute :attr:`number_of_colors`
+        Added attributes :attr:`number_of_colors` and  :attr:`first_color`
 
     """
 
@@ -4831,6 +4839,7 @@ class MultiPlot1DProperties(MultiPlotProperties):
         super().__init__()
         self.colormap = None
         self.number_of_colors = None
+        self.first_color = 0
         self._drawing = False
 
     def from_dict(self, dict_=None):
@@ -4923,9 +4932,13 @@ class MultiPlot1DProperties(MultiPlotProperties):
                 number_of_colors = self.number_of_colors
             else:
                 number_of_colors = len(self.drawings)
-            colors = plt.get_cmap(self.colormap, number_of_colors)
+            colors = plt.get_cmap(
+                self.colormap, number_of_colors + self.first_color
+            )
             for idx, _ in enumerate(plotter.drawings):
-                self.drawings[idx].color = colors(idx % number_of_colors)
+                self.drawings[idx].color = colors(
+                    (idx % number_of_colors) + self.first_color
+                )
 
 
 class SinglePlot2DStackedProperties(MultiPlot1DProperties):

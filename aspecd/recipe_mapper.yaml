@@ -1,7 +1,7 @@
 ---
 
 format:
-  type: metadata mapper cwepr
+  type: metadata mapper
   version: 0.1
 
 map 1:
