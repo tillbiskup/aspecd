@@ -70,6 +70,15 @@ A Python virtual environment needs to be activated. This is usually done using t
 
     source aspecd/bin/activate
 
+
+.. note::
+
+    **Windows-Users** activate their virtual environment differently.
+
+    .. code-block:: bash
+
+        aspecd/Scripts/Activate
+
 Assuming in this case that your virtual environment is called ``aspecd`` and that you are in the same path where you just created your virtual environment.
 
 Deactivating is simple as well, once you are done. Either close the terminal, or issue the command ``deactivate``.
