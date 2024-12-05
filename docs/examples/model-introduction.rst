@@ -29,7 +29,7 @@ Classes used:
 
 Although the primary motivation for the :mod:`aspecd.model` module is to provide mathematical models that can be used for fitting experimental data, in conjunction with the `FitPy package <https://docs.fitpy.de/>`_, they can be used to create artificial datasets and demonstrate the capabilities of the ASpecD framework.
 
-As there are a few subtle differences between working with actual (imported) data and models, this page serves as an introduction wo working with model data.
+As there are a few subtle differences between working with actual (imported) data and models, this page serves as an introduction to working with model data.
 
 
 Working with imported data vs. models

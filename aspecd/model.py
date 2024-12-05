@@ -296,6 +296,42 @@ class Model(ToDictMixin):
         that auto-generate one axis.
 
 
+    Examples
+    --------
+    For convenience, a series of examples in recipe style (for details of
+    the recipe-driven data analysis, see :mod:`aspecd.tasks`) is given below
+    for how to make use of this class. The examples focus each on a single
+    aspect.
+
+    Defining a model in a recipe generally follows the strategy shown below,
+    although creating an instance of the base class :class:`Model` will
+    usually not help, as you need to instantiate a concrete model:
+
+    .. code-block:: yaml
+
+        kind: model
+        type: Model
+        properties:
+          parameters:
+            foo: 42
+            bar: 21
+        from_dataset: dataset_label
+        result: foo
+
+    Note that you can refer to datasets and results created during cooking
+    of a recipe using their respective labels. Those labels will
+    automatically be replaced by the actual dataset/result prior to
+    performing the task.
+
+    Here, we have used this for the parameter ``from_dataset`` in the above
+    recipe excerpt. For a :obj:`Model` object, you can set the variables
+    explicitly. However, in context of a recipe, this is rarely useful.
+    Therefore, the ``from_dataset`` parameter lets you refer to a dataset
+    (by its label used within the recipe) that is used to call the
+    :meth:`Model.from_dataset` method with to obtain the variables from this
+    dataset.
+
+
     .. versionchanged:: 0.3
         New attribute :attr:`description`
 
