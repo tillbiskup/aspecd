@@ -74,7 +74,7 @@ Setting the scene
 The scenario: We have a curve comprising of two overlapping Lorentzians and want to highlight the individual components. Here, we just plot the data and the individual components.
 
 
-.. literalinclude:: plotting-annotation-marker.yaml
+.. literalinclude:: plotting-annotation-fillbetween.yaml
     :language: yaml
     :linenos:
     :lines: 49-72
@@ -95,7 +95,7 @@ FillBetween with default settings
 The scenario is as described above: We have a curve comprising of two overlapping Lorentzians and want to highlight the individual components. To fill the area below the curves of the individual components, we can use a :class:`aspecd.annotation.FillBetween` annotation.
 
 
-.. literalinclude:: plotting-annotation-marker.yaml
+.. literalinclude:: plotting-annotation-fillbetween.yaml
     :language: yaml
     :linenos:
     :lines: 74-102
@@ -120,7 +120,7 @@ Individual annotations with styling
 In the example above, we have shown the default styling of the :class:`aspecd.annotation.FillBetween` annotation. As this is not quite what we usually would like to see, here, we apply some styling. For details of the parameters you can set, have a look at :class:`aspecd.plotting.PatchProperties`.
 
 
-.. literalinclude:: plotting-annotation-marker.yaml
+.. literalinclude:: plotting-annotation-fillbetween.yaml
     :language: yaml
     :linenos:
     :lines: 104-149
@@ -142,7 +142,7 @@ Individual annotations in a SinglePlotter
 Quite similar to the situation above, we need not use a :class:`aspecd.plotting.MultiPlotter` to show the individual components, as the annotation would be sufficient. Note that we stored the annotations for the individual lines declared above using the ``result`` key, so that we can reuse them here.
 
 
-.. literalinclude:: plotting-annotation-marker.yaml
+.. literalinclude:: plotting-annotation-fillbetween.yaml
     :language: yaml
     :linenos:
     :lines: 151-168
@@ -163,7 +163,7 @@ Data with baseline
 By default, and if not providing a second line, the patch extends from zero to the data points given by the actual data of the curve. While you could set a scalar value different from zero, more often you will encounter baselines, at least in spectroscopy and in real life. Here, we first (re)create the same data as above, but this time with a baseline added. To add the baseline to both, the model data and the individual components, we use the :class:`aspecd.processing.DatasetAlgebra` processing step. Afterwards, the data with baseline are plotted together with the baseline.
 
 
-.. literalinclude:: plotting-annotation-marker.yaml
+.. literalinclude:: plotting-annotation-fillbetween.yaml
     :language: yaml
     :linenos:
     :lines: 170-222
@@ -184,10 +184,10 @@ Filling between two curves
 Having data with a baseline, this is finally a sensible real-world situation where you may want to provide a second dataset as boundary for the patch. Of course, other typical scenarios are marking the confidence interval of a fit, where you have the lower and upper boundaries as dataset.
 
 
-.. literalinclude:: plotting-annotation-marker.yaml
+.. literalinclude:: plotting-annotation-fillbetween.yaml
     :language: yaml
     :linenos:
-    :lines: 224-272
+    :lines: 224-271
     :lineno-start: 224
 
 
