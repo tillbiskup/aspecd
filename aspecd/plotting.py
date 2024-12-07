@@ -4966,7 +4966,10 @@ class MultiPlot1DProperties(MultiPlotProperties):
             )
             default_colors = mpl.rcParams["axes.prop_cycle"].by_key()["color"]
             for idx, _ in enumerate(plotter.drawings):
-                if self.drawings[idx].color == default_colors[idx]:
+                if (
+                    self.drawings[idx].color
+                    == default_colors[idx % len(default_colors)]
+                ):
                     self.drawings[idx].color = colors(
                         (idx % number_of_colors) + self.first_color
                     )

@@ -3,7 +3,6 @@
 import contextlib
 import hashlib
 import io
-import logging
 import warnings
 
 import matplotlib.axes
@@ -29,6 +28,7 @@ class TestPlotter(unittest.TestCase):
     def tearDown(self):
         if os.path.isfile(self.filename):
             os.remove(self.filename)
+        plt.close(self.plotter.figure)
 
     def test_instantiate_class(self):
         pass
@@ -268,6 +268,9 @@ class TestSinglePlotter(unittest.TestCase):
     def setUp(self):
         self.plotter = plotting.SinglePlotter()
 
+    def tearDown(self):
+        plt.close(self.plotter.figure)
+
     def test_instantiate_class(self):
         pass
 
@@ -419,6 +422,9 @@ class TestSinglePlotter1D(unittest.TestCase):
 
     def test_instantiate_class(self):
         pass
+
+    def tearDown(self):
+        plt.close(self.plotter.figure)
 
     def test_has_type_property(self):
         self.assertTrue(hasattr(self.plotter, "type"))
@@ -1776,6 +1782,9 @@ class TestMultiPlotter(unittest.TestCase):
     def setUp(self):
         self.plotter = plotting.MultiPlotter()
 
+    def tearDown(self):
+        plt.close(self.plotter.figure)
+
     def test_instantiate_class(self):
         pass
 
@@ -1982,6 +1991,9 @@ class TestMultiPlotter1D(unittest.TestCase):
         self.dataset.data.axes[0].unit = "mT"
         self.dataset.data.axes[1].quantity = "intensity"
         self.dataset.data.axes[1].unit = "V"
+
+    def tearDown(self):
+        plt.close(self.plotter.figure)
 
     def test_instantiate_class(self):
         pass
@@ -2221,6 +2233,9 @@ class TestMultiPlotter1DStacked(unittest.TestCase):
         self.plotter.datasets.append(dataset_)
         self.plotter.datasets.append(dataset_)
 
+    def tearDown(self):
+        plt.close(self.plotter.figure)
+
     def test_instantiate_class(self):
         pass
 
@@ -2434,6 +2449,9 @@ class TestCompositePlotter(unittest.TestCase):
         self.plotter = plotting.CompositePlotter()
         self.dataset = aspecd.dataset.CalculatedDataset()
         self.dataset.data.data = np.sin(np.linspace(0, 2 * np.pi, 101))
+
+    def tearDown(self):
+        plt.close(self.plotter.figure)
 
     def test_instantiate_class(self):
         pass
@@ -2847,6 +2865,9 @@ class TestSingleCompositePlotter(unittest.TestCase):
     def setUp(self):
         self.plotter = plotting.SingleCompositePlotter()
 
+    def tearDown(self):
+        plt.close(self.plotter.figure)
+
     def test_instantiate_class(self):
         pass
 
@@ -2971,6 +2992,7 @@ class TestSaver(unittest.TestCase):
         self.saver.filename = self.filename
         self.saver.save(plotter)
         self.assertEqual(self.saver.plotter, plotter)
+        plt.close(plotter.figure)
 
     def test_has_parameters_property(self):
         self.assertTrue(hasattr(self.saver, "parameters"))
@@ -2984,6 +3006,7 @@ class TestSaver(unittest.TestCase):
         self.saver.filename = self.filename
         self.saver.save(plotter)
         self.assertTrue(os.path.isfile(self.filename))
+        plt.close(plotter.figure)
 
     def test_set_format_parameter_adds_extension(self):
         plotter = plotting.Plotter()
@@ -2993,6 +3016,7 @@ class TestSaver(unittest.TestCase):
         self.saver.parameters["format"] = "pdf"
         self.saver.save(plotter)
         self.assertTrue(os.path.isfile(self.filename))
+        plt.close(plotter.figure)
 
     def test_set_format_parameter_corrects_extension(self):
         plotter = plotting.Plotter()
@@ -3003,6 +3027,7 @@ class TestSaver(unittest.TestCase):
         self.saver.filename = ".".join([basename, "png"])
         self.saver.save(plotter)
         self.assertTrue(os.path.isfile(self.filename))
+        plt.close(plotter.figure)
 
     def test_set_format_parameter_writes_appropriate_file(self):
         plotter = plotting.Plotter()
@@ -3012,6 +3037,7 @@ class TestSaver(unittest.TestCase):
         self.saver.parameters["format"] = "pdf"
         self.saver.save(plotter)
         self.assertTrue(os.path.isfile(self.filename))
+        plt.close(plotter.figure)
 
     def test_save_with_singleplotter1d(self):
         test_dataset = dataset.Dataset()
@@ -3020,6 +3046,7 @@ class TestSaver(unittest.TestCase):
         plotter.plot()
         self.saver.filename = self.filename
         self.saver.save(plotter)
+        plt.close(plotter.figure)
 
     def test_save_with_singleplotter2d(self):
         test_dataset = dataset.Dataset()
@@ -3029,6 +3056,7 @@ class TestSaver(unittest.TestCase):
         plotter.plot()
         self.saver.filename = self.filename
         self.saver.save(plotter)
+        plt.close(plotter.figure)
 
     def test_save_with_multiplotter(self):
         plotter = plotting.MultiPlotter()
@@ -3036,6 +3064,7 @@ class TestSaver(unittest.TestCase):
         plotter.plot()
         self.saver.filename = self.filename
         self.saver.save(plotter)
+        plt.close(plotter.figure)
 
     def test_save_with_too_long_filename_replaces_filename_with_hash(self):
         self.saver.plotter = plotting.Plotter()
@@ -3828,6 +3857,9 @@ class TestColorbarProperties(unittest.TestCase):
             matplotlib.cm.ScalarMappable(cmap="viridis"), ax=ax
         )
 
+    def tearDown(self):
+        plt.close()
+
     def test_instantiate_class(self):
         pass
 
@@ -4257,7 +4289,7 @@ class TestMultiPlot1DProperties(unittest.TestCase):
             plotter.properties.add_drawing()
         plotter.properties.drawings[2].color = colour
         plotter.plot()
-        plt.show()
+        # plt.show()
         self.assertEqual(colours(1), plotter.properties.drawings[1].color)
         self.assertEqual(
             colour,
