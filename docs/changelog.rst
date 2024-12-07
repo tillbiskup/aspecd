@@ -54,6 +54,7 @@ Fixes
 * :class:`aspecd.processing.SliceRemoval` handles lists properly
 * :class:`aspecd.processing.SliceRemoval` removes value(s) from corresponding axis
 * :class:`aspecd.processing.Averaging` handles inverted axes (*e.g.*, ppm scale) correctly regardless how ranges are given
+* :class:`aspecd.plotting.MultiPlot1DProperties` handles explicit colours of individual drawings correctly.
 
 
 Version 0.11.0

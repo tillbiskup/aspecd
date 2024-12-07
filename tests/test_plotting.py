@@ -4239,6 +4239,32 @@ class TestMultiPlot1DProperties(unittest.TestCase):
         # plt.show()
         plt.close(plotter.figure)
 
+    def test_drawing_w_colormap_w_explicit_colour_has_correct_colour(self):
+        colormap_name = "viridis"
+        colour = "#cccccc"
+        n_drawings = 5
+        colours = plt.get_cmap(colormap_name, n_drawings)
+        self.plot_properties.colormap = colormap_name
+
+        plotter = plotting.MultiPlotter1D()
+        plotter.properties = self.plot_properties
+        x = np.linspace(0, 2 * np.pi, 64)
+        y = np.cos(x)
+        for idx in range(n_drawings):
+            dataset_ = dataset.Dataset()
+            dataset_.data.data = idx * y
+            plotter.datasets.append(dataset_)
+            plotter.properties.add_drawing()
+        plotter.properties.drawings[2].color = colour
+        plotter.plot()
+        plt.show()
+        self.assertEqual(colours(1), plotter.properties.drawings[1].color)
+        self.assertEqual(
+            colour,
+            matplotlib.colors.to_hex(plotter.properties.drawings[2].color),
+        )
+        plt.close(plotter.figure)
+
 
 class TestSinglePlot2DStackedProperties(unittest.TestCase):
     def setUp(self):

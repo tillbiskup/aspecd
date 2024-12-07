@@ -4964,10 +4964,12 @@ class MultiPlot1DProperties(MultiPlotProperties):
             colors = plt.get_cmap(
                 self.colormap, number_of_colors + self.first_color
             )
+            default_colors = mpl.rcParams["axes.prop_cycle"].by_key()["color"]
             for idx, _ in enumerate(plotter.drawings):
-                self.drawings[idx].color = colors(
-                    (idx % number_of_colors) + self.first_color
-                )
+                if self.drawings[idx].color == default_colors[idx]:
+                    self.drawings[idx].color = colors(
+                        (idx % number_of_colors) + self.first_color
+                    )
 
 
 class SinglePlot2DStackedProperties(MultiPlot1DProperties):
