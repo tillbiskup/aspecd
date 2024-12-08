@@ -280,6 +280,28 @@ class TestPlotter(unittest.TestCase):
         self.assertListEqual(figure_size, list(plotter.figure_size))
         plt.close(plotter.figure)
 
+    def test_fig_props_are_not_applied_before_plotting_if_fig_set_extern(
+        self,
+    ):
+
+        class MockPlotter(plotting.Plotter):
+            def __init__(self):
+                super().__init__()
+                self.figure_size = None
+
+            def _create_plot(self):
+                self.figure_size = self.figure.get_size_inches()
+
+        plotter = MockPlotter()
+        figure_size = [3, 6]
+        plotter.properties.figure.size = figure_size
+        fig, ax = plt.subplots()
+        plotter.figure = fig
+        plotter.axes = ax
+        plotter.plot()
+        self.assertNotEqual(figure_size[0], plotter.figure_size[0])
+        plt.close(plotter.figure)
+
 
 class TestSinglePlotter(unittest.TestCase):
     def setUp(self):

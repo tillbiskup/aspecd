@@ -1072,8 +1072,8 @@ class Plotter(aspecd.utils.ToDictMixin):
         }
         self.properties = PlotProperties()
         self.description = "Abstract plotting step"
-        self.figure = None
-        self.axes = None
+        self._figure = None
+        self._axes = None
         self.filename = ""
         self.caption = Caption()
         self.legend = None
@@ -1091,16 +1091,38 @@ class Plotter(aspecd.utils.ToDictMixin):
             "axes",
             "legend",
         ]
+        self._figure_set_externally = False
+        self._axes_set_externally = False
+
+    @property
+    def figure(self):
+        """Reference to figure object."""
+        return self._figure
+
+    @figure.setter
+    def figure(self, figure=None):
+        self._figure_set_externally = True
+        self._figure = figure
 
     @property
     def fig(self):
         """Shorthand for :attr:`figure`."""
-        return self.figure
+        return self._figure
+
+    @property
+    def axes(self):
+        """Reference to axes object used for actual plotting."""
+        return self._axes
+
+    @axes.setter
+    def axes(self, axes=None):
+        self._axes_set_externally = True
+        self._axes = axes
 
     @property
     def ax(self):  # pylint: disable=invalid-name
-        """Short hand for :attr:`axes`."""
-        return self.axes
+        """Shorthand for :attr:`axes`."""
+        return self._axes
 
     def plot(self):
         """Perform the actual plotting.
@@ -1253,7 +1275,7 @@ class Plotter(aspecd.utils.ToDictMixin):
             mpl.interactive(
                 False
             )  # Mac OS X: prevent plot window from opening
-            self.figure, self.axes = plt.subplots()
+            self._figure, self._axes = plt.subplots()
 
     def _apply_figure_properties(self):
         """
@@ -1266,7 +1288,8 @@ class Plotter(aspecd.utils.ToDictMixin):
         itself relies on the actual figure size.
 
         """
-        self.properties.figure.apply(figure=self.figure)
+        if not self._figure_set_externally:
+            self.properties.figure.apply(figure=self.figure)
 
     def _create_plot(self):
         """Perform the actual plotting of the data of the dataset(s).
