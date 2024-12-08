@@ -4113,6 +4113,7 @@ class CompositePlotter(Plotter):
         for idx, axes in enumerate(self.axes):
             plotter_copy[idx].figure = self.figure
             plotter_copy[idx].axes = axes
+            plotter_copy[idx].properties.axes.apply(axes)
             plotter_copy[idx].plot()
             self._apply_figure_properties()
         # Needs to be reapplied after plotting again to remove labels
