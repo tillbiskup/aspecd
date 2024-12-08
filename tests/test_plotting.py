@@ -2971,6 +2971,23 @@ class TestCompositePlotter(unittest.TestCase):
         plotter.plot()
         self.assertEqual(figure_size[0], plotter.figure_size[0])
 
+    def test_plot_with_sharex_shows_xlabel_only_on_bottom(self):
+        self.plotter.grid_dimensions = [2, 2]
+        self.plotter.subplot_locations = [
+            [0, 0, 1, 1],
+            [1, 0, 1, 1],
+            [0, 1, 2, 1],
+        ]
+        self.plotter.sharex = True
+        single_plotter = plotting.SinglePlotter1D()
+        self.dataset.data.axes[0].quantity = "foo"
+        single_plotter.dataset = self.dataset
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plot()
+        self.assertFalse(self.plotter.axes[0].get_xlabel())
+
 
 class TestSingleCompositePlotter(unittest.TestCase):
     def setUp(self):

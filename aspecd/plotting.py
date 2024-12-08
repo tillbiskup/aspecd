@@ -4108,6 +4108,26 @@ class CompositePlotter(Plotter):
             plotter.style = self.style
             if hasattr(plotter, "drawings"):
                 plotter.drawings = []
+        # Needs to be applied before plotting for certain plotters
+        self._share_axes()
+        for idx, axes in enumerate(self.axes):
+            plotter_copy[idx].figure = self.figure
+            plotter_copy[idx].axes = axes
+            plotter_copy[idx].plot()
+            self._apply_figure_properties()
+        # Needs to be reapplied after plotting again to remove labels
+        self._share_axes()
+        for idx, position in enumerate(self.axes_positions):
+            left, bottom, width, height = self.axes[idx].get_position().bounds
+            new_position = [
+                left + position[0] * width,
+                bottom + position[1] * height,
+                position[2] * width,
+                position[3] * height,
+            ]
+            self.axes[idx].set_position(new_position)
+
+    def _share_axes(self):
         if self.sharex:
             if isinstance(self.sharex, bool) or self.sharex == "all":
                 self._sharex()
@@ -4118,20 +4138,6 @@ class CompositePlotter(Plotter):
                 self._sharey()
             elif self.sharey in ["row", "rows", "row-wise"]:
                 self._sharey_row_wise()
-        for idx, axes in enumerate(self.axes):
-            plotter_copy[idx].figure = self.figure
-            plotter_copy[idx].axes = axes
-            plotter_copy[idx].plot()
-            self._apply_figure_properties()
-        for idx, position in enumerate(self.axes_positions):
-            left, bottom, width, height = self.axes[idx].get_position().bounds
-            new_position = [
-                left + position[0] * width,
-                bottom + position[1] * height,
-                position[2] * width,
-                position[3] * height,
-            ]
-            self.axes[idx].set_position(new_position)
 
     def _sharex(self):
         for axes in self.axes:
