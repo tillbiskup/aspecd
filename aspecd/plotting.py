@@ -1134,6 +1134,7 @@ class Plotter(aspecd.utils.ToDictMixin):
         self._set_style()
         self._create_figure_and_axes()
         self._apply_figure_properties()
+        self._apply_axes_properties()
         self._create_plot()
         self._add_annotations()
         self.properties.apply(plotter=self)
@@ -1290,6 +1291,20 @@ class Plotter(aspecd.utils.ToDictMixin):
         """
         if not self._figure_set_externally:
             self.properties.figure.apply(figure=self.figure)
+
+    def _apply_axes_properties(self):
+        """
+        Apply the properties of the axes.
+
+        While generally, all properties are applied calling out to
+        :meth:`PlotProperties.apply` in the :meth:`plot` method, having the
+        axes properties applied early on, *i.e.* **before the actual
+        plotting**, is sometimes crucial, particularly if the plotting
+        itself relies on the actual axes limits.
+
+        """
+        if not self._axes_set_externally:
+            self.properties.axes.apply(axes=self.axes)
 
     def _create_plot(self):
         """Perform the actual plotting of the data of the dataset(s).
@@ -4093,6 +4108,16 @@ class CompositePlotter(Plotter):
             plotter.style = self.style
             if hasattr(plotter, "drawings"):
                 plotter.drawings = []
+        if self.sharex:
+            if isinstance(self.sharex, bool) or self.sharex == "all":
+                self._sharex()
+            elif self.sharex in ["col", "column", "column-wise"]:
+                self._sharex_column_wise()
+        if self.sharey:
+            if isinstance(self.sharey, bool) or self.sharey == "all":
+                self._sharey()
+            elif self.sharey in ["row", "rows", "row-wise"]:
+                self._sharey_row_wise()
         for idx, axes in enumerate(self.axes):
             plotter_copy[idx].figure = self.figure
             plotter_copy[idx].axes = axes
@@ -4107,17 +4132,6 @@ class CompositePlotter(Plotter):
                 position[3] * height,
             ]
             self.axes[idx].set_position(new_position)
-
-        if self.sharex:
-            if isinstance(self.sharex, bool) or self.sharex == "all":
-                self._sharex()
-            elif self.sharex in ["col", "column", "column-wise"]:
-                self._sharex_column_wise()
-        if self.sharey:
-            if isinstance(self.sharey, bool) or self.sharey == "all":
-                self._sharey()
-            elif self.sharey in ["row", "rows", "row-wise"]:
-                self._sharey_row_wise()
 
     def _sharex(self):
         for axes in self.axes:
@@ -4485,6 +4499,12 @@ class PlotProperties(aspecd.utils.Properties):
         For the properties that can be set this way, see the documentation
         of the :class:`aspecd.plotting.FigureProperties` class.
 
+    axes : :class:`aspecd.plotting.AxesProperties`
+        Properties of the axes.
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.AxesProperties` class.
+
     legend : :class:`aspecd.plotting.LegendProperties`
         Properties of the legend.
 
@@ -4507,11 +4527,16 @@ class PlotProperties(aspecd.utils.Properties):
     aspecd.exceptions.MissingPlotterError
         Raised if no plotter is provided.
 
+
+    .. versionchanged:: 0.12
+        Moved :attr:`axes` up to this class from subclasses.
+
     """
 
     def __init__(self):
         super().__init__()
         self.figure = FigureProperties()
+        self.axes = AxesProperties()
         self.legend = LegendProperties()
         self.zero_lines = LineProperties()
         # Set default properties
@@ -4540,6 +4565,11 @@ class PlotProperties(aspecd.utils.Properties):
         if not plotter:
             raise aspecd.exceptions.MissingPlotterError
         self.figure.apply(figure=plotter.figure)
+        if isinstance(plotter.axes, list):
+            for axes in plotter.axes:
+                self.axes.apply(axes=axes)
+        else:
+            self.axes.apply(axes=plotter.axes)
 
 
 class SinglePlotProperties(PlotProperties):
@@ -4548,6 +4578,12 @@ class SinglePlotProperties(PlotProperties):
 
     Attributes
     ----------
+    figure : :class:`aspecd.plotting.FigureProperties`
+        Properties of the figure as such
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.FigureProperties` class.
+
     axes : :class:`aspecd.plotting.AxesProperties`
         Properties of the axes.
 
@@ -4575,7 +4611,6 @@ class SinglePlotProperties(PlotProperties):
 
     def __init__(self):
         super().__init__()
-        self.axes = AxesProperties()
         self.grid = GridProperties()
         self.drawing = DrawingProperties()
 
@@ -4716,6 +4751,12 @@ class MultiPlotProperties(PlotProperties):
 
     Attributes
     ----------
+    figure : :class:`aspecd.plotting.FigureProperties`
+        Properties of the figure as such
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.FigureProperties` class.
+
     axes : :class:`aspecd.plotting.AxesProperties`
         Properties of the axes.
 
@@ -4745,7 +4786,6 @@ class MultiPlotProperties(PlotProperties):
 
     def __init__(self):
         super().__init__()
-        self.axes = AxesProperties()
         self.grid = GridProperties()
         self.drawings = []
 
@@ -5161,6 +5201,12 @@ class CompositePlotProperties(PlotProperties):
 
     Attributes
     ----------
+    figure : :class:`aspecd.plotting.FigureProperties`
+        Properties of the figure as such
+
+        For the properties that can be set this way, see the documentation
+        of the :class:`aspecd.plotting.FigureProperties` class.
+
     axes : :class:`AxesProperties`
         Properties for all axes of the CompositePlotter.
 

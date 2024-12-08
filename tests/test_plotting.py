@@ -302,6 +302,45 @@ class TestPlotter(unittest.TestCase):
         self.assertNotEqual(figure_size[0], plotter.figure_size[0])
         plt.close(plotter.figure)
 
+    def test_axes_properties_are_applied_before_plotting(self):
+
+        class MockPlotter(plotting.Plotter):
+            def __init__(self):
+                super().__init__()
+                self.axes_ylim = None
+
+            def _create_plot(self):
+                self.axes_ylim = self.axes.get_ylim()
+
+        plotter = MockPlotter()
+        axes_ylim = [3, 6]
+        plotter.properties.axes.ylim = axes_ylim
+        plotter.plot()
+        self.assertListEqual(axes_ylim, list(plotter.axes_ylim))
+        plt.close(plotter.figure)
+
+    def test_ax_props_are_not_applied_before_plotting_if_fig_set_extern(
+        self,
+    ):
+
+        class MockPlotter(plotting.Plotter):
+            def __init__(self):
+                super().__init__()
+                self.axes_ylim = None
+
+            def _create_plot(self):
+                self.axes_ylim = self.axes.get_ylim()
+
+        plotter = MockPlotter()
+        axes_ylim = [3, 6]
+        plotter.properties.axes.ylim = axes_ylim
+        fig, ax = plt.subplots()
+        plotter.figure = fig
+        plotter.axes = ax
+        plotter.plot()
+        self.assertNotEqual(axes_ylim[0], plotter.axes_ylim[0])
+        plt.close(plotter.figure)
+
 
 class TestSinglePlotter(unittest.TestCase):
     def setUp(self):
@@ -3331,8 +3370,14 @@ class TestPlotProperties(unittest.TestCase):
         self.assertTrue(hasattr(self.plot_properties, "from_dict"))
         self.assertTrue(callable(self.plot_properties.from_dict))
 
-    def test_has_figure_property(self):
-        self.assertTrue(hasattr(self.plot_properties, "figure"))
+    def test_has_properties(self):
+        properties = [
+            "figure",
+            "axes",
+        ]
+        for prop in properties:
+            with self.subTest(prop=prop):
+                self.assertTrue(hasattr(self.plot_properties, prop))
 
     def test_has_apply_method(self):
         self.assertTrue(hasattr(self.plot_properties, "apply"))
@@ -3342,13 +3387,23 @@ class TestPlotProperties(unittest.TestCase):
         with self.assertRaises(aspecd.exceptions.MissingPlotterError):
             self.plot_properties.apply()
 
-    def test_apply_sets_properties(self):
+    def test_apply_sets_figure_properties(self):
         self.plot_properties.figure.dpi = 300.0
         plot = plotting.Plotter()
         plot.plot()
         self.plot_properties.apply(plotter=plot)
         self.assertEqual(
             self.plot_properties.figure.dpi, plot.figure.get_dpi()
+        )
+        plt.close(plot.figure)
+
+    def test_apply_sets_axes_properties(self):
+        self.plot_properties.axes.xlabel = "foobar"
+        plot = plotting.Plotter()
+        plot.plot()
+        self.plot_properties.apply(plotter=plot)
+        self.assertEqual(
+            self.plot_properties.axes.xlabel, plot.axes.get_xlabel()
         )
         plt.close(plot.figure)
 
