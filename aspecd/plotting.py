@@ -1111,6 +1111,7 @@ class Plotter(aspecd.utils.ToDictMixin):
         """
         self._set_style()
         self._create_figure_and_axes()
+        self._apply_figure_properties()
         self._create_plot()
         self._add_annotations()
         self.properties.apply(plotter=self)
@@ -1253,6 +1254,19 @@ class Plotter(aspecd.utils.ToDictMixin):
                 False
             )  # Mac OS X: prevent plot window from opening
             self.figure, self.axes = plt.subplots()
+
+    def _apply_figure_properties(self):
+        """
+        Apply the properties of the figure.
+
+        While generally, all properties are applied calling out to
+        :meth:`PlotProperties.apply` in the :meth:`plot` method, having the
+        figure properties applied early on, *i.e.* **before the actual
+        plotting**, is sometimes crucial, particularly if the plotting
+        itself relies on the actual figure size.
+
+        """
+        self.properties.figure.apply(figure=self.figure)
 
     def _create_plot(self):
         """Perform the actual plotting of the data of the dataset(s).

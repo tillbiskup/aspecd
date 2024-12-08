@@ -263,6 +263,23 @@ class TestPlotter(unittest.TestCase):
         self.plotter.delete_annotation(0)
         self.assertIs(annotation_step, self.plotter.annotations[-1])
 
+    def test_figure_properties_are_applied_before_plotting(self):
+
+        class MockPlotter(plotting.Plotter):
+            def __init__(self):
+                super().__init__()
+                self.figure_size = None
+
+            def _create_plot(self):
+                self.figure_size = self.figure.get_size_inches()
+
+        plotter = MockPlotter()
+        figure_size = [3, 6]
+        plotter.properties.figure.size = figure_size
+        plotter.plot()
+        self.assertListEqual(figure_size, list(plotter.figure_size))
+        plt.close(plotter.figure)
+
 
 class TestSinglePlotter(unittest.TestCase):
     def setUp(self):

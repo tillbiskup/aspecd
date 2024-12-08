@@ -46,6 +46,8 @@ Changes
   * **New recipe format version: 0.3**.
   * Existing recipes are updated automatically on import.
 
+* Figure properties (see :class:`aspecd.plotting.FigureProperties`) are applied to the figure *before* the actual plotting is done, as some plotters need to know the (final) figure size or else.
+
 
 Fixes
 -----
