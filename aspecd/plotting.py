@@ -4068,7 +4068,7 @@ class CompositePlotter(Plotter):
         return dict_
 
     def _create_figure_and_axes(self):
-        self.figure = plt.figure()
+        self._figure = plt.figure()
         # noinspection PyArgumentList
         self.grid_spec = self.figure.add_gridspec(
             self.grid_dimensions[0],
@@ -4097,6 +4097,7 @@ class CompositePlotter(Plotter):
             plotter_copy[idx].figure = self.figure
             plotter_copy[idx].axes = axes
             plotter_copy[idx].plot()
+            self._apply_figure_properties()
         for idx, position in enumerate(self.axes_positions):
             left, bottom, width, height = self.axes[idx].get_position().bounds
             new_position = [

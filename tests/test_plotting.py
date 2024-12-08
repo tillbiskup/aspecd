@@ -2899,6 +2899,39 @@ class TestCompositePlotter(unittest.TestCase):
                 self.plotter.axes[1].get_ylim(),
             )
 
+    def test_plot_does_not_set_figure_set_from_external(self):
+        self.plotter.grid_dimensions = [1, 1]
+        self.plotter.subplot_locations = [[0, 0, 1, 1]]
+        self.plotter.axes_positions = [[0.2, 0.2, -0.2, -0.2]]
+        single_plotter = plotting.SinglePlotter1D()
+        single_plotter.dataset = self.dataset
+        self.plotter.plotter.append(single_plotter)
+        self.plotter.plot()
+        self.assertFalse(self.plotter._figure_set_externally)
+
+    def test_plot_reapplies_figure_properties_after_each_plotter(self):
+        class MockPlotter(plotting.CompositePlotter):
+            def __init__(self):
+                super().__init__()
+                self.figure_size = None
+
+            def _create_plot(self):
+                super()._create_plot()
+                self.figure_size = self.figure.get_size_inches()
+
+        figure_size = [3, 6]
+        plotter = MockPlotter()
+        plotter.grid_dimensions = [1, 1]
+        plotter.subplot_locations = [[0, 0, 1, 1]]
+        plotter.axes_positions = [[0.2, 0.2, -0.2, -0.2]]
+        plotter.properties.figure.size = figure_size
+        single_plotter = plotting.SinglePlotter1D()
+        single_plotter.properties.figure.size = [30, 60]
+        single_plotter.dataset = self.dataset
+        plotter.plotter.append(single_plotter)
+        plotter.plot()
+        self.assertEqual(figure_size[0], plotter.figure_size[0])
+
 
 class TestSingleCompositePlotter(unittest.TestCase):
     def setUp(self):
