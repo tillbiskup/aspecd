@@ -52,7 +52,7 @@ setuptools.setup(
         "scipy>=0.14",
         "oyaml",
         "asdf",
-        "bibrecord",
+        "bibrecord>=0.2",
         "setuptools",
     ],
     extras_require={
