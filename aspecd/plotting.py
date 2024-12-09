@@ -1001,12 +1001,6 @@ class Plotter(aspecd.utils.ToDictMixin):
     description : :class:`str`
         Short description, to be set in class definition
 
-    figure : :class:`matplotlib.figure.Figure`
-        Reference to figure object
-
-    axes : :class:`matplotlib.axes.Axes`
-        Reference to axes object used for actual plotting
-
     filename : :class:`str`
         Name of file to save the plot to
 
@@ -1096,7 +1090,15 @@ class Plotter(aspecd.utils.ToDictMixin):
 
     @property
     def figure(self):
-        """Reference to figure object."""
+        """
+        Reference to figure object.
+
+        Returns
+        -------
+        figure : :class:`matplotlib.figure.Figure`
+            Reference to figure object
+
+        """
         return self._figure
 
     @figure.setter
@@ -1111,7 +1113,15 @@ class Plotter(aspecd.utils.ToDictMixin):
 
     @property
     def axes(self):
-        """Reference to axes object used for actual plotting."""
+        """
+        Reference to axes object used for actual plotting.
+
+        Returns
+        -------
+        axes : :class:`matplotlib.axes.Axes`
+            Reference to axes object used for actual plotting
+
+        """
         return self._axes
 
     @axes.setter
@@ -3923,13 +3933,6 @@ class CompositePlotter(Plotter):
 
     Attributes
     ----------
-    axes : :class:`list`
-        List of axes
-
-        Will eventually be objects of subtypes of
-        :class:`matplotlib.axes.Axes` and populated upon calling
-        :meth:`aspecd.plotting.Plotter.plot`.
-
     grid_dimensions : :class:`list`
         Dimensions of the grid used to layout the figure
 
@@ -4052,6 +4055,28 @@ class CompositePlotter(Plotter):
         self.sharey = False
         self.properties = CompositePlotProperties()
         self.__kind__ = "compositeplot"
+
+    @property
+    def axes(self):
+        """
+        Axes of the composite plotter.
+
+        Will eventually be objects of subtypes of
+        :class:`matplotlib.axes.Axes` and populated upon calling
+        :meth:`aspecd.plotting.Plotter.plot`.
+
+        Returns
+        -------
+        axes : :class:`list`
+            List of axes
+
+        """
+        return self._axes
+
+    @axes.setter
+    def axes(self, axes=None):
+        self._axes_set_externally = True
+        self._axes = axes
 
     def to_dict(self, remove_empty=False):
         """
@@ -6944,7 +6969,6 @@ class AnnotationTextProperties(DrawingProperties):
 
     """
 
-    # pylint: disable=too-many-instance-attributes
     def __init__(self):
         super().__init__()
         self.alpha = None
