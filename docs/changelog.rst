@@ -11,6 +11,9 @@ Version 0.12.0
 Not yet released
 
 
+**Note:** This version comes with a new version of the recipe format: 0.3. Existing recipes are updated automatically on import.
+
+
 New features
 ------------
 
@@ -58,6 +61,12 @@ Fixes
 * :class:`aspecd.processing.SliceRemoval` removes value(s) from corresponding axis
 * :class:`aspecd.processing.Averaging` handles inverted axes (*e.g.*, ppm scale) correctly regardless how ranges are given
 * :class:`aspecd.plotting.MultiPlot1DProperties` handles explicit colours of individual drawings correctly.
+
+
+Updated requirements
+--------------------
+
+* bibrecord >= 0.2
 
 
 Version 0.11.0
