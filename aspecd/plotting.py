@@ -1108,7 +1108,15 @@ class Plotter(aspecd.utils.ToDictMixin):
 
     @property
     def fig(self):
-        """Shorthand for :attr:`figure`."""
+        """
+        Shorthand for :attr:`figure`.
+
+        Returns
+        -------
+        figure : :class:`matplotlib.figure.Figure`
+            Reference to figure object
+
+        """
         return self._figure
 
     @property
@@ -1131,7 +1139,15 @@ class Plotter(aspecd.utils.ToDictMixin):
 
     @property
     def ax(self):  # pylint: disable=invalid-name
-        """Shorthand for :attr:`axes`."""
+        """
+        Shorthand for :attr:`axes`.
+
+        Returns
+        -------
+        axes : :class:`matplotlib.axes.Axes`
+            Reference to axes object used for actual plotting
+
+        """
         return self._axes
 
     def plot(self):
