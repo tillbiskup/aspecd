@@ -457,7 +457,8 @@ class DatasetImporter:
         else:
             self.dataset = dataset
         self._import()
-        # Untested due to lack of ideas how to test
+        if self.dataset.data.data.size == 0:
+            logger.warning('Could not read data from "%s"', self.source)
         # pylint: disable=protected-access
         self.dataset._origdata = copy.deepcopy(self.dataset.data)
         self.dataset.id = self.source

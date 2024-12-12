@@ -65,6 +65,28 @@ class TestDatasetImporter(unittest.TestCase):
         self.importer.import_into(test_dataset)
         self.assertEqual("foobar", test_dataset.label)
 
+    def test_import_copies_data_to_origdata(self):
+        class MockImporter(io.DatasetImporter):
+            def _import(self):
+                self.dataset.data.data = np.ones(5)
+
+        test_dataset = dataset.Dataset()
+        importer = MockImporter()
+        importer.source = "foobar"
+        importer.import_into(test_dataset)
+        np.testing.assert_array_equal(
+            test_dataset.data.data, test_dataset._origdata.data
+        )
+
+    def test_import_with_no_data_read_logs_warning(self):
+        test_dataset = dataset.Dataset()
+        self.importer.source = "/path/to/filename.ext"
+        with self.assertLogs(__package__, level="WARN") as cm:
+            self.importer.import_into(test_dataset)
+        self.assertIn(
+            f'Could not read data from "{self.importer.source}"', cm.output[0]
+        )
+
 
 class TestDatasetExporter(unittest.TestCase):
     def setUp(self):
