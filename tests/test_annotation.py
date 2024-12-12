@@ -3,6 +3,7 @@
 import unittest
 
 import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
 
 import aspecd.annotation as annotation
@@ -161,6 +162,9 @@ class TestPlotAnnotation(unittest.TestCase):
     def setUp(self):
         self.annotation = annotation.PlotAnnotation()
 
+    def tearDown(self):
+        plt.close("all")
+
     def test_instantiate_class(self):
         pass
 
@@ -237,6 +241,9 @@ class TestVerticalLine(unittest.TestCase):
     def setUp(self):
         self.annotation = annotation.VerticalLine()
         self.plotter = aspecd.plotting.Plotter()
+
+    def tearDown(self):
+        plt.close("all")
 
     def test_instantiate_class(self):
         pass
@@ -330,6 +337,9 @@ class TestHorizontalLine(unittest.TestCase):
         self.annotation = annotation.HorizontalLine()
         self.plotter = aspecd.plotting.Plotter()
 
+    def tearDown(self):
+        plt.close("all")
+
     def test_instantiate_class(self):
         pass
 
@@ -415,6 +425,9 @@ class TestText(unittest.TestCase):
     def setUp(self):
         self.annotation = annotation.Text()
         self.plotter = aspecd.plotting.Plotter()
+
+    def tearDown(self):
+        plt.close("all")
 
     def test_instantiate_class(self):
         pass
@@ -531,6 +544,9 @@ class TestVerticalSpan(unittest.TestCase):
         self.annotation = annotation.VerticalSpan()
         self.plotter = aspecd.plotting.Plotter()
 
+    def tearDown(self):
+        plt.close("all")
+
     def test_instantiate_class(self):
         pass
 
@@ -629,6 +645,9 @@ class TestHorizontalSpan(unittest.TestCase):
         self.annotation = annotation.HorizontalSpan()
         self.plotter = aspecd.plotting.Plotter()
 
+    def tearDown(self):
+        plt.close("all")
+
     def test_instantiate_class(self):
         pass
 
@@ -726,6 +745,9 @@ class TestTextWithLine(unittest.TestCase):
     def setUp(self):
         self.annotation = annotation.TextWithLine()
         self.plotter = aspecd.plotting.Plotter()
+
+    def tearDown(self):
+        plt.close("all")
 
     def test_instantiate_class(self):
         pass
@@ -906,6 +928,9 @@ class TestMarker(unittest.TestCase):
         self.annotation = annotation.Marker()
         self.plotter = aspecd.plotting.Plotter()
 
+    def tearDown(self):
+        plt.close("all")
+
     def test_instantiate_class(self):
         pass
 
@@ -1082,6 +1107,9 @@ class TestFillBetween(unittest.TestCase):
         self.plotter = aspecd.plotting.Plotter()
         self.dataset = aspecd.dataset.CalculatedDataset()
         self.dataset.data.data = np.ones(101)
+
+    def tearDown(self):
+        plt.close("all")
 
     def test_instantiate_class(self):
         pass

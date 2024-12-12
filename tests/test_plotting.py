@@ -28,7 +28,7 @@ class TestPlotter(unittest.TestCase):
     def tearDown(self):
         if os.path.isfile(self.filename):
             os.remove(self.filename)
-        plt.close(self.plotter.figure)
+        plt.close("all")
 
     def test_instantiate_class(self):
         pass
@@ -107,7 +107,7 @@ class TestPlotter(unittest.TestCase):
         self.assertTrue(
             isinstance(self.plotter.figure, matplotlib.figure.Figure)
         )
-        plt.close(self.plotter.figure)
+        plt.close("all")
 
     def test_plot_sets_fig_property(self):
         self.plotter.plot()
@@ -119,12 +119,12 @@ class TestPlotter(unittest.TestCase):
     def test_plot_sets_axes_property(self):
         self.plotter.plot()
         self.assertTrue(isinstance(self.plotter.axes, matplotlib.axes.Axes))
-        plt.close(self.plotter.figure)
+        plt.close("all")
 
     def test_plot_sets_ax_property(self):
         self.plotter.plot()
         self.assertTrue(isinstance(self.plotter.ax, matplotlib.axes.Axes))
-        plt.close(self.plotter.figure)
+        plt.close("all")
 
     def test_plot_sets_no_new_figure_property_if_existing(self):
         fig, ax = plt.subplots()
@@ -347,7 +347,7 @@ class TestSinglePlotter(unittest.TestCase):
         self.plotter = plotting.SinglePlotter()
 
     def tearDown(self):
-        plt.close(self.plotter.figure)
+        plt.close("all")
 
     def test_instantiate_class(self):
         pass
@@ -502,7 +502,7 @@ class TestSinglePlotter1D(unittest.TestCase):
         pass
 
     def tearDown(self):
-        plt.close(self.plotter.figure)
+        plt.close("all")
 
     def test_has_type_property(self):
         self.assertTrue(hasattr(self.plotter, "type"))
@@ -711,7 +711,7 @@ class TestSinglePlotter2D(unittest.TestCase):
         self.plotter = plotting.SinglePlotter2D()
 
     def tearDown(self):
-        plt.close(self.plotter.figure)
+        plt.close("all")
 
     def test_instantiate_class(self):
         pass
@@ -1139,7 +1139,7 @@ class TestSinglePlotter2DStacked(unittest.TestCase):
     def tearDown(self):
         if os.path.exists(self.filename):
             os.remove(self.filename)
-        plt.close(self.plotter.figure)
+        plt.close("all")
 
     def test_instantiate_class(self):
         pass
@@ -1470,7 +1470,7 @@ class TestMultiDeviceDataPlotter1D(unittest.TestCase):
     def tearDown(self):
         if os.path.exists(self.filename):
             os.remove(self.filename)
-        plt.close(self.plotter.figure)
+        plt.close("all")
 
     def create_dataset(self, devices=("device1", "device2")):
         self.dataset = aspecd.dataset.CalculatedDataset()
@@ -1722,7 +1722,7 @@ class TestSingleBarPlotter(unittest.TestCase):
         self.dataset2d.data.axes[2].unit = "V"
 
     def tearDown(self):
-        plt.close(self.plotter.figure)
+        plt.close("all")
 
     def test_instantiate_class(self):
         pass
@@ -1861,7 +1861,7 @@ class TestMultiPlotter(unittest.TestCase):
         self.plotter = plotting.MultiPlotter()
 
     def tearDown(self):
-        plt.close(self.plotter.figure)
+        plt.close("all")
 
     def test_instantiate_class(self):
         pass
@@ -2071,7 +2071,7 @@ class TestMultiPlotter1D(unittest.TestCase):
         self.dataset.data.axes[1].unit = "V"
 
     def tearDown(self):
-        plt.close(self.plotter.figure)
+        plt.close("all")
 
     def test_instantiate_class(self):
         pass
@@ -2312,7 +2312,7 @@ class TestMultiPlotter1DStacked(unittest.TestCase):
         self.plotter.datasets.append(dataset_)
 
     def tearDown(self):
-        plt.close(self.plotter.figure)
+        plt.close("all")
 
     def test_instantiate_class(self):
         pass
@@ -2529,7 +2529,7 @@ class TestCompositePlotter(unittest.TestCase):
         self.dataset.data.data = np.sin(np.linspace(0, 2 * np.pi, 101))
 
     def tearDown(self):
-        plt.close(self.plotter.figure)
+        plt.close("all")
 
     def test_instantiate_class(self):
         pass
@@ -2994,7 +2994,7 @@ class TestSingleCompositePlotter(unittest.TestCase):
         self.plotter = plotting.SingleCompositePlotter()
 
     def tearDown(self):
-        plt.close(self.plotter.figure)
+        plt.close("all")
 
     def test_instantiate_class(self):
         pass
@@ -3085,8 +3085,7 @@ class TestSaver(unittest.TestCase):
     def tearDown(self):
         if os.path.isfile(self.filename):
             os.remove(self.filename)
-        if self.saver.plotter and self.saver.plotter.fig:
-            plt.close(self.saver.plotter.fig)
+        plt.close("all")
 
     def test_instantiate_class(self):
         pass
@@ -3376,6 +3375,9 @@ class TestPlotProperties(unittest.TestCase):
     def setUp(self):
         self.plot_properties = plotting.PlotProperties()
 
+    def tearDown(self):
+        plt.close("all")
+
     def test_instantiate_class(self):
         pass
 
@@ -3428,6 +3430,9 @@ class TestPlotProperties(unittest.TestCase):
 class TestFigureProperties(unittest.TestCase):
     def setUp(self):
         self.figure_properties = plotting.FigureProperties()
+
+    def tearDown(self):
+        plt.close("all")
 
     def test_instantiate_class(self):
         pass
@@ -3485,6 +3490,9 @@ class TestFigureProperties(unittest.TestCase):
 class TestAxesProperties(unittest.TestCase):
     def setUp(self):
         self.axis_properties = plotting.AxesProperties()
+
+    def tearDown(self):
+        plt.close("all")
 
     def test_instantiate_class(self):
         pass
@@ -3818,6 +3826,9 @@ class TestLegendProperties(unittest.TestCase):
     def setUp(self):
         self.legend_properties = plotting.LegendProperties()
 
+    def tearDown(self):
+        plt.close("all")
+
     def test_instantiate_class(self):
         pass
 
@@ -3954,6 +3965,9 @@ class TestGridProperties(unittest.TestCase):
     def setUp(self):
         self.grid_properties = plotting.GridProperties()
 
+    def tearDown(self):
+        plt.close("all")
+
     def test_instantiate_class(self):
         pass
 
@@ -4046,6 +4060,9 @@ class TestColorbarProperties(unittest.TestCase):
 class TestSinglePlotProperties(unittest.TestCase):
     def setUp(self):
         self.plot_properties = plotting.SinglePlotProperties()
+
+    def tearDown(self):
+        plt.close("all")
 
     def test_instantiate_class(self):
         pass

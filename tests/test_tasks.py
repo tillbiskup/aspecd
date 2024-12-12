@@ -4936,7 +4936,7 @@ class TestChefDeService(unittest.TestCase):
         self.assertIn(
             "No history has been written. This is considered bad "
             "practice in terms of reproducible research",
-            cm.output[1],
+            cm.output[2],
         )
 
     def test_written_history_can_be_used_as_recipe(self):
